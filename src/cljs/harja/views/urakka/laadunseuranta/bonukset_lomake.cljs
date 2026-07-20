@@ -188,7 +188,7 @@
        ::lomake/col-luokka "col-xs-12"
        :validoi [[:ei-tyhja "Anna perustelu"]]}
       ;; näytä lukutilassa vain teksti
-      (if (and voi-muokata? (not lukutila?))
+      (if (and voi-muokata? (not lukutila?) (not (= :teiden-hoito (:tyyppi @nav/valittu-urakka))))
        {:otsikko "Kulun kohdistus"
         :nimi :toimenpideinstanssi
         :pakollinen? true
@@ -208,12 +208,15 @@
                                          (assoc data :toimenpideinstanssi (:tpi_id %)))}
                          toimenpideinstanssit]])}
         {:otsikko "Kulun kohdistus"
-         :nimi :toimenpideinstanssi
-         :pakollinen? true
          :tyyppi :string
-         :hae #(do
-                 (hae-tpi-nimi-idlla (:toimenpideinstanssi %)))
-         ::lomake/col-luokka "col-xs-12"})
+         :nimi :toimenpideinstanssi
+         :muokattava? (constantly false)
+         ::lomake/col-luokka "col-xs-12"
+         :hae (fn [rivi]
+                (let [tpi-id (:toimenpideinstanssi rivi)]
+                  (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
+                        @tiedot-urakka/urakan-toimenpideinstanssit)
+                    "")))})
       #_ {:otsikko "Kulun kohdistus"
           :tyyppi :string
           :nimi :toimenpideinstanssi

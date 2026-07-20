@@ -325,8 +325,11 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
         cy.contains('label', 'Indeksi').should('not.exist')
 
-        // Bonus - Tämä vaihtuu, kun uusi bonusmalli saadaan mergettyä (-> Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta)
-        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
+        //  Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta on ainoa vaihtoehto ja tekstinä lomakkeella
+        cy.get('label').contains('Bonus').parent().parent().parent().find('div').should('have.class', 'lomake-arvo')
+        cy.get('label').contains('Bonus').parent().parent().parent().find('button').should('have.length', 0)
+
+        //cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta'});
 
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu)
@@ -392,7 +395,7 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         cy.contains('label', 'Bonus').click();
 
         // Bonus
-        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta'});
 
         // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
         cy.contains('label', 'Indeksi').should('not.exist')
@@ -409,7 +412,7 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('400')
 
         // Käsitelty pvm
-        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type('{selectall}15.02.2026')
 
         // Siirretään fokus pois päivämääräkentästä
         cy.get('label').contains('Perustelu').click()
@@ -470,7 +473,7 @@ describe('Bonukset toimii - MHU19 (Oulu)', function () {
 
 
         // Bonus
-        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Asiakastyytyväisyysbonus'});
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta'});
 
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu3)
@@ -488,7 +491,7 @@ describe('Bonukset toimii - MHU19 (Oulu)', function () {
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('500')
 
         // Käsitelty pvm
-        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('1.5.2024')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type('{selectall}01.05.2024')
 
         // Siirretään fokus pois päivämääräkentästä
         cy.get('label').contains('Perustelu').click()
