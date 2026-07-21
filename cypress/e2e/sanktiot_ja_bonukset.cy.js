@@ -111,7 +111,8 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         cy.wait('@tallenna', {timeout: clickTimeout})
 
         // Varmistetaan onnistuminen
-        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
     })
 
     it('Avaa sanktio listasta MHU25', function () {
@@ -190,7 +191,9 @@ describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
         cy.wait('@tallenna', {timeout: clickTimeout})
 
         // Varmistetaan onnistuminen
-        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
     })
 
     it('Avaa sanktio listasta MHU24', function () {
@@ -274,7 +277,8 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
         cy.wait('@tallenna', {timeout: clickTimeout})
 
         // Varmistetaan onnistuminen
-        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
     })
 
     it('Avaa sanktio listasta MHU19', function () {

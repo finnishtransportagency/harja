@@ -340,16 +340,18 @@
         (laatupoikkeamat-q/liita-liite<! db id (:id liite))))))
 
 (defn- varmista-sanktion-tiedot [laatupoikkeama sanktio]
-  (let [sanktio (if (nil? (:kasittelytapa sanktio))
-                  (assoc sanktio :kasittelytapa (:kasittelytapa (:paatos laatupoikkeama)))
+  (let [l-kasittelytapa (:kasittelytapa (:paatos laatupoikkeama))
+        l-kasittelyaika (:kasittelyaika (:paatos laatupoikkeama))
+        sanktio (if (and (nil? (:kasittelytapa sanktio)) l-kasittelytapa)
+                  (assoc sanktio :kasittelytapa l-kasittelytapa)
                   sanktio)
         ;; Mikäli sanktion määräystapa on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelytapa tai työmaakokous
-        sanktio (if (nil? (:maaraystapa sanktio))
-                  (assoc sanktio :maaraystapa (or (name (:kasittelytapa (:paatos laatupoikkeama))) "tyomaakokous"))
+        sanktio (if (and (nil? (:maaraystapa sanktio)) l-kasittelytapa)
+                  (assoc sanktio :maaraystapa (name l-kasittelytapa))
                   sanktio)
         ;; Mikäli sanktion määrättypvm on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelypäivämäärä
-        sanktio (if (nil? (:maarattypvm sanktio))
-                  (assoc sanktio :maarattypvm (:kasittelyaika (:paatos laatupoikkeama)))
+        sanktio (if (and (nil? (:maarattypvm sanktio)) l-kasittelyaika)
+                  (assoc sanktio :maarattypvm l-kasittelyaika)
                   sanktio)]
     sanktio))
 
@@ -416,7 +418,7 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
