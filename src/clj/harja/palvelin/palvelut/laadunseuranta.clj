@@ -19,11 +19,15 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
+            [taoensso.timbre :as log]
+            [clojure.java.jdbc :as jdbc]
+
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.kommentit :as kommentit]
             [harja.kyselyt.liitteet :as liitteet]
             [harja.kyselyt.sanktiot :as sanktiot]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as sanktio-konfiguraatio]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
@@ -41,13 +45,9 @@
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
 
-            [taoensso.timbre :as log]
-            [clojure.java.jdbc :as jdbc]
-
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
             [harja.id :refer [id-olemassa?]]))
-
 
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
@@ -223,9 +223,24 @@
                 (-> urakan-tiedot :loppupvm)))
     (throw (SecurityException. "Talvisuolan ylityksen ehdot eivät täyttyneet: Urakka ei ole teidenhoidon hoitourakka, tai sanktion perintäpäivä ei ole urakan viimeisen hoitovuoden aikana."))))
 
+(defn- vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+  [db {:keys [urakka-id urakan-alkupvm paivamaara soveltuvuuskonteksti laji sanktiotyyppi-id]}]
+  (when (and laji
+          (not= :yllapidon_bonus laji)
+          (not= :lupaussanktio laji)
+          paivamaara)
+    (sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+      db
+      {:urakka-id urakka-id
+       :hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+       :soveltuvuuskonteksti soveltuvuuskonteksti
+       :laji laji
+       :sanktiotyyppi-id sanktiotyyppi-id})))
+
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu  maaraystapa tehtavaryhma tehtava] :as sanktio} laatupoikkeama-id urakka kasittelyaika]
+                   toimenpideinstanssi vakiofraasi poistettu maaraystapa tehtavaryhma tehtava] :as sanktio}
+   laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
@@ -245,7 +260,17 @@
                         (:id tyyppi)
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
-        _ (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot))
+        paivamaara (or paivamaara perintapvm)
+        _ (when (= :yllapidon_bonus laji)
+            (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
+        _ (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+            db
+            {:urakka-id urakka
+             :urakan-alkupvm (:alkupvm urakan-tiedot)
+             :paivamaara paivamaara
+             :soveltuvuuskonteksti soveltuvuuskonteksti
+             :laji laji
+             :sanktiotyyppi-id sanktiotyyppi})
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -332,7 +357,10 @@
         id)
       (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
         (doseq [sanktio (:sanktiot laatupoikkeama)]
-          (tallenna-laatupoikkeaman-sanktio db user sanktio id urakka kasittelyaika))))))
+          (tallenna-laatupoikkeaman-sanktio
+          db user sanktio id urakka kasittelyaika
+          {:paivamaara (:aika laatupoikkeama)
+           :soveltuvuuskonteksti :laatupoikkeama}))))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -373,26 +401,6 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
-(defn hae-urakan-sanktio-konfiguraatio
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
-
-(defn hae-sanktio-profiilit-admin
-  [db user]
-  (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
-
-(defn hae-sanktio-profiilin-detalji-admin
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
-
-(defn hae-bonus-profiilit-admin
-  [db user]
-  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
-
-(defn hae-bonus-profiilin-detalji-admin
-  [db user tiedot]
-  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
-
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
@@ -413,7 +421,10 @@
               (name kasittelytapa) muukasittelytapa
               (:id user)
               id)
-          sanktio-id (tallenna-laatupoikkeaman-sanktio c user sanktio id urakka kasittelyaika)
+          sanktio-id (tallenna-laatupoikkeaman-sanktio
+                       c user sanktio id urakka kasittelyaika
+                       {:paivamaara hk-alkupvm
+                        :soveltuvuuskonteksti :urakka})
           _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
       sanktio-id)))
 
@@ -484,23 +495,27 @@
 
       :hae-urakan-sanktio-konfiguraatio
       (fn [user tiedot]
-        (hae-urakan-sanktio-konfiguraatio db user tiedot))
+        (sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio db user tiedot))
+
+      :hae-urakan-bonus-konfiguraatio
+      (fn [user tiedot]
+        (bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio db user tiedot))
 
       :hae-sanktio-profiilit-admin
       (fn [user _]
-        (hae-sanktio-profiilit-admin db user))
+        (sanktio-konfiguraatio/hae-sanktio-profiilit-admin db user))
 
       :hae-sanktio-profiilin-detalji-admin
       (fn [user tiedot]
-        (hae-sanktio-profiilin-detalji-admin db user tiedot))
+        (sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin db user tiedot))
 
       :hae-bonus-profiilit-admin
       (fn [user _]
-        (hae-bonus-profiilit-admin db user))
+        (bonus-konfiguraatio/hae-bonus-profiilit-admin db user))
 
       :hae-bonus-profiilin-detalji-admin
       (fn [user tiedot]
-        (hae-bonus-profiilin-detalji-admin db user tiedot))
+        (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
@@ -527,6 +542,7 @@
       :hae-urakan-sanktiot-ja-bonukset
       :hae-sanktiotyypit
       :hae-urakan-sanktio-konfiguraatio
+      :hae-urakan-bonus-konfiguraatio
       :hae-sanktio-profiilit-admin
       :hae-sanktio-profiilin-detalji-admin
       :hae-bonus-profiilit-admin

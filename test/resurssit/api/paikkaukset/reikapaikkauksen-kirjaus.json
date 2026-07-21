@@ -18,14 +18,16 @@
         "tunniste": {
           "id": <ulkoinenid>
         },
-        "pvm": "2024-10-28",
+        "ajankohta": "2024-10-28T14:12:00Z",
         "sijainti": {
           "tieosoite": {
             "tie": 20,
             "aosa": 1,
             "aet": 1,
             "losa": 5,
-            "let": 16
+            "let": 16,
+            "ajr": 1,
+            "kaista": 11
           },
           "pistegeometria": {
             "x": 404470.43673149456,

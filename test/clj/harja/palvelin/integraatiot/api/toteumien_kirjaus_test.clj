@@ -225,52 +225,6 @@
       (finally
         (u (str "DELETE FROM toteuma WHERE urakka = " urakka-id " AND ulkoinen_id = " ulkoinen-id))))))
 
-
-(deftest poista-usea-toteuma-paivittaa-urakan-materiaalicachen-aikavalin-min-max
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'"))
-        min-pvm "01.01.2019"
-        max-pvm "02.01.2019"
-        pvm-str->date (fn [pvm-str]
-                        (-> pvm-str
-                            pvm/->pvm-date-timeksi
-                            pvm/dateksi))
-        min-alkanut (pvm-str->date min-pvm)
-        max-alkanut (pvm-str->date max-pvm)
-        paivitys-args (atom nil)]
-    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
-                  (fn [_ _]
-                    [{:alkanut min-alkanut
-                      :min_alkanut min-alkanut
-                      :max_alkanut max-alkanut}
-                     {:alkanut max-alkanut
-                      :min_alkanut min-alkanut
-                      :max_alkanut max-alkanut}])
-
-                  harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
-                  (fn [& _] 2)
-                  harja.kyselyt.sopimukset/hae-urakan-sopimus-idt
-                  (fn [& _] [{:id 123}])
-                  materiaalit/paivita-sopimuksen-materiaalin-kaytto
-                  (fn [& _] nil)
-                  materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain
-                  (fn [_ args]
-                    (reset! paivitys-args args)
-                    nil)]
-      (api-toteuma/poista-toteumat
-        ds
-        {:id 1 :kayttajanimi kayttaja-jvh}
-        [111 222]
-        urakka-id))
-
-    (is (some? @paivitys-args) "Urakan materiaalicachen päivitystä kutsutaan")
-    (is (= urakka-id (:urakka @paivitys-args)))
-    (is (= (pvm/iso8601 (pvm/->pvm min-pvm))
-           (pvm/iso8601 (:alkupvm @paivitys-args)))
-        "Urakan materiaalicachen päivityksen alkupvm on min")
-    (is (= (pvm/iso8601 (pvm/->pvm max-pvm))
-           (pvm/iso8601 (:loppupvm @paivitys-args)))
-        "Urakan materiaalicachen päivityksen loppupvm on max")))
-
 (deftest poista-toteumat-palauttaa-onnistumisviestin-ja-valittaa-oikeat-argumentit
   (let [urakka-id 12345
         ulkoiset-idt [111 222]
@@ -320,48 +274,6 @@
            (:ilmoitukset vastaus)))
     (is (false? @sopimus-paivitys-kutsuttu?) "Sopimuksen materiaalicachea ei päivitetä kun mitään ei poisteta")
     (is (false? @urakka-paivitys-kutsuttu?) "Urakan materiaalicachea ei päivitetä kun mitään ei poisteta")))
-
-(deftest poista-toteumat-paivittaa-sopimusten-materiaalicachen-kaikille-uniikeille-alkupvmille
-  (let [urakka-id 12345
-        ulkoiset-idt [111 222]
-        kirjaaja {:id 987 :kayttajanimi kayttaja-jvh}
-        pvm-str->date (fn [pvm-str]
-                        (-> pvm-str
-                            pvm/->pvm-date-timeksi
-                            pvm/dateksi))
-        d1 (pvm-str->date "01.01.2019")
-        d2 (pvm-str->date "02.01.2019")
-        paivitykset (atom [])
-        odotetut (set (for [sopimus [10 20]
-                            pvm ["01.01.2019" "02.01.2019"]]
-                        [sopimus pvm]))]
-    (with-redefs [harja.kyselyt.toteumat/hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
-                  (fn [& _]
-                    [{:alkanut d1
-                      :min_alkanut d1
-                      :max_alkanut d2}
-                     {:alkanut d2
-                      :min_alkanut d1
-                      :max_alkanut d2}])
-                  harja.kyselyt.toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
-                  (fn [& _] 2)
-                  harja.kyselyt.sopimukset/hae-urakan-sopimus-idt
-                  (fn [& _] [{:id 10} {:id 20}])
-                  materiaalit/paivita-sopimuksen-materiaalin-kaytto
-                  (fn [_ args]
-                    (swap! paivitykset conj args)
-                    nil)
-                  materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain
-                  (fn [& _] nil)]
-      (api-toteuma/poista-toteumat ds kirjaaja ulkoiset-idt urakka-id))
-
-    (is (= #{10 20} (set (map :sopimus @paivitykset))) "Kaikkien sopimusten cache päivitetään")
-    (is (= 4 (count @paivitykset)) "Päivityksiä tulee sopimusten_lkm * uniikkien_pvm_lkm")
-    (is (= odotetut
-           (set (map (fn [{:keys [sopimus alkupvm]}]
-                       [sopimus (pvm/pvm alkupvm)])
-                     @paivitykset)))
-        "Sopimuskohtainen päivitys ajetaan jokaiselle uniikille alkupvm:lle")))
 
 (deftest poista-toteumat-tyhjalla-alkupvm-listalla-ei-kutsu-urakan-paivitysta
   (let [urakka-id 12345

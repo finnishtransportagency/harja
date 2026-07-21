@@ -521,6 +521,7 @@
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 (defonce suunnittelu-tehtavat-maarat (cursor tila [:suunnittelu :tehtavat-maarat]))
+(defonce suunnittelu-kalustoresurssit (cursor tila [:suunnittelu :kalustoresurssit]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
