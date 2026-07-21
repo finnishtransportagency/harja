@@ -403,7 +403,7 @@
               :fmt pvm/pvm-opt :tyyppi :pvm
               :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
-           ;; MHU25 urakoille ei näytetä laskutuskuukaudta
+           ;; MHU25 urakoille ei näytetä laskutuskuukautta
            (if (<= urakan-alkuvuosi 2024)
              (if (and voi-muokata? (not lukutila?))
                {:otsikko "Laskutuskuukausi"
