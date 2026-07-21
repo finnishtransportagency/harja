@@ -16,32 +16,36 @@
 # https://postgis.net/docs/manual-3.3/postgis_installation.html#install_requirements
 ARG POSTGIS_VERSION=3.3.3
 
+# -- Asennettava maven-versio ja paketin SHA
+# Tarkista uusin saatavilla oleva maven: https://downloads.apache.org/maven/maven-3
+# Maven pitää arkistoissaan ainoastaan viimeisimmän version, vanhoja versioita ei ole saatavilla.
+ARG MAVEN_VERSIO=3.9.16
+# https://downloads.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz.sha512
+ARG MAVEN_SHA512="831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6"
 
-#-------------------------------#
-#----- Rakenna pohja-image -----#
-#-------------------------------#
+
+#------------------------------------------#
+#----- PostGIS builder -stage (käännös) ---#
+#------------------------------------------#
 
 # https://hub.docker.com/_/postgres/tags
-FROM postgres:15.18-bookworm AS base
-# https://docs.docker.com/engine/reference/builder/#understand-how-arg-and-from-interact
+FROM postgres:15.18-bookworm AS postgis-builder
 ARG POSTGIS_VERSION
 
-# --- Asenna riippuvuudet --- #
-
-# Asenna työkaluja
-RUN apt-get update && apt-get install -y wget
-
-
-RUN wget "https://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
+# Lataa PostGIS-lähdekoodi
+RUN apt-get update && apt-get install -y wget \
+    && wget "https://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
     && tar -xvzf "postgis-${POSTGIS_VERSION}.tar.gz" \
     && rm "postgis-${POSTGIS_VERSION}.tar.gz"
 
-# Asenna PostGISin buildaamiseen vaadittavat riippuvuudet (https://docs.docker.com/build/cache/#use-the-dedicated-run-cache)
+# Asenna PostGISin buildaamiseen vaadittavat riippuvuudet
 RUN --mount=type=cache,target=/var/cache/apt \
     set -ex \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
-      libgdal-dev libgeos-dev libproj-dev \
+      libgdal-dev \
+      libgeos-dev \
+      libproj-dev \
       postgresql-server-dev-$PG_MAJOR \
       autoconf \
       automake \
@@ -54,16 +58,11 @@ RUN --mount=type=cache,target=/var/cache/apt \
       g++ \
       git \
       llvm-dev \
-      libboost-all-dev \
-      libcgal-dev \
       libcurl4-gnutls-dev \
-      libgmp-dev \
       libjson-c-dev \
-      libmpfr-dev \
       libpcre3-dev \
       libprotobuf-c-dev \
       libsqlite3-dev \
-      libtiff-dev \
       libtool \
       libxml2-dev \
       make \
@@ -71,24 +70,54 @@ RUN --mount=type=cache,target=/var/cache/apt \
       protobuf-c-compiler \
       xsltproc
 
-# Buildaa PostGIS
-RUN  cd postgis-${POSTGIS_VERSION} \
-        && ./configure \
-        && make clean \
-        # Anna Makelle saatavilla olevat prosessointiyksiköt
-        && make -j$(nproc) \
-        && make install
+# Buildaa PostGIS ilman rasteria ja sfcgal:ia, topology-plugin jää käyttöön
+RUN cd postgis-${POSTGIS_VERSION} \
+    && ./configure --without-raster --without-sfcgal \
+    && make clean \
+    # Anna Makelle saatavilla olevat prosessointiyksiköt \
+    && make -j$(nproc) \
+    && make install
 
 
-## Asenna maven
+#---------------------------------#
+#---- Lopullinen runtime-image ---#
+#---------------------------------#
+FROM postgres:15.18-bookworm AS final
+ARG MAVEN_VERSIO
+ARG MAVEN_SHA512
+
+# Yhdistä image harjan repositoryyn
+LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
+LABEL org.opencontainers.image.description="PostGIS 3.3.3 extension with PostgreSQL 15.18 bookworm"
+
+# Kopioi PostGISin käännetyt artefaktit builder-stagesta
+COPY --from=postgis-builder /usr/lib/postgresql/ /usr/lib/postgresql/
+COPY --from=postgis-builder /usr/share/postgresql/ /usr/share/postgresql/
+
+# Asenna vain ajonaikaiset runtime-kirjastot (ei -dev paketteja, ei kääntäjiä)
+RUN --mount=type=cache,target=/var/cache/apt \
+    set -ex \
+    && apt-get update \
+    && apt-get install -y --no-install-recommends \
+      libgeos-c1v5 \
+      libgdal32 \
+      libproj25 \
+      libprotobuf-c1 \
+      libjson-c5 \
+      libxml2 \
+      libcurl3-gnutls \
+      libsqlite3-0 \
+      libpcre3 \
+      wget \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+## Asenna Maven (tarvitaan Flyway-migraatioiden ajamiseen)
 # HUOM: Maven pitää arkistoissaan ainoastaan viimeisimmän version, vanhoja versioita ei ole saatavilla.
 #       Eli, mikäli buildaat tämän imagen uudestaan ja build kaatuu tähän, tarkista mikä on uusin saatavilla oleva maven:
 #       https://downloads.apache.org/maven/maven-3
-ENV MAVEN_VERSIO=3.9.16
-# https://downloads.apache.org/maven/maven-3/3.9.16/binaries/apache-maven-3.9.16-bin.tar.gz.sha512
-ENV MAVEN_SHA512="831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0cafb8338851f90780735568773e0a6cd07bbec107cda0b896b008b861075358b6f6"
 
-RUN apt-get update && apt-get install -y openjdk-17-jdk \
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
     && wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
     && if [ "$MAVEN_SHA512" != "$(sha512sum apache-maven-${MAVEN_VERSIO}-bin.tar.gz | awk '{print $1}')" ]; then \
                echo "Downloaded Maven SHA512: $(sha512sum apache-maven-${MAVEN_VERSIO}-bin.tar.gz | awk '{print $1}')"; \
@@ -96,30 +125,22 @@ RUN apt-get update && apt-get install -y openjdk-17-jdk \
                exit 1; \
            fi \
     && tar xzvf "apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
-    && rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz"
+    && rm "apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
 
 # Lisää maven bin kansio PATH:iin
 ENV PATH="/apache-maven-${MAVEN_VERSIO}/bin/:${PATH}"
 
-# Siivous
-RUN apt-get -y --purge autoremove  \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/*
 
-
-#---------------------------------#
-#---- Harjadb-imagen rakennus ----#
-#---------------------------------#
-FROM base
-
-# Yhdistä image harjan repositoryyn
-LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
-LABEL org.opencontainers.image.description="PostGIS 3.3.2 extension with PostgreSQL 13.11 bullseye"
+#-----------------------------------------#
+#---- Harjadb-imagen konfigurointi -------#
+#-----------------------------------------#
 
 # Aseta Harjaan liittyvät default ympäristömuuttujat
 ENV HARJA_TIETOKANTA_PORTTI=5432
 
-# Siirretään apuscriptit postgresl käyttäjän kotihakemistoon
+# Siirretään apuscriptit postgresql käyttäjän kotihakemistoon
 WORKDIR /var/lib/postgresql/
 
 ADD docker_aja-migraatiot.sh ./aja-migraatiot.sh
@@ -184,4 +205,3 @@ SHELL ["/bin/bash", "-c"]
 CMD sed -i "s/port = 5432/port = ${HARJA_TIETOKANTA_PORTTI}/g" ./data/postgresql.conf \
     && sed -i 's/#port =/port =/g' ./data/postgresql.conf \
     && pg_ctl start && tail -f /dev/null
-
