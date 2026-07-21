@@ -339,6 +339,20 @@
         (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
         (laatupoikkeamat-q/liita-liite<! db id (:id liite))))))
 
+(defn- varmista-sanktion-tiedot [laatupoikkeama sanktio]
+  (let [sanktio (if (nil? (:kasittelytapa sanktio))
+                  (assoc sanktio :kasittelytapa (:kasittelytapa (:paatos laatupoikkeama)))
+                  sanktio)
+        ;; Mikäli sanktion määräystapa on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelytapa tai työmaakokous
+        sanktio (if (nil? (:maaraystapa sanktio))
+                  (assoc sanktio :maaraystapa (or (name (:kasittelytapa (:paatos laatupoikkeama))) "tyomaakokous"))
+                  sanktio)
+        ;; Mikäli sanktion määrättypvm on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelypäivämäärä
+        sanktio (if (nil? (:maarattypvm sanktio))
+                  (assoc sanktio :maarattypvm (:kasittelyaika (:paatos laatupoikkeama)))
+                  sanktio)]
+    sanktio))
+
 (defn- tallenna-laatupoikkeaman-paatos [{:keys [db urakka user laatupoikkeama id]}]
   ;; Urakanvalvoja voi kirjata päätöksen
   (when (and (:paatos (:paatos laatupoikkeama))
@@ -356,10 +370,12 @@
          :id id})
       (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
         (doseq [sanktio (:sanktiot laatupoikkeama)]
-          (tallenna-laatupoikkeaman-sanktio
-          db user sanktio id urakka kasittelyaika
-          {:paivamaara (:aika laatupoikkeama)
-           :soveltuvuuskonteksti :laatupoikkeama}))))))
+          ;; Varmistetaan, että sanktion käsittelytapa on sama kuin laatupoikkeaman käsittelytapa, jos sanktion käsittelytapaa ei ole jostain syystä annettu
+          (let [sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)]
+            (tallenna-laatupoikkeaman-sanktio
+              db user sanktio id urakka kasittelyaika
+              {:paivamaara (:aika laatupoikkeama)
+               :soveltuvuuskonteksti :laatupoikkeama})))))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -411,6 +427,7 @@
     ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
+          sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                         :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
