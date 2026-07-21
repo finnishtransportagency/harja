@@ -14,9 +14,15 @@
 # Muuta materiaalia:
 # https://github.com/postgis/docker-postgis
 # https://postgis.net/docs/manual-3.3/postgis_installation.html#install_requirements
-ARG POSTGIS_VERSION=3.3.3
 
-# -- Asennettava maven-versio ja paketin SHA
+
+# -- Asennettava PostGIS-versio ja paketin MD5-hash
+# Tarkista versio ja hash: https://download.osgeo.org/postgis/source/
+ARG POSTGIS_VERSION=3.3.3
+# https://download.osgeo.org/postgis/source/postgis-3.3.3.tar.gz.md5
+ARG POSTGIS_MD5="d94b48dfc7c106c2722844bfc611f180"
+
+# -- Asennettava maven-versio ja paketin SHA-hash
 # Tarkista uusin saatavilla oleva maven: https://downloads.apache.org/maven/maven-3
 # Maven pitää arkistoissaan ainoastaan viimeisimmän version, vanhoja versioita ei ole saatavilla.
 ARG MAVEN_VERSIO=3.9.16
@@ -31,10 +37,16 @@ ARG MAVEN_SHA512="831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0c
 # https://hub.docker.com/_/postgres/tags
 FROM postgres:15.18-bookworm AS postgis-builder
 ARG POSTGIS_VERSION
+ARG POSTGIS_MD5
 
 # Lataa PostGIS-lähdekoodi
 RUN apt-get update && apt-get install -y wget \
     && wget "https://download.osgeo.org/postgis/source/postgis-${POSTGIS_VERSION}.tar.gz" \
+    && if [ "$POSTGIS_MD5" != "$(md5sum postgis-${POSTGIS_VERSION}.tar.gz | awk '{print $1}')" ]; then \
+               echo "Downloaded PostGIS MD5: $(md5sum postgis-${POSTGIS_VERSION}.tar.gz | awk '{print $1}')"; \
+               echo "PostGIS package md5 values don't match! exiting."; \
+               exit 1; \
+           fi \
     && tar -xvzf "postgis-${POSTGIS_VERSION}.tar.gz" \
     && rm "postgis-${POSTGIS_VERSION}.tar.gz"
 
