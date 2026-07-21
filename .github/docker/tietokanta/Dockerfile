@@ -180,6 +180,7 @@ RUN pg_ctl start; \
 
 # Käynnistä postgresql ja pidä container käynnissä
 # Jos ympäristömuuttujaa HARJA_TIETOKANTA_PORTTI ei ole asetettu, käytä oletusarvoa.
+SHELL ["/bin/bash", "-c"]
 CMD sed -i "s/port = 5432/port = ${HARJA_TIETOKANTA_PORTTI}/g" ./data/postgresql.conf \
     && sed -i 's/#port =/port =/g' ./data/postgresql.conf \
     && pg_ctl start && tail -f /dev/null
