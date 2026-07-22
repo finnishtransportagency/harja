@@ -17,7 +17,7 @@
 
 # -- PostgreSQL pohjaimagen versio:
 # https://hub.docker.com/_/postgres/tag
-ARG POSTHRESQL_DOCKER_IMAGE_VERSION=postgres:15.18-bookworm
+ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:15.18-bookworm
 #ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:13.23-bookworm
 
 
