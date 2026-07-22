@@ -375,8 +375,18 @@ jobs:
       - name: Setup clojure environment
         uses: ./.github/actions/setup-build-env-and-tools
 
+      - name: Verify CI JVM options
+        run: |
+          echo "::group::JVM-optiot CI-profiilista"
+          echo "Leiningen projektin :jvm-opts (+ci profiililla):"
+          lein with-profile +ci pprint :jvm-opts
+          echo "::endgroup::"
+        shell: bash
+
       - name: Run backend tests
-        run: lein test2junit
+        # CI-profiili (profiles.clj :ci) yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
+        # LEIN_JVM_OPTS ei vaikuta projekti-JVM:iin koska project.clj:ssä on :jvm-opts ^:replace.
+        run: lein with-profile +ci test2junit
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@d9f48fc87bc235f7e214acf696ca5abc0a986f16 # v6.4.2
