@@ -23,7 +23,7 @@
       :kasittelytapa
       :vakiofraasi
       :maaraystapa)
-    (konv/decimal->double :summa :indeksikorjaus :tavoitehinnanalennus)
+    (konv/decimal->double :summa :indeksikorjaus)
     ;; Muunna timestampit java-date:ksi
     (konv/muunna [:kasittelyaika :maarattypvm :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))
