@@ -46,8 +46,10 @@ jobs:
       e2e-tests: 'true'
       build-harja: 'light'
       # Disabloidaan kaikki muut testit
+      scan-docker-image: 'false'
       deps-tree: 'false'
       lint-clj: 'false'
+      validate-oikeudet-edn: 'false'
       backend-tests: 'false'
       slow-tests: 'false'
       front-end-tests: 'false'
