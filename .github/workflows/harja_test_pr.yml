@@ -35,7 +35,9 @@ jobs:
       # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
       # Testataan vanhempaa PostgreSQL versiota vasten vanhojen testipalvelimien yhteensopivuuden varmistamiseksi.
       # TODO: Käytä harjadb-latest, kun vanhempien versioiden tuesta voidaan luopua.
-      test-db-service: harjadb-13.13-3.3.3
+      #test-db-service: harjadb-13.13-3.3.3
+
+      test-db-service: harjadb-latest
       e2e-browsers: "['chrome']"
       # PR-testeissä ajetaan vain kevyt build ja testauksen kannalta epärelevantit osat on jätetty pois.
       build-harja: 'light'
