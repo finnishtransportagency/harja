@@ -10,9 +10,10 @@
 
 
  ;; CI-profiili: Yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
+ ;; Annetaan korkeahko 4g heap alkuun, jotta sitä ei tarvitse heti kasvattaa ajon aikana.
  ;; GitHub Actions public repo runner (ubuntu-latest): 4 CPU / 16 GB RAM.
  ;; Käytä CI:ssä: lein with-profile +ci ...
- :ci {:jvm-opts ^:replace ["-Xms2g" "-Xmx8g" "-XX:+UseG1GC" "-XX:+TieredCompilation"]}
+ :ci {:jvm-opts ^:replace ["-Xms4g" "-Xmx8g" "-XX:+UseG1GC" "-XX:+TieredCompilation"]}
  :dev {:dependencies [
                       [com.bhauman/rebel-readline-cljs "0.1.5"]
                       [cider/piggieback "0.6.0"]
