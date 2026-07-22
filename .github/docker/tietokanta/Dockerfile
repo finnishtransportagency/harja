@@ -17,8 +17,8 @@
 
 # -- PostgreSQL pohjaimagen versio:
 # https://hub.docker.com/_/postgres/tag
-#ARG POSTHRESQL_DOCKER_IMAGE_VERSION=postgres:15.18-bookworm
-ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:13.23-bookworm
+ARG POSTHRESQL_DOCKER_IMAGE_VERSION=postgres:15.18-bookworm
+#ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:13.23-bookworm
 
 
 # -- Asennettava PostGIS-versio ja paketin MD5-hash
