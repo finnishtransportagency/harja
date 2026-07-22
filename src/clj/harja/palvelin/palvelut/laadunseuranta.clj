@@ -154,6 +154,7 @@
                    (map #(assoc % :bonus? true))
                    urakan-bonukset)
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
+        _ (println "urakan-sanktiot" urakan-sanktiot)
         sanktiot-ja-bonukset (into []
                                (map konv/alaviiva->rakenne
                                  (concat
@@ -239,7 +240,7 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi poistettu maaraystapa tehtavaryhma tehtava] :as sanktio}
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu maaraystapa tehtavaryhma tehtava] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -278,6 +279,7 @@
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
                 :maarattypvm (konv/sql-date maarattypvm)
+                :kasittelytapa (name kasittelytapa)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
                 :tyyppi sanktiotyyppi
@@ -335,6 +337,18 @@
       ;; Liitä kommentti laatupoikkeamaon
       (laatupoikkeamat-q/liita-kommentti<! db id (:id kommentti)))))
 
+
+(defn- varmista-sanktion-tiedot [laatupoikkeama sanktio]
+  (let [l-kasittelytapa (:kasittelytapa (:paatos laatupoikkeama))
+        sanktio (if (and (nil? (:kasittelytapa sanktio)) l-kasittelytapa)
+                  (assoc sanktio :kasittelytapa l-kasittelytapa)
+                  sanktio)
+        ;; Mikäli sanktion määräystapa on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelytapa tai työmaakokous
+        sanktio (if (and (nil? (:maaraystapa sanktio)) l-kasittelytapa)
+                  (assoc sanktio :maaraystapa (name l-kasittelytapa))
+                  sanktio)]
+    sanktio))
+
 (defn- tallenna-laatupoikkeaman-liitteet [db laatupoikkeama id]
   (when-let [uusi-liite (:uudet-liitteet laatupoikkeama)]
     (let [liitteet (if (sequential? uusi-liite) uusi-liite [uusi-liite])]
@@ -357,10 +371,11 @@
         id)
       (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
         (doseq [sanktio (:sanktiot laatupoikkeama)]
-          (tallenna-laatupoikkeaman-sanktio
-          db user sanktio id urakka kasittelyaika
-          {:paivamaara (:aika laatupoikkeama)
-           :soveltuvuuskonteksti :laatupoikkeama}))))))
+          (let [sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)]
+            (tallenna-laatupoikkeaman-sanktio
+              db user sanktio id urakka kasittelyaika
+              {:paivamaara (:aika laatupoikkeama)
+               :soveltuvuuskonteksti :laatupoikkeama})))))))
 
 (defn tallenna-laatupoikkeama [{:keys [db user fim email sms laatupoikkeama]}]
   (let [urakka-id (:urakka laatupoikkeama)]
@@ -412,6 +427,7 @@
     ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
     ;; koska laatupoikkeamalla voi olla 0...n sanktiota
     (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
+          sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
           id (laatupoikkeamat-q/luo-tai-paivita-laatupoikkeama c user (assoc laatupoikkeama :tekija "tilaaja"
                                                                         :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)

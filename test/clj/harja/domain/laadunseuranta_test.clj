@@ -17,7 +17,11 @@
         yllapidon-lajit [:yllapidon_sakko :yllapidon_muistutus]
         mhu24-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2024)}
         mhu25-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2025)}
-        alueurakka {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)}]
+        alueurakka {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)}
+        paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025 true)
+        paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025 true)
+        tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025 true)
+        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025 true)]
 
     (testing "Ylläpidon urakat (validoinnista riippumatta)"
       (doseq [validoinnit? [true false]]
@@ -55,13 +59,13 @@
         "Alueurakka, validoinnit pois -> ei arvonvähennyssanktiota"))
 
 
-    (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
+    (is (= [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]
-           alueurakan-lajit)
+          hoidon-lajit-ilman-arvonvahennysta)
       "Hoidon sanktiolajit alueurakoille")
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]
-           mhu-lajit)
+          hoidon-lajit-arvonvahennyksella)
       "Hoidon sanktiolajit MH-urakoille")
     (is (= [:yllapidon_sakko :yllapidon_muistutus]
            paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
@@ -71,7 +75,13 @@
 (deftest laatupoikkeaman-mahdolliset-sanktiolajit
   (let [hoidon-lajit [:muistutus :A :B :C :arvonvahennyssanktio]
         yllapidon-lajit [:yllapidon_sakko :yllapidon_muistutus]
-        alkupvm (pvm/hoitokauden-alkupvm 2019)]
+        alkupvm (pvm/hoitokauden-alkupvm 2019)
+        alueurakan-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)} 2019 true)
+        mhu-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)} 2019 true)
+        paallystyksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paallystys :alkupvm (pvm/hoitokauden-alkupvm 2019)} 2019 true)
+        paikkauksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paikkaus :alkupvm (pvm/hoitokauden-alkupvm 2019)} 2019 true)
+        tiemerkinnan-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :tiemerkinta :alkupvm (pvm/hoitokauden-alkupvm 2019)} 2019 true)
+        valaistuksen-lajit (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :valaistus :alkupvm (pvm/hoitokauden-alkupvm 2019)} 2019 true)]
 
     (is (= [:muistutus :A :B :C :arvonvahennyssanktio]
            alueurakan-lajit mhu-lajit)

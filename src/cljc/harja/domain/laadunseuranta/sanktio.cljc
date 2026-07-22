@@ -301,6 +301,7 @@
     :puhelin "Puhelimitse"
     :kommentit "Harja-kommenttien perusteella"
     :muu "Muu tapa"
+    :ei-tiedossa "Ei tiedossa"
     nil))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]

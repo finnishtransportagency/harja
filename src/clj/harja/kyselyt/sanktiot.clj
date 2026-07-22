@@ -20,6 +20,7 @@
       ;; Muunnetaan ennen kuin ajetaan konv/alaviiva->rakenne sanktioille ja bonuksille
       ;;   -> tämä tehdään "hae-urakan-sanktiot-ja-bonukset" rajapinnassa lopuksi.
       :laatupoikkeama_paatos_kasittelytapa
+      :kasittelytapa
       :vakiofraasi
       :maaraystapa)
     (konv/decimal->double :summa :indeksikorjaus :tavoitehinnanalennus)

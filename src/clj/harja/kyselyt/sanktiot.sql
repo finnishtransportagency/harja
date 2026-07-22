@@ -2,9 +2,9 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, maarattypvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio,
+(perintapvm, maarattypvm, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio,
  maaraystapa, tehtavaryhma, tehtava, luoja, luotu)
-VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
+VALUES (:perintapvm, :maarattypvm, :kasittelytapa::laatupoikkeaman_kasittelytapa, :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
             (SELECT t.id -- suoraan annettu tpi
              FROM toimenpideinstanssi t
@@ -25,6 +25,7 @@ VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
 UPDATE sanktio
 SET perintapvm          = :perintapvm,
     maarattypvm         = :maarattypvm,
+    kasittelytapa       = :kasittelytapa::laatupoikkeaman_kasittelytapa,
     sakkoryhma          = :ryhma :: sanktiolaji,
     tyyppi              = :tyyppi,
     toimenpideinstanssi = COALESCE(
@@ -53,6 +54,7 @@ WHERE id = :id;
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.kasittelytapa,
        lp.aika                            AS laatupoikkeama_aika,
        lp.kohde                           AS laatupoikkeama_kohde,
        lp.kasittelyaika                   AS laatupoikkeama_paatos_kasittelyaika,
@@ -83,6 +85,7 @@ WHERE laatupoikkeama = :laatupoikkeama
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.kasittelytapa,
        s.maara           AS summa,
        s.sakkoryhma      AS laji,
        s.suorasanktio,
@@ -112,6 +115,7 @@ WHERE id = :id;
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.kasittelytapa,
        -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten.
        -- Huomaa, että sama käsittelyaika haetaan myös erikseen hierarkiana laatupoikkeamaa varten ja sitä käytetään lomakkeella
        -- sanktion laatupoikkeamassa.
@@ -258,7 +262,7 @@ SELECT s.id,
        s.indeksi             AS indeksi,
        TRUE                  AS suorasanktio,
        TRUE                  AS bonus,
-       lp.kasittelytapa      AS kasittelytapa,
+       s.kasittelytapa      AS kasittelytapa,
        s.toimenpideinstanssi AS toimenpideinstanssi,
        0                     AS indeksikorjaus,
        lp.perustelu          AS lisatieto,
@@ -326,6 +330,7 @@ SELECT s.id             AS id,
        s.perintapvm,
        s.indeksi,
        s.maara,
+       s.kasittelytapa,
        s.laatupoikkeama as "laatupoikkeama-id",
        s.toimenpideinstanssi,
        s.tyyppi,

@@ -2,6 +2,7 @@
   "Arvonvähennyksen lomake"
   (:require [reagent.core :refer [atom] :as r]
 
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
 
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
@@ -96,6 +97,7 @@
       [;; Tapahtumapaikka/kuvaus
        {:otsikko "Tapahtumapaikka/kuvaus"
         :tyyppi :text
+        :koko [80 1]
         :nimi :kohde
         :hae (comp :kohde :laatupoikkeama)
         :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
@@ -110,41 +112,9 @@
         ::lomake/col-luokka "col-xs-12"
         :hae (comp :perustelu :paatos :laatupoikkeama)
         :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
-        :tyyppi :text :koko [80 :auto]
+        :tyyppi :text
+        :koko [80 3]
         :validoi [[:ei-tyhja "Anna perustelu"]]}
-
-       ;; Arvonvähennys
-       {:otsikko "Arvonvähennys"
-        :nimi :summa
-        :tyyppi :euro
-        :pakollinen? true
-        :uusi-rivi? true
-        :aseta (fn [rivi arvo]
-                 (assoc rivi :summa
-                   (when arvo (- (Math/abs arvo)))))
-        :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
-                  [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
-       
-       {:otsikko "Tavoitehinnan alennus"
-        :nimi :summa
-        :tyyppi :euro
-        :pakollinen? true
-        :uusi-rivi? true
-        :muokattava? (constantly false)}
-
-       ;; Kulun kohdistus - muille kuin mhu25 urakoille näytetään aina
-       (when (not mhu25?)
-         {:otsikko "Kulun kohdistus"
-          :pakollinen? true
-          :uusi-rivi? true
-          :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
-          ::lomake/col-luokka "col-xs-8"
-          :nimi :toimenpideinstanssi
-          :tyyppi :valinta
-          :valinta-arvo :tpi_id
-          :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-          :valinnat mahdolliset-kulun-kohdistukset
-          :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
        ;; Tehtäväryhmä - Näytetään vain mhu25 urakoille
        (when mhu25?
@@ -181,6 +151,42 @@
                             :else " - valitse tehtävä -") ;; Kehotetaan valitsemaan tehtävä
           :pakollinen? (seq tehtavat)
           ::lomake/col-luokka "col-xs-6"})
+
+       ;; Kulun kohdistus - muille kuin mhu25 urakoille näytetään aina
+       (when (not mhu25?)
+         {:otsikko "Kulun kohdistus"
+          :pakollinen? true
+          :uusi-rivi? true
+          :disabled? (when (empty? @tiedot-urakka/urakan-toimenpideinstanssit) true)
+          ::lomake/col-luokka "col-xs-8"
+          :nimi :toimenpideinstanssi
+          :tyyppi :valinta
+          :valinta-arvo :tpi_id
+          :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+          :valinnat mahdolliset-kulun-kohdistukset
+          :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
+
+
+       ;; Arvonvähennys
+       {:otsikko "Arvonvähennys"
+        :nimi :summa
+        :tyyppi :euro
+        :pakollinen? true
+        :uusi-rivi? true
+        :aseta (fn [rivi arvo]
+                 (assoc rivi :summa
+                   (when arvo (- (Math/abs arvo)))))
+        :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
+                  [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
+       
+       {:otsikko "Tavoitehinnan alennus"
+        :nimi :summa
+        :tyyppi :numero
+        :pakollinen? true
+        :uusi-rivi? true
+        ;:fmt (partial fmt/euro-opt false)
+        :jos-tyhja "-"
+        :muokattava? (constantly false)}
 
        ;; Havaittu ja Määrätty päivämäärät
        (lomake/ryhma {:rivi? true}
@@ -276,8 +282,10 @@
           :vaihtoehdot [:tyomaakokous :valikatselmus]
           :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
                              :valikatselmus "Välikatselmus"}}
-         ;; MHU24 urakoiden määräystapa on alasvetovalikko
-         {:otsikko "Määräystapa" :nimi :maaraystapa :tyyppi :valinta
+         ;; MHU24 urakoilla on käsittelytapa, muttei määräystapaa
+         {:otsikko "Käsittelytapa"
+          :nimi :kasittelytapa
+          :tyyppi :valinta
           :pakollinen? true
           ::lomake/col-luokka "col-xs-6"
           :valinnat sanktio-domain/kasittelytavat
@@ -291,7 +299,7 @@
           :tyyppi :string
           :validoi [[:ei-tyhja "Anna lyhyt kuvaus käsittelytavasta."]]})
 
-       ;; Käsittelytapa (aina välikatselmus) - Tämä näytetään vain mhu25 urakoille
+       ;; Käsittelytapa tekstinä (aina välikatselmus) - Tämä näytetään vain mhu25 urakoille
        (when mhu25?
          {:otsikko "Käsittelytapa" :nimi :kasittelytapa :tyyppi :valinta
           :pakollinen? true

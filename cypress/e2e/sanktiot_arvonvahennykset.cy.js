@@ -165,6 +165,8 @@ function tallennaLomake() {
     cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaSanktio');
     cy.get(SP).contains('button', 'Tallenna').click();
     cy.wait('@tallennaSanktio', {timeout: clickTimeout});
+    cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+        .and('contain.text', 'Sanktion tallennus onnistui')
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
 }
 
@@ -263,6 +265,7 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
         cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('exist');
         cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
+        cy.get(SP).contains('.form-group', 'Käsittelytapa').should('exist');
 
         // Täytetään lomake
         kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
@@ -273,8 +276,8 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
         valitsePvm('Havaittu', havaittuPvm);
         valitsePvm('Käsitelty', maarattyPvm);
 
-        // Määräystapa on MHU24-urakalla alasvetovalikko
-        valitseEnsimmainenAlasvetoarvo('Määräystapa');
+        // Käsittelytapa on MHU24-urakalla alasvetovalikko
+        valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
 
         tallennaLomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3).should('exist');
@@ -328,19 +331,20 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
         cy.get(SP).contains('.form-group', 'Tehtävä').should('not.exist');
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
-        cy.get(SP).contains('.form-group', 'Summa').should('exist');
+        cy.get(SP).contains('.form-group', 'Sanktion suuruus').should('exist');
+        cy.get(SP).contains('.form-group', 'Käsittelytapa').should('exist');
 
         // Täytetään lomake
         valitseAlasvetoarvo('Sanktion laji', 'Arvonvähennys');
         kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
         kirjoitaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
-        kirjoitaInputkenttaan('Summa', '80');
+        kirjoitaInputkenttaan('Sanktion suuruus', '80');
         valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
 
         valitsePvm('Havaittu', havaittuPvm);
         valitsePvm('Käsitelty', maarattyPvm);
 
-        // Määräystapa on MHU24-urakalla alasvetovalikko
+        // Käsittelytapa on MHU24-urakalla alasvetovalikko
         valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
 
         tallennaLomake();
@@ -352,7 +356,7 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
 
         siirryMuokkaustilaan();
         // Myös muokkaustilassa tavoitehinta-radio näkyy, kun MHU24-tarkistus on pois käytöstä.
-        cy.get(SP).contains('label', 'Summa').should('exist');
+        cy.get(SP).contains('label', 'Sanktion suuruus').should('exist');
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
 
