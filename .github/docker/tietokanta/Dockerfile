@@ -15,6 +15,11 @@
 # https://github.com/postgis/docker-postgis
 # https://postgis.net/docs/manual-3.3/postgis_installation.html#install_requirements
 
+# -- PostgreSQL pohjaimagen versio:
+# https://hub.docker.com/_/postgres/tag
+#ARG POSTHRESQL_DOCKER_IMAGE_VERSION=postgres:15.18-bookworm
+ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:13.23-bookworm
+
 
 # -- Asennettava PostGIS-versio ja paketin MD5-hash
 # Tarkista versio ja hash: https://download.osgeo.org/postgis/source/
@@ -35,7 +40,8 @@ ARG MAVEN_SHA512="831a8591fe20c8243b1dbe7d71e3244f31d1665b0804b2e825e38cbbe5ce0c
 #------------------------------------------#
 
 # https://hub.docker.com/_/postgres/tags
-FROM postgres:15.18-bookworm AS postgis-builder
+FROM $POSTGRESQL_DOCKER_IMAGE_VERSION AS postgis-builder
+ARG POSTGRESQL_DOCKER_IMAGE_VERSION
 ARG POSTGIS_VERSION
 ARG POSTGIS_MD5
 
@@ -94,7 +100,8 @@ RUN cd postgis-${POSTGIS_VERSION} \
 #---------------------------------#
 #---- Lopullinen runtime-image ---#
 #---------------------------------#
-FROM postgres:15.18-bookworm AS final
+FROM $POSTGRESQL_DOCKER_IMAGE_VERSION AS final
+ARG POSTGRESQL_DOCKER_IMAGE_VERSION
 ARG MAVEN_VERSIO
 ARG MAVEN_SHA512
 
