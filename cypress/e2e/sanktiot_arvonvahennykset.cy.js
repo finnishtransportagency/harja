@@ -15,23 +15,28 @@ let pageloadTimeout = 30000;
 let testiArvonvahennysKuvaus1 = "CY-mhu25-tavoitehinta";    // MHU25, vaikuttaa tavoitehintaan
 let testiArvonvahennysKuvaus2 = "CY-mhu25-ei-tavoitehinta"; // MHU25, ei vaikuta tavoitehintaan
 let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
+let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
 
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
 let testiArvonvahennysPerustelu2 = "CY-perustelu2-ei-vaikuta-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
+let testiArvonvahennysPerustelu4 = "CY-perustelu4";
 
 let testiurakka1 = "Rovaniemen MHU testiurakka (1. hoitovuosi)"; // mhu25 urakka
 let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
+let testiurakka3 = "Oulun MHU 2019-2024";              // mhu19 urakka
 let evk = "Lappi";
 let evk2 = "Pohjois-Suomi";
 
 // Havaittu- ja Määrätty/Käsitelty-päivämäärät.
-// Sekä Rovaniemen (käynnissä 2025-10-01–2030-10-01) että Suomussalmen
+// Sekä Rovaniemen (käynnissä 2025-10-01–2030-10-01) että Raahen
 // (käynnissä 2024-10-01–2029-09-30) urakat ovat kuluvana vuonna (2026) käynnissä,
 // joten käytetään kuluvan hoitokauden (1.10.2025–30.9.2026) sisällä olevia päiviä.
 // HUOM: päivämäärän on oltava urakan voimassaolon sisällä, muuten pvm-valitsin hylkää sen.
 let havaittuPvm = "01.03.2026";
 let maarattyPvm = "15.03.2026";
+let havaittuPvmOulu = "01.03.2021";
+let maarattyPvmOulu = "15.03.2021";
 
 // Sivupaneelin juuri, jonka sisällä lomake renderöidään (ks. sanktiot_ja_bonukset_nakyma.cljs)
 const SP = '.ei-sulje-sivupaneelia';
@@ -119,13 +124,6 @@ function valitseEnsimmainenAlasvetoarvo(otsikko) {
     });
     cy.wait(250);
     cy.get(SP).contains('.form-group', otsikko).find('ul li a').first().click({force: true});
-}
-
-// Valitse alasvetovalikon ensimmäinen vaihtoehto data-cy:n perusteella (esim. laskutuskuukausi)
-function valitseEnsimmainenDataCyAlasveto(dataCy) {
-    cy.get('[data-cy=' + dataCy + ']').find('button').click();
-    cy.wait(250);
-    cy.get('[data-cy=' + dataCy + ']').find('ul li a').first().click({force: true});
 }
 
 // Valitse radio-painike sen näkyvän tekstin perusteella
@@ -240,7 +238,7 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
 // --- Testit: MHU24-urakka (Suomussalmi) vuonna 2026 ---
 
-describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käytöstä', () => {
+describe('Arvonvähennykset - Raahen MHU24-urakka, validointi pois käytöstä - eli uusi lomake', () => {
 
     before(() => {
         siivoaKanta(testiArvonvahennysKuvaus3);
@@ -253,25 +251,93 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi pois käyt�
         asetaArvonvahennysValidointiKayttoon(true);
     });
 
-    it('Lomakkeella näkyy tavoitehinta-valinta, mutta ei tehtäväryhmä/tehtävä -valikoita', () => {
+    it('Tarkista lomakkeen tiedot', () => {
         avaaSanktiotJaBonukset(testiurakka2, evk2);
         avaaUusiArvonvahennys();
 
-        // MHU24-urakalla ei silti näytetä tehtäväryhmää eikä tehtävää,
+        // MHU24-urakalla ei silti näytetä tehtäväryhmää eikä tehtävää, eikä mhu24 näytetä indeksiä
         // vaan Kulun kohdistus ja Laskutuskuukausi ovat näkyvissä.
+        cy.get(SP).contains('.form-group', 'Indeksi').should('not.exist');
         cy.get(SP).contains('.form-group', 'Tehtäväryhmä').should('not.exist');
         cy.get(SP).contains('.form-group', 'Tehtävä').should('not.exist');
+
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
         cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('exist');
         cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
         cy.get(SP).contains('.form-group', 'Käsittelytapa').should('exist');
+        cy.get(SP).contains('.form-group', 'Havaittu').should('exist');
+        cy.get(SP).contains('.form-group', 'Käsitelty').should('exist');
 
         // Täytetään lomake
         kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
         kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
         kirjoitaInputkenttaan('Arvonvähennys', '80');
         valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
+
+        valitsePvm('Havaittu', havaittuPvm);
+        valitsePvm('Käsitelty', maarattyPvm);
+
+        // Käsittelytapa on MHU24-urakalla alasvetovalikko
+        valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
+
+        tallennaLomake();
+        cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3).should('exist');
+
+        // Avaa ja muokkaa
+        avaaTallennettu(testiArvonvahennysKuvaus3);
+        cy.get(SP).contains(testiArvonvahennysKuvaus3).should('exist');
+
+        siirryMuokkaustilaan();
+
+        cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
+        cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
+
+        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
+        tallennaLomake();
+        cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3 + ' muokattu').should('exist');
+    });
+
+
+});
+
+describe('Arvonvähennykset - Oulun MHU19-urakka, validointi pois käytöstä - eli uusi lomake', () => {
+
+    before(() => {
+        siivoaKanta(testiArvonvahennysKuvaus4);
+        // Otetaan MHU24-tarkistus pois käytöstä.
+        asetaArvonvahennysValidointiKayttoon(false);
+    });
+
+    after(() => {
+        // Palautetaan asetus testin jälkeen oletustilaan, ettei testi jätä ympäristöä muutettuun tilaan.
+        asetaArvonvahennysValidointiKayttoon(true);
+    });
+
+    it('Tarkista lomakkeen tiedot', () => {
+        avaaSanktiotJaBonukset(testiurakka3, evk2);
+        avaaUusiArvonvahennys();
+
+        // MHU24-urakalla ei silti näytetä tehtäväryhmää eikä tehtävää, eikä tavoitehinnan alennus
+        // vaan Kulun kohdistus, Laskutuskuukausi ja indeksi ovat näkyvissä.
+        cy.get(SP).contains('.form-group', 'Tehtäväryhmä').should('not.exist');
+        cy.get(SP).contains('.form-group', 'Tehtävä').should('not.exist');
+        cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('not.exist');
+
+        cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
+        cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
+        cy.get(SP).contains('.form-group', 'Indeksi').should('exist');
+        cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
+        cy.get(SP).contains('.form-group', 'Käsittelytapa').should('exist');
+        cy.get(SP).contains('.form-group', 'Havaittu').should('exist');
+        cy.get(SP).contains('.form-group', 'Käsitelty').should('exist');
+
+        // Täytetään lomake
+        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
+        kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
+        kirjoitaInputkenttaan('Arvonvähennys', '80');
+        valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
+        valitseEnsimmainenAlasvetoarvo('Indeksi');
 
         valitsePvm('Havaittu', havaittuPvm);
         valitsePvm('Käsitelty', maarattyPvm);

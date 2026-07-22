@@ -36,6 +36,8 @@
         muokataan-vanhaa? (some? (:id @muokattu))
         tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         tehtavaryhmat (:tehtavaryhmat app)
         ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
@@ -167,26 +169,41 @@
           :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]})
 
 
-       ;; Arvonvähennys
-       {:otsikko "Arvonvähennys"
-        :nimi :summa
-        :tyyppi :euro
-        :pakollinen? true
-        :uusi-rivi? true
-        :aseta (fn [rivi arvo]
-                 (assoc rivi :summa
-                   (when arvo (- (Math/abs arvo)))))
-        :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
-                  [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
-       
-       {:otsikko "Tavoitehinnan alennus"
-        :nimi :summa
-        :tyyppi :numero
-        :pakollinen? true
-        :uusi-rivi? true
-        ;:fmt (partial fmt/euro-opt false)
-        :jos-tyhja "-"
-        :muokattava? (constantly false)}
+       ;; Arvonvähennys (ja mahdollinen indeksi)
+       (lomake/ryhma {:rivi? true}
+        {:otsikko "Arvonvähennys"
+         :nimi :summa
+         :tyyppi :euro
+         :pakollinen? true
+         :uusi-rivi? true
+         :aseta (fn [rivi arvo]
+                  (assoc rivi :summa
+                    (when arvo (- (Math/abs arvo)))))
+         :validoi [[:ei-tyhja "Anna vähennyksen määrä"]
+                   [:rajattu-numero -9999999 0 "Anna arvo väliltä 0 - -9 999 999"]]}
+
+         (when (and (<= urakan-alkuvuosi 2020) (sanktio-domain/muu-kuin-muistutus? @muokattu))
+           {:otsikko (str "Indeksi") :nimi :indeksi
+            :tyyppi :valinta
+            ::lomake/col-luokka "col-xs-4"
+            :muokattava? (constantly (not lukutila?))
+            :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
+            :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
+            :valinnat (if (and (tiedot-urakka/indeksi-kaytossa-sakoissa?) (not (nil? (:indeksi @nav/valittu-urakka))))
+                        [(:indeksi @nav/valittu-urakka) nil]
+                        [nil])
+            :valinta-nayta #(or % "Ei indeksiä")}))
+
+       ;; Tavoitehinnan alennusta ei näytetä 19-20 urakoille
+       (when (>= urakan-alkuvuosi 2021)
+         {:otsikko "Tavoitehinnan alennus"
+              :nimi :summa
+              :tyyppi :numero
+              :pakollinen? true
+              :uusi-rivi? true
+              ;:fmt (partial fmt/euro-opt false)
+              :jos-tyhja "-"
+              :muokattava? (constantly false)})
 
        ;; Havaittu ja Määrätty päivämäärät
        (lomake/ryhma {:rivi? true}
