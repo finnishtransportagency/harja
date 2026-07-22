@@ -79,7 +79,7 @@
   [profiilit konteksti]
   (vaadi-yksiselitteinen-bonus-profiili* profiilit konteksti heita-illegal-argument!))
 
-(defn- vaadi-profiililla-rivit*
+(defn- vaadi-profiililla-rivit
   [profiili toimenpideinstanssi-id rivit virhe-heittaja!]
   (when-not (seq rivit)
     (virhe-heittaja!
@@ -90,10 +90,6 @@
        :toimenpideinstanssi-id toimenpideinstanssi-id}))
 
   rivit)
-
-(defn- vaadi-profiililla-rivit
-  [profiili toimenpideinstanssi-id rivit]
-  (vaadi-profiililla-rivit* profiili toimenpideinstanssi-id rivit heita-illegal-argument!))
 
 (defn- bonus-lajin-nayttonimi
   [rivit]
@@ -145,12 +141,11 @@
                       :hoitovuosi hoitovuosi})
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi})
-        rivit (->> (q/hae-bonus-profiilin-rivit
-                     db
-                     {:bonus_profiili_id (:id profiili)
-                      :urakka_id urakka-id
-                      :toimenpideinstanssi_id toimenpideinstanssi-id})
-                (vaadi-profiililla-rivit profiili toimenpideinstanssi-id))]
+        rivit (q/hae-bonus-profiilin-rivit
+                db
+                {:bonus_profiili_id (:id profiili)
+                 :urakka_id urakka-id
+                 :toimenpideinstanssi_id toimenpideinstanssi-id})]
     (when (empty? rivit)
       (log/warn "Bonus-profiililta" (:nimi profiili)
         "ei löytynyt rivejä toimenpideinstanssille" toimenpideinstanssi-id
@@ -169,7 +164,7 @@
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi}
                    heita-bonus-kirjausvirhe!)
-        rivit (vaadi-profiililla-rivit*
+        rivit (vaadi-profiililla-rivit
                 profiili
                 toimenpideinstanssi-id
                 (q/hae-bonus-profiilin-rivit
@@ -192,7 +187,7 @@
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi}
                    heita-bonus-kirjausvirhe!)
-        rivit (vaadi-profiililla-rivit*
+        rivit (vaadi-profiililla-rivit
                 profiili
                 toimenpideinstanssi-id
                 (q/hae-bonus-profiilin-rivit
