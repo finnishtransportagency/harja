@@ -632,11 +632,11 @@ jobs:
           java -cp :harja-0.0.1-SNAPSHOT-standalone.jar harja.palvelin.main > harja.out 2>&1 &
           javapid=$!
           
-          for i in $(seq 4); do
+          for i in $(seq 12); do
             curl localhost:3000 > /dev/null 2>&1 && break
             if kill -0 $javapid; then
-              echo "Harja ei ole vielä käynnissä, odotetaan 10 sec..."
-              sleep 10
+              echo "Harja ei ole vielä käynnissä, odotetaan 3 sec..."
+              sleep 3
             else
               echo "Harja ei käynnisty. Lopetetaan..."
               cat harja.out
