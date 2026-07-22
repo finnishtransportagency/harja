@@ -154,7 +154,6 @@
                    (map #(assoc % :bonus? true))
                    urakan-bonukset)
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
-        _ (println "urakan-sanktiot" urakan-sanktiot)
         sanktiot-ja-bonukset (into []
                                (map konv/alaviiva->rakenne
                                  (concat
