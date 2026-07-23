@@ -132,7 +132,12 @@
                      (e! (arvonvahennys-tiedot/->HaeTehtavaryhmanTehtavat (:tehtavaryhma valittu))))
                    (-> rivi
                      (assoc :tehtavaryhma valittu)
-                     (assoc :tehtava nil)))
+                     (assoc :tehtava nil)
+                     ;; Aseta toimenpideinstanssi tehtäväryhmän perusteella
+                      (assoc :toimenpideinstanssi
+                        (when (and valittu (:tehtavaryhma valittu))
+                          (some #(when (= (:id %) (:tehtavaryhma_toimenpide_id valittu)) (:tpi_id %))
+                            @tiedot-urakka/urakan-toimenpideinstanssit)))))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-6"
           :validoi [[:ei-tyhja "Valitse tehtäväryhmä"]]})
