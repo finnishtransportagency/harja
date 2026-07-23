@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -233,7 +233,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@0d95c9a7becc1e6e297d76df9bc735c44f4cbcbc # v3.0.5
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
