@@ -43,7 +43,7 @@
   [hoitokaudet]
   (mapv (fn [{:keys [alkupvm loppupvm]}]
           [alkupvm loppupvm])
-        hoitokaudet))
+    hoitokaudet))
 
 (defn heita-virhe [viesti]
   (throw+ viesti))
@@ -115,7 +115,16 @@
 
         ;; 2025 vuodesta eteenpäin on käytössä vuosittaiset muutoset/pysyvät muutokset
         muutosvaikutus (if (>= 2024 urakan-alkuvuosi) 0 taman-vuoden-muutokset-summa)
-        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0) muutosvaikutus)]
+
+        ;; Urakan alkuvuodesta 2025 eteenpäin myös arvonvähennykset vaikuttavat tavoiteintaan. Ja -26 hoitovuodesta eteenpäin myös vanhemmilla urakoilla
+        ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
+        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
+                                                                   :alkupvm (first valittu-hoitokausi)
+                                                                   :loppupvm (second valittu-hoitokausi)})
+        arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
+                                                            muutosvaikutus
+                                                            arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
     (bigdec (round2 2 hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta))))
 
@@ -270,6 +279,10 @@
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm})
+        ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
+        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
+                                                                   :alkupvm hoitokauden-alkupvm
+                                                                   :loppupvm hoitokauden-loppupvm})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
@@ -309,6 +322,7 @@
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
                               :sanktiot sanktiot
+                              :arvonvahennykset arvonvahennykset
                               :budjettitavoite budjettitavoite-vuodelle
                               :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
                  :paatokset paatokset

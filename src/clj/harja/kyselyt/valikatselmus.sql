@@ -120,13 +120,47 @@ SELECT e.rahasumma, e.tyyppi
    AND e.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
 
 -- name: hae-sanktiot
-SELECT s.maara,
+WITH urakan_tiedot AS (
+    SELECT u.id,
+           EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+    FROM urakka u
+    WHERE u.id = :urakka-id
+),
+jarjestelman_asetukset_tieto AS (
+    SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
+    FROM jarjestelman_asetukset ja
+)
+SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
        s.sakkoryhma,
-       (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka-id::INT, s.sakkoryhma)) AS indeksikorjaus
+       (SELECT korotus * -1 FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka-id::INT, s.sakkoryhma)) AS indeksikorjaus
   FROM sanktio s
            JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+           CROSS JOIN urakan_tiedot u
+           CROSS JOIN jarjestelman_asetukset_tieto ja
  WHERE s.poistettu IS NOT TRUE
-   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
+   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND ja.arvonvahennys_validoinnit_kaytossa IS TRUE));
+
+-- name: hae-arvonvahennykset
+WITH urakan_tiedot AS (
+    SELECT u.id,
+           EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+    FROM urakka u
+    WHERE u.id = :urakka-id
+),
+jarjestelman_asetukset_tieto AS (
+    SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
+    FROM jarjestelman_asetukset ja
+)
+SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
+       s.sakkoryhma
+  FROM sanktio s
+           JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+           CROSS JOIN urakan_tiedot u
+           CROSS JOIN jarjestelman_asetukset_tieto ja
+ WHERE s.poistettu IS NOT TRUE
+   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR ja.arvonvahennys_validoinnit_kaytossa IS FALSE));
 
 -- name: hae-tavoitehinnan-muutokset-hoitokaudelle
 select id, "urakka-id", otsikko, selite, summa
