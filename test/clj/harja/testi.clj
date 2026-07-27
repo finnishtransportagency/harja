@@ -1987,24 +1987,26 @@
 (defn lisaa-suorasanktio-urakalle
   "Anna sakkoryhma (esim: 'A','C', 'arvonvahennyssanktio', 'vaihtosanktio'
   Anna määrä integerina (Esim 5)
-  pvm on perintäpäivämäärä - esim 2025-12-12
+  pvm on perintäpäivämäärä tekstinä - esim 2025-12-12
   urakka-id on urakan id - integer
   tpi on toimenpideinstanssi, jolle sanktio laitetaan, anna integer.
   sanktiotyyppi taulusta id,
   tehtavaryhma-id on arvonvähennyksille sopiva tehtäväryhmä, integer - ei ole pakko antaa,
   tehtava-id on arvonvähennyksille sopiva tehtävä, integer - ei ole pakko antaa"
-  [maara sakkoryhma pvm urakka-id tpi sanktiotyyppi-id tehtavaryhma-id tehtava-id]
+  [maara sakkoryhma pvm-str urakka-id tpi sanktiotyyppi-id tehtavaryhma-id tehtava-id]
   (let [;; Lisätään ensin laatupoikkeama, jotta voidaan lisätä sanktio
-        aika (pvm/iso-8601->pvm pvm)
+        aika (pvm/iso-8601->pvm pvm-str)
         laatupoikkeama-id (i (format "INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, paatos, perustelu, luotu, aika,
         kasittelyaika, urakka, lahde)
         VALUES ('xx', 'tilaaja','puhelin','sanktio', 'xx', now(), '%s', '%s', %s, 'harja-ui');"
                                aika aika urakka-id))
 
+        _ (println "insert sanktio:: " maara pvm-str laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma tehtavaryhma-id tehtava-id)
+
         sanktio_id (i (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
         luotu, sakkoryhma, tehtavaryhma, tehtava)
         VALUES (%s, '%s', %s, %s, %s, true, now(), '%s', %s, %s);"
-                        maara pvm laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma tehtavaryhma-id tehtava-id))]))
+                        maara pvm-str laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma tehtavaryhma-id tehtava-id))]))
 
 (defn lahes-sama?
   "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.
