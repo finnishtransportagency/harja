@@ -131,16 +131,18 @@
     :avain_hoitokausi :lisatyot_hoitokausi_yht}])
 
 
-(def ^:private tavoitehintaan-vaikuttavat-rivit
+(defn- tavoitehintaan-vaikuttavat-rivit [hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?]
   [{:lihavoi? false
     :otsikko "Muut tavoitehintaan vaikuttavat kulut"
     :avain_yht :muut_kulut_val_aika
     :avain_hoitokausi :muut_kulut_hoitokausi}
 
-   {:lihavoi? false
-    :otsikko "Arvonvähennykset"
-    :avain_yht :arvonvahennykset_val_aika_yht
-    :avain_hoitokausi :arvonvahennykset_hoitokausi_yht}
+   ;; Saadaan näyttää, jos urakka alkaa 2025 tai aiemmillekin urakoille, mutta vasta -26 hoitovuonna, tai jos validointi on pois käytöstä
+   (when (or (>= urakan-alkuvuosi 2025) (>= hoitokauden-alkuvuosi 2026) (not av-validointi?))
+     {:lihavoi? false
+      :otsikko "Arvonvähennykset"
+      :avain_yht :arvonvahennykset_val_aika_yht
+      :avain_hoitokausi :arvonvahennykset_hoitokausi_yht})
 
    {:lihavoi? true
     :yhteensa? true
@@ -264,7 +266,8 @@
 
 (defn taulukko-tyomaakokous
   [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti
-           kyseessa-kk-vali? sheet-nimi tavoitehintainen?]}]
+           kyseessa-kk-vali? sheet-nimi tavoitehintainen?
+           hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?]}]
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
@@ -300,7 +303,7 @@
                 (and
                   tavoitehintainen?
                   (= "Muut tavoitehintaan vaikuttavat kulut" otsikko))
-                (tee-taulukko-rivit data kyseessa-kk-vali? tavoitehintaan-vaikuttavat-rivit))]
+                (tee-taulukko-rivit data kyseessa-kk-vali? (tavoitehintaan-vaikuttavat-rivit hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?)))]
 
     [:taulukko {:sheet-nimi sheet-nimi
                 :viimeinen-rivi-yhteenveto? false
