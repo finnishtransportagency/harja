@@ -6,11 +6,14 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.tyokalut.functor :refer [fmap]]
+
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
-            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
+            [harja.kyselyt.jarjestelman-tila :as jarjestelmatila-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
-            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
+
+            [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
+            [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :as taulukot]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-tuotekohtainen :as apurit]))
@@ -152,7 +155,10 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id aikarajaus valittu-kk] :as parametrit}]
   (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
-  (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        av-validointi? (:arvonvahennys_validoinnit_kaytossa (first (jarjestelmatila-q/hae-jarjestelman-asetukset db)))
+        kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
         ;; Aina jos valittuna koko vuosi / vuoden kuukausi, näytetään vain yksi sarake source: trust me bro
@@ -292,7 +298,8 @@
                                                   :laskutettu-teksti laskutettu-teksti
                                                   :laskutetaan-teksti laskutetaan-teksti
                                                   :kyseessa-kk-vali? kyseessa-kk-vali?
-                                                  :alkupvm alkupvm}))))
+                                                  :alkupvm alkupvm}
+                   hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?))))
 
      (when-not
        (boolean kustannussuunnitelma-vahvistettu?)
