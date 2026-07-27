@@ -331,7 +331,7 @@
         ;; Hae hallinnolliset laiminlyönnit sanktiotyypin id
         sanktiotyyppi-id (:id (first (q-map (format "SELECT id FROM sanktiotyyppi st WHERE st.nimi = '%s';"
                                               "Hallinnolliset laiminlyönnit"))))
-        _ (lisaa-sanktio-urakalle 12 "C" alkuaika urakka-id (:id korvausinvestointi) sanktiotyyppi-id)
+        _ (lisaa-suorasanktio-urakalle 12 "C" alkuaika urakka-id (:id korvausinvestointi) sanktiotyyppi-id)
 
 
         _ (when (= (empty? @oulun-mhu-urakka-2022-2023))

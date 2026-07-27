@@ -1,6 +1,8 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmus-test
   (:require [clojure.test :refer :all]
+            [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.urakka :as urakka]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -10,9 +12,7 @@
             [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
-            [harja.tyokalut.yleiset :refer [round2]]
-            [harja.pvm :as pvm]
-            [harja.testi :refer :all])
+            [harja.tyokalut.yleiset :refer [round2]])
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
 
