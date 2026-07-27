@@ -110,7 +110,7 @@
           _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi = %s AND perintapvm = '%s'::DATE"
                  hallinnolliset-toimenpiteet-tpi-id testipvm))
           _ (lisaa-suorasanktio-urakalle sanktiomaara "vaihtosanktio" testipvm urakka-id
-               hallinnolliset-toimenpiteet-tpi-id sanktiotyyppi-id)
+               hallinnolliset-toimenpiteet-tpi-id sanktiotyyppi-id nil nil)
 
           tiedot (lyv-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
                    (:db jarjestelma)
@@ -147,9 +147,9 @@
           _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi = %s AND perintapvm = '%s'::DATE"
                  hallinnolliset-toimenpiteet-tpi-id testipvm))
           _ (lisaa-suorasanktio-urakalle sanktiomaara "vaihtosanktio" testipvm urakka-id
-               hallinnolliset-toimenpiteet-tpi-id sanktiotyyppi-id)
+               hallinnolliset-toimenpiteet-tpi-id sanktiotyyppi-id nil nil)
           _ (lisaa-suorasanktio-urakalle arvonvahennysmaara "arvonvahennyssanktio" testipvm urakka-id
-               hallinnolliset-toimenpiteet-tpi-id sanktiotyyppi-id)
+               hallinnolliset-toimenpiteet-tpi-id sanktiotyyppi-id nil nil)
 
           tiedot (lyv-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
                    (:db jarjestelma)
