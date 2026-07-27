@@ -2000,9 +2000,6 @@
         kasittelyaika, urakka, lahde)
         VALUES ('xx', 'tilaaja','puhelin','sanktio', 'xx', now(), '%s', '%s', %s, 'harja-ui');"
                                aika aika urakka-id))
-
-        _ (println "insert sanktio:: " maara pvm-str laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma tehtavaryhma-id tehtava-id)
-
         sanktio_id (i (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
         luotu, sakkoryhma, tehtavaryhma, tehtava)
         VALUES (%s, '%s', %s, %s, %s, true, now(), '%s', %s, %s);"

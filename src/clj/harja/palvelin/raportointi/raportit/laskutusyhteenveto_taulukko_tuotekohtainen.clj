@@ -13,6 +13,11 @@
     :avain_hoitokausi :hankinnat_laskutettu}
 
    {:lihavoi? false
+    :otsikko "Arvonvähennykset"
+    :avain_yht :arvonvahennykset_laskutetaan
+    :avain_hoitokausi :arvonvahennykset_laskutettu}
+
+   {:lihavoi? false
     :otsikko "Lisätyöt"
     :avain_yht :lisatyot_laskutetaan
     :avain_hoitokausi :lisatyot_laskutettu}

@@ -190,7 +190,7 @@
           talvisuola-b (first (filter #(= (:tehtavaryhma_nimi %) "B1 - Talvisuola") kaikki-tehtavaryhmat))
           tehtavaryhman-tehtava (first (tehtavamaarat-kyselyt/tehtavaryhman-tehtavat-urakalle (:db jarjestelma)
                                    {:urakka-id urakka-id
-                                    :tehtavaryhma-id (:id talvisuola-b)
+                                    :tehtavaryhma-id (:tehtavaryhma talvisuola-b)
                                     :urakan-alkuvuosi urakan-alkuvuosi}))
           ;; HAetaan toimenpideinstanssi toimenpid_id:llä
           tehtavaryhman-tpi (:id (first (q-map (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s AND toimenpide = %s" urakka-id (:tehtavaryhma_toimenpide_id talvisuola-b)))))
@@ -200,7 +200,7 @@
           _ (lisaa-suorasanktio-urakalle sanktiomaara "vaihtosanktio" testipvm urakka-id
               hallinnollinen-tpi-id styyppi-laiminlyonti-id nil nil)
           _ (lisaa-suorasanktio-urakalle arvonvahennysmaara "arvonvahennyssanktio" testipvm urakka-id
-              tehtavaryhman-tpi styyppi-arvonvah-id (:id talvisuola-b) (:id tehtavaryhman-tehtava))
+              tehtavaryhman-tpi styyppi-arvonvah-id (:tehtavaryhma talvisuola-b) (:id tehtavaryhman-tehtava))
           tuotekohtainen-laskutusyhteenveto
           (laskutus-q/hae-laskutusyhteenvedon-tiedot-tuotekohtainen (:db jarjestelma)
             {:urakka (int urakka-id)

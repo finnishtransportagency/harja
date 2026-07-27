@@ -137,6 +137,11 @@
     :avain_yht :muut_kulut_val_aika
     :avain_hoitokausi :muut_kulut_hoitokausi}
 
+   {:lihavoi? false
+    :otsikko "Arvonvähennykset"
+    :avain_yht :arvonvahennykset_val_aika_yht
+    :avain_hoitokausi :arvonvahennykset_hoitokausi_yht}
+
    {:lihavoi? true
     :yhteensa? true
     :otsikko "Yhteensä"
