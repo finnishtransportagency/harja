@@ -8,19 +8,31 @@
 //
 // HUOM! Lomakkeen logiikka: src/cljs/harja/views/urakka/laadunseuranta/arvonvahennys_lomake.cljs
 
-// Asetuksia
-let clickTimeout = 12000;
-let pageloadTimeout = 30000;
+import {
+    clickTimeout,
+    SP,
+    siivoaTietokannastaSanktiot,
+    avaaSanktiotJaBonukset,
+    avaaUusiArvonvahennys,
+    kirjoitaSivupaneelissaTekstikenttaan,
+    kirjoitaSivupaneelissaInputkenttaan,
+    valitseSivupaneelissaAlasvetoarvo,
+    valitseSivupaneelissaEnsimmainenAlasvetoarvo,
+    valitseSivupaneelissaRadio,
+    valitseSivupaneelissaPvm,
+    tallennaSuorasanktiolomake,
+    avaaSivupaneelissaTallennettu,
+    siirrySivupaneelissaMuokkaustilaan
+} from '../support/apurit';
 
+// Asetuksia
 let testiArvonvahennysKuvaus1 = "CY-mhu25-tavoitehinta";    // MHU25, vaikuttaa tavoitehintaan
 let testiArvonvahennysKuvaus2 = "CY-mhu25-ei-tavoitehinta"; // MHU25, ei vaikuta tavoitehintaan
 let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
 let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
 
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
-let testiArvonvahennysPerustelu2 = "CY-perustelu2-ei-vaikuta-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
-let testiArvonvahennysPerustelu4 = "CY-perustelu4";
 
 let testiurakka1 = "Rovaniemen MHU testiurakka (1. hoitovuosi)"; // mhu25 urakka
 let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
@@ -35,21 +47,7 @@ let evk2 = "Pohjois-Suomi";
 // HUOM: päivämäärän on oltava urakan voimassaolon sisällä, muuten pvm-valitsin hylkää sen.
 let havaittuPvm = "01.03.2026";
 let maarattyPvm = "15.03.2026";
-let havaittuPvmOulu = "01.03.2021";
-let maarattyPvmOulu = "15.03.2021";
 
-// Sivupaneelin juuri, jonka sisällä lomake renderöidään (ks. sanktiot_ja_bonukset_nakyma.cljs)
-const SP = '.ei-sulje-sivupaneelia';
-
-// Helper: siivoa testidatan sanktiot kannasta
-function siivoaKanta(kohde) {
-    cy.terminaaliKomento().then((terminaaliKomento) => {
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE lp.kohde = '" + kohde + "');\"");
-        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM laatupoikkeama WHERE kohde = '" + kohde + "';\"");
-    });
-}
 
 // Helper: hallitse arvonvähennyslomakkeen MHU24-tarkistusta tietokanta-asetuksella.
 // true  = validointi käytössä, eli MHU24-urakalla tavoitehinnan valintaa ei näytetä vielä 2026
@@ -64,128 +62,14 @@ function asetaArvonvahennysValidointiKayttoon(kaytossa) {
     });
 }
 
-// Helper: navigoi sanktiot ja bonukset -näkymään
-let avaaSanktiotJaBonukset = function (urakkaNimi, urakkaEvk) {
-    cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot')
-
-    cy.viewport(1400, 1400)
-    cy.visit("/")
-
-    cy.contains('.haku-lista-item', urakkaEvk).click()
-    cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-    cy.get('[data-cy=murupolku-urakkatyyppi]').find('button').click()
-    cy.wait(250); // Pudotusvalikko re-renderöityy avattaessa
-    cy.get('[data-cy=murupolku-urakkatyyppi]').contains('ul li a', 'Hoito').click({force: true})
-    cy.contains('Näytä päättyneet').click();
-    cy.wait(250); // Toimii varmemmin, kun ei ole niin kiire
-    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
-    cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
-    cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
-    cy.wait('@sanktiot', {timeout: clickTimeout})
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
-}
-
-// --- Lomakkeen apufunktiot ---
-
-// Avaa uusi arvonvähennyslomake sivupaneeliin
-function avaaUusiArvonvahennys() {
-    cy.contains('.lisaa-nappi', 'Lisää uusi').click();
-    cy.get(SP, {timeout: clickTimeout}).should('be.visible');
-    // Sivupaneeli avautuu oletuksena sanktiolomakkeelle -> valitaan "Arvonvähennys"
-    cy.get(SP).contains('label', 'Arvonvähennys').click();
-}
-
-// Kirjoita :text-tyyppiseen kenttään (textarea) otsikon perusteella
-function kirjoitaTekstikenttaan(otsikko, teksti) {
-    cy.get(SP).contains('.form-group', otsikko).should('exist');
-    cy.get(SP).contains('.form-group', otsikko).find('textarea').first().clear();
-    cy.get(SP).contains('.form-group', otsikko).find('textarea').first().type(teksti);
-}
-
-// Kirjoita :euro-/:string-tyyppiseen input-kenttään otsikon perusteella
-function kirjoitaInputkenttaan(otsikko, arvo) {
-    cy.get(SP).contains('.form-group', otsikko).find('input').first().clear();
-    cy.get(SP).contains('.form-group', otsikko).find('input').first().type(arvo);
-}
-
-// Valitse alasvetovalikosta arvo näkyvän tekstin perusteella (otsikon perusteella löydetty kenttä)
-function valitseAlasvetoarvo(otsikko, arvoTeksti) {
-    cy.get(SP).contains('.form-group', otsikko).within(() => {
-        cy.get('button').first().click();
-    });
-    cy.wait(250); // Lista re-renderöityy, annetaan sen asettua
-    cy.get(SP).contains('.form-group', otsikko).contains('ul li a', arvoTeksti).click({force: true});
-}
-
-// Valitse alasvetovalikon ensimmäinen oikea vaihtoehto (kun arvo on datariippuvainen)
-function valitseEnsimmainenAlasvetoarvo(otsikko) {
-    cy.get(SP).contains('.form-group', otsikko).within(() => {
-        cy.get('button').first().click();
-    });
-    cy.wait(250);
-    cy.get(SP).contains('.form-group', otsikko).find('ul li a').first().click({force: true});
-}
-
-// Valitse radio-painike sen näkyvän tekstin perusteella
-function valitseRadio(teksti) {
-    // Vayla-radio renderöityy muodossa: input.vayla-radio + label[for=input-id].
-    // Valitaan varsinainen radio-input labelin for-attribuutin kautta, koska pelkkä
-    // labelin klikkaus ei ole tässä komponentissa aina luotettava Cypressissä.
-    cy.get(SP).contains('label', teksti).then(($label) => {
-        let inputId = $label.attr('for');
-        expect(inputId, 'radio-labelilla pitää olla for-attribuutti').to.exist;
-
-        cy.get(SP).find('input[type="radio"][id="' + inputId + '"]').as('radioKentta');
-        cy.get('@radioKentta').check({force: true});
-        cy.get('@radioKentta').should('be.checked');
-    });
-}
-
-// Valitse päivämäärä :pvm-kenttään otsikon perusteella
-function valitsePvm(otsikko, pvm) {
-    // Päivämääräkentät ovat lomakkeella ryhmässä, joten haetaan input nimenomaan labelin kautta.
-    // Kenttä on :pvm, joten arvo annetaan muodossa "p.k.vvvv" ilman kellonaikaa.
-    cy.get(SP).find('label').contains(otsikko)
-        .parents('.form-group').first()
-        .find('input').first()
-        .as('pvmKentta');
-
-    cy.get('@pvmKentta').clear().type(pvm);
-    cy.get('@pvmKentta').should('have.value', pvm);
-
-    // Päivämääräpopup jää muuten helposti auki seuraavien kenttien päälle.
-    // Suljetaan se siirtämällä fokus ja klikkaamalla labelia
-    cy.get(SP).find('label').contains(otsikko).click({force: true});
-}
-
-// Tallenna lomake ja odota tallennuskutsua
-function tallennaLomake() {
-    cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaSanktio');
-    cy.get(SP).contains('button', 'Tallenna').click();
-    cy.wait('@tallennaSanktio', {timeout: clickTimeout});
-    cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
-        .and('contain.text', 'Sanktion tallennus onnistui')
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
-}
-
-// Avaa listalta tallennettu arvonvähennys (lukutilaan) kuvauksen perusteella
-function avaaTallennettu(kuvaus) {
-    cy.get('.sanktiot').contains('td', kuvaus, {timeout: clickTimeout}).click();
-    cy.get(SP, {timeout: clickTimeout}).should('be.visible');
-}
-
-// Siirry lukutilasta muokkaustilaan
-function siirryMuokkaustilaan() {
-    cy.get(SP).contains('button', 'Muokkaa').click();
-}
 
 // --- Testit: MHU25-urakka (Rovaniemi) ---
 
 describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
     before(() => {
-        siivoaKanta(testiArvonvahennysKuvaus1);
-        siivoaKanta(testiArvonvahennysKuvaus2);
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus1);
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus2);
     });
 
     it('Arvonvähennys mhu25 urakalle', () => {
@@ -193,28 +77,28 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         avaaUusiArvonvahennys();
 
         // Perustiedot
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1);
-        kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu1);
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1);
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu1);
 
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('not.exist');
 
-        kirjoitaInputkenttaan('Arvonvähennys', '200');
+        kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '200');
 
         // Tehtäväryhmän valinta laukaisee tehtävien haun
         cy.intercept('POST', '_/hae-tehtavaryhman-tehtavat-urakalle').as('haeTehtavat');
-        valitseEnsimmainenAlasvetoarvo('Tehtäväryhmä');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtäväryhmä');
         cy.wait('@haeTehtavat', {timeout: clickTimeout});
         // HUOM: testidatan tehtäväryhmällä tulee olla tehtäviä, jotta tehtävä on valittavissa
-        valitseEnsimmainenAlasvetoarvo('Tehtävä');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtävä');
 
         // Päivämäärät
-        valitsePvm('Havaittu', havaittuPvm);
-        valitsePvm('Määrätty', maarattyPvm);
+        valitseSivupaneelissaPvm('Havaittu', havaittuPvm);
+        valitseSivupaneelissaPvm('Määrätty', maarattyPvm);
 
         // Määräystapa ja käsittelytapa
-        valitseRadio('Työmaakokous');
+        valitseSivupaneelissaRadio('Työmaakokous');
 
-        tallennaLomake();
+        tallennaSuorasanktiolomake();
 
         // Tallennus näkyy listalla
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1).should('exist');
@@ -223,13 +107,13 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
 
         // Avataan tallennettu lukutilassa ja tarkistetaan tiedot
-        avaaTallennettu(testiArvonvahennysKuvaus1);
+        avaaSivupaneelissaTallennettu(testiArvonvahennysKuvaus1);
         cy.get(SP).contains(testiArvonvahennysKuvaus1).should('exist');
 
         // Muokataan kuvausta
-        siirryMuokkaustilaan();
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1 + ' muokattu');
-        tallennaLomake();
+        siirrySivupaneelissaMuokkaustilaan();
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1 + ' muokattu');
+        tallennaSuorasanktiolomake();
 
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1 + ' muokattu').should('exist');
     });
@@ -241,7 +125,7 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 describe('Arvonvähennykset - Raahen MHU24-urakka, validointi pois käytöstä - eli uusi lomake', () => {
 
     before(() => {
-        siivoaKanta(testiArvonvahennysKuvaus3);
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus3);
         // Otetaan MHU24-tarkistus pois käytöstä.
         asetaArvonvahennysValidointiKayttoon(false);
     });
@@ -270,31 +154,31 @@ describe('Arvonvähennykset - Raahen MHU24-urakka, validointi pois käytöstä -
         cy.get(SP).contains('.form-group', 'Käsitelty').should('exist');
 
         // Täytetään lomake
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
-        kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
-        kirjoitaInputkenttaan('Arvonvähennys', '80');
-        valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
+        kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '80');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Kulun kohdistus');
 
-        valitsePvm('Havaittu', havaittuPvm);
-        valitsePvm('Käsitelty', maarattyPvm);
+        valitseSivupaneelissaPvm('Havaittu', havaittuPvm);
+        valitseSivupaneelissaPvm('Käsitelty', maarattyPvm);
 
         // Käsittelytapa on MHU24-urakalla alasvetovalikko
-        valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Käsittelytapa');
 
-        tallennaLomake();
+        tallennaSuorasanktiolomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3).should('exist');
 
         // Avaa ja muokkaa
-        avaaTallennettu(testiArvonvahennysKuvaus3);
+        avaaSivupaneelissaTallennettu(testiArvonvahennysKuvaus3);
         cy.get(SP).contains(testiArvonvahennysKuvaus3).should('exist');
 
-        siirryMuokkaustilaan();
+        siirrySivupaneelissaMuokkaustilaan();
 
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
 
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
-        tallennaLomake();
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
+        tallennaSuorasanktiolomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3 + ' muokattu').should('exist');
     });
 
@@ -304,7 +188,7 @@ describe('Arvonvähennykset - Raahen MHU24-urakka, validointi pois käytöstä -
 describe('Arvonvähennykset - Oulun MHU19-urakka, validointi pois käytöstä - eli uusi lomake', () => {
 
     before(() => {
-        siivoaKanta(testiArvonvahennysKuvaus4);
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus4);
         // Otetaan MHU24-tarkistus pois käytöstä.
         asetaArvonvahennysValidointiKayttoon(false);
     });
@@ -333,32 +217,32 @@ describe('Arvonvähennykset - Oulun MHU19-urakka, validointi pois käytöstä - 
         cy.get(SP).contains('.form-group', 'Käsitelty').should('exist');
 
         // Täytetään lomake
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
-        kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
-        kirjoitaInputkenttaan('Arvonvähennys', '80');
-        valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
-        valitseEnsimmainenAlasvetoarvo('Indeksi');
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
+        kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '80');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Kulun kohdistus');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Indeksi');
 
-        valitsePvm('Havaittu', havaittuPvm);
-        valitsePvm('Käsitelty', maarattyPvm);
+        valitseSivupaneelissaPvm('Havaittu', havaittuPvm);
+        valitseSivupaneelissaPvm('Käsitelty', maarattyPvm);
 
         // Käsittelytapa on MHU24-urakalla alasvetovalikko
-        valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Käsittelytapa');
 
-        tallennaLomake();
+        tallennaSuorasanktiolomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3).should('exist');
 
         // Avaa ja muokkaa
-        avaaTallennettu(testiArvonvahennysKuvaus3);
+        avaaSivupaneelissaTallennettu(testiArvonvahennysKuvaus3);
         cy.get(SP).contains(testiArvonvahennysKuvaus3).should('exist');
 
-        siirryMuokkaustilaan();
+        siirrySivupaneelissaMuokkaustilaan();
 
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
 
-        kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
-        tallennaLomake();
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
+        tallennaSuorasanktiolomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3 + ' muokattu').should('exist');
     });
 
@@ -368,7 +252,7 @@ describe('Arvonvähennykset - Oulun MHU19-urakka, validointi pois käytöstä - 
 describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä', () => {
 
     before(() => {
-        siivoaKanta(testiArvonvahennysKuvaus3);
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus3);
         // Otetaan MHU24-tarkistus käyttöön
         asetaArvonvahennysValidointiKayttoon(true);
     });
@@ -401,44 +285,44 @@ describe('Arvonvähennykset - MHU24-urakka (Suomussalmi), validointi käytössä
         cy.get(SP).contains('.form-group', 'Käsittelytapa').should('exist');
 
         // Täytetään lomake
-        valitseAlasvetoarvo('Sanktion laji', 'Arvonvähennys');
-        kirjoitaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
-        kirjoitaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
-        kirjoitaInputkenttaan('Sanktion suuruus', '80');
-        valitseEnsimmainenAlasvetoarvo('Kulun kohdistus');
+        valitseSivupaneelissaAlasvetoarvo('Sanktion laji', 'Arvonvähennys');
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu3);
+        kirjoitaSivupaneelissaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3);
+        kirjoitaSivupaneelissaInputkenttaan('Sanktion suuruus', '80');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Kulun kohdistus');
 
-        valitsePvm('Havaittu', havaittuPvm);
-        valitsePvm('Käsitelty', maarattyPvm);
+        valitseSivupaneelissaPvm('Havaittu', havaittuPvm);
+        valitseSivupaneelissaPvm('Käsitelty', maarattyPvm);
 
         // Käsittelytapa on MHU24-urakalla alasvetovalikko
-        valitseEnsimmainenAlasvetoarvo('Käsittelytapa');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Käsittelytapa');
 
-        tallennaLomake();
+        tallennaSuorasanktiolomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3).should('exist');
 
         // Avaa ja muokkaa
-        avaaTallennettu(testiArvonvahennysKuvaus3);
+        avaaSivupaneelissaTallennettu(testiArvonvahennysKuvaus3);
         cy.get(SP).contains(testiArvonvahennysKuvaus3).should('exist');
 
-        siirryMuokkaustilaan();
+        siirrySivupaneelissaMuokkaustilaan();
         // Myös muokkaustilassa tavoitehinta-radio näkyy, kun MHU24-tarkistus on pois käytöstä.
         cy.get(SP).contains('label', 'Sanktion suuruus').should('exist');
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('exist');
         cy.get(SP).contains('.form-group', 'Laskutuskuukausi').should('exist');
 
-        kirjoitaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
-        tallennaLomake();
+        kirjoitaSivupaneelissaInputkenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus3 + ' muokattu');
+        tallennaSuorasanktiolomake();
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus3 + ' muokattu').should('exist');
     });
 
 
     describe('Siivotaan lopuksi', function () {
         before(function () {
-            siivoaKanta(testiArvonvahennysKuvaus1);
-            siivoaKanta(testiArvonvahennysKuvaus1+ ' muokattu');
-            siivoaKanta(testiArvonvahennysKuvaus2);
-            siivoaKanta(testiArvonvahennysKuvaus3);
-            siivoaKanta(testiArvonvahennysKuvaus3+ ' muokattu');
+            siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus1);
+            siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus1+ ' muokattu');
+            siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus2);
+            siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus3);
+            siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus3+ ' muokattu');
         });
 
         it('Tarkista, että kanta on siivottu', function () {
