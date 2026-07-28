@@ -7,6 +7,11 @@ let testiSanktioKuvaus3 = "CY-sanktio-testi3";
 let testiSanktioPerustelu = "CY-perustelu";
 let testiSanktioPerustelu2 = "CY-perustelu2";
 let testiSanktioPerustelu3 = "CY-perustelu3";
+let testiTalvisuolaKuvausMhu25EiViimeinen = "CY-talvisuola-mhu25-ei-viimeinen";
+let testiTalvisuolaKuvausMhu25Viimeinen = "CY-talvisuola-mhu25-viimeinen";
+let testiTalvisuolaKuvausMhu19EiViimeinen = "CY-talvisuola-mhu19-ei-viimeinen";
+let testiTalvisuolaKuvausMhu19Viimeinen = "CY-talvisuola-mhu19-viimeinen";
+let testiTalvisuolaPerustelu = "CY-talvisuola-perustelu";
 let testiurakka = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
 let testiurakka2 = "POP MHU Suomussalmi 2024-2029";
 let testiurakka3 = "Oulun MHU 2019-2024";
@@ -290,13 +295,121 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
     })
 })
 
+describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function () {
+    before(function () {
+        siivoaKanta(testiTalvisuolaKuvausMhu25EiViimeinen);
+        siivoaKanta(testiTalvisuolaKuvausMhu25Viimeinen);
+        siivoaKanta(testiTalvisuolaKuvausMhu19EiViimeinen);
+        siivoaKanta(testiTalvisuolaKuvausMhu19Viimeinen);
+    });
+
+    it('MHU25: talvisuolan ylitys ei tallenna ennen viimeistä hoitovuotta', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka, evk)
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Talvisuolan kokonaiskäytön ylitys'});
+
+        cy.get('label').contains('Tapahtumapaikka').parent().parent().parent().find('input').first().clear().type(testiTalvisuolaKuvausMhu25EiViimeinen)
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiTalvisuolaPerustelu)
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type('500')
+
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first().clear().type('15.02.2026')
+        cy.get('label').contains('Perustelu').click()
+
+        cy.get('div.virhe span').contains('Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle').should('be.visible')
+
+    })
+
+    it('MHU25: talvisuolan ylitys tallentuu viimeisellä hoitovuodella', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka, evk)
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaTalvisuolaMhu25')
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Talvisuolan kokonaiskäytön ylitys'});
+
+        cy.get('label').contains('Tapahtumapaikka').parent().parent().parent().find('input').first().clear().type(testiTalvisuolaKuvausMhu25Viimeinen)
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiTalvisuolaPerustelu)
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type('500')
+
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('15.02.2030')
+        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first().clear().type('15.02.2030')
+        cy.get('label').contains('Perustelu').click()
+
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
+        cy.wait('@tallennaTalvisuolaMhu25', {timeout: clickTimeout})
+        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+    })
+
+    it('Vanhempi urakka (MHU19): talvisuolan ylitys ei tallenna ennen viimeistä hoitovuotta', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka3, evk2)
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Talvisuolan kokonaiskäytön ylitys'});
+
+        cy.get('label').contains('Tapahtumapaikka').parent().parent().parent().find('input').first().clear().type(testiTalvisuolaKuvausMhu19EiViimeinen)
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiTalvisuolaPerustelu)
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type('500')
+
+        // Käsittelytapa
+        cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
+
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('15.02.2022')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('15.02.2022')
+        cy.get('label').contains('Perustelu').click()
+
+        cy.get('div.virhe span').contains('Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle').should('be.visible')
+    })
+
+    it('Vanhempi urakka (MHU19): talvisuolan ylitys tallentuu viimeisellä hoitovuodella', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka3, evk2)
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaTalvisuolaMhu19')
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Talvisuolan kokonaiskäytön ylitys'});
+
+        cy.get('label').contains('Tapahtumapaikka').parent().parent().parent().find('input').first().clear().type(testiTalvisuolaKuvausMhu19Viimeinen)
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiTalvisuolaPerustelu)
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type('500')
+
+        // Käsittelytapa
+        cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
+
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('15.02.2024')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().clear().type('15.02.2024')
+        cy.get('label').contains('Perustelu').click()
+
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
+        cy.wait('@tallennaTalvisuolaMhu19', {timeout: clickTimeout})
+        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+    })
+})
+
 // TODO: Bonusten testit ja olisi hyvä lisätä myöhemmin myös Arvonvähennykselle testit
 describe.skip('Bonukset toimii', function () {
-    it('Lisää uusi bonus', function () {
+   xit('Lisää uusi bonus', function () {
         // Implementoidaan myöhemmin
     })
 
-    it('Avaa bonus listasta', function () {
+   xit('Avaa bonus listasta', function () {
         // Implementoidaan myöhemmin
     })
 })
@@ -306,6 +419,10 @@ describe('Siivotaan lopuksi', function () {
         siivoaKanta(testiSanktioKuvaus);
         siivoaKanta(testiSanktioKuvaus2);
         siivoaKanta(testiSanktioKuvaus3);
+        siivoaKanta(testiTalvisuolaKuvausMhu25EiViimeinen);
+        siivoaKanta(testiTalvisuolaKuvausMhu25Viimeinen);
+        siivoaKanta(testiTalvisuolaKuvausMhu19EiViimeinen);
+        siivoaKanta(testiTalvisuolaKuvausMhu19Viimeinen);
     });
 
     it('Tarkista, että kanta on siivottu', function () {
