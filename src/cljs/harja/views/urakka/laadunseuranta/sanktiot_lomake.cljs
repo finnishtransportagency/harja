@@ -92,7 +92,12 @@
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
-                    lukutila?)]
+                    lukutila?)
+        talvisuolan-validointi-fn (fn [arvo sanktio]
+                                    (when (and (not (nil? arvo))
+                                            (= :talvisuolan_ylitys (:laji sanktio))
+                                            (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
+                                      (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit)
@@ -384,11 +389,7 @@
                         (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
              :fmt pvm/pvm-opt :tyyppi :pvm
              :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                       (fn [arvo sanktio]
-                         (when (and (not (nil? arvo))
-                                 (= :talvisuolan_ylitys (:laji sanktio))
-                                 (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
-                           (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))]}
+                       (partial talvisuolan-validointi-fn)]}
 
              {:otsikko "Määrätty" :nimi :maarattypvm
               :pakollinen? true
@@ -398,10 +399,11 @@
                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
                                     ;; hoitokauden syyskuun 15. päivä
                                     (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                    (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (+ 1 (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))))]
+                                    (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (pvm/vuosi (second (pvm/paivamaaran-hoitokausi arvo))))))]
                          (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
               :fmt pvm/pvm-opt :tyyppi :pvm
-              :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+              :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                        (partial talvisuolan-validointi-fn)]})
 
            ;; MHU25 urakoille ei näytetä laskutuskuukautta
            (if (<= urakan-alkuvuosi 2024)
