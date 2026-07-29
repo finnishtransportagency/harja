@@ -86,6 +86,14 @@ let avaaSanktiotJaBonukset = function (urakkaNimi, urakkaEvk) {
 }
 
 // --- Lomakkeen apufunktiot ---
+// Etsi form-group labelin täsmätekstillä (ei osittaisosumaa)
+function haeFormGroupOtsikolla(otsikko) {
+    return cy.get(SP).find('label').then(($labels) => {
+        const loytynyt = [...$labels].find((el) => el.textContent.trim() === otsikko);
+        expect(loytynyt, `Labelia ei löytynyt otsikolla: ${otsikko}`).to.exist;
+        return cy.wrap(loytynyt).closest('.form-group');
+    });
+}
 
 // Avaa uusi arvonvähennyslomake sivupaneeliin
 function avaaUusiArvonvahennys() {
@@ -110,11 +118,11 @@ function kirjoitaInputkenttaan(otsikko, arvo) {
 
 // Valitse alasvetovalikosta arvo näkyvän tekstin perusteella (otsikon perusteella löydetty kenttä)
 function valitseAlasvetoarvo(otsikko, arvoTeksti) {
-    cy.get(SP).contains('.form-group', otsikko).within(() => {
+    haeFormGroupOtsikolla(otsikko).within(() => {
         cy.get('button').first().click();
     });
     cy.wait(250); // Lista re-renderöityy, annetaan sen asettua
-    cy.get(SP).contains('.form-group', otsikko).contains('ul li a', arvoTeksti).click({force: true});
+    haeFormGroupOtsikolla(otsikko).contains('ul li a', arvoTeksti).click({force: true});
 }
 
 // Valitse alasvetovalikon ensimmäinen oikea vaihtoehto (kun arvo on datariippuvainen)
@@ -229,6 +237,11 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         // Muokataan kuvausta
         siirryMuokkaustilaan();
         kirjoitaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1 + ' muokattu');
+        // Vaihda tehtäväryhmä ja tehtävä
+        valitseAlasvetoarvo('Tehtäväryhmä', 'L - Liikennemerkit ja liikenteenohjauslaitteet');
+        cy.wait('@haeTehtavat', {timeout: clickTimeout});
+        valitseAlasvetoarvo('Tehtävä', 'Opastustaulun/-viitan uusiminen');
+
         tallennaLomake();
 
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1 + ' muokattu').should('exist');

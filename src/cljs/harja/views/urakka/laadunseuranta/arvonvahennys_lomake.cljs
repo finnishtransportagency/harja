@@ -38,7 +38,8 @@
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
-        tehtavaryhmat (:tehtavaryhmat app)
+        ;; Lisätään tehtäväryhmälle id
+        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %)) (:tehtavaryhmat app))
         ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
         mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit mhu25?)
@@ -128,14 +129,14 @@
           :uusi-rivi? true
           :aseta (fn [rivi valittu]
                    ;; Hae valitun tehtäväryhmän tehtävät
-                   (when (:tehtavaryhma valittu)
-                     (e! (arvonvahennys-tiedot/->HaeTehtavaryhmanTehtavat (:tehtavaryhma valittu))))
+                   (when (:id valittu)
+                     (e! (arvonvahennys-tiedot/->HaeTehtavaryhmanTehtavat (:id valittu))))
                    (-> rivi
                      (assoc :tehtavaryhma valittu)
                      (assoc :tehtava nil)
                      ;; Aseta toimenpideinstanssi tehtäväryhmän perusteella
                       (assoc :toimenpideinstanssi
-                        (when (and valittu (:tehtavaryhma valittu))
+                        (when (and valittu (:id valittu))
                           (some #(when (= (:id %) (:tehtavaryhma_toimenpide_id valittu)) (:tpi_id %))
                             @tiedot-urakka/urakan-toimenpideinstanssit)))))
           :pakollinen? true
