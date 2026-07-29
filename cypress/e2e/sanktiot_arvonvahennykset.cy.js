@@ -118,7 +118,7 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         cy.wait('@haeTehtavat', {timeout: clickTimeout});
         valitseSivupaneelissaAlasvetoarvo('Tehtävä', 'Opastustaulun/-viitan uusiminen');
 
-        tallennaLomake();
+        tallennaSuorasanktiolomake();
 
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1 + ' muokattu').should('exist');
     });

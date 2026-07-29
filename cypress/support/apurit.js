@@ -1,3 +1,13 @@
+// --- Lomakkeen apufunktiot ---
+// Etsi form-group labelin täsmätekstillä (ei osittaisosumaa)
+function haeFormGroupOtsikolla(otsikko) {
+    return cy.get(SP).find('label').then(($labels) => {
+        const loytynyt = [...$labels].find((el) => el.textContent.trim() === otsikko);
+        expect(loytynyt, `Labelia ei löytynyt otsikolla: ${otsikko}`).to.exist;
+        return cy.wrap(loytynyt).closest('.form-group');
+    });
+}
+
 export const ladataanHarjaaTimeout = 30000;
 export const clickTimeout = 4000;
 export const pageloadTimeout = 30000;
@@ -84,11 +94,11 @@ export function kirjoitaSivupaneelissaInputkenttaan(otsikko, arvo) {
 
 // Valitse alasvetovalikosta arvo näkyvän tekstin perusteella (otsikon perusteella löydetty kenttä)
 export function valitseSivupaneelissaAlasvetoarvo(otsikko, arvoTeksti) {
-    cy.get(SP).contains('.form-group', otsikko).within(() => {
+    haeFormGroupOtsikolla(otsikko).within(() => {
         cy.get('button').first().click();
     });
     cy.wait(250); // Lista re-renderöityy, annetaan sen asettua
-    cy.get(SP).contains('.form-group', otsikko).contains('ul li a', arvoTeksti).click({force: true});
+    haeFormGroupOtsikolla(otsikko).contains('ul li a', arvoTeksti).click({force: true});
 }
 
 // Valitse sivupaneelissa alasvetovalikon ensimmäinen oikea vaihtoehto (kun arvo on datariippuvainen)
