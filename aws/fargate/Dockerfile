@@ -27,6 +27,14 @@ RUN apt-get update \
     && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
     && echo "Europe/Helsinki" > /etc/timezone
 
+# Päivitä libc ja muut paketit
+RUN apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade \
+        libc6 \
+        libc-bin \
+        locales \
+    && rm -rf /var/lib/apt/lists/*
+
 # Asenna apurit
 RUN apt-get update && apt-get install -y \
     bash \
