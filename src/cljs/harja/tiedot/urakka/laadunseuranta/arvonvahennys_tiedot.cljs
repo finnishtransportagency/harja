@@ -14,7 +14,7 @@
     {:suorasanktio true
      :laji :arvonvahennyssanktio
      :perintapvm default-perintapvm
-     :maaraystapa :valikatselmus
+     :maaraystapa :tyomaakokous
      :tehtavaryhma nil
      :tehtava nil
      :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi

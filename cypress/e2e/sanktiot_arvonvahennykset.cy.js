@@ -113,7 +113,12 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         // Muokataan kuvausta
         siirrySivupaneelissaMuokkaustilaan();
         kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvaus1 + ' muokattu');
-        tallennaSuorasanktiolomake();
+        // Vaihda tehtäväryhmä ja tehtävä
+        valitseSivupaneelissaAlasvetoarvo('Tehtäväryhmä', 'L - Liikennemerkit ja liikenteenohjauslaitteet');
+        cy.wait('@haeTehtavat', {timeout: clickTimeout});
+        valitseSivupaneelissaAlasvetoarvo('Tehtävä', 'Opastustaulun/-viitan uusiminen');
+
+        tallennaLomake();
 
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvaus1 + ' muokattu').should('exist');
     });
