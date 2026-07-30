@@ -255,7 +255,7 @@
 
                      true
                      (assoc-in [:maarattypvm] arvo)
-                     
+
                      true
                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm

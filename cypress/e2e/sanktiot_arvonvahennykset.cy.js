@@ -73,6 +73,12 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
         kirjoitaSivupaneelissaTekstikenttaan('Perustelu', testiArvonvahennysPerustelu1);
 
         cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('not.exist');
+        cy.get(SP).contains('.form-group', 'Kohdistuu hoitovuodelle').should('exist');
+        cy.get(SP).contains('.form-group', 'Tavoitehinnan alennus').should('exist');
+        cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
+        cy.get(SP).contains('.form-group', 'Käsittelytapa').should('exist');
+        cy.get(SP).contains('.form-group', 'Havaittu').should('exist');
+        cy.get(SP).contains('.form-group', 'Määrätty').should('exist');
 
         kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '200');
 
@@ -120,7 +126,7 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
 // --- Testit: MHU24-urakka (Suomussalmi) vuonna 2026 ---
 
-describe('Arvonvähennykset - Raahen MHU24-urakka, validointi pois käytöstä - eli uusi lomake', () => {
+describe('Arvonvähennykset - Raahen MHU24-urakka - 2026 hoitokausi - eli uusi lomake', () => {
 
     before(() => {
         siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus3);
