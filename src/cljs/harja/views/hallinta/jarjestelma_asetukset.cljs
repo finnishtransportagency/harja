@@ -134,8 +134,7 @@
         geometriapaivitykset]])))
 
 (defn asetukset [e! app]
-  (let [valikatselmus-validointi (r/atom (get-in app [:asetukset :valikatselmus-validointi]))
-        arvonvahennys-validointi (r/atom (get-in app [:asetukset :arvonvahennys-validointi]))]
+  (let [valikatselmus-validointi (r/atom (get-in app [:asetukset :valikatselmus-validointi]))]
     [:div
      [:h2 "Järjestelmään vaikuttavia asetuksia"]
      [:div.row
@@ -151,18 +150,7 @@
                            :vaihtoehto-nayta {:true "Validoinnit käytössä"
                                               :false "Validoinnit poissa"}
                            :valitse-fn #(e! (tiedot/->ToggleValikatselmusValidoinnit %))}
-        valikatselmus-validointi]]
-      [:div.col-md-6
-       [:h3 "Ota arvonvähennyslomakkeen mhu24- tarkistus pois käytöstä"]
-       [:p "Arvonvähennyssanktio näytetään defaulttina vain mhu25 urakoille. Ja vuodesta 2026 lähtien myös muille. Tämä poistaa tuon 2026 lähtien vaatimuksen"]
-       [kentat/tee-kentta {:tyyppi :radio-group
-                           :vaihtoehdot [:true :false]
-                           :vayla-tyyli? true
-                           :nayta-rivina? true
-                           :vaihtoehto-nayta {:true "Ei salita mhu24 urakoille"
-                                              :false "Salli mhu24 urakoille"}
-                           :valitse-fn #(e! (tiedot/->ToggleArvonvahennysValidoinnit %))}
-        arvonvahennys-validointi]]]]))
+        valikatselmus-validointi]]]]))
 
 (defn jarjestelma-asetukset* [e! app]
   (komp/luo
