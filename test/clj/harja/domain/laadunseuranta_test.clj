@@ -32,32 +32,20 @@
               (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025 validoinnit?))
           (str "Ylläpidon sanktiolajit, validoinnit? " validoinnit?))))
 
-    ;; :arvonvahennyssanktio näytetään tässä "vanhassa" listassa vain, kun uutta arvonvähennyslomaketta EI vielä näytetä.
-    (testing "Validoinnit käytössä (arvonvahennys_validoinnit_kaytossa = true)"
+
+    (testing "Tarkistetaan onhan arvonvähennykset näkyvissä oikeissa urakoissa ja oikeaan aikaan"
       (is (= hoidon-lajit-arvonvahennyksella
             (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025 true))
         "MHU24-urakka ennen 2026 -> arvonvähennyssanktio mukana vanhassa listassa")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2026 true))
-        "MHU24-urakka alkuvuodesta 2026 -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
+            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027 true))
+        "MHU24-urakka alkuvuodesta 2027 -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
       (is (= hoidon-lajit-ilman-arvonvahennysta
             (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025 true))
         "MHU25-urakka -> ei arvonvähennyssanktiota vanhassa listassa (uusi lomake käytössä aina)")
       (is (= hoidon-lajit-arvonvahennyksella
             (sanktio-domain/urakan-sanktiolajit alueurakka 2025 true))
         "Alueurakka (ei MHU25) ennen 2026 -> arvonvähennyssanktio mukana vanhassa listassa"))
-
-    (testing "Validoinnit pois käytöstä (arvonvahennys_validoinnit_kaytossa = false)"
-      (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025 false))
-        "MHU24-urakka, validoinnit pois -> ei arvonvähennyssanktiota vanhassa listassa")
-      (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025 false))
-        "MHU25-urakka, validoinnit pois -> ei arvonvähennyssanktiota")
-      (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit alueurakka 2025 false))
-        "Alueurakka, validoinnit pois -> ei arvonvähennyssanktiota"))
-
 
     (is (= [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
             :testikeskiarvo-sanktio :vaihtosanktio]

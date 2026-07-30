@@ -18,11 +18,6 @@
          :haku-kaynnissa? false
          :tallennus-kaynnissa? false}))
 
-;; Globaali arvonvahennys_validoinnit_kaytossa -järjestelmäasetus boolean-muodossa.
-;; Päivitetään aina kun järjestelmän asetukset haetaan (mm. sanktiot ja bonukset -näkymässä),
-;; jotta asetus on saatavilla myös tuck-näkymien ulkopuolella (esim. urakan sanktiolajit -reaktiossa).
-(defonce arvonvahennys-validoinnit-kaytossa? (atom true))
-
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeGeometria-aineistot [])
 (defrecord Geometria-aineistotHaettu [geometria-aineistot])

@@ -133,19 +133,14 @@
   "Palauttaa urakalle kuuluvat sanktiolajit urakka-tyypin mukaisesti.
 
    :arvonvahennyssanktio lisätään teiden-hoito-tyyppisen urakan lajeihin heti :C-sanktion jälkeen, mikäli:
-   - MHU24-urakka -> aina siihen asti, että kuluvan hoitokauden alkuvuosi on 2026 (eli väliaikaisesti)
-     ja järjestelmäasetus arvonvahennys_validoinnit_kaytossa on true (eli validoinnit on käytössä).
+   - MHU24-urakka -> aina siihen asti, että kuluvan hoitokauden alkuvuosi on 2026 (eli väliaikaisesti).
 
    Parametrit:
      urakka                              Urakan tiedot (mm. :tyyppi ja :alkupvm)
-     kuluvan-hoitokauden-alkuvuosi       Kuluvan hoitokauden alkuvuosi (int)
-     arvonvahennys-validoinnit-kaytossa? Järjestelmäasetus arvonvahennys_validoinnit_kaytossa (boolean)"
-  [{:keys [tyyppi] :as urakka} kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?]
-  (let [;; Arvonvähennyssanktio näytetään tässä "vanhassa" listassa vain silloin, kun uutta arvonvähennyslomaketta
-        ;; EI näytetä (vrt. sivupaneelityypit). Eli kun validoinnit ovat käytössä, urakka ei ole MHU25 (tai uudempi)
-        ;; eikä kuluvan hoitokauden alkuvuosi ole vielä 2026.
+     kuluvan-hoitokauden-alkuvuosi       Kuluvan hoitokauden alkuvuosi (int)"
+  [{:keys [tyyppi] :as urakka} kuluvan-hoitokauden-alkuvuosi]
+  (let [;; Arvonvähennyssanktio näytetään tässä "vanhassa" listassa jos on mhu25+ urakka tai jos hoitovuosi on 2026 alkaen.
         nayta-arvonvahennyssanktio? (cond
-                                      (not arvonvahennys-validoinnit-kaytossa?) false ;; Validoinnit pois käytöstä - ei näytetä tässä listassa
                                       (mhu25-urakka? urakka) false                    ;; MHU25 (tai uudempi) - ei näytetä
                                       (>= kuluvan-hoitokauden-alkuvuosi 2026) false   ;; Alkanut hoitovuosi 2026 - ei näytetä
                                       :else true)]                                    ;; Kaikissa muissa tapauksissa näytetään
