@@ -254,6 +254,9 @@
                      (assoc-in [:perintapvm] arvo)
 
                      true
+                     (assoc-in [:maarattypvm] arvo)
+                     
+                     true
                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm
           :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
