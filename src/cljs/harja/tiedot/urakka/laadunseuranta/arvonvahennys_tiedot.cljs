@@ -8,11 +8,13 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]))
 
-(defn uusi-arvonvahennys [mhu25?]
+(defn uusi-arvonvahennys [mhu25? valittu-hoitokauden-alkuvuosi]
   (let [nyt (pvm/nyt)
+        ;mhu25+ urakoille perintäpäivä on aina hoitovuoden viimeisessä kuussa. Muilla se on on kuluva valittu hoitovuosi ja kuluva kuukausi.
+        muiden-vuosi (if (< (pvm/kuukausi nyt) 10) (inc valittu-hoitokauden-alkuvuosi) valittu-hoitokauden-alkuvuosi)
         default-perintapvm (if mhu25? ; mhu25 ja myöhempien urakoiden perintäpäivämäärä on aina defaulttina hoitokauden viimeisen kuukauden 15 päivä
-                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) 9 15)
-                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))]
+                             (pvm/luo-pvm-dec-kk (inc valittu-hoitokauden-alkuvuosi) 9 15)
+                             (pvm/luo-pvm-dec-kk muiden-vuosi (pvm/kuukausi nyt) 15))]
     {:suorasanktio true
      :laji :arvonvahennyssanktio
      :perintapvm default-perintapvm

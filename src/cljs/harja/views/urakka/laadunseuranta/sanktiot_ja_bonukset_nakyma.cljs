@@ -58,9 +58,9 @@
                                      ;; lomakkeelle ei jää aiemman lomakkeen dataa.
                                      (case valinta
                                        :sanktiot
-                                       (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka)))
+                                       (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
                                        :arvonvahennys
-                                       (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys mhu25?))
+                                       (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys mhu25? (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
                                        :bonukset
                                        (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
                                        nil))}
@@ -169,7 +169,7 @@
          (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                          (:id valittu-urakka))
                uusi-sanktio (merge
-                              (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
+                              (tiedot/uusi-sanktio (:tyyppi valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))
                               {:toimenpideinstanssi tpi})
                ;; Vanhemmilla urakoilla ei ole välttämättä käsittelytapana välikatselmus.
                uusi-sanktio (if (>= urakan-alkuvuosi 2025)
@@ -220,13 +220,6 @@
          [:br]
          [:br]
          (str "Päätöksen selitys: " perustelu)]))))
-
-(defn fmt-laskutuskuukausi
-  "Muokataan päivämäärästä -> Syyskuu 2023 (3. hoitovuosi) tyyppinen string"
-  [laskutuskuukausi urakan-alkupaiva]
-  (let [kuukausi-vuosi (pvm/koko-kuukausi-ja-vuosi laskutuskuukausi true)
-        hoitovuoden-nro (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupaiva laskutuskuukausi)]
-    (str kuukausi-vuosi " (" hoitovuoden-nro ". hoitokausi)")))
 
 (defn sanktiot-ja-bonukset-listaus
   [sivupaneeli-auki?-atom valittu-urakka]
