@@ -8,9 +8,11 @@
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.navigaatio :as nav]))
 
-(defn uusi-arvonvahennys []
+(defn uusi-arvonvahennys [mhu25?]
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+        default-perintapvm (if mhu25? ; mhu25 ja myöhempien urakoiden perintäpäivämäärä on aina defaulttina hoitokauden viimeisen kuukauden 15 päivä
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) 9 15)
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))]
     {:suorasanktio true
      :laji :arvonvahennyssanktio
      :perintapvm default-perintapvm

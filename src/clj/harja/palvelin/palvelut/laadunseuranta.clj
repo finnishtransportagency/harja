@@ -277,7 +277,8 @@
                               (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
-                :maarattypvm (konv/sql-date maarattypvm)
+                ;; Käytetään käsittelyaikaa, jos määrättypvm on asettamatta. Esim arvonvähennyksillä sitä ei ole pakko asettaa.
+                :maarattypvm (if maarattypvm (konv/sql-date maarattypvm) (konv/sql-timestamp kasittelyaika))
                 :kasittelytapa (name kasittelytapa)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
@@ -299,7 +300,7 @@
                 :luoja (:id user)
                 ;; Arvonvähennyksen lisäkentät
                 :maaraystapa (when maaraystapa (name maaraystapa))
-                :tehtavaryhma (:tehtavaryhma tehtavaryhma)
+                :tehtavaryhma (:id tehtavaryhma)
                 :tehtava (:id tehtava)}]
     (if-not (id-olemassa? id)
       (let [uusi-sanktio (sanktiot/luo-sanktio<! db params)]

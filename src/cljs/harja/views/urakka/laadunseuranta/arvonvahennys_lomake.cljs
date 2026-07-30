@@ -46,7 +46,6 @@
         tehtavat (:tehtavat app)
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
-        kuluvan-hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
         liitteet-id (str "liitteet-element-id-" (gensym))]
 
     [:div
@@ -229,12 +228,12 @@
           :hae (comp :kasittelyaika :paatos :laatupoikkeama)
           :aseta (fn [rivi arvo]
                    (cond-> rivi
-                                   ;; Jos perintäpvm ei ole vielä valittu, asetetaan esivalinta
-                                   (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                   (assoc-in [:perintapvm] arvo)
+                     ;; Jos perintäpvm ei ole vielä valittu, asetetaan esivalinta
+                     (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                     (assoc-in [:perintapvm] arvo)
 
-                                   true
-                                   (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
+                     true
+                     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm
           :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 

@@ -6,13 +6,11 @@
             [harja.loki :refer [log]]
             [harja.transit :as t]
 
-            [harja.tyokalut.muunnos :as muunnos]
             [harja.asiakas.kommunikaatio :as k]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.urakka :as uu-tiedot]
-            [harja.tiedot.hallinta.jarjestelma-asetukset :as jasetukset-tiedot]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as bonukset-tiedot]
             [harja.tiedot.urakka.laadunseuranta.arvonvahennys-tiedot :as arvonvahennys-tiedot]
@@ -30,7 +28,6 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.domain.tierekisteri :as tierekisteri]
 
             [harja.views.urakka.valinnat :as urakka-valinnat]
             [harja.views.urakka.laadunseuranta.sanktiot-lomake :as sanktiot-lomake]
@@ -40,17 +37,17 @@
 
 ;; --- Sivupaneeli sanktio- ja bonuslomakkeille ---
 
-(defn- sivupaneelityypit [mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?]
+(defn- sivupaneelityypit [arvonvahennyslomake-kaytossa?]
   (cond-> []
     true (conj :sanktiot)
-    (or (not arvonvahennys-validointi?) mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) (conj :arvonvahennys)
+    arvonvahennyslomake-kaytossa? (conj :arvonvahennys)
     true (conj :bonukset)))
 
 (defn bonus-sanktio-valikko
-  [tila mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?]
+  [tila mhu25? arvonvahennyslomake-kaytossa?]
   [:<>
    [kentat/tee-kentta {:tyyppi :radio-group
-                       :vaihtoehdot (sivupaneelityypit mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?)
+                       :vaihtoehdot (sivupaneelityypit arvonvahennyslomake-kaytossa?)
                        :vayla-tyyli? true
                        :nayta-rivina? true
                        :vaihtoehto-nayta {:sanktiot "Sanktio"
@@ -63,7 +60,7 @@
                                        :sanktiot
                                        (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka)))
                                        :arvonvahennys
-                                       (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys))
+                                       (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys mhu25?))
                                        :bonukset
                                        (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
                                        nil))}
@@ -95,13 +92,7 @@
               arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                        (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-              arvonvahennys-validointi? (muunnos/keyword->bool (get-in app [:asetukset :arvonvahennys-validointi]))
-              kuluva-alkanut-hoitovuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
-              uusi-arvonvahennyslomake-kaytossa? (cond
-                                                   (not arvonvahennys-validointi?) true ;; Jos validoinnit pois käytöstä - aina näytetään uusi lomake
-                                                   mhu25? true ;; MHU25 urakoille - aina uusi lomake
-                                                   (>= kuluva-alkanut-hoitovuosi 2026) true ;; Jos kuluva vuosi 2026 - aina uusi lomake
-                                                   :else false)]
+              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-kaytossa? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -117,7 +108,7 @@
                   "Lisää uusi")]
 
            (when-not muokataan-vanhaa?
-             [bonus-sanktio-valikko (r/cursor tila [:lomake]) mhu25? kuluva-alkanut-hoitovuosi arvonvahennys-validointi?])
+             [bonus-sanktio-valikko (r/cursor tila [:lomake]) mhu25? arvonvahennyslomake-kaytossa?])
 
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
@@ -133,14 +124,14 @@
                 lupaus?
                 [yleiset/vihje "Lupaussanktiota tai lupausbonusta ei voi muokata tällä lomakkeella" nil 18])])
 
-           ; Avaa oikea lomake - uusi-arvonvahennyslomake-kaytossa?
+           ; Avaa oikea lomake - arvonvahennyslomake-kaytossa?
            (cond
              bonusten-syotto?
              [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu
               ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
               #(tiedot/paivita-sanktiot-ja-bonukset!)
               lukutila? oikeus-muokata?]
-             (and uusi-arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
+             (and arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
              [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata? mhu25?]
 
              :else
@@ -180,6 +171,7 @@
                uusi-sanktio (merge
                               (tiedot/uusi-sanktio (:tyyppi valittu-urakka))
                               {:toimenpideinstanssi tpi})
+               ;; Vanhemmilla urakoilla ei ole välttämättä käsittelytapana välikatselmus.
                uusi-sanktio (if (>= urakan-alkuvuosi 2025)
                               (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus)
                               uusi-sanktio)]
@@ -341,7 +333,6 @@
       (komp/lippu tiedot/nakymassa?)
       (komp/sisaan-ulos #(do
                            (e! (arvonvahennys-tiedot/->HaeKaikkiTehtavaryhmat))
-                           (e! (jasetukset-tiedot/->HaeJarjestelmanAsetukset))
                            (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
                                                                        :default nil}))
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
