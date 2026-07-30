@@ -1,10 +1,6 @@
 (ns harja.domain.laadunseuranta_test
   (:require [clojure.test :refer [deftest testing is use-fixtures]]
-            [clojure.spec.gen.alpha :as gen]
-            [clojure.spec.alpha :as s]
-            [clojure.set :as clj-set]
             [harja.testi :refer :all]
-            [slingshot.slingshot :refer [throw+]]
             [slingshot.test]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.pvm :as pvm]))
@@ -18,33 +14,32 @@
         mhu24-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2024)}
         mhu25-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2025)}
         alueurakka {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)}
-        paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025 true)
-        paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025 true)
-        tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025 true)
-        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025 true)]
+        paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
+        paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
+        tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
+        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025)]
 
     (testing "Ylläpidon urakat (validoinnista riippumatta)"
-      (doseq [validoinnit? [true false]]
-        (is (= yllapidon-lajit
-              (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025 validoinnit?)
-              (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025 validoinnit?)
-              (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025 validoinnit?)
-              (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025 validoinnit?))
-          (str "Ylläpidon sanktiolajit, validoinnit? " validoinnit?))))
+      (is (= yllapidon-lajit
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025))
+        (str "Ylläpidon sanktiolajit, validoinnit? ")))
 
 
     (testing "Tarkistetaan onhan arvonvähennykset näkyvissä oikeissa urakoissa ja oikeaan aikaan"
       (is (= hoidon-lajit-arvonvahennyksella
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025 true))
+            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025))
         "MHU24-urakka ennen 2026 -> arvonvähennyssanktio mukana vanhassa listassa")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027 true))
+            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027))
         "MHU24-urakka alkuvuodesta 2027 -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025 true))
+            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025))
         "MHU25-urakka -> ei arvonvähennyssanktiota vanhassa listassa (uusi lomake käytössä aina)")
       (is (= hoidon-lajit-arvonvahennyksella
-            (sanktio-domain/urakan-sanktiolajit alueurakka 2025 true))
+            (sanktio-domain/urakan-sanktiolajit alueurakka 2025))
         "Alueurakka (ei MHU25) ennen 2026 -> arvonvähennyssanktio mukana vanhassa listassa"))
 
     (is (= [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
