@@ -467,10 +467,9 @@ UNION ALL
            JOIN sanktiotyyppi st ON s.tyyppi = st.id
            JOIN toimenpide tpk ON tpk.id = st.toimenpidekoodi
            CROSS JOIN urakan_tiedot u
-           CROSS JOIN jarjestelman_asetukset_tieto ja
      WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
        AND s.poistettu = FALSE
-       --- Vain mhu25+ (ja muutkin, jos validoinnit eivät ole päällä) urakoiden arvonvähennykset haetaan tässä
+       --- Vain mhu25+ (ja muutkin, hoitovuosi on >= 2026)
        AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR %s > 2025))
      GROUP BY s.tyyppi, s.indeksi"
     urakka urakka urakka alkupvm loppupvm hoitokauden-alkuvuosi))
@@ -490,6 +489,12 @@ UNION ALL
                          :loppupvm "2026-09-30"
                          :hoitokauden-alkuvuosi 2025
                          :urakan-alkuvuosi 2025})
+
+(def raahe23-parametrit {:urakka (hae-urakan-id-nimella "Raahen MHU 2023-2028")
+                         :alkupvm "2026-10-01"
+                         :loppupvm "2027-09-30"
+                         :hoitokauden-alkuvuosi 2026
+                         :urakan-alkuvuosi 2023})
 
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu
@@ -645,6 +650,33 @@ UNION ALL
                    :tavoitehintainen :false}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
+(defn lisaa-urakalle-arvonvahennys [tpi-nimi hoitokauden-alkuvuosi urakka-id]
+  (let [;; Luodaan uusi arvonvähennyssanktio
+        perustelu "Arvoja vähentämään"
+        perintapvm (pvm/->pvm-aika (str "03.12." hoitokauden-alkuvuosi " 22:00:00"))
+        av-sakko {:suorasanktio true
+                  :toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella tpi-nimi)
+                  :perintapvm perintapvm
+                  :laji :arvonvahennyssanktio
+                  :summa 123
+                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where id = 8;")))
+                           :nimi "Ei tarvita sanktiotyyppiä"}
+                  :indeksi nil}
+        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
+                        :paatos {:paatos "sanktio",
+                                 :kasittelyaika perintapvm,
+                                 :kasittelytapa :kommentit,
+                                 :perustelu perustelu}
+                        :aika perintapvm,
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm (str "1.10." hoitokauden-alkuvuosi))
+        hk-loppupvm (pvm/->pvm (str "30.09." (inc hoitokauden-alkuvuosi)))
+        _ (kutsu-http-palvelua
+                         :tallenna-suorasanktio +kayttaja-jvh+
+                         {:sanktio av-sakko
+                          :laatupoikkeama laatupoikkeama
+                          :hoitokausi [hk-alkupvm hk-loppupvm]})]))
+
 (deftest lisatyot-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakkavastaava (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -769,11 +801,12 @@ UNION ALL
                           0M (map #(first %) sanktiot-db))]
     (is (= sanktiot-toteutuneet sanktiot-db-yht))))
 
-(deftest arvonvahennykset-test-2019-urakalle-toimii-kun-validoinnit-on-kaytossa
-  (let [vastaus (hae-kustannukset oulumhu-parametrit)
+(deftest arvonvahennykset-test-2023-urakalle-toimii
+  (let [_ (lisaa-urakalle-arvonvahennys "Raahen MHU 2023-2028 Soratien hoito TP" 2026 (:urakka raahe23-parametrit))
+        vastaus (hae-kustannukset raahe23-parametrit)
         arvonvahennykset (filter #(when (= "arvonvahennykset" (:paaryhma %)) true) vastaus)
         arvonvahennykset-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) arvonvahennykset))
-        arvonvahennykset-toteutuneet-sql (q (arvonvahennykset-dbhaku oulumhu-parametrit))
+        arvonvahennykset-toteutuneet-sql (q (arvonvahennykset-dbhaku raahe23-parametrit))
         arvonvahennykset-sql-toteutunut-summa (reduce (fn [summa b]
                                                         (if b
                                                           (+ summa b)
@@ -782,31 +815,7 @@ UNION ALL
     (is (= (bigdec arvonvahennykset-toteutuneet) arvonvahennykset-sql-toteutunut-summa))))
 
 (deftest arvonvahennykset-test-2025-urakalle-toimii
-  (let [;; Luodaan uusi arvonvähennyssanktio
-        perustelu "Arvoja vähentämään"
-        perintapvm (pvm/->pvm-aika "3.1.2026 22:00:00")
-        av-sakko {:suorasanktio true
-                  :toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "POP MHU Kajaani 2025-2030 Talvihoito TP")
-                  :perintapvm perintapvm
-                  :laji :arvonvahennyssanktio
-                  :summa 123
-                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where id = 8;")))
-                           :nimi "Ei tarvita sanktiotyyppiä"}
-                  :indeksi nil}
-        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
-                        :paatos {:paatos "sanktio",
-                                 :kasittelyaika perintapvm,
-                                 :kasittelytapa :kommentit,
-                                 :perustelu perustelu}
-                        :aika perintapvm,
-                        :urakka (:urakka kajaani-parametrit)}
-        hk-alkupvm (pvm/->pvm "1.10.2025")
-        hk-loppupvm (pvm/->pvm "30.09.2026")
-        sanktiovastaus (kutsu-http-palvelua
-                         :tallenna-suorasanktio +kayttaja-jvh+
-                         {:sanktio av-sakko
-                          :laatupoikkeama laatupoikkeama
-                          :hoitokausi [hk-alkupvm hk-loppupvm]})
+  (let [_ (lisaa-urakalle-arvonvahennys "POP MHU Kajaani 2025-2030 Talvihoito TP" 2026 (:urakka kajaani-parametrit))
         kustannukset-palvelusta (hae-kustannukset kajaani-parametrit)
         arvonvahennykset-palvelusta (filter #(when (= "arvonvahennykset" (:paaryhma %)) true) kustannukset-palvelusta)
         arvonvahennykset-palvelusta-yht (apply + (map (fn [rivi] (:toteutunut_summa rivi)) arvonvahennykset-palvelusta))
