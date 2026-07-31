@@ -139,13 +139,13 @@
          [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+") (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]
         (when arvonvahennykset-yht
           [:div.flex-row.summa-rivi
-           [:span.sisennys "• Arvonvähennykset"]
+           [:span.sisennys "• Arvonvähennysten tavoitehintamuutokset"]
            [:span (fmt/euro-opt false arvonvahennykset-yht)]])]
        ;; Käsin kirjatut tavoitehinnan oikaisut
        [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan muutokset"]
         [:span (str (when (> tavoitehinnan-muutokset 0) "+") (fmt/euro-opt false tavoitehinnan-muutokset))]])
-     (when arvonvahennykset-yht
+     (when (and (not (:muutosten_hallinta urakan-parametrit)) arvonvahennykset-yht)
        [:div.flex-row.summa-rivi
         [:span "Arvonvähennykset"]
         [:span (fmt/euro-opt false arvonvahennykset-yht)]])
