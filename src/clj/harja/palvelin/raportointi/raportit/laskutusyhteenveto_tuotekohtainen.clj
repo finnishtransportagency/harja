@@ -157,7 +157,6 @@
   (log/debug "Tuotekohtainen PARAMETRIT: " (pr-str parametrit))
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        av-validointi? (:arvonvahennys_validoinnit_kaytossa (first (jarjestelmatila-q/hae-jarjestelman-asetukset db)))
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
@@ -299,7 +298,7 @@
                                                   :laskutetaan-teksti laskutetaan-teksti
                                                   :kyseessa-kk-vali? kyseessa-kk-vali?
                                                   :alkupvm alkupvm}
-                   hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?))))
+                   hoitokauden-alkuvuosi urakan-alkuvuosi))))
 
      (when-not
        (boolean kustannussuunnitelma-vahvistettu?)

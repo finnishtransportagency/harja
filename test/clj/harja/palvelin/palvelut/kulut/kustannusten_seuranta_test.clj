@@ -423,17 +423,14 @@ UNION ALL
       AND kt.sopimus = s.id
       AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '%s'::DATE AND '%s'::DATE);" urakka urakka alkupvm loppupvm))
 
-(defn- sanktiot-dbhaku [{:keys [urakka alkupvm loppupvm]}]
+(defn- sanktiot-dbhaku [{:keys [urakka alkupvm loppupvm hoitokauden-alkuvuosi]}]
   (format
     "WITH urakan_tiedot AS (
     SELECT u.id,
     u.tyyppi,
     EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
     FROM urakka u
-    WHERE u.id = %s),
-    jarjestelman_asetukset_tieto AS (
-      SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
-      FROM jarjestelman_asetukset ja)
+    WHERE u.id = %s)
     SELECT
       CASE WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
            ELSE SUM(s.maara + (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, %s::INTEGER, s.sakkoryhma))) * -1
@@ -444,26 +441,22 @@ UNION ALL
            JOIN sanktiotyyppi st ON s.tyyppi = st.id
            JOIN toimenpide tpk ON tpk.id = st.toimenpidekoodi
            CROSS JOIN urakan_tiedot u
-           CROSS JOIN jarjestelman_asetukset_tieto ja
      WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
        AND s.poistettu = FALSE
         --- Jätetään mhu25+ urakoilta, (tai kaikilta, jos validoinnit eivät ole käytössä)
         -- arvonvähennykset pois, ne haetaan erikseen
-        AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND ja.arvonvahennys_validoinnit_kaytossa IS TRUE))
+        AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND %s <= 2025))
      GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma"
-    urakka urakka urakka alkupvm loppupvm))
+    urakka urakka urakka alkupvm loppupvm hoitokauden-alkuvuosi))
 
-(defn- arvonvahennykset-dbhaku [{:keys [urakka alkupvm loppupvm]}]
+(defn- arvonvahennykset-dbhaku [{:keys [urakka alkupvm loppupvm hoitokauden-alkuvuosi]}]
   (format
     "WITH urakan_tiedot AS (
       SELECT u.id,
       u.tyyppi,
       EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
       FROM urakka u
-      WHERE u.id = %s),
-    jarjestelman_asetukset_tieto AS (
-      SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
-      FROM jarjestelman_asetukset ja)
+      WHERE u.id = %s)
     SELECT
       CASE WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
            ELSE SUM(s.maara + (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, %s::INTEGER, s.sakkoryhma))) * -1
@@ -478,9 +471,9 @@ UNION ALL
      WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
        AND s.poistettu = FALSE
        --- Vain mhu25+ (ja muutkin, jos validoinnit eivät ole päällä) urakoiden arvonvähennykset haetaan tässä
-       AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR ja.arvonvahennys_validoinnit_kaytossa IS FALSE))
+       AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR %s > 2025))
      GROUP BY s.tyyppi, s.indeksi"
-    urakka urakka urakka alkupvm loppupvm))
+    urakka urakka urakka alkupvm loppupvm hoitokauden-alkuvuosi))
 
 (deftest hae-olemattomia-kustannuksia
   (let [urakka (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]

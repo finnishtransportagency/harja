@@ -6,14 +6,14 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :refer [taulukko-rivi]]))
 
 
-(defn- tuotekohtainen-rivit [data hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?]
+(defn- tuotekohtainen-rivit [data hoitokauden-alkuvuosi urakan-alkuvuosi]
   [{:lihavoi? false
     :otsikko "Hankinnat"
     :avain_yht :hankinnat_laskutetaan
     :avain_hoitokausi :hankinnat_laskutettu}
 
-   ;; Saadaan näyttää, jos urakka alkaa 2025 tai aiemmillekin urakoille, mutta vasta -26 hoitovuonna, tai jos validointi on pois käytöstä
-   (when (or (>= urakan-alkuvuosi 2025) (>= hoitokauden-alkuvuosi 2026) (not av-validointi?))
+   ;; Saadaan näyttää, jos urakka alkaa 2025 tai aiemmillekin urakoille, mutta vasta -26 hoitovuonna
+   (when (or (>= urakan-alkuvuosi 2025) (>= hoitokauden-alkuvuosi 2026))
      {:lihavoi? false
       :otsikko "Arvonvähennykset"
       :avain_yht :arvonvahennykset_laskutetaan
@@ -207,7 +207,7 @@
 (defn- rivit-tuotekohtainen
   "Instanssitaulukkojen rivimääritykset"
   [data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika
-   hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?]
+   hoitokauden-alkuvuosi urakan-alkuvuosi]
   (let [;; MHU ja HJU hoidon johto- taulukko,
         ;; jossa näytetään hieman muista instansseista poikkeavia lukuja
         mhu-hju-rivit (fn [data kyseessa-kk-vali?]
@@ -219,7 +219,7 @@
         taulukko-rivit (tee-taulukko-rivit data
                          {:kyseessa-kk-vali? kyseessa-kk-vali?
                           :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
-                         (tuotekohtainen-rivit data hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?))
+                         (tuotekohtainen-rivit data hoitokauden-alkuvuosi urakan-alkuvuosi))
 
         rahavaraus-rivit (rahavaraus-rivit
                            kyseessa-kk-vali?
@@ -245,7 +245,7 @@
 
 (defn taulukko-tuotekohtainen
   "Instanssikohtaiset taulukot"
-  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]} hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?]
+  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]} hoitokauden-alkuvuosi urakan-alkuvuosi]
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
@@ -254,7 +254,7 @@
                 (remove nil?
                   (rivit-tuotekohtainen
                     data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika
-                    hoitokauden-alkuvuosi urakan-alkuvuosi av-validointi?)))]
+                    hoitokauden-alkuvuosi urakan-alkuvuosi)))]
 
     [:taulukko {:sheet-nimi sheet-nimi
                 :viimeinen-rivi-yhteenveto? false

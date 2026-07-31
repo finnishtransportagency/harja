@@ -18,7 +18,6 @@
   (log/debug "Työmaakokous PARAMETRIT: " (pr-str parametrit))
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        av-validointi? (:arvonvahennys_validoinnit_kaytossa (first (jarjestelmatila-q/hae-jarjestelman-asetukset db)))
         kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
@@ -122,8 +121,7 @@
                                         :laskutetaan-teksti laskutetaan-teksti
                                         :kyseessa-kk-vali? kyseessa-kk-vali?
                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                        :urakan-alkuvuosi urakan-alkuvuosi
-                                        :av-validointi? av-validointi?})))
+                                        :urakan-alkuvuosi urakan-alkuvuosi})))
 
        ;; --------------- ;;
        ;;    Muutokset    ;;
@@ -135,8 +133,7 @@
                                  :laskutetaan-teksti laskutetaan-teksti
                                  :kyseessa-kk-vali? kyseessa-kk-vali?
                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                 :urakan-alkuvuosi urakan-alkuvuosi
-                                 :av-validointi? av-validointi?}))
+                                 :urakan-alkuvuosi urakan-alkuvuosi}))
 
        ;; ------------------------ ;;
        ;;   Rahavaraukset, muut    ;;
@@ -147,8 +144,7 @@
                                :laskutetaan-teksti laskutetaan-teksti
                                :kyseessa-kk-vali? kyseessa-kk-vali?
                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                               :urakan-alkuvuosi urakan-alkuvuosi
-                               :av-validointi? av-validointi?})
+                               :urakan-alkuvuosi urakan-alkuvuosi})
 
        (taulukko-tyomaakokous {:data rivitiedot
                                :otsikko "Muut tavoitehintaan vaikuttavat kulut"
@@ -157,8 +153,7 @@
                                :kyseessa-kk-vali? kyseessa-kk-vali?
                                :tavoitehintainen? true
                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                               :urakan-alkuvuosi urakan-alkuvuosi
-                               :av-validointi? av-validointi?})
+                               :urakan-alkuvuosi urakan-alkuvuosi})
 
      (when-not
        (boolean (:kustannussuunnitelma_vahvistettu rivitiedot))
@@ -217,8 +212,7 @@
                                :kyseessa-kk-vali? kyseessa-kk-vali?
                                :tavoitehintainen? false
                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                               :urakan-alkuvuosi urakan-alkuvuosi
-                               :av-validointi? av-validointi?})
+                               :urakan-alkuvuosi urakan-alkuvuosi})
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
      (taulukot/lapinakyva-taulukko false

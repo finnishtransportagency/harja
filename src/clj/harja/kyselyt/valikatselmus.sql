@@ -125,10 +125,6 @@ WITH urakan_tiedot AS (
            EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
     FROM urakka u
     WHERE u.id = :urakka-id
-),
-jarjestelman_asetukset_tieto AS (
-    SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
-    FROM jarjestelman_asetukset ja
 )
 SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
        s.sakkoryhma,
@@ -136,10 +132,9 @@ SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
   FROM sanktio s
            JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
            CROSS JOIN urakan_tiedot u
-           CROSS JOIN jarjestelman_asetukset_tieto ja
  WHERE s.poistettu IS NOT TRUE
    AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-   AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND ja.arvonvahennys_validoinnit_kaytossa IS TRUE));
+   AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND :hoitokauden-alkuvuosi::INT <= 2025));
 
 -- name: hae-arvonvahennykset
 WITH urakan_tiedot AS (
@@ -147,20 +142,15 @@ WITH urakan_tiedot AS (
            EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
     FROM urakka u
     WHERE u.id = :urakka-id
-),
-jarjestelman_asetukset_tieto AS (
-    SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
-    FROM jarjestelman_asetukset ja
 )
 SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
        s.sakkoryhma
   FROM sanktio s
            JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
            CROSS JOIN urakan_tiedot u
-           CROSS JOIN jarjestelman_asetukset_tieto ja
  WHERE s.poistettu IS NOT TRUE
    AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-   AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR ja.arvonvahennys_validoinnit_kaytossa IS FALSE));
+   AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR :hoitokauden-alkuvuosi::INT >= 2026));
 
 -- name: hae-tavoitehinnan-muutokset-hoitokaudelle
 select id, "urakka-id", otsikko, selite, summa

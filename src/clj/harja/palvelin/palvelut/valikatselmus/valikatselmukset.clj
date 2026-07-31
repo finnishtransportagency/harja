@@ -120,7 +120,8 @@
         ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
         arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
                                                                    :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)})
+                                                                   :loppupvm (second valittu-hoitokausi)
+                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
         hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
                                                             muutosvaikutus
@@ -278,11 +279,13 @@
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna sanktioita. Joten haetaan ne erikseen
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
-                                                   :loppupvm hoitokauden-loppupvm})
+                                                   :loppupvm hoitokauden-loppupvm
+                                                   :hoitokauden-alkuvuosi hoitovuosi})
         ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
         arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
                                                                    :alkupvm hoitokauden-alkupvm
-                                                                   :loppupvm hoitokauden-loppupvm})
+                                                                   :loppupvm hoitokauden-loppupvm
+                                                                   :hoitokauden-alkuvuosi hoitovuosi})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa

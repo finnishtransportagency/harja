@@ -258,7 +258,6 @@ DECLARE
     arvonvahennykset_rivi                 RECORD;
     arvonvahennykset_hoitokausi_yht       NUMERIC;
     arvonvahennykset_val_aika_yht         NUMERIC;
-    arvonvahennys_validoinnit_kaytossa    BOOLEAN;
     paatos_tavoitepalkkio_hoitokausi_yht  NUMERIC;
     paatos_tavoitepalkkio_val_aika_yht    NUMERIC;
     paatos_tavoiteh_ylitys_hoitokausi_yht NUMERIC;
@@ -361,10 +360,6 @@ BEGIN
     SELECT u.id, u.alkupvm, u.nimi  FROM urakka u WHERE u.id = ur INTO urakan_tiedot;
     RAISE NOTICE '*** Urakan tiedot: % ', urakan_tiedot;
     urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
-
-    -- Haetaan arvonvähennysvalidoinnin tila järjestelmäasetuksista
-    arvonvahennys_validoinnit_kaytossa := (SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE)
-                                             FROM jarjestelman_asetukset ja);
 
     -------------------------
     -- Valitun aikavälin hoitokausien tavoitehinnat
@@ -1235,9 +1230,7 @@ BEGIN
                                    -- Vain arvonvähennyssanktiot: mhu25+ urakoilla aina,
                                    -- vanhemmilla urakoilla hoitovuodesta 2026 tai validoinnit pois
                                    AND s.sakkoryhma = 'arvonvahennyssanktio'
-                                   AND (urakan_alkuvuosi >= 2025
-                                     OR hk_alkuvuosi >= 2026
-                                     OR arvonvahennys_validoinnit_kaytossa IS FALSE)
+                                   AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026)
         LOOP
             RAISE NOTICE 'arvonvahennykset_rivi: % ', arvonvahennykset_rivi;
 
@@ -1462,9 +1455,7 @@ BEGIN
                            -- Vanhoilla urakoilla (alkuvuosi < 2025) erotus tehdään vasta hoitovuodesta 2026
                            -- tai jos validoinnit eivät ole käytössä.
                            AND (s.sakkoryhma != 'arvonvahennyssanktio'
-                                OR (urakan_alkuvuosi < 2025
-                                    AND hk_alkuvuosi < 2026
-                                    AND arvonvahennys_validoinnit_kaytossa IS TRUE))
+                                OR (urakan_alkuvuosi < 2025 AND hk_alkuvuosi < 2026))
         LOOP
             RAISE NOTICE 'sanktiot_rivi: % ', sanktiot_rivi;
             RAISE NOTICE 'sanktiot_rivi.summa_korotettuna: %', sanktiot_rivi.summa_korotettuna;

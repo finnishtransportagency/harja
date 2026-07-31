@@ -617,7 +617,6 @@ DECLARE
     arvonvahennykset_laskutettu           NUMERIC;
     arvonvahennykset_laskutetaan          NUMERIC;
     arvonvahennysrivi                     RECORD;
-    arvonvahennys_validoinnit_kaytossa    BOOLEAN;
 
     -- Hoidon johto
     h_rivi                                RECORD;
@@ -750,9 +749,6 @@ BEGIN
 
     SELECT u.id, u.alkupvm, u.nimi  FROM urakka u WHERE u.id = ur INTO urakan_tiedot;
     urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
-    -- Haetaan arvonvähennysvalidoinnin tila järjestelmäasetuksista
-    arvonvahennys_validoinnit_kaytossa := (SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE)
-                                           FROM jarjestelman_asetukset ja);
 
     johto_ja_hallintakorvaus_toimenpideinstanssi_id := (
       SELECT tpi.id AS id
@@ -863,9 +859,7 @@ BEGIN
                               -- Vanhassa mallissa (ennen 2025 alkaneet urakat, ennen hk 2026,
                               -- validoinnit paalla) arvonvahennykset kuuluvat edelleen sanktioihin.
                               AND (s.sakkoryhma != 'arvonvahennyssanktio'
-                                   OR (urakan_alkuvuosi < 2025
-                                       AND hk_alkuvuosi < 2026
-                                       AND arvonvahennys_validoinnit_kaytossa IS TRUE))
+                                   OR (urakan_alkuvuosi < 2025 AND hk_alkuvuosi < 2026))
             LOOP
                 IF sanktiorivi.perintapvm <= aikavali_loppupvm THEN
                     -- Hoitokauden alusta
@@ -893,7 +887,6 @@ BEGIN
         arvonvahennykset_laskutettu := 0.0;
         arvonvahennykset_laskutetaan := 0.0;
         -- Arvonvähennykset haetaan erikseen (2025+ urakoilla aina, vanhemmilla urakoilla ei huomioida tässä)
-        RAISE NOTICE 'arvonvahennys_validoinnit_kaytossa: %', arvonvahennys_validoinnit_kaytossa;
         RAISE NOTICE 'arvonvahennys tpi : %',  t.tpi;
         RAISE NOTICE 'arvonvahennys hk_alkuvuosi : %',  hk_alkuvuosi;
         RAISE NOTICE 'arvonvahennykset : %',  (SELECT s.maara * -1 AS maara
@@ -905,10 +898,7 @@ BEGIN
                                                  AND s.perintapvm <= aikavali_loppupvm
                                                  AND s.poistettu IS NOT TRUE
                                                  AND s.sakkoryhma = 'arvonvahennyssanktio'
-                                                  AND (urakan_alkuvuosi >= 2025
-                                                       OR hk_alkuvuosi >= 2026
-                                                       OR arvonvahennys_validoinnit_kaytossa IS FALSE)
-                                                 );
+                                                  AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026));
         RAISE NOTICE 'arvonvahennys urakan alkuvuosi : %',  (SELECT EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
                                                              FROM urakka u
                                                              WHERE u.id = ur);
@@ -922,8 +912,7 @@ BEGIN
                                     AND s.perintapvm <= aikavali_loppupvm
                                     AND s.poistettu IS NOT TRUE
                                     AND s.sakkoryhma = 'arvonvahennyssanktio'
-                                    AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026
-                                             OR arvonvahennys_validoinnit_kaytossa IS FALSE)
+                                    AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026)
             LOOP
                 RAISE NOTICE 'arvonvahennysrivi: %', arvonvahennysrivi;
                 IF arvonvahennysrivi.perintapvm <= aikavali_loppupvm THEN

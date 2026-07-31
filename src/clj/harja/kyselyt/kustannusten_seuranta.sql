@@ -14,12 +14,7 @@ WITH urakan_toimenpideinstanssi_23150 AS
                 u.tyyppi,
                 EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
          FROM urakka u
-         WHERE u.id = :urakka
-     ),
-     jarjestelman_asetukset_tieto AS (
-         SELECT COALESCE(BOOL_OR(ja.arvonvahennys_validoinnit_kaytossa), FALSE) AS arvonvahennys_validoinnit_kaytossa
-         FROM jarjestelman_asetukset ja
-     )
+         WHERE u.id = :urakka)
 -- Haetaan budjetoidut hankintakustannukset ja rahavaraukset kustannusarvioitu_tyo taulusta
 -- Kaikki budjetoidut kustannukset ovat joko rahavarauksia tai hankintoja. Erillishankinnat on eriytetty omaksi haukseen
 SELECT COALESCE(SUM(kt.summa + 
@@ -698,12 +693,11 @@ FROM sanktio s
      JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka AND tpi.id = s.toimenpideinstanssi
      JOIN sanktiotyyppi st ON s.tyyppi = st.id
      CROSS JOIN urakan_tiedot u
-     CROSS JOIN jarjestelman_asetukset_tieto ja
 WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND s.poistettu IS NOT TRUE
   --- Jätetään mhu25+ urakoilta, (tai kaikilta, jos validoinnit eivät ole käytössä)
   -- arvonvähennykset pois, ne haetaan erikseen
-  AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND ja.arvonvahennys_validoinnit_kaytossa IS TRUE))
+  AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND :hoitokauden-alkuvuosi::INTEGER <= 2025))
 GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma
 
 UNION ALL
@@ -751,11 +745,10 @@ FROM sanktio s
          LEFT JOIN tehtavaryhma tr ON tr.id = s.tehtavaryhma
          JOIN sanktiotyyppi st ON s.tyyppi = st.id
          CROSS JOIN urakan_tiedot u
-         CROSS JOIN jarjestelman_asetukset_tieto ja
 WHERE s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
   AND s.poistettu IS NOT TRUE
-  --- Vain mhu25+ (ja muutkin, jos validoinnit eivät ole päällä) urakoiden arvonvähennykset haetaan tässä
-  AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR ja.arvonvahennys_validoinnit_kaytossa IS FALSE))
+  --- Vain mhu25+ (ja muutkin, jos hoitokausi on 2026+) urakoiden arvonvähennykset haetaan tässä
+  AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR :hoitokauden-alkuvuosi::INTEGER >= 2026))
 GROUP BY s.sakkoryhma, tr.nimi, tr.jarjestys, tk.koodi
 
 -- paatos_tavoitehinta_alitus -taulusta haetaan siirrot seuraavalle vuodelle - eli, kun tavoitepalkkio ylittää 3%, niin sen ylimenevä osuus siirretään seuraavalle vuodelle toteutuman alennukseksi
