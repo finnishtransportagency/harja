@@ -1047,14 +1047,12 @@
         ;; Legacy-odotus vastaa vanhaa toimintaa, jossa arvonvähennyssanktio on aina mukana hoidon urakoilla:
         ;; validoinnit käytössä (true) ja kuluvan hoitokauden alkuvuosi ennen vuotta 2026.
         kuluvan-hoitokauden-alkuvuosi 2025
-        arvonvahennys-validoinnit-kaytossa? true
         lajit (case soveltuvuuskonteksti
                 :laatupoikkeama (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
-                                                                              :alkupvm (:alkupvm urakka)}
-                                  kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?)
+                                                                              :alkupvm (:alkupvm urakka)})
                 (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
                                                      :alkupvm (:alkupvm urakka)}
-                  kuluvan-hoitokauden-alkuvuosi arvonvahennys-validoinnit-kaytossa?))]
+                  kuluvan-hoitokauden-alkuvuosi))]
     (mapv (fn [jarjestys laji]
             {:laji laji
              :rivin-tyyppi (legacy-rivin-tyyppi laji)

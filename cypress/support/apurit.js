@@ -181,4 +181,3 @@ export function avaaSivupaneelissaTallennettu(kuvaus) {
 export function siirrySivupaneelissaMuokkaustilaan() {
     cy.get(SP).contains('button', 'Muokkaa').click();
 }
-

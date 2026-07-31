@@ -14,16 +14,10 @@ WHERE "osa-alue"=:osa-alue AND
 ORDER BY paivitetty DESC;
 
 -- name: hae-jarjestelman-asetukset
-SELECT valikatselmus_validoinnit_kaytossa, arvonvahennys_validoinnit_kaytossa FROM jarjestelman_asetukset;
+SELECT valikatselmus_validoinnit_kaytossa FROM jarjestelman_asetukset;
 
 -- name: toggle-valikatselmus-validoinnit!
 UPDATE jarjestelman_asetukset
    SET valikatselmus_validoinnit_kaytossa = :validoinnit,
        muokattu = NOW(),
        muokkaaja = :kayttajaid;
-
--- name: toggle-arvonvahennys-validoinnit!
-UPDATE jarjestelman_asetukset
-SET arvonvahennys_validoinnit_kaytossa = :validoinnit,
-    muokattu = NOW(),
-    muokkaaja = :kayttajaid;

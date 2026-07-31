@@ -16,7 +16,6 @@
             [taoensso.truss :as truss :refer-macros [have]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.hallinta.jarjestelma-asetukset :as jasetukset]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.urakka :as urakka-domain])
 

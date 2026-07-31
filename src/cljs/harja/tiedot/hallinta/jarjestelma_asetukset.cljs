@@ -18,11 +18,6 @@
          :haku-kaynnissa? false
          :tallennus-kaynnissa? false}))
 
-;; Globaali arvonvahennys_validoinnit_kaytossa -järjestelmäasetus boolean-muodossa.
-;; Päivitetään aina kun järjestelmän asetukset haetaan (mm. sanktiot ja bonukset -näkymässä),
-;; jotta asetus on saatavilla myös tuck-näkymien ulkopuolella (esim. urakan sanktiolajit -reaktiossa).
-(defonce arvonvahennys-validoinnit-kaytossa? (atom true))
-
 (defrecord Nakymassa? [nakymassa?])
 (defrecord HaeGeometria-aineistot [])
 (defrecord Geometria-aineistotHaettu [geometria-aineistot])
@@ -36,9 +31,6 @@
 (defrecord ToggleValikatselmusValidoinnit [validoinnit])
 (defrecord ToggleValikatselmusValidoinnitOnnistui [vastaus])
 (defrecord ToggleValikatselmusValidoinnitEpaonnistui [vastaus])
-(defrecord ToggleArvonvahennysValidoinnit [validoinnit])
-(defrecord ToggleArvonvahennysValidoinnitOnnistui [vastaus])
-(defrecord ToggleArvonvahennysValidoinnitEpaonnistui [vastaus])
 (defrecord HaeJarjestelmanAsetukset [])
 (defrecord HaeJarjestelmanAsetuksetOnnistui [vastaus])
 (defrecord HaeJarjestelmanAsetuksetEpaonnistui [vastaus])
@@ -144,27 +136,6 @@
     (viesti/nayta! [:span "Virhe validoinnin muutoksessa!"] :danger)
     (assoc app :tallennus-kaynnissa? false))
 
-  ToggleArvonvahennysValidoinnit
-  (process-event [{validoinnit :validoinnit} app]
-    (if-not (:tallennus-kaynnissa? app)
-      (do (tuck-apurit/post! :toggle-arvonvahennys-validoinnit
-            {:validointi validoinnit}
-            {:onnistui ->ToggleArvonvahennysValidoinnitOnnistui
-             :epaonnistui ->ToggleArvonvahennysValidoinnitEpaonnistui})
-        (assoc app :tallennus-kaynnissa? true))
-      app))
-
-  ToggleArvonvahennysValidoinnitOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (-> app
-      (assoc-in [:asetukset :arvonvahennys-validointi] vastaus)
-      (assoc :tallennus-kaynnissa? false)))
-
-  ToggleArvonvahennysValidoinnitEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta! [:span "Virhe validoinnin muutoksessa!"] :danger)
-    (assoc app :tallennus-kaynnissa? false))
-
   HaeJarjestelmanAsetukset
   (process-event [_ app]
     (tuck-apurit/get! :hae-jarjestelma-asetukset
@@ -174,13 +145,9 @@
 
   HaeJarjestelmanAsetuksetOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [valikatselmus-validoinnit (:valikatselmus_validoinnit_kaytossa vastaus)
-          arvonvahennys-validoinnit (:arvonvahennys_validoinnit_kaytossa vastaus)]
-      ;; Pidä globaali asetus ajan tasalla, jotta se on saatavilla myös tuck-näkymien ulkopuolella.
-      (reset! arvonvahennys-validoinnit-kaytossa? (boolean arvonvahennys-validoinnit))
+    (let [valikatselmus-validoinnit (:valikatselmus_validoinnit_kaytossa vastaus)]
       (-> app
-        (assoc-in [:asetukset :valikatselmus-validointi] (keyword (str valikatselmus-validoinnit)))
-        (assoc-in [:asetukset :arvonvahennys-validointi] (keyword (str arvonvahennys-validoinnit))))))
+        (assoc-in [:asetukset :valikatselmus-validointi] (keyword (str valikatselmus-validoinnit))))))
 
   HaeJarjestelmanAsetuksetEpaonnistui
   (process-event [_ app]

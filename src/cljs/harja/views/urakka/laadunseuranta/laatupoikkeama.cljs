@@ -14,6 +14,7 @@
             [harja.ui.viesti :as viesti]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.napit :as napit]
@@ -158,7 +159,7 @@
                 (fn []
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
                    (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
-                         uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka)) {:suorasanktio false})
+                         uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))) {:suorasanktio false})
                                 (assoc :maarattypvm kasittelyaika)
                                 (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)

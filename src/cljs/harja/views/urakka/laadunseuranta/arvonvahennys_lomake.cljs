@@ -37,7 +37,7 @@
         tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
-        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
+        urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         ;; Lisätään tehtäväryhmälle id
         tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %)) (:tehtavaryhmat app))
         ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
@@ -46,8 +46,29 @@
         tehtavat (:tehtavat app)
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
-        kuluvan-hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))
-        liitteet-id (str "liitteet-element-id-" (gensym))]
+        liitteet-id (str "liitteet-element-id-" (gensym))
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
+        urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
+        urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
+        viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)
+                                          urakan-loppuvuosi
+                                          (dec urakan-loppuvuosi))
+        hoitovuodet (if (<= urakan-alkuvuosi viimeinen-hoitovuoden-alkuvuosi)
+                      (vec (range urakan-alkuvuosi (inc viimeinen-hoitovuoden-alkuvuosi)))
+                      [])
+        hoitovuosi->teksti (fn [hoitovuosi]
+                             (when (int? hoitovuosi)
+                               (let [jarjestysnumero (inc (- hoitovuosi urakan-alkuvuosi))]
+                                 (str jarjestysnumero ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")"))))
+        perintapvm->hoitovuosi (fn [perintapvm]
+                                 (when perintapvm
+                                   (let [vuosi (pvm/vuosi perintapvm)
+                                         kuukausi (pvm/kuukausi perintapvm)
+                                         hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
+                                     (when (some #{hoitovuosi} hoitovuodet)
+                                       hoitovuosi))))]
+
+
 
     [:div
      [debug/debug @muokattu]
@@ -79,8 +100,7 @@
                        [:button.nappi-kielteinen.oikealle
                         {:class (when @tallennus-kaynnissa "disabled")
                          :on-click
-                         (fn [e]
-                           (.preventDefault e)
+                          (fn [_]
                            (varmista-kayttajalta/varmista-kayttajalta
                              {:otsikko "Arvonvähennyksen poistaminen"
                               :sisalto "Haluatko varmasti poistaa arvonvähennyksen? Toimintoa ei voi perua."
@@ -229,17 +249,34 @@
           :hae (comp :kasittelyaika :paatos :laatupoikkeama)
           :aseta (fn [rivi arvo]
                    (cond-> rivi
-                                   ;; Jos perintäpvm ei ole vielä valittu, asetetaan esivalinta
-                                   (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                   (assoc-in [:perintapvm] arvo)
+                     ;; Jos perintäpvm ei ole vielä valittu, asetetaan esivalinta
+                     (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                     (assoc-in [:perintapvm] arvo)
 
-                                   true
-                                   (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
+                     true
+                     (assoc-in [:maarattypvm] arvo)
+
+                     true
+                     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm
           :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
 
-         ;; Laskutuskuukausi näytetään mhu24 urakoille
-         (when (and (not mhu25?) voi-muokata? (not lukutila?))
+         ;; Laskutuskuukausi - muokkausmoodi
+         (cond
+           (and mhu25? voi-muokata? (not lukutila?))
+           {:otsikko "Kohdistuu hoitovuodelle"
+            :nimi :perintapvm
+            :pakollinen? true
+            :tyyppi :valinta
+            :valinnat hoitovuodet
+            :hae #(perintapvm->hoitovuosi (:perintapvm %))
+            :aseta (fn [rivi hoitovuosi]
+                     (assoc rivi :perintapvm
+                       (when hoitovuosi
+                         (pvm/hoitokauden-alkupvm hoitovuosi))))
+            :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
+            ::lomake/col-luokka "col-xs-6"}
+           (and (not mhu25?) voi-muokata? (not lukutila?))
            {:otsikko "Laskutuskuukausi"
             :label-for-id laskutuskuukausi-id
             :nimi :perintapvm
@@ -280,7 +317,16 @@
                               (when (not @tiedot-urakka/yllapitourakka?)
                                 [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))})
 
-           (when (and (not mhu25?) lukutila?)
+           (cond
+             (and mhu25? lukutila?)
+             {:otsikko "Kohdistuu hoitovuodelle"
+              :nimi :perintapvm
+              :fmt (fn [perintapvm]
+                     (some-> perintapvm perintapvm->hoitovuosi hoitovuosi->teksti))
+              :pakollinen? true
+              :tyyppi :pvm
+              ::lomake/col-luokka "col-xs-6"}
+             (and (not mhu25?) lukutila?)
            {:otsikko "Laskutuskuukausi"
             :nimi :perintapvm
             :fmt (fn [pvm]

@@ -115,9 +115,9 @@
   (reaction
     (domain-sanktio/sanktio-konfiguraation-lajit @valitun-urakan-sanktio-konfiguraatio)))
 
-(defn uusi-sanktio [urakkatyyppi]
+(defn uusi-sanktio [urakkatyyppi valittu-hoitokauden-alkuvuosi]
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+        default-perintapvm (pvm/luo-pvm-dec-kk valittu-hoitokauden-alkuvuosi (pvm/kuukausi nyt) 15)]
     {:harja.ui.lomake/muokatut #{:kasittelyaika}
      :suorasanktio true
      :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
