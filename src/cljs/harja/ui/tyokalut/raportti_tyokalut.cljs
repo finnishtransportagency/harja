@@ -65,7 +65,8 @@
            esta-tiivis-grid? :esta-tiivis-grid?
            avattavat-rivit :avattavat-rivit
            sivuttain-rullattava? :sivuttain-rullattava?
-           ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-vasen]
+           ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?
+           ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?} optiot-vasen]
       [raportointi/grid
        otsikko
        gridin-luokka
@@ -82,6 +83,7 @@
        avattavat-rivit
        sivuttain-rullattava?
        ensimmainen-sarake-sticky?
+       ei-footer-muokkauspaneelia?
        otsikot-vasen rivit-vasen])]
    ;; Ei piirretä oikeaa elementtiä, jos sitä ei ole annettu.
    (if otsikko-oikea
@@ -101,7 +103,8 @@
              esta-tiivis-grid? :esta-tiivis-grid?
              avattavat-rivit :avattavat-rivit
              sivuttain-rullattava? :sivuttain-rullattava?
-             ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-oikea]
+             ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?
+             ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?} optiot-oikea]
         [raportointi/grid
          otsikko 
          gridin-luokka
@@ -118,6 +121,7 @@
          avattavat-rivit
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
+         ei-footer-muokkauspaneelia?
          otsikot-oikea rivit-oikea])]
      [:div.width-half])])
 

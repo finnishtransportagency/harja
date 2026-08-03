@@ -16,11 +16,14 @@
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as bonus-konfiguraatio]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -353,6 +356,12 @@
             (assoc % :indeksikorjattuna (:bonus-indeksikorjattuna %))
             %))))
 
+(defn- bonus-write-path-validoitava?
+  [tyyppi]
+  (let [bonuslaji (keyword tyyppi)]
+    (and (not= :yllapidon_bonus bonuslaji)
+      (boolean (sanktio-domain/bonuslaji->teksti bonuslaji)))))
+
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
@@ -375,6 +384,8 @@
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
+            bonuslaji (keyword tyyppi)
+            mhu-bonus? (bonus-write-path-validoitava? tyyppi)
             ;; Koska laskutuskuukausi voi olla antamatta, niin asetetaan se samaksi kuin pvm
             laskutuskuukausi (if (nil? laskutuskuukausi)
                                pvm
@@ -383,6 +394,15 @@
             sopimus (if (nil? sopimus)
                       (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
                       sopimus)
+            urakan-tiedot (when mhu-bonus?
+                            (first (urakat-q/hae-urakan-tiedot db urakka-id)))
+            _ (when mhu-bonus?
+                (bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+                  db
+                  {:urakka-id urakka-id
+                   :hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) pvm)
+                   :toimenpideinstanssi-id toimenpideinstanssi
+                   :bonuslaji bonuslaji}))
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus

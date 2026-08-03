@@ -45,6 +45,11 @@ on:
         default: 'true'
         type: string
         required: false
+      validate-oikeudet-edn:
+        description: 'Enabloi validate-oikeudet-edn job'
+        default: 'true'
+        type: string
+        required: false
       backend-tests:
         description: 'Enabloi back-tests job'
         default: 'true'
@@ -91,7 +96,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -117,7 +122,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -137,6 +142,7 @@ jobs:
 
   # Validoi että oikeudet EDN-tiedostot ovat ajan tasalla
   validate-oikeudet-edn:
+    if: ${{ inputs.validate-oikeudet-edn == 'true' }}
     name: "Validoi oikeudet EDN-tiedostot"
     runs-on: ubuntu-latest
     permissions:
@@ -144,7 +150,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -194,7 +200,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -271,7 +277,7 @@ jobs:
       packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -292,9 +298,9 @@ jobs:
           path: ./target
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@d7f5e7f509e45cec5c76c4d5afdd7de93d0b3df5 # v4.1.0
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
       - name: Log in to the Container registry
-        uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+        uses: docker/login-action@af1e73f918a031802d376d3c8bbc3fe56130a9b0 # v4.4.0
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -302,7 +308,7 @@ jobs:
 
       - name: Build and tag Harja app test image
         id: build-test-image
-        uses: docker/build-push-action@f9f3042f7e2789586610d6e8b85c8f03e5195baf # v7.2.0
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
         env:
           IMAGE_TAG: ${{ github.sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
@@ -350,7 +356,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -400,7 +406,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -449,7 +455,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -495,7 +501,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -559,7 +565,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -653,7 +659,7 @@ jobs:
       - name: Install Cypress test dependencies (transit-js)
         if: steps.cache-npm.outputs.cache-hit != 'true'
         run: |
-          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package").dependencies["transit-js"]')
+          NPM_TRANSITJS_VERSION=$(node -pe 'require("./package.json").dependencies["transit-js"]')
           npm install "transit-js@${NPM_TRANSITJS_VERSION}" --ignore-scripts
 
       # Ajaa cypress testit erillisessä kontissa
