@@ -181,12 +181,14 @@
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (defn vain-hoitokausivalinta? [raportti]
-  (#{:suolasakko :muutos-ja-lisatyot} raportti))
+  (#{:suolasakko :muutos-ja-lisatyot :valitavoiteraportti} raportti))
 
 ;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
 (defn ei-kuukausivalintaa? [raportti]
   (#{:mpu-paikkausten-yhteenveto
-     :ppu-paikkausten-yhteenveto} raportti))
+     :ppu-paikkausten-yhteenveto
+     :valitavoiteraportti
+     :muutos-ja-lisatyot} raportti))
 
 (defn vain-kuukausivalinta? [raportti urakka-valittu?]
   ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
@@ -262,22 +264,22 @@
         pvm-rajattu-eiliseen? (boolean (#{:materiaaliraportti :pohjavesialueiden-suolatoteumat} (:nimi @valittu-raporttityyppi)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled
-                          (or @vapaa-aikavali?
-                              vain-hoitokausivalinta?
+      (when-not vain-hoitokausivalinta?
+        [ui-valinnat/vuosi {:disabled
+                            (or @vapaa-aikavali?
                               (and vain-kuukausivalinta?
-                                   ;; Hoidossa /MHU:Ssa valitaan ensin hoitokausi, ja se määrää minkä vuoden
-                                   ;; kuukauden voi valita.
-                                   ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
-                                   ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
-                                   ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
-                                   ;; disabloidaan vuosi-valinta vain hoidon urakoille
-                                   (#{:hoito :teiden-hoito} urakkatyyppi)))}
-       vuosi-eka vuosi-vika valittu-vuosi
-       #(do
-         (reset! valittu-vuosi %)
-         (reset! valittu-hoitokausi nil)
-         (reset! valittu-kuukausi nil))]
+                                ;; Hoidossa /MHU:Ssa valitaan ensin hoitokausi, ja se määrää minkä vuoden
+                                ;; kuukauden voi valita.
+                                ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
+                                ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
+                                ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
+                                ;; disabloidaan vuosi-valinta vain hoidon urakoille
+                                (#{:hoito :teiden-hoito} urakkatyyppi)))}
+         vuosi-eka vuosi-vika valittu-vuosi
+         #(do
+            (reset! valittu-vuosi %)
+            (reset! valittu-hoitokausi nil)
+            (reset! valittu-kuukausi nil))])
       ;; Erikoiskeissi, miksi hassunnäköisiä ehtoja:
       ;; Jos valittuna on koko maa tai hallintayksikkö, mutta ei urakkaa, silloin
       ;; urakkatyyppi (alasvetovalinnasta) on :hoito, mutta hoitourakassa? saa arvon null

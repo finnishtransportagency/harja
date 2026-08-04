@@ -332,7 +332,7 @@
     :urakkatyyppi    #{:hoito :teiden-hoito}}
 
    {:nimi         :valitavoiteraportti
-    :parametrit   [{:tyyppi nil, :konteksti nil, :pakollinen nil, :nimi nil}]
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"}
     :kuvaus       "Välitavoiteraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita
@@ -491,4 +491,3 @@
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
-

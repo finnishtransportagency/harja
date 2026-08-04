@@ -323,8 +323,10 @@
 (defmethod muodosta-html :info-laatikko [[_ ensisijainen-teksti toissijainen-teksti leveys]]
   (yleiset/info-laatikko :vahva-ilmoitus ensisijainen-teksti toissijainen-teksti leveys {:ikoni-fn #(ikonit/harja-icon-status-alert) :luokka "pull-right"}))
 
-(defmethod muodosta-html :otsikko-heading-small [[_ teksti]]
-  [:h1.raportti-otsikko {:style {:font-size "12px"}} teksti])
+(defmethod muodosta-html :otsikko-heading-small [[_ teksti lisaa-vali]]
+  [:h1.raportti-otsikko {:style (merge {:font-size "12px"}
+                                  (when lisaa-vali {:margin-left "0.5rem"}))}
+   teksti])
 
 (defmethod muodosta-html :otsikko [[_ teksti]]
   [:h3.raportti-otsikko teksti])
