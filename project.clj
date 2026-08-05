@@ -287,7 +287,21 @@
                    :ohita :ohita
                    :default (fn [m]
                               (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
-                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))}
+                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
+                   ;; Shard-selektorit backend CI-testejä varten:
+                   ;; Jaetaan :default-selektorin läpäisevät testit namespacen nimen hashin perusteella kahteen osaan
+                   ;; rinnakkaista backend-testien ajoa varten (ks. reusable_run_app_tests.yml).
+                   ;; HUOM: näiden pitää olla itsenäisiä (fn [m] ...) -literaaleja, koska lein test evaluoi
+                   ;; test-selectors-arvot uudelleen erillisessä aliprosessissa, jossa project.clj:n
+                   ;; muut top-level-määrittelyt (esim. defn-) eivät ole käytettävissä.
+                   :shard-1 (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
+                                (and (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))
+                                     (= 0 (mod (hash (str (:ns m))) 2)))))
+                   :shard-2 (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
+                                (and (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))
+                                     (= 1 (mod (hash (str (:ns m))) 2)))))}
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
@@ -303,4 +317,3 @@
 
   ;;:doo {:paths {:phantom "phantomjs --local-storage-path=/tmp --local-storage-quota=1024 --offline-storage-path=/tmp --offline-storage-quota=1024"}}
   )
-
