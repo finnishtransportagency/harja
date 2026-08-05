@@ -195,6 +195,7 @@ WHERE lp.urakka = :urakka
 SELECT ek.id,
        ek.laskutuskuukausi                                 as perintapvm,
        ek.pvm                                              AS kasittelyaika,
+       ek.pvm                                              AS maarattypvm,  -- UIlla mhu25 urakoilla puhutaan määrättypäivästä
        ek.rahasumma                                        AS summa,
        ek.tyyppi::TEXT                                     AS laji,
        ek.indeksin_nimi                                    AS indeksi,
@@ -239,6 +240,7 @@ SELECT s.id,
        s.perintapvm          AS perintapvm,
        -- Kasittelyaika haetaan sanktion suhteen laatupoikkeaman puolelta, erilliskustannuksissa se on 'pvm'-sarake.
        lp.kasittelyaika      AS kasittelyaika,
+       lp.kasittelyaika      AS maarattypvm, -- UIlla mhu25 urakoilla puhutaan määrättypäivästä
        -- Muunna ylläpidon bonuksen summa positiiviseksi (se on käytännössä negatiivinen sanktio nykytoteuksella)
        s.maara * -1          AS summa,
        'yllapidon_bonus'     AS laji,
