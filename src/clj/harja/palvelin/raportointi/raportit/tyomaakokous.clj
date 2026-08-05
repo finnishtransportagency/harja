@@ -59,4 +59,4 @@
             [:yksikkohintaiset-tyot "Yksikköhintaiset työt päivittäin" yks-hint-paivittain/suorita]
             [:yks-hint-tehtavien-summat "Yksikköhintaiset työt tehtävittäin" yks-hint-tehtavittain/suorita]
             [:valitavoiteraportti "Välitavoitteet" (fn [db user tiedot] (valitavoiteraportti/suorita db user (assoc tiedot :tyomaakokousraportti? true)))]
-            [:ymparisto "Ympäristöraportti" ymparisto/suorita]])])
+            [:ymparisto "Ympäristöraportti" (fn [db user tiedot] (ymparisto/suorita db user (assoc tiedot :tyomaakokousraportti? true)))]])])

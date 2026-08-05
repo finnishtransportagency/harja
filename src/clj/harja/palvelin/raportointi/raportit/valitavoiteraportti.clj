@@ -160,6 +160,8 @@
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm tyomaakokousraportti?] :as parametrit}]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakan-tiedot)
+        ;;alkupvm ja loppupvm voivat olla yhden kuukauden alku- ja loppupäivät, jos ollaan työmaakokousraportissa,
+        ;;mutta välitavoiteraportti näytetään sielläkin vain koko hoitovuoden ajalta
         alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
         loppupvm (second (pvm/paivamaaran-hoitokausi loppupvm))
         valitavoitteet (hae-valitavoitteet db {:urakka urakka-id

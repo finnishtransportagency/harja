@@ -188,7 +188,8 @@
   (#{:mpu-paikkausten-yhteenveto
      :ppu-paikkausten-yhteenveto
      :valitavoiteraportti
-     :muutos-ja-lisatyot} raportti))
+     :muutos-ja-lisatyot
+     :ymparistoraportti} raportti))
 
 (defn vain-kuukausivalinta? [raportti urakka-valittu?]
   ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
