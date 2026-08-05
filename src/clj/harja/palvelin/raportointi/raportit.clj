@@ -228,7 +228,7 @@
 
    {:nimi         :tyomaakokous
     :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto" :oletusarvo true}
-                   ;;    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöraportti" :oletusarvo true} Jätetään tässä vaiheessa pois, koska muutos- ja lisätyöraportti toinmii vain hoitovuoikohtaisesti
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöraportti" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laskutusyhteenveto" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laatupoikkeamat" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ympäristöraportti" :oletusarvo true}

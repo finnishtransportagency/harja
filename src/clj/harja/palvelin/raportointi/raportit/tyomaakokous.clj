@@ -48,7 +48,7 @@
             [:laatupoikkeamaraportti "Laatupoikkeamat" laatupoikkeamat/suorita]
             [:laskutusyhteenveto "Laskutusyhteenveto" urakkatyypin-laskutusyhteenveto]
             [:materiaaliraportti "Materiaaliraportti" materiaalit/suorita]
-            ;;[:muutos-ja-lisatyoraportti "Muutos- ja lisätyöraportti" muutos-ja-lisatyoraportti/suorita] Jätetään pois tässä vaiheessa, koska muutos- ja lisätyöraportti toimii vain hoitovuosikohtaisesti tällä hetkellä.
+            [:muutos-ja-lisatyoraportti "Muutos- ja lisätyöraportti" muutos-ja-lisatyoraportti/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]
             [:soratietarkastusraportti "Soratietarkastukset" soratietarkastukset/suorita]
             [:tehtavamaarat "Tehtävämäärät" tehtavamaarat/suorita]
@@ -58,5 +58,5 @@
             [:yks-hint-kuukausiraportti "Yksikköhintaiset työt kuukausittain" yks-hint-kuukausittain/suorita]
             [:yksikkohintaiset-tyot "Yksikköhintaiset työt päivittäin" yks-hint-paivittain/suorita]
             [:yks-hint-tehtavien-summat "Yksikköhintaiset työt tehtävittäin" yks-hint-tehtavittain/suorita]
-            [:ymparisto "Ympäristöraportti" ymparisto/suorita]
-            [:valitavoiteraportti "Välitavoitteet" (fn [db user tiedot] (valitavoiteraportti/suorita db user (assoc tiedot :tyomaakokousraportti? true)))]])])
+            [:valitavoiteraportti "Välitavoitteet" (fn [db user tiedot] (valitavoiteraportti/suorita db user (assoc tiedot :tyomaakokousraportti? true)))]
+            [:ymparisto "Ympäristöraportti" ymparisto/suorita]])])
