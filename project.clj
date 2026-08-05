@@ -180,7 +180,9 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.0"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.1"]]
+                         [tools.jackson.core/jackson-core "3.2.1"]
+                         ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
+                         [com.google.code.gson/gson "2.8.9"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
