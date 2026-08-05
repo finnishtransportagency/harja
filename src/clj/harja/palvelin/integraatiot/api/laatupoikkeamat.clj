@@ -63,24 +63,24 @@
               :ulkoinen_id (:id tunniste)
               :urakka-id urakka-id}))
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
-               db
-               {:lahde "harja-api"
-                :urakka urakka-id,
-                :aika (aika-string->java-sql-date aika),
-                :tekija "urakoitsija",
-                :kohde kohde,
-                :selvitys true,
-                :luoja (:id kirjaaja),
-                :kuvaus kuvaus,
-                :sijainti geometria,
-                :tr_numero (:tie tr-osoite),
-                :tr_alkuosa (:aosa tr-osoite),
-                :tr_loppuosa (:losa tr-osoite),
-                :tr_alkuetaisyys (:aet tr-osoite),
-                :tr_loppuetaisyys (:let tr-osoite),
-                :yllapitokohde yllapitokohde-id,
-                :sisaltaa_laatupoikkeaman sisaltaa-poikkeamaraportin,
-                :ulkoinen_id (:id tunniste)})))))
+             db
+             {:lahde "harja-api"
+              :urakka urakka-id,
+              :aika (aika-string->java-sql-date aika),
+              :tekija "urakoitsija",
+              :kohde kohde,
+              :selvitys true,
+              :luoja (:id kirjaaja),
+              :kuvaus kuvaus,
+              :sijainti geometria,
+              :tr_numero (:tie tr-osoite),
+              :tr_alkuosa (:aosa tr-osoite),
+              :tr_loppuosa (:losa tr-osoite),
+              :tr_alkuetaisyys (:aet tr-osoite),
+              :tr_loppuetaisyys (:let tr-osoite),
+              :yllapitokohde yllapitokohde-id,
+              :sisaltaa_laatupoikkeaman sisaltaa-poikkeamaraportin,
+              :ulkoinen_id (:id tunniste)})))))
 
 (defn tallenna-kommentit [db laatupoikkeama-id kirjaaja kommentit]
   (doseq [kommentin-data kommentit]
