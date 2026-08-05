@@ -130,6 +130,9 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         cy.viewport(1100, 1200)
         avaaSanktiotJaBonukset(testiurakka, evk)
 
+        // Määrätty päivämäärä pitäisi näkyä listassa
+        cy.contains('td', '15.02.2026');
+
         // Klikataan luotua sanktiota gridissä
         cy.contains('td', testiSanktioKuvaus).click()
 
@@ -347,11 +350,13 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         // Siirretään fokus pois päivämääräkentästä
         cy.get('label').contains('Perustelu').click()
 
-        // Varmistetaan, että "Laskutuskuukausi" -kenttä on ihan vain tekstiä, eikä disabled alasvetovalikko.
-        cy.get('label').contains('Laskutuskuukausi').parent().parent().parent().find('button').should('have.length', 0)
+        // Varmistetaan, että "Laskutuskuukausi" -kenttä on "Kohdistuu hoitovuodelle" ja hoitovuosi on valittavissa
+        //cy.get('label').contains('Kohdistuu hoitovuodelle').parent().parent().parent().find('button').should('have.length', 0)
+        cy.get('label[for*=perintapvm] + div').valinnatValitse({valinta: '1. hoitovuosi (2025 - 2026)'});
+        cy.get('label').contains('Laskutuskuukausi').should('not.exist')
 
-        // Varmistetaan, että "Käsittelytapa" -kenttä on read only (disabled) MHU25 urakalla
-        cy.get('label').contains('Käsittelytapa').parent().parent().parent().find('.form-control-static')
+        // Varmistetaan, että "Käsittelytapa" -kenttää ei ole MHU25 urakalla
+        cy.get('label').contains('Käsittelytapa').should('not.exist')
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
@@ -407,6 +412,9 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('div').should('have.class', 'lomake-arvo')
         cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('button').should('have.length', 0)
 
+        // 23 urakoilla ei ole "kohdistuu hoitovuodelle" vaan "laskutuskuukausi"
+        cy.get('label').contains('Kohdistuu hoitovuodelle').should('not.exist')
+        cy.get('label').contains('Laskutuskuukausi').should('be.visible')
 
         // Summa
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('400')
@@ -427,8 +435,8 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').click();
 
 
-        // Käsittelytapa
-        cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
+        // Käsittelytapaa ei saa olla mhu23 urakalle
+        cy.get('label').contains('Käsittelytapa').should('not.exist')
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
@@ -500,8 +508,8 @@ describe('Bonukset toimii - MHU19 (Oulu)', function () {
         cy.get('[data-cy=koontilaskun-kk-dropdown]').should('not.have.class', 'disabled')
         cy.get('[data-cy=koontilaskun-kk-dropdown] .valittu').should('contain', 'Toukokuu 2024 (5. hoitovuosi)')
 
-        // Käsittelytapa
-        cy.get('label[for*=kasittelytapa] + div').valinnatValitse({valinta: 'Työmaakokous'});
+        // Käsittelytapaa ei saa olla mhu19 urakalla
+        cy.get('label').contains('Käsittelytapa').should('not.exist')
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
