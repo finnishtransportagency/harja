@@ -104,7 +104,7 @@
 
        [lomake/lomake
         {:otsikko "SANKTION TIEDOT"
-         :otsikko-elementti :h3
+         :otsikko-elementti :h4
          :ei-borderia? true
          :vayla-tyyli? true
          :luokka "padding-16 taustavari-taso3"

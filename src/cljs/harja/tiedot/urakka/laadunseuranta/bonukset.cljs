@@ -31,11 +31,22 @@
 
 (defn uusi-bonus []
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                    (>= urakan-alkuvuosi 2025))
+        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
+        default-perintapvm (if mhu25?
+                             (let [v (pvm/vuosi nyt)
+                                   kk (pvm/kuukausi nyt)
+                                   kohde-vuosi (if (>= kk 10) (inc v) v)]
+                               (pvm/->pvm (str "15.9." kohde-vuosi)))
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))
+        kasittelytapa (if mhu25? :valikatselmus nil)]
     {:laji nil
-     :kasittelytapa nil
      :perintapvm default-perintapvm
      :kasittelyaika nyt
+     :kasittelytapa kasittelytapa
      :toimenpideinstanssi (let [tpis (if urakka/mh-urakka?
                                        (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
                                        @urakka/urakan-toimenpideinstanssit)]

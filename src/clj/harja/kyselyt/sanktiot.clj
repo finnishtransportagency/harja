@@ -34,7 +34,7 @@
   (-> rivi
     (konv/string->keyword :laji :kasittelytapa)
     ;; Muunna timestampit java-date:ksi
-    (konv/muunna [:kasittelyaika] konv/java-date)
+    (konv/muunna [:kasittelyaika :maarattypvm] konv/java-date)
     (konv/decimal->double :summa :indeksiåkorjaus)))
 
 ;; Käytössä jeesql:ssä
