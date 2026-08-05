@@ -432,6 +432,7 @@ SET
   tr_loppuosa      = :tr_loppuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuetaisyys = :tr_loppuetaisyys,
+  yllapitokohde    = :yllapitokohde_id, -- kaikilla urakoilla ei ole ylläpitokohteita, joten voi olla null
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
   "sisaltaa-poikkeamaraportin?" = :sisaltaa_poikkeamaraportin
