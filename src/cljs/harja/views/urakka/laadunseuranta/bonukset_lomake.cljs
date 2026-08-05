@@ -238,16 +238,6 @@
                   (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
                         @tiedot-urakka/urakan-toimenpideinstanssit)
                     "")))})
-      #_ {:otsikko "Kulun kohdistus"
-          :tyyppi :string
-          :nimi :toimenpideinstanssi
-          :muokattava? (constantly false)
-          ::lomake/col-luokka "col-xs-12"
-          :hae (fn [rivi]
-                 (let [tpi-id (:toimenpideinstanssi rivi)]
-                   (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
-                         @tiedot-urakka/urakan-toimenpideinstanssit)
-                     "")))}
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"
@@ -401,8 +391,7 @@
                   (some-> perintapvm perintapvm->hoitovuosi hoitovuosi->teksti))
            :pakollinen? true
            :tyyppi :pvm
-           ::lomake/col-luokka "col-xs-6"}
-          )
+           ::lomake/col-luokka "col-xs-6"})
         ;; Poistetaan hoidon urakoilta käsittelytapa kokonaan
         (when (not (= :teiden-hoito urakan-tyyppi))
           {:otsikko "Käsittelytapa"
