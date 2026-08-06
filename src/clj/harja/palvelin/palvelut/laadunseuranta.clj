@@ -237,7 +237,7 @@
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa indeksi suorasanktio
+  [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi kasittelytapa poistettu] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
@@ -290,6 +290,7 @@
                          (if (= :yllapidon_bonus laji)
                            (- (Math/abs summa))
                            (Math/abs summa)))
+                :laskutusrajan-ylitys laskutusrajan-ylitys
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama-id
                 :suorasanktio (or suorasanktio false)
