@@ -32,6 +32,10 @@ inputs:
     description: 'Selain, jota vasten testit ajetaan. Cypress-konttiin asennetut selaimet: chrome, edge'
     default: 'chrome'
     required: false
+  spec:
+    description: 'Cypress --spec glob-pattern (esim. cypress/e2e/s1_*.cy.js). Tyhjä = aja kaikki testit.'
+    default: ''
+    required: false
 
 
 runs:
@@ -76,18 +80,28 @@ runs:
         IMAGE_NAME: ${{ inputs.image }}
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
         BROWSER: ${{ inputs.browser }}
+        SPEC: ${{ inputs.spec }}
       run: |
         echo "Ajetaan cypress komento kontissa käyttäjänä: node"
-        
+
         docker run \
           --network host \
           -u node \
           -e ELECTRON_EXTRA_LAUNCH_ARGS='--disable-gpu' \
+          -e CYPRESS_VIDEO=false \
+          -e SPEC="$SPEC" \
+          -e BROWSER="$BROWSER" \
           -v $GITHUB_WORKSPACE:/harja \
           -w /harja \
           "$IMAGE_NAME" \
-          bash -c "echo -e \"Chrome version:  \$(google-chrome --version) \nEdge version:  \$(edge --version) \n\";
-                   echo '-------------------';
-                   cypress run --browser $BROWSER"
+          bash -c '
+            echo -e "Chrome version:  $(google-chrome --version)\nEdge version:  $(edge --version)\n";
+            echo "-------------------";
+            if [ -n "$SPEC" ]; then
+              cypress run --browser "$BROWSER" --spec "$SPEC";
+            else
+              cypress run --browser "$BROWSER";
+            fi
+          '
       shell: bash
 
