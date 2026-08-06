@@ -123,7 +123,41 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         cy.wait('@tallenna', {timeout: clickTimeout})
 
         // Varmistetaan onnistuminen
-        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+    })
+
+    it('Näyttää laskutusraja-sanktion kentät oikein MHU25', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonukset(testiurakka, evk)
+
+        // Klikkaa "Lisää uusi" -nappia
+        cy.contains('Lisää uusi').click()
+
+        // Sivupaneeli aukeaa
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+
+        // Valitse "Sanktio" radio
+        cy.contains('label', 'Sanktio').click()
+
+        // Valitse sanktion laji, jossa tyyppi ja tapahtumapaikka eivät ole käytössä
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Laskutus yli laskutusrajan'});
+
+        // Varmistetaan pyydetyt kenttänäkyvyydet
+        cy.contains('label', 'Tyyppi').should('not.exist')
+        cy.contains('label', 'Tapahtumapaikka/kuvaus').should('not.exist')
+
+        // Sanktion suuruuden otsikko pitää näkyä ja arvon olla vain luettavissa
+        cy.contains('label', 'Sanktion suuruus (20% ylittävästä laskutuksesta)').should('be.visible')
+        cy.get('label').contains('Sanktion suuruus (20% ylittävästä laskutuksesta)').parent().parent().parent().within(() => {
+            cy.get('div.lomake-arvo').should('be.visible').invoke('text').should('not.be.empty')
+            cy.get('input').should('have.length', 0)
+            cy.get('button').should('have.length', 0)
+        })
+
+        // Ylityksen määrä -kenttä pitää löytyä
+        cy.contains('label', 'Ylityksen määrä (€)').should('be.visible')
+        cy.get('label').contains('Ylityksen määrä (€)').parent().parent().parent().find('input').first().should('be.visible')
     })
 
     it('Avaa sanktio listasta MHU25', function () {
@@ -205,7 +239,9 @@ describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
         cy.wait('@tallenna', {timeout: clickTimeout})
 
         // Varmistetaan onnistuminen
-        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
     })
 
     it('Avaa sanktio listasta MHU24', function () {
@@ -289,7 +325,8 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
         cy.wait('@tallenna', {timeout: clickTimeout})
 
         // Varmistetaan onnistuminen
-        cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
     })
 
     it('Avaa sanktio listasta MHU19', function () {

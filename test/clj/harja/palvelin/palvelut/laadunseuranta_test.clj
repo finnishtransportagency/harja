@@ -1,35 +1,41 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
+            [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.laadunseuranta :as ls]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.testi :refer :all]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
+
+            [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
+            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+
+
+
+
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
-            [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
-            [harja.fmt :as fmt]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [clojure.string :as str]
-            [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
-            [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
+
+            [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
@@ -330,6 +336,7 @@
         tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
         ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
         sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :maaraystapa "tyomaakokous"
                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;"))),
                           :nimi "Talvihoito, päätiet", :toimenpidekoodi 618}}
         laatupoikkeama {:tekijanimi "Max Power"
@@ -350,8 +357,15 @@
     (is (= "Talvihoito, päätiet" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
     (is (= -777.0 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
     (is (nil? (:indeksi lisatty-hoidon-sakko)) "Indeksi oltava nil koska MHU jonka alkuvuosi > 2020")
+    (is (= "tyomaakokous" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa tallentuu lisäyksessä")
     (is (= (hae-iin-maanteiden-hoitourakan-2021-2026-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
     (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
+
+    (palvelukutsu-tallenna-suorasanktio
+      +kayttaja-jvh+ (assoc sanktio :id sanktio-id :maaraystapa "valikatselmus") laatupoikkeama hk-alkupvm hk-loppupvm)
+    (is (= "valikatselmus" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa päivittyy updatessa")
 
 
     ;; Siivoa roskat
@@ -801,14 +815,14 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :laskutusrajan-ylitys nil :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :kasittelytapa nil :id 9,
     :perintapvm #inst "2019-10-11T21:00:00.000-00:00",
     :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
@@ -2056,3 +2070,33 @@
       (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
                                        +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
         "Sanktion tallennus ei onnistu"))))
+
+(deftest suorasanktio-laskutusrajan-ylitys-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "ylityksen-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
+        laskutusrajan-ylitys 12345.60M
+        sanktio {:suorasanktio true
+                 :laji :laskutus_yli_laskutusrajan
+                 :laskutusrajan-ylitys laskutusrajan-ylitys
+                 :summa (* 0.2M laskutusrajan-ylitys)
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "2.6.2030 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "2.6.2030 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Laskutusrajan ylitys -sanktio saadaan tallennettua"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                  :alku hk-alkupvm
+                                                                                  :loppu hk-loppupvm})
+            lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
+        (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
+        (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))
