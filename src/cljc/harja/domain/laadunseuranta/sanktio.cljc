@@ -291,7 +291,7 @@
   "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]
   (case avainsana
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"

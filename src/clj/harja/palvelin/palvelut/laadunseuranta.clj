@@ -238,8 +238,8 @@
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
 (defn tallenna-laatupoikkeaman-sanktio
-  [db user {:keys [id perintapvm maarattypvm laji tyyppi summa indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu maaraystapa tehtavaryhma tehtava] :as sanktio}
+  [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -247,7 +247,7 @@
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
         summa (if (decimal? summa)
-                (double summa)            ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
                 summa)
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
@@ -274,7 +274,7 @@
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
-                              (and poistettu (nil? perintapvm))  ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
+                              (and poistettu (nil? perintapvm)) ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
                 ;; Käytetään käsittelyaikaa, jos määrättypvm on asettamatta. Esim arvonvähennyksillä sitä ei ole pakko asettaa.
@@ -291,6 +291,7 @@
                          (if (= :yllapidon_bonus laji)
                            (- (Math/abs summa))
                            (Math/abs summa)))
+                :laskutusrajan-ylitys laskutusrajan-ylitys
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama-id
                 :suorasanktio (or suorasanktio false)
@@ -337,24 +338,28 @@
       ;; Liitä kommentti laatupoikkeamaon
       (laatupoikkeamat-q/liita-kommentti<! db id (:id kommentti)))))
 
-
-(defn- varmista-sanktion-tiedot [laatupoikkeama sanktio]
-  (let [l-kasittelytapa (:kasittelytapa (:paatos laatupoikkeama))
-        sanktio (if (and (nil? (:kasittelytapa sanktio)) l-kasittelytapa)
-                  (assoc sanktio :kasittelytapa l-kasittelytapa)
-                  sanktio)
-        ;; Mikäli sanktion määräystapa on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelytapa tai työmaakokous
-        sanktio (if (and (nil? (:maaraystapa sanktio)) l-kasittelytapa)
-                  (assoc sanktio :maaraystapa (name l-kasittelytapa))
-                  sanktio)]
-    sanktio))
-
 (defn- tallenna-laatupoikkeaman-liitteet [db laatupoikkeama id]
   (when-let [uusi-liite (:uudet-liitteet laatupoikkeama)]
     (let [liitteet (if (sequential? uusi-liite) uusi-liite [uusi-liite])]
       (doseq [liite liitteet]
         (log/info "UUSI LIITE LAATUPOIKKEAMAAN: " uusi-liite)
         (laatupoikkeamat-q/liita-liite<! db id (:id liite))))))
+
+(defn- varmista-sanktion-tiedot [laatupoikkeama sanktio]
+  (let [l-kasittelytapa (:kasittelytapa (:paatos laatupoikkeama))
+        l-kasittelyaika (:kasittelyaika (:paatos laatupoikkeama))
+        sanktio (if (and (nil? (:kasittelytapa sanktio)) l-kasittelytapa)
+                  (assoc sanktio :kasittelytapa l-kasittelytapa)
+                  sanktio)
+        ;; Mikäli sanktion määräystapa on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelytapa tai työmaakokous
+        sanktio (if (and (nil? (:maaraystapa sanktio)) l-kasittelytapa)
+                  (assoc sanktio :maaraystapa (name l-kasittelytapa))
+                  sanktio)
+        ;; Mikäli sanktion määrättypvm on asettamatta, niin laitetaan siihen laatupoikkeaman käsittelypäivämäärä
+        sanktio (if (and (nil? (:maarattypvm sanktio)) l-kasittelyaika)
+                  (assoc sanktio :maarattypvm l-kasittelyaika)
+                  sanktio)]
+    sanktio))
 
 (defn- tallenna-laatupoikkeaman-paatos [{:keys [db urakka user laatupoikkeama id]}]
   ;; Urakanvalvoja voi kirjata päätöksen
@@ -364,13 +369,16 @@
     (let [{:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)]
       (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos!
         db
-        (konv/sql-timestamp kasittelyaika)
-        (name paatos) perustelu
-        (name kasittelytapa) muukasittelytapa
-        (:id user)
-        id)
+        {:kasittelyaika (konv/sql-timestamp kasittelyaika)
+         :paatos (name paatos)
+         :perustelu perustelu
+         :kasittelytapa (if kasittelytapa (name kasittelytapa) "ei-tiedossa")
+         :muukasittelytapa muukasittelytapa
+         :muokkaaja (:id user)
+         :id id})
       (when (= :sanktio (:paatos (:paatos laatupoikkeama)))
         (doseq [sanktio (:sanktiot laatupoikkeama)]
+          ;; Varmistetaan, että sanktion käsittelytapa on sama kuin laatupoikkeaman käsittelytapa, jos sanktion käsittelytapaa ei ole jostain syystä annettu
           (let [sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)]
             (tallenna-laatupoikkeaman-sanktio
               db user sanktio id urakka kasittelyaika
@@ -416,7 +424,7 @@
   (into []
     (sanktiot/hae-sanktiotyypit db)))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm]]
   ;; Roolien tarkastukset on kopioitu laatupoikkeaman kirjaamisesta,
   ;; riittäisi varmaan vain roolit/urakanvalvoja?
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
@@ -432,11 +440,13 @@
                                                                         :poistettu poista-laatupoikkeama?))
           {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
           _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
-              (konv/sql-timestamp kasittelyaika)
-              (name paatos) perustelu
-              (name kasittelytapa) muukasittelytapa
-              (:id user)
-              id)
+              {:kasittelyaika (konv/sql-timestamp kasittelyaika)
+               :paatos (name paatos)
+               :perustelu perustelu
+               :kasittelytapa (if kasittelytapa (name kasittelytapa) "ei-tiedossa")
+               :muukasittelytapa muukasittelytapa
+               :muokkaaja (:id user)
+               :id id})
           sanktio-id (tallenna-laatupoikkeaman-sanktio
                        c user sanktio id urakka kasittelyaika
                        {:paivamaara hk-alkupvm

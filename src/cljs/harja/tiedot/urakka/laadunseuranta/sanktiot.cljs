@@ -118,19 +118,23 @@
 (defn uusi-sanktio [urakkatyyppi valittu-hoitokauden-alkuvuosi]
   (let [nyt (pvm/nyt)
         default-perintapvm (pvm/luo-pvm-dec-kk valittu-hoitokauden-alkuvuosi (pvm/kuukausi nyt) 15)]
-    {:harja.ui.lomake/muokatut #{:kasittelyaika}
-     :suorasanktio true
-     :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
-     :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                          (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                      :valikatselmus
-                      nil)
-     :perintapvm default-perintapvm
-     :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
-                            (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
-     :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                      :paatos {:paatos "sanktio"
-                               :kasittelyaika nyt}}}))
+   {:harja.ui.lomake/muokatut #{:kasittelyaika}
+    :suorasanktio true
+    :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
+    :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                         (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                     :valikatselmus
+                     nil)
+    :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                       (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                   "tyomaakokous"
+                   nil)
+    :perintapvm default-perintapvm
+    :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                           (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
+    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                     :paatos {:paatos "sanktio"
+                              :kasittelyaika nyt}}}))
 
 (defn pyorayta-laskutuskuukausi-valinnat
   []
