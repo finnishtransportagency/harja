@@ -815,7 +815,7 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :laskutusrajan-ylitys nil :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
                      :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
@@ -2070,3 +2070,33 @@
       (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
                                        +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
         "Sanktion tallennus ei onnistu"))))
+
+(deftest suorasanktio-laskutusrajan-ylitys-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "ylityksen-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
+        laskutusrajan-ylitys 12345.60M
+        sanktio {:suorasanktio true
+                 :laji :laskutus_yli_laskutusrajan
+                 :laskutusrajan-ylitys laskutusrajan-ylitys
+                 :summa (* 0.2M laskutusrajan-ylitys)
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "2.6.2030 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "2.6.2030 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Laskutusrajan ylitys -sanktio saadaan tallennettua"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                  :alku hk-alkupvm
+                                                                                  :loppu hk-loppupvm})
+            lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
+        (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
+        (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))
