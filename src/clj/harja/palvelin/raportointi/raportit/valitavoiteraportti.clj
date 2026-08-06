@@ -157,7 +157,7 @@
    {:otsikko "Kommentti valmistumisesta" :leveys 8}
    {:otsikko "Merkitsijä" :leveys 5}])
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm tyomaakokousraportti?] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakan-tiedot)
         ;;alkupvm ja loppupvm voivat olla yhden kuukauden alku- ja loppupäivät, jos ollaan työmaakokousraportissa,
@@ -180,7 +180,8 @@
 
     [:raportti {:orientaatio :landscape
                 :nimi raportin-nimi}
-     [:otsikko-heading-small otsikko tyomaakokousraportti?]
+     [:teksti-paksu otsikko]
+     [:tyhja-rivi nil]
      [:taulukko {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
                  :tyhja (when (empty? urakkakohtaiset-datarivit) "Ei raportoitavia määräaikaan mennessä tehtäviä töitä.")
                  :sheet-nimi raportin-nimi}
