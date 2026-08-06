@@ -235,7 +235,6 @@
               :tyyppi :numero
               :pakollinen? true
               :uusi-rivi? true
-              ;:fmt (partial fmt/euro-opt false)
               :jos-tyhja "-"
               :muokattava? (constantly false)})
 
