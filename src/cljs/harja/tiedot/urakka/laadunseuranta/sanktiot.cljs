@@ -125,7 +125,7 @@
                     nil)
    :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
                         (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                  "valikatselmus"
+                  "tyomaakokous"
                   nil)
    :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
                     :paatos {:paatos "sanktio"

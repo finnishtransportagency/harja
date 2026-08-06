@@ -1,35 +1,41 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
+            [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.laadunseuranta :as ls]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.testi :refer :all]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
+
+            [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
+            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+
+
+
+
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
-            [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
-            [harja.fmt :as fmt]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [clojure.string :as str]
-            [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
-            [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
+
+            [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID))
   (:use org.httpkit.fake))
 
