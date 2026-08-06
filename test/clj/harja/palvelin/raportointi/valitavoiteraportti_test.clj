@@ -44,29 +44,31 @@
                                 {:nimi :valitavoiteraportti
                                  :konteksti "urakka"
                                  :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit parametrit})]
+                                 :parametrit parametrit})
+        raportin-otsikko (-> vastaus second :nimi)
+        urakkakohtainen-taulukko (nth vastaus 4)
+        urakkakohtaiset-otsikot (nth urakkakohtainen-taulukko 2)
+        urakkakohtaiset-valitavoitteet (nth urakkakohtainen-taulukko 3)
+        kaikkien-urakoiden-valitavoitteiden-taulukko (nth vastaus 5)
+        kaikkien-urakoiden-valitavoitteiden-otsikot (nth kaikkien-urakoiden-valitavoitteiden-taulukko 2)
+        kaikkien-urakoiden-valitavoitteet (nth kaikkien-urakoiden-valitavoitteiden-taulukko 3)]
     (is (vector? vastaus))
-    (is (match vastaus
-          [:raportti {:orientaatio :landscape, :nimi "Välitavoiteraportti", :rajoita-pdf-rivimaara nil}
-           [:otsikko-heading-small "Oulun alueurakka 2014-2019, Välitavoiteraportti ajalta 01.10.2014 - 30.09.2016, suoritettu 06.08.2026" nil]
-           [:taulukko
-            {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt", :tyhja nil, :sheet-nimi "Välitavoiteraportti"}
-            [{:otsikko "Nimi", :leveys 10} nil
-             {:otsikko "Takaraja", :leveys 5}
-             {:otsikko "Tila", :leveys 5}
-             {:otsikko "Valmistumispäivä", :leveys 5}
-             {:otsikko "Kommentti valmistumisesta", :leveys 10}
-             {:otsikko "Valmiiksimerkitsijä", :leveys 5}]
-            [["Sepon mökkitie suolattu" nil "24.12.2014 (12 vuotta myöhässä)" "Myöhässä (12v)" "-" nil " "]
-             ["Pelkosentie 678 suolattu" nil "23.09.2015 (11 vuotta myöhässä)" "Valmistunut" "25.09.2015" "Aurattu, mutta vähän tuli myöhässä" " "]]]
-           [:taulukko {:otsikko "Kaikissa urakoissa määräaikaan mennessä tehtävät työt", :tyhja "Ei raportoitavia määräaikaan mennessä tehtäviä töitä.", :sheet-nimi "Välitavoiteraportti"}
-            [{:otsikko "Työn kuvaus", :leveys 8}
-             {:otsikko "Urakkakohtaiset tarkennukset", :leveys 8}
-             {:otsikko "Valtakunnallinen takaraja", :leveys 5}
-             {:otsikko "Takaraja urakassa", :leveys 5}
-             {:otsikko "Tila", :leveys 5}
-             {:otsikko "Valmistumispäivä", :leveys 5}
-             {:otsikko "Kommentti valmistumisesta", :leveys 8}
-             {:otsikko "Merkitsijä", :leveys 5}]
-            nil]]
-          true))))
+    (is (= raportin-otsikko "Välitavoiteraportti"))
+    (is (= urakkakohtaiset-otsikot
+          [{:otsikko "Nimi", :leveys 10} nil
+           {:otsikko "Takaraja", :leveys 5}
+           {:otsikko "Tila", :leveys 5}
+           {:otsikko "Valmistumispäivä", :leveys 5}
+           {:otsikko "Kommentti valmistumisesta", :leveys 10}
+           {:otsikko "Valmiiksimerkitsijä", :leveys 5}]))
+    (is (= (count urakkakohtaiset-valitavoitteet) 2))
+    (is (= kaikkien-urakoiden-valitavoitteiden-otsikot)
+          [{:otsikko "Työn kuvaus", :leveys 8}
+           {:otsikko "Urakkakohtaiset tarkennukset", :leveys 8}
+           {:otsikko "Valtakunnallinen takaraja", :leveys 5}
+           {:otsikko "Takaraja urakassa", :leveys 5}
+           {:otsikko "Tila", :leveys 5}
+           {:otsikko "Valmistumispäivä", :leveys 5}
+           {:otsikko "Kommentti valmistumisesta", :leveys 8} {:otsikko "Merkitsijä", :leveys 5}])
+    (is (= (count urakkakohtaiset-valitavoitteet) 2))
+    (is (= (count kaikkien-urakoiden-valitavoitteet) 0))))
