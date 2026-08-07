@@ -207,13 +207,11 @@
    hoitokauden-alkuvuosi urakan-alkuvuosi]
   (let [;; MHU ja HJU hoidon johto- taulukko,
         ;; jossa näytetään hieman muista instansseista poikkeavia lukuja
-        _ (println "data" (pr-str (into (sorted-map) data)))
         mhu-hju-rivit (fn [data kyseessa-kk-vali?]
                         (tee-taulukko-rivit data
                           {:kyseessa-kk-vali? kyseessa-kk-vali?
                            :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
                           (mhu-hju-maaritykset data)))
-        _ (println "mhu-hju-rivit" (pr-str (mhu-hju-rivit data kyseessa-kk-vali?)))
         taulukko-rivit (tee-taulukko-rivit data
                          {:kyseessa-kk-vali? kyseessa-kk-vali?
                           :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
