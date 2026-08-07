@@ -13,47 +13,53 @@
         yllapidon-lajit [:yllapidon_sakko :yllapidon_muistutus]
         mhu24-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2024)}
         mhu25-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2025)}
-        alueurakka {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)}
-        paallystyksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
-        paikkauksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
-        tiemerkinnan-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
-        valaistuksen-lajit (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025)]
+        alueurakka {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)}]
 
-    (testing "Ylläpidon urakat (validoinnista riippumatta)"
-      (is (= yllapidon-lajit
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025))
-        (str "Ylläpidon sanktiolajit, validoinnit? ")))
-
-
-    (testing "Tarkistetaan onhan arvonvähennykset näkyvissä oikeissa urakoissa ja oikeaan aikaan"
+    (testing "Hoidon urakat, kun arvonvähennys on vielä vanhassa sanktiolistassa"
       (is (= hoidon-lajit-arvonvahennyksella
             (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025))
-        "MHU24-urakka ennen 2026 -> arvonvähennyssanktio mukana vanhassa listassa")
-      (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027))
-        "MHU24-urakka alkuvuodesta 2027 -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
-      (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025))
-        "MHU25-urakka -> ei arvonvähennyssanktiota vanhassa listassa (uusi lomake käytössä aina)")
+        "MHU24-urakka ennen hoitovuotta 2026 -> arvonvähennyssanktio mukana")
       (is (= hoidon-lajit-arvonvahennyksella
             (sanktio-domain/urakan-sanktiolajit alueurakka 2025))
-        "Alueurakka (ei MHU25) ennen 2026 -> arvonvähennyssanktio mukana vanhassa listassa"))
+        "Alueurakka ennen hoitovuotta 2026 -> arvonvähennyssanktio mukana"))
 
-    (is (= [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
-            :testikeskiarvo-sanktio :vaihtosanktio]
-          hoidon-lajit-ilman-arvonvahennysta)
-      "Hoidon sanktiolajit alueurakoille")
-    (is (= [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys :tenttikeskiarvo-sanktio
-            :testikeskiarvo-sanktio :vaihtosanktio]
-          hoidon-lajit-arvonvahennyksella)
-      "Hoidon sanktiolajit MH-urakoille")
-    (is (= [:yllapidon_sakko :yllapidon_muistutus]
-           paallystyksen-lajit paikkauksen-lajit tiemerkinnan-lajit valaistuksen-lajit)
-      "Ylläpidon sanktiolajit")))
+    (testing "Hoidon urakat, kun arvonvähennys on siirtynyt omalle lomakkeelle"
+      (is (= hoidon-lajit-ilman-arvonvahennysta
+            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2026))
+        "MHU24-urakka hoitovuodesta 2026 alkaen -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
+      (is (= hoidon-lajit-ilman-arvonvahennysta
+            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027))
+        "MHU24-urakka hoitovuonna 2027 -> ei arvonvähennyssanktiota")
+      (is (= hoidon-lajit-ilman-arvonvahennysta
+            (sanktio-domain/urakan-sanktiolajit alueurakka 2026))
+        "Alueurakka hoitovuodesta 2026 alkaen -> ei arvonvähennyssanktiota")
+      (is (= hoidon-lajit-ilman-arvonvahennysta
+            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025))
+        "MHU25-urakka -> ei arvonvähennyssanktiota vanhassa listassa hoitovuodesta riippumatta")
+      (is (= hoidon-lajit-ilman-arvonvahennysta
+            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2027))
+        "MHU25-urakka hoitovuonna 2027 -> ei arvonvähennyssanktiota"))
 
+    (testing "Ylläpidon urakat saavat aina ylläpidon lajit, hoitovuodesta riippumatta"
+      (is (= yllapidon-lajit
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2026)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2027)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2026)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2027)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2026)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2027)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2026)
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2027))
+        "Ylläpidon sanktiolajit"))
+
+    (testing "Tuntematon urakkatyyppi"
+      (is (= []
+            (sanktio-domain/urakan-sanktiolajit {:tyyppi :vesivayla-hoito} 2025))
+        "Muille urakkatyypeille ei tarjota sanktiolajeja"))))
 
 (deftest laatupoikkeaman-mahdolliset-sanktiolajit
   (let [hoidon-lajit [:muistutus :A :B :C :arvonvahennyssanktio]

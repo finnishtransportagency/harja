@@ -117,7 +117,18 @@
 
 (defn uusi-sanktio [urakkatyyppi valittu-hoitokauden-alkuvuosi]
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk valittu-hoitokauden-alkuvuosi (pvm/kuukausi nyt) 15)]
+        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                 (>= urakan-alkuvuosi 2025))
+        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
+        default-perintapvm (if mhu25?
+                             (let [v (pvm/vuosi nyt)
+                                   kk (pvm/kuukausi nyt)
+                                   kohde-vuosi (if (>= kk 10) (inc v) v)]
+                               (pvm/->pvm (str "15.9." kohde-vuosi)))
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))]
+
    {:harja.ui.lomake/muokatut #{:kasittelyaika}
     :suorasanktio true
     :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)

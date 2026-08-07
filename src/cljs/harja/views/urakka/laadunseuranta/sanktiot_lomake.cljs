@@ -71,6 +71,7 @@
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
@@ -92,7 +93,27 @@
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
-                    lukutila?)]
+                    lukutila?)
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
+        urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
+        urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
+        viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)
+                                          urakan-loppuvuosi
+                                          (dec urakan-loppuvuosi))
+        hoitovuodet (if (<= urakan-alkuvuosi viimeinen-hoitovuoden-alkuvuosi)
+                      (vec (range urakan-alkuvuosi (inc viimeinen-hoitovuoden-alkuvuosi)))
+                      [])
+        hoitovuosi->teksti (fn [hoitovuosi]
+                             (when (int? hoitovuosi)
+                               (let [jarjestysnumero (inc (- hoitovuosi urakan-alkuvuosi))]
+                                 (str jarjestysnumero ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")"))))
+        perintapvm->hoitovuosi (fn [perintapvm]
+                                 (when perintapvm
+                                   (let [vuosi (pvm/vuosi perintapvm)
+                                         kuukausi (pvm/kuukausi perintapvm)
+                                         hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
+                                     (when (some #{hoitovuosi} hoitovuodet)
+                                       hoitovuosi))))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit)
@@ -486,13 +507,17 @@
                 :tyyppi :pvm
                 ::lomake/col-luokka "col-xs-6"})
              ;; MHU25 urakoille näytetään perintäpäivä hoitokautena
-             {:otsikko "Hoitovuosi, jota sanktio koskee"
+             {:otsikko "Kohdistuu hoitovuodelle"
               :nimi :perintapvm
               :pakollinen? true
               :tyyppi :valinta
-              :valinnat (map second @tiedot-urakka/valitun-urakan-hoitokaudet)
-              :valinta-nayta #(when %
-                                (pvm/hoitokausi-str-alkuvuodesta-vuodet (pvm/vuosi %)))
+              :valinnat hoitovuodet
+              :hae #(perintapvm->hoitovuosi (:perintapvm %))
+              :aseta (fn [rivi hoitovuosi]
+                       (assoc rivi :perintapvm
+                         (when hoitovuosi
+                           (pvm/hoitokauden-alkupvm hoitovuosi))))
+              :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
               ::lomake/col-luokka "col-xs-6"}))
 
           ;; MHU25 urakoille näytetään määräystapa valintana.
