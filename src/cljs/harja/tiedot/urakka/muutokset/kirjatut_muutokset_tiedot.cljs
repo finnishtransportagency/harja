@@ -76,12 +76,13 @@
 
 (defn luo-tai-paivita-kustannusvaikutus
   "Rakentaa / päivittää kustannusvaikutusrivin perusavaimilla."
-  [{:keys [toimenpideinstanssi hoitokauden_alkuvuosi summa]} vanha-kv]
+  [{:keys [toimenpideinstanssi hoitokauden_alkuvuosi summa tehtavamaaramuutos-kirjattu?]} vanha-kv]
   (assoc (or vanha-kv {})
     :toimenpideinstanssi toimenpideinstanssi
     :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
     :kustannuslaji "hankintakustannukset"
-    :summa summa))
+    :summa summa
+    :tehtavamaaramuutos-kirjattu? tehtavamaaramuutos-kirjattu?))
 
 (defn paivita-kustannusvaikutus [r toimenpideinstanssi hk-alkuvuosi f]
   (update r :kustannusvaikutukset
@@ -323,7 +324,8 @@
                                (luo-tai-paivita-kustannusvaikutus
                                  {:summa muutos-summa
                                   :toimenpideinstanssi toimenpideinstanssi
-                                  :hoitokauden_alkuvuosi hk-alkuvuosi}
+                                  :hoitokauden_alkuvuosi hk-alkuvuosi
+                                  :tehtavamaaramuutos-kirjattu? true}
                                  arvo)))]
                 (-> kv-map vals vec))))))
 
