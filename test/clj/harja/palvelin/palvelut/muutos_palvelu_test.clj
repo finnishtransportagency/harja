@@ -1,17 +1,18 @@
 (ns harja.palvelin.palvelut.muutos-palvelu-test
   (:require [clojure.java.io :as io]
+            [clojure.string :as str]
+            [taoensso.timbre :as log]
             [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [taoensso.timbre :as log]
 
-            [harja.tyokalut.yleiset :refer [round2]]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
-            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.tyokalut.yleiset :refer [round2]]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu])
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
+            [harja.palvelin.komponentit.liitteet :as liitteet-komponentti]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu])
   (:import (org.apache.commons.io IOUtils)))
 
 
@@ -672,6 +673,81 @@
                    :muutos muutos})]
 
     (is (= odotettu-vastaus (flatten (concat (map :kustannusvaikutukset (:toimenpiteiden-tiedot vastaus))))))))
+
+
+;; Testataan kirjata tavoitehinnan pysyvämuutos ilman tehtävä määrämuutoksia
+(deftest kustannusvaikutusten-tallennus-ilman-maaramuutosta
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        muutos {:id (ffirst (q "SELECT MAX(id) FROM mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';"))
+                :versio 2
+                :tyyppi "pysyva"
+                :liite-idt #{}}]
+
+    (testing "Tallennus toimii ilman määrämuutoksia, syy on olemassa"
+      (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
+                                        :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025
+                                        :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu koska ei nyt kirjattu"}
+
+                                       {:summa 45000, :kustannuslaji "hankintakustannukset",
+                                        :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026
+                                        :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu 26 vuodelle myöskään"}]
+            odotettu-vastaus (list
+                               {:hoitokauden_alkuvuosi 2025
+                                :kustannuslaji "hankintakustannukset"
+                                :summa 35000
+                                :syy "Ei kirjattu koska ei nyt kirjattu"
+                                :tehtavamaaramuutos-kirjattu? false
+                                :toimenpideinstanssi 125
+                                :versio 2}
+
+                               {:hoitokauden_alkuvuosi 2026
+                                :kustannuslaji "hankintakustannukset"
+                                :summa 45000
+                                :syy "Ei kirjattu 26 vuodelle myöskään"
+                                :tehtavamaaramuutos-kirjattu? false
+                                :toimenpideinstanssi 125
+                                :versio 2}
+
+                               ;; Olemassa olevia
+                               {:hoitokauden_alkuvuosi 2027
+                                :kustannuslaji "hankintakustannukset"
+                                :summa 1000
+                                :syy nil
+                                :tehtavamaaramuutos-kirjattu? true
+                                :toimenpideinstanssi 125
+                                :versio 1}
+                               {:hoitokauden_alkuvuosi 2028
+                                :kustannuslaji "hankintakustannukset"
+                                :summa 1000
+                                :syy nil
+                                :tehtavamaaramuutos-kirjattu? true
+                                :toimenpideinstanssi 125
+                                :versio 1})
+
+            _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
+                (:db jarjestelma) muutos kustannusvaikutus-payload false)
+
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :hae-muutoksen-tiedot
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :muutos muutos})]
+        (is (= odotettu-vastaus (flatten (concat (map :kustannusvaikutukset (:toimenpiteiden-tiedot vastaus))))))))
+
+
+    (testing "Virheellinen data, tehtävämuutoksia ei kirjata ilman syytä"
+      (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
+                                        :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025
+                                        :tehtavamaaramuutos-kirjattu? false}]
+
+            vastaus (try (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
+                           (:db jarjestelma) muutos kustannusvaikutus-payload false)
+                      (catch Exception e e))]
+
+        (is
+          (true? (str/includes? vastaus "violates check constraint"))
+          "Odotettu virhe heitetään, tavoitehinnan muutosta ilman tehtävämäärää ei voi kirjata ilman syytä")))))
+
 
 ;; Suomussalmi on urakka, jossa pysyviä muutoksia saadaan useammalle hoitovuodelle 2025-2029
 (deftest pysyvan-muutoksen-tallennus-suomussalmi
