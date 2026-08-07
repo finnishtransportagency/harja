@@ -55,7 +55,9 @@
                                              ;; harkitse esim. palveluhakua on-demand, ja mahdollisesti hoiy
                                              (= (:toimenpidekoodi %) (:toimenpidekoodi rivi))
                                              (= (:hoitokauden-alkuvuosi %) valittu-hoitovuoden-alkuvuosi))
-                                    (:toimenpiteiden-tehtavat muokattava-muutos))]
+                                    (:toimenpiteiden-tehtavat muokattava-muutos))
+
+            ]
 
 
         [:span
@@ -177,29 +179,6 @@
                              :disabled (not voi-muokata?)}])}]
           tehtavat-ja-maarat-valittuna-hoitovuonna]
 
-         (let [tehtavamuutoksia? (-> rivi :kustannusvaikutukset first :tehtavamuutoksia)
-               ei-tehtavamuutoksia-syy (-> rivi :kustannusvaikutukset first :syy)]
-
-           ;; Jos halutaan tallentaa tavoitehinnan muutos ilman tehtävämuutoksia, vaaditaan tähän jokin syy
-           [:div.tehtava-vaikutus-valinta.padding-bottom-16
-            [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
-                                :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi))}
-
-             (if (some? tehtavamuutoksia?)
-               (not tehtavamuutoksia?)
-               false)]
-
-            (when-not tehtavamuutoksia?
-              [:div.padding-top-16
-               [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu mutta tehtävämäärät eivät muutu"
-                                                :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
-                                                :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
-                                                             #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
-                                                                    (:toimenpideinstanssi rivi)
-                                                                    %)))
-                                                :luokka ""}]])])
-
          [:h4 "Vaikutus tavoitehintaan"]
 
          [:label {:for (str "tavoitehintainput-" (:toimenpideinstanssi rivi)) :class "tavoitehinta-label"}
@@ -215,7 +194,33 @@
               (e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos
                     (:toimenpideinstanssi rivi)
                     (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
-                    summa))))]]))))
+                    summa))))]
+
+         ;; Jos halutaan tallentaa tavoitehinnan muutos ilman tehtävämuutoksia, vaaditaan tähän jokin syy
+         (let [tavoitehinnan-muutos-syotetty? (-> rivi :kustannusvaikutukset first some?)
+               onko-tehtavamuutoksia? (-> rivi :kustannusvaikutukset first :onko-tehtavamuutoksia?)
+               ei-tehtavamuutoksia-syy (-> rivi :kustannusvaikutukset first :syy)]
+
+           ;; Älä näytä lomaketta, ennenkuin tavoitehinnan muutos euroina on syötetty jotain
+           (when tavoitehinnan-muutos-syotetty?
+             [:div.tehtava-vaikutus-valinta.padding-top-16
+              [kentat/tee-kentta {:tyyppi :checkbox
+                                  :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
+                                  :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi))}
+               (if (some? onko-tehtavamuutoksia?)
+                 (not onko-tehtavamuutoksia?)
+                 false)]
+
+              (when
+                (false? onko-tehtavamuutoksia?)
+                [:div.padding-top-16
+                 [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu mutta tehtävämäärät eivät muutu"
+                                                  :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
+                                                  :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
+                                                               #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
+                                                                      (:toimenpideinstanssi rivi)
+                                                                      %)))
+                                                  :luokka ""}]])]))]))))
 
 (defn- grid-pysyvan-muutoksen-vaikutukset*
   [vetolaatikkorivit hoitovuosi toimenpiteiden-tiedot]
@@ -318,7 +323,7 @@
                                                          :kustannusvaikutukset
                                                          :tehtavat_ja_maarat
                                                          :syy
-                                                         :tehtavamuutoksia])
+                                                         :onko-tehtavamuutoksia?])
                                       (select-keys muokattava-muutos [:hoitovuosi
                                                                       :toimenpiteiden-tehtavat
                                                                       :tehtavat_ja_maarat])

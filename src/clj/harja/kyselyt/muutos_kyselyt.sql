@@ -182,7 +182,7 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     :toimenpideinstanssi,
     :hoitokauden_alkuvuosi,
     :summa,
-    :tehtavamuutoksia,
+    :onko-tehtavamuutoksia?,
     :syy
 ) ON CONFLICT (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi)
 DO UPDATE SET
@@ -428,7 +428,7 @@ SELECT
                         'toimenpideinstanssi', kust.toimenpideinstanssi,
                         'summa', kust.summa,
                         'hoitokauden_alkuvuosi', kust.hoitokauden_alkuvuosi,
-                        'tehtavamuutoksia', kust.tehtavamuutoksia,
+                        'onko-tehtavamuutoksia?', kust.tehtavamuutoksia,
                         'syy', kust.syy,
                         'versio', kust.versio
                     )

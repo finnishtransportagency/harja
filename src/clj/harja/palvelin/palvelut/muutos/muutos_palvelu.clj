@@ -632,14 +632,14 @@
 
 (defn luo-kustannusvaikutus
   [aiti-muutos-id versio {:keys [hoitokauden_alkuvuosi toimenpideinstanssi
-                                 kustannuslaji summa tehtavamuutoksia syy] :as sql-opts}]
+                                 kustannuslaji summa onko-tehtavamuutoksia? syy] :as sql-opts}]
   {:muutos_id aiti-muutos-id
    :versio versio
    :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
    :toimenpideinstanssi toimenpideinstanssi
    :kustannuslaji kustannuslaji
    :summa summa
-   :tehtavamuutoksia tehtavamuutoksia
+   :onko-tehtavamuutoksia? onko-tehtavamuutoksia?
    :syy syy})
 
 (defn tallenna-muutoksen-kustannusvaikutukset

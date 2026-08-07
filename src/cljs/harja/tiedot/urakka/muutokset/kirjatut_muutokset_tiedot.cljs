@@ -84,6 +84,16 @@
     :summa summa
     ))
 
+(defn paivita-kustannusvaikutus [r toimenpideinstanssi f]
+  (update r :kustannusvaikutukset
+    (fn [kustannusvaikutukset]
+      (mapv
+        (fn [kv]
+          (if (= (:toimenpideinstanssi kv) toimenpideinstanssi)
+            (f kv)
+            kv))
+        kustannusvaikutukset))))
+
 (defn koosta-kustannusvaikutukset-pysyvaan-muutokseen
   "Koostetaan kustannusvaikutukset kaikista toimenpide-vetolaatikoista yhteen vektoriksi tallennusta varten."
   [app]
@@ -207,7 +217,6 @@
          :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
     (-> app
       (assoc
-        :tehtavavaikutuksia? true
         :muutoksen-tiedot-haku-kaynnissa? true)))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
@@ -397,22 +406,19 @@
 
   PaivitaTehtavavaikutus
   (process-event [{:keys [rivi]} app]
-    (-> app
-      (assoc :voi-tallentaa? true)
-      (muokkaa-toimenpiteen-rivit-pysyva-muutos
-        (:toimenpideinstanssi rivi)
-        (fn [r]
-          (update r :kustannusvaikutukset
-            (fn [kustannusvaikutukset]
-              (let [nykyinen (-> kustannusvaikutukset first :tehtavamuutoksia)
-                    uusi-arvo (if (some? nykyinen)
-                                (not nykyinen)
-                                false)]
-                (cons
-                  (assoc (first kustannusvaikutukset)
-                    :tehtavamuutoksia uusi-arvo)
-                  (rest kustannusvaikutukset)))))))
-      (koosta-kustannusvaikutukset-pysyvaan-muutokseen)))
+    (let [toimenpideinstanssi (:toimenpideinstanssi rivi)]
+      (-> app
+        (assoc :voi-tallentaa? true)
+        (muokkaa-toimenpiteen-rivit-pysyva-muutos
+          toimenpideinstanssi
+          (fn [r]
+            (paivita-kustannusvaikutus
+              r
+              toimenpideinstanssi
+              #(update % :onko-tehtavamuutoksia?
+                 (fn [v]
+                   (if (some? v) (not v) false))))))
+        (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
 
   PaivitaTehtavavaikutusSyy
   (process-event [{:keys [toimenpideinstanssi syy]} app]
@@ -421,12 +427,12 @@
       (muokkaa-toimenpiteen-rivit-pysyva-muutos
         toimenpideinstanssi
         (fn [r]
-          (update r :kustannusvaikutukset
-            (fn [kustannusvaikutukset]
-              (cons
-                (assoc (first kustannusvaikutukset) :syy syy)
-                (rest kustannusvaikutukset))))))
+          (paivita-kustannusvaikutus
+            r
+            toimenpideinstanssi
+            #(assoc % :syy syy))))
       (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
+
 
 ;; -- Pysyvät muutokset -- LOPPUU
 
