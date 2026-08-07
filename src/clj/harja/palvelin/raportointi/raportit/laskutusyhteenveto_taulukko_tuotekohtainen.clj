@@ -95,18 +95,15 @@
     :avain_yht :hj_palkkio_laskutetaan
     :avain_hoitokausi :hj_palkkio_laskutettu}
 
-   ;; MHU25 urakoille ei näytetä bonuksia & sanktioita 
-   (when-not (:onko_laskutusraja_kaytossa data)
-     {:lihavoi? false
-      :otsikko "Bonukset"
-      :avain_yht :bonukset_laskutetaan
-      :avain_hoitokausi :bonukset_laskutettu})
+   {:lihavoi? false
+    :otsikko "Bonukset"
+    :avain_yht :bonukset_laskutetaan
+    :avain_hoitokausi :bonukset_laskutettu}
 
-   (when-not (:onko_laskutusraja_kaytossa data)
-     {:lihavoi? false
-      :otsikko "Sanktiot"
-      :avain_yht :sakot_laskutetaan
-      :avain_hoitokausi :sakot_laskutettu})
+   {:lihavoi? false
+    :otsikko "Sanktiot"
+    :avain_yht :sakot_laskutetaan
+    :avain_hoitokausi :sakot_laskutettu}
 
    ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
    (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))
@@ -210,12 +207,13 @@
    hoitokauden-alkuvuosi urakan-alkuvuosi]
   (let [;; MHU ja HJU hoidon johto- taulukko,
         ;; jossa näytetään hieman muista instansseista poikkeavia lukuja
+        _ (println "data" (pr-str (into (sorted-map) data)))
         mhu-hju-rivit (fn [data kyseessa-kk-vali?]
                         (tee-taulukko-rivit data
                           {:kyseessa-kk-vali? kyseessa-kk-vali?
                            :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
                           (mhu-hju-maaritykset data)))
-
+        _ (println "mhu-hju-rivit" (pr-str (mhu-hju-rivit data kyseessa-kk-vali?)))
         taulukko-rivit (tee-taulukko-rivit data
                          {:kyseessa-kk-vali? kyseessa-kk-vali?
                           :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
@@ -238,7 +236,7 @@
                           :avain_hoitokausi :kaikki_laskutettu}])]
 
     ;; Mergetä ja palauta rivit
-    (if (= "MHU ja HJU hoidon johto" otsikko)
+    (if (or (= "MHU hoidon johto" otsikko) (= "MHU ja HJU hoidon johto" otsikko))
       (vec (concat (mhu-hju-rivit data kyseessa-kk-vali?) rahavaraus-rivit yhteensa-rivi))
       (vec (concat taulukko-rivit rahavaraus-rivit yhteensa-rivi)))))
 

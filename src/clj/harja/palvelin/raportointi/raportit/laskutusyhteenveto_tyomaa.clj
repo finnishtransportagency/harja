@@ -201,9 +201,10 @@
        [:laskutusyhteenveto-otsikko (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:laskutusyhteenveto-otsikko "Tavoitehinnan ulkopuoliset kustannukset"])
 
-       ;; ------------------------ ;;
-       ;;    Lisätyöt & muut       ;;
-       ;; ------------------------ ;;
+       ;; --------------------------- ;;
+       ;; Tavoitehinnan ulkopuoliset  ;;
+       ;; Lisätyöt & muut             ;;
+       ;; --------------------------- ;;
        (taulukko-tyomaakokous {:data rivitiedot
                                ;; Tämä on design mukainen otsikko
                                :otsikko "Kustannus"
