@@ -55,7 +55,7 @@
     (is (vector? vastaus))
     (is (= raportin-otsikko "Välitavoiteraportti"))
     (is (= urakkakohtaiset-otsikot
-          [{:otsikko "Nimi", :leveys 10} nil
+          [{:otsikko "Nimi", :leveys 10}
            {:otsikko "Takaraja", :leveys 5}
            {:otsikko "Tila", :leveys 5}
            {:otsikko "Valmistumispäivä", :leveys 5}
