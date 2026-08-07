@@ -42,13 +42,13 @@
        :epaonnistui ->KutsuEpaonnistui
        :epaonnistui-parametrit [{:viesti "Tehtäväryhmien haku epäonnistui"}]
        :paasta-virhe-lapi? true})
-    (assoc app :haku-menossa true))
+    (assoc app :tehtavaryhma-haku-menossa? true))
 
   HaeKaikkiTehtavaryhmatOnnistui
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :tehtavaryhmat vastaus)
-      (assoc :haku-menossa false)))
+      (assoc :tehtavaryhma-haku-menossa? false)))
 
   HaeTehtavaryhmanTehtavat
   (process-event [{id :id} app]
@@ -59,13 +59,13 @@
        :epaonnistui ->KutsuEpaonnistui
        :epaonnistui-parametrit [{:viesti "Tehtävien haku epäonnistui"}]
        :paasta-virhe-lapi? true})
-    (assoc app :haku-menossa true))
+    (assoc app :tehtavaryhma-haku-menossa? true))
 
   HaeTehtavaryhmanTehtavatOnnistui
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :tehtavat vastaus)
-      (assoc :haku-menossa false)))
+      (assoc :tehtavaryhma-haku-menossa? false)))
 
   KutsuEpaonnistui
   (process-event [{{:keys [viesti]} :parametrit :as tulos} app]

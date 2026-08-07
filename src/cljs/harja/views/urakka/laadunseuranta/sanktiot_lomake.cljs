@@ -71,6 +71,7 @@
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
@@ -92,7 +93,27 @@
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
-                    lukutila?)]
+                    lukutila?)
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
+        urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
+        urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
+        viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)
+                                          urakan-loppuvuosi
+                                          (dec urakan-loppuvuosi))
+        hoitovuodet (if (<= urakan-alkuvuosi viimeinen-hoitovuoden-alkuvuosi)
+                      (vec (range urakan-alkuvuosi (inc viimeinen-hoitovuoden-alkuvuosi)))
+                      [])
+        hoitovuosi->teksti (fn [hoitovuosi]
+                             (when (int? hoitovuosi)
+                               (let [jarjestysnumero (inc (- hoitovuosi urakan-alkuvuosi))]
+                                 (str jarjestysnumero ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")"))))
+        perintapvm->hoitovuosi (fn [perintapvm]
+                                 (when perintapvm
+                                   (let [vuosi (pvm/vuosi perintapvm)
+                                         kuukausi (pvm/kuukausi perintapvm)
+                                         hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
+                                     (when (some #{hoitovuosi} hoitovuodet)
+                                       hoitovuosi))))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit)
@@ -104,7 +125,7 @@
 
        [lomake/lomake
         {:otsikko "SANKTION TIEDOT"
-         :otsikko-elementti :h3
+         :otsikko-elementti :h4
          :ei-borderia? true
          :vayla-tyyli? true
          :luokka "padding-16 taustavari-taso3"
@@ -210,7 +231,7 @@
                             [yleiset/info-laatikko :neutraali
                              [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
 
-         (when-not (or yllapitourakka? vesivaylaurakka?)
+         (when-not (or yllapitourakka? vesivaylaurakka? (= :laskutus_yli_laskutusrajan (:laji @muokattu)))
            (if (not lukutila?)
              {:otsikko "Tyyppi" :tyyppi :valinta
               :pakollinen? true
@@ -269,7 +290,7 @@
                                    "Ei liity kohteeseen"
                                    ""))))})
 
-         (when (and (not yllapitokohdeurakka?) (not vesivaylaurakka?))
+         (when (and (not yllapitokohdeurakka?) (not vesivaylaurakka?) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
            {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
             :uusi-rivi? true
             :hae (comp :kohde :laatupoikkeama)
@@ -299,8 +320,35 @@
           :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
           :hae (comp :perustelu :paatos :laatupoikkeama)
           :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
-          :tyyppi :text :koko [80 :auto]
+          :tyyppi :text :koko [80 3]
           :validoi [[:ei-tyhja "Anna perustelu"]]}
+
+         ;; Kun sanktiolajina on "Laskutusrajan ylitys" niin näytetään "Ylityksen määrä" -kenttä
+         (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
+           {:otsikko "Ylityksen määrä (€)"
+            :nimi :laskutusrajan-ylitys
+            :tyyppi :euro
+            :vaadi-positiivinen-numero? true
+            ::lomake/col-luokka "col-xs-4"
+            :hae #(when (:laskutusrajan-ylitys %) (Math/abs (:laskutusrajan-ylitys %)))
+            :aseta (fn [rivi arvo] (-> rivi
+                                     (assoc :laskutusrajan-ylitys arvo)
+                                     (assoc :summa (* 0.2 arvo))))
+            :pakollinen? true :uusi-rivi? true
+            :validoi [[:ei-tyhja "Anna ylityksen määrä"]
+                      [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+
+         ;; Kun sanktiolajina on "laskutusrajan ylitys" niin näytetään summa eri nimisenä ja eri kohdassa
+         (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
+          {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
+           :nimi :summa
+           :tyyppi :euro
+           :kentan-arvon-luokka "fontti-20-kevyempi"
+           :muokattava? (constantly false)
+           :vaadi-positiivinen-numero? true
+           ::lomake/col-luokka "col-xs-8"
+           :hae #(when (:summa %) (Math/abs (:summa %)))
+           :pakollinen? true :uusi-rivi? true})
 
          ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
          (when (or
@@ -337,7 +385,7 @@
                          "")))}))
 
          (apply lomake/ryhma {:rivi? true}
-           (keep identity [(when (sanktio-domain/muu-kuin-muistutus? @muokattu)
+           (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
                              {:otsikko "Sanktion suuruus" :nimi :summa :tyyppi :euro
                               :vaadi-positiivinen-numero? true
                               ::lomake/col-luokka "col-xs-4"
@@ -457,20 +505,57 @@
                            laskutuskuukaudet)))
                 :pakollinen? true
                 :tyyppi :pvm
-                ::lomake/col-luokka "col-xs-6"})))
+                ::lomake/col-luokka "col-xs-6"})
+             ;; MHU25 urakoille näytetään perintäpäivä hoitokautena
+             {:otsikko "Kohdistuu hoitovuodelle"
+              :nimi :perintapvm
+              :pakollinen? true
+              :tyyppi :valinta
+              :valinnat hoitovuodet
+              :hae #(perintapvm->hoitovuosi (:perintapvm %))
+              :aseta (fn [rivi hoitovuosi]
+                       (assoc rivi :perintapvm
+                         (when hoitovuosi
+                           (pvm/hoitokauden-alkupvm hoitovuosi))))
+              :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
+              ::lomake/col-luokka "col-xs-6"}))
 
-         {:otsikko (if (<= urakan-alkuvuosi 2024) "Käsittelytapa" "Käsittely ja laskutus")
+          ;; MHU25 urakoille näytetään määräystapa valintana.
+          (when mhu25?
+            (if (not lukutila?)
+              {:otsikko "Määräystapa"
+               :radio-luokka "maaraystapa-ei-marginia"
+               :nimi :maaraystapa
+               :tyyppi :radio-group
+               :pakollinen? true
+               :uusi-rivi? true
+               :nayta-rivina? true
+               ::lomake/col-luokka "col-xs-12"
+               :vaihtoehdot ["tyomaakokous" "valikatselmus"]
+               :vaihtoehto-nayta {"tyomaakokous" "Työmaakokous"
+                                  "valikatselmus" "Välikatselmus"}}
+
+              {:otsikko "Määräystapa"
+               :nimi :maaraystapa
+               :tyyppi :teksti
+               :muokattava? (constantly false)
+               ::lomake/col-luokka "col-xs-12"
+               :fmt (fn [arvo]
+                      (case arvo
+                        "tyomaakokous" "Työmaakokous"
+                        "valikatselmus" "Välikatselmus"
+                        arvo))}))
+
+         {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
+          :muokattava? (if mhu25? (constantly false) (constantly voi-muokata?))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
-          :hae (comp :kasittelytapa :paatos :laatupoikkeama)
-          :aseta #(assoc-in %1 [:laatupoikkeama :paatos :kasittelytapa] %2)
           :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
           :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
-         (when (= :muu (get-in @muokattu [:laatupoikkeama :paatos :kasittelytapa]))
+         (when (= :muu (:kasittelytapa @muokattu))
            {:otsikko "Muu käsittelytapa" :nimi :muukasittelytapa :pakollinen? true
             ::lomake/col-luokka "col-xs-12"
             :hae (comp :muukasittelytapa :paatos :laatupoikkeama)

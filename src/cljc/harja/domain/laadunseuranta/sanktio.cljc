@@ -170,24 +170,6 @@
     ;; MHU ja muut
     :else [:muistutus :A :B :C :arvonvahennyssanktio]))
 
-#_ (defn laatupoikkeaman-sanktiolajit
-  [{:keys [tyyppi alkupvm] :as urakka} kuluvan-hoitokauden-alkuvuosi]
-  (let [nayta-arvonvahennyssanktio? (cond (mhu25-urakka? urakka) true ;; Jos mhu25? - true
-                                      (>= kuluvan-hoitokauden-alkuvuosi 2026) true ;; Jos alkanut vuosi 2026 - true
-                                      :else false ;; Kaikissa muissa tapauksissa false
-                                      )
-        _ (println "laatupoikkeaman-sanktiolajit :: nayta-arvonvahennyssanktio?" nayta-arvonvahennyssanktio? "(mhu25-urakka? urakka)" (mhu25-urakka? urakka) "kuluvan-hoitokauden-alkuvuosi" kuluvan-hoitokauden-alkuvuosi)]
-    (cond
-      ;; Yllapidon urakka?
-      (urakka-domain/yllapitourakka? tyyppi)
-      [:yllapidon_sakko :yllapidon_muistutus]
-
-      ;; MHU ja muut
-      :else (vec (concat
-                   (when nayta-arvonvahennyssanktio?
-                     [:arvonvahennyssanktio])
-                   [:muistutus :A :B :C])))))
-
 (defn sanktio-konfiguraation-lajin-tiedot
   [sanktio-konfiguraatio laji]
   (some #(when (= laji (:laji %)) %) (:sanktio-lajit sanktio-konfiguraatio)))
@@ -291,7 +273,7 @@
   "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]
   (case avainsana
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"

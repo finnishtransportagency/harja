@@ -170,7 +170,7 @@
                          (:id valittu-urakka))
                uusi-sanktio (merge
                               (tiedot/uusi-sanktio (:tyyppi valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))
-                              {:toimenpideinstanssi tpi})
+                               {:toimenpideinstanssi tpi})
                ;; Vanhemmilla urakoilla ei ole välttämättä käsittelytapana välikatselmus.
                uusi-sanktio (if (>= urakan-alkuvuosi 2025)
                               (assoc-in uusi-sanktio [:laatupoikkeama :paatos :kasittelytapa] :valikatselmus)

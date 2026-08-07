@@ -161,16 +161,20 @@
                    (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
                          uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))) {:suorasanktio false})
                                 (assoc :maarattypvm kasittelyaika)
+                                (assoc :perintapvm kasittelyaika)
+                                 (assoc :kasittelytapa (if (tila/mhu25-urakka? @nav/valittu-urakka)
+                                                         :valikatselmus
+                                                         (get-in @laatupoikkeama [:paatos :kasittelytapa])))
                                 (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
                          uusi-sanktio-atom (atom uusi)
                          mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)]
+                    (reset! sivupaneeli-auki? true)
                     (reset! sanktiot/valittu-sanktio
                       (-> (uuden-sanktion-rivi uusi (:tyyppi @nav/valittu-urakka) @sanktiot/valitun-urakan-sanktiolajit mahdolliset-kulun-kohdistukset)
                         (assoc :laatupoikkeama siivottu-laatupoikkeama)
                         (assoc :perustelu (:paatoksen-selitys siivottu-laatupoikkeama))
-                        (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama)))))
-                  (reset! sivupaneeli-auki? true))
+                        (assoc :laatupoikkeamaaika (:aika siivottu-laatupoikkeama))))))
                 {:ikoni (ikonit/livicon-plus)
                  :disabled (boolean disabled?)}]]
               (when disabled?

@@ -44,6 +44,7 @@
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
         mahdolliset-kulun-kohdistukset (valittavat-kulun-kohdistukset @tiedot-urakka/urakan-toimenpideinstanssit mhu25?)
         tehtavat (:tehtavat app)
+        haku-menossa? (:tehtavaryhma-haku-menossa? app)
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liitteet-element-id-" (gensym))
@@ -166,20 +167,27 @@
 
        ;; Tehtävä - Näytetään vain mhu25 urakoille
        (when mhu25?
-         {:otsikko "Tehtävä"
-          :nimi :tehtava
-          :tyyppi :valinta
-          :uusi-rivi? true
-          :disabled? (empty? tehtavat)
-          :valinnat (if (empty? tehtavat) [{:id nil :nimi "Tehtäväryhmällä ei ole tehtäviä"}] tehtavat)
-          :valinta-nayta #(cond
-                            (and % (:id %) (:nimi %)) (:nimi %) ;; Normaali tilanne, jossa tehtäväryhmällä on tehtäviä ja voidaan valita jokin niistä
-                            (and % (nil? (:id %)) (:nimi %)) "Tehtäväryhmällä ei ole tehtäviä" ;; Kun Tehtäväryhmällä ei ole tehtäviä
-                            (and % (nil? (:id %)) (nil? (:nimi %))) "-" ;; Kun on tallennettu arvonvähennys, jolla ei ole tehtävää.
-                            :else " - valitse tehtävä -") ;; Kehotetaan valitsemaan tehtävä
-          :pakollinen? (seq tehtavat)
-          ::lomake/col-luokka "col-xs-6"})
-
+         (if haku-menossa?
+           {:otsikko "Tehtävä"
+            :nimi :tehtava
+            :uusi-rivi? true
+            :tyyppi :komponentti
+            ::lomake/col-luokka "col-xs-6"
+            :komponentti (fn [_]
+                           [yleiset/ajax-loader "Ladataan..."])}
+           {:otsikko "Tehtävä"
+            :nimi :tehtava
+            :tyyppi :valinta
+            :uusi-rivi? true
+            :disabled? (empty? tehtavat)
+            :valinnat (if (empty? tehtavat) [{:id nil :nimi "Tehtäväryhmällä ei ole tehtäviä"}] tehtavat)
+            :valinta-nayta #(cond
+                              (and % (:id %) (:nimi %)) (:nimi %) ;; Normaali tilanne, jossa tehtäväryhmällä on tehtäviä ja voidaan valita jokin niistä
+                              (and % (nil? (:id %)) (:nimi %)) "Tehtäväryhmällä ei ole tehtäviä" ;; Kun Tehtäväryhmällä ei ole tehtäviä
+                              (and % (nil? (:id %)) (nil? (:nimi %))) "-" ;; Kun on tallennettu arvonvähennys, jolla ei ole tehtävää.
+                              :else " - valitse tehtävä -") ;; Kehotetaan valitsemaan tehtävä
+            :pakollinen? (seq tehtavat)
+            ::lomake/col-luokka "col-xs-6"}))
        ;; Kulun kohdistus - muille kuin mhu25 urakoille näytetään aina
        (when (not mhu25?)
          {:otsikko "Kulun kohdistus"
@@ -227,7 +235,6 @@
               :tyyppi :numero
               :pakollinen? true
               :uusi-rivi? true
-              ;:fmt (partial fmt/euro-opt false)
               :jos-tyhja "-"
               :muokattava? (constantly false)})
 
@@ -426,6 +433,8 @@
                                                            :nayta-koko? true}]))
                             "Ei liitettä")])})]
       @muokattu]]))
+
+
 
 
 

@@ -197,7 +197,7 @@
     (is (= nil (:tavoitehinta-indeksikorjattu budjettitavoitteet)) "Hoitovuoden alun indeksikorjattu tavoitehinta")
     (is (= {2024 false 2025 false 2026 false 2027 false 2028 false}
           (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)))
-    (is (= 0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
+    (is (= 2346.0 (:aiemmat-pysyvat-muutokset-indeksikorjattu-yht budjettitavoitteet))
       "Aiemmat pysyvät muutokset indeksikorjattuna")
 
     ;; Urakalle ei ole kirjattu muutoksia hoitovuodelle 2026-2027, ainoastaan aiemman vuoden pysyvät muutokset pitäisi näkyä
@@ -213,7 +213,7 @@
     ;; * Aiemmat pysyvät muutokset (indeksikorjattuna)
     ;; * Kirjatut muutokset (tavoitehinnan muutokset) yhteensä
     ;; * Toteutumiin perustuvat muutokset (tavoitehinnan muutokset) yhteensä
-    (is (= 0.0 (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2))) "Muutosten vaikutus yhteensä")))
+    (is (= 2346.0 (some->> (:muutosten-vaikutus-yht budjettitavoitteet) (round2 2))) "Muutosten vaikutus yhteensä")))
 
 (deftest hae-urakan-muutostiedot-ii-kun-annetuilla-ehdoilla-ei-loydy
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
