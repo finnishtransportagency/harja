@@ -122,21 +122,43 @@
       ;; Varmistetaan, että lopputulos on samassa järjestyksessä kuin alkuperäinen lajin-sanktiotyyppien-koodit
       (sort-by #(.indexOf (vec lajin-sanktiotyyppien-koodit) (:koodi %))))))
 
+(defn mhu25-urakka?
+  "Tosi, jos kyseessä on MHU25-urakka tai uudempi, eli teiden-hoito-tyyppinen urakka, jonka alkuvuosi on 2025 tai suurempi."
+  [{:keys [tyyppi alkupvm]}]
+  (and (= :teiden-hoito tyyppi)
+    (some? alkupvm)
+    (>= (pvm/vuosi alkupvm) 2025)))
+
 (defn urakan-sanktiolajit
-  "Palauttaa urakalle kuuluvat sanktiolajit urakka-tyypin mukaisesti"
-  [{:keys [tyyppi] :as urakka}]
+  "Palauttaa urakalle kuuluvat sanktiolajit urakka-tyypin mukaisesti.
 
-  (cond
-    ;; MH- tai Alueurakka?
-    (or (= :teiden-hoito tyyppi) (= :hoito tyyppi))
-    [:muistutus :A :B :C :arvonvahennyssanktio :pohjavesisuolan_ylitys :talvisuolan_ylitys
-     :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]
+   :arvonvahennyssanktio lisätään teiden-hoito-tyyppisen urakan lajeihin heti :C-sanktion jälkeen, mikäli:
+   - MHU24-urakka -> aina siihen asti, että kuluvan hoitokauden alkuvuosi on 2026 (eli väliaikaisesti).
 
-    ;; Yllapidon urakka?
-    (urakka-domain/yllapitourakka? tyyppi)
-    [:yllapidon_sakko :yllapidon_muistutus]
+   Parametrit:
+     urakka                              Urakan tiedot (mm. :tyyppi ja :alkupvm)
+     kuluvan-hoitokauden-alkuvuosi       Kuluvan hoitokauden alkuvuosi (int)"
+  [{:keys [tyyppi] :as urakka} kuluvan-hoitokauden-alkuvuosi]
+  (let [;; Arvonvähennyssanktio näytetään tässä "vanhassa" listassa jos on mhu25+ urakka tai jos hoitovuosi on 2026 alkaen.
+        nayta-arvonvahennyssanktio? (cond
+                                      (mhu25-urakka? urakka) false ;; MHU25 (tai uudempi) - ei näytetä
+                                      (>= kuluvan-hoitokauden-alkuvuosi 2026) false ;; Alkanut hoitovuosi 2026 - ei näytetä
+                                      :else true)] ;; Kaikissa muissa tapauksissa näytetään
+    (cond
+      ;; MH- tai Alueurakka?
+      (or (= :teiden-hoito tyyppi) (= :hoito tyyppi))
+      (vec (concat
+             [:muistutus :A :B :C]
+             (when nayta-arvonvahennyssanktio?
+               [:arvonvahennyssanktio])
+             [:pohjavesisuolan_ylitys :talvisuolan_ylitys
+              :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]))
 
-    :else []))
+      ;; Yllapidon urakka?
+      (urakka-domain/yllapitourakka? tyyppi)
+      [:yllapidon_sakko :yllapidon_muistutus]
+
+      :else [])))
 
 (defn laatupoikkeaman-sanktiolajit
   [{:keys [tyyppi alkupvm] :as urakka}]
@@ -251,7 +273,7 @@
   "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]
   (case avainsana
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyys\u00ADbonus"
+    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"
@@ -269,6 +291,7 @@
     :puhelin "Puhelimitse"
     :kommentit "Harja-kommenttien perusteella"
     :muu "Muu tapa"
+    :ei-tiedossa "Ei tiedossa"
     nil))
 
 (defn luo-kustannustyypit [urakkatyyppi kayttaja toimenpideinstanssi]
@@ -281,17 +304,17 @@
     (cond
       (urakka-domain/alueurakka? urakkatyyppi)
       [:asiakastyytyvaisyysbonus :muu-bonus]
-            ;; Hoidon johto
+      ;; Hoidon johto
       (and (urakka-domain/mh-urakka? urakkatyyppi) (= "23150" (:t2_koodi toimenpideinstanssi)))
       [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus] ;; :tavoitepalkkio :lupausbonus (25.11.2020 piilossa kunnes prosessi selvänä.)
-            ;; MHU Ylläpito
+      ;; MHU Ylläpito
       (and (urakka-domain/mh-urakka? urakkatyyppi) (= "20190" (:t2_koodi toimenpideinstanssi)))
       [:asiakastyytyvaisyysbonus :alihankintabonus :muu-bonus]
       (and (urakka-domain/mh-urakka? urakkatyyppi) (not= "23150" (:t2_koodi toimenpideinstanssi)))
       [:muu-bonus]
 
-            ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktiolaji.
-            ;;      Tätä ei tallenneta erilliskustannus-tauluun, vaan sanktio-tauluun.
+      ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktiolaji.
+      ;;      Tätä ei tallenneta erilliskustannus-tauluun, vaan sanktio-tauluun.
       (urakka-domain/yllapitourakka? urakkatyyppi)
       [:yllapidon_bonus]
 
@@ -319,3 +342,11 @@
     (bonus? rivi) :bonukset
     (arvonvahennys? rivi) :arvonvahennykset
     (sanktio? rivi) :sanktiot))
+
+(defn arvonvahennykset-kaytossa?
+  "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
+  [valittu-urakka kuluva-hoitokausi]
+  (let [mhu25? (and (= :teiden-hoito (:tyyppi valittu-urakka))
+                 (>= (pvm/vuosi (:alkupvm valittu-urakka)) 2025))
+        kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
+    (if (or mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) true false)))
