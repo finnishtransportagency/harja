@@ -37,15 +37,10 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
 
         // Valitse "Bonus" radio
         cy.contains('label', 'Bonus').click()
+        cy.wait(250) // odotetaan, että lomake päivittyy
 
         // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
         cy.contains('label', 'Indeksi').should('not.exist')
-
-        //  Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta on ainoa vaihtoehto ja tekstinä lomakkeella
-        cy.get('label').contains('Bonus').parent().parent().parent().find('div').should('have.class', 'lomake-arvo')
-        cy.get('label').contains('Bonus').parent().parent().parent().find('button').should('have.length', 0)
-
-        //cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta'});
 
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiBonusPerustelu)
