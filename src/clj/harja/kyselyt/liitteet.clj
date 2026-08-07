@@ -4,4 +4,7 @@
 (defqueries "harja/kyselyt/liitteet.sql"
   {:positional? true})
 
-(declare hae-liitteiden-tiedot hae-urakan-liite-id hae-liite-meta-tiedoilla)
+(declare hae-liitteiden-tiedot hae-urakan-liite-id tallenna-liite<! hae-liite-lataukseen
+  hae-siltatarkastusliite-lataukseen hae-pikkukuva-lataukseen
+  poista-laatupoikkeaman-kommentin-liite! poista-turvallisuuspoikkeaman-kommentin-liite!
+  hae-liite-meta-tiedoilla merkitse-liite-virustarkistetuksi! liite-virustarkastettu?)

@@ -38,6 +38,7 @@
             [harja.palvelin.raportointi.excel :as raportointi-excel]
 
             [harja.kyselyt.konversio :as konv]
+            [harja.tyokalut.muunnos :as muunnos]
             [harja.kyselyt.urakat :as urakat]
             [harja.domain.roolit :as roolit]
             [harja.domain.urakka :as domain-urakka]
@@ -238,7 +239,7 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu] :as sanktio}
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -276,8 +277,8 @@
                               (and poistettu (nil? perintapvm)) ;; Jos sanktio on poistettu ja perintäpäivä on nil, niin generoi tämä hetki
                               (konv/sql-timestamp (pvm/nyt))
                               (konv/sql-timestamp perintapvm))
-                :maarattypvm (konv/sql-date maarattypvm)
-                :maaraystapa maaraystapa
+                ;; Käytetään käsittelyaikaa, jos määrättypvm on asettamatta. Esim arvonvähennyksillä sitä ei ole pakko asettaa.
+                :maarattypvm (if maarattypvm (konv/sql-date maarattypvm) (konv/sql-timestamp kasittelyaika))
                 :kasittelytapa (name kasittelytapa)
                 :ryhma (when laji (name laji))
                 ;; hoitourakassa sanktiotyyppi valitaan kälistä, ylläpidosta päätellään implisiittisesti
@@ -297,7 +298,11 @@
                 :id id
                 :poistettu poistettu
                 :muokkaaja (:id user)
-                :luoja (:id user)}]
+                :luoja (:id user)
+                ;; Arvonvähennyksen lisäkentät
+                :maaraystapa (when maaraystapa (name maaraystapa))
+                :tehtavaryhma (:id tehtavaryhma)
+                :tehtava (:id tehtava)}]
     (if-not (id-olemassa? id)
       (let [uusi-sanktio (sanktiot/luo-sanktio<! db params)]
         (sanktiot/merkitse-maksuera-likaiseksi! db (:id uusi-sanktio))
