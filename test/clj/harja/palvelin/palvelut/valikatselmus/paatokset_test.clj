@@ -525,9 +525,9 @@
                                           jarjestelma-kyselyt/hae-jarjestelman-asetukset 
                                           (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-sanktio))
-                            (catch Exception e e))
+                            (catch Exception e e
+                              (println "ERROR: " e)))
           tallennettu-sanktio (valitse-paatos (:paatokset vastaus-sanktio) :lupaukset)
-          
           sanktio (when (:sanktio_id tallennettu-sanktio)
                     (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-sanktio))))]
       
