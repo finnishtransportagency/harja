@@ -35,8 +35,8 @@
 (defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
 
-(defrecord PaivitaTehtavavaikutus [rivi])
-(defrecord PaivitaTehtavavaikutusSyy [toimenpideinstanssi syy])
+(defrecord PaivitaTehtavavaikutus [rivi hk-alkuvuosi])
+(defrecord PaivitaTehtavavaikutusSyy [toimenpideinstanssi syy hk-alkuvuosi])
 
 (defn pysyvia-muutoksia-tulevilla-hoitovuosilla?
   "Hakee pysyvän muutoksen tiedoista, onko muutoksia tulevilla hoitovuosilla."
@@ -81,15 +81,15 @@
     :toimenpideinstanssi toimenpideinstanssi
     :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
     :kustannuslaji "hankintakustannukset"
-    :summa summa
-    ))
+    :summa summa))
 
-(defn paivita-kustannusvaikutus [r toimenpideinstanssi f]
+(defn paivita-kustannusvaikutus [r toimenpideinstanssi hk-alkuvuosi f]
   (update r :kustannusvaikutukset
     (fn [kustannusvaikutukset]
       (mapv
         (fn [kv]
-          (if (= (:toimenpideinstanssi kv) toimenpideinstanssi)
+          (if (and (= (:toimenpideinstanssi kv) toimenpideinstanssi)
+                (= (:hoitokauden_alkuvuosi kv) hk-alkuvuosi))
             (f kv)
             kv))
         kustannusvaikutukset))))
@@ -405,8 +405,10 @@
     app)
 
   PaivitaTehtavavaikutus
-  (process-event [{:keys [rivi]} app]
+  (process-event [{:keys [rivi hk-alkuvuosi]} app]
     (let [toimenpideinstanssi (:toimenpideinstanssi rivi)]
+      (assert (int? hk-alkuvuosi))
+
       (-> app
         (assoc :voi-tallentaa? true)
         (muokkaa-toimenpiteen-rivit-pysyva-muutos
@@ -415,13 +417,16 @@
             (paivita-kustannusvaikutus
               r
               toimenpideinstanssi
-              #(update % :onko-tehtavamuutoksia?
+              hk-alkuvuosi
+              #(update % :tehtavamaaramuutos-kirjattu?
                  (fn [v]
                    (if (some? v) (not v) false))))))
         (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
 
   PaivitaTehtavavaikutusSyy
-  (process-event [{:keys [toimenpideinstanssi syy]} app]
+  (process-event [{:keys [toimenpideinstanssi syy hk-alkuvuosi]} app]
+    (assert (int? hk-alkuvuosi))
+
     (-> app
       (assoc :voi-tallentaa? true)
       (muokkaa-toimenpiteen-rivit-pysyva-muutos
@@ -430,6 +435,7 @@
           (paivita-kustannusvaikutus
             r
             toimenpideinstanssi
+            hk-alkuvuosi
             #(assoc % :syy syy))))
       (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
 

@@ -623,19 +623,47 @@
                 ;; Bumpataan versiota, jotta nähdään asettuuko odotettujen rivien versio samaan versioon kuin äiti-muutoksen
                 :versio 2 :tyyppi "pysyva" :liite-idt #{}}
         ;; Payload muodossa mikä tulisi UI-lomakkeelta osana muuta muutosdataa
-        kustannusvaikutus-payload [{:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025}
-                                   {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026}
-                                   {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2027}
+        kustannusvaikutus-payload [{:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025
+                                    :tehtavamaaramuutos-kirjattu? nil :syy nil}
+                                   {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026
+                                    :tehtavamaaramuutos-kirjattu? nil :syy nil}
+                                   {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2027
+                                    :tehtavamaaramuutos-kirjattu? nil :syy nil}
                                    ;; Tällä rivillä ei muuteta mitään, jotta nähdään että vanha rivi jää ennalleen, eikä sen versio nouse
                                    ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on voimassa jollakin joukolla
                                    ;; lapsi-taulujen rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
-                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2028}]
+                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2028
+                                    :tehtavamaaramuutos-kirjattu? nil :syy nil}]
         odotettu-vastaus (list
-                           {:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025, :versio 2}
-                           {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026, :versio 2}
-                           {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2027, :versio 2}
-                           ;; Tämän rivin pitäisi jäädä ennalleen alkuperäiseen versioon 1, koska rivi jätettiin tarkoituksella päivittämättä
-                           {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2028 :versio 1})
+                           {:hoitokauden_alkuvuosi 2025
+                            :kustannuslaji "hankintakustannukset"
+                            :tehtavamaaramuutos-kirjattu? nil
+                            :summa 1111
+                            :syy nil
+                            :toimenpideinstanssi 125
+                            :versio 2}
+                           {:hoitokauden_alkuvuosi 2026
+                            :kustannuslaji "hankintakustannukset"
+                            :tehtavamaaramuutos-kirjattu? nil
+                            :summa 2222
+                            :syy nil
+                            :toimenpideinstanssi 125
+                            :versio 2}
+                           {:hoitokauden_alkuvuosi 2027
+                            :kustannuslaji "hankintakustannukset"
+                            :tehtavamaaramuutos-kirjattu? nil
+                            :summa 3333
+                            :syy nil
+                            :toimenpideinstanssi 125
+                            :versio 2}
+                           {:hoitokauden_alkuvuosi 2028
+                            :kustannuslaji "hankintakustannukset"
+                            :tehtavamaaramuutos-kirjattu? nil
+                            :summa 1000
+                            :syy nil
+                            :toimenpideinstanssi 125
+                            :versio 1})
+
         _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) muutos kustannusvaikutus-payload false)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-muutoksen-tiedot
@@ -1230,22 +1258,30 @@
                                                        :kustannusvaikutukset (list
                                                                                {:hoitokauden_alkuvuosi 2025
                                                                                 :kustannuslaji "hankintakustannukset"
+                                                                                :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
+                                                                                :syy nil
                                                                                 :toimenpideinstanssi 125
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2026
                                                                                 :kustannuslaji "hankintakustannukset"
+                                                                                :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
+                                                                                :syy nil
                                                                                 :toimenpideinstanssi 125
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2027
                                                                                 :kustannuslaji "hankintakustannukset"
+                                                                                :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
+                                                                                :syy nil
                                                                                 :toimenpideinstanssi 125
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2028
                                                                                 :kustannuslaji "hankintakustannukset"
+                                                                                :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
+                                                                                :syy nil
                                                                                 :toimenpideinstanssi 125
                                                                                 :versio 1})
                                                        :tehtavat_ja_maarat (list

@@ -267,12 +267,12 @@
 
                     ;; Jos halutaan tallentaa pysyvä muutos ilman tehtävämääriä, vaaditaan syy
                     syy-puuttuu? (and
-                                   (false? (:onko-tehtavamuutoksia? kv))
+                                   (false? (:tehtavamaaramuutos-kirjattu? kv))
                                    (str/blank? (:syy kv)))
 
 
                     ei-tehtavamuutoksia-ok? (and kv-syotetty?
-                                              (false? (:onko-tehtavamuutoksia? kv))
+                                              (false? (:tehtavamaaramuutos-kirjattu? kv))
                                               (not syy-puuttuu?))
 
                     toinen-syotetty? (or kv-syotetty? tjm-syotetty?)
