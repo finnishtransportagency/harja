@@ -1,14 +1,13 @@
 (ns harja.palvelin.raportointi.raportit.valitavoiteraportti
-  (:require [harja.kyselyt.urakat :as urakat-q]
-            [harja.fmt :as fmt]
-            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+  (:require [clj-time.coerce :as c]
+            [clj-time.core :as t]
             [jeesql.core :refer [defqueries]]
-            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.fmt :as fmt]
             [harja.domain.urakka :as u-domain]
             [harja.domain.valitavoite :as vt-domain]
-            [clj-time.core :as t]
-            [harja.pvm :as pvm]
-            [clj-time.coerce :as c]))
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko]]
+            [harja.pvm :as pvm]))
 
 (defqueries "harja/palvelin/raportointi/raportit/valitavoitteet.sql")
 
@@ -86,22 +85,23 @@
 
 (defn- muodosta-raportin-rivit-urakkakohtaisissa [valitavoitteet alkupvm loppupvm vesivaylaurakka?]
   (let [valitavoiterivi (fn [valitavoite]
-                          [(:nimi valitavoite)
-                           (when vesivaylaurakka? (if (:aloituspvm valitavoite) (pvm/pvm-opt (:aloituspvm valitavoite)) (str "-")))
-                           (let [kuvaus (kuvaile-keskenerainen-valitavoite valitavoite)]
-                             (str (pvm/pvm-opt (:takaraja valitavoite))
-                                  (when kuvaus
-                                    (str " (" kuvaus ")"))))
-                           (str (vt-domain/valmiustilan-kuvaus valitavoite))
-                           (let [valmispvm (:valmispvm valitavoite)
-                                 kuvaus (kuvaile-valmistunut-valitavoite valitavoite alkupvm loppupvm)]
-                             (if valmispvm
-                               (str (pvm/pvm-opt (:valmispvm valitavoite))
-                                    (if kuvaus
-                                      (str " (" kuvaus ")")))
-                               "-"))
-                           (:valmis-kommentti valitavoite)
-                           (str (:valmis-merkitsija-etunimi valitavoite) " " (:valmis-merkitsija-sukunimi valitavoite))])]
+                          (filterv some?
+                            [(:nimi valitavoite)
+                             (when vesivaylaurakka? (if (:aloituspvm valitavoite) (pvm/pvm-opt (:aloituspvm valitavoite)) (str "-")))
+                             (let [kuvaus (kuvaile-keskenerainen-valitavoite valitavoite)]
+                               (str (pvm/pvm-opt (:takaraja valitavoite))
+                                    (when kuvaus
+                                      (str " (" kuvaus ")"))))
+                             (str (vt-domain/valmiustilan-kuvaus valitavoite))
+                             (let [valmispvm (:valmispvm valitavoite)
+                                   kuvaus (kuvaile-valmistunut-valitavoite valitavoite alkupvm loppupvm)]
+                               (if valmispvm
+                                 (str (pvm/pvm-opt (:valmispvm valitavoite))
+                                      (if kuvaus
+                                        (str " (" kuvaus ")")))
+                                 "-"))
+                             (:valmis-kommentti valitavoite)
+                             (str (:valmis-merkitsija-etunimi valitavoite) " " (:valmis-merkitsija-sukunimi valitavoite))]))]
     (when-not (empty? valitavoitteet)
       (into [] (concat (mapv valitavoiterivi valitavoitteet))))))
 
@@ -139,13 +139,14 @@
       (into [] (concat (mapv valitavoiterivi valitavoitteet))))))
 
 (defn- muodosta-urakkakohtaiset-otsikkorivit [vesivaylaurakka?]
-  [{:otsikko "Nimi" :leveys 10}
-   (when vesivaylaurakka? {:otsikko "Aloituspäivä" :leveys 5})
-   {:otsikko "Takaraja" :leveys 5}
-   {:otsikko "Tila" :leveys 5}
-   {:otsikko "Valmistumispäivä" :leveys 5}
-   {:otsikko "Kommentti valmistumisesta" :leveys 10}
-   {:otsikko "Valmiiksimerkitsijä" :leveys 5}])
+  (filterv some?
+    [{:otsikko "Nimi" :leveys 10}
+     (when vesivaylaurakka? {:otsikko "Aloituspäivä" :leveys 5})
+     {:otsikko "Takaraja" :leveys 5}
+     {:otsikko "Tila" :leveys 5}
+     {:otsikko "Valmistumispäivä" :leveys 5}
+     {:otsikko "Kommentti valmistumisesta" :leveys 10}
+     {:otsikko "Valmiiksimerkitsijä" :leveys 5}]))
 
 (defn- muodosta-valtakunnalliset-otsikkorivit []
   [{:otsikko "Työn kuvaus" :leveys 8}
@@ -158,7 +159,8 @@
    {:otsikko "Merkitsijä" :leveys 5}])
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as parametrit}]
-  (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+  (let [urakan-tiedot (-> (first (urakat-q/hae-urakka db {:id urakka-id}))
+                        (update :tyyppi keyword))
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakan-tiedot)
         ;;alkupvm ja loppupvm voivat olla yhden kuukauden alku- ja loppupäivät, jos ollaan työmaakokousraportissa,
         ;;mutta välitavoiteraportti näytetään sielläkin vain koko hoitovuoden ajalta
@@ -184,11 +186,11 @@
      [:tyhja-rivi nil]
      [:taulukko {:otsikko "Urakkakohtaiset määräaikaan mennessä tehtävät työt"
                  :tyhja (when (empty? urakkakohtaiset-datarivit) "Ei raportoitavia määräaikaan mennessä tehtäviä töitä.")
-                 :sheet-nimi raportin-nimi}
+                 :sheet-nimi "Urakkakohtaiset työt"}
       otsikkorivit-urakkakohtaisissa
       urakkakohtaiset-datarivit]
      (when hoitourakka? [:taulukko {:otsikko "Kaikissa urakoissa määräaikaan mennessä tehtävät työt"
                                     :tyhja (when (empty? valtakunnalliset-datarivit) "Ei raportoitavia määräaikaan mennessä tehtäviä töitä.")
-                                    :sheet-nimi raportin-nimi}
+                                    :sheet-nimi "Kaikkien urakoiden työt"}
                          otsikkorivit-valtakunnallisissa
                          valtakunnalliset-datarivit])]))
