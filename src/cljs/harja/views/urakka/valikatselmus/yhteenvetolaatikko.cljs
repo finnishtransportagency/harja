@@ -251,9 +251,6 @@
      [:div.flex-row.summa-rivi
       [:span "Muut sanktiot"]
       [:span (fmt/euro-opt false muut-sanktiot)]]
-     [:div.flex-row.summa-rivi
-      [:span "Arvonvähennykset"]
-      [:span (fmt/euro-opt false arvonvahennykset-yht)]]
      (when tavoitehinnan-ylityspaatos
        [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan ylitys " (when (> urakoitsijan-tavoitehinnan-ylitysprosentti 0)
