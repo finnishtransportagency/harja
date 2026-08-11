@@ -213,7 +213,7 @@
       [:span "Lupausbonus"]
       [:span (fmt/euro-opt false lupausbonus)]]
      [:div.flex-row.summa-rivi
-      [:span "Asiakastyytyväisyysbonus"]
+      [:span "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"]
       [:span (fmt/euro-opt false asiakastyytyvaisyysbonus)]]
      [:div.flex-row.summa-rivi
       [:span "Muut bonukset"]
