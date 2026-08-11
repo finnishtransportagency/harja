@@ -82,8 +82,11 @@
         vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        ;; Arvonvähennys kuuluu urakan sanktioihin, mutta ei tähän lomakkeelle, koska sille on oma lomakkeensa
-        mahdolliset-sanktiolajit (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
+        hoitokauden-alkuvuosi (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
+        ;; Arvonvähennys kuuluu urakan sanktioihin, mutta ei tähän lomakkeelle, koska sille on oma lomakkeensa mhu25+ ja 2026 hoitovuodesta alkaen
+        mahdolliset-sanktiolajit (if (or mhu25? (>= hoitokauden-alkuvuosi 2026))
+                                   (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
+                                   @tiedot/valitun-urakan-sanktiolajit)
         kaikki-sanktiotyypit @tiedot/sanktiotyypit 
         sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
