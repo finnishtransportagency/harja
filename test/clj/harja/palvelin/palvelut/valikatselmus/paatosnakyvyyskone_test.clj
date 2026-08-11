@@ -63,22 +63,31 @@
 (deftest mhu+-vuodelle-2024-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2024
-        urakan-loppuvuosi (+ urakan-alkuvuosi 5)]
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028))))))
+        urakan-loppuvuosi (+ urakan-alkuvuosi 5)
+        odotettu-lista '({:nimi "Lupaukset", :tyyppi "bonus", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                         {:nimi "Lupaukset", :tyyppi "sanktio", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                         {:nimi "Lupaukset", :tyyppi "taytetty", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                         {:nimi "Tavoitehinnan muutokset", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :nakyvyys_asti 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 2, :paatostyyppi "tavoitehinnan-muutokset"} {:nimi "Hoitovuoden lopun indeksikorjaus", :tyyppi nil, :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 3, :paatostyyppi "indeksikorjaus"} {:nimi "Hoitovuoden lopun tavoite- ja kattohinta", :tyyppi "B", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 4, :paatostyyppi "hoitovuoden-lopun-hinta-v2"} {:nimi "Tavoitehinnan alitus", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 5, :paatostyyppi "tavoitehinta"} {:nimi "Tavoitehinnan ylitys", :tyyppi "B", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 6, :paatostyyppi "tavoitehinta"} {:nimi "Kattohinnan ylitys", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 7, :paatostyyppi "kattohinta"} {:nimi "Hoidonjohtopalkkion muutos", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 8, :paatostyyppi "hoidonjohtopalkkio"} {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 9, :paatostyyppi "raportti"})]
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2024)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028)))))
 
 (deftest mhu+-vuodelle-2025-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
         urakan-alkuvuosi 2025
-        urakan-loppuvuosi (+ urakan-alkuvuosi 5)]
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028))))
-    (is (= 11 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2029))))))
+        urakan-loppuvuosi (+ urakan-alkuvuosi 5)
+        odotettu-lista '({:nimi "Lupaukset", :tyyppi "bonus", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                         {:nimi "Lupaukset", :tyyppi "sanktio", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                         {:nimi "Lupaukset", :tyyppi "taytetty", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                         {:nimi "Tavoitehinnan pysyvät muutokset", :urakan_alkuvuosi 2025, :nakyvyys_alkaen 2025, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 2, :paatostyyppi "tavoitehinnan-pysyvat-muutokset"}
+                         {:nimi "Hoitovuoden lopun indeksikorjaus", :tyyppi nil, :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 3, :paatostyyppi "indeksikorjaus"} {:nimi "Hoitovuoden lopun tavoite- ja kattohinta", :tyyppi "B", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 4, :paatostyyppi "hoitovuoden-lopun-hinta-v2"} {:nimi "Tavoitehinnan alitus", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 5, :paatostyyppi "tavoitehinta"} {:nimi "Tavoitehinnan ylitys", :tyyppi "B", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 6, :paatostyyppi "tavoitehinta"} {:nimi "Kattohinnan ylitys", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+"}, :jarjestys 7, :paatostyyppi "kattohinta"} {:nimi "Hoidonjohtopalkkion muutos", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 8, :paatostyyppi "hoidonjohtopalkkio"} {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 9, :paatostyyppi "raportti"})]
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028)))
+    (is (= odotettu-lista (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2029)))))
 
 (deftest mhu-vuodelle-2024-palautaa-oikein
   (let [mhu-tyyppi "MHU"
