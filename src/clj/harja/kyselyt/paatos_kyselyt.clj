@@ -14,6 +14,7 @@
 
 (declare tee-lupauspaatos<! poista-lupauspaatos<! hae-lupauspaatokset hae-lupauspaatos
   hae-tavoitehinnan-muutos-paatokset tee-tavoitehinnan-muutos-paatos<! hae-tavoitehinnan-muutospaatos poista-tavoitehinnan-muutos-paatos<!
+  hae-tavoitehinnan-pysyvat-muutospaatokset tee-tavoitehinnan-pysyva-muutospaatos<! hae-tavoitehinnan-pysyva-muutospaatos poista-tavoitehinnan-pysyva-muutos-paatos<!
   tee-tavoitehinnan-alitus-paatos<! poista-tavoitehinnan-alitus-paatos<! hae-tavoitehinnnan-alitus-paatokset hae-tavoitehinnan-alituspaatos
   tee-tavoitehinnan-ylitys-paatos<! hae-tavoitehinnan-ylityspaatos hae-tavoitehinnnan-ylitys-paatokset poista-tavoitehinnan-ylitys-paatos<!
   hae-kattohinta-paatokset tee-kattohinta-paatos<! hae-kattohinta-paatos poista-kattohinta-paatos<!

@@ -53,6 +53,39 @@ FROM paatos_tavoitehinnan_muutos
 WHERE id = :paatos-id
   AND poistettu = FALSE;
 
+-- name: tee-tavoitehinnan-pysyva-muutospaatos<!
+-- Tee tavoitehinnan pysyvä muutos päätös
+INSERT INTO paatos_tavoitehinnan_pysyva_muutos (urakkaid, hoitokauden_alkuvuosi, kirjallisesti_sovitut_muutokset,
+                                               pysyvat_muutokset, johto_ja_hallintkorvaus_muutokset, muutostyo_muutokset,
+                                               toteumiin_perustuvat_muutokset, tehtava_ja_maaratoteumamuutokset,
+                                               rahavarausten_muutokset, rahavarausten_muutokset, arvonvahennysten_muutokset,
+                                               tavoitehinnan_muutokset_yhteensa, luoja, luotu)
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :kirjallisesti_sovitut_muutokset, :pysyvat_muutokset, :johto_ja_hallintkorvaus_muutokset,
+        :muutostyo_muutokset, :toteumiin_perustuvat_muutokset, :tehtava_ja_maaratoteumamuutokset,
+        :rahavarausten_muutokset, :rahavarausten_muutokset, :arvonvahennysten_muutokset, :tavoitehinnan_muutokset_yhteensa, :luoja, NOW());
+
+-- name: poista-tavoitehinnan-pysyva-muutos-paatos<!
+-- Poista tavoitehinnan muutos päätös
+UPDATE paatos_tavoitehinnan_pysyva_muutos
+   SET poistettu = TRUE,
+       poistaja  = :poistaja
+ WHERE id = :id;
+
+-- name: hae-tavoitehinnan-pysyvat-muutospaatokset
+-- Hae tavoitehinnan pysyvät muutospäätökset
+SELECT 'Tavoitehinnan pysyvät muutokset' as nimi, *
+  FROM paatos_tavoitehinnan_pysyva_muutos
+ WHERE urakkaid = :urakkaid
+   AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+   AND poistettu = FALSE;
+
+-- name: hae-tavoitehinnan-pysyva-muutospaatos
+-- Hae tavoitehinnan pysyvä muutos
+SELECT 'Tavoitehinnan pysyvät muutokset' as nimi, *
+  FROM paatos_tavoitehinnan_pysyva_muutos
+ WHERE id = :paatos-id
+   AND poistettu = FALSE;
+
 -- name: tee-tavoitehinnan-ylitys-paatos<!
 -- Tee tavoitehinnan ylitys päätös
 INSERT INTO paatos_tavoitehinta_ylitys (urakkaid, hoitokauden_alkuvuosi, tavoitehinta, toteutuneet_kustannukset,
