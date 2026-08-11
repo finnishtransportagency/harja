@@ -535,9 +535,9 @@
                :uusi-rivi? true
                :nayta-rivina? true
                ::lomake/col-luokka "col-xs-12"
-               :vaihtoehdot ["tyomaakokous" "valikatselmus"]
-               :vaihtoehto-nayta {"tyomaakokous" "Työmaakokous"
-                                  "valikatselmus" "Välikatselmus"}}
+               :vaihtoehdot [:tyomaakokous :valikatselmus]
+               :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
+                                  :valikatselmus "Välikatselmus"}}
 
               {:otsikko "Määräystapa"
                :nimi :maaraystapa
@@ -546,8 +546,8 @@
                ::lomake/col-luokka "col-xs-12"
                :fmt (fn [arvo]
                       (case arvo
-                        "tyomaakokous" "Työmaakokous"
-                        "valikatselmus" "Välikatselmus"
+                        :tyomaakokous "Työmaakokous"
+                        :valikatselmus "Välikatselmus"
                         arvo))}))
 
          {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")

@@ -149,7 +149,7 @@
                              nil)
             :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
                                (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                           "tyomaakokous"
+                           :tyomaakokous
                            nil)
             :perintapvm default-perintapvm
             :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
