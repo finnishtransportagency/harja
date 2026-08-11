@@ -4,7 +4,6 @@
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
-            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
             [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (def paatostyypit
@@ -13,9 +12,8 @@
    {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :nakyvyys_asti 2028 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
-   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
-   ;; TODO: Speksi muuttui vielä. Jätetään vielä julkaisematta
-   ;; {:nimi "Tavoitehinnan pysyvät muutokset" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-pysyvat-muutokset"}
+   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
+   {:nimi "Tavoitehinnan pysyvät muutokset" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-pysyvat-muutokset"}
    {:nimi "Hoitovuoden lopun indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :paatostyyppi "indeksikorjaus"}
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
@@ -239,6 +237,31 @@
 
       :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2))))
+
+(defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi]
+  ;; Edeltävät vaatimukset päätöksen tallentamiselle:
+  ;; - Hoitotovuoden pitää olla päättynyt
+
+  (if-not (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
+    paatokset
+
+    ;; Kokeillaan tähän erilaista lähestymistapaa. Kirjoitetaan validoinnit päätösmäppiin sisälle
+    (let [;; Korvataan koneelta saatu päätös tässä valistellulta
+          tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
+          tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
+                                              (assoc :kirjallisesti-sovitut-muutokset 1M)
+                                              (assoc :pysyvat-muutokset 1M)
+                                              (assoc :johto-ja-hallintkorvaus-muutokset 1M)
+                                              (assoc :muutostyo-muutokset 1M)
+                                              (assoc :toteumiin-perustuvat-muutokset 1M)
+                                              (assoc :tehtava-ja-maaratoteumamuutokset 1M)
+                                              (assoc :rahavarausten-muutokset 1M)
+                                              (assoc :arvonvahennysten-muutokset -1M)
+                                              (assoc :tavoitehinnan-muutokset-yhteensa 1M)
+                                              (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))))
+          paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
+          paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
+      paatokset)))
 
 (defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
                                        taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
@@ -518,9 +541,9 @@
 
 ;; Hoitovuoden lopun tavoite- ja kattohinta
 (defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
-                                                tavoitehinnan-muutokset taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus
-                                                hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus
-                                                tietokanta-paatokset mahdolliset-paatokset]
+                                                 tavoitehinnan-muutokset taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus
+                                                 hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus
+                                                 tietokanta-paatokset mahdolliset-paatokset]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; Hoitotovuoden pitää olla päättynyt
   ;; Tavoitehinnan muutokset -päätös on tallennettu

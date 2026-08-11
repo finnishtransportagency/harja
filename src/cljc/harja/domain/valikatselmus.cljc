@@ -56,7 +56,15 @@
 (s/def ::kattohintakerroin number?)
 (s/def ::tarkistettu #(inst? %))
 (s/def ::lisaa_tavoitehintaan_lopunindeksikorjaus boolean?)
-
+(s/def ::kirjallisesti-sovitut-muutokset #(or (nil? %) (number? %)))
+(s/def ::pysyvat-muutokset #(or (nil? %) (number? %)))
+(s/def ::johto-ja-hallintkorvaus-muutokset #(or (nil? %) (number? %)))
+(s/def ::muutostyo-muutokset #(or (nil? %) (number? %)))
+(s/def ::toteumiin-perustuvat-muutokset #(or (nil? %) (number? %)))
+(s/def ::tehtava-ja-maaratoteumamuutokset #(or (nil? %) (number? %)))
+(s/def ::rahavarausten-muutokset #(or (nil? %) (number? %)))
+(s/def ::arvonvahennysten-muutokset #(or (nil? %) (number? %)))
+(s/def ::tavoitehinnan-muutokset-yhteensa #(or (nil? %) (number? %)))
 
 (s/def ::lupauspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::tyyppi ::urakkaid ::tavoitehinta ::tarjous_tavoitehinta
                                         ::luvatut_pisteet ::toteutuneet_pisteet ::bonusprosentti ::sanktioprosentti ::luoja]
@@ -64,6 +72,12 @@
 
 (s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::muokkaa_kattohinta ::tavoitehinta
                                        ::kattohinta ::luoja]))
+
+(s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjallisesti-sovitut-muutokset
+                                                     ::pysyvat-muutokset ::johto-ja-hallintkorvaus-muutokset ::muutostyo-muutokset
+                                                     ::toteumiin-perustuvat-muutokset ::tehtava-ja-maaratoteumamuutokset
+                                                     ::rahavarausten-muutokset ::arvonvahennysten-muutokset ::tavoitehinnan-muutokset-yhteensa
+                                                     ::luoja]))
 
 (s/def ::kattohinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kattohinta ::toteutuneet_kustannukset
                                                    ::ylityksen_maara ::urakoitsija_maksaa ::siirrettava_maara ::maksimi_siirrettava_maara
@@ -75,6 +89,7 @@
                                                     ::siirron_maara ::tavoitepalkkio ::tavoitepalkkion_maksuprosentti ::tavoitepalkkion_maksimi_prosentti ::viimeinen_hoitokausi
                                                     ::luoja]
                                     :opt-un [::kulu_id]))
+
 (s/def ::tavoitehinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::tavoitehinta
                                                      ::toteutuneet_kustannukset ::ylityksen_maara ::tilaajan_prosentti
                                                      ::urakoitsijan_prosentti ::tilaaja_maksaa ::urakoitsija_maksaa ::viimeinen_hoitokausi
