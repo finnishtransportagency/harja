@@ -8,6 +8,7 @@ import {
     testiurakkaMhu24,
     testiurakkaMhu25
 } from '../support/sanktiotJaBonuksetFns';
+import {SP} from "../support/apurit";
 
 // Suorasanktioiden E2E-testit (Sanktiot ja bonukset -näkymä).
 // Bonustestit ovat omassa tiedostossaan: s2_bonukset.cy.js
@@ -60,6 +61,9 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
 
         // Perustelu
         cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiSanktioPerustelu)
+
+        // Kulun kohdistus on on G - Hoidonjohtopalkkio
+        cy.get('label').contains('Kulun kohdistus').parent().parent().parent().find('span').contains('G - Hoidonjohtopalkkio');
 
         // Sanktion suuruus
         cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type('500')
