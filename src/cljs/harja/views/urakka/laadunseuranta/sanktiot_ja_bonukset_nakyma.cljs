@@ -152,24 +152,24 @@
                      :nayta-rivina? true}
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
-(defn- suodattimet-ja-toiminnot [valittu-urakka sivupaneeli-auki?-atom lajisuodattimet]
+(defn- suodattimet-ja-toiminnot [sivupaneeli-auki?-atom lajisuodattimet]
   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi tiedot/valittu-sanktio)
         tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
               (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
     [:div.flex-row
         [:div
-         [valinnat/urakkavalinnat {:urakka valittu-urakka}
+         [valinnat/urakkavalinnat {:urakka @nav/valittu-urakka}
           ^{:key "urakkavalinnat"}
-          [urakka-valinnat/urakan-hoitokausi valittu-urakka]]]
+          [urakka-valinnat/urakan-hoitokausi @nav/valittu-urakka]]]
 
         [:div {:style {:flex-grow 2}}
          [lajisuodatin-valinnat lajisuodattimet]]
         [:div {:style {:flex-grow 1}}
          (let [oikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
-                         (:id valittu-urakka))
+                         (:id @nav/valittu-urakka))
                uusi-sanktio (merge
-                              (tiedot/uusi-sanktio (:tyyppi valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))
+                              (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))
                                {:toimenpideinstanssi tpi})
                ;; Vanhemmilla urakoilla ei ole välttämättä käsittelytapana välikatselmus.
                uusi-sanktio (if (>= urakan-alkuvuosi 2025)
@@ -222,7 +222,7 @@
          (str "Päätöksen selitys: " perustelu)]))))
 
 (defn sanktiot-ja-bonukset-listaus
-  [sivupaneeli-auki?-atom valittu-urakka]
+  [sivupaneeli-auki?-atom]
   (let [;; TODO: Onko tämä käytännössä sama asia kuin alempi "yllapitokohdeurakka?". Ylläpitourakakka?:ssa on mukana lisäksi :valaistus-urakkatyypi
         ;;       Jos yllapitourakka? on OK, niin "yllapitokohdeurakka?" voi poistaa ja korvata viittaukset siihen "yllapitourakka?"-symbolilla.
         yllapitourakka? @tiedot-urakka/yllapitourakka?
@@ -234,8 +234,8 @@
                    reverse)
         hoitokauden-alku (first @tiedot-urakka/valittu-hoitokausi)
         hoitokauden-loppu (second @tiedot-urakka/valittu-hoitokausi)
-        urakka-id (when valittu-urakka (:id valittu-urakka))
-        urakka-nimi (when valittu-urakka (:nimi valittu-urakka))]
+        urakka-id (when @nav/valittu-urakka (:id @nav/valittu-urakka))
+        urakka-nimi (when @nav/valittu-urakka (:nimi @nav/valittu-urakka))]
 
     [:div.sanktiot
      #_[harja.ui.debug/debug sanktiot]
@@ -276,21 +276,26 @@
                    :class #{"nappi-toissijainen"}}
           [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna PDF"]]]]]]
 
-     [suodattimet-ja-toiminnot valittu-urakka sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
+     (when (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
+       [:div
+        [yleiset/info-laatikko :neutraali
+         [:span "Tässä urakassa sanktiot ja arvonvähennykset määrätään työmaakokouksissa, mutta käsitellään vasta
+          välikatselmuksissa ja vastaanottotarkastuksessa. Bonukset käsitellään välikatselmuksissa ja vastaanottotarkastuksessa."]]])
+
+     [suodattimet-ja-toiminnot sivupaneeli-auki?-atom @tiedot/urakan-lajisuodattimet]
 
      [grid/grid
       {:tyhja (if @tiedot/haetut-sanktiot-ja-bonukset "Ei löytyneitä tietoja" [ajax-loader "Haetaan sanktioita."])
        :rivi-klikattu #(do
                          (reset! sivupaneeli-auki?-atom true)
                          (valitse-sanktio-tai-bonus! % tiedot/valittu-sanktio))
-       :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))
-                               yhteensa-indeksit (reduce + 0 (map :indeksikorjaus %))]
+       :rivi-jalkeen-fn #(let [yhteensa-summat (reduce + 0 (map :summa %))]
                            [{:teksti "Yht." :luokka "lihavoitu"}
                             {:teksti (str (count %) " kpl") :sarakkeita 4 :luokka "lihavoitu"}
                             {:teksti (str (fmt/euro-opt false yhteensa-summat)) :tasaa :oikea :luokka "lihavoitu"}])}
 
       [(if (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
-         {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
+         {:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
          {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
        {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
        (when yllapitokohdeurakka?
@@ -327,7 +332,7 @@
       (komp/sisaan-ulos #(do
                            (e! (arvonvahennys-tiedot/->HaeKaikkiTehtavaryhmat))
                            (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
-                                                                       :default nil}))
+                                                                     :default nil}))
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
       (fn [e! app]
         [:div.laadunseuranta
@@ -337,5 +342,5 @@
                                           (reset! sivupaneeli-auki? false)
                                           (reset! tiedot/valittu-sanktio nil))}
             [sivupaneeli e! app sivupaneeli-auki?]])
-         [sanktiot-ja-bonukset-listaus sivupaneeli-auki? @nav/valittu-urakka]
+         [sanktiot-ja-bonukset-listaus sivupaneeli-auki?]
          [debug/debug app]]))))
