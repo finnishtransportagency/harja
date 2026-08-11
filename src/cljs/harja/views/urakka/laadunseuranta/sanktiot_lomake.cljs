@@ -82,12 +82,20 @@
         vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        mahdolliset-sanktiolajit @tiedot/valitun-urakan-sanktiolajit
+        ;; Arvonvähennys kuuluu urakan sanktioihin, mutta ei tähän lomakkeelle, koska sille on oma lomakkeensa
+        mahdolliset-sanktiolajit (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
         kaikki-sanktiotyypit @tiedot/sanktiotyypit 
         sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
+        ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin.
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
+        ;;mhu -25 alkaen, sanktio kohdistuu tehtäväryhmään "G - Hoindonjohtopalkkio" - Kaivetaan siis oikea tehtäväryhmä listasta
+        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %)) @tiedot/valitun-urakan-tehtavaryhmat)
+        ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
+        tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
+        ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
+        hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
                                (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
@@ -378,11 +386,7 @@
               :nimi :toimenpideinstanssi
               :muokattava? (constantly false)
               ::lomake/col-luokka "col-xs-12"
-              :hae (fn [rivi]
-                     (let [tpi-id (:toimenpideinstanssi rivi)]
-                       (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
-                             @tiedot-urakka/urakan-toimenpideinstanssit)
-                         "")))}))
+              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
 
          (apply lomake/ryhma {:rivi? true}
            (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
