@@ -236,6 +236,6 @@
             [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
              (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
-           (or (not hoitovuosi-kesken?) (not (:virheet paatos)))
+           (and (not hoitovuosi-kesken?) (not (:virheet paatos)))
            #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
            #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]]]])]))

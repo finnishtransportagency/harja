@@ -40,13 +40,17 @@
         [:div.flex-row.summa-rivi-matala
          [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) "%)")]
          [:div.rivi-lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
+
         [:hr.paatos-hr]
 
-        ;; Päätöksenteko napit
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-         #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
-         (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
-                                                                    :teksti "Automaattisesti kirjattu tavoitehinnan ylitys -kulu poistetaan."})]])]))
+        [:div.muokkaustoiminnot
+         (when (:virheet paatos)
+           [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken?
+          (and voi-muokata? (not (:virheet paatos)))
+          #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
+          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
+                                                                     :teksti "Automaattisesti kirjattu tavoitehinnan ylitys -kulu poistetaan."})]]])]))
 
 (defn- tavoitehinnan-laskentamodaali [paatos]
   (let []

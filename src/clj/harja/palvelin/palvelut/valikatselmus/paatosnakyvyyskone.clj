@@ -227,18 +227,18 @@
                     (conj virheet "Hoitovuosi on kesken.")
                     virheet)
           virheet (if (not oikaistu-tavoitehinta)
-                    virheet
-                    (conj virheet "Tavoitehinta puuttuu."))
+                    (conj virheet "Tavoitehinta puuttuu.")
+                    virheet)
           virheet (if (not kattohinta)
-                    virheet
-                    (conj virheet "Tavoitehinta puuttuu."))
+                    (conj virheet "Kattohinta puuttuu.")
+                    virheet)
           ;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
           tavoitehinnan-muutospaatos (-> tavoitehinnan-muutospaatos
                                        (assoc :tavoitehinta oikaistu-tavoitehinta)
                                        (assoc :kattohinta kattohinta)
                                        (assoc :muokkaa_kattohinta muokkaa-kattohinta?)
-                                       (assoc :hoitovuosi-kesken? (hoitovuosi-paattynyt? kuluva-hoitovuosi))
+                                       (assoc :hoitovuosi-kesken? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                                        (assoc :virheet virheet))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
@@ -438,7 +438,10 @@
                                      (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) (or tavoitehinnan-ylitys 0)))
                                      (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
                                      (assoc :virheet virheet))
-        paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))]
+        ;; Lisätään muokattu päätös takaisin listaan vain jos tavoitehinnan ylitys on suurempi kuin 0. Muuten päätös poistetaan listasta
+        paatokset (if (> tavoitehinnan-ylitys 0)
+                    (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))
+                    paatokset)]
     paatokset))
 
 (defn valmistele-kattohinnan-paatokset [db validoinnit-kaytossa? urakkaid paatokset hoitovuoden-lopun-kattohinta kustannukset

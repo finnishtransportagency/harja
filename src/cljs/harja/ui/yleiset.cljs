@@ -889,7 +889,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
           ensisijainen-viesti]
          ;; Mikäli toissijainen-viesti on setti, vektori tai lista, niin renderöidään jokainen elementti omalle rivilleen.
          (when toissijainen-viesti
-           (if toissijainen-viesti-on-teksti-tai-html?
+           (if (toissijainen-viesti-on-teksti-tai-html? toissijainen-viesti)
              ;; Tulostetaan html tai teksti
              [:div {:style {:font-weight 400}} toissijainen-viesti]
              ;; Tulostetaan taulukkona
