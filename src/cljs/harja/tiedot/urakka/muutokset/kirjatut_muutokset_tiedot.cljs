@@ -76,24 +76,40 @@
 
 (defn luo-tai-paivita-kustannusvaikutus
   "Rakentaa / päivittää kustannusvaikutusrivin perusavaimilla."
-  [{:keys [toimenpideinstanssi hoitokauden_alkuvuosi summa tehtavamaaramuutos-kirjattu?]} vanha-kv]
-  (assoc (or vanha-kv {})
-    :toimenpideinstanssi toimenpideinstanssi
-    :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
-    :kustannuslaji "hankintakustannukset"
-    :summa summa
-    :tehtavamaaramuutos-kirjattu? tehtavamaaramuutos-kirjattu?))
+  [{:keys [toimenpideinstanssi hoitokauden_alkuvuosi summa] :as uusi} vanha-kv]
+  (cond-> (assoc (or vanha-kv {})
+            :toimenpideinstanssi toimenpideinstanssi
+            :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+            :kustannuslaji "hankintakustannukset"
+            :summa summa)
+
+    (contains? uusi :tehtavamaaramuutos-kirjattu?)
+    (assoc
+      :tehtavamaaramuutos-kirjattu?
+      (:tehtavamaaramuutos-kirjattu? uusi))))
 
 (defn paivita-kustannusvaikutus [r toimenpideinstanssi hk-alkuvuosi f]
   (update r :kustannusvaikutukset
     (fn [kustannusvaikutukset]
-      (mapv
-        (fn [kv]
-          (if (and (= (:toimenpideinstanssi kv) toimenpideinstanssi)
-                (= (:hoitokauden_alkuvuosi kv) hk-alkuvuosi))
-            (f kv)
-            kv))
-        kustannusvaikutukset))))
+      (let [loydetty? (some
+                        #(and
+                           (= (:toimenpideinstanssi %) toimenpideinstanssi)
+                           (= (:hoitokauden_alkuvuosi %) hk-alkuvuosi))
+                        kustannusvaikutukset)]
+        (if loydetty?
+          (mapv
+            (fn [kv]
+              (if (and (= (:toimenpideinstanssi kv) toimenpideinstanssi)
+                    (= (:hoitokauden_alkuvuosi kv) hk-alkuvuosi))
+                (f kv)
+                kv))
+            kustannusvaikutukset)
+
+          ;; Ei löytynyt -> luodaan uusi
+          (conj (vec kustannusvaikutukset)
+            (f {:kustannuslaji "hankintakustannukset"
+                :toimenpideinstanssi toimenpideinstanssi
+                :hoitokauden_alkuvuosi hk-alkuvuosi})))))))
 
 (defn koosta-kustannusvaikutukset-pysyvaan-muutokseen
   "Koostetaan kustannusvaikutukset kaikista toimenpide-vetolaatikoista yhteen vektoriksi tallennusta varten."
@@ -322,10 +338,11 @@
                     kv-map (update kv-map hk-alkuvuosi
                              (fn [arvo]
                                (luo-tai-paivita-kustannusvaikutus
-                                 {:summa muutos-summa
-                                  :toimenpideinstanssi toimenpideinstanssi
-                                  :hoitokauden_alkuvuosi hk-alkuvuosi
-                                  :tehtavamaaramuutos-kirjattu? true}
+                                 (cond-> {:summa muutos-summa
+                                          :toimenpideinstanssi toimenpideinstanssi
+                                          :hoitokauden_alkuvuosi hk-alkuvuosi}
+                                   (nil? arvo)
+                                   (assoc :tehtavamaaramuutos-kirjattu? true))
                                  arvo)))]
                 (-> kv-map vals vec))))))
 
@@ -422,7 +439,11 @@
               hk-alkuvuosi
               #(update % :tehtavamaaramuutos-kirjattu?
                  (fn [v]
-                   (if (some? v) (not v) false))))))
+                   (if (some? v)
+                     (not v)
+                     false)))
+
+              )))
         (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
 
   PaivitaTehtavavaikutusSyy

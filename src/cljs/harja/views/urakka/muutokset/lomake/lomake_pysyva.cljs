@@ -200,31 +200,28 @@
                kv-valittuna-hoitovuonna (when (some? kv-valittuna-hoitovuonna)
                                           (first kv-valittuna-hoitovuonna))
 
-               tavoitehinnan-muutos-syotetty? (-> kv-valittuna-hoitovuonna :summa some?)
                tehtavamaaramuutos-kirjattu? (-> kv-valittuna-hoitovuonna :tehtavamaaramuutos-kirjattu?)
                ei-tehtavamuutoksia-syy (-> kv-valittuna-hoitovuonna :syy)]
 
-           ;; Älä näytä lomaketta, ennenkuin tavoitehinnan muutos euroina on syötetty jotain
-           (when tavoitehinnan-muutos-syotetty?
-             [:div.tehtava-vaikutus-valinta.padding-top-16
-              [kentat/tee-kentta {:tyyppi :checkbox
-                                  :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
-                                  :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi valittu-hoitovuoden-alkuvuosi))}
-               (if (some? tehtavamaaramuutos-kirjattu?)
-                 (not tehtavamaaramuutos-kirjattu?)
-                 false)]
+           [:div.tehtava-vaikutus-valinta.padding-top-16
+            [kentat/tee-kentta {:tyyppi :checkbox
+                                :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
+                                :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi valittu-hoitovuoden-alkuvuosi))}
+             (if (some? tehtavamaaramuutos-kirjattu?)
+               (not tehtavamaaramuutos-kirjattu?)
+               false)]
 
-              (when
-                (false? tehtavamaaramuutos-kirjattu?)
-                [:div.padding-top-16
-                 [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu mutta tehtävämäärät eivät muutu"
-                                                  :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
-                                                  :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
-                                                               #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
-                                                                      (:toimenpideinstanssi rivi)
-                                                                      %
-                                                                      valittu-hoitovuoden-alkuvuosi)))
-                                                  :luokka ""}]])]))]))))
+            (when
+              (false? tehtavamaaramuutos-kirjattu?)
+              [:div.padding-top-16
+               [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu mutta tehtävämäärät eivät muutu"
+                                                :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
+                                                :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
+                                                             #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
+                                                                    (:toimenpideinstanssi rivi)
+                                                                    %
+                                                                    valittu-hoitovuoden-alkuvuosi)))
+                                                :luokka ""}]])])]))))
 
 (defn- grid-pysyvan-muutoksen-vaikutukset*
   [vetolaatikkorivit hoitovuosi toimenpiteiden-tiedot]
@@ -331,9 +328,7 @@
                                       (select-keys muokattava-muutos [:hoitovuosi
                                                                       :toimenpiteiden-tehtavat
                                                                       :tehtavat_ja_maarat])
-                                      voi-muokata?]
-
-                                     #_[pysyvan-muutoksen-vetolaatikko-old e! app rivi]))
+                                      voi-muokata?]))
                               (:toimenpiteiden-tiedot muokattava-muutos)))]
     [:div.toimenpiteiden-tiedot
      ;; Näytä debug-info kehittäjille
