@@ -852,6 +852,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (defonce infolaatikko-nakyvissa? (atom {}))
 
+(defn- hiccup?
+  "Tunnistaa Hiccup-muotoisen HTML:n (vektori joka alkaa keywordillä)"
+  [x]
+  (and (vector? x)
+    (keyword? (first x))))
+
+(defn- toissijainen-viesti-on-teksti-tai-html?
+  "Palauttaa true jos string tai Hiccup, false jos tavallinen collection"
+  [viesti]
+  (or (string? viesti)
+    (hiccup? viesti)))
+
 (defn info-laatikko
   ([tyyppi ensisijainen-viesti]
    (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
@@ -875,9 +887,15 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
         [:div.infolaatikon-teksti
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
+         ;; Mikäli toissijainen-viesti on setti, vektori tai lista, niin renderöidään jokainen elementti omalle rivilleen.
          (when toissijainen-viesti
-           [:div {:style {:font-weight 400}}
-            toissijainen-viesti])]
+           (if toissijainen-viesti-on-teksti-tai-html?
+             ;; Tulostetaan html tai teksti
+             [:div {:style {:font-weight 400}} toissijainen-viesti]
+             ;; Tulostetaan taulukkona
+             [:div {:style {:font-weight 400}}
+              (doall (for* [v toissijainen-viesti]
+                       [:div (str "• " v)]))]))]
         (when sulje-nappi-id
           ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
           [:button {:class "napiton-nappi pelkka-ikoni infolaatikon-sulje-ikoni"
