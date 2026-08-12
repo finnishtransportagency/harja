@@ -279,19 +279,34 @@
 
                     molemmat-ok? (or
                                    (and kv-syotetty? tjm-syotetty?)
-                                   ei-tehtavamuutoksia-ok?)]
+                                   ei-tehtavamuutoksia-ok?)
+
+                    summa-puuttuu? (and kv
+                                     (not (number? (:summa kv))))]
 
               ;; Luodaan virhe-map, jos syötetyt tiedot ovat puuttellisia
-              :when (or syy-puuttuu?
+              :when (or summa-puuttuu?
+                      syy-puuttuu?
                       (and toinen-syotetty? (not molemmat-ok?)))]
 
           {:toimenpideinstanssi (:toimenpideinstanssi rivi)
            :toimenpide (:toimenpide rivi)
            :alkuvuosi alkuvuosi
            :puuttuu (cond
+                      summa-puuttuu? :tavoitehinnan-muutos
+
+                      ;; Halutaan kirjata tavoitehinnan muutos ilman määrämuutoksia, mutta syy puuttuu
                       syy-puuttuu? :syy
-                      kv-syotetty? :maaramuutos
-                      :else :tavoitehinnan-muutos)}))
+
+                      ;; Tehtävä ja määrämuutosta ei ole syötetty
+                      (and toinen-syotetty?
+                        (not molemmat-ok?)
+                        (not tjm-syotetty?))
+                      :maaramuutos
+
+                      ;; Tavoitehinnan muutosta ei ole kirjattu 
+                      (not kv-syotetty?)
+                      :tavoitehinnan-muutos)}))
       rivit)))
 
 (defn koosta-pysyvan-muutoksen-lomake-virheet [tpi-vetolaatikoiden-virheet]
@@ -299,10 +314,9 @@
     (fn [virhe]
       (str (:alkuvuosi virhe) " / Toimenpide '" (:toimenpide virhe) "': "
         (case (:puuttuu virhe)
-          :tavoitehinnan-muutos "Tavoitehinnan muutos"
-          :maaramuutos "Vaikutus tehtävämäärään"
-          :syy "Tehtävämäärien puutoksen syy")
-        " puuttuu."))
+          :tavoitehinnan-muutos "Tavoitehinnan muutos euroina puuttuu."
+          :maaramuutos "Vaikutus tehtävämääriin puuttuu. Lisää muuttuneet tehtävät ja tehtävämäärät."
+          :syy "Syy tehtävämäärämuutosten puuttumiselle on kirjaamatta.")))
     (sort-by :alkuvuosi tpi-vetolaatikoiden-virheet)))
 
 (defn koosta-lomakkeen-validaatio-virheet [lomake]

@@ -57,12 +57,12 @@
                                              (= (:hoitokauden-alkuvuosi %) valittu-hoitovuoden-alkuvuosi))
                                     (:toimenpiteiden-tehtavat muokattava-muutos))]
 
-        [:span
-         [:h3 "Vaikutus tehtävämääriin"]
-         [:p (str (:toimenpide rivi) ", "
-               (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
-                 urakan-hoitokaudet
-                 "Hoitovuosi"))]
+        [:div.vaikutus-otsikko
+         [:h3 "Vaikutus tehtävä- ja määräluettelon tehtäviin"]
+         [:p.body-strong (str (:toimenpide rivi) ", "
+                           (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
+                             urakan-hoitokaudet
+                             "Hoitovuosi"))]
 
          ;; Pakota uudelleenrenderöinti, jotta uudet tiedot valuvat :muutos-callbackiin ja :valinnat-fn:iin
          ^{:key (str valittu-hoitovuoden-alkuvuosi "_"
@@ -176,23 +176,6 @@
                              :disabled (not voi-muokata?)}])}]
           tehtavat-ja-maarat-valittuna-hoitovuonna]
 
-         [:h4 "Vaikutus tavoitehintaan"]
-
-         [:label {:for (str "tavoitehintainput-" (:toimenpideinstanssi rivi)) :class "tavoitehinta-label"}
-          "Tavoitehinnan muutos euroina (+/-)"]
-         [kentat/tee-kentta {:elementin-id (str "tavoitehintainput-" (:toimenpideinstanssi rivi))
-                             :tyyppi :numero :fmt fmt/euro-opt
-                             :disabled? (not voi-muokata?)
-                             :pakollinen? true
-                             :input-luokka "tavoitehinnan-muutos-input"
-                             :placeholder "Syötä hintavaikutus"}
-          (r/wrap muutos-valittuna-hoitovuonna
-            (fn [summa]
-              (e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos
-                    (:toimenpideinstanssi rivi)
-                    (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
-                    summa))))]
-
          ;; Jos halutaan tallentaa tavoitehinnan muutos ilman tehtävämuutoksia, vaaditaan tähän jokin syy
          (let [kv-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %))
                                           (:kustannusvaikutukset rivi))
@@ -214,14 +197,39 @@
             (when
               (false? tehtavamaaramuutos-kirjattu?)
               [:div.padding-top-16
-               [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu mutta tehtävämäärät eivät muutu"
+               [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu, mutta tehtävämäärät eivät muutu"
                                                 :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
                                                 :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
                                                              #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
                                                                     (:toimenpideinstanssi rivi)
                                                                     %
                                                                     valittu-hoitovuoden-alkuvuosi)))
-                                                :luokka ""}]])])]))))
+                                                :luokka ""}]])])
+
+         [:h3.padding-top-24 "Vaikutus tavoitehintaan"]
+         [:p.body-strong (str (:toimenpide rivi) ", "
+                           (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
+                             urakan-hoitokaudet
+                             "Hoitovuosi"))]
+
+         [:label {:for (str "tavoitehintainput-" (:toimenpideinstanssi rivi)) :class "tavoitehinta-label padding-top-8"}
+          "Tavoitehinnan muutos (+/-)"]
+
+         [kentat/tee-kentta {:elementin-id (str "tavoitehintainput-" (:toimenpideinstanssi rivi))
+                             :tyyppi :numero
+                             :fmt fmt/euro-opt
+                             :disabled? (not voi-muokata?)
+                             :pakollinen? true
+                             :input-luokka "tavoitehinnan-muutos-input"
+                             :placeholder "Syötä hintavaikutus"}
+          (r/wrap muutos-valittuna-hoitovuonna
+            (fn [summa]
+              (e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos
+                    (:toimenpideinstanssi rivi)
+                    (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+                    summa))))]
+
+         [:p.small-caption "Ilmoita muutos ilman indeksikorjausta"]]))))
 
 (defn- grid-pysyvan-muutoksen-vaikutukset*
   [vetolaatikkorivit hoitovuosi toimenpiteiden-tiedot]
