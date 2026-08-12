@@ -182,7 +182,7 @@
        [:div.flex-row.alkuun.valistys16
         [:span (fmt/euro-opt false kattohinta)]]])))
 
-(defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
+(defn tavoitehinnan-muutokset [e! paatos oikeudet-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
   (let [paatos-avain :tavoitehinnan-muutokset
         paatos-tehty? (boolean (:id paatos))
         hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
@@ -198,7 +198,7 @@
         ;; Kattohintaa voi muokata 19/20 alkavat urakat
         kattohinnan-oikaisu-mahdollinen? (and
                                            (seq tavoitehinnan-muutokset)
-                                           voi-muokata?
+                                           oikeudet-muokata?
                                            poikkeusvuosi?)]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
@@ -215,12 +215,12 @@
        [:div
         [tavoitehinnan-oikaisut-taulukko e! hoitokauden-oikaisut-atom
          hoitokauden-alkuvuosi
-         {:voi-muokata? (and voi-muokata? (not paatos-tehty?))
+         {:voi-muokata? (and on-oikeudet? (not paatos-tehty?))
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
           :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))}
          tallennus-kesken?]
 
-        (when (and paatos-tehty? voi-muokata?)
+        (when (and paatos-tehty? on-oikeudet?)
           [:div.valja
            [yleiset/info-laatikko :neutraali
             "Tavoitehinnan muutokset on päätetty. Voit tehdä muutoksia perumalla päätöksen."
@@ -229,14 +229,13 @@
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta paatos-tehty? hoitokauden-alkuvuosi])
 
-        ;; Päätöksenteko napit
-        (if-not hoitovuosi-kesken?
-          [:div
-           [:hr.paatos-hr]
-           (if-not (:virhe paatos)
-             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
-             [:div.muokkaustoiminnot
-              [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
-          [:div {:style {:padding-bottom "1rem"}}])])]))
+        [:div
+         [:hr.paatos-hr]
+         [:div.muokkaustoiminnot
+          (when (:virheet paatos)
+            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+             (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
+           (or (not hoitovuosi-kesken?) (not (:virheet paatos)))
+           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
+           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]]]])]))

@@ -130,9 +130,9 @@
                [yleiset/info-laatikko :huolto "Tavoitehinnan muutokset uudistuvat. Päivityksen ajan osio on pois käytöstä. Tiedotamme muutoksesta tarkemmin sähköpostitse." nil nil nil]]
               [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?])
             (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-            (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+            (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-            (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+            (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
             (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]

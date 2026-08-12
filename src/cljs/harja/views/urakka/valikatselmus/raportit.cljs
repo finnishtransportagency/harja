@@ -6,11 +6,12 @@
             [harja.tiedot.urakka.siirtymat :as siirtymat]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
-(defn raportit [e! {:keys [urakkaid virhe id] :as paatos} voi-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+(defn raportit [e! {:keys [urakkaid virhe id] :as paatos} tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
   (let [paatos-avain :valikatselmuspoytakirjaan-liitettavat-raportit
         paatos-tehty? (some? id)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-        hallintayksikko-id (-> @tila/yleiset :urakka :hallintayksikko :id)]
+        hallintayksikko-id (-> @tila/yleiset :urakka :hallintayksikko :id)
+        voi-muokata? (not (:virhe paatos))]
 
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
@@ -45,8 +46,10 @@
            {:luokka "klikattava alleviivaa"}]]]
 
         [:hr.paatos-hr-matalin]
-        (if virhe
-          [:div.muokkaustoiminnot [yleiset/info-laatikko :vahva-ilmoitus virhe nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]]
-          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-           #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
-           #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))])])]))
+
+        [:div.muokkaustoiminnot
+         (when virhe
+           [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" virhe nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+          #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
+          #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))]]])]))

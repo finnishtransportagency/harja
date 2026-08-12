@@ -1,5 +1,6 @@
 (ns harja.views.urakka.valikatselmus.hintapaatokset
   (:require [clojure.string :as str]
+            [harja.ui.ikonit :as ikonit]
             [reagent.core :as r :refer [atom]]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
@@ -59,7 +60,7 @@
       [:p.laskenta-rivi "Poikkeus: viimeisenä hoitovuonna ei ole siirtomahdollisuutta. Tavoitepalkkio maksetaan täysimääräisesti koko viimeisen vuoden hoitovuoden
       lopun tavoitehinnan alittavasta osuudesta."]]]))
 
-(defn tavoitehinnan-alitus [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
+(defn tavoitehinnan-alitus [e! paatos tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :tavoitehinta-alitus
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
@@ -100,13 +101,13 @@
         [:hr.paatos-hr]
 
         ;; Päätöksenteko napit tai mahdollinen virhe
-        (if (:virhe paatos)
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]]
-          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatos))
-           (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatos))
-                                                                      :teksti "Automaattisesti kirjattu tavoitepalkkio ja siirtosumma poistetaan."})])])]))
+        [:div.muokkaustoiminnot
+         (when (:virheet paatos)
+           [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (not (:virheet paatos))
+          #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatos))
+          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatos))
+                                                                     :teksti "Automaattisesti kirjattu tavoitepalkkio ja siirtosumma poistetaan."})]]])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys
