@@ -310,15 +310,15 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
 
 describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function () {
     before(function () {
-        siivoaKanta(testiTalvisuolaKuvausMhu25EiViimeinen);
-        siivoaKanta(testiTalvisuolaKuvausMhu25Viimeinen);
-        siivoaKanta(testiTalvisuolaKuvausMhu19EiViimeinen);
-        siivoaKanta(testiTalvisuolaKuvausMhu19Viimeinen);
+        siivoaSanktiotKannasta(testiTalvisuolaKuvausMhu25EiViimeinen);
+        siivoaSanktiotKannasta(testiTalvisuolaKuvausMhu25Viimeinen);
+        siivoaSanktiotKannasta(testiTalvisuolaKuvausMhu19EiViimeinen);
+        siivoaSanktiotKannasta(testiTalvisuolaKuvausMhu19Viimeinen);
     });
 
     it('MHU25: talvisuolan ylitys ei tallenna ennen viimeistä hoitovuotta', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonukset(testiurakka, evk)
+        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
 
         cy.contains('Lisää uusi').click()
         cy.contains('h2', 'Lisää uusi').should('be.visible')
@@ -340,7 +340,7 @@ describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function (
 
     it('MHU25: talvisuolan ylitys tallentuu viimeisellä hoitovuodella', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonukset(testiurakka, evk)
+        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaTalvisuolaMhu25')
 
@@ -365,7 +365,7 @@ describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function (
 
     it('Vanhempi urakka (MHU19): talvisuolan ylitys ei tallenna ennen viimeistä hoitovuotta', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonukset(testiurakka3, evk2)
+        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu19, evkPohjoisSuomi)
 
         cy.contains('Lisää uusi').click()
         cy.contains('h2', 'Lisää uusi').should('be.visible')
@@ -389,7 +389,7 @@ describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function (
 
     it('Vanhempi urakka (MHU19): talvisuolan ylitys tallentuu viimeisellä hoitovuodella', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonukset(testiurakka3, evk2)
+        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu19, evkPohjoisSuomi)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaTalvisuolaMhu19')
 
