@@ -1657,7 +1657,7 @@
         poistettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi poistettu-paatos)))
-    (is (not (nil? (:virhe poistettu-paatos))))))
+    (is (not (nil? (:virheet poistettu-paatos))))))
 
 (deftest kysely-hoidonjohtopalkkion-muutospaatos-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
