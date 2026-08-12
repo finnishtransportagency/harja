@@ -1,37 +1,37 @@
 -- name: hae-hoidon-urakat-kojelautaan
 SELECT u.id,
-       COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
-       u.elinvoimakeskus_id as evk_id,
-       EXTRACT (YEAR FROM u.alkupvm) AS urakan_alkuvuosi,
-       :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       COALESCE(u.lyhyt_nimi, u.nimi)               AS nimi,
+       u.elinvoimakeskus_id                         AS evk_id,
+       EXTRACT (YEAR FROM u.alkupvm)                AS urakan_alkuvuosi,
+       :hoitokauden_alkuvuosi                       AS hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
                                          monesko_hoitokausi(u.alkupvm, u.loppupvm,
                                                             :hoitokauden_alkuvuosi::INTEGER))       AS ks_tila,
-       (SELECT 'tavoitehinnan-alitus' as tyyppi
+       (SELECT 'tavoitehinnan-alitus'               AS tyyppi
         FROM paatos_tavoitehinta_alitus p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
-          LIMIT 1) AS tavoitehintaalituspaatos,
-       (SELECT 'tavoitehinnan-ylitys' as tyyppi
+          LIMIT 1)                                  AS tavoitehintaalituspaatos,
+       (SELECT 'tavoitehinnan-ylitys'               AS tyyppi
         FROM paatos_tavoitehinta_ylitys p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
         LIMIT 1) AS tavoitehintaylityspaatos,
-       (SELECT 'kattohinnan-ylitys' as tyyppi
+       (SELECT 'kattohinnan-ylitys'                 AS tyyppi
         FROM paatos_kattohinta p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
         LIMIT 1) AS kattohintapaatos,
-       (SELECT 'tavoitehinnan-muutokset' as tyyppi
+       (SELECT 'tavoitehinnan-muutokset'            AS tyyppi
         FROM paatos_tavoitehinnan_muutos p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
         LIMIT 1) AS tavoitehinnan_muutospaatos,
-       (SELECT tyyppi::TEXT as tyyppi
+       (SELECT tyyppi::TEXT                         AS tyyppi
          FROM paatos_lupaus p
          WHERE p.urakkaid = u.id
            AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
@@ -68,11 +68,12 @@ SELECT u.id,
      (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
  ORDER BY COALESCE(u.lyhyt_nimi, u.nimi);
 
+
 -- name: hae-paallystysurakat-kojelautaan
 SELECT u.id,
        u.nimi,
-       u.elinvoimakeskus_id as evk_id,
-       :vuosi as hoitokauden_alkuvuosi, -- Käytetään UIn vuoksi tässä samaa termiä kuin hoidossa vaikka kyseessä on vuosi
+       u.elinvoimakeskus_id AS evk_id,
+       :vuosi AS hoitokauden_alkuvuosi, -- Käytetään UIn vuoksi tässä samaa termiä kuin hoidossa vaikka kyseessä on vuosi
        COUNT(*) FILTER (WHERE y.id IS NOT NULL) AS yllapitokohteiden_lkm,
        COUNT(*) FILTER (WHERE pot2.tila IN ('valmis', 'lukittu')) AS valmis_hyvaksytty,
        COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL AND pot2.tila IN ('valmis', 'lukittu')
@@ -105,5 +106,3 @@ WHERE
     (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
 GROUP BY u.id, u.nimi, u.elinvoimakeskus_id, hoitokauden_alkuvuosi
 ORDER BY u.nimi;
-
-
