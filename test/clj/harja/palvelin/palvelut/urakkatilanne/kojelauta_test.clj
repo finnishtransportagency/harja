@@ -1,15 +1,15 @@
 (ns harja.palvelin.palvelut.urakkatilanne.kojelauta-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
-            [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta]
             [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
+
+            [harja.pvm :as pvm]
+            [harja [testi :refer :all]]
             [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-            [harja
-             [testi :refer :all]]
-            [harja.pvm :as pvm]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta]
+            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]))
 
 
 (defn jarjestelma-fixture [testit]
@@ -289,10 +289,8 @@
     (is (= 1 (count vastaus)) "Urakoiden lukumäärä")))
 
 
-(deftest valikatselmus-nousee-oikein-kojelautaan-iin-urakassa
+(deftest lupausbonus-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
-        kayttaja-id (:id +kayttaja-jvh+)
         psu-evk-id (hae-pohjois-suomen-evk-id)
         vastaus-ennen-paatoksia (first
                                   (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -300,48 +298,16 @@
                                                                             :hoitokauden-alkuvuosi 2024
                                                                             :urakka-idt [urakka-id]
                                                                             :evk-idt #{}}))
-
-        ;; lisätään kantaan seuraavat päätökset:
-        ;; 1. tavoitehinnan ylitys
-        kayttajaid (:id +kayttaja-jvh+)
-        hoitokauden-alkuvuosi 2024
-        tavoitehinta 5M
-        toteutuneet-kustannukset 5M
-        ylityksen-maara 10M
-        tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
-        urakoitsijan-prosentti (- 100 (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit))
-        tilaaja-maksaa 150M
-        urakoitsija-maksaa 50M
-        siirto 50M
-        kulu-id 1
-        tavoitehinnan-ylitys-paatos (paatos-apurit/tavoitehinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi tavoitehinta toteutuneet-kustannukset
-                 ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
-                 urakoitsija-maksaa siirto kulu-id false kayttajaid)
-        _ (paatos-kyselyt/tee-tavoitehinnan-ylityspaatos (:db jarjestelma) tavoitehinnan-ylitys-paatos)
-        ;; 2. kattohinnan-ylitys
-        hoitokauden-alkuvuosi 2024
-        kattohinta 5M
-        toteutuneet-kustannukset 5M
-        ylityksen-maara 10M
-        urakoitsija-maksaa 50M
-        siirrettava-maara 50M
-        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
-        viimeinen_hoitokausi false
-        kulu-id 1
-        kattohinnan-ylitys-paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                 ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
-
-        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
-        ;; 3. lupausbonus
+        tehdyt-paatokset-ennen (:tehdyt-paatokset-count vastaus-ennen-paatoksia)
         _ (tallenna-lupauspaatos urakka-id "bonus" 76 92)
-
         vastaus (first
                   (kutsu-palvelua (:http-palvelin jarjestelma)
                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
                                                             :hoitokauden-alkuvuosi 2024
                                                             :urakka-idt [urakka-id]
-                                                            :evk-idt #{}}))]
+                                                            :evk-idt #{}}))
+        tehdyt-paatokset-jalkeen (:tehdyt-paatokset-count vastaus)]
+
     (is (= urakka-id (get-in vastaus-ennen-paatoksia [:id])) "Urakka")
     (is (= psu-evk-id (get-in vastaus-ennen-paatoksia [:evk_id])) "PSU EVK")
     (is (nil? (get-in vastaus-ennen-paatoksia [:tavoitehintapaatos])) "Tavoitehinta")
@@ -350,9 +316,8 @@
 
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= psu-evk-id (get-in vastaus [:evk_id])) "PSU EVK")
-    (is (= "kattohinnan-ylitys" (get-in vastaus [:kattohintapaatos])) "Rahapäätökset")
-    (is (= "tavoitehinnan-ylitys" (get-in vastaus [:tavoitehintaylityspaatos])) "Rahapäätökset")
-    (is (= "bonus" (get-in vastaus [:lupauspaatos])) "Lupauspäätökset")))
+    (is (= 1 tehdyt-paatokset-jalkeen))
+    (is (= 0 tehdyt-paatokset-ennen))))
 
 (deftest lupauspisteet-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
@@ -388,20 +353,24 @@
 (deftest taytetty-nousee-oikein-kojelautaan-iin-urakassa
   (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         psu-evk-id (hae-pohjois-suomen-evk-id)
+        hae-kojelauta-fn (fn []
+                           (first
+                             (kutsu-palvelua (:http-palvelin jarjestelma)
+                               :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
+                                                                       :hoitokauden-alkuvuosi 2024
+                                                                       :urakka-idt [urakka-id]
+                                                                       :evk-idt #{}})))
+        tehdyt-paatokset-ennen (:tehdyt-paatokset-count (hae-kojelauta-fn))
         ;; Tallenna lupauspäätös kantaan
         _ (tallenna-lupauspaatos urakka-id "taytetty" 76 76)
-
-        vastaus (first
-                  (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
-                                                            :hoitokauden-alkuvuosi 2024
-                                                            :urakka-idt [urakka-id]
-                                                            :evk-idt #{}}))]
+        ;; Hae uusi vastaus
+        vastaus (hae-kojelauta-fn)]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")
     (is (= psu-evk-id (get-in vastaus [:evk_id])) "PSU EVK")
     (is (= 76 (get-in vastaus [:luvatut_pisteet])) "luvatut_pisteet")
     (is (= 76 (get-in vastaus [:toteutuneet_pisteet])) "luvatut_pisteet")
-    (is (= "taytetty" (get-in vastaus [:lupauspaatos])) "Lupauksen pitäisi olla täytetty")))
+    (is (= 0 tehdyt-paatokset-ennen) "Päätöksiä ei ole ennenkun tehtiin lupauspäätös")
+    (is (= 1 (:tehdyt-paatokset-count vastaus)) "Lupauksen pitäisi nostaa tehtyjen päätösten määrää")))
 
 
 (deftest haku-ei-loyda-kun-evk-ja-urakka-ristiriidassa
@@ -498,18 +467,18 @@
                                                                                 :hoitokauden-alkuvuosi 2022
                                                                                 :urakka-idt [urakka-id]
                                                                                 :evk-idt #{}}))
-        kohteen-odotettu-virhe {:kohdenimi    "Tärkeä kohde mt20 2022"
-                                :kohdenumero  "L42"
+        kohteen-odotettu-virhe {:kohdenimi "Tärkeä kohde mt20 2022"
+                                :kohdenumero "L42"
                                 :lahetysvirhe "paha virhe"
-                                :tunnus       "B"}
+                                :tunnus "B"}
         ;; merkataan vielä lähetys onnistuneeksi ja assertataan niiden määrä
         _ (u (format "UPDATE yllapitokohde SET lahetetty = NOW(), lahetysvirhe = null, lahetys_onnistunut = TRUE WHERE id = %s;" kohde-id))
         vastaus-lahetys-onnistuu (first
-                                      (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
-                                                                                :hoitokauden-alkuvuosi 2022
-                                                                                :urakka-idt [urakka-id]
-                                                                                :evk-idt #{}}))]
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :paallystys
+                                                                             :hoitokauden-alkuvuosi 2022
+                                                                             :urakka-idt [urakka-id]
+                                                                             :evk-idt #{}}))]
     (is (= urakka-id (get-in vastaus-aloitettu [:id])) "Urakka")
     (is (= 1 (get-in vastaus-aloittamatta [:aloittamatta])) "Kohteita aloittamatta")
     (is (= 1 (get-in vastaus-aloitettu [:yllapitokohteiden_lkm])) "ylläpitokohteiden lkm")

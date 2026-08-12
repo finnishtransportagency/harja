@@ -963,10 +963,11 @@
                                 hoitovuoden-lopun-tavoitehinta)]
     mahdolliset-paatokset))
 
-(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
+(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset-kojelautaan
   "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
+  ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
   (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
