@@ -88,7 +88,7 @@
       :tehtavamaaramuutos-kirjattu?
       (:tehtavamaaramuutos-kirjattu? uusi))))
 
-(defn paivita-kustannusvaikutus [r toimenpideinstanssi hk-alkuvuosi f]
+(defn luo-tai-paivita-rivin-kustannusvaikutus [r toimenpideinstanssi hk-alkuvuosi f]
   (update r :kustannusvaikutukset
     (fn [kustannusvaikutukset]
       (let [loydetty? (some
@@ -433,7 +433,7 @@
         (muokkaa-toimenpiteen-rivit-pysyva-muutos
           toimenpideinstanssi
           (fn [r]
-            (paivita-kustannusvaikutus
+            (luo-tai-paivita-rivin-kustannusvaikutus
               r
               toimenpideinstanssi
               hk-alkuvuosi
@@ -455,7 +455,7 @@
       (muokkaa-toimenpiteen-rivit-pysyva-muutos
         toimenpideinstanssi
         (fn [r]
-          (paivita-kustannusvaikutus
+          (luo-tai-paivita-rivin-kustannusvaikutus
             r
             toimenpideinstanssi
             hk-alkuvuosi
