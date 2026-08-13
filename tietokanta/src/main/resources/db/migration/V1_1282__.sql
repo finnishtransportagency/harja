@@ -17,10 +17,6 @@ UPDATE mhu_muutos_kustannusvaikutus
    SET tehtavamaaramuutos_kirjattu = TRUE
  WHERE summa IS NOT NULL;
 
-UPDATE mhu_muutos_kustannusvaikutus_historia
-   SET tehtavamaaramuutos_kirjattu = TRUE
- WHERE summa IS NOT NULL;
-
 -- Vaadi että tälle kirjataan aina syy
 -- Heittää repliin constraint virheen, jos yritetään tallentaa vaikutus ilman tehtävämuutoksia, ilman syytä
 ALTER TABLE mhu_muutos_kustannusvaikutus
