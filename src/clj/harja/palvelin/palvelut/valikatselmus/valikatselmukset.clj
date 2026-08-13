@@ -1001,10 +1001,9 @@
         tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)]
     tietokanta-paatokset))
 
-(defn onko-paatoksia-tekematta
-  "Päätellään onko jokin päätös vielä tekemättä. Esim. raporttipäätös voi olla tekemättä ja tämä palauttaa true."
+(defn hae-urakan-mahdolliset-paatokset
+  "Yhteinen päätöstenhakufunktio"
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
@@ -1021,19 +1020,57 @@
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
         hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite-vuodelle)
-        hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja kuluva-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta
+                                         db kayttaja
+                                         kuluva-hoitovuosi
+                                         valittu-hoitokausi
+                                         urakkaid
+                                         urakan-alkuvuosi
+                                         budjettitavoite-vuodelle)
 
         ; Haetaan ensin kaikki mahdolliset päätökset
-        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
+        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset
+                                mhu-tyyppi
+                                urakan-alkuvuosi
+                                urakan-loppuvuosi
+                                kuluva-hoitovuosi)
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset
+                                mahdolliset-paatokset
+                                toteutuneet-kustannukset
+                                hoitovuoden-lopun-kattohinta
+                                hoitovuoden-lopun-tavoitehinta)]
+    mahdolliset-paatokset))
+
+(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset-kojelautaan
+  "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
+  (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
+        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
+        ;; Muodostetaan vastaus
+        vastaus {:mahdolliset-paatokset mahdolliset-paatokset
+                 :tietokanta-paatokset tietokanta-paatokset}]
+    vastaus))
+
+(defn onko-paatoksia-tekematta
+  "Päätellään onko jokin päätös vielä tekemättä, mikä voi vaikuttaa lukituksiin. 
+  HOX jotkin päätökset lasketaan tästä pois."
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
+  (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
 
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
         ;; Poistetaan mahdollinen raporttipäätös
-        tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)]
-    (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))))
+        tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)
+
+        ;; Muodostetaan vastaus
+        vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
+    vastaus))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
