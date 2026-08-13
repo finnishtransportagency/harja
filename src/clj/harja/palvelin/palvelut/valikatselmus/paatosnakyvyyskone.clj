@@ -241,7 +241,8 @@
 
 (defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi
                                                     kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
-                                                    jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa]
+                                                    jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa
+                                                    arvonvahennykset-yht]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
 
@@ -259,7 +260,7 @@
                                               (assoc :toteumiin-perustuvat-muutokset (+ tehtava-ja-maaramuutos-summa rahavarausmuutos-summa))
                                               (assoc :tehtava-ja-maaratoteumamuutokset tehtava-ja-maaramuutos-summa)
                                               (assoc :rahavarausten-muutokset rahavarausmuutos-summa)
-                                              (assoc :arvonvahennysten-muutokset -1M)
+                                              (assoc :arvonvahennysten-muutokset arvonvahennykset-yht)
                                               (assoc :tavoitehinnan-muutokset-yhteensa 1M)
                                               (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
