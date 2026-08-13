@@ -250,19 +250,27 @@
     paatokset
 
     ;; Kokeillaan tähän erilaista lähestymistapaa. Kirjoitetaan validoinnit päätösmäppiin sisälle
-    (let [;; Korvataan koneelta saatu päätös tässä valistellulta
+    (let [virheet nil
+          virheet (if (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+                    (conj virheet "Hoitovuosi on kesken.")
+                    virheet)
+          tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0) (or pysyvat-muutokset 0) (or muutostyo-muutokset 0)
+                                            (or jjh-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0)
+                                            (or arvonvahennykset-yht 0))
+          ;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
           tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
-                                              (assoc :kirjallisesti-sovitut-muutokset kirjallisesti-sovitut-muutokset)
-                                              (assoc :pysyvat-muutokset pysyvat-muutokset)
-                                              (assoc :johto-ja-hallintkorvaus-muutokset jjh-muutokset)
-                                              (assoc :muutostyo-muutokset muutostyo-muutokset)
-                                              (assoc :toteumiin-perustuvat-muutokset (+ tehtava-ja-maaramuutos-summa rahavarausmuutos-summa))
-                                              (assoc :tehtava-ja-maaratoteumamuutokset tehtava-ja-maaramuutos-summa)
-                                              (assoc :rahavarausten-muutokset rahavarausmuutos-summa)
-                                              (assoc :arvonvahennysten-muutokset arvonvahennykset-yht)
-                                              (assoc :tavoitehinnan-muutokset-yhteensa 1M)
-                                              (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))))
+                                              (assoc :kirjallisesti-sovitut-muutokset (or kirjallisesti-sovitut-muutokset 0))
+                                              (assoc :pysyvat-muutokset (or pysyvat-muutokset 0))
+                                              (assoc :johto-ja-hallintakorvaus-muutokset (or jjh-muutokset 0))
+                                              (assoc :muutostyo-muutokset (or muutostyo-muutokset 0))
+                                              (assoc :toteumiin-perustuvat-muutokset (+ (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0)))
+                                              (assoc :tehtava-ja-maaratoteumamuutokset (or tehtava-ja-maaramuutos-summa 0))
+                                              (assoc :rahavarausten-muutokset (or rahavarausmuutos-summa 0))
+                                              (assoc :arvonvahennysten-muutokset (or arvonvahennykset-yht 0))
+                                              (assoc :tavoitehinnan-muutokset-yhteensa (or tavoitehinna-muutokset-yhteensa 0))
+                                              (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi))))
+                                              (assoc :virheet virheet))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
       paatokset)))

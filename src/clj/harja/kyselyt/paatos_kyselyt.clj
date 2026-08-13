@@ -49,6 +49,7 @@
       (cond
         (= (:nimi paatos) "Lupaukset") (hae-lupauspaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Tavoitehinnan muutokset") (hae-tavoitehinnan-muutos-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+        (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset") (hae-tavoitehinnan-pysyvat-muutospaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Hoitovuoden lopun indeksikorjaus") (hae-indeksikorjauspaatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Hoitovuoden lopun tavoite- ja kattohinta") (hae-hoitokauden-lopun-hinta-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         (= (:nimi paatos) "Tavoitehinnan alitus") (hae-tavoitehinnnan-alitus-paatokset db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
@@ -155,6 +156,44 @@
             ;; Throw exception
             (throw (Exception. "Tavoitehinnan muutospäätöstä ei löydy annetulla id:llä tai se ei kuulu annetulle urakalle.")))]
     (poista-tavoitehinnan-muutos-paatos<! db {:poistaja kayttajaid :id paatosid})))
+
+(defn tee-tavoitehinnan-pysyva-muutospaatos
+  "Tavoitehinnan muutospäätös mäppi:
+  {:hoitokauden_alkuvuosi <vuosi>
+  :urakkaid <urakka-id>
+  :kirjallisesti-sovitut-muutokset <summa>
+  :pysyvat-muutokset <summa>
+  :johto-ja-hallintakorvaus-muutokset <summa>
+  :muutostyo-muutokset <summa>
+  :toteumiin-perustuvat-muutokset <summa>
+  :tehtava-ja-maaratoteumamuutokset <summa>
+  :rahavarausten-muutokset <summa>
+  :arvonvahennysten-muutokset <summa>
+  :tavoitehinnan-muutokset-yhteensa <summa>
+  :luoja <kuka>}"
+
+  [db {:keys [urakkaid] :as paatos} kayttajaid]
+  ;; Varmistetaan, että tarvittavat tiedot on annettu
+  (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm (pvm/vuosi))
+        hoitovuosinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) (pvm/->pvm (str "1.10." (:hoitokauden_alkuvuosi paatos))))
+        validaatio #{}
+        paatos (dissoc paatos :hoitovuosi-kesken? :paatostyyppi)
+        ;; Validoi perustietojen pakollisuus
+        valid (s/valid? ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos paatos)
+        _ (when-not valid
+            (log/error (s/explain-str ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos paatos)))
+        validaatio (if valid
+                     validaatio
+                     (conj validaatio "Puutteelliset tavoitehinnan muutospäätöstiedot."))]
+
+    (if (seq validaatio)
+      (do
+        (log/error "Virheellinen tavoitehinnan muutospäätös:" paatos)
+        (heita-virhe (str "Tavoitehinnan muutospäätöksessä virheitä: " (string/join ", " validaatio))))
+      ;; Tallenna uudet tiedot tietokantaan
+      (let [uusi-paatos (tee-tavoitehinnan-pysyva-muutospaatos<! db paatos)]
+        uusi-paatos))))
 
 (defn tee-tavoitehinnan-alituspaatos
   "Tavoitehinnan alityspäätöksen mäppi:

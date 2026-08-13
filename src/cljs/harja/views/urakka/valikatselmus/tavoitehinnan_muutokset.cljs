@@ -279,7 +279,7 @@
           [:span (positiivinen-arvo-fn :pysyvat-muutokset)]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Johto- ja hallintokorvauksen muutokset"]
-          [:span (positiivinen-arvo-fn :johto-ja-hallintkorvaus-muutokset )]]
+          [:span (positiivinen-arvo-fn :johto-ja-hallintakorvaus-muutokset )]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Muutostyöt (erillisrahoitetut)"]
           [:span (positiivinen-arvo-fn :muutostyo-muutokset)]]
@@ -300,31 +300,23 @@
           [:div.big-text "Tavoitehinnan muutokset yhteensä"]
           [:div.big-text.lihavoitu (positiivinen-arvo-fn :tavoitehinnan-muutokset-yhteensa)]]]
 
-        (when-not hoitovuosi-kesken?
-          [:div.siirtyma-linkit
-           [:p "Tavoitehintamuutosten kirjaaminen"
-            [yleiset/linkki " siirry Muutokset -sivulle."
-             #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-                {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]
-           [:p "Arvonvähennysten kirjaaminen"
-            [yleiset/linkki " siirry Sanktiot ja bonukset -sivulle."
-             #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
-                {:taso1 :urakat :taso2 :laadunseuranta :taso3 :sanktiot})]]])
+        [:div.siirtyma-linkit
+         [:p "Tavoitehintamuutosten kirjaaminen"
+          [yleiset/linkki " siirry Muutokset -sivulle."
+           #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+              {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]
+         [:p "Arvonvähennysten kirjaaminen"
+          [yleiset/linkki " siirry Sanktiot ja bonukset -sivulle."
+           #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+              {:taso1 :urakat :taso2 :laadunseuranta :taso3 :sanktiot})]]]
 
-        (when (and paatos-tehty? voi-muokata?)
-          [:div.valja
-           [yleiset/info-laatikko :neutraali
-            "Tavoitehinnan muutokset on päätetty. Voit tehdä muutoksia perumalla päätöksen."
-            nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
 
-        ;; Päätöksenteko napit
-        (if-not hoitovuosi-kesken?
-          [:div
-           [:hr.paatos-hr]
-           (if-not (:virhe paatos)
-             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
-              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]
-             [:div.muokkaustoiminnot
-              [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
-          [:div {:style {:padding-bottom "1rem"}}])])]))
+        [:div
+         [:hr.paatos-hr]
+         (if-not (:virheet paatos)
+           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
+            #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
+            #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]
+           [:div.muokkaustoiminnot
+            [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
+        [:div {:style {:padding-bottom "1rem"}}]])]))

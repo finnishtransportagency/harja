@@ -56,13 +56,13 @@ WHERE id = :paatos-id
 -- name: tee-tavoitehinnan-pysyva-muutospaatos<!
 -- Tee tavoitehinnan pysyvä muutos päätös
 INSERT INTO paatos_tavoitehinnan_pysyva_muutos (urakkaid, hoitokauden_alkuvuosi, kirjallisesti_sovitut_muutokset,
-                                               pysyvat_muutokset, johto_ja_hallintkorvaus_muutokset, muutostyo_muutokset,
+                                               pysyvat_muutokset, johto_ja_hallintakorvaus_muutokset, muutostyo_muutokset,
                                                toteumiin_perustuvat_muutokset, tehtava_ja_maaratoteumamuutokset,
-                                               rahavarausten_muutokset, rahavarausten_muutokset, arvonvahennysten_muutokset,
+                                               rahavarausten_muutokset, arvonvahennysten_muutokset,
                                                tavoitehinnan_muutokset_yhteensa, luoja, luotu)
-VALUES (:urakkaid, :hoitokauden_alkuvuosi, :kirjallisesti_sovitut_muutokset, :pysyvat_muutokset, :johto_ja_hallintkorvaus_muutokset,
-        :muutostyo_muutokset, :toteumiin_perustuvat_muutokset, :tehtava_ja_maaratoteumamuutokset,
-        :rahavarausten_muutokset, :rahavarausten_muutokset, :arvonvahennysten_muutokset, :tavoitehinnan_muutokset_yhteensa, :luoja, NOW());
+VALUES (:urakkaid, :hoitokauden_alkuvuosi, :kirjallisesti-sovitut-muutokset, :pysyvat-muutokset, :johto-ja-hallintakorvaus-muutokset,
+        :muutostyo-muutokset, :toteumiin-perustuvat-muutokset, :tehtava-ja-maaratoteumamuutokset,
+        :rahavarausten-muutokset, :arvonvahennysten-muutokset, :tavoitehinnan-muutokset-yhteensa, :luoja, NOW());
 
 -- name: poista-tavoitehinnan-pysyva-muutos-paatos<!
 -- Poista tavoitehinnan muutos päätös

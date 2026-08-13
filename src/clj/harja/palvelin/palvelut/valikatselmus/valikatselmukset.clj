@@ -547,6 +547,8 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) budjettitavoite)
           kirjallisesti-sovitut-muutokset (:kirjallisesti-sovitut-muutokset budjettitavoite-vuodelle)
           pysyvat-muutokset (:pysyvat-muutokset budjettitavoite-vuodelle)
+          muutostyo-muutokset (:muutostyo-muutokset budjettitavoite-vuodelle)
+          jjh-muutokset (:jjh-muutokset budjettitavoite-vuodelle)
 
           ;; Muutosten aiheuttamat muutokset tavoitehinnassa
           muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
@@ -559,36 +561,42 @@
                                        :hoitokaudet (hoitokaudet-vektorimuotoon (q-urakat/hae-urakan-hoitokaudet db urakka-id))
                                        :valittu-hoitokausi valittu-hoitokausi})
           rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
-          tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
-                                         (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
-                                         0)
-          taman-vuoden-muutokset-summa (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+
+          ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
+          arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
+                                                                     :alkupvm (first valittu-hoitokausi)
+                                                                     :loppupvm (second valittu-hoitokausi)
+                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
 
           ;; Verrataan kirjallisesti sovittuja muutoksia saatuihin päätöksen arvoihin
-          validaatio (if-not (= (konversio/konvertoi->int kirjallisesti-sovitut-muutokset) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))
+          validaatio (if-not (= (konversio/konvertoi->int (or kirjallisesti-sovitut-muutokset 0)) (konversio/konvertoi->int (:kirjallisesti-sovitut-muutokset paatos)))
                        (conj validaatio (str "Päätökseltä tullut kirjallisesti sovittu muutos ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät kirjallisesti sovitut muutokset:" kirjallisesti-sovitut-muutokset "€. Päätöksen mukaiset kirjallisesti sovitut muutokset: " (:kirjallisesti-sovitut-muutokset paatos) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int pysyvat-muutokset) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))
+          validaatio (if-not (= (konversio/konvertoi->int (or pysyvat-muutokset 0)) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))
                        (conj validaatio (str "Päätökseltä tullut pysyvä muutos summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät pysyvät muutokset:" pysyvat-muutokset "€. Päätöksen mukaiset pysyvät muutokset: " (:pysyvat-muutokset paatos) " €"))
                        validaatio)
 
-
-
-          ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
-          tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
-                                                                      :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          validaatio (if-not (= (konversio/konvertoi->int tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
-                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or jjh-muutokset 0)) (konversio/konvertoi->int (:johto-ja-hallintakorvaus-muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät johto- ja hallintakorvaus muutokset:" jjh-muutokset "€. Päätöksen mukaiset Johto ja hallintakorvausmuutokset: " (:johto-ja-hallintakorvaus-muutokset paatos) " €"))
                        validaatio)
-          kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
-                                                                  :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          validaatio (if-not (= (konversio/konvertoi->int kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
-                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Suunniteltu kattohinta:" kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
+
+          validaatio (if-not (= (konversio/konvertoi->int (or muutostyo-muutokset 0)) (konversio/konvertoi->int (:muutostyo-muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät muutostyon muutokset:" muutostyo-muutokset "€. Päätöksen mukaiset muutöstyön muutokset: " (:muutostyo-muutokset paatos) " €"))
                        validaatio)
+
+          validaatio (if-not (= (konversio/konvertoi->int (or rahavarausmuutos-summa 0)) (konversio/konvertoi->int (:rahavarausten-muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät rahavarausten muutokset:" rahavarausmuutos-summa "€. Päätöksen mukaiset rahavarausten muutokset: " (:rahavarausten-muutokset paatos) " €"))
+                       validaatio)
+
+          validaatio (if-not (= (konversio/konvertoi->int (or arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten-muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät arvonvähennysten muutokset:" arvonvahennykset-yht "€. Päätöksen mukaiset rahavarausten muutokset: " (:arvonvahennysten-muutokset paatos) " €"))
+                       validaatio)
+
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
-              (paatos-kyselyt/tee-tavoitehinnan-muutospaatos db paatos (:id kayttaja)))]
+              (paatos-kyselyt/tee-tavoitehinnan-pysyva-muutospaatos db paatos (:id kayttaja)))]
 
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -597,7 +605,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
   (log/debug "poista-tavoitehinnan-muutospaatos :: paatos" (pr-str paatos))
   ;; Poista päätös
-  (paatos-kyselyt/poista-tavoitehinnan-muutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))
+  (paatos-kyselyt/poista-tavoitehinnan-pysyva-muutos-paatos<! db (:urakkaid paatos) (:id kayttaja) (:id paatos))
   ;; Hae välikatselmuksen tiedot
   (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))
 

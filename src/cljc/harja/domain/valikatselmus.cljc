@@ -58,7 +58,7 @@
 (s/def ::lisaa_tavoitehintaan_lopunindeksikorjaus boolean?)
 (s/def ::kirjallisesti-sovitut-muutokset #(or (nil? %) (number? %)))
 (s/def ::pysyvat-muutokset #(or (nil? %) (number? %)))
-(s/def ::johto-ja-hallintkorvaus-muutokset #(or (nil? %) (number? %)))
+(s/def ::johto-ja-hallintakorvaus-muutokset #(or (nil? %) (number? %)))
 (s/def ::muutostyo-muutokset #(or (nil? %) (number? %)))
 (s/def ::toteumiin-perustuvat-muutokset #(or (nil? %) (number? %)))
 (s/def ::tehtava-ja-maaratoteumamuutokset #(or (nil? %) (number? %)))
@@ -73,8 +73,8 @@
 (s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::muokkaa_kattohinta ::tavoitehinta
                                        ::kattohinta ::luoja]))
 
-(s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjallisesti-sovitut-muutokset
-                                                     ::pysyvat-muutokset ::johto-ja-hallintkorvaus-muutokset ::muutostyo-muutokset
+(s/def ::tavoitehinnan-pysyva-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjallisesti-sovitut-muutokset
+                                                     ::pysyvat-muutokset ::johto-ja-hallintakorvaus-muutokset ::muutostyo-muutokset
                                                      ::toteumiin-perustuvat-muutokset ::tehtava-ja-maaratoteumamuutokset
                                                      ::rahavarausten-muutokset ::arvonvahennysten-muutokset ::tavoitehinnan-muutokset-yhteensa
                                                      ::luoja]))
