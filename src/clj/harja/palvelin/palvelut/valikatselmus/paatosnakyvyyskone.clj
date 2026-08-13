@@ -238,7 +238,10 @@
       :else ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
       (lisaa-paatos-virheellisena paatokset "Tavoitehinnan muutokset" "Tavoitehintaa tai kattohintaa ei ole määritelty." true 2))))
 
-(defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi]
+
+(defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi
+                                                    kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
+                                                    jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
 
@@ -249,13 +252,13 @@
     (let [;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
           tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
-                                              (assoc :kirjallisesti-sovitut-muutokset 1M)
-                                              (assoc :pysyvat-muutokset 1M)
-                                              (assoc :johto-ja-hallintkorvaus-muutokset 1M)
-                                              (assoc :muutostyo-muutokset 1M)
-                                              (assoc :toteumiin-perustuvat-muutokset 1M)
-                                              (assoc :tehtava-ja-maaratoteumamuutokset 1M)
-                                              (assoc :rahavarausten-muutokset 1M)
+                                              (assoc :kirjallisesti-sovitut-muutokset kirjallisesti-sovitut-muutokset)
+                                              (assoc :pysyvat-muutokset pysyvat-muutokset)
+                                              (assoc :johto-ja-hallintkorvaus-muutokset jjh-muutokset)
+                                              (assoc :muutostyo-muutokset muutostyo-muutokset)
+                                              (assoc :toteumiin-perustuvat-muutokset (+ tehtava-ja-maaramuutos-summa rahavarausmuutos-summa))
+                                              (assoc :tehtava-ja-maaratoteumamuutokset tehtava-ja-maaramuutos-summa)
+                                              (assoc :rahavarausten-muutokset rahavarausmuutos-summa)
                                               (assoc :arvonvahennysten-muutokset -1M)
                                               (assoc :tavoitehinnan-muutokset-yhteensa 1M)
                                               (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))))

@@ -93,7 +93,7 @@
   (let [urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))
         ;; Haetaan pysyvät muutokset, jotka vaikuttavat tähän hoitovuoteen
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
-        aktiiviset-muutokset (:muutos-summa budjettitavoite-vuodelle)
+        kirjallisesti-sovitut-muutokset (:kirjallisesti-sovitut-muutokset budjettitavoite-vuodelle)
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
         muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
@@ -110,7 +110,7 @@
         tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
                                        (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
                                        0)
-        taman-vuoden-muutokset-summa (+ (or aktiiviset-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+        taman-vuoden-muutokset-summa (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
 
         ;; 2025 vuodesta eteenpäin on käytössä vuosittaiset muutoset/pysyvät muutokset
         muutosvaikutus (if (>= 2024 urakan-alkuvuosi) 0 taman-vuoden-muutokset-summa)
@@ -167,10 +167,13 @@
         tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakkaid :hoitokauden_alkuvuosi valittu-hoitovuosi})
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
         ;; Haetaan pysyviin muutoksiin perustuvat tiedot
-        aktiiviset-muutokset (:muutos-summa budjettitavoite-vuodelle)
+        kirjallisesti-sovitut-muutokset (:kirjallisesti-sovitut-muutokset budjettitavoite-vuodelle)
+        pysyvat-muutokset (:pysyvat-muutokset budjettitavoite-vuodelle)
+        muutostyo-muutokset (:muutostyo-muutokset budjettitavoite-vuodelle)
+        jjh-muutokset (:jjh-muutokset budjettitavoite-vuodelle)
         ;; Varmistetaan, että urakan muutosten hallinta on päällä
         taman-vuoden-muutokset-summa (if (:muutosten_hallinta urakan-parametrit)
-                                       (+ (or aktiiviset-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+                                       (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
                                        0)
         mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
         hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
@@ -194,7 +197,7 @@
         ;; Valmistellaan päätökset ui:ta varten
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset valittu-hoitovuosi)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa )
         mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset mahdolliset-paatokset)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos db (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset) urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu?)
@@ -528,7 +531,8 @@
           budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakka-id})
           ;; Otetaan käytyn hoitovuoden budjetti
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) budjettitavoite)
-          pysyvat-muutokset (:muutos-summa budjettitavoite-vuodelle)
+          kirjallisesti-sovitut-muutokset (:kirjallisesti-sovitut-muutokset budjettitavoite-vuodelle)
+          pysyvat-muutokset (:pysyvat-muutokset budjettitavoite-vuodelle)
 
           ;; Muutosten aiheuttamat muutokset tavoitehinnassa
           muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
@@ -544,11 +548,11 @@
           tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
                                          (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
                                          0)
-          taman-vuoden-muutokset-summa (+ (or pysyvat-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+          taman-vuoden-muutokset-summa (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
 
-          ;; Verrataan pysyviä muutoksia saatuihin päätöksen arvoihin
-          validaatio (if-not (= (konversio/konvertoi->int pysyvat-muutokset) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut pysyvä muutos summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät pysyvät muutokset:" pysyvat-muutokset "€. Päätöksen mukaiset pysyvät muutokset: " (:pysyvat-muutokset paatos) " €"))
+          ;; Verrataan kirjallisesti sovittuja muutoksia saatuihin päätöksen arvoihin
+          validaatio (if-not (= (konversio/konvertoi->int kirjallisesti-sovitut-muutokset) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut kirjallisesti sovittu muutos ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät kirjallisesti sovitut muutokset:" kirjallisesti-sovitut-muutokset "€. Päätöksen mukaiset kirjallisesti sovitut muutokset: " (:kirjallisesti-sovitut-muutokset paatos) " €"))
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int pysyvat-muutokset) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))

@@ -133,14 +133,14 @@
         oikaisujen-maara (if (and (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
                            (- (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite))
                            0)
-        pysyvat-muutokset-summa (or (:muutos-summa urakka-tavoite) 0M)
-        hoitovuoden-lopun-tavoitehinta (+ (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) pysyvat-muutokset-summa)
+        kirjallisesti-sovitut-muutokset-summa (or (:kirjallisesti-sovitut-muutokset urakka-tavoite) 0M)
+        hoitovuoden-lopun-tavoitehinta (+ (or (:tavoitehinta-oikaistu urakka-tavoite) (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M) kirjallisesti-sovitut-muutokset-summa)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (when (:tavoitehinta-oikaistu urakka-tavoite) (- (:tavoitehinta-oikaistu urakka-tavoite) oikaisujen-maara))]
 
     (if urakka-tavoite
       {:hoitokauden-alun-indeksikorjattu-tavoitehinta (or hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu urakka-tavoite) 0M)
        :oikaisujen-maara oikaisujen-maara
-       :kirjallisesti-sovitut-muutokset pysyvat-muutokset-summa
+       :kirjallisesti-sovitut-muutokset kirjallisesti-sovitut-muutokset-summa
        :jaljella (- hoitovuoden-lopun-tavoitehinta kaikki-tavoitehintaiset-laskutettu valikatselmus-siirrot-ed-vuodelta)
        :oikaistu? oikaistu?}
       {:hoitokauden-alun-indeksikorjattu-tavoitehinta 0
