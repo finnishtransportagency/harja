@@ -488,8 +488,11 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id elinvoimakeskus-id
-                               urakoittain? urakkatyyppi urakkanumero?] :as parametrit}]
+                               urakoittain? urakkatyyppi urakkanumero? tyomaakokousraportti?] :as parametrit}]
   (let [urakoittain? (if urakka-id false urakoittain?)
+        ;;tyomaakokousraportissa näytetään aina koko hoitovuoden tiedot, vaikka on kuukausi valittuna
+        alkupvm (if tyomaakokousraportti? (first (pvm/paivamaaran-hoitokausi alkupvm)) alkupvm)
+        loppupvm (if tyomaakokousraportti? (second (pvm/paivamaaran-hoitokausi loppupvm)) loppupvm)
         konteksti (cond urakka-id :urakka
                     elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
