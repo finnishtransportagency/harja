@@ -91,15 +91,17 @@
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
               [:<>
-               [:div.big-text.lihavoitu "Ei bonusta eikä sanktiota"]])]])
+               [:div.big-text "Ei bonusta eikä sanktiota"]])]])
 
-        ;; Jos päätöksessä on virhe, niin näytetään se
-        (when (:virhe paatos)
-          [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
         [:hr.paatos-hr]
 
+        ;; Jos päätöksessä on virhe, niin näytetään se
+        (when (:virheet paatos)
+          [:div [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+                 (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
+
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and (not (:virheet paatos)) voi-muokata?)
          #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
                                                                     :teksti "Automaattisesti kirjattu bonus/sanktio poistetaan."})
