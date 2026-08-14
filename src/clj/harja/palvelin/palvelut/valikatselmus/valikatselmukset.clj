@@ -570,28 +570,28 @@
           arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
 
           ;; Verrataan kirjallisesti sovittuja muutoksia saatuihin päätöksen arvoihin
-          validaatio (if-not (= (konversio/konvertoi->int (or kirjallisesti-sovitut-muutokset 0)) (konversio/konvertoi->int (:kirjallisesti-sovitut-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut kirjallisesti sovittu muutos ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät kirjallisesti sovitut muutokset:" kirjallisesti-sovitut-muutokset "€. Päätöksen mukaiset kirjallisesti sovitut muutokset: " (:kirjallisesti-sovitut-muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or kirjallisesti-sovitut-muutokset 0)) (konversio/konvertoi->int (:kirjallisesti_sovitut_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut kirjallisesti sovittu muutos ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät kirjallisesti sovitut muutokset:" kirjallisesti-sovitut-muutokset "€. Päätöksen mukaiset kirjallisesti sovitut muutokset: " (:kirjallisesti_sovitut_muutokset paatos) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or pysyvat-muutokset 0)) (konversio/konvertoi->int (:pysyvat-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut pysyvä muutos summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät pysyvät muutokset:" pysyvat-muutokset "€. Päätöksen mukaiset pysyvät muutokset: " (:pysyvat-muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or pysyvat-muutokset 0)) (konversio/konvertoi->int (:pysyvat_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut pysyvä muutos summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät pysyvät muutokset:" pysyvat-muutokset "€. Päätöksen mukaiset pysyvät muutokset: " (:pysyvat_muutokset paatos) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or jjh-muutokset 0)) (konversio/konvertoi->int (:johto-ja-hallintakorvaus-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät johto- ja hallintakorvaus muutokset:" jjh-muutokset "€. Päätöksen mukaiset Johto ja hallintakorvausmuutokset: " (:johto-ja-hallintakorvaus-muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or jjh-muutokset 0)) (konversio/konvertoi->int (:johto_ja_hallintakorvaus_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät johto- ja hallintakorvaus muutokset:" jjh-muutokset "€. Päätöksen mukaiset Johto ja hallintakorvausmuutokset: " (:johto_ja_hallintakorvaus_muutokset paatos) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or muutostyo-muutokset 0)) (konversio/konvertoi->int (:muutostyo-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät muutostyon muutokset:" muutostyo-muutokset "€. Päätöksen mukaiset muutöstyön muutokset: " (:muutostyo-muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or muutostyo-muutokset 0)) (konversio/konvertoi->int (:muutostyo_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät muutostyon muutokset:" muutostyo-muutokset "€. Päätöksen mukaiset muutöstyön muutokset: " (:muutostyo_muutokset paatos) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or rahavarausmuutos-summa 0)) (konversio/konvertoi->int (:rahavarausten-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät rahavarausten muutokset:" rahavarausmuutos-summa "€. Päätöksen mukaiset rahavarausten muutokset: " (:rahavarausten-muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or rahavarausmuutos-summa 0)) (konversio/konvertoi->int (:rahavarausten_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät rahavarausten muutokset:" rahavarausmuutos-summa "€. Päätöksen mukaiset rahavarausten muutokset: " (:rahavarausten_muutokset paatos) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten-muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät arvonvähennysten muutokset:" arvonvahennykset-yht "€. Päätöksen mukaiset rahavarausten muutokset: " (:arvonvahennysten-muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät arvonvähennysten muutokset:" arvonvahennykset-yht "€. Päätöksen mukaiset rahavarausten muutokset: " (:arvonvahennysten_muutokset paatos) " €"))
                        validaatio)
 
           _ (if (seq validaatio)
@@ -603,9 +603,10 @@
 
 (defn poista-tavoitehinnan-pysyva-muutospaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
-  (log/debug "poista-tavoitehinnan-muutospaatos :: paatos" (pr-str paatos))
+  (log/debug "poista-tavoitehinnan-pysyva-muutospaatos :: paatos" (pr-str paatos))
   ;; Poista päätös
-  (paatos-kyselyt/poista-tavoitehinnan-pysyva-muutos-paatos<! db (:urakkaid paatos) (:id kayttaja) (:id paatos))
+  (paatos-kyselyt/poista-tavoitehinnan-pysyva-muutos-paatos<! db {:poistaja (:id kayttaja)
+                                                                  :id (:id paatos)})
   ;; Hae välikatselmuksen tiedot
   (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))
 

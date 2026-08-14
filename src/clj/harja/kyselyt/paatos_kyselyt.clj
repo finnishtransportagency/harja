@@ -161,15 +161,15 @@
   "Tavoitehinnan muutospäätös mäppi:
   {:hoitokauden_alkuvuosi <vuosi>
   :urakkaid <urakka-id>
-  :kirjallisesti-sovitut-muutokset <summa>
-  :pysyvat-muutokset <summa>
-  :johto-ja-hallintakorvaus-muutokset <summa>
-  :muutostyo-muutokset <summa>
-  :toteumiin-perustuvat-muutokset <summa>
-  :tehtava-ja-maaratoteumamuutokset <summa>
-  :rahavarausten-muutokset <summa>
-  :arvonvahennysten-muutokset <summa>
-  :tavoitehinnan-muutokset-yhteensa <summa>
+  :kirjallisesti_sovitut_muutokset <summa>
+  :pysyvat_muutokset <summa>
+  :johto_ja_hallintakorvaus_muutokset <summa>
+  :muutostyo_muutokset <summa>
+  :toteumiin_perustuvat_muutokset <summa>
+  :tehtava_ja_maaratoteumamuutokset <summa>
+  :rahavarausten_muutokset <summa>
+  :arvonvahennysten_muutokset <summa>
+  :tavoitehinnan_muutokset_yhteensa <summa>
   :luoja <kuka>}"
 
   [db {:keys [urakkaid] :as paatos} kayttajaid]

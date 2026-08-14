@@ -273,32 +273,32 @@
         [:div
          [:div.flex-row.laskenta-avattuna.semibold
           [:div "Kirjallisesti sovitut muutokset"]
-          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :kirjallisesti-sovitut-muutokset)]]
+          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :kirjallisesti_sovitut_muutokset)]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Pysyvät muutokset"]
-          [:span (positiivinen-arvo-fn :pysyvat-muutokset)]]
+          [:span (positiivinen-arvo-fn :pysyvat_muutokset)]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Johto- ja hallintokorvauksen muutokset"]
-          [:span (positiivinen-arvo-fn :johto-ja-hallintakorvaus-muutokset )]]
+          [:span (positiivinen-arvo-fn :johto_ja_hallintakorvaus_muutokset )]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Muutostyöt (erillisrahoitetut)"]
-          [:span (positiivinen-arvo-fn :muutostyo-muutokset)]]
+          [:span (positiivinen-arvo-fn :muutostyo_muutokset)]]
          [:div.flex-row.laskenta-avattuna.semibold
           [:div "Toteumiin perustuvat tavoitehintamuutokset"]
-          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :toteumiin-perustuvat-muutokset)]]
+          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :toteumiin_perustuvat_muutokset)]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"]
-          [:span (positiivinen-arvo-fn :tehtava-ja-maaratoteumamuutokset)]]
+          [:span (positiivinen-arvo-fn :tehtava_ja_maaratoteumamuutokset)]]
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Rahavarausten muutokset"]
-          [:span (positiivinen-arvo-fn :rahavarausten-muutokset)]]
+          [:span (positiivinen-arvo-fn :rahavarausten_muutokset)]]
          [:div.flex-row.laskenta-rivi.semibold
           [:div "Arvonvähennysten tavoitehintamuutokset"]
-          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :arvonvahennysten-muutokset)]]
+          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :arvonvahennysten_muutokset)]]
          [:hr.paatos-hr {:style {:padding-bottom "0.5rem"}}]
          [:div.flex-row {:aria-live "polite"}
           [:div.big-text "Tavoitehinnan muutokset yhteensä"]
-          [:div.big-text.lihavoitu (positiivinen-arvo-fn :tavoitehinnan-muutokset-yhteensa)]]]
+          [:div.big-text.lihavoitu (positiivinen-arvo-fn :tavoitehinnan_muutokset_yhteensa)]]]
 
         [:div.siirtyma-linkit
          [:p "Tavoitehintamuutosten kirjaaminen"

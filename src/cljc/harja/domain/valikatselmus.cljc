@@ -56,15 +56,15 @@
 (s/def ::kattohintakerroin number?)
 (s/def ::tarkistettu #(inst? %))
 (s/def ::lisaa_tavoitehintaan_lopunindeksikorjaus boolean?)
-(s/def ::kirjallisesti-sovitut-muutokset #(or (nil? %) (number? %)))
-(s/def ::pysyvat-muutokset #(or (nil? %) (number? %)))
-(s/def ::johto-ja-hallintakorvaus-muutokset #(or (nil? %) (number? %)))
-(s/def ::muutostyo-muutokset #(or (nil? %) (number? %)))
-(s/def ::toteumiin-perustuvat-muutokset #(or (nil? %) (number? %)))
-(s/def ::tehtava-ja-maaratoteumamuutokset #(or (nil? %) (number? %)))
-(s/def ::rahavarausten-muutokset #(or (nil? %) (number? %)))
-(s/def ::arvonvahennysten-muutokset #(or (nil? %) (number? %)))
-(s/def ::tavoitehinnan-muutokset-yhteensa #(or (nil? %) (number? %)))
+(s/def ::kirjallisesti_sovitut_muutokset #(or (nil? %) (number? %)))
+(s/def ::pysyvat_muutokset #(or (nil? %) (number? %)))
+(s/def ::johto_ja_hallintakorvaus_muutokset #(or (nil? %) (number? %)))
+(s/def ::muutostyo_muutokset #(or (nil? %) (number? %)))
+(s/def ::toteumiin_perustuvat_muutokset #(or (nil? %) (number? %)))
+(s/def ::tehtava_ja_maaratoteumamuutokset #(or (nil? %) (number? %)))
+(s/def ::rahavarausten_muutokset #(or (nil? %) (number? %)))
+(s/def ::arvonvahennysten_muutokset #(or (nil? %) (number? %)))
+(s/def ::tavoitehinnan_muutokset_yhteensa #(or (nil? %) (number? %)))
 
 (s/def ::lupauspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::tyyppi ::urakkaid ::tavoitehinta ::tarjous_tavoitehinta
                                         ::luvatut_pisteet ::toteutuneet_pisteet ::bonusprosentti ::sanktioprosentti ::luoja]
@@ -73,10 +73,10 @@
 (s/def ::tavoitehinnan-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::muokkaa_kattohinta ::tavoitehinta
                                        ::kattohinta ::luoja]))
 
-(s/def ::tavoitehinnan-pysyva-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjallisesti-sovitut-muutokset
-                                                     ::pysyvat-muutokset ::johto-ja-hallintakorvaus-muutokset ::muutostyo-muutokset
-                                                     ::toteumiin-perustuvat-muutokset ::tehtava-ja-maaratoteumamuutokset
-                                                     ::rahavarausten-muutokset ::arvonvahennysten-muutokset ::tavoitehinnan-muutokset-yhteensa
+(s/def ::tavoitehinnan-pysyva-muutospaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kirjallisesti_sovitut_muutokset
+                                                     ::pysyvat_muutokset ::johto_ja_hallintakorvaus_muutokset ::muutostyo_muutokset
+                                                     ::toteumiin_perustuvat_muutokset ::tehtava_ja_maaratoteumamuutokset
+                                                     ::rahavarausten_muutokset ::arvonvahennysten_muutokset ::tavoitehinnan_muutokset_yhteensa
                                                      ::luoja]))
 
 (s/def ::kattohinnan-ylityspaatos (s/keys :req-un [::hoitokauden_alkuvuosi ::urakkaid ::kattohinta ::toteutuneet_kustannukset
