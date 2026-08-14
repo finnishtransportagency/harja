@@ -631,13 +631,16 @@
                                                       :versio uusi-muutos-versio})))))
 
 (defn luo-kustannusvaikutus
-  [aiti-muutos-id versio {:keys [hoitokauden_alkuvuosi toimenpideinstanssi kustannuslaji summa] :as sql-opts}]
+  [aiti-muutos-id versio {:keys [hoitokauden_alkuvuosi toimenpideinstanssi
+                                 kustannuslaji summa tehtavamaaramuutos-kirjattu? syy] :as sql-opts}]
   {:muutos_id aiti-muutos-id
    :versio versio
    :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
    :toimenpideinstanssi toimenpideinstanssi
    :kustannuslaji kustannuslaji
-   :summa summa})
+   :summa summa
+   :tehtavamaaramuutos-kirjattu? tehtavamaaramuutos-kirjattu?
+   :syy syy})
 
 (defn tallenna-muutoksen-kustannusvaikutukset
   [db aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?]
@@ -753,17 +756,17 @@
         laskutusraja (:laskutusraja (first (kulu-kyselyt/hae-urakan-laskutusraja conn {:urakka-id urakka-id :hoitokausinro hoitokausinro})))
         laskutusraja-alkuperainen (:laskutusraja_alkuperainen (first (kulu-kyselyt/hae-urakan-alkuperainen-laskutusraja conn {:urakka-id urakka-id :hoitokausinro hoitokausinro})))
         muutokset-yhteensa-kaikki (-> (muutos-kyselyt/hae-laskutusrajan-muutosten-summa-hoitovuodelle
-                                       conn {:urakka-id urakka-id :hoitokauden_alkuvuosi hk-alkuvuosi :paivitettava-muutos-id nil})
-                                       first :muutokset_yhteensa (or 0))
+                                        conn {:urakka-id urakka-id :hoitokauden_alkuvuosi hk-alkuvuosi :paivitettava-muutos-id nil})
+                                    first :muutokset_yhteensa (or 0))
         muutokset-yhteensa-ilman-valittua (-> (muutos-kyselyt/hae-laskutusrajan-muutosten-summa-hoitovuodelle
-                                               conn {:urakka-id urakka-id :hoitokauden_alkuvuosi hk-alkuvuosi :paivitettava-muutos-id paivitettava-muutos-id})
-                                               first :muutokset_yhteensa (or 0))]
-    {:hoitokausinro                     hoitokausinro
-     :hoitovuoden-tavoitehinta          hoitovuoden-tavoitehinta
-     :laskutusraja                      laskutusraja
-     :laskutusraja_alkuperainen         laskutusraja-alkuperainen
-     :laskutusrajaa_nostettu?           (when (and laskutusraja laskutusraja-alkuperainen) (> laskutusraja laskutusraja-alkuperainen))
-     :muutokset-yhteensa-kaikki         muutokset-yhteensa-kaikki
+                                                conn {:urakka-id urakka-id :hoitokauden_alkuvuosi hk-alkuvuosi :paivitettava-muutos-id paivitettava-muutos-id})
+                                            first :muutokset_yhteensa (or 0))]
+    {:hoitokausinro hoitokausinro
+     :hoitovuoden-tavoitehinta hoitovuoden-tavoitehinta
+     :laskutusraja laskutusraja
+     :laskutusraja_alkuperainen laskutusraja-alkuperainen
+     :laskutusrajaa_nostettu? (when (and laskutusraja laskutusraja-alkuperainen) (> laskutusraja laskutusraja-alkuperainen))
+     :muutokset-yhteensa-kaikki muutokset-yhteensa-kaikki
      :muutokset-yhteensa-ilman-valittua muutokset-yhteensa-ilman-valittua}))
 
 (defn tallenna-muutos [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos laskenta-automatiikka?] :as tiedot}]
@@ -853,11 +856,11 @@
               aiempi-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
               summa (:summa (first kustannusvaikutukset))
               muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
-                (when (and hoitovuoden-tavoitehinta summa)
-                  (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta)))))
+              (when (and hoitovuoden-tavoitehinta summa)
+                (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta)))))
               muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
-                (when (and hoitovuoden-tavoitehinta summa)
-                  (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta)))))]
+              (when (and hoitovuoden-tavoitehinta summa)
+                (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta)))))]
 
           ;; Tallenna liitteet
           (tallenna-muutoksen-liitteet conn aiti-muutos-id-ja-versio liitteet)
@@ -889,11 +892,11 @@
               (tallenna-muutoksen-tehtavien-maaramuutokset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio maaramuutokset)))
 
           (when-let [uusi-laskutusraja (muutos-apurit/laske-uusi-laskutusraja paivitetaan? tyyppi-muutostyo? tyyppi-pysyva?
-                                             muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
-                                             muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa laskutusrajaa_nostettu?
-                                             laskutusraja laskutusraja_alkuperainen
-                                             hoitovuoden-tavoitehinta summa muutokset-yhteensa-kaikki
-                                             muutokset-yhteensa-ilman-valittua aiempi-muutos)]
+                                         muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
+                                         muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa laskutusrajaa_nostettu?
+                                         laskutusraja laskutusraja_alkuperainen
+                                         hoitovuoden-tavoitehinta summa muutokset-yhteensa-kaikki
+                                         muutokset-yhteensa-ilman-valittua aiempi-muutos)]
             (kulu-kyselyt/paivita-urakan-laskutusraja! conn
               {:urakka-id urakka-id
                :hoitokausinro hoitokausinro
@@ -1041,8 +1044,8 @@
           {:urakka-id urakka-id
            :hoitokausinro hoitokausinro
            :laskutusraja (if (> prosenttiosuus 3.00)
-                          (- laskutusraja poistettava-muutos)
-                          laskutusraja_alkuperainen)
+                           (- laskutusraja poistettava-muutos)
+                           laskutusraja_alkuperainen)
            :kayttaja (:id kayttaja)}))
 
       ;; Merkitse muutos poistetuksi
