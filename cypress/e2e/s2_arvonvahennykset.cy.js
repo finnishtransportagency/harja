@@ -87,9 +87,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
 
         cy.contains('.haku-lista-item', evk).click()
         cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').find('button').click()
-        cy.wait(250);
-        cy.get('[data-cy=murupolku-urakkatyyppi]').contains('ul li a', 'Hoito').click({force: true})
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
         cy.contains('Näytä päättyneet').click();
         cy.wait(250);
         cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
@@ -122,9 +120,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
 
         cy.contains('.haku-lista-item', evk).click()
         cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').find('button').click()
-        cy.wait(250);
-        cy.get('[data-cy=murupolku-urakkatyyppi]').contains('ul li a', 'Hoito').click({force: true})
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
         cy.contains('Näytä päättyneet').click();
         cy.wait(250);
         cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
@@ -165,9 +161,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
 
         cy.contains('.haku-lista-item', evk).click()
         cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').find('button').click()
-        cy.wait(250);
-        cy.get('[data-cy=murupolku-urakkatyyppi]').contains('ul li a', 'Hoito').click({force: true})
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
         cy.contains('Näytä päättyneet').click();
         cy.wait(250);
         cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
@@ -208,9 +202,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
 
         cy.contains('.haku-lista-item', evk).click()
         cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').find('button').click()
-        cy.wait(250);
-        cy.get('[data-cy=murupolku-urakkatyyppi]').contains('ul li a', 'Hoito').click({force: true})
+        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
         cy.contains('Näytä päättyneet').click();
         cy.wait(250);
         cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()

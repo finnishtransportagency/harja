@@ -43,29 +43,35 @@
     arvonvahennyslomake-kaytossa? (conj :arvonvahennys)
     true (conj :bonukset)))
 
-(defn bonus-sanktio-valikko
+(defn bonus-sanktio-arvonvahennykset-valikko
   [tila mhu25? arvonvahennyslomake-kaytossa?]
-  [:<>
-   [kentat/tee-kentta {:tyyppi :radio-group
-                       :vaihtoehdot (sivupaneelityypit arvonvahennyslomake-kaytossa?)
-                       :vayla-tyyli? true
-                       :nayta-rivina? true
-                       :vaihtoehto-nayta {:sanktiot "Sanktio"
-                                          :arvonvahennys "Arvonvähennys"
-                                          :bonukset "Bonus"}
-                       :valitse-fn (fn [valinta]
-                                     ;; Alusta sanktio/bonus/arvonvähennys joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
-                                     ;; lomakkeelle ei jää aiemman lomakkeen dataa.
-                                     (case valinta
-                                       :sanktiot
-                                       (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
-                                       :arvonvahennys
-                                       (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys mhu25? (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
-                                       :bonukset
-                                       (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))
-                                       nil))}
-    tila]
-   [:hr]])
+  (let [valittu-arvo (atom (cond
+                             (= @tila :sanktiot) :sanktiot
+                             (and (= @tila :arvonvahennys) (not arvonvahennyslomake-kaytossa?)) :sanktiot
+                             (and (= @tila :arvonvahennys) arvonvahennyslomake-kaytossa?) :arvonvahennys
+                             :else :bonukset))]
+    [:<>
+     [kentat/tee-kentta {:tyyppi :radio-group
+                         :vaihtoehdot (sivupaneelityypit arvonvahennyslomake-kaytossa?)
+                         :vayla-tyyli? true
+                         :nayta-rivina? true
+                         :vaihtoehto-nayta {:sanktiot "Sanktio"
+                                            :arvonvahennys "Arvonvähennys"
+                                            :bonukset "Bonus"}
+                         :valitse-fn (fn [arvo]
+                                       ;; Alusta sanktio/bonus/arvonvähennys joka kerta kun valinta vaihdetaan, jotta uudelle tyhjälle
+                                       ;; lomakkeelle ei jää aiemman lomakkeen dataa.
+                                       (cond
+                                         (or (= arvo :sanktiot) (and (= arvo :arvonvahennys) (not arvonvahennyslomake-kaytossa?)))
+                                         (reset! tiedot/valittu-sanktio (tiedot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
+
+                                         (and (= arvo :arvonvahennys) arvonvahennyslomake-kaytossa?)
+                                         (reset! tiedot/valittu-sanktio (arvonvahennys-tiedot/uusi-arvonvahennys mhu25? (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))))
+
+                                         (= arvo :bonukset)
+                                         (reset! tiedot/valittu-sanktio (bonukset-tiedot/uusi-bonus))))}
+      valittu-arvo]
+     [:hr]]))
 
 
 (defn sivupaneeli
@@ -108,7 +114,7 @@
                   "Lisää uusi")]
 
            (when-not muokataan-vanhaa?
-             [bonus-sanktio-valikko (r/cursor tila [:lomake]) mhu25? arvonvahennyslomake-kaytossa?])
+             [bonus-sanktio-arvonvahennykset-valikko (r/cursor tila [:lomake]) mhu25? arvonvahennyslomake-kaytossa?])
 
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
