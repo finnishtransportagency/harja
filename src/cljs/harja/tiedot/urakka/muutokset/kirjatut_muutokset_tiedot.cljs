@@ -441,9 +441,7 @@
                  (fn [v]
                    (if (some? v)
                      (not v)
-                     false)))
-
-              )))
+                     false))))))
         (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
 
   PaivitaTehtavavaikutusSyy
