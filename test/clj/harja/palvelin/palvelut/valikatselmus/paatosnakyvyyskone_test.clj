@@ -148,18 +148,31 @@
     (is (= 13 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028))))))
 
 (deftest mhu-vuodelle-2025-palautaa-oikein
-  (let [mhu-tyyppi "MHU"
+  (let [odotetut-paatokset '({:nimi "Lupaukset", :tyyppi "bonus", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                             {:nimi "Lupaukset", :tyyppi "sanktio", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                             {:nimi "Lupaukset", :tyyppi "taytetty", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 1, :paatostyyppi "lupaus"}
+                             {:nimi "Tavoitehinnan muutokset", :urakan_alkuvuosi 2021, :nakyvyys_alkaen 2021, :nakyvyys_asti 2028, :hoitotyyppi #{"MHU"}, :jarjestys 2, :paatostyyppi "tavoitehinnan-muutokset"}
+                             {:nimi "Tavoitehinnan pysyvät muutokset", :urakan_alkuvuosi 2025, :nakyvyys_alkaen 2025, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 2, :paatostyyppi "tavoitehinnan-pysyvat-muutokset"}
+                             {:nimi "Hoitovuoden lopun indeksikorjaus", :tyyppi nil, :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 3, :paatostyyppi "indeksikorjaus"}
+                             {:nimi "Hoitovuoden lopun tavoite- ja kattohinta", :tyyppi "C", :urakan_alkuvuosi 2025, :nakyvyys_alkaen 2025, :hoitotyyppi #{"MHU"}, :jarjestys 4, :paatostyyppi "hoitovuoden-lopun-hinta-v2"}
+                             {:nimi "Tavoitehinnan alitus", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU"}, :jarjestys 5, :paatostyyppi "tavoitehinta"}
+                             {:nimi "Tavoitehinnan ylitys", :tyyppi "A", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU"}, :jarjestys 6, :paatostyyppi "tavoitehinta"}
+                             {:nimi "Tavoitehinnan ylitys", :tyyppi "B", :urakan_alkuvuosi 2024, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU+" "MHU"}, :jarjestys 6, :paatostyyppi "tavoitehinta"}
+                             {:nimi "Kattohinnan ylitys", :urakan_alkuvuosi 2019, :nakyvyys_alkaen 2019, :hoitotyyppi #{"MHU"}, :jarjestys 7, :paatostyyppi "kattohinta"}
+                             {:nimi "Hoidonjohtopalkkion muutos", :urakan_alkuvuosi 2021, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU"}, :jarjestys 8, :paatostyyppi "hoidonjohtopalkkio"}
+                             {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit", :urakan_alkuvuosi 2020, :nakyvyys_alkaen 2024, :hoitotyyppi #{"MHU"}, :jarjestys 9, :paatostyyppi "raportti"})
+        mhu-tyyppi "MHU"
         urakan-alkuvuosi 2025
         urakan-loppuvuosi (+ urakan-alkuvuosi 5)
-        paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)
-        filtteroidyt-paatokset (kone/filtteroi-mahdolliset-paatokset paatokset nil nil nil)
+        paatokset-25 (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)
+        filtteroidyt-paatokset (kone/filtteroi-mahdolliset-paatokset paatokset-25 nil nil nil)
         hoitovuoden-lopun-hinta-maara (filter #(= "hoitovuoden-lopun-hinta-v2" (:paatostyyppi %)) filtteroidyt-paatokset)
         _ (is (= 1 (count hoitovuoden-lopun-hinta-maara)))]
-    (is (= 12 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025))))
-    (is (= 12 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026))))
-    (is (= 12 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027))))
-    (is (= 12 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028))))
-    (is (= 12 (count (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2029))))))
+    (is (= odotetut-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2025)))
+    (is (= odotetut-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2026)))
+    (is (= odotetut-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2027)))
+    (is (= odotetut-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2028)))
+    (is (= odotetut-paatokset (kone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi 2029)))))
 
 (deftest mhu-vuodelle-2019-palautaa-oikein
   (let [mhu-tyyppi "MHU"
@@ -205,8 +218,8 @@
 (deftest paatosmaarat-mhu-tyypilla-test
   (let [mhu-paatokset (kone/mahdolliset-paatokset-tyypilla "MHU" kone/paatostyypit)
         mhu+-paatokset (kone/mahdolliset-paatokset-tyypilla "MHU+" kone/paatostyypit)]
-    (is (= 17 (count mhu-paatokset)))
-    (is (= 11 (count mhu+-paatokset)))))
+    (is (= 18 (count mhu-paatokset)))
+    (is (= 12 (count mhu+-paatokset)))))
 
 (deftest paatosmaarat-hoitokauden-alkuvuosilla-test
   (let [urakan-alkuvuosi-2019-paatokset (kone/mahdolliset-paatokset-urakan-alkuvuodella 2019 kone/paatostyypit)
@@ -222,7 +235,7 @@
     (is (= 11 (count urakan-alkuvuosi-2022-paatokset)))
     (is (= 11 (count urakan-alkuvuosi-2023-paatokset)))
     (is (= 20 (count urakan-alkuvuosi-2024-paatokset)))
-    (is (= 21 (count urakan-alkuvuosi-2025-paatokset)))))
+    (is (= 22 (count urakan-alkuvuosi-2025-paatokset)))))
 
 (deftest paatosmaarat-nakyvyys-asti-test
   (let [urakan-alkuvuosi-2019-paatokset (kone/mahdolliset-paatokset-nakyvyys-asti 2019 kone/paatostyypit)
@@ -232,12 +245,12 @@
         urakan-alkuvuosi-2023-paatokset (kone/mahdolliset-paatokset-nakyvyys-asti 2023 kone/paatostyypit)
         urakan-alkuvuosi-2024-paatokset (kone/mahdolliset-paatokset-nakyvyys-asti 2024 kone/paatostyypit)
         urakan-alkuvuosi-2025-paatokset (kone/mahdolliset-paatokset-nakyvyys-asti 2025 kone/paatostyypit)]
-    (is (= 21 (count urakan-alkuvuosi-2019-paatokset)))
-    (is (= 21 (count urakan-alkuvuosi-2020-paatokset)))
-    (is (= 21 (count urakan-alkuvuosi-2021-paatokset)))
-    (is (= 21 (count urakan-alkuvuosi-2022-paatokset)))
-    (is (= 21 (count urakan-alkuvuosi-2023-paatokset)))
-    (is (= 21 (count urakan-alkuvuosi-2024-paatokset)))
+    (is (= 22 (count urakan-alkuvuosi-2019-paatokset)))
+    (is (= 22 (count urakan-alkuvuosi-2020-paatokset)))
+    (is (= 22 (count urakan-alkuvuosi-2021-paatokset)))
+    (is (= 22 (count urakan-alkuvuosi-2022-paatokset)))
+    (is (= 22 (count urakan-alkuvuosi-2023-paatokset)))
+    (is (= 22 (count urakan-alkuvuosi-2024-paatokset)))
     (is (= 18 (count urakan-alkuvuosi-2025-paatokset)))))
 
 (deftest paatosmaarat-nakyvyys-vuodesta-test
@@ -254,7 +267,7 @@
     (is (= 9 (count nakyvyysvuosi-2022-paatokset)))
     (is (= 9 (count nakyvyysvuosi-2023-paatokset)))
     (is (= 20 (count nakyvyysvuosi-2024-paatokset)))
-    (is (= 21 (count nakyvyysvuosi-2025-paatokset)))))
+    (is (= 22 (count nakyvyysvuosi-2025-paatokset)))))
 
 (deftest yhdista-mapit-test
   (let [;; pk viittaa päätöskoneeseen, ja db databaseen

@@ -303,7 +303,7 @@
     (is (not= (count vastaus) 0))
     (is (not (nil? (:paatokset vastaus))) "Päätökset pitäisi löytyä")
     (is (= "Lupaukset" (:nimi (some :lupaukset (:paatokset vastaus)))) "Lupauspäätös pitäisi löytyä")
-    (is (= "Tavoitehinnan muutokset" (:nimi (some :tavoitehinnan-muutokset (:paatokset vastaus)))) "Tavoitehinnan muutokset -päätös pitäisi löytyä")
+    (is (= "Tavoitehinnan pysyvät muutokset" (:nimi (some :tavoitehinnan-pysyvat-muutokset (:paatokset vastaus)))) "Tavoitehinnan muutokset -päätös pitäisi löytyä")
     (is (= "Hoitovuoden lopun indeksikorjaus" (:nimi (some :hoitovuoden-lopun-indeksikorjaus (:paatokset vastaus)))) "Hoitovuoden lopun indeksikorjaus -päätös pitäisi löytyä")
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi (some :hoitovuoden-lopun-tavoite-ja-kattohinta (:paatokset vastaus)))) "Hoitovuoden lopun tavoite- ja kattohinta -päätös pitäisi löytyä")
     (is (= "Tavoitehinnan alitus" (:nimi (some :tavoitehinnan-alitus (:paatokset vastaus)))) "Tavoitehinnan alitus -päätös pitäisi löytyä")
