@@ -162,7 +162,7 @@
     "sille hoitoluokkaryhmälle, jota on reitillä eniten."))
 
 (def ^:private kalustoyhteenveto-ei-reitteja-teksti
-  "Ei talvihoitoreittejä. Aloita tuomalla reitit käyttäen excel-tiedostoa.")
+  "Ei yhtään talvihoitoreittiä. Aloita tuomalla reitit käyttäen Excel-tiedostoa.")
 
 (defn- mhu26-urakka?
   "Talvihoitoreittien kalustoyhteenveto näytetään vain MHU26-urakoille eli teiden hoidon
@@ -250,7 +250,7 @@
          "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]
 
       (if (empty? talvihoitoreitit)
-        [:div kalustoyhteenveto-ei-reitteja-teksti]
+        [:div.kalustoyhteenveto-ei-reitteja kalustoyhteenveto-ei-reitteja-teksti]
 
         (doall
           [:div.margin-top-16

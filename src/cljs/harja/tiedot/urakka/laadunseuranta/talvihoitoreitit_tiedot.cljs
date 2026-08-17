@@ -146,6 +146,7 @@
   (process-event
     [{:keys [vastaus]} app]
     (log/error "HaeKalustoyhteenvetoEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "Yhteenvedon noutaminen epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
     (dissoc app :kalustoyhteenveto))
 
   HaeTalvihoitoreititOnnistui
