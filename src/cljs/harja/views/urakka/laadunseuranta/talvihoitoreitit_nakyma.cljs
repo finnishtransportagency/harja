@@ -226,12 +226,13 @@
       (when (and (mhu26-urakka? @nav/valittu-urakka)
                  (or (seq talvihoitoreitit) (seq kalustoyhteenveto)))
         [kalustoyhteenveto-osio kalustoyhteenveto])
-      [:div.flex-row {:style {:justify-content "space-between"}}
-       [:div {:style {:display "flex"}}
+
+      [:div.talvihoitoreitit-otsikko-ja-painikkeet
+       [:h2 "Suunnitellut talvihoitoreitit"]
+       [:div.talvihoitoreitit-painikkeet
         ;; Jos talvihoitoreittejä on olemassa, niin annetaan käyttäjän ladata ne Exceliin
         (when-not (empty? talvihoitoreitit)
-          [:span [:form {:style {:margin-left "auto"}
-                         :target "_blank" :method "POST"
+          [:span [:form {:target "_blank" :method "POST"
                          :action (k/excel-url :lataa-talvihoitoreitit-exceliin)}
                   [:input {:type "hidden" :name "parametrit"
                            :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)})}]
@@ -244,10 +245,10 @@
           :url "lue-talvihoitoreitit-excelista"
           :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
           :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]
-
-        [yleiset/tiedoston-lataus-linkki
-         "Lataa Excel-pohja"
-         "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]
+        [:div.talvihoitoreitit-pohja-linkki
+         [yleiset/tiedoston-lataus-linkki
+          "Lataa Excel-pohja"
+          "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]]
 
       (if (empty? talvihoitoreitit)
         [:div.kalustoyhteenveto-ei-reitteja kalustoyhteenveto-ei-reitteja-teksti]

@@ -127,4 +127,42 @@
     font-size: 14px;
     margin-top: 24px;
   }
+
+  .talvihoitoreitit-otsikko-ja-painikkeet {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  .talvihoitoreitit-painikkeet {
+    display: flex;
+    gap: @valistys-8;
+
+    form,
+    div {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .talvihoitoreitit-pohja-linkki {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    a {
+      display: flex;
+      align-items: center;
+    }
+
+    span {
+      line-height: 1;
+      vertical-align: middle;
+    }
+  }
 }
