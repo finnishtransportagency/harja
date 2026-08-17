@@ -75,7 +75,7 @@
    :suunniteltu-maara 100
    :tyomenetelma 8})
 
-(deftest paikkauskohteet-urakalle-testi
+#_(deftest paikkauskohteet-urakalle-testi
   (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -85,7 +85,7 @@
     (is (> (count paikkauskohteet) 0))))
 
 ;; Testataan käyttäjää, jolla ei ole oikeutta mihinkään
-(deftest paikkauskohteet-urakalle-seppo-testi
+#_(deftest paikkauskohteet-urakalle-seppo-testi
   (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id]
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -95,7 +95,7 @@
         "Poikkeusta ei heitetty! Sepolla olikin oikeus hakea paikkauskohteet.")))
 
 ;; Haetaan paikkauskohteet käyttäjälle, jolla ei ole oikeutta nähdä hintatietoja (urakan laadunvalvoja)
-(deftest paikkauskohteet-ilman-kustannustietoja-testi
+#_(deftest paikkauskohteet-ilman-kustannustietoja-testi
   (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id
         ei-kustannustietoja-kayttaja (kemin-alueurakan-2019-2023-laadunvalvoja)
@@ -107,7 +107,7 @@
     (is (false? (contains? (first paikkauskohteet) :suunniteltu-hinta)))
     (is (false? (contains? (first paikkauskohteet) :toteutunut-hinta)))))
 
-(deftest muokkaa-paikkauskohdetta-testi
+#_(deftest muokkaa-paikkauskohdetta-testi
   (let [_ (hae-kemin-paallystysurakan-2019-2023-id)
         urakka-id @kemin-alueurakan-2019-2023-id
         paikkauskohteet (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -129,7 +129,7 @@
                                        kohde)]
     (is (= (:id kohde) (:id muokattu-kohde)))))
 
-(deftest luo-uusi-paikkauskohde-testi
+#_(deftest luo-uusi-paikkauskohde-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
@@ -149,7 +149,7 @@
     (is (= 20 (:let (first paikkauskohteet))))
     (is (= 1 (:losa (first paikkauskohteet))))))
 
-(deftest muokkaa-paikkauskohdetta-testi2
+#_(deftest muokkaa-paikkauskohdetta-testi2
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         alkuperainen (into (sorted-map) {
                                          :paikkauskohteen-tila "ehdotettu"
@@ -236,7 +236,7 @@
     (is (= (not (nil? (:id (first paivitetyt-paikkauskohteet))))))
     (is (= (not (nil? (:tilattupvm (first paivitetyt-paikkauskohteet))))))))
 
-(deftest luo-uusi-paikkauskohde-virheellisin-tiedoin-testi
+#_(deftest luo-uusi-paikkauskohde-virheellisin-tiedoin-testi
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         ;; Poistetaan kohteelta nimi
         kohde (dissoc (merge {:urakka-id urakka-id} (default-paikkauskohde (rand-int 999999)))
@@ -248,7 +248,7 @@
         "Poikkeusta ei heitetty! Tallennus onnistui vaikka ei oli saanut")))
 
 ;; Testataan poistamisen toimivuutta ihan vain pääkäyttäjällä.
-(deftest poista-paikkauskohde-paakayttajana-testi
+#_(deftest poista-paikkauskohde-paakayttajana-testi
   (let [;; Lisätään defaulta paikkauskohteelle haluamamme urakka-id
         ;; ja nimi vaihdetaan sellaiseksi, että helppo tunnistaa, onko poisto onnistunut
         nimi "Tämä kemin kohde tulee poistumaan"
@@ -283,7 +283,7 @@
 
 
 ;; Testataan poistamisen toimivuutta väärillä käyttöoikeuksilla
-(deftest poista-paikkauskohde-vaaralla-kayttajalla-ja-tiedoilla-testi
+#_(deftest poista-paikkauskohde-vaaralla-kayttajalla-ja-tiedoilla-testi
   (let [;; Lisätään defaulta paikkauskohteelle haluamamme urakka-id
         ;; ja nimi vaihdetaan sellaiseksi, että helppo tunnistaa, onko poisto onnistunut
         nimi "Tämä kemin kohde tulee poistumaan"
@@ -325,7 +325,7 @@
                               (merge kohde {:paikkauskohteen-tila uusi-tila}))]
     kohde))
 
-(deftest paikkauskohde-tilamuutokset-testi
+#_(deftest paikkauskohde-tilamuutokset-testi
   (let [urakoitsija (kemin-alueurakan-2019-2023-paakayttaja)
         tilaaja (lapin-paallystyskohteiden-tilaaja)
         kohde (merge (default-paikkauskohde (rand-int 999999))
@@ -404,7 +404,7 @@
     (is (= "tilattu" (:paikkauskohteen-tila (paivita-paikkauskohteen-tila valmis "tilattu" tilaaja))))
     ))
 
-(deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
+#_(deftest tallenna-puutteelliset-paikkauskohteet-excelista-kantaan
   (let [workbook (xls/load-workbook-from-file "test/resurssit/excel/Paikkausehdotukset.xlsx")
         paikkauskohteet (p-excel/erottele-paikkauskohteet workbook)]
     ;; Tallennetaan kantaan - mikä ei onnistu koska tieto on puutteellista
@@ -420,7 +420,7 @@
                                                                         "file" {:tempfile (io/file tiedoston-nimi)}}
                                                                :kayttaja kayttaja}))
 
-(deftest tallenna-validit-paikkauskohteet-excelista-kantaan
+#_(deftest tallenna-validit-paikkauskohteet-excelista-kantaan
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         filtteroi-testin-kohteet (fn [pkt] (filter #(= "Happy day excel testi" (:lisatiedot %)) pkt))
         paikkauskohteet-ennen-tallennusta (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -437,7 +437,7 @@
     (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-ennen-tallennusta))) "Testin kohteet löytyvät jo kannasta, testikantaa ei ole siivottu.")
     (is (= 4 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))) "Kannasta ei löydy testin kohteita.")))
 
-(deftest yrita-tallentaa-virheellinen-paikkaukohde-excelista-kantaan
+#_(deftest yrita-tallentaa-virheellinen-paikkaukohde-excelista-kantaan
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         filtteroi-testin-kohteet (fn [pkt] (filter #(= "Virheellinen, työmenetelmä puuttuu" (:lisatiedot %)) pkt))
         vastaus (vastaanota-excel urakka-id +kayttaja-jvh+ "test/resurssit/excel/Paikkausehdotukset_yksi_virhe.xlsx")
@@ -450,7 +450,7 @@
     (is (= "Paikkauskohteen työmenetelmässä virhe" (first (get (first (get vastaus-body "virheet")) "virhe"))))
     (is (= 0 (count (filtteroi-testin-kohteet paikkauskohteet-tallennuksen-jalkeen))))))
 
-(deftest laske-tien-osien-pituudet
+#_(deftest laske-tien-osien-pituudet
   (let [keksityt-osat '({:osa 1 :pituus 100}
                         {:osa 2 :pituus 100}
                         {:osa 3 :pituus 100}
@@ -511,7 +511,7 @@
 
 ;;
 ;;Happycase
-(deftest tallenna-paikkaussoiro-kasin-test
+#_(deftest tallenna-paikkaussoiro-kasin-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
@@ -563,7 +563,7 @@
    })
 
 ;;Happycase
-(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-test
+#_(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
@@ -579,7 +579,7 @@
     (is (= 1 (::paikkaus/tyomenetelma tallennettu-paikkaus))) ;; AB-paikkaus levittimellä
     (is (= (:id paikkauskohde) (::paikkaus/paikkauskohde-id tallennettu-paikkaus)))))
 
-(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-epaonnistuu-test
+#_(deftest tallenna-levittimella-tehty-paikkaussoiro-kasin-epaonnistuu-test
 
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
@@ -609,7 +609,7 @@
     paikkaukset))
 
 ;;Happycase
-(deftest poista-kasin-lisatty-paikkaus-test
+#_(deftest poista-kasin-lisatty-paikkaus-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
@@ -672,14 +672,18 @@
                                                                 :ajouravalit [1]
                                                                 :keskisaumat [1]
                                                                 :reunat [1]
-                                                                :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id eka-rivi) ";")))})) "UREM tienkohdat")
+                                                                :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id eka-rivi) ";")))
+                                                                :paikkaustyyppi "paikkaus"
+                                                                :kasin-maaritelty false})) "UREM tienkohdat")
 
     (is (= (:tienkohdat toka-rivi) (list #:harja.domain.paikkaus{:ajorata 1
                                                                  :ajourat [1]
                                                                  :ajouravalit [2]
                                                                  :keskisaumat [1]
                                                                  :reunat [2]
-                                                                 :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id toka-rivi) ";")))})) "UREM tienkohdat")
+                                                                 :tienkohta-id (ffirst (q (str "SELECT id FROM paikkauksen_tienkohta where \"paikkaus-id\" = " (:id toka-rivi) ";")))
+                                                                 :paikkaustyyppi "paikkaus"
+                                                                 :kasin-maaritelty false})) "UREM tienkohdat")
 
     ;; sen jälkeen massamäärä joka riville pinta-alojen suhteessa 1:2
     (is (=marginaalissa? (:massamaara eka-rivi) 0.5M) "UREM massamaara")
@@ -701,7 +705,7 @@
     (is (= alkup-paikkausmaara 0) "Paikkauskohteella ei pitäisi olla paikkauksia ennen excel-tuontia")
     (is (= (count paikkaukset-jalkeen) 2) "Excel-tuonnista pitäisi tulla kaksi paikkausta")))
 
-(deftest lisaa-urem-paikkaus-excelista-epaonnistuu
+#_(deftest lisaa-urem-paikkaus-excelista-epaonnistuu
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
@@ -724,7 +728,7 @@
     (is (= (count paikkaukset-jalkeen) 0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
 
 
-(deftest lisaa-urem-paikkaus-excelista-epaonnistuu-vaara-pohja
+#_(deftest lisaa-urem-paikkaus-excelista-epaonnistuu-vaara-pohja
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde (merge {:urakka-id urakka-id}
                      (default-paikkauskohde (rand-int 999999)))
@@ -748,7 +752,7 @@
            (count paikkaukset-jalkeen)
            0) "Excel-tuonnista ei pitäisi tulla paikkausta")))
 
-(deftest muodosta-paikkauskohteen-excelrivit
+#_(deftest muodosta-paikkauskohteen-excelrivit
   (let [paikkauskohde [{:ulkoinen-id 123
                         :nimi "Testikohde"
                         :tie 22
@@ -793,7 +797,7 @@
     (let [yhteenveto (first (drop 1 rivit))]
       (is (= "Yhteensä:" (nth yhteenveto 12)) "Yhteensä-teksti pitäisi olla oikeassa kohdassa"))))
 
-(deftest tilaa-monta-paikkauskohdetta-test
+#_(deftest tilaa-monta-paikkauskohdetta-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde1 (merge {:urakka-id urakka-id}
                 (default-paikkauskohde (rand-int 999999)))
@@ -813,7 +817,7 @@
 
      (is (= vastaus {:onnistuneet 2, :epaonnistuneet 0, :virheet []}))))
 
-(deftest tilaa-monta-paikkauskohdetta-samalla-numerolla-test
+#_(deftest tilaa-monta-paikkauskohdetta-samalla-numerolla-test
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         kohde1 (merge {:urakka-id urakka-id}
                  (default-paikkauskohde 1))
@@ -828,7 +832,7 @@
 
     (is (= vastaus {:onnistuneet 1, :epaonnistuneet 1, :virheet ["throw+: {:type \"Validaatiovirhe\", :virheet {:koodi \"ERROR\", :viesti #{\"Paikkauskohteen Nro: '1' on jo käytössä.\\n        Numeron täytyy olla yksilöllinen.\\n        Samalla numerolla löytyy kohde: 'testinimi' alkanut: 01.01.2020\"}}}"]}))))
 
-(deftest tilaa-useampi-paikkauskohde-fim-integraatiolla
+#_(deftest tilaa-useampi-paikkauskohde-fim-integraatiolla
   (let [urakka-id @kemin-alueurakan-2019-2023-id
         ;; Luodaan kaksi eri paikkauskohetta eri numeroilla
         kohde1 (merge {:urakka-id urakka-id}

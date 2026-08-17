@@ -220,7 +220,7 @@
 
    {:nimi         :tyomaakokous
     :parametrit   [{:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Sanktioiden yhteenveto" :oletusarvo true}
-                   ;;    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöraportti" :oletusarvo true} Jätetään tässä vaiheessa pois, koska muutos- ja lisätyöraportti toinmii vain hoitovuoikohtaisesti
+                   {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Muutos- ja lisätyöraportti" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laskutusyhteenveto" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Laatupoikkeamat" :oletusarvo true}
                    {:tyyppi "checkbox", :konteksti "urakka", :pakollinen true, :nimi "Ympäristöraportti" :oletusarvo true}
@@ -324,7 +324,7 @@
     :urakkatyyppi    #{:hoito :teiden-hoito}}
 
    {:nimi         :valitavoiteraportti
-    :parametrit   [{:tyyppi nil, :konteksti nil, :pakollinen nil, :nimi nil}]
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"urakka"}
     :kuvaus       "Välitavoiteraportti"
     :suorita      #'harja.palvelin.raportointi.raportit.valitavoiteraportti/suorita
@@ -483,4 +483,3 @@
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
-

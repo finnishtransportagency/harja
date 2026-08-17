@@ -29,7 +29,7 @@
   hae-tiemerkinnan-suorittavat-urakat hae-kohteen-merkinta-ja-jyrsintatiedot merkitse-kohde-valmiiksi-tiemerkintaan<!
   tallenna-paallystyskohteen-aikataulu! tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
   tallenna-yllapitokohteen-kustannukset-yhaid! onko-olemassa-urakalla? hae-urakkaan-liittyvat-tiemerkintakohteet
-  hae-urakkaan-kuuluvat-yllapitokohteet paivita-yllapitokohteen-tiemerkintaaikataulu!
+  hae-urakkaan-kuuluvat-yllapitokohteet hae-yllapitokohde-urakan-nimella paivita-yllapitokohteen-tiemerkintaaikataulu!
   paivita-yllapitokohteen-paallystysilmoituksen-aikataulu<! hae-kaikki-urakan-yllapitokohteet
   hae-paikkauskohteen-paikkaukset-alueelle hae-paikkauskohteen-paikkaukset
   hae-yllapitokohteiden-tiedot-sahkopostilahetykseen)

@@ -12,7 +12,7 @@
             [harja.tiedot.kanavat.urakka.kanavaurakka :as ku]
             [harja.pvm :as pvm]
             [harja.loki :refer [log]]
-            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje ajax-loader-pieni] :as yleiset]
+            [harja.ui.yleiset :refer [livi-pudotusvalikko vihje ajax-loader-pieni tooltip] :as yleiset]
             [harja.tiedot.raportit :as raportit]
             [cljs.core.async :refer [<! timeout]]
             [harja.views.kartta :as kartta]
@@ -181,12 +181,15 @@
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (defn vain-hoitokausivalinta? [raportti]
-  (#{:suolasakko :muutos-ja-lisatyot} raportti))
+  (#{:suolasakko :muutos-ja-lisatyot :valitavoiteraportti} raportti))
 
 ;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
 (defn ei-kuukausivalintaa? [raportti]
   (#{:mpu-paikkausten-yhteenveto
-     :ppu-paikkausten-yhteenveto} raportti))
+     :ppu-paikkausten-yhteenveto
+     :valitavoiteraportti
+     :muutos-ja-lisatyot
+     :ymparistoraportti} raportti))
 
 (defn vain-kuukausivalinta? [raportti urakka-valittu?]
   ;; Näytetään vain kuukausivalinta, jos kyseessä on työmaakokous
@@ -262,22 +265,22 @@
         pvm-rajattu-eiliseen? (boolean (#{:materiaaliraportti :pohjavesialueiden-suolatoteumat} (:nimi @valittu-raporttityyppi)))]
     [:span
      [:div.raportin-vuosi-hk-kk-valinta
-      [ui-valinnat/vuosi {:disabled
-                          (or @vapaa-aikavali?
-                              vain-hoitokausivalinta?
+      (when-not vain-hoitokausivalinta?
+        [ui-valinnat/vuosi {:disabled
+                            (or @vapaa-aikavali?
                               (and vain-kuukausivalinta?
-                                   ;; Hoidossa /MHU:Ssa valitaan ensin hoitokausi, ja se määrää minkä vuoden
-                                   ;; kuukauden voi valita.
-                                   ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
-                                   ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
-                                   ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
-                                   ;; disabloidaan vuosi-valinta vain hoidon urakoille
-                                   (#{:hoito :teiden-hoito} urakkatyyppi)))}
-       vuosi-eka vuosi-vika valittu-vuosi
-       #(do
-         (reset! valittu-vuosi %)
-         (reset! valittu-hoitokausi nil)
-         (reset! valittu-kuukausi nil))]
+                                ;; Hoidossa /MHU:Ssa valitaan ensin hoitokausi, ja se määrää minkä vuoden
+                                ;; kuukauden voi valita.
+                                ;; Ylläpidossa ei ole hoitokausivalintaa, joten on pakko valita
+                                ;; ensin vuosi, joka sitten taas määrää minkä vuoden kuukauden voi valita.
+                                ;; Tästä syystä, jos vain-kuukausivalinta on tosi,
+                                ;; disabloidaan vuosi-valinta vain hoidon urakoille
+                                (#{:hoito :teiden-hoito} urakkatyyppi)))}
+         vuosi-eka vuosi-vika valittu-vuosi
+         #(do
+            (reset! valittu-vuosi %)
+            (reset! valittu-hoitokausi nil)
+            (reset! valittu-kuukausi nil))])
       ;; Erikoiskeissi, miksi hassunnäköisiä ehtoja:
       ;; Jos valittuna on koko maa tai hallintayksikkö, mutta ei urakkaa, silloin
       ;; urakkatyyppi (alasvetovalinnasta) on :hoito, mutta hoitourakassa? saa arvon null
@@ -481,7 +484,7 @@
    "Laatupoikkeamat" :laatupoikkeamaraportti
    "Laskutusyhteenveto" :laskutusyhteenveto
    "Materiaaliraportti" :materiaaliraportti
-   ;"Muutos- ja lisätyöraportti" :muutos-ja-lisatyoraportti ;; Jätetaan uudempi versio pois, koska se toimii vain hoitovuosi tasolla
+   "Muutos- ja lisätyöraportti" :muutos-ja-lisatyoraportti
    "Sanktioiden yhteenveto" :sanktioraportti
    "Soratietarkastukset" :soratietarkastusraportti
    "Tiestötarkastukset" :tiestotarkastusraportti
@@ -817,7 +820,11 @@
             [:h3 "Raportin tiedot"]
 
             [yleiset/tietoja {:class "border-bottom raporttivalinnat-valistys"}
-             "Elinvoimakeskus" [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
+             [:span "Elinvoimakeskus\u00a0"
+              [tooltip {:suunta :oikea}
+               [ikonit/livicon-info-circle]
+               "Urakat on siirretty ELY-alueilta elinvoimakeskuksiin. Tämän vuoksi myös historiallisia tietoja haettaessa haut kohdistuvat uuteen elinvoimakeskukseen."]]
+             [hallintayksikko-ja-urakkatyyppi v-hal v-ur-tyyppi]
              "Urakka" (cond
                         ;; Latausindikaattori jos urakkahaku on käynnissä
                         (and v-hal ladataanko-urakoita? @nav/urakka-haku-kaynnissa?)

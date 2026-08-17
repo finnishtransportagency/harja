@@ -47,7 +47,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           # Estä turha kredentiaalien tallennus levylle (tietoturva)
           persist-credentials: false
@@ -105,7 +105,7 @@ jobs:
           run-id: ${{ inputs.artifact-run-id }}
 
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@254c19bd240aabef8777f48595e9d2d7b972184b # v6.2.1
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           aws-region: "eu-west-1"
           role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"
@@ -178,14 +178,14 @@ jobs:
 
       - name: Update ECS task definition (add image id)
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@6853cfae8c3a7d978fbf68b5a55453395541dfbb # v1.8.5
+        uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea # v1.9.0
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@a310a830f5c14e583e35d84e4e1ec7dd177c3c9c # v2.6.2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
@@ -233,7 +233,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
