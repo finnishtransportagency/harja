@@ -14,7 +14,7 @@
             [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]
-            [harja.views.urakka.valikatselmus.yhteenvetolaatikko :as yhteevetolaatikko]
+            [harja.views.urakka.valikatselmus.yhteenveto.valikatselmus-yhteenveto :as yhteevetolaatikko]
             [harja.views.urakka.valikatselmus.tavoitehinnan-muutokset :as tavoitehinnan-muutokset]
             [harja.views.urakka.valikatselmus.lupaukset :as lupaukset]
             [harja.views.urakka.valikatselmus.hintapaatokset :as hintapaatokset]
@@ -115,7 +115,7 @@
        [:div.hoitovuosi-info
         (when hoitovuosi-kesken?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä päättynyt."
-           (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi))" alkaen. "
+           (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi)) " alkaen. "
              (when (<= urakan-alkuvuosi 2024) " Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.")) nil])
         (when hoitokausi-tulevaisuudessa?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä alkanut." nil nil])])
@@ -182,7 +182,7 @@
            [:div.valikatselmus-haku
             [yleiset/ajax-loader-pieni "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
-            #_ [debug/debug app]
+            #_[debug/debug app]
             [:div.col-xs-12.col-md-7
 
              [valikatselmus-otsikko-ja-tiedot e! app]

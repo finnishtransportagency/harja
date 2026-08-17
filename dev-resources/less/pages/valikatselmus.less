@@ -243,8 +243,12 @@
 div.valikatselmus-yhteenveto {
 
   .yhteenveto-container & {
-    position: sticky;
-    top: @valistys-32;
+    // position: sticky;
+    // top: @valistys-32;
+  }
+  
+  &.osio {
+    margin-bottom: @valistys-16;
   }
 
   max-width: 532px;
@@ -306,9 +310,8 @@ div.valikatselmus-yhteenveto {
     color: @green-dark;
   }
   h2.yhteenveto {
-    font-size: 1.75rem;
-    margin-top: @valistys-8;
-    margin-bottom: @valistys-32;
+    margin: 0;
+    padding-bottom: @valistys-16;
   }
   h3 {
     margin-top: 1.375rem;
