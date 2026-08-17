@@ -86,6 +86,7 @@
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.toimenkuvat-palvelu :as toimenkuvat-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
+    [harja.palvelin.palvelut.hallinta.urakkaparametrit :as urakkaparametrit-hallinta]
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -890,6 +891,11 @@
       (component/using
         (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
         [:http-palvelin :db :excel-vienti])
+
+      :urakkaparametrit-hallinta
+      (component/using
+        (urakkaparametrit-hallinta/->UrakkaParametritHallinta)
+        [:http-palvelin :db])
 
       :urakkatilanne
       (component/using
