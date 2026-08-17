@@ -33,9 +33,7 @@ let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
 let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
 
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
-let testiArvonvahennysPerustelu2 = "CY-perustelu2-ei-vaikuta-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
-let testiArvonvahennysPerustelu4 = "CY-perustelu4";
 
 let testiurakka1 = "Rovaniemen MHU testiurakka (1. hoitovuosi)"; // mhu25 urakka
 let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka

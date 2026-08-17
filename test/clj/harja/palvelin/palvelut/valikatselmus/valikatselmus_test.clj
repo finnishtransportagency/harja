@@ -1,6 +1,8 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmus-test
   (:require [clojure.test :refer :all]
+            [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [harja.pvm :as pvm]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.domain.urakka :as urakka]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -10,9 +12,7 @@
             [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
-            [harja.tyokalut.yleiset :refer [round2]]
-            [harja.pvm :as pvm]
-            [harja.testi :refer :all])
+            [harja.tyokalut.yleiset :refer [round2]])
   (:import (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta)))
 
@@ -309,6 +309,53 @@
     (is (= "Tavoitehinnan alitus" (:nimi (some :tavoitehinnan-alitus (:paatokset vastaus)))) "Tavoitehinnan alitus -päätös pitäisi löytyä")
     (is (= "Hoidonjohtopalkkion muutos" (:nimi (some :hoidonjohtopalkkion-muutos (:paatokset vastaus)))) "Hoidonjohtopalkkion muutos -päätös pitäisi löytyä")
     (is (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi (some :valikatselmuspoytakirjaan-liitettavat-raportit (:paatokset vastaus)))) "Välikatselmuspöytäkirjaan liitettävät raportit -päätös pitäisi löytyä")))
+
+(deftest hae-valikatselmuksen-tiedot-hoitovuodelle-2025-arvonvahennykset-erotellaan
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokauden-alkuvuosi 2025
+        testikayttaja (kayttaja urakka-id)
+        luoja-id (:id (first (q-map "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'")))
+        toimenpideinstanssi-id (:id (first (q-map (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s ORDER BY id LIMIT 1" urakka-id))))
+        sanktiotyyppi-id (:id (first (q-map "SELECT id FROM sanktiotyyppi WHERE koodi = 0 LIMIT 1")))
+        tavallinen-sanktio-kuvaus "Välikatselmuksen arvonvähennystesti - tavallinen sanktio"
+        arvonvahennys-kuvaus "Välikatselmuksen arvonvähennystesti - arvonvähennys"
+        tavallinen-sanktio-maara 1234.56M
+        arvonvahennys-maara 2345.67M]
+    (try
+      (let [tavallinen-laatupoikkeama-id
+            (i (format (str "INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, "
+                            "tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, "
+                            "tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) "
+                            "VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '', "
+                            "'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Testin vuoksi lisätty sanktio', 123, %s, NOW(), "
+                            "'2025-10-11 06:06.37', '2025-10-11 06:06.37', FALSE, FALSE, %s, '%s', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5)")
+                       luoja-id urakka-id tavallinen-sanktio-kuvaus))
+            _ (i (format (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+                              "VALUES ('A'::SANKTIOLAJI, %s, '2025-10-12 06:06.37', '2025-10-11 06:06.37', 'MAKU 2015', %s, %s, %s, FALSE, %s)")
+                         tavallinen-sanktio-maara tavallinen-laatupoikkeama-id toimenpideinstanssi-id sanktiotyyppi-id luoja-id))
+            arvonvahennys-laatupoikkeama-id
+            (i (format (str "INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, "
+                            "tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, "
+                            "tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) "
+                            "VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '', "
+                            "'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Testin vuoksi lisätty arvonvähennys', 123, %s, NOW(), "
+                            "'2025-11-11 06:06.37', '2025-11-11 06:06.37', FALSE, FALSE, %s, '%s', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5)")
+                       luoja-id urakka-id arvonvahennys-kuvaus))
+            _ (i (format (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+                              "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, %s, '2025-11-12 06:06.37', '2025-11-11 06:06.37', 'MAKU 2015', %s, %s, %s, FALSE, %s)")
+                         arvonvahennys-maara arvonvahennys-laatupoikkeama-id toimenpideinstanssi-id sanktiotyyppi-id luoja-id))
+            vastaus (with-redefs [;; Validoinnin takia päätöksiä ei saada kuluvalle hoitovuodelle haettua, joten feikataan nykyhetki tulevaisuuteen
+                                  pvm/nyt (constantly (pvm/luo-pvm-dec-kk 2026 10 15))]
+                      (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) testikayttaja
+                        {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi}))
+            sanktiot (get-in vastaus [:yhteenveto :sanktiot])
+            arvonvahennykset (get-in vastaus [:yhteenveto :arvonvahennykset])]
+        (is (seq sanktiot) "Sanktiot pitäisi löytyä")
+        (is (seq arvonvahennykset) "Arvonvähennykset pitäisi löytyä")
+        (is (some #(= (- tavallinen-sanktio-maara) (:maara %)) sanktiot) "Tavallisen sanktion löytyy")
+        (is (not-any? #(= "arvonvahennyssanktio" (:sakkoryhma %)) sanktiot) "Sanktiot-lista ei saa sisältää arvonvähennyksiä MHU 2025+ -urakalla")
+        (is (every? #(= "arvonvahennyssanktio" (:sakkoryhma %)) arvonvahennykset) "Arvonvähennysten listalla saa olla vain arvonvähennyksiä")
+        (is (some #(= (- arvonvahennys-maara) (:maara %)) arvonvahennykset) "Lisätty arvonvähennys löytyy")))))
 
 (deftest onko-paatoksia-tekematta-vuodelle-2021-test
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id

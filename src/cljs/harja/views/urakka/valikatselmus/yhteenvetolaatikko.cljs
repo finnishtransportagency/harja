@@ -22,22 +22,29 @@
         toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
         pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
+        arvonvahennykset-yht (apply + (map #(:maara %) (:arvonvahennykset yhteenvedon-tiedot)))
 
         ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
         hv-lopun-indkorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
         hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hv-lopun-indkorjaus-paatos) 0)
 
+        ;; Hoitovuoden lopun tavoitehinta tulee budjettitavoite -hausta, jossa on mukana vain tietokantaan suoraan tallennettu hoitokauden lopun tavoitehinta.
+        ;; Se ei siis ota huomioon muutoksia tai arvonvähennyksiä.
         hoitovuoden-lopun-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta]) 0)
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
+        ;; Sekä arvonvähennykset
         hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta
                                          ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
                                          (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus)
-                                         pysyvat-muutokset-toteuma-muutokset-yht)
+                                         pysyvat-muutokset-toteuma-muutokset-yht
+                                         arvonvahennykset-yht)
         hoitovuoden-lopun-kattohinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta]) 0)
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
+        ;; Sekä arvonvähennykset
         hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
                                        (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                       (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+                                       (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                       (* arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
         ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
@@ -79,11 +86,6 @@
                                         (+ (:maara a) (:indeksikorjaus a))
                                         0))
                                  (:sanktiot yhteenvedon-tiedot)))
-        arvonvahennykset (apply + (map (fn [a]
-                                         (if (= (:sakkoryhma a) "arvonvahennyssanktio")
-                                           (+ (:maara a) (:indeksikorjaus a))
-                                           0))
-                                    (:sanktiot yhteenvedon-tiedot)))
         ;; Alitukset ja ylitykset
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
@@ -134,11 +136,19 @@
            [:span (str (when (> kirjallisesti-sovitut-muutokset 0) "+") (fmt/euro-opt false kirjallisesti-sovitut-muutokset))]])
         [:div.flex-row.summa-rivi
          [:span.sisennys "• Toteumiin perustuvat muutokset"]
-         [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+") (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]]
+         [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+") (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]
+        (when arvonvahennykset-yht
+          [:div.flex-row.summa-rivi
+           [:span.sisennys "• Arvonvähennysten tavoitehintamuutokset"]
+           [:span (fmt/euro-opt false arvonvahennykset-yht)]])]
        ;; Käsin kirjatut tavoitehinnan oikaisut
        [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan muutokset"]
         [:span (str (when (> tavoitehinnan-muutokset 0) "+") (fmt/euro-opt false tavoitehinnan-muutokset))]])
+     (when (and (not (:muutosten_hallinta urakan-parametrit)) arvonvahennykset-yht)
+       [:div.flex-row.summa-rivi
+        [:span "Arvonvähennykset"]
+        [:span (fmt/euro-opt false arvonvahennykset-yht)]])
      [:div.flex-row.summa-rivi
       [:span "Hoitovuoden lopun indeksikorjaus"]
       [:span (fmt/euro-opt false hoitokauden_lopun_indeksikorjaus)]]
@@ -163,6 +173,10 @@
      [:div.flex-row.summa-rivi
       [:span "Hoidonjohtopalkkio"]
       [:span (fmt/euro-opt false hoidonjohtopalkkio)]]
+     (when arvonvahennykset-yht
+       [:div.flex-row.summa-rivi
+        [:span "Arvonvähennykset"]
+        [:span (fmt/euro-opt false arvonvahennykset-yht)]])
      (when (> muut-kulut 0)
        [:div.flex-row.summa-rivi
         [:span "Muut kulut"]
@@ -199,7 +213,7 @@
       [:span "Lupausbonus"]
       [:span (fmt/euro-opt false lupausbonus)]]
      [:div.flex-row.summa-rivi
-      [:span "Asiakastyytyväisyysbonus"]
+      [:span "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"]
       [:span (fmt/euro-opt false asiakastyytyvaisyysbonus)]]
      [:div.flex-row.summa-rivi
       [:span "Muut bonukset"]
@@ -237,9 +251,6 @@
      [:div.flex-row.summa-rivi
       [:span "Muut sanktiot"]
       [:span (fmt/euro-opt false muut-sanktiot)]]
-     [:div.flex-row.summa-rivi
-      [:span "Arvonvähennykset"]
-      [:span (fmt/euro-opt false arvonvahennykset)]]
      (when tavoitehinnan-ylityspaatos
        [:div.flex-row.summa-rivi
         [:span "Tavoitehinnan ylitys " (when (> urakoitsijan-tavoitehinnan-ylitysprosentti 0)

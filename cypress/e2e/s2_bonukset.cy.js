@@ -79,7 +79,8 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
 
         // Klikataan luotua bonusta gridissä
-        cy.contains('td', testiBonusPerustelu).click()
+        cy.contains('td', testiBonusPerustelu);
+        cy.contains('td', 'Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta').click();
 
         // Sivupaneeli aukeaa ja näyttää bonuksen tiedot
         cy.contains(testiBonusPerustelu).should('be.visible')

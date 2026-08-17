@@ -74,8 +74,8 @@
     [:div
      [debug/debug @muokattu]
      [lomake/lomake
-      {:otsikko "SANKTION TIEDOT"
-       :otsikko-elementti :h3
+      {:otsikko "ARVONVÄHENNYKSEN TIEDOT"
+       :otsikko-elementti :h4
        :ei-borderia? true
        :vayla-tyyli? true
        :luokka "padding-16 taustavari-taso3"
@@ -236,6 +236,7 @@
               :pakollinen? true
               :uusi-rivi? true
               :jos-tyhja "-"
+              :fmt fmt/euro-opt
               :muokattava? (constantly false)})
 
        ;; Havaittu ja Määrätty päivämäärät
