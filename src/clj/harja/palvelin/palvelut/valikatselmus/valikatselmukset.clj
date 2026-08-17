@@ -43,7 +43,7 @@
   [hoitokaudet]
   (mapv (fn [{:keys [alkupvm loppupvm]}]
           [alkupvm loppupvm])
-        hoitokaudet))
+    hoitokaudet))
 
 (defn heita-virhe [viesti]
   (throw+ viesti))
@@ -115,7 +115,17 @@
 
         ;; 2025 vuodesta eteenpäin on käytössä vuosittaiset muutoset/pysyvät muutokset
         muutosvaikutus (if (>= 2024 urakan-alkuvuosi) 0 taman-vuoden-muutokset-summa)
-        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0) muutosvaikutus)]
+
+        ;; Urakan alkuvuodesta 2025 eteenpäin myös arvonvähennykset vaikuttavat tavoiteintaan. Ja -26 hoitovuodesta eteenpäin myös vanhemmilla urakoilla
+        ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
+        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
+                                                                   :alkupvm (first valittu-hoitokausi)
+                                                                   :loppupvm (second valittu-hoitokausi)
+                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
+                                                            muutosvaikutus
+                                                            arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
     (bigdec (round2 2 hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta))))
 
@@ -273,7 +283,13 @@
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna sanktioita. Joten haetaan ne erikseen
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
-                                                   :loppupvm hoitokauden-loppupvm})
+                                                   :loppupvm hoitokauden-loppupvm
+                                                   :hoitokauden-alkuvuosi hoitovuosi})
+        ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
+        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
+                                                                   :alkupvm hoitokauden-alkupvm
+                                                                   :loppupvm hoitokauden-loppupvm
+                                                                   :hoitokauden-alkuvuosi hoitovuosi})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
@@ -313,6 +329,7 @@
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
                               :sanktiot sanktiot
+                              :arvonvahennykset arvonvahennykset
                               :budjettitavoite budjettitavoite-vuodelle
                               :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
                  :paatokset paatokset
@@ -927,10 +944,9 @@
         tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)]
     tietokanta-paatokset))
 
-(defn onko-paatoksia-tekematta
-  "Päätellään onko jokin päätös vielä tekemättä. Esim. raporttipäätös voi olla tekemättä ja tämä palauttaa true."
+(defn hae-urakan-mahdolliset-paatokset
+  "Yhteinen päätöstenhakufunktio"
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi]}]
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
@@ -947,19 +963,57 @@
         ;; Otetaan käytyn hoitovuoden budjetti
         budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) kuluva-hoitovuosi) %) budjettitavoite)
         hoitovuoden-lopun-kattohinta (:kattohinta-oikaistu budjettitavoite-vuodelle)
-        hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja kuluva-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta
+                                         db kayttaja
+                                         kuluva-hoitovuosi
+                                         valittu-hoitokausi
+                                         urakkaid
+                                         urakan-alkuvuosi
+                                         budjettitavoite-vuodelle)
 
         ; Haetaan ensin kaikki mahdolliset päätökset
-        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
+        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset
+                                mhu-tyyppi
+                                urakan-alkuvuosi
+                                urakan-loppuvuosi
+                                kuluva-hoitovuosi)
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset
+                                mahdolliset-paatokset
+                                toteutuneet-kustannukset
+                                hoitovuoden-lopun-kattohinta
+                                hoitovuoden-lopun-tavoitehinta)]
+    mahdolliset-paatokset))
+
+(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset-kojelautaan
+  "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
+  (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
+        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
+        ;; Muodostetaan vastaus
+        vastaus {:mahdolliset-paatokset mahdolliset-paatokset
+                 :tietokanta-paatokset tietokanta-paatokset}]
+    vastaus))
+
+(defn onko-paatoksia-tekematta
+  "Päätellään onko jokin päätös vielä tekemättä, mikä voi vaikuttaa lukituksiin. 
+  HOX jotkin päätökset lasketaan tästä pois."
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
+  (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
 
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
         ;; Poistetaan mahdollinen raporttipäätös
-        tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)]
-    (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))))
+        tietokanta-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) tietokanta-paatokset)
+
+        ;; Muodostetaan vastaus
+        vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
+    vastaus))
 
 (defrecord Valikatselmukset []
   component/Lifecycle

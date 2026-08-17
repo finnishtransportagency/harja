@@ -310,6 +310,7 @@
 (deftest mhu-korvausinvestointi
   (let [alkuaika "2022-10-01"
         loppuaika "2022-10-01"
+        sanktiopvm "2022-11-15"
         urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
 
         ;;Hae Korvausinvestoinnin toimenpideinstanssi
@@ -331,8 +332,7 @@
         ;; Hae hallinnolliset laiminlyönnit sanktiotyypin id
         sanktiotyyppi-id (:id (first (q-map (format "SELECT id FROM sanktiotyyppi st WHERE st.nimi = '%s';"
                                               "Hallinnolliset laiminlyönnit"))))
-        _ (lisaa-sanktio-urakalle 12 "C" alkuaika urakka-id (:id korvausinvestointi) sanktiotyyppi-id)
-
+        _ (lisaa-suorasanktio-urakalle 12 "C" sanktiopvm urakka-id (:id korvausinvestointi) sanktiotyyppi-id nil nil)
 
         _ (when (= (empty? @oulun-mhu-urakka-2022-2023))
             (reset! oulun-mhu-urakka-2022-2023 (hae-2022-2023-oulu-mhu-tiedot)))
