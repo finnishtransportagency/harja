@@ -111,7 +111,7 @@
         hoitovuosi-kesken? (pvm/valissa? nykyhetki (first valittu-hoitokausi) (second valittu-hoitokausi))
         hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi (pvm/nyt))]
     [:<>
-     (when (and (<= (count paatokset) 1) (or hoitovuosi-kesken? hoitokausi-tulevaisuudessa?))
+     (when (or hoitovuosi-kesken? hoitokausi-tulevaisuudessa?)
        [:div.hoitovuosi-info
         (when hoitovuosi-kesken?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä päättynyt."

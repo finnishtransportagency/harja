@@ -8,10 +8,7 @@
             [harja.domain.lupaus-domain :as lupaus-domain]))
 
 (def paatostyypit
-  [{:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
-   {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
-   {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 1 :paatostyyppi "lupaus"}
-   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
+  [ {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :nakyvyys_asti 2028 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
    ;; TODO: Speksi muuttui vielä. Jätetään vielä julkaisematta
@@ -27,10 +24,14 @@
    {:nimi "Tavoitehinnan ylitys" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 6 :paatostyyppi "tavoitehinta"}
    {:nimi "Kattohinnan ylitys" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 7 :paatostyyppi "kattohinta"}
    {:nimi "Kattohinnan ylitys" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 7 :paatostyyppi "kattohinta"}
-   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 8 :paatostyyppi "hoidonjohtopalkkio"}
-   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "hoidonjohtopalkkio"}
-   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 9 :paatostyyppi "raportti"}
-   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 9 :paatostyyppi "raportti"}])
+   {:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "lupaus"}
+   {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "lupaus"}
+   {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "lupaus"}
+
+   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 9 :paatostyyppi "hoidonjohtopalkkio"}
+   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 9 :paatostyyppi "hoidonjohtopalkkio"}
+   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 10 :paatostyyppi "raportti"}
+   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 10 :paatostyyppi "raportti"}])
 
 (defn distinct-by [vektori avain]
   (:result (reduce
@@ -144,11 +145,11 @@
   (cond
     ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
     (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
-    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Hoitovuosi ei ole päättynyt tai Tarjouksen tavoitehinta -päätös on täyttämättä tai lupausten toteumissa on vielä osa täyttämättä." true 1)
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Hoitovuosi ei ole päättynyt tai Tarjouksen tavoitehinta -päätös on täyttämättä tai lupausten toteumissa on vielä osa täyttämättä." true 8)
     (and validoinnit-kaytossa? (or (nil? luvatut-pisteet) (nil? toteutuneet-pisteet)))
-    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Lupauksia täyttämättä." true 1)
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Lupauksia täyttämättä." true 8)
     (and validoinnit-kaytossa? (or (nil? tarjouksen-tavoitehinta) (nil? tavoitehinta-indeksikorjattu)))
-    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Tarjouksen tavoitehintaa ei ole määritelty." true 1)
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Tarjouksen tavoitehintaa ei ole määritelty." true 8)
     (and toteutuneet-pisteet luvatut-pisteet tarjouksen-tavoitehinta tavoitehinta-indeksikorjattu)
     (let [;; Urakan parametreista lupaussanktion ja bonuksen prosentit
           urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
@@ -213,7 +214,7 @@
           paatokset)))
     ;; Ehdot eivät täyttyneet, otetaan lupauspäätökset pois listasta ja lisätään virheilmoitus päätökselle
     :else
-    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." true 1)))
+    (lisaa-paatos-virheellisena paatokset "Lupaukset" "Toteutuneita pisteitä, luvattuja pisteitä tai tarjouksen tavoitehintaa ei ole määritelty." true 8)))
 
 (defn valmistele-tavoitehinnan-muutospaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta kattohinta
                                              muokkaa-kattohinta? kuluva-hoitovuosi]
