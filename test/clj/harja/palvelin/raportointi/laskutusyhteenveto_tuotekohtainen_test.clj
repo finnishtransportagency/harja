@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.tuotekohtainen-raportti-test
+(ns harja.palvelin.raportointi.laskutusyhteenveto_tuotekohtainen-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
             [com.stuartsierra.component :as component]

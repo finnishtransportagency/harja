@@ -6,11 +6,18 @@
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-yhteiset :refer [taulukko-rivi]]))
 
 
-(defn- tuotekohtainen-rivit [data]
+(defn- tuotekohtainen-rivit [data hoitokauden-alkuvuosi urakan-alkuvuosi]
   [{:lihavoi? false
     :otsikko "Hankinnat"
     :avain_yht :hankinnat_laskutetaan
     :avain_hoitokausi :hankinnat_laskutettu}
+
+   ;; Saadaan näyttää, jos urakka alkaa 2025 tai aiemmillekin urakoille, mutta vasta -26 hoitovuonna
+   (when (or (>= urakan-alkuvuosi 2025) (>= hoitokauden-alkuvuosi 2026))
+     {:lihavoi? false
+      :otsikko "Arvonvähennykset"
+      :avain_yht :arvonvahennykset_laskutetaan
+      :avain_hoitokausi :arvonvahennykset_laskutettu})
 
    {:lihavoi? false
     :otsikko "Lisätyöt"
@@ -88,18 +95,15 @@
     :avain_yht :hj_palkkio_laskutetaan
     :avain_hoitokausi :hj_palkkio_laskutettu}
 
-   ;; MHU25 urakoille ei näytetä bonuksia & sanktioita 
-   (when-not (:onko_laskutusraja_kaytossa data)
-     {:lihavoi? false
-      :otsikko "Bonukset"
-      :avain_yht :bonukset_laskutetaan
-      :avain_hoitokausi :bonukset_laskutettu})
+   {:lihavoi? false
+    :otsikko "Bonukset"
+    :avain_yht :bonukset_laskutetaan
+    :avain_hoitokausi :bonukset_laskutettu}
 
-   (when-not (:onko_laskutusraja_kaytossa data)
-     {:lihavoi? false
-      :otsikko "Sanktiot"
-      :avain_yht :sakot_laskutetaan
-      :avain_hoitokausi :sakot_laskutettu})
+   {:lihavoi? false
+    :otsikko "Sanktiot"
+    :avain_yht :sakot_laskutetaan
+    :avain_hoitokausi :sakot_laskutettu}
 
    ;; Hoitovuoden päättäminen, näytetään vain jos arvot olemassa
    (when (yhteiset/raha-arvo-olemassa? (:hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu data))
@@ -199,7 +203,8 @@
 
 (defn- rivit-tuotekohtainen
   "Instanssitaulukkojen rivimääritykset"
-  [data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika]
+  [data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika
+   hoitokauden-alkuvuosi urakan-alkuvuosi]
   (let [;; MHU ja HJU hoidon johto- taulukko,
         ;; jossa näytetään hieman muista instansseista poikkeavia lukuja
         mhu-hju-rivit (fn [data kyseessa-kk-vali?]
@@ -207,11 +212,10 @@
                           {:kyseessa-kk-vali? kyseessa-kk-vali?
                            :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
                           (mhu-hju-maaritykset data)))
-
         taulukko-rivit (tee-taulukko-rivit data
                          {:kyseessa-kk-vali? kyseessa-kk-vali?
                           :tyhja-arvo (yhteiset/summa-fmt 0.00M)}
-                         (tuotekohtainen-rivit data))
+                         (tuotekohtainen-rivit data hoitokauden-alkuvuosi urakan-alkuvuosi))
 
         rahavaraus-rivit (rahavaraus-rivit
                            kyseessa-kk-vali?
@@ -230,14 +234,14 @@
                           :avain_hoitokausi :kaikki_laskutettu}])]
 
     ;; Mergetä ja palauta rivit
-    (if (= "MHU ja HJU hoidon johto" otsikko)
+    (if (or (= "MHU hoidon johto" otsikko) (= "MHU ja HJU hoidon johto" otsikko))
       (vec (concat (mhu-hju-rivit data kyseessa-kk-vali?) rahavaraus-rivit yhteensa-rivi))
       (vec (concat taulukko-rivit rahavaraus-rivit yhteensa-rivi)))))
 
 
 (defn taulukko-tuotekohtainen
   "Instanssikohtaiset taulukot"
-  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]}]
+  [{:keys [data otsikko laskutettu-teksti laskutetaan-teksti kyseessa-kk-vali? sheet-nimi]} hoitokauden-alkuvuosi urakan-alkuvuosi]
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
@@ -245,7 +249,8 @@
         rivit (into []
                 (remove nil?
                   (rivit-tuotekohtainen
-                    data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika)))]
+                    data otsikko kyseessa-kk-vali? rahavaraukset-nimet rahavaraukset-hoitokausi rahavaraukset-val-aika
+                    hoitokauden-alkuvuosi urakan-alkuvuosi)))]
 
     [:taulukko {:sheet-nimi sheet-nimi
                 :viimeinen-rivi-yhteenveto? false

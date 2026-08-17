@@ -72,7 +72,8 @@
    [:td.numero {:style {:width (:prosentti leveydet)}} (when prosentti prosentti)]])
 
 (defn- taulukoi-paaryhman-tehtavat
-  "Listataan kaksiportaisen pääryhmän tehtävät. Eli älä käytä tätä, mikäli pääryhmällä on toimenpiteitä."
+  "Listataan kaksiportaisen pääryhmän tehtävät. Eli älä käytä tätä, mikäli pääryhmällä on toimenpiteitä ja tehtäviä
+  eli kolmeportainen järjestely."
   [paaryhma-avain tehtavat]
   (for [l tehtavat
         :let [vahvistettu ((keyword (str (name paaryhma-avain) "-indeksikorjaus-vahvistettu")) l)]]
@@ -138,6 +139,7 @@
              hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
              rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
              toimistokulu-tehtavat (filter #(= "toimistokulut" (:toimenpideryhma %)) (:tehtavat toimenpide))
+             arvonvahennys-tehtavat (filter #(= "arvonvahennykset" (:toimenpideryhma %)) (:tehtavat toimenpide))
              palkka-tehtavat (filter #(= "palkat" (:toimenpideryhma %)) (:tehtavat toimenpide))
              negatiivinen? (big/gt (big/->big (or (:toimenpide-toteutunut-summa toimenpide) 0))
                              (big/->big (or (:toimenpide-budjetoitu-summa-indeksikorjattu toimenpide) 0)))
@@ -153,6 +155,7 @@
 
                                     :else
                                     (concat
+                                      (tehtavatason-rivitys toimenpide arvonvahennys-tehtavat false :tehtava_nimi)
                                       (tehtavatason-rivitys toimenpide toimistokulu-tehtavat false :tehtava_nimi)
                                       (tehtavatason-rivitys toimenpide palkka-tehtavat false :tehtava_nimi)
                                       (tehtavatason-rivitys toimenpide hankinta-tehtavat false :tehtava_nimi)
@@ -344,6 +347,12 @@
         bonukset (:bonukset rivit-paaryhmittain)
         ulkopuoliset-rahavaraukset (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)
         sanktiot (:sanktiot rivit-paaryhmittain)
+        arvonvahennykset (let [arv (:arvonvahennykset rivit-paaryhmittain)]
+                           (if (sequential? arv)
+                             ;; Kolmiportainen malli: domain palauttaa toimenpiteet sekvenssinä
+                             (toimenpidetason-rivitys e! app arv)
+                             ;; Kaksiportainen malli: domain palauttaa mapin, jonka :tehtavat sisältää rivit
+                             (taulukoi-paaryhman-tehtavat :arvonvahennykset (:tehtavat arv))))
         siirto-toteutunut (get-in rivit-paaryhmittain [:siirto :siirto-toteutunut])
         siirto-negatiivinen? (neg? (or siirto-toteutunut 0))
         siirtoa-viime-vuodelta? (not (or (nil? siirto-toteutunut) (= 0 siirto-toteutunut)))
@@ -394,8 +403,9 @@
          (paaryhman-rivitys e! app "Kilpailutettavat hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain true true)
          (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain true true)
          (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true true)
-         (paaryhman-rivitys e! app "Muutokset" :muutokset muutokset-rivit rivit-paaryhmittain true false)
          (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain true true)
+         (paaryhman-rivitys e! app "Muutokset" :muutokset muutokset-rivit rivit-paaryhmittain true false)
+         (paaryhman-rivitys e! app "Arvonvähennykset" :arvonvahennykset arvonvahennykset rivit-paaryhmittain false false)
          (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true true)
          (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false true)
          ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
