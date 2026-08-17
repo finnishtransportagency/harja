@@ -219,6 +219,7 @@
                        (assoc :bonusprosentti bonusprosentti)
                        (assoc :indeksi indeksi)
                        (assoc :indeksikorotus indeksikorotus)
+                       (assoc :hoitovuosi-kesken? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
                        (assoc :virheet virheet))
         ;; Poista kaikki lupauspäätökset listasta
         paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)

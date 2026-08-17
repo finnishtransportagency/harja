@@ -22,7 +22,7 @@
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
      
-     (when (not (contains? avatut-paatokset paatos-avain))
+     (when (and (not (:hoitovuosi-kesken? paatos)) (not (contains? avatut-paatokset paatos-avain)))
        [:div
         ;; Tuloksia ei näytetä mikäli tarjouksen tavoitehinta puuttuu
         (when (and (< 0 (:toteutuneet_pisteet paatos)) (:tavoitehinta paatos))
@@ -107,4 +107,8 @@
                                                                     :teksti "Automaattisesti kirjattu bonus/sanktio poistetaan."})
          #(if (:lupaussanktio paatos)
             [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
-            [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])]))
+            [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])
+
+     ;; Ei näytetä sisältöä, mikäli hoitovuosi on kesken
+     (when (and (:hoitovuosi-kesken? paatos) (not (contains? avatut-paatokset paatos-avain)))
+       [:p "Sisältö nähtävillä vasta, kun hiotokausi päättyy."])]))
