@@ -313,10 +313,12 @@
 
         [:div
          [:hr.paatos-hr]
-         (if-not (:virheet paatos)
-           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-            #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
-            #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]
-           [:div.muokkaustoiminnot
-            [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
-        [:div {:style {:padding-bottom "1rem"}}]])]))
+         [::div.muokkaustoiminnot
+          (when (:virheet paatos)
+            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+             (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+
+            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
+             (and (not (:virheet paatos)) voi-muokata?)
+             #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
+             #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]]]])]))
