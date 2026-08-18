@@ -70,7 +70,7 @@
       (> hoitokauden-numero 1)) (+ hoitokauden-numero urakan-aloitusvuosi)))
 
 
-(defn liita-yhteen-mapit-ja-korvaa-avain 
+(defn liita-yhteen-mapit-ja-korvaa-avain
   "Tekee join-liitoksen kahden kokoelman välillä jotka sisältävät mappeja.
    Parametrit:
   * kokoelma1: Kokoelma mappeja johon liitos tehdään
@@ -97,6 +97,19 @@
     (map (fn [a]
            (merge (get m2 a {}) (get m1 a {})))
       kaikki-avaimet)))
+
+
+(defn yhdista-mapit
+  "Yhdistetään tietokannasta tulevat ja päätöskoneelta tulevat päätökset niin, että
+   käytetään päätöskoneen päätöksiä, jos niitä ei ole vielä tietokannassa ja muuten tietokannan päätöksiä.
+   Vertailussa käytetään :nimi avainta. Se täytyy löytyä molemmista mapeistä."
+  [pk-paatokset db-paatokset]
+  (let [index-map (into {} (map (fn [m] [(:nimi m) m]) db-paatokset))]
+    (map (fn [m1]
+           (if-let [m2 (index-map (:nimi m1))]
+             m2
+             m1))
+      pk-paatokset)))
 
 
 (defn random-luku-valilta

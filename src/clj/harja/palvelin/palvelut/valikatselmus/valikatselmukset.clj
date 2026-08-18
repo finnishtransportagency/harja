@@ -1,40 +1,42 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmukset
-  (:require
-    [com.stuartsierra.component :as component]
-    [clojure.string :as string]
-    [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-    [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
-    [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-    [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
-    [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
-    [slingshot.slingshot :refer [throw+]]
-    [taoensso.timbre :as log]
-    [specql.core :refer [columns]]
-    [harja.tyokalut.functor :refer [fmap]]
-    [harja.tyokalut.yleiset :refer [round2]]
-    [harja.domain.kulut.valikatselmus :as valikatselmus]
-    [harja.domain.muokkaustiedot :as muokkaustiedot]
-    [harja.domain.oikeudet :as oikeudet]
-    [harja.domain.urakka :as urakka]
-    [harja.domain.valikatselmus :as valikatselmus-domain]
-    [harja.kyselyt.konversio :as konversio]
-    [harja.kyselyt.urakat :as q-urakat]
-    [harja.kyselyt.valikatselmus :as valikatselmus-q]
-    [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-    [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-    [harja.kyselyt.indeksit :as indeksi-kyselyt]
-    [harja.kyselyt.jarjestelman-tila :as jarjestelma-kyselyt]
-    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
-    [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
-    [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
-    [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]
-    [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
-    [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
-    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
-    [harja.pvm :as pvm]
-    [harja.domain.lupaus-domain :as lupaus-domain]
-    [clojure.java.jdbc :as jdbc]
-    [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]))
+  (:require [taoensso.timbre :as log]
+            [clojure.string :as string]
+            [clojure.java.jdbc :as jdbc]
+            [specql.core :refer [columns]]
+            [slingshot.slingshot :refer [throw+]]
+            [com.stuartsierra.component :as component]
+
+            [harja.pvm :as pvm]
+            [harja.tyokalut.functor :refer [fmap]]
+            [harja.tyokalut.yleiset :refer [round2] :as yleiset]
+
+            [harja.domain.urakka :as urakka]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.domain.kulut.valikatselmus :as valikatselmus]
+            [harja.domain.valikatselmus :as valikatselmus-domain]
+            [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+
+            [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
+            [harja.kyselyt.valikatselmus :as valikatselmus-q]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.jarjestelman-tila :as jarjestelma-kyselyt]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+
+            [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
+            [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
+            [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+            [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
+            [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]))
 
 (defn hoitokaudet-vektorimuotoon
   "Muuntaa hoitokaudet {:alkupvm .. :loppupvm ..} -muodosta vektoreiksi [alkupvm loppupvm],
@@ -247,7 +249,7 @@
                                 mahdolliset-paatokset)
 
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
-        paatokset (paatoskone/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
+        paatokset (yleiset/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
     paatokset))
 
 (defn hae-kustannukset-jarjestettyna [db urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm]
