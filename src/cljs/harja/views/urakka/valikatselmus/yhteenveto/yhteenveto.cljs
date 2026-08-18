@@ -108,6 +108,7 @@
         ;; Alitukset ja ylitykset
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
+
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
         ;; Lasketaan siis tavoitehinnan ylitys ja alitus olemassa olevista luvuista.
         tavoitehinnan-ylitys (if (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta))
@@ -184,9 +185,10 @@
       [:span.laskenta-rivi-lukema "Toteutuma yhteensä"]
       [:span.laskenta-rivi-lukema (fmt/euro-opt false toteuma-yht)]]
 
-     ;; Border himmeli
-     [:div {:class (when (or tavoitehinnan-ylitys? tavoitehinnan-alitus?) (str "toteutuneet-kustannukset " ympyra-class))}
 
+     ;; ----------------------------------------------------
+     ;; TAVOITEHINNAN YLITYS
+     [:div {:class (when (or tavoitehinnan-ylitys? tavoitehinnan-alitus?) (str "toteutuneet-kustannukset " ympyra-class))}
       ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
       (when tavoitehinnan-ylitys?
         [:<>
@@ -197,16 +199,17 @@
           [:h3 {:class (when (> tavoitehinnan-ylitys 0)
                          "negatiivinen-numero")} (fmt/euro-opt false tavoitehinnan-ylitys)]]
 
-         ;; FIXME 
          [:div.flex-row.summa-rivi
-          [:span.sisennys "• Urakoitsija maksaa (75 %)"]
-          [:span "jonkun verran"]]
+          [:span.sisennys (str "• Urakoitsija maksaa (" (:urakoitsijan_prosentti tavoitehinnan-ylityspaatos) "%)")]
+          [:span (fmt/euro-opt false (:urakoitsija_maksaa tavoitehinnan-ylityspaatos))]]
 
          [:div.flex-row.summa-rivi
-          [:span.sisennys "• Tilaaja maksaa (25 %)"]
-          [:span "jonkun verran"]]])
+          [:span.sisennys (str "• Tilaaja maksaa (" (:tilaajan_prosentti tavoitehinnan-ylityspaatos) "%)")]
+          [:span (fmt/euro-opt false (:tilaaja_maksaa tavoitehinnan-ylityspaatos))]]])
 
-      ;; Näytetään tavoitehinnan-alitusrivi mikäli alitus on olemassa
+
+      ;; ----------------------------------------------------
+      ;; TAVOITEHINNAN ALITUS
       (when tavoitehinnan-alitus?
         [:<>
          [:div.flex-row.summa-rivi
@@ -225,7 +228,8 @@
           [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]]])]
 
 
-     ;; Näytetään kattohinnna ylitysrivi, mikäli kattohinnan ylitys on olemassa
+     ;; ----------------------------------------------------
+     ;; KATTOHINNAN YLITYS
      (when kattohinnan-ylitys?
        ;; Näille erillinen border himmeli
        [:div {:class (str "toteutuneet-kustannukset " ympyra-class)}
@@ -237,10 +241,9 @@
          [:h3 {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
                         "negatiivinen-numero summa")} (fmt/euro-opt false kattohinnan-ylitys)]]
 
-        ;; FIXME 
         [:div.flex-row.summa-rivi
          [:span.sisennys "• Urakoitsija maksaa"]
-         [:span "jotain ne maksaa"]]
+         [:span (fmt/euro-opt false (:urakoitsija_maksaa kattohinnan-ylityspaatos))]]
 
         [:div.flex-row.summa-rivi
          [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
