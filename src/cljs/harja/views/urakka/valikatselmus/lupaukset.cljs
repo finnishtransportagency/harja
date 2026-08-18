@@ -111,4 +111,4 @@
 
      ;; Ei näytetä sisältöä, mikäli hoitovuosi on kesken
      (when (and (:hoitovuosi-kesken? paatos) (not (contains? avatut-paatokset paatos-avain)))
-       [:p "Sisältö nähtävillä vasta, kun hiotokausi päättyy."])]))
+       [:p "Sisältö nähtävillä vasta, kun hoitokausi päättyy."])]))
