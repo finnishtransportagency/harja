@@ -100,6 +100,7 @@
         paatokset (sort-by :jarjestys (conj paatokset lupauspaatos))]
     paatokset))
 
+
 (defn valmistele-tavoitehinnan-muutospaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta kattohinta
                                              muokkaa-kattohinta? kuluva-hoitovuosi]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
@@ -165,6 +166,7 @@
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
       paatokset)))
+
 
 (defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
                                        taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
@@ -245,6 +247,7 @@
       :else
       (apurit/lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Tavoitehintaa, tavoitehinnan muutoksia tai hoitokauden indeksikuukausia ei ole määritelty." true 3))))
 
+
 (defn valmistele-tavoitehinnan-alituspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi
                                              hoitokauden-alun-tavoitehinta hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset
                                              tietokanta-paatokset tavoitehinta-vahvistettu?]
@@ -308,6 +311,7 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
       paatokset)))
 
+
 (defn valmistele-tavoitehinnan-ylityspaatos [_db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi
                                              urakan-loppuvuosi kuluva-hoitovuosi hoitovuoden-lopun-tavoitehinta
                                              hoitovuoden-lopun-kattohinta kustannukset tietokanta-paatokset
@@ -360,6 +364,7 @@
                     (sort-by :jarjestys (conj paatokset tavoitehinnan-ylityspaatos))
                     paatokset)]
     paatokset))
+
 
 (defn valmistele-kattohinnan-paatokset [db validoinnit-kaytossa? urakkaid paatokset hoitovuoden-lopun-kattohinta kustannukset
                                         kuluva-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu?]
@@ -428,6 +433,7 @@
       :else
       (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kattohintaa tai toteutuneita kustannuksia ei ole määritelty." false 7))))
 
+
 ;; Hoitovuoden lopun tavoite- ja kattohinta
 (defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
                                                  tavoitehinnan-muutokset taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus
@@ -482,6 +488,7 @@
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Hoitovuoden lopun tavoite- ja kattohinta")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset hintapaatos))]
       paatokset)))
+
 
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset hv-lopun-tavoitehinta-ilman-indeksia
                                                   tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi]
@@ -544,6 +551,7 @@
           paatokset (sort-by :jarjestys (conj paatokset paatos))]
       paatokset)))
 
+
 (defn valmistele-raporttipaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset]
   (if (first (filter #(= (:nimi %) "Välikatselmuspöytäkirjaan liitettävät raportit") paatokset))
     ;; Mikäli raporttipäätös on olemassa
@@ -562,6 +570,7 @@
                              (str/replace #"ä" "a")
                              (str/replace #" " "-")
                              (str/replace #"--" "-")))))
+
 
 (defn filtteroi-mahdolliset-paatokset
   "Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan.

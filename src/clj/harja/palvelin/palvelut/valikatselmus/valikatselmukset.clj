@@ -30,6 +30,7 @@
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
             [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
+            [harja.palvelin.palvelut.valikatselmus.apurit :as v-apurit]
             [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -159,7 +160,7 @@
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi))
         valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
         mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
-        mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
+        mhu-tyyppi (v-apurit/urakan-hoitotyyppi mhu+urakka?)
         tavoitehinta-vahvistettu? (:exists (first (budjettisuunnittelu-q/onko-kustannussuunnitelma-vahvistettu db
                                                     {:urakkaid urakkaid
                                                      :hoitovuosinro hoitovuosinro})))
@@ -187,7 +188,7 @@
         taman-vuoden-muutokset-summa (if (:muutosten_hallinta urakan-parametrit)
                                        (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
                                        0)
-        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
+        mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
         hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
         arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
                                                                    :alkupvm (first valittu-hoitokausi)
@@ -1041,7 +1042,7 @@
                                                          kuluva-hoitovuosi toteutuneet-kustannukset
                                                          hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
   (let [; Haetaan ensin kaikki mahdolliset päätökset
-        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
+        mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
         mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
         ;; Poistetaan mahdollinen raporttipäätös
         mahdolliset-paatokset (remove (fn [rivi] (= (:nimi rivi) "Välikatselmuspöytäkirjaan liitettävät raportit")) mahdolliset-paatokset)
@@ -1061,7 +1062,7 @@
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi))
         valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
         mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
-        mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
+        mhu-tyyppi (v-apurit/urakan-hoitotyyppi mhu+urakka?)
         ;; Haetaan urakan taloustiedot, jotta tiedetään kuuluuko tavoitehinnan alitus, ylitys ja kattohinta pakettiin
         kustannukset (hae-kustannukset-jarjestettyna db urakkaid kuluva-hoitovuosi
                        (pvm/hoitokauden-alkupvm kuluva-hoitovuosi) (pvm/hoitokauden-loppupvm (inc kuluva-hoitovuosi)))
@@ -1079,7 +1080,7 @@
                                          budjettitavoite-vuodelle)
 
         ; Haetaan ensin kaikki mahdolliset päätökset
-        mahdolliset-paatokset (paatoskone/kaikki-mahdolliset-paatokset
+        mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset
                                 mhu-tyyppi
                                 urakan-alkuvuosi
                                 urakan-loppuvuosi
