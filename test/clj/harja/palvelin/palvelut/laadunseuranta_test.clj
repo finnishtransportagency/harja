@@ -32,8 +32,9 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
-            [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID)
            (clojure.lang ExceptionInfo)
            (harja.domain.roolit EiOikeutta))

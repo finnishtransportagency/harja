@@ -438,11 +438,11 @@
 
 (defn hae-bonus-profiilit-admin
   [db user]
-  (sanktio-konfiguraatio/hae-bonus-profiilit-admin db user))
+  (bonus-konfiguraatio/hae-bonus-profiilit-admin db user))
 
 (defn hae-bonus-profiilin-detalji-admin
   [db user tiedot]
-  (sanktio-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
+  (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
