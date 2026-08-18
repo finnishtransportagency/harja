@@ -248,10 +248,7 @@
   [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
   (let [paatos-avain :tavoitehinnan-pysyvat-muutokset
         paatos-tehty? (boolean (:id paatos))
-        hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
-
-
         paatoksen-tiedot (merge
                            paatos
                            {:urakkaid (-> @tila/yleiset :urakka :id)})
@@ -274,28 +271,37 @@
          [:div.flex-row.laskenta-avattuna.semibold
           [:div "Kirjallisesti sovitut muutokset"]
           [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :kirjallisesti_sovitut_muutokset)]]
+
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Pysyvät muutokset"]
           [:span (positiivinen-arvo-fn :pysyvat_muutokset)]]
+
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Johto- ja hallintokorvauksen muutokset"]
           [:span (positiivinen-arvo-fn :johto_ja_hallintakorvaus_muutokset )]]
+
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Muutostyöt (erillisrahoitetut)"]
           [:span (positiivinen-arvo-fn :muutostyo_muutokset)]]
+
          [:div.flex-row.laskenta-avattuna.semibold
           [:div "Toteumiin perustuvat tavoitehintamuutokset"]
           [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :toteumiin_perustuvat_muutokset)]]
+
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"]
           [:span (positiivinen-arvo-fn :tehtava_ja_maaratoteumamuutokset)]]
+
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Rahavarausten muutokset"]
           [:span (positiivinen-arvo-fn :rahavarausten_muutokset)]]
+
          [:div.flex-row.laskenta-rivi.semibold
           [:div "Arvonvähennysten tavoitehintamuutokset"]
           [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :arvonvahennysten_muutokset)]]
+
          [:hr.paatos-hr {:style {:padding-bottom "0.5rem"}}]
+
          [:div.flex-row {:aria-live "polite"}
           [:div.big-text "Tavoitehinnan muutokset yhteensä"]
           [:div.big-text.lihavoitu (positiivinen-arvo-fn :tavoitehinnan_muutokset_yhteensa)]]]
@@ -305,14 +311,15 @@
           [yleiset/linkki " siirry Muutokset -sivulle."
            #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
               {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]
+
          [:p "Arvonvähennysten kirjaaminen"
           [yleiset/linkki " siirry Sanktiot ja bonukset -sivulle."
            #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
               {:taso1 :urakat :taso2 :laadunseuranta :taso3 :sanktiot})]]]
 
-
         [:div
          [:hr.paatos-hr]
+
          [::div.muokkaustoiminnot
           (when (:virheet paatos)
             [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
