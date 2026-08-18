@@ -1,5 +1,7 @@
 (ns harja.views.urakka.valikatselmus.yhteenveto.yhteenveto
   (:require [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
+            [harja.tiedot.navigaatio :as nav]
             [harja.views.urakka.valikatselmus.yhteenveto.luvut :as luvut]
             [harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset :as bonukset]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
@@ -59,11 +61,10 @@
       [:span (str (when (> tavoitehinnan-muutokset 0) "+")
                (fmt/euro-opt false tavoitehinnan-muutokset))]])
 
-   (when (and
-           (not (:muutosten_hallinta urakan-parametrit))
-           arvonvahennykset-yht)
+   ;; FIXME .. tuleekohan toisen pularin mukana
+   (when false
      [:div.flex-row.summa-rivi
-      [:span "Arvonvähennykset"]
+      [:span "Arvonvähennysten tavoitehintamuutokset"]
       [:span (fmt/euro-opt false arvonvahennykset-yht)]])
 
    [:div.flex-row.summa-rivi
@@ -82,10 +83,12 @@
 
 
 (defn osio-toteutuneet-kustannukset
-  [{:keys [paatokset]}
+  [{:keys [paatokset hoitokauden-alkuvuosi]}
    {:keys [yhteenvedon-tiedot arvonvahennykset-yht
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
-  (let [;; Toteutuneet kustannukset
+  (let [urakan-loppuvuosi (some-> @nav/valittu-urakka :loppupvm pvm/vuosi)
+        viimeinen-hoitovuosi? (= hoitokauden-alkuvuosi (dec urakan-loppuvuosi))
+        ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
         ;; Välikatselmuksessa Hankintakustannuksiin lisätään toteutuneet Rahavaraukset.
         hankintakustannukset (or
@@ -245,9 +248,11 @@
          [:span.sisennys "• Urakoitsija maksaa"]
          [:span (fmt/euro-opt false (:urakoitsija_maksaa kattohinnan-ylityspaatos))]]
 
-        [:div.flex-row.summa-rivi
-         [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
-         [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]]])]))
+        ;; Ei tarvitse näyttää siirtoja viimeisenä hoitovuonna
+        (when-not viimeinen-hoitovuosi?
+          [:div.flex-row.summa-rivi
+           [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
+           [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]])])]))
 
 
 (defn yhteenvetolaatikko [_e! app]

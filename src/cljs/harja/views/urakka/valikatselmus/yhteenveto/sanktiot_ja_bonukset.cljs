@@ -37,8 +37,8 @@
       [:span (fmt/euro-opt false muut-bonukset)]]]))
 
 
-(defn osio-sanktiot [{:keys [paatokset]}
-                     {:keys [yhteenvedon-tiedot]}]
+(defn osio-sanktiot [{:keys [paatokset urakan-parametrit]}
+                     {:keys [yhteenvedon-tiedot arvonvahennykset-yht]}]
   (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
         lupaussanktio (or (luvut/arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
         muut-sanktiot (apply + (map (fn [a]
@@ -61,7 +61,15 @@
 
      [:div.flex-row.summa-rivi
       [:span "Muut sanktiot"]
-      [:span (fmt/euro-opt false muut-sanktiot)]]]))
+      [:span (fmt/euro-opt false muut-sanktiot)]]
+
+     ;; Vanhemmat urakat, arvovähennykset tulee tänne
+     (when (and
+             (not (:muutosten_hallinta urakan-parametrit))
+             arvonvahennykset-yht)
+       [:div.flex-row.summa-rivi
+        [:span "Arvonvähennykset"]
+        [:span (fmt/euro-opt false arvonvahennykset-yht)]])]))
 
 
 (defn osio-hoidonjohtopalkkio [{:keys [paatokset]} _luvut]
