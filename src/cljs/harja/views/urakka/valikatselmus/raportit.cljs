@@ -20,11 +20,9 @@
 
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
-        [:div
-         [yleiset/info-laatikko :neutraali (str "Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)) nil nil]]
 
         [:div.flex-row.raportti-teksti
-         [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan."]]
+         [:p "Tarkista, että seuraavien raporttien luvut ovat oikein ja liitä raportit välikatselmuspöytäkirjaan. Hoitovuoden raportointi lukitaan 31.12." (inc hoitokauden-alkuvuosi)]]
 
         [:div.flex-row.ilmoitus
          [:div
@@ -48,8 +46,6 @@
         [:hr.paatos-hr-matalin]
 
         [:div.muokkaustoiminnot
-         (when virhe
-           [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" virhe nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
-         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and voi-muokata? (not virhe))
           #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
           #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))]]])]))

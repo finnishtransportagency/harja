@@ -28,9 +28,9 @@
     [:div.laskenta-rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
 
    (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
-    [:div.flex-row.laskenta-rivi-matalampi
-     [:div "Hoitovuoden indeksikorjattu hoidonjohtopalkkio"]
-     [:div.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio paatos))]])
+     [:div.flex-row.laskenta-rivi-matalampi
+      [:div "Hoitovuoden indeksikorjattu hoidonjohtopalkkio"]
+      [:div.laskenta-rivi-lukema (fmt/euro-opt (:hoidonjohtopalkkio paatos))]])
 
    (when-not (= 0 (:hoidonjohtopalkkio_muutos paatos))
      [:div.row.laskenta-kaava
@@ -44,48 +44,55 @@
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoidonjohtopalkkion-muutos
         paatos-tehty? (some? (:id paatos))
-
+        _ (js/console.log "paatos" (pr-str paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Hoidonjohtopalkkion muutos" paatos-tehty? paatos-avain avatut-paatokset
       (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
-     (when (not (contains? avatut-paatokset paatos-avain))
+     (when (and (:hoitovuosi-kesken? paatos) (not (contains? avatut-paatokset paatos-avain)))
+       [:p "Sisältö nähtävillä vasta, kun hoitokausi päättyy."])
+
+     (when (and (not (:hoitovuosi-kesken? paatos)) (not (contains? avatut-paatokset paatos-avain)))
        [:div
         [:p.yla-selite "Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu"
          [:span.laskenta-rivi-lukema " > 5% "] "tarjouksen mukaisen tavoitehintaan verrattuna."]
 
-        (if-not (:virhe paatos)
-          [:div
-           [:div.flex-row.prosentti-rivi
-            [:div "Muutosprosentti"]
-            [:div.rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
+        [:div
+         [:div.flex-row.prosentti-rivi
+          [:div "Muutosprosentti"]
+          [:div.rivi-lukema (fmt/desimaaliluku (:muutosprosentti paatos) 1) "%"]]
 
-           [:div.flex-row
-            [:div.big-text "Hoidonjohtopalkkion muutos"]
-            [:div.big-text.lihavoitu (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
+         [:div.flex-row
+          [:div.big-text "Hoidonjohtopalkkion muutos"]
+          [:div.big-text.lihavoitu (fmt/euro-opt false (:hoidonjohtopalkkio_muutos paatos))]]
 
-           [:div.flex-row.laskenta-linkki
-            [yleiset/linkki "Näytä laskenta"
-             (fn [] (modal/nayta! {:otsikko "Laskenta"
-                                   :otsikko-muotoilut {:font-size "32px"}
-                                   :body-tyyli {:margin-bottom "24px"}
-                                   :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
-                                   :footer [napit/sulje #(modal/piilota!)]
-                                   :footer-tyyli {:text-align "left"}}
-                      [laskenta-modaali paatos]))
-             {:style {:text-decoration :underline}}]]
+         [:div.flex-row.laskenta-linkki
+          [yleiset/linkki "Näytä laskenta"
+           (fn [] (modal/nayta! {:otsikko "Laskenta"
+                                 :otsikko-muotoilut {:font-size "32px"}
+                                 :body-tyyli {:margin-bottom "24px"}
+                                 :content-tyyli {:padding-top "24px" :padding-bottom "24px"}
+                                 :footer [napit/sulje #(modal/piilota!)]
+                                 :footer-tyyli {:text-align "left"}}
+                    [laskenta-modaali paatos]))
+           {:style {:text-decoration :underline}}]]
 
-           [:hr.paatos-hr-korkeampi]
+         [:hr.paatos-hr-korkeampi]
 
-           [:div [yleiset/info-laatikko :neutraali (str
-                                                     (if (= 0 (:hoidonjohtopalkkio_muutos paatos))
-                                                       "Tavoitehinnan muutos on pienempi kuin 5%. Ei muuteta hoidonjohtopalkkiota."
-                                                       "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.")) nil nil]]
 
-           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-            #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
-            (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))
-                                                                       :teksti "Automaattisesti kirjattu kulu poistetaan."})]]
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
+
+         [:div
+          [:div [yleiset/info-laatikko :neutraali (str
+                                                    (if (= 0 (:hoidonjohtopalkkio_muutos paatos))
+                                                      "Tavoitehinnan muutos on pienempi kuin 5%. Ei muuteta hoidonjohtopalkkiota."
+                                                      "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.")) nil nil]]
+
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and (not (:virheet paatos)) voi-muokata?)
+           #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
+           (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))
+                                                                      :teksti "Automaattisesti kirjattu kulu poistetaan."})]
+          (when (:virheet paatos)
+            [:div.muokkaustoiminnot
+             [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+              (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]]])]))
