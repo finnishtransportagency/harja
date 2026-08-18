@@ -44,7 +44,6 @@
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoidonjohtopalkkion-muutos
         paatos-tehty? (some? (:id paatos))
-        _ (js/console.log "paatos" (pr-str paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
