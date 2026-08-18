@@ -124,11 +124,8 @@
         (for* [paatos paatokset]
           (cond
             (= (ffirst paatos) :lupaukset) [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-            (= (ffirst paatos) :tavoitehinnan-muutokset)
-            (if (>= urakan-alkuvuosi 2025)
-              [:div {:style {:height "90px" :width "100%"}}
-               [yleiset/info-laatikko :huolto "Tavoitehinnan muutokset uudistuvat. Päivityksen ajan osio on pois käytöstä. Tiedotamme muutoksesta tarkemmin sähköpostitse." nil nil nil]]
-              [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?])
+            (= (ffirst paatos) :tavoitehinnan-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?]
+            (= (ffirst paatos) :tavoitehinnan-pysyvat-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-muutokset-2025 e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-pysyvat-muutokset app) hoitovuosi-kesken?]
             (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
