@@ -383,7 +383,6 @@
 
 (defn osio-bonukset [{:keys [paatokset]}
                      {:keys [yhteenvedon-tiedot]}]
-
   (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
         lupausbonus (or (arvo-paatoksesta lupauspaatos :lupausbonus) 0)
 
@@ -415,18 +414,38 @@
       [:span (fmt/euro-opt false muut-bonukset)]]]))
 
 
-(defn osio-sanktiot []
+(defn osio-sanktiot [{:keys [paatokset]}
+                     {:keys [yhteenvedon-tiedot]}]
+  (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
+        lupaussanktio (or (arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
+        muut-sanktiot (apply + (map (fn [a]
+                                      (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
+                                        (+ (:maara a) (:indeksikorjaus a))
+                                        0))
+                                 (:sanktiot yhteenvedon-tiedot)))]
 
-  [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
-   [:h3 "Sanktiot"]
-   ]
-  )
+    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
+     [:h3 "Sanktiot"]
+
+     [:div.flex-row.summa-rivi-ylin
+      [:span "Lupaussanktio"]
+      [:span (fmt/euro-opt false lupaussanktio)]]
+
+     [:div.flex-row.summa-rivi-ylin
+      [:span "Laskutus yli laskutusrajan -sanktiot"]
+      ;; FIXME onkohan tämä nyt tavoitehinnan ylitys 
+      [:span "mikähän tämä on, mate?"]]
+
+     [:div.flex-row.summa-rivi
+      [:span "Muut sanktiot"]
+      [:span (fmt/euro-opt false muut-sanktiot)]]]))
 
 
 (defn osio-hoidonjohtopalkkio []
 
   [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
    [:h3 "Hoidonjohtopalkkion muutos"]
+
    ]
   )
 
@@ -437,5 +456,5 @@
      (osio-lopun-tavoite-ja-katto app luvut)
      (osio-toteutuneet-kustannukset app luvut)
      (osio-bonukset app luvut)
-     (osio-sanktiot)
+     (osio-sanktiot app luvut)
      (osio-hoidonjohtopalkkio)]))
