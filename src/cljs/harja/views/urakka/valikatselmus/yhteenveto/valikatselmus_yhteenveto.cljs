@@ -441,13 +441,28 @@
       [:span (fmt/euro-opt false muut-sanktiot)]]]))
 
 
-(defn osio-hoidonjohtopalkkio []
+(defn osio-hoidonjohtopalkkio [{:keys [paatokset]} _luvut]
+  (let [hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
+        hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
 
-  [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
-   [:h3 "Hoidonjohtopalkkion muutos"]
+    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
+     [:h3 "Hoidonjohtopalkkion muutos"]
+     ;; Jos hoidonjohtopalkkio on positiivinen, niin se on urakoitsijan saatavia.
+     ;; Jos hoitovuoden lopun tavoitehinta ilman indeksitarkastuksia on enemmmän kuin 5% suurempi kuin tarjouksen tavoitehinta
+     ;; niin hoidonjohtopalkkiota muutetaan. Jos se ei ole muuttunut yli 5%, niin muutos on nolla ja silloin näytetään nollaa.
+     (if (:id hoidonjohtopalkkiopaatos)
+       (if (>= hoidonjohtopalkkion-muutos 0)
+         [:div.flex-row.summa-rivi
+          [:span "Hoidonjohtopalkkion muutos"]
+          [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]]
 
-   ]
-  )
+         [:div.flex-row.summa-rivi
+          [:span "Hoidonjohtopalkkion muutos"]
+          [:span (fmt/euro-opt false 0)]])
+
+       [:div.flex-row.summa-rivi
+        [:span "Hoidonjohtopalkkion muutos"]
+        [:span (fmt/euro-opt false 0)]])]))
 
 
 (defn yhteenvetolaatikko [_e! app]
@@ -457,4 +472,4 @@
      (osio-toteutuneet-kustannukset app luvut)
      (osio-bonukset app luvut)
      (osio-sanktiot app luvut)
-     (osio-hoidonjohtopalkkio)]))
+     (osio-hoidonjohtopalkkio app luvut)]))
