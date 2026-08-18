@@ -628,13 +628,13 @@
                       (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
                     (conj "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä.")
 
-                    hv-lopun-tavoitehinta-ilman-indeksia
+                    (not hv-lopun-tavoitehinta-ilman-indeksia)
                     (conj "Hoitovuoden lopun tavoite puuttuu.")
 
-                    tarjouksen-tavoitehinta
+                    (not tarjouksen-tavoitehinta)
                     (conj "Tarjouksen tavoitehinta puuttuu.")
 
-                    hoidonjohtopalkkio
+                    (not hoidonjohtopalkkio)
                     (conj "Hoidonjohtopalkkio puuttuu."))
 
           paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
