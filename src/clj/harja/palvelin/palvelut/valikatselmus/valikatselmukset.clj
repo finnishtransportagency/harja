@@ -211,7 +211,7 @@
 
         validoinnit-kaytossa? (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset)
         ;; Valmistellaan päätökset ui:ta varten
-        mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi)
+        mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa arvonvahennykset-yht)
         mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi)
