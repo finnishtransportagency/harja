@@ -8,78 +8,92 @@
 
 
 (defn osio-lopun-tavoite-ja-katto
-  [{:keys [urakan-parametrit]}
+  [{:keys [urakan-parametrit hoitokauden-alkuvuosi]}
    {:keys [hoitovuoden-alun-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset
            aktiiviset-pysyvat-muutokset menneet-pysyvat-muutokset
            toteumiin-perustuvat-muutokset-yht pysyvat-muutokset-toteuma-muutokset-yht
            arvonvahennykset-yht hoitokauden_lopun_indeksikorjaus
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
+  (let [;; Joko uusi urakka, tai >= 26 vuosi
+        nayta-arvonvahennykset? (or
+                                  (and
+                                    arvonvahennykset-yht
+                                    (:muutosten_hallinta urakan-parametrit))
+                                  (>= hoitokauden-alkuvuosi 2026))]
 
-  ;; Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa 
-  ;; linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
-  [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
+    ;; Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa 
+    ;; linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
+    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
 
-   [:h2.yhteenveto "Yhteenveto"]
-   [:h3.padding-bottom-16 "Hoitovuoden lopun tavoite- ja kattohinta"]
+     [:h2.yhteenveto "Yhteenveto"]
+     [:h3.padding-bottom-16 "Hoitovuoden lopun tavoite- ja kattohinta"]
 
-   [:div.flex-row.summa-rivi-ylin
-    [:span "Hoitovuoden alun indeksikorjattu tavoitehinta"]
-    [:span (fmt/euro-opt false hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]
+     [:div.flex-row.summa-rivi-ylin
+      [:span "Hoitovuoden alun indeksikorjattu tavoitehinta"]
+      [:span (fmt/euro-opt false hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]
 
-   (when menneet-pysyvat-muutokset
-     [:div.flex-row.summa-rivi
-      [:span.sisennys "• Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)"]
-      [:span (fmt/euro-opt false menneet-pysyvat-muutokset)]])
+     (when menneet-pysyvat-muutokset
+       [:div.flex-row.summa-rivi
+        [:span.sisennys "• Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)"]
+        [:span (fmt/euro-opt false menneet-pysyvat-muutokset)]])
 
-   (if (:muutosten_hallinta urakan-parametrit)
-     ;; Pysyvät muutokset ja toteutumiin perustuvat muutokset
-     [:div
-      [:div.flex-row.summa-rivi
-       [:span "Tavoitehinnan muutokset"]
-       [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+")
-                (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
-
-      (when aktiiviset-pysyvat-muutokset
+     (if (:muutosten_hallinta urakan-parametrit)
+       ;; ----------------------------------------------------
+       ;; Uudemmat urakat
+       ;; Pysyvät muutokset ja toteutumiin perustuvat muutokset
+       [:<>
         [:div.flex-row.summa-rivi
-         [:span.sisennys "• Kirjallisesti sovitut muutokset"]
-         [:span (str (when (> aktiiviset-pysyvat-muutokset 0) "+")
-                  (fmt/euro-opt false aktiiviset-pysyvat-muutokset))]])
+         [:span "Tavoitehinnan muutokset"]
+         [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+")
+                  (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
 
-      [:div.flex-row.summa-rivi
-       [:span.sisennys "• Toteumiin perustuvat muutokset"]
-       [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+")
-                (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]
+        (when aktiiviset-pysyvat-muutokset
+          [:div.flex-row.summa-rivi
+           [:span.sisennys "• Kirjallisesti sovitut muutokset"]
+           [:span (str (when (> aktiiviset-pysyvat-muutokset 0) "+")
+                    (fmt/euro-opt false aktiiviset-pysyvat-muutokset))]])
 
-      (when arvonvahennykset-yht
         [:div.flex-row.summa-rivi
-         [:span.sisennys "• Arvonvähennysten tavoitehintamuutokset"]
-         [:span (fmt/euro-opt false arvonvahennykset-yht)]])]
+         [:span.sisennys "• Toteumiin perustuvat muutokset"]
+         [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+")
+                  (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]
 
-     ;; Käsin kirjatut tavoitehinnan oikaisut
+        ;; MHU 25
+        ;; Vanhemmilla urakoilla tämä näkyy sanktiot osiossa
+        (when nayta-arvonvahennykset?
+          [:div.flex-row.summa-rivi
+           [:span.sisennys "• Arvonvähennysten tavoitehintamuutokset"]
+           [:span (fmt/euro-opt false arvonvahennykset-yht)]])]
+
+
+       ;; ----------------------------------------------------
+       ;; Vanhemmat urakat
+       ;; Käsin kirjatut tavoitehinnan oikaisut
+       [:<>
+        [:div.flex-row.summa-rivi
+         [:span "Tavoitehinnan muutokset"]
+         [:span (str (when (> tavoitehinnan-muutokset 0) "+")
+                  (fmt/euro-opt false tavoitehinnan-muutokset))]]
+
+        (when nayta-arvonvahennykset?
+          [:div.flex-row.summa-rivi
+           [:span "Arvonvähennysten tavoitehintamuutokset"]
+           [:span (fmt/euro-opt false arvonvahennykset-yht)]])])
+
+
      [:div.flex-row.summa-rivi
-      [:span "Tavoitehinnan muutokset"]
-      [:span (str (when (> tavoitehinnan-muutokset 0) "+")
-               (fmt/euro-opt false tavoitehinnan-muutokset))]])
+      [:span "Hoitovuoden lopun indeksikorjaus"]
+      [:span (fmt/euro-opt false hoitokauden_lopun_indeksikorjaus)]]
 
-   ;; FIXME .. tuleekohan toisen pularin mukana
-   (when false
+     [:hr]
+
      [:div.flex-row.summa-rivi
-      [:span "Arvonvähennysten tavoitehintamuutokset"]
-      [:span (fmt/euro-opt false arvonvahennykset-yht)]])
+      [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
+      [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-tavoitehinta)]]
 
-   [:div.flex-row.summa-rivi
-    [:span "Hoitovuoden lopun indeksikorjaus"]
-    [:span (fmt/euro-opt false hoitokauden_lopun_indeksikorjaus)]]
-
-   [:hr]
-
-   [:div.flex-row.summa-rivi
-    [:span.laskenta-rivi-lukema "Hoitovuoden lopun tavoitehinta"]
-    [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-tavoitehinta)]]
-
-   [:div.flex-row.summa-rivi
-    [:span.laskenta-rivi-lukema "Hoitovuoden lopun kattohinta"]
-    [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-kattohinta)]]])
+     [:div.flex-row.summa-rivi
+      [:span.laskenta-rivi-lukema "Hoitovuoden lopun kattohinta"]
+      [:span.laskenta-rivi-lukema (fmt/euro-opt false hoitovuoden-lopun-kattohinta)]]]))
 
 
 (defn osio-toteutuneet-kustannukset

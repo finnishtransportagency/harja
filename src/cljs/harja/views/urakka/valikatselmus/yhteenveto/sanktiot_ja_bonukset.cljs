@@ -37,7 +37,7 @@
       [:span (fmt/euro-opt false muut-bonukset)]]]))
 
 
-(defn osio-sanktiot [{:keys [paatokset urakan-parametrit]}
+(defn osio-sanktiot [{:keys [paatokset urakan-parametrit hoitokauden-alkuvuosi]}
                      {:keys [yhteenvedon-tiedot arvonvahennykset-yht]}]
   (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
         lupaussanktio (or (luvut/arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
@@ -45,7 +45,13 @@
                                       (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
                                         (+ (:maara a) (:indeksikorjaus a))
                                         0))
-                                 (:sanktiot yhteenvedon-tiedot)))]
+                                 (:sanktiot yhteenvedon-tiedot)))
+
+        nayta-arvonvahennykset? (or
+                                  (and
+                                    arvonvahennykset-yht
+                                    (not (:muutosten_hallinta urakan-parametrit)))
+                                  (< hoitokauden-alkuvuosi 2026))]
 
     [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
      [:h3 "Sanktiot"]
@@ -64,9 +70,8 @@
       [:span (fmt/euro-opt false muut-sanktiot)]]
 
      ;; Vanhemmat urakat, arvovähennykset tulee tänne
-     (when (and
-             (not (:muutosten_hallinta urakan-parametrit))
-             arvonvahennykset-yht)
+     ;; 26 eteenpäin näkyy taas ylemmässä yhteenvedossa
+     (when nayta-arvonvahennykset?
        [:div.flex-row.summa-rivi
         [:span "Arvonvähennykset"]
         [:span (fmt/euro-opt false arvonvahennykset-yht)]])]))
