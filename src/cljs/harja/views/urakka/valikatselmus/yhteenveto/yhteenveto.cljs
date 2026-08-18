@@ -1,65 +1,8 @@
-(ns harja.views.urakka.valikatselmus.yhteenveto.valikatselmus-yhteenveto
+(ns harja.views.urakka.valikatselmus.yhteenveto.yhteenveto
   (:require [harja.fmt :as fmt]
+            [harja.views.urakka.valikatselmus.yhteenveto.luvut :as luvut]
+            [harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset :as bonukset]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
-
-
-(defn arvo-paatoksesta
-  "Monet euromääräiset arvot päätöksestä kannattaa hakea vasta, kun päätös on tehty. 
-  Ja toisaalta päätöksissä voi olla myös tietoja, jotka voidaan näyttää, vaikka päätöstä ei ole vielä tehty. 
-  Eli verrataan tietokanta id:tä siihen, että onko päätös tehty."
-  [paatos avain]
-  (when (:id paatos)
-    (get paatos avain)))
-
-
-(defn yhteenveto-luvut [{:keys [paatokset urakan-parametrit] :as app}]
-  (let [yhteenvedon-tiedot (:yhteenveto app)
-        ;; Yhteenvedot kokonaissummat ja tavoitehinnan muodostuminen
-        hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu]) 0)
-        ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
-        tavoitehinnan-muutokset (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu]) 0)
-        aktiiviset-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
-                                       (get-in yhteenvedon-tiedot [:budjettitavoite :muutos-summa]))
-        menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
-                                    (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-muutos-summa]))
-        toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
-                                             (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
-        pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
-        arvonvahennykset-yht (apply + (map #(:maara %) (:arvonvahennykset yhteenvedon-tiedot)))
-
-        ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
-        hv-lopun-indkorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
-        hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hv-lopun-indkorjaus-paatos) 0)
-
-        ;; Hoitovuoden lopun tavoitehinta tulee budjettitavoite -hausta, jossa on mukana vain tietokantaan suoraan tallennettu hoitokauden lopun tavoitehinta.
-        ;; Se ei siis ota huomioon muutoksia tai arvonvähennyksiä.
-        hoitovuoden-lopun-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-tavoitehinta]) 0)
-        ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
-        ;; Sekä arvonvähennykset
-        hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta
-                                         ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
-                                         (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus)
-                                         pysyvat-muutokset-toteuma-muutokset-yht
-                                         arvonvahennykset-yht)
-        hoitovuoden-lopun-kattohinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta]) 0)
-        ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
-        ;; Sekä arvonvähennykset
-        hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
-                                       (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                       (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                       (* arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
-    {:yhteenvedon-tiedot yhteenvedon-tiedot
-     :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
-     :tavoitehinnan-muutokset tavoitehinnan-muutokset
-     :aktiiviset-pysyvat-muutokset aktiiviset-pysyvat-muutokset
-     :menneet-pysyvat-muutokset menneet-pysyvat-muutokset
-     :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
-     :pysyvat-muutokset-toteuma-muutokset-yht pysyvat-muutokset-toteuma-muutokset-yht
-     :arvonvahennykset-yht arvonvahennykset-yht
-     :hv-lopun-indkorjaus-paatos hv-lopun-indkorjaus-paatos
-     :hoitokauden_lopun_indeksikorjaus hoitokauden_lopun_indeksikorjaus
-     :hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-tavoitehinta
-     :hoitovuoden-lopun-kattohinta hoitovuoden-lopun-kattohinta}))
 
 
 (defn osio-lopun-tavoite-ja-katto
@@ -169,21 +112,21 @@
         ;; Lasketaan siis tavoitehinnan ylitys ja alitus olemassa olevista luvuista.
         tavoitehinnan-ylitys (if (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta))
                                (- toteuma-yht hoitovuoden-lopun-tavoitehinta)
-                               (arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara))
+                               (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara))
 
         tavoitehinnan-alitus (if (and (not tavoitehinnan-alituspaatos) (< toteuma-yht hoitovuoden-lopun-tavoitehinta))
                                (- hoitovuoden-lopun-tavoitehinta toteuma-yht)
                                (or (:alituksen_maara tavoitehinnan-alituspaatos) 0))
 
-        tavoitepalkkio (or (arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
-        seuraavan-vuoden-hankintakustannusten-alennus (or (arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
+        tavoitepalkkio (or (luvut/arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
+        seuraavan-vuoden-hankintakustannusten-alennus (or (luvut/arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
 
         kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
                              (- toteuma-yht hoitovuoden-lopun-kattohinta)
-                             (arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara))
+                             (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara))
         ;; Niputetaan siirrot yhdelle riville
-        siirto-seuraavan-vuoden-hankintakustannuksiin (- (or (arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
+        siirto-seuraavan-vuoden-hankintakustannuksiin (- (or (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
                                                         seuraavan-vuoden-hankintakustannusten-alennus)
 
         tavoitehinnan-ylitys? (or
@@ -304,95 +247,11 @@
          [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]]])]))
 
 
-(defn osio-bonukset [{:keys [paatokset]}
-                     {:keys [yhteenvedon-tiedot]}]
-  (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
-        lupausbonus (or (arvo-paatoksesta lupauspaatos :lupausbonus) 0)
-
-        asiakastyytyvaisyysbonus (apply + (map (fn [bonus]
-                                                 (if (= (:tyyppi bonus) "asiakastyytyvaisyysbonus")
-                                                   (:rahasumma bonus)
-                                                   0))
-                                            (:bonukset yhteenvedon-tiedot)))
-
-        muut-bonukset (apply + (map (fn [bonus]
-                                      (if (not (contains? #{"asiakastyytyvaisyysbonus" "lupausbonus"} (:tyyppi bonus)))
-                                        (:rahasumma bonus)
-                                        0))
-                                 (:bonukset yhteenvedon-tiedot)))]
-
-    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
-     [:h3 "Bonukset"]
-
-     [:div.flex-row.summa-rivi-ylin
-      [:span "Lupausbonus"]
-      [:span (fmt/euro-opt false lupausbonus)]]
-
-     [:div.flex-row.summa-rivi
-      [:span "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"]
-      [:span (fmt/euro-opt false asiakastyytyvaisyysbonus)]]
-
-     [:div.flex-row.summa-rivi
-      [:span "Muut bonukset"]
-      [:span (fmt/euro-opt false muut-bonukset)]]]))
-
-
-(defn osio-sanktiot [{:keys [paatokset]}
-                     {:keys [yhteenvedon-tiedot]}]
-  (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
-        lupaussanktio (or (arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
-        muut-sanktiot (apply + (map (fn [a]
-                                      (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
-                                        (+ (:maara a) (:indeksikorjaus a))
-                                        0))
-                                 (:sanktiot yhteenvedon-tiedot)))]
-
-    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
-     [:h3 "Sanktiot"]
-
-     [:div.flex-row.summa-rivi-ylin
-      [:span "Lupaussanktio"]
-      [:span (fmt/euro-opt false lupaussanktio)]]
-
-     [:div.flex-row.summa-rivi-ylin
-      [:span "Laskutus yli laskutusrajan -sanktiot"]
-      ;; FIXME onkohan tämä nyt tavoitehinnan ylitys 
-      [:span "mikähän tämä on, mate?"]]
-
-     [:div.flex-row.summa-rivi
-      [:span "Muut sanktiot"]
-      [:span (fmt/euro-opt false muut-sanktiot)]]]))
-
-
-(defn osio-hoidonjohtopalkkio [{:keys [paatokset]} _luvut]
-  (let [hoidonjohtopalkkiopaatos (valikatselmus-tiedot/ota-paatos paatokset :hoidonjohtopalkkion-muutos)
-        hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
-
-    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
-     [:h3 "Hoidonjohtopalkkion muutos"]
-     ;; Jos hoidonjohtopalkkio on positiivinen, niin se on urakoitsijan saatavia.
-     ;; Jos hoitovuoden lopun tavoitehinta ilman indeksitarkastuksia on enemmmän kuin 5% suurempi kuin tarjouksen tavoitehinta
-     ;; niin hoidonjohtopalkkiota muutetaan. Jos se ei ole muuttunut yli 5%, niin muutos on nolla ja silloin näytetään nollaa.
-     (if (:id hoidonjohtopalkkiopaatos)
-       (if (>= hoidonjohtopalkkion-muutos 0)
-         [:div.flex-row.summa-rivi
-          [:span "Hoidonjohtopalkkion muutos"]
-          [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]]
-
-         [:div.flex-row.summa-rivi
-          [:span "Hoidonjohtopalkkion muutos"]
-          [:span (fmt/euro-opt false 0)]])
-
-       [:div.flex-row.summa-rivi
-        [:span "Hoidonjohtopalkkion muutos"]
-        [:span (fmt/euro-opt false 0)]])]))
-
-
 (defn yhteenvetolaatikko [_e! app]
-  (let [luvut (yhteenveto-luvut app)]
+  (let [luvut (luvut/yhteenveto-luvut app)]
     [:<>
      (osio-lopun-tavoite-ja-katto app luvut)
      (osio-toteutuneet-kustannukset app luvut)
-     (osio-bonukset app luvut)
-     (osio-sanktiot app luvut)
-     (osio-hoidonjohtopalkkio app luvut)]))
+     (bonukset/osio-bonukset app luvut)
+     (bonukset/osio-sanktiot app luvut)
+     (bonukset/osio-hoidonjohtopalkkio app luvut)]))

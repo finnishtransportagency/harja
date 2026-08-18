@@ -14,7 +14,7 @@
             [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]
-            [harja.views.urakka.valikatselmus.yhteenveto.valikatselmus-yhteenveto :as yhteevetolaatikko]
+            [harja.views.urakka.valikatselmus.yhteenveto.yhteenveto :as yhteevetolaatikko]
             [harja.views.urakka.valikatselmus.tavoitehinnan-muutokset :as tavoitehinnan-muutokset]
             [harja.views.urakka.valikatselmus.lupaukset :as lupaukset]
             [harja.views.urakka.valikatselmus.hintapaatokset :as hintapaatokset]
