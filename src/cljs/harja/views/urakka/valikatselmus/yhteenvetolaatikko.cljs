@@ -15,13 +15,13 @@
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu]) 0)
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
         tavoitehinnan-muutokset (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu]) 0)
-        aktiiviset-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
-                            (get-in yhteenvedon-tiedot [:budjettitavoite :muutos-summa]))
+        kirjallisesti-sovitut-muutokset (when (:muutosten_hallinta urakan-parametrit)
+                            (get-in yhteenvedon-tiedot [:budjettitavoite :kirjallisesti-sovitut-muutokset]))
         menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
                             (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-muutos-summa]))
         toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
-        pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
+        pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
         arvonvahennykset-yht (apply + (map #(:maara %) (:arvonvahennykset yhteenvedon-tiedot)))
 
         ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
@@ -130,10 +130,10 @@
         [:div.flex-row.summa-rivi
          [:span "Tavoitehinnan muutokset"]
          [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+") (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
-        (when aktiiviset-pysyvat-muutokset
+        (when kirjallisesti-sovitut-muutokset
           [:div.flex-row.summa-rivi
            [:span.sisennys "• Kirjallisesti sovitut muutokset"]
-           [:span (str (when (> aktiiviset-pysyvat-muutokset 0) "+") (fmt/euro-opt false aktiiviset-pysyvat-muutokset))]])
+           [:span (str (when (> kirjallisesti-sovitut-muutokset 0) "+") (fmt/euro-opt false kirjallisesti-sovitut-muutokset))]])
         [:div.flex-row.summa-rivi
          [:span.sisennys "• Toteumiin perustuvat muutokset"]
          [:span (str (when (> toteumiin-perustuvat-muutokset-yht 0) "+") (fmt/euro-opt false toteumiin-perustuvat-muutokset-yht))]]
