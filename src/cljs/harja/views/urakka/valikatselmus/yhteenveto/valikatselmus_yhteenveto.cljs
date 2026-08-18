@@ -381,12 +381,39 @@
     ))
 
 
-(defn osio-bonukset []
+(defn osio-bonukset [{:keys [paatokset]}
+                     {:keys [yhteenvedon-tiedot]}]
 
-  [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
-   [:h3 "Bonukset"]
-   ]
-  )
+  (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
+        lupausbonus (or (arvo-paatoksesta lupauspaatos :lupausbonus) 0)
+
+        asiakastyytyvaisyysbonus (apply + (map (fn [bonus]
+                                                 (if (= (:tyyppi bonus) "asiakastyytyvaisyysbonus")
+                                                   (:rahasumma bonus)
+                                                   0))
+                                            (:bonukset yhteenvedon-tiedot)))
+
+        muut-bonukset (apply + (map (fn [bonus]
+                                      (if (not (contains? #{"asiakastyytyvaisyysbonus" "lupausbonus"} (:tyyppi bonus)))
+                                        (:rahasumma bonus)
+                                        0))
+                                 (:bonukset yhteenvedon-tiedot)))]
+
+    [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
+     [:h3 "Bonukset"]
+
+     [:div.flex-row.summa-rivi-ylin
+      [:span "Lupausbonus"]
+      [:span (fmt/euro-opt false lupausbonus)]]
+
+     [:div.flex-row.summa-rivi
+      [:span "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"]
+      [:span (fmt/euro-opt false asiakastyytyvaisyysbonus)]]
+
+     [:div.flex-row.summa-rivi
+      [:span "Muut bonukset"]
+      [:span (fmt/euro-opt false muut-bonukset)]]]))
+
 
 (defn osio-sanktiot []
 
@@ -409,6 +436,6 @@
     [:<>
      (osio-lopun-tavoite-ja-katto app luvut)
      (osio-toteutuneet-kustannukset app luvut)
-     (osio-bonukset)
+     (osio-bonukset app luvut)
      (osio-sanktiot)
      (osio-hoidonjohtopalkkio)]))
