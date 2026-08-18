@@ -116,7 +116,7 @@
         (when hoitovuosi-kesken?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä päättynyt."
            (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi))" alkaen. "
-             (when (<= urakan-alkuvuosi 2024) " Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.")) nil])
+             (when (<= urakan-alkuvuosi 2024) " Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.")) nil {:luokka "koko-levea"}])
         (when hoitokausi-tulevaisuudessa?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä alkanut." nil nil])])
      [:div
