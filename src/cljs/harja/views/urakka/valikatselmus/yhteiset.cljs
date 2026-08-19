@@ -1,10 +1,12 @@
 (ns harja.views.urakka.valikatselmus.yhteiset
-  (:require [harja.domain.oikeudet :as oikeudet]
-            [harja.tiedot.istunto :as istunto]
-            [harja.ui.modal :as modal]
+  (:require [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
-            [harja.ui.ikonit :as ikonit]))
+            [harja.ui.ikonit :as ikonit]
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.oikeudet :as oikeudet]))
 
+
+;; TODO poistuu ehkä
 (defn paatoksen-poistovarmistus-modaali
   [{:keys [peru-paatos-fn teksti]}]
   (let [varmistus-modaalin-kutsu-fn #(modal/nayta! {:otsikko "Perutaanko päätös?"
@@ -47,6 +49,7 @@
         :else
         false)))
 
+
 (defn paatosotsikko-ja-avaus [e! otsikko paatos-tehty? paatos-avain avatut-paatokset avaa-tai-sulje-haitari-fn avaa-paatos-fn]
   [:div.paatos-komponentti-otsikko-row.klikattava {:on-click #(e! avaa-paatos-fn)}
    [:div.navigation-ikoni {:on-click #(avaa-tai-sulje-haitari-fn % paatos-avain)}
@@ -60,6 +63,7 @@
       [:div.badge.paatetty.paatos-badge "Päätetty"]
       [:div.badge.avoin.paatos-badge "Avoin"])]])
 
+
 (defn paatosotsikko [otsikko paatos-tehty?]
   [:div.paatos-komponentti-otsikko-row
    [:h2.paatos-komponentti-otsikko otsikko]
@@ -68,13 +72,14 @@
       [:div.badge.paatetty.paatos-badge "Päätetty"]
       [:div.badge.avoin.paatos-badge "Avoin"])]])
 
+
 (defn paatosnapit [paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata? tallenna-paatos-fn poista-paatos-fn ei-oikeuksia-teksti-fn]
   (if (not paatos-tehty?)
     [:div.paatos-toiminto
      (if on-oikeudet?
        [napit/yleinen-ensisijainen "Vahvista päätös" tallenna-paatos-fn
         {:ikoni [ikonit/harja-icon-status-selected]
-         :disabled (or tallennus-kesken? (not voi-muokata?)(:virhe paatoksen-tiedot))}]
+         :disabled (or tallennus-kesken? (not voi-muokata?) (:virhe paatoksen-tiedot))}]
        (when ei-oikeuksia-teksti-fn (ei-oikeuksia-teksti-fn)))]
     [:div.paatos-toiminto
      (if on-oikeudet?

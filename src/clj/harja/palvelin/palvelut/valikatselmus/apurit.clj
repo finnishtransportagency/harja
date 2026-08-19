@@ -101,3 +101,26 @@
 
 (defn paatos-mahdollinen? [mahdolliset-paatokset nimi]
   (boolean (seq (filter #(when (= (:nimi %) nimi) %) mahdolliset-paatokset))))
+
+
+(defn hae-ketjutetusti-kumoutuvat-paatokset
+  [paatokset peruttu-avain]
+  (loop [kasiteltavat [peruttu-avain]
+         loydetyt #{}
+         tulos []]
+    (if-let [avain (first kasiteltavat)]
+      (let [riippuvaiset (->> paatokset
+                           (filter
+                             (fn [paatos]
+                               (some #(= avain (:avain %))
+                                 (:riippuu paatos))))
+                           (remove #(contains? loydetyt (:avain %))))
+
+            riippuvaiset-avaimet (mapv :avain riippuvaiset)]
+
+        (recur
+          (into (vec (rest kasiteltavat)) riippuvaiset-avaimet)
+          (into loydetyt riippuvaiset-avaimet)
+          (into tulos riippuvaiset)))
+
+      tulos)))

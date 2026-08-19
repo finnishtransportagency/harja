@@ -91,6 +91,10 @@
 (defrecord TallennaHoitovuodenlopunIndeksikorjauspaatos [paatos])
 (defrecord PoistaHoitovuodenlopunIndeksikorjauspaatos [paatos])
 
+(defrecord HaeKetjutetustiKumoutuvatPaatokset [paatos peru-fn])
+(defrecord HaeKumoutuvatOnnistui [vastaus])
+(defrecord SuljePaatosModal [])
+
 (defrecord PaivitaKattohinnanSiirtoCheckbox [uusi-arvo])
 (defrecord PaivitaKattohinnanSiirtoMaara [uusi-arvo])
 
@@ -132,7 +136,9 @@
       (assoc :yhteenveto (:yhteenveto vastaus))
       (assoc :urakan-parametrit (:urakan-parametrit vastaus))
       (assoc :haku-kaynnissa? false)
-      (assoc :tallennus-kesken? false))))
+      (assoc :tallennus-kesken? false)
+      (assoc :nayta-kumoa-modal? false)
+      (assoc :tehdyt-kumoutuvat-paatokset nil))))
 
 (extend-protocol tuck/Event
 
@@ -574,7 +580,37 @@
       (assoc paatos :luoja (:id @istunto/kayttaja))
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
-    (assoc app :tallennus-kesken? true)))
+    (assoc app :tallennus-kesken? true))
+
+  HaeKetjutetustiKumoutuvatPaatokset
+  (process-event [{paatos :paatos peru-fn :peru-fn} app]
+    (tuck-apurit/post!
+      :hae-ketjutetusti-kumoutuvat-paatokset
+      paatos
+      {:onnistui ->HaeKumoutuvatOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app
+      :peru-fn peru-fn
+      :tallennus-kesken? true
+      :nayta-kumoa-modal? false
+      :tehdyt-kumoutuvat-paatokset nil
+      :kumottava-paatos-nimi (:nimi paatos)))
+
+  HaeKumoutuvatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app
+      :tallennus-kesken? false
+      :nayta-kumoa-modal? true
+      :tehdyt-kumoutuvat-paatokset vastaus))
+
+  SuljePaatosModal
+  (process-event [_ app]
+    (assoc app
+      :peru-fn nil
+      :tallennus-kesken? false
+      :nayta-kumoa-modal? false
+      :kumottava-paatos-nimi nil
+      :tehdyt-kumoutuvat-paatokset nil)))
 
 (defn avaa-tai-sulje-haitari [event avain]
   (when (dom/enter-nappain? event)

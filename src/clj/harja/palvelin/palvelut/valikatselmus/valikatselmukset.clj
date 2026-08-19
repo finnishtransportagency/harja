@@ -1092,7 +1092,7 @@
                                 hoitovuoden-lopun-tavoitehinta)]
     mahdolliset-paatokset))
 
-(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset-kojelautaan
+(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
   "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
   ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
@@ -1123,134 +1123,188 @@
         vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
     vastaus))
 
+(defn hae-ketjutetusti-kumoutuvat-paatokset
+  "Syötetään päätös, joka halutaan kumota. 
+  Palauttaa kaikki riippuvaiset päätökset, jotka kumoutuvat sen mukana."
+  [db kayttaja {:keys [urakkaid hoitokauden_alkuvuosi] :as paatos}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
+
+  (let [payload {:urakkaid urakkaid :kuluva-hoitovuosi hoitokauden_alkuvuosi}
+        kaikki-paatokset (palauta-kaikki-mahdolliset-ja-tehdyt-paatokset db kayttaja payload)
+        tehdyt-paatokset (:tietokanta-paatokset kaikki-paatokset)
+
+        ;; Kaikki urakan mahdolliset kumoutuvat päätökset
+        kaikki-kumoutuvat (v-apurit/hae-ketjutetusti-kumoutuvat-paatokset
+                            (hae-urakan-mahdolliset-paatokset db kayttaja payload)
+                            (:avain paatos))
+
+        ;; Palauita pelkästään tehdyt päätökset, jotka kumoutuvat
+        tehdyt-nimet (set (map :nimi tehdyt-paatokset))
+        tehdyt-kumoutuvat-paatokset (filterv
+                                      #(contains? tehdyt-nimet (:nimi %))
+                                      kaikki-kumoutuvat)]
+    tehdyt-kumoutuvat-paatokset))
+
 (defrecord Valikatselmukset []
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
           db (:db this)]
+
+      (julkaise-palvelu http :hae-ketjutetusti-kumoutuvat-paatokset
+        (fn [user tiedot]
+          (hae-ketjutetusti-kumoutuvat-paatokset db user tiedot)))
+
       (julkaise-palvelu http :tallenna-tavoitehinnan-oikaisu
         (fn [user tiedot]
           (tallenna-tavoitehinnan-oikaisu db user tiedot)))
+
       (julkaise-palvelu http :poista-tavoitehinnan-oikaisu
         (fn [user tiedot]
           (poista-tavoitehinnan-oikaisu db user tiedot)))
+
       (julkaise-palvelu http :tallenna-kattohinnan-oikaisu
         (fn [user tiedot]
           (tallenna-kattohinnan-oikaisu db user tiedot)))
+
       (julkaise-palvelu http :poista-kattohinnan-oikaisu
         (fn [user tiedot]
           (poista-kattohinnan-oikaisu db user tiedot)))
+
       (julkaise-palvelu (:http-palvelin this)
         :hae-valikatselmuksen-tiedot-hoitovuodelle
         (fn [user tiedot]
           (hae-valikatselmuksen-tiedot-hoitovuodelle (:db this) user tiedot)))
+
       (julkaise-palvelu (:http-palvelin this)
         :onko-paatoksia-tekematta
         (fn [user tiedot]
           (onko-paatoksia-tekematta (:db this) user tiedot)))
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-lupauspaatos
         (fn [user tiedot]
           (tee-lupauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-lupauspaatos
         (fn [user tiedot]
           (poista-lupauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-muutospaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-muutospaatos
         (fn [user tiedot]
           (poista-tavoitehinnan-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-pysyvamuutospaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-pysyvamuutospaatos
         (fn [user tiedot]
           (poista-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-alituspaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-alituspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-alituspaatos
         (fn [user tiedot]
           (poista-tavoitehinnan-alituspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-ylityspaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-ylityspaatos
         (fn [user tiedot]
           (poista-tavoitehinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-kattohinnan-ylityspaatos
         (fn [user tiedot]
           (tee-kattohinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-kattohinnan-ylityspaatos
         (fn [user tiedot]
           (poista-kattohinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-indeksikorjauspaatos
         (fn [user tiedot]
           (tee-indeksikorjauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-indeksikorjauspaatos
         (fn [user tiedot]
           (poista-indeksikorjauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-hv-lopun-tavoite-ja-kattohintapaatos
         (fn [user tiedot]
           (tee-hv-lopun-tavoite-ja-kattohintapaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoitovuoden-lopun-hintapaatos
         (fn [user tiedot]
           (poista-hoitovuoden-lopun-hintapaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
           (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
           (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :tee-poytakirjan-raporttipaatos
         (fn [user tiedot]
           (tee-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
+
       (julkaise-palvelu (:http-palvelin this)
         :poista-poytakirjan-raporttipaatos
         (fn [user tiedot]
           (poista-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
       this))
+
   (stop [this]
     (poista-palvelut (:http-palvelin this)
+      :hae-ketjutetusti-kumoutuvat-paatokset
       :tallenna-tavoitehinnan-oikaisu
       :poista-tavoitehinnan-oikaisu
       :tallenna-kattohinnan-oikaisu
