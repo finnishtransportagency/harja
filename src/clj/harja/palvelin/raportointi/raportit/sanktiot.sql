@@ -7,8 +7,6 @@ SELECT
   s.indeksi,
   suorasanktio,
   st.id                   AS sanktiotyyppi_id,
-  st.nimi                 AS sanktiotyyppi_nimi,
-  st.koodi                AS sanktiotyyppi_koodi,
   tpi.id                  AS toimenpideinstanssi_id,
   tpi.nimi                AS toimenpideinstanssi_nimi,
   tpk2.koodi              AS toimenpide_koodi,
@@ -63,8 +61,6 @@ SELECT
   st.id          AS sanktiotyyppi_id,
   st.nimi        AS sanktiotyyppi_nimi,
   tpi.id         AS toimenpideinstanssi_id,
-  tpi.nimi       AS toimenpideinstanssi_nimi,
-  ypk.yllapitoluokka AS yllapitoluokka,
   u.id           AS "urakka-id",
   u.nimi         AS nimi,
   u.loppupvm     AS loppupvm,
@@ -167,19 +163,23 @@ FROM sanktio s
   JOIN sanktio_profiili sp
     ON sp.urakkatyyppi = u.tyyppi::TEXT
     AND sp.aktiivinen IS TRUE
-    AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+    AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
     AND sp.alkupvm <= u.alkupvm
     AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
-  JOIN sanktio_profiili_rivi spr
+  -- HUOM: LEFT JOIN, koska sanktiotyypille ei välttämättä löydy profiiliriviä
+  -- (esim. vanhentunut/poistettu sanktiotyyppi, jota ei ole koodattu profiiliin).
+  -- Sanktio ei saa kadota raportilta tällöin - se näytetään "Tunnistamattomat
+  -- sanktiot" -taulukossa (ks. sanktio.clj).
+  LEFT JOIN sanktio_profiili_rivi spr
     ON spr.sanktio_profiili_id = sp.id
     AND spr.sanktiotyyppi_id = s.tyyppi
-  JOIN sanktio_laji sl ON spr.sanktio_laji_id = sl.id
+  LEFT JOIN sanktio_laji sl ON spr.sanktio_laji_id = sl.id
   LEFT JOIN sanktio_profiili_laji_esitystiedot splet
     ON splet.sanktio_profiili_id = sp.id
     AND splet.sanktio_laji_id = sl.id
 WHERE s.poistettu IS NOT TRUE
   AND s.perintapvm BETWEEN :alku AND :loppu
-  AND u.id = :urakka
+  AND (:urakka::INTEGER IS NOT NULL OR :elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
   AND (lp.yllapitokohde IS NULL OR (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-urakkataso-bonukset
@@ -198,12 +198,14 @@ SELECT
   u.nimi AS urakan_nimi
 FROM erilliskustannus ek
   JOIN urakka u ON ek.urakka = u.id
+                AND (:urakka::INTEGER IS NOT NULL AND u.id = :urakka
+                  OR :urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus))
   -- Liitetään bonus_profiili ja rivi
   -- Valitaan urakalle sopiva profiili urakan alkupäivämäärän perusteella
   JOIN bonus_profiili bp
     ON bp.urakkatyyppi = u.tyyppi::TEXT
     AND bp.aktiivinen IS TRUE
-    AND :hoitovuosi BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu
+    AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu)
     AND bp.alkupvm <= u.alkupvm
     AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
   JOIN bonus_laji bl ON bl.koodi = ek.tyyppi::TEXT
@@ -215,7 +217,7 @@ FROM erilliskustannus ek
     AND bplet.bonus_laji_id = bl.id
 WHERE ek.poistettu IS NOT TRUE
   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
-  AND u.id = :urakka;
+  AND (:urakka::INTEGER IS NOT NULL OR :elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus);
 
 -- name: hae-urakkataso-sanktiolajit
 -- Hakee kaikki urakan sanktiolajit ja -tyypit profiilista (myös tyhjät = nollasummat)
@@ -234,12 +236,14 @@ WITH sanktio_profiili_rivit AS (
     JOIN sanktiotyyppi st ON st.id = spr_cte.sanktiotyyppi_id
     JOIN sanktio s ON s.tyyppi = spr_cte.sanktiotyyppi_id
     JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
-    JOIN urakka u ON tpi.urakka = u.id AND u.id = :urakka
+    JOIN urakka u ON tpi.urakka = u.id
+                  AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+                    OR (:urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
   WHERE s.poistettu IS NOT TRUE
     AND s.perintapvm BETWEEN :alku AND :loppu
     AND sp.urakkatyyppi = u.tyyppi::TEXT
     AND sp.aktiivinen IS TRUE
-    AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+    AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
     AND sp.alkupvm <= u.alkupvm
     AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
   GROUP BY spr_cte.sanktio_laji_id, spr_cte.sanktiotyyppi_id
@@ -265,10 +269,11 @@ FROM sanktio_profiili sp
     ON splet.sanktio_profiili_id = sp.id
     AND splet.sanktio_laji_id = sl.id
   LEFT JOIN sanktio_profiili_rivit spr_cte ON spr_cte.sanktio_laji_id = sl.id AND spr_cte.sanktiotyyppi_id = st.id
-  JOIN urakka u ON u.id = :urakka
+  JOIN urakka u ON ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+                OR (:urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
 WHERE sp.urakkatyyppi = u.tyyppi::TEXT
   AND sp.aktiivinen IS TRUE
-  AND :hoitovuosi BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu
+  AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
   AND sp.alkupvm <= u.alkupvm
   AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
 ORDER BY sl.id, st.id, sl.jarjestys, st.koodi;
@@ -291,10 +296,11 @@ FROM bonus_profiili bp
   LEFT JOIN bonus_profiili_laji_esitystiedot bplet
     ON bplet.bonus_profiili_id = bp.id
     AND bplet.bonus_laji_id = bl.id
-  JOIN urakka u ON u.id = :urakka
+  JOIN urakka u ON (:urakka::INTEGER IS NOT NULL AND u.id = :urakka
+                OR :urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus))
 WHERE bp.urakkatyyppi = u.tyyppi::TEXT
   AND bp.aktiivinen IS TRUE
-  AND :hoitovuosi BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu
+  AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu)
   AND bp.alkupvm <= u.alkupvm
   AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
 ORDER BY bl.id, bl.jarjestys;
