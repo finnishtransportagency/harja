@@ -748,12 +748,19 @@
 
 (deftest rajapinta-tavoitehinnan-alitus-2021-lisays-onnistuu-test
   (let [hoitokauden-alkuvuosi 2021
+        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+        valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
         urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ;; Hae urakan hoitokauden alun tavoitehinta
         hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
                                         (:db jarjestelma) {:urakka-id urakkaid
                                                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite (:db jarjestelma) {:urakka urakkaid})
+        budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) budjettitavoite)
+        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta (:db jarjestelma)
+                                         +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid 2021 budjettitavoite-vuodelle)
+
         ;; Haetaan urakan parametrit
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
@@ -866,8 +873,16 @@
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2021
+        hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+        hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+        valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
+        urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        budjettitavoite (budjettisuunnittelu-kyselyt/hae-budjettitavoite (:db jarjestelma) {:urakka urakkaid})
+        budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) budjettitavoite)
+        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta (:db jarjestelma)
+                                         +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid 2021 budjettitavoite-vuodelle)
+
         hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         toteutuneet-kustannukset 5M
         alituksen-maara 10M
         siirron-maara 100M
@@ -996,11 +1011,11 @@
                  ylityksen-maara tilaajan-prosentti urakoitsijan-prosentti tilaaja-maksaa
                  urakoitsija-maksaa siirto kulu-id false kayttajaid)
         ;; Ei odoteta vastausta, koska ehdot ei täyty
-        _ (try
+        vastaus (try
             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                           budjettisuunnittelu-kyselyt/hae-budjettitavoite
                           (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                    :tavoitehinta-oikaistu tavoitehinta
+                                                    :tavoitehinta tavoitehinta
                                                     :hoitovuoden-lopun-kattohinta (* 1.1 tavoitehinta)}])]
               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-ylityspaatos +kayttaja-jvh+ paatos))
             (catch Exception e e
@@ -1413,7 +1428,7 @@
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
+                                       :tavoitehinta hv_lopun_tavoitehinta_ennen_indkorj}]
         vastaus (try
                   (with-redefs [valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
                                 ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
@@ -1461,7 +1476,7 @@
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :tavoitehinta-oikaistu (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
+                                       :tavoitehinta (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
                                        :kirjallisesti-sovitut-muutokset muutokset}]
         vastaus (try
                   (with-redefs [;; valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
@@ -1510,7 +1525,7 @@
                  pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
+                                       :tavoitehinta hv_lopun_tavoitehinta_ennen_indkorj}]
         vastaus (try
                   (with-redefs [;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
@@ -1620,7 +1635,7 @@
                   (with-redefs [;; Feikataan vastaukset
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite
                                 (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                          :tavoitehinta-oikaistu tavoitehinta_jalkeen
+                                                          :tavoitehinta tavoitehinta_jalkeen
                                                           :hoitovuoden-lopun-kattohinta kattohinta}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
@@ -1719,7 +1734,7 @@
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                       :tavoitehinta-oikaistu hv_lopun_indkorjaamaton_tavoitehinta}]
+                                       :tavoitehinta hv_lopun_indkorjaamaton_tavoitehinta}]
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
                                 ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
