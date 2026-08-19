@@ -151,9 +151,11 @@
                       "-päätöksen peruminen peruuttaa  myös automaattiset kulut, 
                       bonus- tai sanktiomaksut sekä tietojen lukitukset, jotka mahdollisesti syntyivät päätöksestä."]
 
-                     [:div.padding-top-24 "Päätöksen peruminen peruuttaa myös seuraavat päätökset:"]
-                     (for* [x tehdyt-kumoutuvat-paatokset]
-                       [:div.sisennys "• " (:nimi x)])])]
+                     (when (> (count tehdyt-kumoutuvat-paatokset) 0)
+                       [:<>
+                        [:div.padding-top-24 "Päätöksen peruminen peruuttaa myös seuraavat päätökset:"]
+                        (for* [x tehdyt-kumoutuvat-paatokset]
+                          [:div.sisennys "• " (:nimi x)])])])]
 
          :footer [:<>
                   [:div.muokkaus-modal-napit.padding-top-16

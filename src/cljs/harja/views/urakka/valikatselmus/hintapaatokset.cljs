@@ -48,9 +48,12 @@
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken?
           (and voi-muokata? (not (:virheet paatos)))
+          ;; Vahvista
           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
-          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
-                                                                     :teksti "Automaattisesti kirjattu tavoitehinnan ylitys -kulu poistetaan."})]]])]))
+          ;; Peru päätös
+          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                 paatos
+                 (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos)))))]]])]))
 
 (defn- tavoitehinnan-laskentamodaali [paatos]
   (let []
@@ -120,7 +123,7 @@
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
         siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)
-        maksimi-siirrettava-maara (fmt/desimaaliluku (or (:maksimi_siirrettava_maara paatos) 0)  2 2 false)
+        maksimi-siirrettava-maara (fmt/desimaaliluku (or (:maksimi_siirrettava_maara paatos) 0) 2 2 false)
         muokattu-maksimi-siirrettava-maara (str/replace maksimi-siirrettava-maara "," ".")]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
