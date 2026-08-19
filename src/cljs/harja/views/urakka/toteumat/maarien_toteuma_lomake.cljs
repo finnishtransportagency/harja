@@ -188,7 +188,7 @@
                      :virhe?                (kentassa-virhe? [::t/toteumat indeksi ::t/sijainti] validius)
                      :vaadi-vali? false
                      :vayla-tyyli?          true
-                     :sijainti              (r/wrap sijainti (constantly true))}
+                     :sijainti              sijainti}
                     (r/wrap sijainti
                             (r/partial paivita! :tierekisteriosoite indeksi))]]
                   [:div.row
@@ -413,7 +413,7 @@
              :tyyppi :tierekisteriosoite
              :vaadi-vali? false
              :vayla-tyyli? true
-             :sijainti (r/wrap sijainti (constantly true))
+             :sijainti sijainti
              :lataa-piirrettaessa-koordinaatit? true}
             {:nimi [::t/toteumat 0 ::t/ei-sijaintia]
              :disabled? pakota-sijainti?
