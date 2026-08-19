@@ -64,7 +64,7 @@
     (is (= perusluku [:teksti "Indeksilaskennan perusluku: 110,8"]) "Peruslukuteksti")
     (is (= indeksikerroin [:teksti "Hoitokauden 2021-22 indeksikerroin: 1,261"]) "Laskutusyhteenvedon indeksikerroin")
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.01.2022 - 31.01.2022" sanktioraportin-otsikko))
+    (is (= "Sanktiot, bonukset ja arvovähennykset — Oulun MHU 2019-2024 01.01.2022-31.01.2022" sanktioraportin-otsikko))
     (is (= "Sanktioiden yhteenveto" sanktioyhteenveto))))
 
 
@@ -99,4 +99,4 @@
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
           laskutusyhteenveto-taulukot))
-    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.10.2014 - 31.10.2014" sanktio-otsikko))))
+    (is (= "Sanktiot, bonukset ja arvovähennykset — Oulun alueurakka 2014-2019 01.10.2014-31.10.2014" sanktio-otsikko))))

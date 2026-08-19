@@ -51,8 +51,10 @@
     (is (vector? vastaus))
     (is (=marginaalissa? sanktiosumma 26488.52))
     (let [otsikko "Sanktiot"
-          taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
+          taulukot (apurit/hae-osion-taulukot vastaus otsikko)
+          taulukko (first taulukot)]
       (is (= "Oulun alueurakka 2014-2019" (:nimi (second vastaus))))
+      (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko ""}
                                           {:otsikko "Oulun alueurakka 2014-2019"}))))
@@ -171,11 +173,11 @@
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-toimii-urakalle
   (let [urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
         (suorita-sanktioraportti "urakka" [2018 10 1] [2019 9 30])
-        taulukko (apurit/taulukko-otsikolla
-                   urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
-                   "Sanktiot")
+        taulukot (apurit/hae-osion-taulukot urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella "Sanktiot")
+        taulukko (first taulukot)
         tarkistus-fn (tarkista-rivi-summalle 777M)]
     (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella))))
+    (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkistus-fn)))
@@ -183,11 +185,11 @@
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-laskee-sanktiot-vain-jos-viimeinen-kuukausi-on-mukana
   (let [urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
         (suorita-sanktioraportti "urakka" [2018 9 1] [2019 8 1])
-        taulukko (apurit/taulukko-otsikolla
-                   urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
-                   "Sanktiot")
+        taulukot (apurit/hae-osion-taulukot urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella "Sanktiot")
+        taulukko (first taulukot)
         tarkistus-fn (tarkista-rivi-summalle 0)]
     (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella))))
+    (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko
       tarkistus-fn)))
