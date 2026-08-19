@@ -116,7 +116,7 @@
                                 (not (valikatselmus-yhteiset/onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
         hoitovuosi-kesken? (pvm/valissa? nykyhetki (first valittu-hoitokausi) (second valittu-hoitokausi))
         hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi (pvm/nyt))]
-    
+
     [:<>
      (when (or hoitovuosi-kesken? hoitokausi-tulevaisuudessa?)
        [:div.hoitovuosi-info
@@ -141,23 +141,24 @@
          :tarkkaile-ulkopuolisia-muutoksia? true
          :header [:div.col-md-12
                   [:h2.header-yhteiset "Haluatko perua päätöksen?"]
-                  [:div.body
+                  (if tallennus-kesken?
+                    [yleiset/ajax-loader-pieni "Haetaan tietoja..."]
+                    [:div.body
+                     [:<>
+                      "“"
+                      [:span.lihavoitu kumottava-paatos-nimi]
+                      "“"
+                      "-päätöksen peruminen peruuttaa  myös automaattiset kulut, 
+                      bonus- tai sanktiomaksut sekä tietojen lukitukset, jotka mahdollisesti syntyivät päätöksestä."]
 
-                   [:<>
-                    "“"
-                    [:span.lihavoitu kumottava-paatos-nimi]
-                    "“"
-                    "-päätöksen peruminen peruuttaa  myös automaattiset kulut, 
-                    bonus- tai sanktiomaksut sekä tietojen lukitukset, jotka mahdollisesti syntyivät päätöksestä."]
-
-                   [:div.padding-top-24 "Päätöksen peruminen peruuttaa myös seuraavat päätökset:"]
-                   (for* [x tehdyt-kumoutuvat-paatokset]
-                     [:div.sisennys "• " (:nimi x)])]]
+                     [:div.padding-top-24 "Päätöksen peruminen peruuttaa myös seuraavat päätökset:"]
+                     (for* [x tehdyt-kumoutuvat-paatokset]
+                       [:div.sisennys "• " (:nimi x)])])]
 
          :footer [:<>
                   [:div.muokkaus-modal-napit.padding-top-16
-                   [napit/tallenna "Kyllä, peru päätös" #(peru-fn)]
-                   [napit/yleinen-toissijainen "Peruuta" #(e! (valikatselmus-tiedot/->SuljePaatosModal))]]]}]]
+                   [napit/tallenna "Kyllä, peru päätös" #(peru-fn) {:disabled tallennus-kesken?}]
+                   [napit/yleinen-toissijainen "Peruuta" #(e! (valikatselmus-tiedot/->SuljePaatosModal)) {:disabled tallennus-kesken?}]]]}]]
 
       (doall
         (for* [paatos paatokset]
@@ -169,8 +170,7 @@
             (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-            ;; TODO .. viritä avain tänne jotenkin paremmin
-            (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (assoc (second (first paatos)) :avain :indeksikorjaus) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+            (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             :else nil)))]]))

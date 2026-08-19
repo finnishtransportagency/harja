@@ -250,7 +250,7 @@
                                 mahdolliset-paatokset)
 
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
-        paatokset (yleiset/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]
+        paatokset (yleiset/yhdista-mapit :nimi mahdolliset-paatokset tietokanta-paatokset)]
     paatokset))
 
 (defn hae-kustannukset-jarjestettyna [db urakkaid hoitovuosi hoitokauden-alkupvm hoitokauden-loppupvm]

@@ -100,16 +100,15 @@
 
 
 (defn yhdista-mapit
-  "Yhdistetään tietokannasta tulevat ja päätöskoneelta tulevat päätökset niin, että
-   käytetään päätöskoneen päätöksiä, jos niitä ei ole vielä tietokannassa ja muuten tietokannan päätöksiä.
-   Vertailussa käytetään :nimi avainta. Se täytyy löytyä molemmista mapeistä."
-  [pk-paatokset db-paatokset]
-  (let [index-map (into {} (map (fn [m] [(:nimi m) m]) db-paatokset))]
-    (map (fn [m1]
-           (if-let [m2 (index-map (:nimi m1))]
-             m2
-             m1))
-      pk-paatokset)))
+  "Yhdistää mapit annetun avaimen perusteella.
+  Jos sama avain löytyy molemmista, jälkimmäisen arvot ylikirjoittavat ensimmäisen vastaavat arvot."
+  [avain pohjat paivitykset]
+  (let [index (into {} (map (juxt avain identity) paivitykset))]
+    (map (fn [pohja]
+           (if-let [paivitys (get index (avain pohja))]
+             (merge pohja paivitys)
+             pohja))
+      pohjat)))
 
 
 (defn random-luku-valilta

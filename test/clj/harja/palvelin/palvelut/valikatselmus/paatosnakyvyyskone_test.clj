@@ -307,9 +307,9 @@
                       {:nimi "Kattohinnan ylitys" :tyyppi "db"}
                       {:nimi "Hoidonjohtopalkkion muutos" :tyyppi "db"}
                       {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :tyyppi "db"}]
-        yhdistetyt-paatokset (yleiset/yhdista-mapit pk-paatokset db-paatokset)
+        yhdistetyt-paatokset (yleiset/yhdista-mapit :nimi pk-paatokset db-paatokset)
         yksi-db-paatos (conj [] (first db-paatokset))
-        yksi-tietokannasta (yleiset/yhdista-mapit pk-paatokset yksi-db-paatos)]
+        yksi-tietokannasta (yleiset/yhdista-mapit :nimi pk-paatokset yksi-db-paatos)]
     (is (= 9 (count yhdistetyt-paatokset)))
     (is (= "db" (:tyyppi (first yhdistetyt-paatokset))))
     (is (= "db" (:tyyppi (last yhdistetyt-paatokset))))
