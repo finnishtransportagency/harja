@@ -806,6 +806,7 @@
                                               (when (:korosta rivi) "korostettu-rivi ")
                                               (when (:korosta-hennosti rivi) "hennosti-korostettu-rivi ")
                                               (when (:korosta-harmaa rivi) "harmaa-korostettu-rivi ")
+                                              (when (:himmennetty rivi) "himmennetty-rivi ")
                                               (when (:valkoinen rivi) "valkoinen-rivi ")
                                               (when (:lihavoi rivi) "bold ")
                                               (when (:yhteenveto rivi) "yhteenveto ")
