@@ -88,9 +88,12 @@
                                                       "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.")) nil nil]]
 
           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and (not (:virheet paatos)) voi-muokata?)
+           ;; Vahvista
            #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
-           (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))
-                                                                      :teksti "Automaattisesti kirjattu kulu poistetaan."})]
+           ;; Peru päätös 
+           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                  paatos
+                  (fn [] (e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos)))))]
           (when (:virheet paatos)
             [:div.muokkaustoiminnot
              [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
