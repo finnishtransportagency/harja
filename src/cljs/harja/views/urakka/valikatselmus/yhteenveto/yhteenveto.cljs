@@ -10,7 +10,7 @@
 (defn osio-lopun-tavoite-ja-katto
   [{:keys [urakan-parametrit hoitokauden-alkuvuosi]}
    {:keys [hoitovuoden-alun-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset
-           aktiiviset-pysyvat-muutokset menneet-pysyvat-muutokset
+           kirjallisesti-sovitut-muutokset menneet-pysyvat-muutokset
            toteumiin-perustuvat-muutokset-yht pysyvat-muutokset-toteuma-muutokset-yht
            arvonvahennykset-yht hoitokauden_lopun_indeksikorjaus
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
@@ -47,11 +47,11 @@
          [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+")
                   (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
 
-        (when aktiiviset-pysyvat-muutokset
+        (when kirjallisesti-sovitut-muutokset
           [:div.flex-row.summa-rivi
            [:span.sisennys "• Kirjallisesti sovitut muutokset"]
-           [:span (str (when (> aktiiviset-pysyvat-muutokset 0) "+")
-                    (fmt/euro-opt false aktiiviset-pysyvat-muutokset))]])
+           [:span (str (when (> kirjallisesti-sovitut-muutokset 0) "+")
+                    (fmt/euro-opt false kirjallisesti-sovitut-muutokset))]])
 
         [:div.flex-row.summa-rivi
          [:span.sisennys "• Toteumiin perustuvat muutokset"]

@@ -17,13 +17,13 @@
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu]) 0)
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
         tavoitehinnan-muutokset (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu]) 0)
-        aktiiviset-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
-                                       (get-in yhteenvedon-tiedot [:budjettitavoite :muutos-summa]))
+        kirjallisesti-sovitut-muutokset (when (:muutosten_hallinta urakan-parametrit)
+                                       (get-in yhteenvedon-tiedot [:budjettitavoite :kirjallisesti-sovitut-muutokset]))
         menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
                                     (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-muutos-summa]))
         toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
-        pysyvat-muutokset-toteuma-muutokset-yht (+ (or aktiiviset-pysyvat-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
+        pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
         arvonvahennykset-yht (apply + (map #(:maara %) (:arvonvahennykset yhteenvedon-tiedot)))
 
         ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
@@ -50,7 +50,7 @@
     {:yhteenvedon-tiedot yhteenvedon-tiedot
      :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
      :tavoitehinnan-muutokset tavoitehinnan-muutokset
-     :aktiiviset-pysyvat-muutokset aktiiviset-pysyvat-muutokset
+     :kirjallisesti-sovitut-muutokset kirjallisesti-sovitut-muutokset
      :menneet-pysyvat-muutokset menneet-pysyvat-muutokset
      :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
      :pysyvat-muutokset-toteuma-muutokset-yht pysyvat-muutokset-toteuma-muutokset-yht
