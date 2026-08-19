@@ -179,7 +179,9 @@ FROM sanktio s
     AND splet.sanktio_laji_id = sl.id
 WHERE s.poistettu IS NOT TRUE
   AND s.perintapvm BETWEEN :alku AND :loppu
-  AND (:urakka::INTEGER IS NOT NULL OR :elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
+  AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+    OR (:urakka::INTEGER IS NULL
+      AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
   AND (lp.yllapitokohde IS NULL OR (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
 
 -- name: hae-urakkataso-bonukset
