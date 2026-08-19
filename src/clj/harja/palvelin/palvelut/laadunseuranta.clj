@@ -462,6 +462,11 @@
       ;; koska laatupoikkeamalla voi olla 0...n sanktiota
       (let [poista-laatupoikkeama? (boolean (and (:suorasanktio sanktio) (:poistettu sanktio)))
             sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
+        ;; Vanhoilla urakoilla käsittelytapa valitaan sanktiolomakkeella.
+        ;; Päätöksen tallennus käyttää laatupoikkeaman päätöstä, joten pidä arvot samoina.
+        laatupoikkeama (if (:kasittelytapa sanktio)
+                 (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
+                 laatupoikkeama)
             ;; Laatupoikkeaman kautta tehtyä sanktiota muokattaessa säilytetään laatupoikkeaman ne
             ;; kentät, joita sanktiolomake ei näytä eikä käsittele oikein (tekijä, selvityspyyntö sekä
             ;; poikkeamaraportti-lippu). Näin muokkaus ei tyhjennä niitä. Suorasanktioille ja uusille
@@ -481,8 +486,8 @@
             {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
             _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
                 (konv/sql-timestamp kasittelyaika)
-                (name paatos) perustelu
-                (name kasittelytapa) muukasittelytapa
+              (if (keyword? paatos) (name paatos) paatos) perustelu
+              (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
                 (:id user)
                 id)
             sanktio-id (tallenna-laatupoikkeaman-sanktio
