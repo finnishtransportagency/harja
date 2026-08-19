@@ -15,7 +15,7 @@
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [harja.ui.grid :as grid]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log error]]
             [harja.tiedot.urakka :as u]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -33,6 +33,20 @@
     (if (raportti-domain/raporttielementti? elementti)
       (first elementti)
       :vain-arvo)))
+
+(defn- validoi-raporttielementti! [indeksi elementti]
+  (when (and (vector? elementti)
+          (not (keyword? (first elementti))))
+    (throw (js/Error.
+             (str "Raportin sisältöelementti ei ole raporttielementti indeksissä " indeksi
+               ". Odotettiin avainsanalla alkavaa vektoria, saatiin: " (pr-str elementti)
+               ". Tarkista, ettei raporttirungossa ole ylimääräistä vektoria, esimerkiksi [[[:taulukko ...]]]."))))
+  elementti)
+
+(defn- avaimellinen-html [html avain]
+  (if (vector? html)
+    (with-meta html {:key avain})
+    html))
 
 (defmethod muodosta-html :vain-arvo [arvo] arvo)
 
@@ -257,6 +271,7 @@
                                   korosta? (:korosta? optiot)
                                   korosta-hennosti? (:korosta-hennosti? optiot)
                                   korosta-harmaa? (:korosta-harmaa? optiot)
+                                  himmennetty? (:himmennetty? optiot)
                                   valkoinen? (:valkoinen? optiot)
                                   rivin-luokka (:rivin-luokka optiot)
                                   mappina (assoc
@@ -274,6 +289,9 @@
 
                                 korosta-harmaa?
                                 (assoc :korosta-harmaa true)
+
+                                himmennetty?
+                                (assoc :himmennetty true)
 
                                 valkoinen?
                                 (assoc :valkoinen true)
@@ -348,14 +366,14 @@
                   (when rivita? {:white-space "pre-line"})
                   (when alamarginaali {:margin-bottom alamarginaali}))}
    teksti
-   (when infopallura (muodosta-html [:infopallura infopallura]))])
+  (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura leveysprosentti]}]]
   [:div {:style (merge
                   {:font-weight 700
                    :color (when vari vari)}
                   (when leveysprosentti {:width (str leveysprosentti "%")}))} teksti
-   (when infopallura (muodosta-html [:infopallura infopallura]))])
+  (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
@@ -435,8 +453,10 @@
     [:div.display-flex.display-container]
     (map-indexed
       (fn [i d]
-        ^{:key (str "display-flex-" i)}
-        [muodosta-html d])
+        (avaimellinen-html
+          (muodosta-html
+            (validoi-raporttielementti! i d))
+          (str "display-flex-" i)))
       data)))
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
@@ -445,7 +465,7 @@
 
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
-  [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
+  (let [html [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
 
    ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
@@ -466,13 +486,16 @@
 
    (keep-indexed (fn [i elementti]
                    (when elementti
-                     ^{:key i}
-                     [muodosta-html elementti]))
+                     (avaimellinen-html
+                       (muodosta-html
+                         (validoi-raporttielementti! i elementti))
+                       i)))
      (mapcat (fn [sisalto]
                (if (list? sisalto)
                  sisalto
                  [sisalto]))
-       sisalto))])
+       sisalto))]]
+    html))
 
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
@@ -486,5 +509,9 @@
                            :arvo arvo})])
 
 (defmethod muodosta-html :default [elementti]
-  (log "HTML-raportti ei tue elementtiä: " elementti)
-  nil)
+  (let [kuvaus (pr-str elementti)
+        kuvaus (subs kuvaus 0 (min 200 (count kuvaus)))]
+    (error "HTML-raportti ei tue elementtiä:" kuvaus)
+    ;; Näkyvä merkki, ettei tuettu elementti kadota raportilta äänettömästi
+    [:div {:style {:color "#dd0000" :border "1px solid #dd0000" :margin "0.5rem 0" :padding "0.5rem" :font-family "monospace" :font-size "12px"}}
+     (str "Virhe: HTML-raportti ei tue elementtiä: " kuvaus)]))
