@@ -1657,7 +1657,7 @@
   :roolien-oikeudet
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
-   "ELY_Paakayttaja" #{"R*" "W*" "poisto*"},
+   "ELY_Paakayttaja" #{"R*" "W*" "poisto*" "päätös*"},
    "ELY_Peruskayttaja" #{"R*"},
    "ELY_Urakanvalvoja" #{"R*" "W" "poisto" "päätös"},
    "ELY_turvallisuusvastaava" #{"R"},
