@@ -17,10 +17,10 @@
 (defonce virheet-atom (atom {}))
 (defonce tallenna-painettu (atom false))
 
-(defn- rivi-painikkeet [e! uusi-id  muuttui?
+(defn- rivi-painikkeet [e! uusi-id muuttui?
                         uudet-simplified
-                        tallennus-kesken? 
-                        hoitokauden-alkuvuosi 
+                        tallennus-kesken?
+                        hoitokauden-alkuvuosi
                         hoitokauden-oikaisut-atom
                         voi-muokata? rivilla-tyhja-elementti]
   [:div.painikkeet
@@ -145,10 +145,10 @@
           :elementin-id (str "summa-" uusi-id)
           :aria-label "Vaikutus euroina"}]
         hoitokauden-oikaisut-atom]]
-      
+
       ;; Tallenna / Lisää rivi 
       ;; Siirretty alas, koska "Vahvista päätös" voidaan sotkea tallenna- napiksi.
-      (rivi-painikkeet e! uusi-id  muuttui?
+      (rivi-painikkeet e! uusi-id muuttui?
         uudet-simplified
         tallennus-kesken?
         hoitokauden-alkuvuosi
@@ -203,15 +203,15 @@
                                            poikkeusvuosi?)]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
-     
+
      (if hoitovuosi-kesken?
        [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
        [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
-        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
-     
+        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
+
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
-     
+
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         [tavoitehinnan-oikaisut-taulukko e! hoitokauden-oikaisut-atom
@@ -238,8 +238,12 @@
              (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
            (and (not hoitovuosi-kesken?) (not (:virheet paatos)))
+           ;; Vahvista
            #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]]]])]))
+           ;; Peru päätös 
+           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                  paatos
+                  (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot)))))]]]])]))
 
 (defn tavoitehinnan-muutokset-2025
   "-25 ja myöhemmin alkaville urakoille näytetään täysin erilainen tavoitehinnan muutokset komponentti. Erotetaan se sen vuoksi
@@ -259,7 +263,7 @@
      (if hoitovuosi-kesken?
        [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
        [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
-        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
+        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
 
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
@@ -277,7 +281,7 @@
 
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Johto- ja hallintokorvauksen muutokset"]
-          [:span (positiivinen-arvo-fn :johto_ja_hallintakorvaus_muutokset )]]
+          [:span (positiivinen-arvo-fn :johto_ja_hallintakorvaus_muutokset)]]
 
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Muutostyöt (erillisrahoitetut)"]
@@ -324,7 +328,11 @@
             [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
              (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
-            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
-             (and (not (:virheet paatos)) voi-muokata?)
-             #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
-             #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]]]])]))
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
+           (and (not (:virheet paatos)) voi-muokata?)
+           ;; Vahvista
+           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
+           ;; Peru päätös 
+           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                  paatos
+                  (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot)))))]]]])]))
