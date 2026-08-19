@@ -564,7 +564,7 @@
          {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if (and saa-muokata-lp-sanktiota? (not mhu25?)) (constantly voi-muokata?) (constantly false))
+          :muokattava? (if (not mhu25?) (constantly voi-muokata?) (constantly false))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
           :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
