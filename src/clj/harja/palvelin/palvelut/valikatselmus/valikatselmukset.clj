@@ -1123,6 +1123,7 @@
         vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
     vastaus))
 
+
 (defn hae-ketjutetusti-kumoutuvat-paatokset
   "Syötetään päätös, joka halutaan kumota. 
   Palauttaa kaikki riippuvaiset päätökset, jotka kumoutuvat sen mukana."
@@ -1138,12 +1139,64 @@
                             (hae-urakan-mahdolliset-paatokset db kayttaja payload)
                             (:avain paatos))
 
-        ;; Palauita pelkästään tehdyt päätökset, jotka kumoutuvat
-        tehdyt-nimet (set (map :nimi tehdyt-paatokset))
-        tehdyt-kumoutuvat-paatokset (filterv
-                                      #(contains? tehdyt-nimet (:nimi %))
-                                      kaikki-kumoutuvat)]
+        ;; Palauta pelkästään tehdyt päätökset, jotka kumoutuvat
+        tehdyt-kumoutuvat-paatokset (->>
+                                      (yleiset/yhdista-mapit :nimi kaikki-kumoutuvat tehdyt-paatokset)
+                                      (filter :id)
+                                      vec)]
     tehdyt-kumoutuvat-paatokset))
+
+
+(defn poista-yksittainen-paatos
+  [db kayttaja {:keys [avain paatostyyppi] :as paatos}]
+  (log/debug "poista-yksittainen-paatos :: avain" (pr-str avain))
+  (case avain
+    :hoitovuoden-lopun-hinta
+    (poista-hoitovuoden-lopun-hintapaatos db kayttaja paatos)
+
+    :tavoitehinnan-ylitys
+    (poista-tavoitehinnan-ylityspaatos db kayttaja paatos)
+
+    :tavoitehinnan-alitus
+    (poista-tavoitehinnan-alituspaatos db kayttaja paatos)
+
+    :kattohinnan-ylitys
+    (poista-kattohinnan-ylityspaatos db kayttaja paatos)
+
+    :hoidonjohtopalkkio
+    (poista-hoidonjohtopalkkion-muutospaatos db kayttaja paatos)
+
+    :indeksikorjaus
+    (poista-indeksikorjauspaatos db kayttaja paatos)
+
+    :lupaus
+    (poista-lupauspaatos db kayttaja paatos)
+
+    :raportti
+    (poista-poytakirjan-raporttipaatos db kayttaja paatos)
+
+    :tavoitehinnan-muutokset
+    (case paatostyyppi
+      "tavoitehinnan-pysyvat-muutokset"
+      (poista-tavoitehinnan-pysyva-muutospaatos db kayttaja paatos)
+
+      "tavoitehinnan-muutokset"
+      (poista-tavoitehinnan-muutospaatos db kayttaja paatos))))
+
+
+(defn poista-paatokset-ketjutetusti
+  [db kayttaja {:keys [paatos tehdyt-kumoutuvat-paatokset] :as _tiedot}]
+
+  (let [{:keys [urakkaid hoitokauden_alkuvuosi]} paatos
+        _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
+        ;; Poista itse valittu päätös
+        _ (poista-yksittainen-paatos db kayttaja paatos)]
+
+    ;; Poista kaikki siihen ketjutetut päätökset
+    (doseq [paatos tehdyt-kumoutuvat-paatokset]
+      (poista-yksittainen-paatos db kayttaja paatos))
+
+    (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakkaid :hoitovuosi hoitokauden_alkuvuosi})))
 
 (defrecord Valikatselmukset []
   component/Lifecycle
@@ -1154,6 +1207,10 @@
       (julkaise-palvelu http :hae-ketjutetusti-kumoutuvat-paatokset
         (fn [user tiedot]
           (hae-ketjutetusti-kumoutuvat-paatokset db user tiedot)))
+
+      (julkaise-palvelu http :poista-paatokset-ketjutetusti
+        (fn [user tiedot]
+          (poista-paatokset-ketjutetusti db user tiedot)))
 
       (julkaise-palvelu http :tallenna-tavoitehinnan-oikaisu
         (fn [user tiedot]
@@ -1304,6 +1361,7 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
+      :poista-paatokset-ketjutetusti
       :hae-ketjutetusti-kumoutuvat-paatokset
       :tallenna-tavoitehinnan-oikaisu
       :poista-tavoitehinnan-oikaisu

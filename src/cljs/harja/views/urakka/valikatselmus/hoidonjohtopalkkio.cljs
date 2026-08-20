@@ -94,6 +94,7 @@
            #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                   paatos
                   (fn [] (e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos)))))]
+          
           (when (:virheet paatos)
             [:div.muokkaustoiminnot
              [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"

@@ -94,6 +94,8 @@
 (defrecord HaeKetjutetustiKumoutuvatPaatokset [paatos peru-fn])
 (defrecord HaeKumoutuvatOnnistui [vastaus])
 (defrecord SuljePaatosModal [])
+(defrecord PeruValikatselmusPaatos [paatos])
+
 
 (defrecord PaivitaKattohinnanSiirtoCheckbox [uusi-arvo])
 (defrecord PaivitaKattohinnanSiirtoMaara [uusi-arvo])
@@ -602,6 +604,20 @@
       :tallennus-kesken? false
       :nayta-kumoa-modal? true
       :tehdyt-kumoutuvat-paatokset vastaus))
+
+  PeruValikatselmusPaatos
+  (process-event [{:keys [paatos]} app]
+    (tuck-apurit/post!
+      :poista-paatokset-ketjutetusti
+      {:paatos (assoc paatos :luoja (:id @istunto/kayttaja))
+       :tehdyt-kumoutuvat-paatokset (:tehdyt-kumoutuvat-paatokset app)}
+      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+    (assoc app
+      :tallennus-kesken? true
+      :nayta-kumoa-modal? false
+      :tehdyt-kumoutuvat-paatokset nil
+      :kumottava-paatos-nimi (:nimi paatos)))
 
   SuljePaatosModal
   (process-event [_ app]

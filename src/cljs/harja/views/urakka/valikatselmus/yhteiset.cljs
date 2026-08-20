@@ -6,24 +6,6 @@
             [harja.domain.oikeudet :as oikeudet]))
 
 
-;; TODO poistuu ehkä
-(defn paatoksen-poistovarmistus-modaali
-  [{:keys [peru-paatos-fn teksti]}]
-  (let [varmistus-modaalin-kutsu-fn #(modal/nayta! {:otsikko "Perutaanko päätös?"
-                                                    :otsikko-muotoilut {:font-size "28px" :margin-bottom "24px"}
-                                                    :leveys "560px"
-                                                    :content-tyyli {:line-height "24px" :padding-top "24px" :padding-bottom "24px"}
-                                                    :body-tyyli {:margin-bottom "24px"}
-                                                    :footer [:div
-                                                             [napit/yleinen-ensisijainen "Peru päätös" (fn []
-                                                                                                         (modal/piilota!)
-                                                                                                         (peru-paatos-fn)) {:luokka "valikatselmus-nappi nappi-ensisijainen"}]
-                                                             [napit/yleinen-toissijainen "Peruuta" (fn [] (modal/piilota!)) {:luokka "valikatselmus-nappi nappi-toissijainen"}]]
-                                                    :footer-tyyli {:text-align "left"}
-                                                    :ruksi-tyyli {:color "#004D99" :font-size "24px"}}
-                                       [:div teksti])]
-    varmistus-modaalin-kutsu-fn))
-
 ;; Varmistetaan, että on kirjoitusoikeudet. Välikatselmusta voi katsoa lukuoikeuksilla, mutta päätöksiä ei voi tehdä
 ;; lukuoikeuksilla
 (defn onko-oikeudet-tehda-paatos? [urakka-id]

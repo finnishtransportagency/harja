@@ -55,4 +55,4 @@
            ;; Peru päätös 
            #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                   paatos
-                  (fn [] (e! (valikatselmus-tiedot/->PoistaHoitokaudenlopunHintapaatos paatos)))))]]]])]))
+                  (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]]])]))
