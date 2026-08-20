@@ -337,6 +337,20 @@
                 [hoitokauden-alkuvuosi vahvistettu?]))
         urakan-hoitokaudet))))
 
+(defn hoitovuosi-lukittu?
+  "Palauttaa true, jos annettu hoitovuosi on vahvistettu Kustannusten Suunnittelu tai
+  Hoitovuoden alun tavoitehinta -sivuilla."
+  [db urakka-id hoitovuosi urakan-alkupvm]
+  (assert (int? urakka-id) "Urakka-id tulee olla kokonaisluku")
+
+  (let [hoitovuosi-nro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro
+                         urakan-alkupvm hoitovuosi)
+        vahvistuksen-tila (first (budjettisuunnittelu-q/onko-kustannussuunnitelma-vahvistettu
+                                   db {:urakkaid urakka-id
+                                       :hoitovuosinro hoitovuosi-nro}))
+        vahvistettu? (:exists vahvistuksen-tila)]
+    vahvistettu?))
+
 
 (defn- laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä.
@@ -1004,14 +1018,23 @@
 
   (jdbc/with-db-transaction [conn db]
     (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
+          urakan-alkupvm (-> (q-urakat/hae-urakka db {:id urakka-id}) first :alkupvm)
           _ (when-not muutos
               (throw+ {:type virheet/+viallinen-kutsu+
                        :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
                                   :viesti "Muutosta ei löydy"}]}))
 
           tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
+          kohdistuu-hoitovuoteen (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:voimassa_alkaen muutos)))
+          vuosi-lukittu? (hoitovuosi-lukittu? db urakka-id kohdistuu-hoitovuoteen urakan-alkupvm)
           ;; Tarkasta voiko muutoksen poistaa
           {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty? conn tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
+          ;; Lisätään poistoon tarkistus, että hoitovuosi ei ole lukittu, vaikka muutoksen poisto olisi muuten sallittu
+          voi-poistaa? (if (and voi-poistaa? (not vuosi-lukittu?)) true false)
+          ;; Jos hoitovuoden lukitsemisesta ei ole vielä virhettä merkittynä, niin lisätään
+          virhe (if (and (not voi-poistaa?) (nil? virhe))
+                  "Muutoksen kohdistama hoitovuosi on lukittu. Poista mahdolliset vahvistukset poistaaksesi muutoksen."
+                  virhe)
           hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
           {:keys [hoitokausinro hoitovuoden-tavoitehinta laskutusraja laskutusraja_alkuperainen
                   laskutusrajaa_nostettu? muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua]}

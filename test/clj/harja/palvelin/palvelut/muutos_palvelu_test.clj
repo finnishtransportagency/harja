@@ -8,6 +8,8 @@
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.tyokalut.yleiset :refer [round2]]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
@@ -620,20 +622,21 @@
 (deftest kustannusvaikutusten-tallennus
   ;; Kustannusvaikutusten testi samaan tapaan kuin tehtävän määrien tallennuksen testi yllä
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "POP MHU Suomussalmi 2024-2029 Päällystepaikkaukset TP")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';"))
                 ;; Bumpataan versiota, jotta nähdään asettuuko odotettujen rivien versio samaan versioon kuin äiti-muutoksen
                 :versio 2 :tyyppi "pysyva" :liite-idt #{}}
         ;; Payload muodossa mikä tulisi UI-lomakkeelta osana muuta muutosdataa
-        kustannusvaikutus-payload [{:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025
+        kustannusvaikutus-payload [{:summa 1111, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi toimenpideinstanssi-id, :hoitokauden_alkuvuosi 2025
                                     :tehtavamaaramuutos-kirjattu? true :syy nil}
-                                   {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026
+                                   {:summa 2222, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi toimenpideinstanssi-id, :hoitokauden_alkuvuosi 2026
                                     :tehtavamaaramuutos-kirjattu? true :syy nil}
-                                   {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2027
+                                   {:summa 3333, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi toimenpideinstanssi-id, :hoitokauden_alkuvuosi 2027
                                     :tehtavamaaramuutos-kirjattu? true :syy nil}
                                    ;; Tällä rivillä ei muuteta mitään, jotta nähdään että vanha rivi jää ennalleen, eikä sen versio nouse
                                    ;; Mhu_muutos taulun versio-numero edustaa uusinta versiota, joka on voimassa jollakin joukolla
                                    ;; lapsi-taulujen rivejä. Versioita ei ole tarpeen nostaa turhaan riveille, jotka eivät muutu.
-                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2028
+                                   {:summa 1000, :kustannuslaji "hankintakustannukset", :toimenpideinstanssi toimenpideinstanssi-id, :hoitokauden_alkuvuosi 2028
                                     :tehtavamaaramuutos-kirjattu? true :syy nil}]
         odotettu-vastaus (list
                            {:hoitokauden_alkuvuosi 2025
@@ -641,28 +644,28 @@
                             :tehtavamaaramuutos-kirjattu? true
                             :summa 1111
                             :syy nil
-                            :toimenpideinstanssi 125
+                            :toimenpideinstanssi toimenpideinstanssi-id
                             :versio 2}
                            {:hoitokauden_alkuvuosi 2026
                             :kustannuslaji "hankintakustannukset"
                             :tehtavamaaramuutos-kirjattu? true
                             :summa 2222
                             :syy nil
-                            :toimenpideinstanssi 125
+                            :toimenpideinstanssi toimenpideinstanssi-id
                             :versio 2}
                            {:hoitokauden_alkuvuosi 2027
                             :kustannuslaji "hankintakustannukset"
                             :tehtavamaaramuutos-kirjattu? true
                             :summa 3333
                             :syy nil
-                            :toimenpideinstanssi 125
+                            :toimenpideinstanssi toimenpideinstanssi-id
                             :versio 2}
                            {:hoitokauden_alkuvuosi 2028
                             :kustannuslaji "hankintakustannukset"
                             :tehtavamaaramuutos-kirjattu? true
                             :summa 1000
                             :syy nil
-                            :toimenpideinstanssi 125
+                            :toimenpideinstanssi toimenpideinstanssi-id
                             :versio 1})
 
         _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) muutos kustannusvaikutus-payload false)
@@ -685,11 +688,11 @@
 
     (testing "Tallennus toimii ilman määrämuutoksia, syy on olemassa"
       (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025
+                                        :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025
                                         :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu koska ei nyt kirjattu"}
 
                                        {:summa 45000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2026
+                                        :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2026
                                         :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu 26 vuodelle myöskään"}]
             odotettu-vastaus (list
                                {:hoitokauden_alkuvuosi 2025
@@ -697,7 +700,7 @@
                                 :summa 35000
                                 :syy "Ei kirjattu koska ei nyt kirjattu"
                                 :tehtavamaaramuutos-kirjattu? false
-                                :toimenpideinstanssi 125
+                                :toimenpideinstanssi 132
                                 :versio 2}
 
                                {:hoitokauden_alkuvuosi 2026
@@ -705,7 +708,7 @@
                                 :summa 45000
                                 :syy "Ei kirjattu 26 vuodelle myöskään"
                                 :tehtavamaaramuutos-kirjattu? false
-                                :toimenpideinstanssi 125
+                                :toimenpideinstanssi 132
                                 :versio 2}
 
                                ;; Olemassa olevia
@@ -714,14 +717,14 @@
                                 :summa 1000
                                 :syy nil
                                 :tehtavamaaramuutos-kirjattu? true
-                                :toimenpideinstanssi 125
+                                :toimenpideinstanssi 132
                                 :versio 1}
                                {:hoitokauden_alkuvuosi 2028
                                 :kustannuslaji "hankintakustannukset"
                                 :summa 1000
                                 :syy nil
                                 :tehtavamaaramuutos-kirjattu? true
-                                :toimenpideinstanssi 125
+                                :toimenpideinstanssi 132
                                 :versio 1})
 
             _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
@@ -737,7 +740,7 @@
 
     (testing "Virheellinen data, tehtävämuutoksia ei kirjata ilman syytä"
       (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 125, :hoitokauden_alkuvuosi 2025
+                                        :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025
                                         :tehtavamaaramuutos-kirjattu? false}]
 
             vastaus (try (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
@@ -1337,28 +1340,28 @@
                                                                                 :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
                                                                                 :syy nil
-                                                                                :toimenpideinstanssi 125
+                                                                                :toimenpideinstanssi tpi-id-paallpaikk
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2026
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
                                                                                 :syy nil
-                                                                                :toimenpideinstanssi 125
+                                                                                :toimenpideinstanssi tpi-id-paallpaikk
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2027
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
                                                                                 :syy nil
-                                                                                :toimenpideinstanssi 125
+                                                                                :toimenpideinstanssi tpi-id-paallpaikk
                                                                                 :versio 1}
                                                                                {:hoitokauden_alkuvuosi 2028
                                                                                 :kustannuslaji "hankintakustannukset"
                                                                                 :tehtavamaaramuutos-kirjattu? true
                                                                                 :summa 1000
                                                                                 :syy nil
-                                                                                :toimenpideinstanssi 125
+                                                                                :toimenpideinstanssi tpi-id-paallpaikk
                                                                                 :versio 1})
                                                        :tehtavat_ja_maarat (list
                                                                              {:hoitokauden_alkuvuosi 2025
@@ -1668,7 +1671,8 @@
                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
                       (range 2024 2029))
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
-        lukittava-hoitokausi-nro 3
+        lukittava-hoitokausi-nro 2
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "POP MHU Suomussalmi 2024-2029 Talvihoito TP")
         max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
         ;; Luodaan ensin uusi pysyvä muutos
         muutos-payload {:tyyppi "pysyva"
@@ -1678,8 +1682,8 @@
                         :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 50, :hoitokauden_alkuvuosi 2025}
                                              {:tehtava 1448, :maaramuutos 50, :hoitokauden_alkuvuosi 2026}]
                         ;; Hox: Toimenpideinstanssit ovat urakkakohtaisia.
-                        :kustannusvaikutukset [{:toimenpideinstanssi 122, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2025}
-                                               {:toimenpideinstanssi 122, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2026}]}
+                         :kustannusvaikutukset [{:toimenpideinstanssi toimenpideinstanssi-id, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2025}
+                                                {:toimenpideinstanssi toimenpideinstanssi-id, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2026}]}
 
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-muutos
@@ -1688,14 +1692,12 @@
              :valittu-hoitokausi valittu-hoitokausi
              :muutos muutos-payload})
         muutos-id (inc max-id-ennen-tallennusta)
-
-        ;; Vahvistetaan hoitovuosi 2025-2026 (hoitokausi 2)
-        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id lukittava-hoitokausi-nro))
+        ;; Vahvistetaan hoitovuosi 2025-2026 (hoitokausi 2) kustannussuunnitelmassa
+        _ (u (format "DELETE FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = 'tavoite-ja-kattohinta' AND hoitovuosi = %s;" urakka-id lukittava-hoitokausi-nro))
         insert-str (format (str
-                             "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
-                             "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
-                             "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
-                     urakka-id lukittava-hoitokausi-nro 10 10 10 10)
+                             "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm) "
+                             "VALUES (%s, 'tavoite-ja-kattohinta', %s, %s, %s, TRUE, '2025-10-02T10:00:00.000-00:00');")
+                     urakka-id lukittava-hoitokausi-nro (:id +kayttaja-jvh+) (:id +kayttaja-jvh+))
         _ (u insert-str)
         poisto-epaonnistui? (atom false)]
 
@@ -1713,7 +1715,7 @@
     (is (true? @poisto-epaonnistui?) "Pysyvän muutoksen poisto vahvistetulla hoitovuodella epäonnistuu")
 
     ;; Siivotaan testidatan muutokset
-    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id lukittava-hoitokausi-nro))))
+    (u (format "DELETE FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = 'tavoite-ja-kattohinta' AND hoitovuosi = %s;" urakka-id lukittava-hoitokausi-nro))))
 
 (deftest poista-johto-ja-hallintokorvaus-muutos
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
@@ -1770,12 +1772,14 @@
 
     ;; Varmista että muutos on poistettu
     (let [;; Poista muutos
-          vastaus-poiston-jalkeen (poista-muutos +kayttaja-jvh+
-                                    {:muutos-id muutos-id
-                                     :urakka-id urakka-id
-                                     :valittu-hoitokausi valittu-hoitokausi
-                                     :hoitokaudet hoitokaudet
-                                     :laskenta-automatiikka? true})
+          vastaus-poiston-jalkeen (try (poista-muutos +kayttaja-jvh+
+                                         {:muutos-id muutos-id
+                                          :urakka-id urakka-id
+                                          :valittu-hoitokausi valittu-hoitokausi
+                                          :hoitokaudet hoitokaudet
+                                          :laskenta-automatiikka? true})
+                                    (catch Exception e
+                                      (println "Virhe:" e)))
           muutos-poiston-jalkeen (first (q (format "SELECT poistettu FROM mhu_muutos WHERE id = %s;" muutos-id)))
           historia-poiston-jalkeen (q-map (format "SELECT poistettu, versio FROM mhu_muutos_historia WHERE id = %s" muutos-id))
           poistettu-muutoksia-vastauksessa (filter #(= muutos-id (:id %))
