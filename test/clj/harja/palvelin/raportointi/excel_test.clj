@@ -26,3 +26,23 @@
       (is (= "400,5" (.formatCellValue formatter desimaali-arvo)))
       (is (= "400,22" (.formatCellValue formatter pitkä-desimaali-arvo))))))
 
+(deftest raportin-tekstielementit-sailyvat-excel-viennissa
+  (let [workbook (XSSFWorkbook.)]
+    (excel/muodosta-excel
+      [:raportti {:nimi "Testi"}
+       [:otsikko "Ryhmä"
+        [:taulukko {:nimi "Taulukko"
+                    :sheet-nimi "Taulukko"}
+         [{:otsikko "Arvo"}]
+         [[1]]]
+        [:teksti "Säilyvä teksti"]]]
+      workbook)
+    (let [tekstit (mapcat (fn [rivi]
+                            (keep (fn [solu]
+                                    (when (= org.apache.poi.ss.usermodel.CellType/STRING
+                                             (.getCellType solu))
+                                      (.getStringCellValue solu)))
+                                  (iterator-seq (.cellIterator rivi))))
+                          (iterator-seq (.rowIterator (.getSheetAt workbook 0))))]
+      (is (some #(= "Säilyvä teksti" %) tekstit)))))
+
