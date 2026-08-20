@@ -196,23 +196,24 @@
       "Urakalle ei ole kirjattu hoitoluokkaryhmiä Suunnittelu / Kalustoresurssit -sivulla."]
 
      :else
-     [:table.kalustoyhteenveto-taulukko
-      [:thead
-       [:tr
-        [:th "Hoitoluokkaryhmä"]
-        [:th.tasaa-oikealle "Tarjouksessa luvattu kalusto (kpl)"]
-        [:th.tasaa-oikealle
-         [:div.kalustoyhteenveto-otsikko-tooltip
-          [:span "Reiteille suunniteltu kalusto (kpl)"]
-          [suunniteltu-kalusto-tooltip]]]]]
-       [:tbody
-        (doall
-          (for [{:keys [hoitoluokkaryhma nimi luvattu suunniteltu]} kalustoyhteenveto]
-            ^{:key hoitoluokkaryhma}
-            [:tr
-             [:td nimi]
-             [:td.tasaa-oikealle (or luvattu 0)]
-             [:td.tasaa-oikealle suunniteltu]]))]])])
+     [grid/grid
+      {:tunniste :hoitoluokkaryhma
+       :ei-border? true
+       :piilota-otsikot? false
+       :piilota-muokkaus? true
+       :piilota-toiminnot? true
+       :mahdollista-rivin-valinta? false}
+
+      [{:otsikko "Hoitoluokkaryhmä" :nimi :nimi :tyyppi :string :tasaa :vasen :leveys 2}
+       {:otsikko "Tarjouksessa luvattu kalusto (kpl)" :nimi :luvattu :tyyppi :numero
+        :tasaa :oikea :leveys 1
+        :fmt fmt/kokonaisluku-opt}
+       {:otsikko [:div.kalustoyhteenveto-otsikko-tooltip
+                  [:span "Reiteille suunniteltu kalusto (kpl)"]
+                  [suunniteltu-kalusto-tooltip]]
+        :nimi :suunniteltu :tyyppi :numero :tasaa :oikea :leveys 1 :fmt fmt/kokonaisluku-opt}]
+
+      kalustoyhteenveto])])
 
 (defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit kalustoyhteenveto] :as app}]
   [:<>
