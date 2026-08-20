@@ -87,6 +87,11 @@
 (defrecord HaeTalvihoitoreititOnnistui [vastaus])
 (defrecord HaeTalvihoitoreititEpaonnistui [vastaus])
 
+;; Kalustoyhteenveto (MHU26): tarjouksessa luvattu kalusto suhteessa reiteille suunniteltuun
+(defrecord HaeKalustoyhteenveto [])
+(defrecord HaeKalustoyhteenvetoOnnistui [vastaus])
+(defrecord HaeKalustoyhteenvetoEpaonnistui [vastaus])
+
 ;; Manipuloi kartalla näytettäviä reittejä atomin kautta
 (defrecord PoistaValittuKohdeKartalta [id])
 (defrecord LisaaValittuKohdeKartalle [id])
@@ -101,12 +106,23 @@
 ;; Tiedostojen käsittely
 (defrecord TiedostoLadattu [vastaus])
 
+;; Hae kalustoyhteenveto urakalle (vain MHU26)
+(defn hae-kalustoyhteenveto [app]
+  (tuck-apurit/post! :hae-urakan-talvihoito-kalustoyhteenveto
+    {:urakka-id (:id @nav/valittu-urakka)}
+    {:onnistui ->HaeKalustoyhteenvetoOnnistui
+     :epaonnistui ->HaeKalustoyhteenvetoEpaonnistui})
+  app)
+
 ;; Hae talvihoitoreitit urakalle
 (defn hae-talvihoitoreitit [app]
   (tuck-apurit/post! :hae-urakan-talvihoitoreitit
     {:urakka-id (:id @nav/valittu-urakka)}
     {:onnistui ->HaeTalvihoitoreititOnnistui
      :epaonnistui ->HaeTalvihoitoreititEpaonnistui})
+  ;; Pidetään kalustoyhteenveto ajan tasalla, kun reitit ladataan uudelleen (esim. tuonti tai poisto)
+  (when (:nayta-kalustoyhteenveto? app)
+    (hae-kalustoyhteenveto app))
   (assoc app :haku-kaynnissa? true))
 
 (extend-protocol tuck/Event
@@ -115,6 +131,23 @@
   (process-event
     [_ app]
     (hae-talvihoitoreitit app))
+
+  HaeKalustoyhteenveto
+  (process-event
+    [_ app]
+    (hae-kalustoyhteenveto (assoc app :nayta-kalustoyhteenveto? true)))
+
+  HaeKalustoyhteenvetoOnnistui
+  (process-event
+    [{:keys [vastaus]} app]
+    (assoc app :kalustoyhteenveto vastaus))
+
+  HaeKalustoyhteenvetoEpaonnistui
+  (process-event
+    [{:keys [vastaus]} app]
+    (log/error "HaeKalustoyhteenvetoEpaonnistui :: vastaus" (pr-str vastaus))
+    (viesti/nayta-toast! "Yhteenvedon noutaminen epäonnistui" :varoitus viesti/viestin-nayttoaika-pitka)
+    (dissoc app :kalustoyhteenveto))
 
   HaeTalvihoitoreititOnnistui
   (process-event
