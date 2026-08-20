@@ -8,8 +8,6 @@
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.tyokalut.yleiset :refer [round2]]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.kyselyt.muutos-kyselyt :as muutos-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
@@ -681,6 +679,7 @@
 ;; Testataan kirjata tavoitehinnan pysyvämuutos ilman tehtävä määrämuutoksia
 (deftest kustannusvaikutusten-tallennus-ilman-maaramuutosta
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "POP MHU Suomussalmi 2024-2029 Talvihoito TP")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';"))
                 :versio 2
                 :tyyppi "pysyva"
@@ -740,7 +739,7 @@
 
     (testing "Virheellinen data, tehtävämuutoksia ei kirjata ilman syytä"
       (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025
+                                        :toimenpideinstanssi toimenpideinstanssi-id, :hoitokauden_alkuvuosi 2025
                                         :tehtavamaaramuutos-kirjattu? false}]
 
             vastaus (try (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
@@ -1671,7 +1670,7 @@
                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
                       (range 2024 2029))
         valittu-hoitokausi [(pvm/->pvm "1.10.2025") (pvm/->pvm "30.09.2026")]
-        lukittava-hoitokausi-nro 2
+        lukittava-hoitokausi-nro 3
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "POP MHU Suomussalmi 2024-2029 Talvihoito TP")
         max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
         ;; Luodaan ensin uusi pysyvä muutos
@@ -1692,12 +1691,14 @@
              :valittu-hoitokausi valittu-hoitokausi
              :muutos muutos-payload})
         muutos-id (inc max-id-ennen-tallennusta)
-        ;; Vahvistetaan hoitovuosi 2025-2026 (hoitokausi 2) kustannussuunnitelmassa
-        _ (u (format "DELETE FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = 'tavoite-ja-kattohinta' AND hoitovuosi = %s;" urakka-id lukittava-hoitokausi-nro))
+
+        ;; Vahvistetaan hoitovuosi 2025-2026 (hoitokausi 2)
+        _ (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id lukittava-hoitokausi-nro))
         insert-str (format (str
-                             "INSERT INTO suunnittelu_kustannussuunnitelman_tila (urakka, osio, hoitovuosi, luoja, vahvistaja, vahvistettu, vahvistus_pvm) "
-                             "VALUES (%s, 'tavoite-ja-kattohinta', %s, %s, %s, TRUE, '2025-10-02T10:00:00.000-00:00');")
-                     urakka-id lukittava-hoitokausi-nro (:id +kayttaja-jvh+) (:id +kayttaja-jvh+))
+                             "INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, "
+                             "kattohinta, kattohinta_indeksikorjattu, luotu, indeksikorjaus_vahvistettu) "
+                             "VALUES (%s, %s, %s, %s, %s, %s, '2025-10-01T10:00:00.000-00:00', '2025-10-02T10:00:00.000-00:00');")
+                     urakka-id lukittava-hoitokausi-nro 10 10 10 10)
         _ (u insert-str)
         poisto-epaonnistui? (atom false)]
 
@@ -1715,7 +1716,7 @@
     (is (true? @poisto-epaonnistui?) "Pysyvän muutoksen poisto vahvistetulla hoitovuodella epäonnistuu")
 
     ;; Siivotaan testidatan muutokset
-    (u (format "DELETE FROM suunnittelu_kustannussuunnitelman_tila WHERE urakka = %s AND osio = 'tavoite-ja-kattohinta' AND hoitovuosi = %s;" urakka-id lukittava-hoitokausi-nro))))
+    (u (format "DELETE FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s;" urakka-id lukittava-hoitokausi-nro))))
 
 (deftest poista-johto-ja-hallintokorvaus-muutos
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
