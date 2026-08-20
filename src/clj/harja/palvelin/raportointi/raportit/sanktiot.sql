@@ -7,20 +7,23 @@ SELECT
   s.indeksi,
   suorasanktio,
   st.id                   AS sanktiotyyppi_id,
+  st.nimi                 AS sanktiotyyppi_nimi,
   tpi.id                  AS toimenpideinstanssi_id,
   tpi.nimi                AS toimenpideinstanssi_nimi,
   tpk2.koodi              AS toimenpide_koodi,
   u.id                    AS "urakka-id",
   u.nimi                  AS nimi,
+  u.alkupvm               AS urakan_alkupvm,
   u.loppupvm              AS loppupvm,
   o.id                    AS elinvoimakeskus_id,
   o.nimi                  AS elinvoimakeskus_nimi,
-  o.elinvoimakeskusnumero AS elinvoimakeskus_evknumero,
+  o.lyhenne              AS elinvoimakeskus_lyhenne,
   tpk2.nimi      AS toimenpidekoodi_taso2,
   (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, u.id, s.sakkoryhma)) AS indeksikorotus
 FROM urakka u
      JOIN toimenpideinstanssi tpi ON tpi.urakka = u.id
-     JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+    JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+            AND o.tyyppi = 'elinvoimakeskus'
      LEFT JOIN sanktio s on tpi.id = s.toimenpideinstanssi
                             AND s.poistettu IS NOT TRUE
                             -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen
@@ -63,10 +66,11 @@ SELECT
   tpi.id         AS toimenpideinstanssi_id,
   u.id           AS "urakka-id",
   u.nimi         AS nimi,
+  u.alkupvm      AS urakan_alkupvm,
   u.loppupvm     AS loppupvm,
   o.id           AS elinvoimakeskus_id,
   o.nimi         AS elinvoimakeskus_nimi,
-  o.elinvoimakeskusnumero    AS elinvoimakeskus_evknumero,
+  o.lyhenne                  AS elinvoimakeskus_lyhenne,
   (SELECT nimi FROM toimenpide WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
@@ -75,6 +79,7 @@ FROM sanktio s
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
   JOIN urakka u ON (tpi.urakka = u.id OR lp.urakka = u.id) AND u.alkupvm < :loppu AND u.loppupvm > :alku
   JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+                      AND o.tyyppi = 'elinvoimakeskus'
 WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (:urakkatyyppi :: urakkatyyppi IS NULL OR
@@ -99,6 +104,122 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
             (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE)
 ORDER BY yllapitoluokka;
 
+-- name: hae-urakkataso-yllapito-sanktiot
+-- Hakee ylläpidon sanktiot profiilin ja tapahtuman soveltuvuuskontekstin perusteella.
+SELECT
+  s.id AS sanktio_id,
+  s.sakkoryhma,
+  -s.maara AS summa,
+  s.indeksi,
+  s.suorasanktio,
+  sl.koodi AS sanktiolaji_koodi,
+  COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
+  st.id AS sanktiotyyppi_id,
+  st.koodi AS sanktiotyyppi_koodi,
+  st.nimi AS sanktiotyyppi_nimi,
+  tpi.id AS toimenpideinstanssi_id,
+  u.id AS urakka_id,
+  u.nimi AS urakan_nimi,
+  u.alkupvm AS urakan_alkupvm,
+  u.loppupvm AS urakan_loppupvm,
+  o.id AS elinvoimakeskus_id,
+  o.nimi AS elinvoimakeskus_nimi,
+  o.lyhenne AS elinvoimakeskus_lyhenne,
+  ypk.yllapitoluokka AS yllapitoluokka,
+  (CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END) AS soveltuvuuskonteksti,
+  (SELECT nimi
+   FROM toimenpide
+   WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
+FROM sanktio s
+  LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
+  JOIN urakka u ON u.id = COALESCE(tpi.urakka, lp.urakka)
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+                      AND o.tyyppi = 'elinvoimakeskus'
+  JOIN sanktiotyyppi st ON s.tyyppi = st.id
+  LEFT JOIN LATERAL (
+    SELECT sp.*
+    FROM sanktio_profiili sp
+    WHERE sp.urakkatyyppi = u.tyyppi::TEXT
+      AND sp.aktiivinen IS TRUE
+      AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
+      AND sp.alkupvm <= u.alkupvm
+      AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
+    ORDER BY sp.alkupvm DESC, sp.id DESC
+    LIMIT 1
+  ) sp ON TRUE
+  LEFT JOIN sanktio_profiili_rivi spr
+    ON spr.sanktio_profiili_id = sp.id
+    AND spr.sanktiotyyppi_id = s.tyyppi
+    AND spr.soveltuvuuskonteksti = CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END
+    AND spr.aktiivinen IS TRUE
+  LEFT JOIN sanktio_laji sl ON sl.id = spr.sanktio_laji_id AND sl.aktiivinen IS TRUE
+  LEFT JOIN sanktio_profiili_laji_esitystiedot splet
+    ON splet.sanktio_profiili_id = sp.id
+    AND splet.sanktio_laji_id = sl.id
+WHERE s.poistettu IS NOT TRUE
+  AND s.sakkoryhma != 'yllapidon_bonus'::SANKTIOLAJI
+  -- Jos hakuväli sisältää urakan viimeisen kuukauden, mukaan otetaan myös
+  -- urakan päättymisen jälkeen perityt sanktiot.
+  AND (s.perintapvm BETWEEN :alku AND :loppu OR
+       (date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer
+        AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+        AND s.perintapvm > u.loppupvm))
+  AND u.alkupvm < :loppu::DATE
+  AND u.loppupvm > :alku::DATE
+  AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+    OR (:urakka::INTEGER IS NULL
+      AND u.urakkanro IS NOT NULL
+      AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
+  AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+    OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+  AND (lp.yllapitokohde IS NULL OR ypk.id IS NOT NULL)
+ORDER BY ypk.yllapitoluokka NULLS LAST, s.perintapvm, s.id;
+
+-- name: hae-urakkataso-yllapito-bonukset
+-- Hakee ylläpidon legacy-bonukset erillisenä bonusdatana.
+SELECT
+  s.id AS bonus_id,
+  'yllapidon_bonus' AS bonuslaji_koodi,
+  'Bonus' AS bonuslaji_nimi,
+  -s.maara AS summa,
+  s.indeksi,
+  s.suorasanktio,
+  tpi.id AS toimenpideinstanssi_id,
+  u.id AS urakka_id,
+  u.nimi AS urakan_nimi,
+  u.alkupvm AS urakan_alkupvm,
+  u.loppupvm AS urakan_loppupvm,
+  o.id AS elinvoimakeskus_id,
+  o.nimi AS elinvoimakeskus_nimi,
+  o.lyhenne AS elinvoimakeskus_lyhenne,
+  ypk.yllapitoluokka AS yllapitoluokka
+FROM sanktio s
+  LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
+  JOIN urakka u ON u.id = COALESCE(tpi.urakka, lp.urakka)
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+                      AND o.tyyppi = 'elinvoimakeskus'
+WHERE s.poistettu IS NOT TRUE
+  AND s.sakkoryhma = 'yllapidon_bonus'::SANKTIOLAJI
+  -- Sama päättymiskuukauden rajaus kuin vanhassa ylläpitoraportissa.
+  AND (s.perintapvm BETWEEN :alku AND :loppu OR
+       (date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer
+        AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+        AND s.perintapvm > u.loppupvm))
+  AND u.alkupvm < :loppu::DATE
+  AND u.loppupvm > :alku::DATE
+  AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+    OR (:urakka::INTEGER IS NULL
+      AND u.urakkanro IS NOT NULL
+      AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
+  AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+    OR u.tyyppi = :urakkatyyppi::urakkatyyppi)
+  AND (lp.yllapitokohde IS NULL OR ypk.id IS NOT NULL)
+ORDER BY ypk.yllapitoluokka NULLS LAST, s.perintapvm, s.id;
+
 
 -- name: hae-bonukset
 -- Ylläpito (Päällystys) urakoille on olemassa erillinen sanktio ja bonus raportti. Siitä syystä
@@ -118,10 +239,11 @@ SELECT ek.id,
                                                      END)) AS indeksikorotus,
        o.id           AS elinvoimakeskus_id,
        o.nimi         AS elinvoimakeskus_nimi,
-       o.elinvoimakeskusnumero    AS elinvoimakeskus_evknumero
+      o.lyhenne                  AS elinvoimakeskus_lyhenne
 FROM erilliskustannus ek
          JOIN urakka u ON ek.urakka = u.id
          JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+                              AND o.tyyppi = 'elinvoimakeskus'
     AND u.alkupvm < :loppu::DATE
     AND u.loppupvm > :alku::DATE -- Varmista, että urakka on käynnissä annetulla aikavälillä
     AND ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka) -- varmistaa ettei testiurakka tule mukaan alueraportteihin
@@ -152,10 +274,15 @@ SELECT
   s.suorasanktio,
   (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi, s.maara, u.id, s.sakkoryhma)) AS indeksikorotus,
   u.id AS urakka_id,
-  u.nimi AS urakan_nimi
+  u.nimi AS urakan_nimi,
+  u.alkupvm AS urakan_alkupvm,
+  u.loppupvm AS urakan_loppupvm,
+  o.lyhenne AS elinvoimakeskus_lyhenne
 FROM sanktio s
   JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   JOIN urakka u ON tpi.urakka = u.id
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+                      AND o.tyyppi = 'elinvoimakeskus'
   LEFT JOIN sanktiotyyppi st ON s.tyyppi = st.id
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
   -- Liitetään profiili ja rivi
@@ -179,6 +306,8 @@ FROM sanktio s
     AND splet.sanktio_laji_id = sl.id
 WHERE s.poistettu IS NOT TRUE
   AND s.perintapvm BETWEEN :alku AND :loppu
+  AND u.alkupvm < :loppu::DATE
+  AND u.loppupvm > :alku::DATE
   AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
     OR (:urakka::INTEGER IS NULL
       AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
@@ -197,9 +326,14 @@ SELECT
                                             ek.urakka, ek.tyyppi,
                                             u.tyyppi = 'teiden-hoito')) AS indeksikorotus,
   u.id AS urakka_id,
-  u.nimi AS urakan_nimi
+  u.nimi AS urakan_nimi,
+  u.alkupvm AS urakan_alkupvm,
+  u.loppupvm AS urakan_loppupvm,
+  o.lyhenne AS elinvoimakeskus_lyhenne
 FROM erilliskustannus ek
   JOIN urakka u ON ek.urakka = u.id
+  JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
+                      AND o.tyyppi = 'elinvoimakeskus'
                 AND (:urakka::INTEGER IS NOT NULL AND u.id = :urakka
                   OR :urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus))
   -- Liitetään bonus_profiili ja rivi
