@@ -1,5 +1,6 @@
 (ns harja.views.urakka.valikatselmus.tavoitehinnan-muutokset
-  (:require [reagent.core :as r :refer [atom]]
+  (:require [harja.tiedot.urakka.siirtymat :as siirtymat]
+            [reagent.core :as r :refer [atom]]
             [harja.domain.kulut.valikatselmus :as valikatselmus]
             [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
@@ -182,7 +183,7 @@
        [:div.flex-row.alkuun.valistys16
         [:span (fmt/euro-opt false kattohinta)]]])))
 
-(defn tavoitehinnan-muutokset [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
+(defn tavoitehinnan-muutokset [e! paatos oikeudet-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
   (let [paatos-avain :tavoitehinnan-muutokset
         paatos-tehty? (boolean (:id paatos))
         hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
@@ -198,7 +199,7 @@
         ;; Kattohintaa voi muokata 19/20 alkavat urakat
         kattohinnan-oikaisu-mahdollinen? (and
                                            (seq tavoitehinnan-muutokset)
-                                           voi-muokata?
+                                           oikeudet-muokata?
                                            poikkeusvuosi?)]
     ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
@@ -215,12 +216,12 @@
        [:div
         [tavoitehinnan-oikaisut-taulukko e! hoitokauden-oikaisut-atom
          hoitokauden-alkuvuosi
-         {:voi-muokata? (and voi-muokata? (not paatos-tehty?))
+         {:voi-muokata? (and on-oikeudet? (not paatos-tehty?))
           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
           :poista-oikaisu-fn #(e! (valikatselmus-tiedot/->PoistaOikaisu %1 %2))}
          tallennus-kesken?]
 
-        (when (and paatos-tehty? voi-muokata?)
+        (when (and paatos-tehty? on-oikeudet?)
           [:div.valja
            [yleiset/info-laatikko :neutraali
             "Tavoitehinnan muutokset on päätetty. Voit tehdä muutoksia perumalla päätöksen."
@@ -229,14 +230,101 @@
         (when kattohinnan-oikaisu-mahdollinen?
           [kattohinnan-oikaisu e! kattohinta paatos-tehty? hoitokauden-alkuvuosi])
 
-        ;; Päätöksenteko napit
-        (if-not hoitovuosi-kesken?
-          [:div
-           [:hr.paatos-hr]
-           (if-not (:virhe paatos)
-             [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken? voi-muokata?
-              #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
-              #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]
-             [:div.muokkaustoiminnot
-              [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])]
-          [:div {:style {:padding-bottom "1rem"}}])])]))
+        [:div
+         [:hr.paatos-hr]
+         [:div.muokkaustoiminnot
+          (when (:virheet paatos)
+            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+             (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
+           (and (not hoitovuosi-kesken?) (not (:virheet paatos)))
+           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanMuutosPaatos paatoksen-tiedot))
+           #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot))]]]])]))
+
+(defn tavoitehinnan-muutokset-2025
+  "-25 ja myöhemmin alkaville urakoille näytetään täysin erilainen tavoitehinnan muutokset komponentti. Erotetaan se sen vuoksi
+  omaan funktioonsa, jotta koodi pysyy selkeämpänä."
+  [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset tavoitehinnan-muutokset hoitovuosi-kesken?]
+  (let [paatos-avain :tavoitehinnan-pysyvat-muutokset
+        paatos-tehty? (boolean (:id paatos))
+        on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
+        paatoksen-tiedot (merge
+                           paatos
+                           {:urakkaid (-> @tila/yleiset :urakka :id)})
+        positiivinen-arvo-fn (fn [avain]
+                               (str (if (> (avain paatos) 0) "+" "") (fmt/euro-opt false (avain paatos))))]
+    ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
+    [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
+
+     (if hoitovuosi-kesken?
+       [valikatselmus-yhteiset/paatosotsikko "Tavoitehinnan muutokset" paatos-tehty?]
+       [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
+        (partial valikatselmus-tiedot/avaa-tai-sulje-haitari)  (valikatselmus-tiedot/->AvaaPaatos paatos-avain)])
+
+     (when tallennus-kesken?
+       [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
+
+     (when (not (contains? avatut-paatokset paatos-avain))
+       [:div
+        [:div
+         [:div.flex-row.laskenta-avattuna.semibold
+          [:div "Kirjallisesti sovitut muutokset"]
+          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :kirjallisesti_sovitut_muutokset)]]
+
+         [:div.flex-row.summa-rivi
+          [:span.sisennys "• Pysyvät muutokset"]
+          [:span (positiivinen-arvo-fn :pysyvat_muutokset)]]
+
+         [:div.flex-row.summa-rivi
+          [:span.sisennys "• Johto- ja hallintokorvauksen muutokset"]
+          [:span (positiivinen-arvo-fn :johto_ja_hallintakorvaus_muutokset )]]
+
+         [:div.flex-row.summa-rivi
+          [:span.sisennys "• Muutostyöt (erillisrahoitetut)"]
+          [:span (positiivinen-arvo-fn :muutostyo_muutokset)]]
+
+         [:div.flex-row.laskenta-avattuna.semibold
+          [:div "Toteumiin perustuvat tavoitehintamuutokset"]
+          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :toteumiin_perustuvat_muutokset)]]
+
+         [:div.flex-row.summa-rivi
+          [:span.sisennys "• Tehtävä- ja määrätoteumiin perustuvat tavoitehintamuutokset"]
+          [:span (positiivinen-arvo-fn :tehtava_ja_maaratoteumamuutokset)]]
+
+         [:div.flex-row.summa-rivi
+          [:span.sisennys "• Rahavarausten muutokset"]
+          [:span (positiivinen-arvo-fn :rahavarausten_muutokset)]]
+
+         [:div.flex-row.laskenta-rivi.semibold
+          [:div "Arvonvähennysten tavoitehintamuutokset"]
+          [:div.laskenta-rivi-lukema (positiivinen-arvo-fn :arvonvahennysten_muutokset)]]
+
+         [:hr.paatos-hr {:style {:padding-bottom "0.5rem"}}]
+
+         [:div.flex-row {:aria-live "polite"}
+          [:div.big-text "Tavoitehinnan muutokset yhteensä"]
+          [:div.big-text.lihavoitu (positiivinen-arvo-fn :tavoitehinnan_muutokset_yhteensa)]]]
+
+        [:div.siirtyma-linkit
+         [:p "Tavoitehintamuutosten kirjaaminen"
+          [yleiset/linkki " siirry Muutokset -sivulle."
+           #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+              {:taso1 :urakat :taso2 :mhu-muutokset :taso3 nil})]]
+
+         [:p "Arvonvähennysten kirjaaminen"
+          [yleiset/linkki " siirry Sanktiot ja bonukset -sivulle."
+           #(siirtymat/siirry-annettuun-valilehteen @nav/valittu-hallintayksikko-id (-> @tila/yleiset :urakka :id)
+              {:taso1 :urakat :taso2 :laadunseuranta :taso3 :sanktiot})]]]
+
+        [:div
+         [:hr.paatos-hr]
+
+         [::div.muokkaustoiminnot
+          (when (:virheet paatos)
+            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+             (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+
+            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatoksen-tiedot tallennus-kesken?
+             (and (not (:virheet paatos)) voi-muokata?)
+             #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))
+             #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot))]]]])]))

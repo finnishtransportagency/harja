@@ -82,18 +82,34 @@
         vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        mahdolliset-sanktiolajit @tiedot/valitun-urakan-sanktiolajit
+        hoitokauden-alkuvuosi (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
+        ;; Arvonvähennys kuuluu urakan sanktioihin, mutta ei tähän lomakkeelle, koska sille on oma lomakkeensa mhu25+ ja 2026 hoitovuodesta alkaen
+        mahdolliset-sanktiolajit (if (or mhu25? (>= hoitokauden-alkuvuosi 2026))
+                                   (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
+                                   @tiedot/valitun-urakan-sanktiolajit)
         kaikki-sanktiotyypit @tiedot/sanktiotyypit 
         sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
+        ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin.
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
+        ;;mhu -25 alkaen, sanktio kohdistuu tehtäväryhmään "G - Hoindonjohtopalkkio" - Kaivetaan siis oikea tehtäväryhmä listasta
+        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %)) @tiedot/valitun-urakan-tehtavaryhmat)
+        ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
+        tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
+        ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
+        hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
                                (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
                     lukutila?)
+        talvisuolan-validointi-fn (fn [arvo sanktio]
+                                    (when (and (not (nil? arvo))
+                                            (= :talvisuolan_ylitys (:laji sanktio))
+                                            (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
+                                      (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
         urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
@@ -378,11 +394,7 @@
               :nimi :toimenpideinstanssi
               :muokattava? (constantly false)
               ::lomake/col-luokka "col-xs-12"
-              :hae (fn [rivi]
-                     (let [tpi-id (:toimenpideinstanssi rivi)]
-                       (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
-                             @tiedot-urakka/urakan-toimenpideinstanssit)
-                         "")))}))
+              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
 
          (apply lomake/ryhma {:rivi? true}
            (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
@@ -432,11 +444,7 @@
                         (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
              :fmt pvm/pvm-opt :tyyppi :pvm
              :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                       (fn [arvo sanktio]
-                         (when (and (not (nil? arvo))
-                                 (= :talvisuolan_ylitys (:laji sanktio))
-                                 (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
-                           (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))]}
+                       (partial talvisuolan-validointi-fn)]}
 
              {:otsikko "Määrätty" :nimi :maarattypvm
               :pakollinen? true
@@ -446,10 +454,11 @@
                                     ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
                                     ;; hoitokauden syyskuun 15. päivä
                                     (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                    (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (+ 1 (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt))))))]
+                                    (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (pvm/vuosi (second (pvm/paivamaaran-hoitokausi arvo))))))]
                          (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
               :fmt pvm/pvm-opt :tyyppi :pvm
-              :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
+              :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                        (partial talvisuolan-validointi-fn)]})
 
            ;; MHU25 urakoille ei näytetä laskutuskuukautta
            (if (<= urakan-alkuvuosi 2024)
@@ -531,9 +540,9 @@
                :uusi-rivi? true
                :nayta-rivina? true
                ::lomake/col-luokka "col-xs-12"
-               :vaihtoehdot ["tyomaakokous" "valikatselmus"]
-               :vaihtoehto-nayta {"tyomaakokous" "Työmaakokous"
-                                  "valikatselmus" "Välikatselmus"}}
+               :vaihtoehdot [:tyomaakokous :valikatselmus]
+               :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
+                                  :valikatselmus "Välikatselmus"}}
 
               {:otsikko "Määräystapa"
                :nimi :maaraystapa
@@ -542,8 +551,8 @@
                ::lomake/col-luokka "col-xs-12"
                :fmt (fn [arvo]
                       (case arvo
-                        "tyomaakokous" "Työmaakokous"
-                        "valikatselmus" "Välikatselmus"
+                        :tyomaakokous "Työmaakokous"
+                        :valikatselmus "Välikatselmus"
                         arvo))}))
 
          {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")

@@ -2,6 +2,8 @@
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
 
+            [harja.kyselyt.kulut :as kulut-q]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.pvm :as pvm]
             [harja.testi :refer :all]
             [harja.kyselyt.konversio :as konversio]
@@ -130,6 +132,8 @@
          :bonukset_val_aika_yht (:bonukset_val_aika_yht raportti)
          :sanktiot_hoitokausi_yht (:sanktiot_hoitokausi_yht raportti)
          :sanktiot_val_aika_yht (:sanktiot_val_aika_yht raportti)
+         :arvonvahennykset_hoitokausi_yht (:arvonvahennykset_hoitokausi_yht raportti)
+         :arvonvahennykset_val_aika_yht (:arvonvahennykset_val_aika_yht raportti)
          :paatos_tavoitepalkkio_hoitokausi_yht (:paatos_tavoitepalkkio_hoitokausi_yht raportti)
          :paatos_tavoitepalkkio_val_aika_yht (:paatos_tavoitepalkkio_val_aika_yht raportti)
          :paatos_tavoiteh_ylitys_hoitokausi_yht (:paatos_tavoiteh_ylitys_hoitokausi_yht raportti)
@@ -182,7 +186,7 @@
         vastaus (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))]
     (is (not (nil? vastaus)) "Saatiin raportti")
-    (is (= (count (first vastaus)) 99) "Raportilla on oikea määrä rivejä")))
+    (is (= (count (first vastaus)) 101) "Raportilla on oikea määrä rivejä")))
 
 
 (deftest tyomaaraportti-talvihoito-hankinnat-toimii
@@ -323,7 +327,7 @@
     (is (= (* 4 summa) (:hankinnat_hoitokausi_yht purettu)))
     (is (= (* 4 summa) (:hankinnat_val_aika_yht purettu)))))
 
-(deftest tavoitehinta-toimii
+(deftest tavoitehinta-toimii-mhu19-urakalle
   (let [hk_alkupvm "2019-10-01"
         hk_loppupvm "2020-09-30"
         aikavali_alkupvm "2019-10-01"
@@ -385,6 +389,88 @@
     (is (= tavhin_hoitokausi_yht (:tavhin_hoitokausi_yht purettu)))
     (is (= budjettia_jaljella (:budjettia_jaljella purettu)))
     (is (= hoitokauden_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
+
+;; Eroaa edellisestä testistä siten, että mhu25 urakoilla arvonvähennykset vaikuttavat tavoitehintaan
+;; Joten tässä lisätään arvonvähennys ja varmistetaan, että se otetaan raportilla huomnioon.
+(deftest tavoitehinta-toimii-mhu25-urakalle
+  (let [hk_alkupvm "2026-10-01"
+        hk_loppupvm "2027-09-30"
+        aikavali_alkupvm "2026-10-01"
+        aikavali_loppupvm "2027-09-30"
+        siirron-hoitokauden-alkuvuosi 2025 ;; Päätös pitää olla edellisenä vuotena, jotta se näkyy siirroissa.
+        kayttaja-id (:id +kayttaja-jvh+)
+        urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        hoitokauden_alun_tavoitehinta (ffirst (q (format "SELECT COALESCE(ut.tavoitehinta_indeksikorjattu, ut.tavoitehinta, 0) as tavoitehinta
+                                                            from urakka_tavoite ut
+                                                            where ut.hoitokausi = %s
+                                                            and ut.urakka = %s" 2 urakka-id)))
+
+        ;; Lisätään arvonvähennys, joka vaikuttaa tavoitehintaan
+        arvonvahennys 1000M
+        arvonvahennus-pvm "2027-09-15"
+        styyppi-arvonvah-id (:id (first (q-map "SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei tarvita sanktiotyyppiä'")))
+        kaikki-tehtavaryhmat (kulut-q/hae-kaikkien-tehtavaryhmien-nimet (:db jarjestelma))
+        talvisuola-b (first (filter #(= (:tehtavaryhma_nimi %) "B1 - Talvisuola") kaikki-tehtavaryhmat))
+        tehtavaryhman-tehtava (first (tehtavamaarat-kyselyt/tehtavaryhman-tehtavat-urakalle (:db jarjestelma)
+                                       {:urakka-id urakka-id
+                                        :tehtavaryhma-id (:tehtavaryhma talvisuola-b)
+                                        :urakan-alkuvuosi 2025}))
+        ;; Haetaan toimenpideinstanssi toimenpid_id:llä
+        tehtavaryhman-tpi (:id (first (q-map (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s AND toimenpide = %s" urakka-id (:tehtavaryhma_toimenpide_id talvisuola-b)))))
+        _ (lisaa-suorasanktio-urakalle arvonvahennys "arvonvahennyssanktio" arvonvahennus-pvm urakka-id
+            tehtavaryhman-tpi styyppi-arvonvah-id (:tehtavaryhma talvisuola-b) (:id tehtavaryhman-tehtava))
+
+        siirto-ed-vuodelta 10000.0M
+        ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta"
+        ;; Tehdään kattohinnan ylitys
+        kattohinta (* hoitokauden_alun_tavoitehinta 1.1)
+        toteutuneet-kustannukset (* kattohinta 1.1)         ;; Ylitetään 10% kattohinta
+        ylityksen-maara (- toteutuneet-kustannukset kattohinta)
+        urakoitsija-maksaa (* ylityksen-maara 0.5) ;; Urakoitsija maksaa puolet ylityksestä
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        viimeinen_hoitokausi false
+        kulu-id 1
+        paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id siirron-hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                 ylityksen-maara urakoitsija-maksaa siirto-ed-vuodelta kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
+
+        _ (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
+        
+        raportti (q-map (format "select * from ly_raportti_tyomaakokous('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                          hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+        purettu (pura-tyomaaraportti-mapiksi (first raportti))
+
+        rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet purettu))
+        rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array purettu))
+        rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array purettu))
+
+        ;; Pura rahavaraukset mukaan
+        purettu-hoitokausi (reduce (fn [acc [nimi arvo]]
+                                     (assoc acc (generoi-avaimet nimi "hk") arvo))
+                             purettu
+                             (map vector rahavaraukset-nimet rahavaraukset-hoitokausi))
+
+        purettu (reduce (fn [acc [nimi arvo]]
+                          (assoc acc (generoi-avaimet nimi "val") arvo))
+                  purettu-hoitokausi
+                  (map vector rahavaraukset-nimet rahavaraukset-val-aika))
+        ;; Tavoitehintaan kuuluvat kustannukset yhteensä
+        tavhin_hoitokausi_yht (+ (:talvihoito_hoitokausi_yht purettu) (:lyh_hoitokausi_yht purettu)
+                                (:sora_hoitokausi_yht purettu) (:paallyste_hoitokausi_yht purettu)
+                                (:yllapito_hoitokausi_yht purettu) (:korvausinv_hoitokausi_yht purettu)
+                                (:johtojahallinto_hoitokausi_yht purettu) (:erillishankinnat_hoitokausi_yht purettu)
+                                (:hjpalkkio_hoitokausi_yht purettu) (:kaikki_rahavaraukset_hoitokausi_yht purettu)
+                                (:muut_kulut_hoitokausi_yht purettu))
+        budjettia_jaljella (- (:hoitokauden_tavoitehinta purettu) (:tavhin_hoitokausi_yht purettu))]
+
+    (is (= siirto-ed-vuodelta (:hk_valikatselmus_siirrot_ed_vuodelta purettu)))
+    ;; Tarkastetaan, että siirto ja arvonvähennys mukana muiden kulujen yhteissummassa
+    (is (= (+ (* -1 arvonvahennys) siirto-ed-vuodelta) (:muut_kulut_hoitokausi_yht purettu)))
+    (is (= tavhin_hoitokausi_yht (:tavhin_hoitokausi_yht purettu)))
+    (is (= budjettia_jaljella (:budjettia_jaljella purettu)))
+    ;; Onko hoitokauden alun tavoitehinta pysynyt samana?
+    (is (= hoitokauden_alun_tavoitehinta (:hoitokauden_tavoitehinta purettu)))))
 
 
 (deftest tyomaaraportti-bonukset-ja-sanktiot-nakyvyys-toimii
