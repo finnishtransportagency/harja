@@ -1,13 +1,13 @@
 (ns harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot
-  (:require [reagent.core :refer [atom]]
-            [tuck.core :as tuck]
-            [cljs-time.core :as t]
-            [harja.ui.viesti :as viesti]
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.pvm :as pvm]
+  (:require [tuck.core :as tuck]
             [clojure.string :as str]
+            [reagent.core :refer [atom]]
+
+            [harja.pvm :as pvm]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 (def default-arvot {:rivit nil
                     :lomake-valinnat nil
@@ -67,11 +67,11 @@
      :epaonnistui ->HaeYllapitoSelitteetEpaonnistui}))
 
 
-(defn- hae-paikkaus-kustannukset 
+(defn- hae-paikkaus-kustannukset
   "Hakee reikäpaikkausten ja muiden paikkausten kustannukset"
   [app aikavali vuosi callback]
   (tuck-apurit/post! app :hae-paikkaus-kustannukset
-    {:aikavali aikavali 
+    {:aikavali aikavali
      :vuosi vuosi
      :urakka-id @nav/valittu-urakka-id}
     callback))
@@ -80,8 +80,8 @@
 (defn- hae-sanktiot-ja-bonukset [app]
   (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
     {:urakka-id @nav/valittu-urakka-id
-     :alku      (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
-     :loppu     (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+     :alku (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+     :loppu (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
      :vain-yllapitokohteettomat? false
      :hae-sanktiot? true
      :hae-bonukset? true}
@@ -100,7 +100,7 @@
      :epaonnistui ->TallennaKustannusEpaonnistui}))
 
 
-(defn- generoi-avain 
+(defn- generoi-avain
   "Gridi haluaa tr elementeille uniikki id:t (:tunniste)"
   []
   (gensym "yllapito-kustannus"))
