@@ -175,7 +175,7 @@ SELECT SUM(pk.summa) AS "toteutunut-hinta",
   FROM paikkauskustannukset pk
  WHERE vuosi BETWEEN :alkuvuosi AND :loppuvuosi
    AND pk.urakka = :urakkaid
-   AND pk.poistettu IS FALSE
+   AND pk.poistettu IS NOT TRUE 
  GROUP BY pk.kustannustyyppi;
 
 -- name: hae-kustannukset-pkluokittain

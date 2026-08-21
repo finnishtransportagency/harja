@@ -57,7 +57,7 @@ FROM (
           paikkauskustannukset
     WHERE
         urakka = :urakka-id
-        AND poistettu IS FALSE
+        AND poistettu IS NOT TRUE 
       -- Samalla kyselyllä haetaan yksittäisen vuoden kustannukset sekä useamman vuoden kustannukset
         AND (:vuosi::INTEGER IS NULL OR (:vuosi::INTEGER IS NOT NULL AND vuosi = :vuosi))
         AND (:alkuvuosi::INTEGER IS NULL AND :loppuvuosi::INTEGER IS NULL
