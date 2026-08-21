@@ -140,7 +140,7 @@
   HaeKustannuksetYhteensaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   HaeKustannustiedotOnnistui
@@ -184,7 +184,7 @@
   HaeKustannustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   HaeSanktiotJaBonuksetOnnistui
@@ -213,7 +213,7 @@
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   AvaaLomake
@@ -250,14 +250,14 @@
 
   TallennaKustannusOnnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-lyhyt)
     (tuck/process-event (->HaeKustannustiedot) app)
     app)
 
   TallennaKustannusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   HaeYllapitoSelitteetOnnistui
@@ -274,27 +274,23 @@
   HaeYllapitoSelitteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   TallennaMuokatut
   (process-event [{:keys [muokatut]} app]
-    (doseq [rivi muokatut]
-      (tuck-apurit/post! app :tallenna-yllapito-kustannus
-        {:urakka-id @nav/valittu-urakka-id
-         :selite (:selite rivi)
-         :kustannustyyppi (:kustannustyyppi rivi)
-         :vuosi @urakka/valittu-urakan-vuosi
-         :summa (:kokonaiskustannus rivi)
-         :id (:id rivi)
-         :poistettu? (:poistettu rivi)}
-        {:onnistui ->PaivitysOnnistui
-         :epaonnistui ->TallennaKustannusEpaonnistui}))
-    (tuck/process-event (->HaeKustannustiedot) app)
+    (tuck-apurit/post! app :paivita-yllapito-kustannukset
+      {:urakka-id @nav/valittu-urakka-id
+       :vuosi @urakka/valittu-urakan-vuosi
+       :muokatut muokatut}
+      {:onnistui ->PaivitysOnnistui
+       :epaonnistui ->TallennaKustannusEpaonnistui})
     app)
 
   PaivitysOnnistui
-  (process-event [_ app]
+  (process-event [{_vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kustannusten päivitys onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (tuck/process-event (->HaeKustannustiedot) app)
     app)
 
   PaivitysEpaonnistui

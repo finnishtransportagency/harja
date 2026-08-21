@@ -116,8 +116,7 @@
                 :mahdollista-rivin-valinta? false
                 :voi-poistaa? #(muokattava-fn %)
                 :tallenna (fn [sisalto]
-                            (let []
-                              (tuck-apurit/e-kanavalla! e! tiedot/->TallennaMuokatut sisalto)))
+                            (tuck-apurit/e-kanavalla! e! tiedot/->TallennaMuokatut sisalto))
 
                 ;; Ylläpidon kustannuksten yhteenveto
                 ;; Lisätään 2 riviä gridin päätteeksi

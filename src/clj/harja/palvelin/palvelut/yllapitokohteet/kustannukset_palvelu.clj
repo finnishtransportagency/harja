@@ -77,6 +77,28 @@
       (q/tallenna-yllapito-kustannus! db payload))))
 
 
+(defn paivita-yllapito-kustannukset
+  [db kayttaja {:keys [urakka-id vuosi muokatut]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
+
+  (doseq [rivi muokatut]
+    (let [{:keys [selite kustannustyyppi kokonaiskustannus id poistettu]} rivi
+          paivita? (some? id)
+          payload {:urakka-id urakka-id
+                   :selite (if (str/blank? selite) nil selite)
+                   :kustannustyyppi kustannustyyppi
+                   :vuosi vuosi
+                   :summa kokonaiskustannus
+                   :id id
+                   :poistettu poistettu
+                   :luoja (:id kayttaja)}]
+      (if paivita?
+        (q/paivita-yllapito-kustannus! db payload)
+        (q/tallenna-yllapito-kustannus! db payload))))
+  ;; Palauta jotain jotta frontti on tyytyväinen
+  true)
+
+
 (defn hae-kustannusten-selitteet [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/hae-kustannusten-selitteet db tiedot))
@@ -90,11 +112,13 @@
     (julkaise-palvelu http-palvelin :hae-paikkaus-kustannukset (fn [user tiedot] (hae-paikkaus-kustannukset db user tiedot)))
     ;; Tallennus
     (julkaise-palvelu http-palvelin :tallenna-yllapito-kustannus (fn [user tiedot] (tallenna-yllapito-kustannus db user tiedot)))
+    (julkaise-palvelu http-palvelin :paivita-yllapito-kustannukset (fn [user tiedot] (paivita-yllapito-kustannukset db user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-kustannusten-selitteet
+      :hae-paikkaus-kustannukset
       :tallenna-yllapito-kustannus
-      :hae-paikkaus-kustannukset)
+      :paivita-yllapito-kustannukset)
     this))
