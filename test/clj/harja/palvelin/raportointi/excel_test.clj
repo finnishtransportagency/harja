@@ -4,8 +4,11 @@
     [harja.palvelin.raportointi.excel :as excel])
   (:import
     (org.apache.poi.ss.usermodel DataFormatter)
-    (org.apache.poi.xssf.usermodel XSSFWorkbook)
+    (org.apache.poi.xssf.usermodel XSSFFont XSSFWorkbook)
     (java.util Locale)))
+
+(defn- rgb [vari]
+  (mapv #(bit-and 0xff %) (.getRGB vari)))
 
 (deftest numero-opt-kayttaa-oikeaa-excel-formatointia
   (let [workbook (XSSFWorkbook.)
@@ -45,4 +48,47 @@
                                   (iterator-seq (.cellIterator rivi))))
                           (iterator-seq (.rowIterator (.getSheetAt workbook 0))))]
       (is (some #(= "Säilyvä teksti" %) tekstit)))))
+
+(deftest raportin-yhteenveto-ja-rivityylit-noudattavat-speksia
+  (let [workbook (XSSFWorkbook.)]
+    (excel/muodosta-excel
+      [:taulukko {:nimi "Tyylit"
+                  :sheet-nimi "Tyylit"}
+       [{:otsikko "Rivi"}
+        {:otsikko "Summa"}]
+       [{:lihavoi? true
+         :korosta-hennosti? true
+         :rivi ["Yhteensä" 100]}
+        {:himmennetty? true
+         :rivi ["Nollasumma" 0]}
+        {:negatiivinen? true
+         :rivi ["Negatiivinen" -100]}]]
+      workbook)
+    (let [sheet (.getSheetAt workbook 0)
+          yhteenveto (.getCell (.getRow sheet 3) 0)
+         nollasumma (.getCell (.getRow sheet 4) 0)
+             negatiivinen (.getCell (.getRow sheet 5) 0)]
+              (is (= [154 199 252]
+                (rgb (.getFillForegroundColorColor (.getCellStyle yhteenveto)))))
+      (is (.getBold (.getFont (.getCellStyle yhteenveto))))
+      (is (= org.apache.poi.ss.usermodel.FillPatternType/NO_FILL
+             (.getFillPattern (.getCellStyle nollasumma))))
+              (is (= [248 215 209]
+                (rgb (.getFillForegroundColorColor (.getCellStyle negatiivinen)))))
+              (is (= [180 10 20]
+                (rgb (.getXSSFColor
+                  (cast XSSFFont (.getFont (.getCellStyle negatiivinen))))))))))
+
+    (deftest varillisen-tekstin-yhteenvetovari-on-yhtenainen
+      (let [workbook (XSSFWorkbook.)]
+        (excel/muodosta-excel
+          [:taulukko {:nimi "Tyylit"
+                      :sheet-nimi "Tyylit"}
+           [{:otsikko "Arvo"}]
+           [[[:varillinen-teksti {:arvo "Yhteensä"
+                                  :korosta-hennosti? true}]]]]
+          workbook)
+        (let [solu (.getCell (.getRow (.getSheetAt workbook 0) 3) 0)]
+          (is (= [154 199 252]
+                 (rgb (.getFillForegroundColorColor (.getCellStyle solu))))))))
 

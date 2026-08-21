@@ -10,6 +10,10 @@
   {:virhe "rgb(221,0,0)"
    :varoitus "rgb(255,153,0)"
    :info "rgb(0,136,204)"})
+(def excel-raporttivarit
+  {:yhteenveto "#9AC7FC"
+   :negatiivinen-tausta "#F8D7D1"
+   :negatiivinen-teksti "#B40A14"})
 
 
 ;; rajat-excel, virhetyylit-excel, ja solun-oletustyyli-excel ovat exceliin sidottuja,
@@ -40,9 +44,16 @@
   ;; Tekee viivan: —
   "\u2014")
 
-(defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?]
+(defn solun-oletustyyli-excel
+  [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?
+   & [negatiivinen?]]
   (merge-with merge
     (cond
+      negatiivinen?
+      {:background (:negatiivinen-tausta excel-raporttivarit)
+       :font {:color (:negatiivinen-teksti excel-raporttivarit)
+          :name "Open Sans" :size 12}}
+
       varoitus?
       {:background :rose
        :font {:color :black :name "Open Sans" :size 12}}
@@ -56,7 +67,7 @@
                           :font {:color :white :name "Open Sans" :size 12}})
 
       korosta-hennosti?
-      {:background :light_cornflower_blue
+      {:background (:yhteenveto excel-raporttivarit)
        :font {:color :black :name "Open Sans" :size 12}}
 
       korosta-harmaa?
