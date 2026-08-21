@@ -22,12 +22,11 @@
         taulukko (second raportin-osat)
         rivit (nth taulukko 3)]
     (is (= [:otsikko "Sanktiot"] (first raportin-osat)))
-    (is (= "Muistutus" (:otsikko (second taulukko))))
-    (is (= ["Yhteensä" 0] (:rivi (first rivit))))
-    (is (:himmennetty? (second rivit)))
-    (is (= ["Ensimmäinen" 0] (:rivi (second rivit))))
-    (is (= ["Toinen" 0] (:rivi (nth rivit 2))))
-    (is (= "Sakko" (:otsikko (second (last raportin-osat)))))))
+    (is (:himmennetty? (first rivit)))
+    (is (= ["Ensimmäinen" 0] (:rivi (first rivit))))
+    (is (= ["Toinen" 0] (:rivi (second rivit))))
+    (is (= ["Yhteensä" 0] (:rivi (last rivit))))
+    (is (= "Sakko" (get-in (last raportin-osat) [2 0 :otsikko])))))
 
 (deftest urakkatasorunko-sailyttaa-profiilin-rakenteen-ilman-toteumia
   (let [raportti (#'sanktio/koosta-urakkataso-runko
@@ -50,10 +49,36 @@
           raportti))
     (is (some #(and (vector? %)
                  (= :taulukko (first %))
-                 (= "Muistutus" (get-in % [1 :otsikko]))
-                 (= ["Kirjallinen" 0]
-                    (:rivi (second (nth % 3 1)))))
+                 (= "Muistutus" (get-in % [2 0 :otsikko]))
+                  (= ["Kirjallinen" 0]
+                    (:rivi (first (nth % 3 1)))))
           raportti))))
+
+(deftest bonus-ja-arvonvahennys-ovat-omia-osioitaan
+  (let [raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  []
+                  []
+                  []
+                  []
+                  [{:bonuslaji_koodi "bonus"
+                    :bonuslaji_nimi "Bonus"
+                    :bonuslaji_jarjestys 1}]
+                  false)
+        otsikot (->> raportti
+                     (filter #(and (vector? %)
+                                   (= :otsikko (first %))))
+                     (map second)
+                     set)]
+    (is (contains? otsikot "Bonukset"))
+    (is (contains? otsikot "Arvovähennykset"))))
+
+(deftest tyhja-arvonvahennystaulukko-sailyttaa-kategorian
+  (let [taulukko (#'sanktio/koosta-arvonvahennys-taulukko [])]
+    (is (= ["Arvonvähennys" 0]
+           (first (second taulukko))))))
 
 (deftest yllapidon-muistutus-tunnistetaan-lajikoodilla
   (let [raportti (#'sanktio/koosta-urakkataso-runko
@@ -101,9 +126,9 @@
                   false)
         taulukko (some #(when (and (vector? %)
                                 (= :taulukko (first %))
-                                (= "Sakko" (get-in % [1 :otsikko])))
+                  (= "sakko" (get-in % [1 :sheet-nimi])))
                           %)
                    raportti)
         rivit (nth taulukko 3)]
-    (is (= ["Yhteensä" 100] (:rivi (first rivit))))
-    (is (= ["Sakko" 100] (:rivi (second rivit))))))
+    (is (= ["Sakko" 100] (:rivi (first rivit))))
+    (is (= ["Yhteensä" 100] (:rivi (last rivit))))))

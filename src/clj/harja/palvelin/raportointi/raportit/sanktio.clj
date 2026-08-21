@@ -12,16 +12,18 @@
   hae-sanktiot-yllapidon-raportille hae-urakkataso-yllapito-sanktiot hae-urakkataso-yllapito-bonukset)
 
 (defn- koosta-arvonvahennys-taulukko [arvonvahennykset]
-  (let [rivit (mapv (fn [[laji-nimi lajit]]
-                      (let [summa (reduce + 0 (map #(or (:summa %) 0) lajit))]
-                        (rivi (or laji-nimi "Arvonvähennys") summa)))
-                (group-by :sanktiolaji_nimi arvonvahennykset))
+  (let [rivit (if (seq arvonvahennykset)
+                (mapv (fn [[laji-nimi lajit]]
+                        (let [summa (reduce + 0 (map #(or (:summa %) 0) lajit))]
+                          (rivi (or laji-nimi "Arvonvähennys") summa)))
+                  (group-by :sanktiolaji_nimi arvonvahennykset))
+                [(rivi "Arvonvähennys" 0)])
         yhteenveto [{:lihavoi? true
                      :korosta-hennosti? true
                      :rivi (rivi "Yhteensä" (reduce + 0 (map #(or (:summa %) 0) arvonvahennykset)))}]]
     [[{:leveys 12 :otsikko "Arvonvähennyslaji"}
       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
-     (into [] (concat rivit yhteenveto))]))
+    (into [] (concat rivit yhteenveto))]))
 
 (defn- koosta-tunnistamattomat-taulukko
   "Muodostaa taulukon sanktioille, joille ei löytynyt sanktio_profiili_riviä
@@ -34,14 +36,13 @@
                         (rivi (or tyyppi-nimi "Tunnistamaton sanktiotyyppi") summa)))
                 (group-by :sanktiotyyppi_nimi tunnistamattomat))
         yhteensa-summa (reduce + 0 (map #(or (:summa %) 0) tunnistamattomat))]
-    [:taulukko {:otsikko "Tunnistamattomat sanktiot"
-                :sheet-nimi "Tunnistamattomat"
+    [:taulukko {:sheet-nimi "Tunnistamattomat"
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei tunnistamattomia sanktioita."}
-     [{:leveys 12 :otsikko "Sanktiotyyppi"}
+         [{:leveys 12 :otsikko "Tunnistamattomat sanktiot"}
       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
-     (into [] (concat rivit
-                [{:lihavoi? true
+         (into [] (concat rivit
+        [{:lihavoi? true
                   :korosta-hennosti? true
                   :rivi (rivi "Yhteensä" yhteensa-summa)}]))]))
 
@@ -63,17 +64,12 @@
         laji-summa (reduce + 0
                      (map #(or (get sanktio-data-map [laji-koodi (:sanktiotyyppi_koodi %)]) 0)
                        tyypit))]
-    [:taulukko {:otsikko laji-nimi
-                :sheet-nimi (or laji-koodi "sanktio")
+    [:taulukko {:sheet-nimi (or laji-koodi "sanktio")
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei tietoja."}
-     [{:leveys 12 :otsikko "Tyyppi"}
+     [{:leveys 12 :otsikko laji-nimi}
       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
      (concat
-       ;; Laji yhteensä -rivi ensin
-       [{:lihavoi? true
-         :korosta-hennosti? true
-         :rivi (rivi "Yhteensä" laji-summa)}]
        ;; Kaikki profiilin tyyppirivit näytetään, myös yhden tyypin ryhmässä.
        (mapv
          (fn [tyyppi]
@@ -81,7 +77,10 @@
                  summa (or (get sanktio-data-map [laji-koodi tyyppi-koodi]) 0)]
              {:himmennetty? (zero? summa)
               :rivi (rivi (:sanktiotyyppi_nimi tyyppi) summa)}))
-         tyypit))]))
+         tyypit)
+       [{:lihavoi? true
+         :korosta-hennosti? true
+         :rivi (rivi "Yhteensä" laji-summa)}])]))
 
 (defn- koosta-yllapito-taulukko
   "Muodostaa ylläpito-urakan sanktiotaulukon ylläpitoluokittain ryhmiteltynä.
@@ -105,11 +104,10 @@
                 jarjestetty)
         yhteensa-summa (reduce + 0 (map #(or (:summa %) 0) sanktiot))
         yhteensa-maara (count sanktiot)]
-    [:taulukko {:otsikko "Sakot ylläpitoluokittain"
-                :sheet-nimi "Sakot"
+    [:taulukko {:sheet-nimi "Sakot"
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei sakkotietoja."}
-     [{:leveys 12 :otsikko "Ylläpitoluokka"}
+     [{:leveys 12 :otsikko "Sakot ylläpitoluokittain"}
       {:leveys 8 :otsikko "Määrä" :fmt :numero}
       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
      (into [] (concat rivit
@@ -163,11 +161,10 @@
                            :rivi (rivi (:bonuslaji_nimi laji) summa)}))
                       bonus-lajit)
         bonukset-yhteensa (reduce + 0 (vals bonus-data-map))]
-    [:taulukko {:otsikko "Bonukset"
-                :sheet-nimi "Bonukset"
+    [:taulukko {:sheet-nimi "Bonukset"
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja (when (empty? bonus-lajit) "Ei bonuslajeja profiilissa.")}
-     [{:leveys 12 :otsikko "Bonuslaji"}
+     [{:leveys 12 :otsikko "Bonukset"}
       {:leveys 15 :otsikko "Summa (€)" :fmt :raha}]
      (into [] (concat bonus-rivit
                 [{:lihavoi? true
@@ -189,8 +186,8 @@
         vuosi (fn [paivamaara]
                 (when paivamaara
                   (.format (java.text.SimpleDateFormat. "yyyy") paivamaara)))
-        kesto (when (or alkupvm loppupvm)
-                (str (or (vuosi alkupvm) "?") "-" (or (vuosi loppupvm) "?")))]
+        kesto (when (and alkupvm loppupvm)
+          (str (vuosi alkupvm) "-" (vuosi loppupvm)))]
     (str (urakan-nimi rivit)
       (when (and kesto (not (.contains (urakan-nimi rivit) kesto)))
         (str " " kesto)))))
@@ -247,7 +244,7 @@
                                      (koosta-sanktio-taulukot sanktiolajit sanktio-data-map)
                                      [(muodosta-bonus-taulukko (sort-by :bonuslaji_jarjestys bonuslajit)
                                         bonus-data-map)
-                                      (into [:taulukko {:otsikko "Arvonvähennykset"
+                                      (into [:taulukko {:sheet-nimi "Arvonvähennykset"
                                                         :viimeinen-rivi-yhteenveto? true
                                                         :tyhja "Ei arvonvähennyksiä."}]
                                         (koosta-arvonvahennys-taulukko arvonvahennykset))]
@@ -339,9 +336,10 @@
 
                                            (concat
                                              (koosta-sanktio-taulukot sanktiolajit sanktio-data-map)
-                                             [(muodosta-bonus-taulukko bonus-lajit-jarjestyksessa bonus-data-map)
-                                              (into [:taulukko {:otsikko "Arvonvähennykset"
-                                                                :sheet-nimi "Arvonvähennykset"
+                                             [[:otsikko "Bonukset"]
+                                              (muodosta-bonus-taulukko bonus-lajit-jarjestyksessa bonus-data-map)
+                                              [:otsikko "Arvovähennykset"]
+                                              (into [:taulukko {:sheet-nimi "Arvonvähennykset"
                                                                 :viimeinen-rivi-yhteenveto? true
                                                                 :tyhja (when (empty? arvonvahennykset) "Ei arvonvähennyksiä.")}]
                                                 arvonvahennys-taulukko)]
@@ -350,7 +348,10 @@
 
     (into [:raportti {:nimi urakan-nimi
                       :orientaatio :landscape
-                      :excel-vain-urakka-erittely? urakka-erittely?}
+                      :excel-vain-urakka-erittely? urakka-erittely?
+                      :excel-urakkataso? (not urakka-erittely?)
+                      :excel-detail-sheet-nimi (when-not urakka-erittely?
+                                                 urakan-nimi)}
            [:otsikko otsikko]
            [:jakaja nil]
            [:display-flex
