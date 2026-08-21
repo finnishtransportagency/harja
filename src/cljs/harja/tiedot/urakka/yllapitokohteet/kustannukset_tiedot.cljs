@@ -56,6 +56,9 @@
 (defrecord TallennaKustannusEpaonnistui [vastaus])
 (defrecord HaeYllapitoSelitteetOnnistui [vastaus])
 (defrecord HaeYllapitoSelitteetEpaonnistui [vastaus])
+(defrecord TallennaMuokatut [muokatut])
+(defrecord PaivitysEpaonnistui [vastaus])
+(defrecord PaivitysOnnistui [vastaus])
 
 
 (defn- hae-kustannusten-selitteet
@@ -89,13 +92,15 @@
      :epaonnistui ->HaeSanktiotJaBonuksetEpaonnistui}))
 
 
-(defn- tallenna-yllapito-kustannus [app kustannus-tyyppi selite summa]
+(defn- tallenna-yllapito-kustannus [app kustannus-tyyppi selite summa id poistettu?]
   (tuck-apurit/post! app :tallenna-yllapito-kustannus
     {:urakka-id @nav/valittu-urakka-id
      :selite selite
      :kustannustyyppi kustannus-tyyppi
      :vuosi @urakka/valittu-urakan-vuosi
-     :summa summa}
+     :summa summa
+     :id id
+     :poistettu? poistettu?}
     {:onnistui ->TallennaKustannusOnnistui
      :epaonnistui ->TallennaKustannusEpaonnistui}))
 
@@ -144,12 +149,13 @@
 
           ;; Mäppää vastaus vectoreihin mikä kelpaa gridille
           muut-kustannukset (reduce (fn [rivit r]
-                                      ;; Käyttäjien lisäämät muut kustannukset
-                                      (conj rivit
-                                        {:id (generoi-avain)
-                                         :kokonaiskustannus (:kokonaiskustannus r)
-                                         :kustannustyyppi (:kustannustyyppi r)
-                                         :selite (:selite r)}))
+                                      (let [id (js/parseInt (str/replace (:id r) "kustannus-" ""))]
+                                        ;; Käyttäjien lisäämät muut kustannukset
+                                        (conj rivit
+                                          {:id id
+                                           :kokonaiskustannus (:kokonaiskustannus r)
+                                           :kustannustyyppi (:kustannustyyppi r)
+                                           :selite (:selite r)})))
                               []
                               ;; Muut kustannukset eivät sisällä työmenetelmää
                               (filter (fn [r] (empty? (:tyomenetelma r))) (:kustannukset vastaus)))
@@ -235,7 +241,7 @@
                        (second kustannus-selite))
                      ;; Käyttäjä ei kirjoittanut mitään 
                      "")]
-        (tallenna-yllapito-kustannus app kustannus-tyyppi selite kustannus))
+        (tallenna-yllapito-kustannus app kustannus-tyyppi selite kustannus nil false))
 
       (assoc app
         :muokataan false
@@ -269,4 +275,30 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
     (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  TallennaMuokatut
+  (process-event [{:keys [muokatut]} app]
+    (doseq [rivi muokatut]
+      (tuck-apurit/post! app :tallenna-yllapito-kustannus
+        {:urakka-id @nav/valittu-urakka-id
+         :selite (:selite rivi)
+         :kustannustyyppi (:kustannustyyppi rivi)
+         :vuosi @urakka/valittu-urakan-vuosi
+         :summa (:kokonaiskustannus rivi)
+         :id (:id rivi)
+         :poistettu? (:poistettu rivi)}
+        {:onnistui ->PaivitysOnnistui
+         :epaonnistui ->TallennaKustannusEpaonnistui}))
+    (tuck/process-event (->HaeKustannustiedot) app)
+    app)
+
+  PaivitysOnnistui
+  (process-event [_ app]
+    app)
+
+  PaivitysEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Muokkaus epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Muokkaus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app))

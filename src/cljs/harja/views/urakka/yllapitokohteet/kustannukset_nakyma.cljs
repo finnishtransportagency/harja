@@ -86,7 +86,7 @@
               {:ikoni [ikonit/harja-icon-action-add] :vayla-tyyli? true}]]]
 
            ;; Muut kustannukset & Sanktiot ja bonukset
-           (apurit/muut-kustannukset-grid app @urakka/valittu-urakan-vuosi)])))))
+           (apurit/muut-kustannukset-grid e! app @urakka/valittu-urakan-vuosi)])))))
 
 
 (defn kustannukset []

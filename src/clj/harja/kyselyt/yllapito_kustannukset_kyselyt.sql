@@ -48,7 +48,7 @@ FROM (
     UNION ALL
     
     -- Muut paikkauskustannukset
-    SELECT CONCAT('kustannus-',id) AS id,
+    SELECT CONCAT('kustannus-',id)                  AS id,
 		   kustannustyyppi,
 		   SUM(summa)                               AS kokonaiskustannus,
 		   ''                                       AS tyomenetelma,
@@ -71,23 +71,39 @@ ORDER BY tyomenetelma, id;
 
 
 -- name: tallenna-yllapito-kustannus!
-INSERT INTO paikkauskustannukset (
-    urakka, 
-    selite, 
-    kustannustyyppi, 
-    summa, 
+WITH paivitetty AS (
+UPDATE paikkauskustannukset
+   SET urakka = :urakka-id,
+       selite = :selite,
+       kustannustyyppi = :kustannustyyppi::mpu_kustannustyyppi_enum,
+       summa = :summa,
+       vuosi = :vuosi,
+       poistettu = :poistettu,
+       muokattu = NOW(),
+       muokkaaja = :luoja
+WHERE id = :id
+    RETURNING *
+) INSERT INTO paikkauskustannukset (
+    urakka,
+    selite,
+    kustannustyyppi,
+    summa,
     vuosi,
+    poistettu,
     luotu,
     luoja
-) VALUES (
-    :urakka-id, 
-    :selite, 
-    :kustannustyyppi::mpu_kustannustyyppi_enum, 
-    :summa, 
+) SELECT
+    :urakka-id,
+    :selite,
+    :kustannustyyppi::mpu_kustannustyyppi_enum,
+    :summa,
     :vuosi,
+    -- Uusille riveille poistettu aina false 
+    FALSE,
     NOW(),
     COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
-);
+    WHERE NOT EXISTS (SELECT 1 FROM paivitetty)
+RETURNING *;
 
 
 -- name: hae-kustannusten-selitteet

@@ -4,6 +4,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.napit :as napit]
             [harja.ui.lomake :as lomake]
+            [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.protokollat :as protokollat]
             [harja.ui.yleiset :refer [ajax-loader]]
             [harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot :as tiedot])
@@ -97,8 +98,8 @@
     lomake-valinnat]])
 
 
-(defn muut-kustannukset-grid [{:keys [haku-kaynnissa? muut-kustannukset
-                                      kustannukset-yhteensa urakka-ajan-kustannukset-yhteensa] :as _app} valittu-vuosi]
+(defn muut-kustannukset-grid [e! {:keys [haku-kaynnissa? muut-kustannukset
+                                         kustannukset-yhteensa urakka-ajan-kustannukset-yhteensa] :as _app} valittu-vuosi]
 
   (let [muokattava-fn #(and
                          (not= (:kustannustyyppi %) "Sanktiot")
@@ -113,10 +114,10 @@
                 :piilota-otsikot? true
                 :tallenna-vain-muokatut true
                 :mahdollista-rivin-valinta? false
-
-
-
-                :tallenna (fn [a] a)
+                :voi-poistaa? #(muokattava-fn %)
+                :tallenna (fn [sisalto]
+                            (let []
+                              (tuck-apurit/e-kanavalla! e! tiedot/->TallennaMuokatut sisalto)))
 
                 ;; Ylläpidon kustannuksten yhteenveto
                 ;; Lisätään 2 riviä gridin päätteeksi

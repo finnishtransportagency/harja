@@ -24,7 +24,7 @@
                             :loppuvuosi (pvm/vuosi loppupvm) ;; Päällystysurakat päättyy 31.12. joten ei tarvitse vähentää 1 vuotta
                             :vuosi nil
                             :urakka-id urakka-id}
-        
+
         sanktiot-ja-bonukset (laadunseuranta/hae-urakan-sanktiot-ja-bonukset db kayttaja {:hae-sanktiot? true
                                                                                           :hae-bonukset? true
                                                                                           :urakka-id urakka-id
@@ -32,13 +32,13 @@
                                                                                           :loppu loppupvm})
 
         kokonaiskustannus-vastaus (q/hae-paikkaus-kustannukset db kokonaisparametrit)
-        yht (reduce + (map (fn [rivi] 
-                             (or (:kokonaiskustannus rivi) 0)) 
+        yht (reduce + (map (fn [rivi]
+                             (or (:kokonaiskustannus rivi) 0))
                         kokonaiskustannus-vastaus))
-        
+
         ;; Laske sakot ja bonukset mukaan urakan kokonaiskustannuksiin
         yht (+ yht (reduce + (map #(or (:summa %) 0) sanktiot-ja-bonukset)))
-        
+
         parametrit {:alkuaika (when
                                 (and
                                   (some? aikavali)
@@ -59,16 +59,18 @@
 
 
 (defn tallenna-yllapito-kustannus
-  [db kayttaja {:keys [urakka-id selite kustannustyyppi summa vuosi]}]
+  [db kayttaja {:keys [urakka-id selite kustannustyyppi summa vuosi id poistettu?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
   (q/tallenna-yllapito-kustannus! db {:urakka-id urakka-id
-                                 ;; Jos selitettä ei kirjaa, tämä menee kantaan tyhjänä stringinä ""
-                                 ;; Siksi tämä iffittely, tämä asettaa kolumnin NULLiksi jos selite on tyhjä.
-                                 :selite (if (str/blank? selite) nil selite)
-                                 :kustannustyyppi kustannustyyppi
-                                 :summa summa
-                                 :vuosi vuosi
-                                 :luoja (:id kayttaja)}))
+                                      ;; Jos selitettä ei kirjaa, tämä menee kantaan tyhjänä stringinä ""
+                                      ;; Siksi tämä iffittely, tämä asettaa kolumnin NULLiksi jos selite on tyhjä.
+                                      :selite (if (str/blank? selite) nil selite)
+                                      :kustannustyyppi kustannustyyppi
+                                      :summa summa
+                                      :vuosi vuosi
+                                      :luoja (:id kayttaja)
+                                      :id id
+                                      :poistettu (or poistettu? false)}))
 
 
 (defn hae-kustannusten-selitteet [db kayttaja {:keys [urakka-id] :as tiedot}]
