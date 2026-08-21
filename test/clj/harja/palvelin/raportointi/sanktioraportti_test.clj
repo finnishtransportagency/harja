@@ -83,6 +83,20 @@
         sanktiosumma (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä")]
     (is (vector? vastaus))
     (is (=marginaalissa? sanktiosumma 25160M))
+    (let [workbook (XSSFWorkbook.)]
+      (excel/muodosta-excel vastaus workbook)
+      (is (= 2 (.getNumberOfSheets workbook)))
+      (is (= "Yhteenveto" (.getSheetName (.getSheetAt workbook 0))))
+            (is (= "Oulun alueurakka 2014-2019"
+              (.getSheetName (.getSheetAt workbook 1))))
+            (let [yhteenveto-tekstit (sheet-tekstit (.getSheetAt workbook 0))
+             erittely-tekstit (sheet-tekstit (.getSheetAt workbook 1))]
+         (is (some #(= "Sanktiot yhteensä" %) yhteenveto-tekstit))
+         (is (some #(= "Bonukset yhteensä" %) yhteenveto-tekstit))
+         (is (some #(= "Arvovähennykset" %) yhteenveto-tekstit))
+         (is (some #(= "Bonukset" %) erittely-tekstit))
+         (is (some #(= "Arvonvähennykset" %) erittely-tekstit))
+         (is (not-any? #(= "Yhteenveto" %) erittely-tekstit))))
     (let [otsikko "Sanktiot"
           taulukot (apurit/hae-osion-taulukot vastaus otsikko)
           taulukko (first taulukot)]
@@ -165,6 +179,25 @@
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:otsikko "Tyyppi"}
         {:otsikko "Summa (€)"}))))
+
+(deftest raportin-excel-elylle-sisaltaa-kaikki-aktiiviset-urakat
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi               :sanktioraportti
+                   :konteksti          "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
+                   :parametrit         {:alkupvm      (c/to-date (t/local-date 2025 10 1))
+                                        :loppupvm      (c/to-date (t/local-date 2026 9 30))
+                                        :urakkatyyppi :hoito}})
+        workbook (XSSFWorkbook.)]
+    (excel/muodosta-excel vastaus workbook)
+    (let [sheet-nimet (set (map #(.getSheetName %)
+                              (map #(.getSheetAt workbook %)
+                                (range (.getNumberOfSheets workbook)))))]
+      (is (contains? sheet-nimet "POP MHU Kajaani 2025-2030"))
+      (is (contains? sheet-nimet "POP MHU Suomussalmi 2024-2029"))
+      (is (not (contains? sheet-nimet "Yhteenveto"))))))
 
 
 (deftest raportin-suoritus-koko-maalle-toimii
