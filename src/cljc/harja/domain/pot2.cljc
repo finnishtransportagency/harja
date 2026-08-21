@@ -25,10 +25,11 @@
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true
                      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
-  ;; Alustatoimenpiteet näkyvät päällystysilmoituksessa koosteena Toimenpiteen tiedot-sarakkeessa.
-  ;; :lisatty-paksuus on poistettu koosteesta lokakuussa 2025
+   ;; Alustatoimenpiteet näkyvät päällystysilmoituksessa koosteena Toimenpiteen tiedot-sarakkeessa.
+   ;; :lisatty-paksuus on poistettu koosteesta lokakuussa 2025
    :massamenekki {:nimi :massamenekki :otsikko "Massamenekki" :yksikko "kg/m²"
                   :tyyppi :positiivinen-numero :desimaalien-maara 1
+                  :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
                   :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :murske {:nimi :murske :otsikko "Murske"
             :tyyppi :valinta
@@ -39,9 +40,11 @@
                      :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
             :tyyppi :positiivinen-numero :desimaalien-maara 2
+            :validoi [[:rajattu-numero-tai-tyhja 0 20 "Arvon tulee olla välillä 0-20"]]
             :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
    :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²"
                :pakollinen? (constantly false)
+               :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
                :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))
                :muokattava? (fn [rivi]
                               ;; 2 = AB
@@ -51,10 +54,10 @@
                                 (= (:toimenpide rivi) 2)
                                 (= (:toimenpide rivi) 21)
                                 (= (:toimenpide rivi) 22)))
-               :fmt #(fmt/desimaaliluku-opt % 1)
-               }
+               :fmt #(fmt/desimaaliluku-opt % 1)}
    :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
+                        :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
                         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
    :massa {:nimi :massa :otsikko "Massa"
            :tyyppi :valinta
@@ -65,6 +68,7 @@
    :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
                        :tyyppi :positiivinen-numero :desimaalien-maara 1
                        :yksikko "%"
+                       :validoi [[:rajattu-numero-tai-tyhja 0 100 "Arvon tulee olla välillä 0-100"]]
                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
    :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
                :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine
