@@ -65,7 +65,7 @@ SELECT u.id,
        up.muutosten_hallinta,
        up.hoitovuoden_alun_tavoitehinta_kaytossa
 FROM urakka u
-         JOIN urakka_parametrit up ON u.id = up.urakkaid
+         LEFT JOIN urakka_parametrit up ON u.id = up.urakkaid
          JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
          JOIN yllapitokohde y ON y.urakka = u.id
          LEFT JOIN paallystysilmoitus pot2 ON y.id = pot2.paallystyskohde AND pot2.poistettu IS NOT TRUE
@@ -81,5 +81,5 @@ WHERE
         EXTRACT (YEAR FROM u.loppupvm)) AND
     (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
     (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
-GROUP BY u.id, u.nimi, u.elinvoimakeskus_id, hoitokauden_alkuvuosi
+GROUP BY u.id, u.nimi, u.elinvoimakeskus_id, hoitokauden_alkuvuosi, up.laskutusraja_kaytossa, up.muutosten_hallinta, up.hoitovuoden_alun_tavoitehinta_kaytossa
 ORDER BY u.nimi;
