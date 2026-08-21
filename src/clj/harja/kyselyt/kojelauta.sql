@@ -25,8 +25,12 @@ SELECT u.id,
        (SELECT count(*) FROM turvallisuuspoikkeama tp WHERE tp.urakka = u.id AND
            tp.tila IN ('avoin', 'taydennetty') AND
            tp.tapahtunut BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
-               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat
+               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat,
+       up.laskutusraja_kaytossa,
+       up.muutosten_hallinta,
+       up.hoitovuoden_alun_tavoitehinta_kaytossa
   FROM urakka u
+       JOIN urakka_parametrit up ON u.id = up.urakkaid
  WHERE
      u.tyyppi = 'teiden-hoito' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois
@@ -56,8 +60,12 @@ SELECT u.id,
         WHERE y.lahetetty IS NOT NULL
           AND y.lahetysvirhe IS NOT NULL
           AND y.lahetys_onnistunut IS FALSE
-          AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND y.poistettu IS FALSE AND y.urakka = u.id) AS virheelliset_kohteet
+          AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND y.poistettu IS FALSE AND y.urakka = u.id) AS virheelliset_kohteet,
+       up.laskutusraja_kaytossa,
+       up.muutosten_hallinta,
+       up.hoitovuoden_alun_tavoitehinta_kaytossa
 FROM urakka u
+         JOIN urakka_parametrit up ON u.id = up.urakkaid
          JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
          JOIN yllapitokohde y ON y.urakka = u.id
          LEFT JOIN paallystysilmoitus pot2 ON y.id = pot2.paallystyskohde AND pot2.poistettu IS NOT TRUE
