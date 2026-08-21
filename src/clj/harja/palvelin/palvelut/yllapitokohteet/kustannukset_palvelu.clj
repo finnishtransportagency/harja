@@ -61,16 +61,20 @@
 (defn tallenna-yllapito-kustannus
   [db kayttaja {:keys [urakka-id selite kustannustyyppi summa vuosi id poistettu?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-paikkaukset-toteumat kayttaja urakka-id)
-  (q/tallenna-yllapito-kustannus! db {:urakka-id urakka-id
-                                      ;; Jos selitettä ei kirjaa, tämä menee kantaan tyhjänä stringinä ""
-                                      ;; Siksi tämä iffittely, tämä asettaa kolumnin NULLiksi jos selite on tyhjä.
-                                      :selite (if (str/blank? selite) nil selite)
-                                      :kustannustyyppi kustannustyyppi
-                                      :summa summa
-                                      :vuosi vuosi
-                                      :luoja (:id kayttaja)
-                                      :id id
-                                      :poistettu (or poistettu? false)}))
+  (let [paivita? (some? id)
+        payload {:urakka-id urakka-id
+                 ;; Jos selitettä ei kirjaa, tämä menee kantaan tyhjänä stringinä ""
+                 ;; Siksi tämä iffittely, tämä asettaa kolumnin NULLiksi jos selite on tyhjä.
+                 :selite (if (str/blank? selite) nil selite)
+                 :kustannustyyppi kustannustyyppi
+                 :summa summa
+                 :vuosi vuosi
+                 :luoja (:id kayttaja)
+                 :id id
+                 :poistettu (or poistettu? false)}]
+    (if paivita?
+      (q/paivita-yllapito-kustannus! db payload)
+      (q/tallenna-yllapito-kustannus! db payload))))
 
 
 (defn hae-kustannusten-selitteet [db kayttaja {:keys [urakka-id] :as tiedot}]

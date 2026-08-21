@@ -71,39 +71,39 @@ ORDER BY tyomenetelma, id;
 
 
 -- name: tallenna-yllapito-kustannus!
-WITH paivitetty AS (
+INSERT INTO paikkauskustannukset (
+      urakka,
+      selite,
+      kustannustyyppi,
+      summa,
+      vuosi,
+      luotu,
+      luoja,
+      poistettu 
+) VALUES (
+     :urakka-id,
+     :selite,
+     :kustannustyyppi::mpu_kustannustyyppi_enum,
+     :summa,
+     :vuosi,
+     NOW(),
+     COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')),
+     false
+);
+
+
+-- name: paivita-yllapito-kustannus!
 UPDATE paikkauskustannukset
-   SET urakka = :urakka-id,
-       selite = :selite,
-       kustannustyyppi = :kustannustyyppi::mpu_kustannustyyppi_enum,
-       summa = :summa,
-       vuosi = :vuosi,
-       poistettu = :poistettu,
-       muokattu = NOW(),
-       muokkaaja = :luoja
+SET
+    selite = :selite,
+    kustannustyyppi = :kustannustyyppi::mpu_kustannustyyppi_enum,
+    summa = :summa,
+    vuosi = :vuosi,
+    poistettu = :poistettu,
+    muokattu = NOW(),
+    muokkaaja = :luoja
 WHERE id = :id
-    RETURNING *
-) INSERT INTO paikkauskustannukset (
-    urakka,
-    selite,
-    kustannustyyppi,
-    summa,
-    vuosi,
-    poistettu,
-    luotu,
-    luoja
-) SELECT
-    :urakka-id,
-    :selite,
-    :kustannustyyppi::mpu_kustannustyyppi_enum,
-    :summa,
-    :vuosi,
-    -- Uusille riveille poistettu aina false 
-    FALSE,
-    NOW(),
-    COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
-    WHERE NOT EXISTS (SELECT 1 FROM paivitetty)
-RETURNING *;
+  AND urakka = :urakka-id;
 
 
 -- name: hae-kustannusten-selitteet
