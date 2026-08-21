@@ -523,8 +523,6 @@
                                 (filter #(= (:nimi %) "Testimuutostyö muutoksen poistamisen testausta varten"))
                                 first
                                 :id)
-          ;; Poista tavoitehinnan vahvistus, jotta muutos voidaan poistaa
-          _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
 
           laskutusraja-tallennuksen-jalkeen (hae-urakan-laskutusraja urakka-id)
           ;; Poistetaan muutos
