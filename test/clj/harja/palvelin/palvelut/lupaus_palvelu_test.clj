@@ -3,7 +3,6 @@
             [com.stuartsierra.component :as component]
 
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log]
             [harja.testi :refer :all]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.lupaus-domain :as lupaus-domain]
