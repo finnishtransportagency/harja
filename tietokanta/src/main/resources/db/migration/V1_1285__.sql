@@ -1,11 +1,3 @@
--- Uusi parametri katsomaan, onko uusi kustannussuunnitelma eli hoitovuoden alun tavoitehinta sivu käytössä
-ALTER TABLE urakka_parametrit
-    ADD COLUMN hoitovuoden_alun_tavoitehinta_kaytossa boolean DEFAULT false NOT NULL;
-
--- Oletuksena asetus on epätosi; otetaan se käyttöön vuonna 2025 ja myöhemmin alkaville urakoille.
-UPDATE urakka_parametrit up
-   SET hoitovuoden_alun_tavoitehinta_kaytossa = true
-  FROM urakka u
- WHERE u.id = up.urakkaid
-   AND EXTRACT(YEAR FROM u.alkupvm) >= 2025
-   AND u.tyyppi = 'teiden-hoito';
+---- Muuta lupauksessa elokuun määräpäivä oikeaksi
+update lupaus_kustannusennuste_kuukausi_pisteet set paiva = 31, kuvaus = 'Elokuu 31.päivä (2025 urakat)' where "urakan-alkuvuosi" = 2025 and kuukausi = 8;
+update lupaus_kustannusennuste_kuukausi_pisteet set paiva = 31, kuvaus = 'Elokuu 31.päivä (2026 urakat)' where "urakan-alkuvuosi" = 2026 and kuukausi = 8;
