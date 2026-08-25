@@ -551,6 +551,29 @@ jobs:
         run: |
           lein with-profile +phantomjs doo phantom test once
 
+  front-end-tests-shadow:
+    if: ${{ inputs.front-end-tests == 'true' }}
+    name: "Front-end testit (Shadow CLJS)"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Setup Clojure and Node dependencies
+        uses: ./.github/actions/setup-build-env-and-tools
+        with:
+          setup-node: true
+          install-node-deps: true
+          clojure-deps-profile: '+test,+shadow-cljs-testit'
+
+      - name: Shadow CLJS front end tests
+        run: npm run test:shadow-cljs
+
   # integraatiotestit vaativat ActiveMQ-brokerin, siksi oma jobi
   integration-tests:
     if: ${{ inputs.integration-tests == 'true' }}
