@@ -4,6 +4,8 @@ ALTER TABLE urakka_parametrit
 
 -- Oletuksena asetus on epätosi; otetaan se käyttöön vuonna 2025 ja myöhemmin alkaville urakoille.
 UPDATE urakka_parametrit up
-SET hoitovuoden_alun_tavoitehinta_kaytossa = true
-FROM urakka u
-WHERE u.id = up.urakkaid AND EXTRACT(YEAR FROM u.alkupvm) >= 2025;
+   SET hoitovuoden_alun_tavoitehinta_kaytossa = true
+  FROM urakka u
+ WHERE u.id = up.urakkaid
+   AND EXTRACT(YEAR FROM u.alkupvm) >= 2025
+   AND u.tyyppi = 'teiden-hoito';
