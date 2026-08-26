@@ -64,23 +64,16 @@
 
 ;; Päätökset
 (defrecord TallennaLupausPaatos [paatos])
-(defrecord PoistaLupausPaatos [paatos])
-(defrecord PoistaLupausPaatosOnnistui [vastaus])
-(defrecord PoistaLupausPaatosEpaonnistui [vastaus])
 (defrecord TallennaTavoitehinnanMuutosPaatos [paatos])
 (defrecord TallennaTavoitehinnanPysyvaMuutosPaatos [paatos])
 (defrecord TallennaTavoitehinnanAlitusPaatos [paatos])
 (defrecord TallennaTavoitehinnanYlitysPaatos [paatos])
-(defrecord PoistaTavoitehinnanYlitysPaatos [paatos])
 (defrecord TallennaKattohinnanYlitysPaatos [paatos])
 (defrecord TallennaKattohinnanYlitysPaatosEpaonnistui [vastaus])
-(defrecord PoistaKattohinnanYlitysPaatos [paatos])
 (defrecord TallennaPoytakirjanRaporttiPaatos [paatos])
-(defrecord PoistaPoytakirjanRaporttiPaatos [paatos])
 (defrecord TallennaHoidonjohtopalkkionMuutospaatos [paatos])
 (defrecord TallennaHoitokaudenlopunHintapaatos [paatos])
 (defrecord TallennaHoitovuodenlopunIndeksikorjauspaatos [paatos])
-(defrecord PoistaHoitovuodenlopunIndeksikorjauspaatos [paatos])
 
 (defrecord HaeKetjutetustiKumoutuvatPaatokset [paatos peru-fn])
 (defrecord HaeKumoutuvatOnnistui [vastaus])
@@ -315,26 +308,6 @@
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
 
-  PoistaLupausPaatos
-  (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :poista-lupauspaatos
-      paatos
-      {:onnistui ->PoistaLupausPaatosOnnistui
-       :epaonnistui ->PoistaLupausPaatosEpaonnistui
-       :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
-
-  PoistaLupausPaatosOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (kasittele-valikatselmuksen-vastaus app vastaus))
-
-  PoistaLupausPaatosEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Päätöksen poistossa tapahtui virhe" :varoitus)
-    (-> app
-      (assoc :haku-kaynnissa? false)
-      (assoc :tallennus-kesken? false)))
-
   ValitseHoitokausi
   (process-event [{urakkaid :urakkaid vuosi :vuosi} app]
     (let [app (-> app
@@ -422,14 +395,6 @@
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
 
-  PoistaTavoitehinnanYlitysPaatos
-  (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :poista-tavoitehinnan-ylityspaatos
-      (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
-    (assoc app :tallennus-kesken? true))
-
   TallennaKattohinnanYlitysPaatos
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-kattohinnan-ylityspaatos
@@ -454,14 +419,6 @@
         (assoc :tallennus-kesken? false)
         (assoc :haku-kaynnissa? false))))
 
-  PoistaKattohinnanYlitysPaatos
-  (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :poista-kattohinnan-ylityspaatos
-      (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
-    (assoc app :tallennus-kesken? true))
-
   TallennaPoytakirjanRaporttiPaatos
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-poytakirjan-raporttipaatos
@@ -469,14 +426,6 @@
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
-
-  PoistaPoytakirjanRaporttiPaatos
-  (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :poista-poytakirjan-raporttipaatos
-      (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
     (assoc app :tallennus-kesken? true))
 
   TallennaHoidonjohtopalkkionMuutospaatos
@@ -504,14 +453,6 @@
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
-
-  PoistaHoitovuodenlopunIndeksikorjauspaatos
-  (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :poista-indeksikorjauspaatos
-      (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
     (assoc app :tallennus-kesken? true))
 
   HaeKetjutetustiKumoutuvatPaatokset

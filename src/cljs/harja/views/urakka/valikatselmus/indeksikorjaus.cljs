@@ -122,7 +122,7 @@
             ;; Peru päätös
             #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                    paatos
-                   (fn [] (e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos)))))]]
+                   (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]
 
           [:div.muokkaustoiminnot
            [yleiset/info-laatikko :neutraali (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))

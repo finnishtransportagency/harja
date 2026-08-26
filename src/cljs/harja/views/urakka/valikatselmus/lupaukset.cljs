@@ -107,7 +107,7 @@
          ;; Peru päätös 
          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                 paatos
-                (fn [] (e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos)))))
+                (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))
          #(if (:lupaussanktio paatos)
             [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
             [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])

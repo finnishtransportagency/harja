@@ -53,7 +53,7 @@
           ;; Peru päätös
           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                  paatos
-                 (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos)))))]]])]))
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))
 
 (defn- tavoitehinnan-laskentamodaali [paatos]
   (let []
@@ -117,7 +117,7 @@
           ;; Peru päätös 
           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                  paatos
-                 (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos)))))]]])]))
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys
@@ -199,4 +199,4 @@
          ;; Peru päätös 
          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                 paatos
-                (fn [] (e! (valikatselmus-tiedot/->PoistaKattohinnanYlitysPaatos paatos)))))]])]))
+                (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]])]))
