@@ -117,7 +117,7 @@
           ;; Peru päätös 
           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                  paatos
-                 (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatos)))))]]])]))
+                 (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos)))))]]])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys

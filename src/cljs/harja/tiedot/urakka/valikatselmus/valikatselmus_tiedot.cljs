@@ -76,7 +76,6 @@
 (defrecord PoistaTavoitehinnanPysyvaMuutosPaatosOnnistui [vastaus])
 (defrecord PoistaTavoitehinnanPysyvaMuutosPaatosEpaonnistui [vastaus])
 (defrecord TallennaTavoitehinnanAlitusPaatos [paatos])
-(defrecord PoistaTavoitehinnanAlitusPaatos [paatos])
 (defrecord TallennaTavoitehinnanYlitysPaatos [paatos])
 (defrecord PoistaTavoitehinnanYlitysPaatos [paatos])
 (defrecord TallennaKattohinnanYlitysPaatos [paatos])
@@ -455,14 +454,6 @@
       {:onnistui ->HaeValikatselmuksenTiedotOnnistui
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
-    (assoc app :tallennus-kesken? true))
-
-  PoistaTavoitehinnanAlitusPaatos
-  (process-event [{paatos :paatos} app]
-    (tuck-apurit/post! :poista-tavoitehinnan-alituspaatos
-      (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
     (assoc app :tallennus-kesken? true))
 
   TallennaTavoitehinnanYlitysPaatos
