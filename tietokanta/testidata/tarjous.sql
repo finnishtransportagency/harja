@@ -46,187 +46,201 @@ $$
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (1, tarjousid1, urakkaid, 2025, 5000.00, 'johto-ja-hallintokorvaus', 32, kayttajaid, NOW(),
+        VALUES (1, tarjousid1, urakkaid, 2025, 5000.00, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'valmistelukausi ennen urakka-ajan alkua' AND "urakka-id" = urakkaid), 
+                kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (2, tarjousid1, urakkaid, 2025, 90300.00, 'johto-ja-hallintokorvaus', 33, kayttajaid,
+        VALUES (2, tarjousid1, urakkaid, 2025, 90300.00, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" = urakkaid),
+                kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (3, tarjousid1, urakkaid, 2025, 72943.50, 'johto-ja-hallintokorvaus', 34, kayttajaid,
+        VALUES (3, tarjousid1, urakkaid, 2025, 72943.50, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '2. työnjohtaja' AND "urakka-id" = urakkaid),
+                kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (4, tarjousid1, urakkaid, 2025, 10.00, 'johto-ja-hallintokorvaus', 35, kayttajaid, NOW(),
+        VALUES (4, tarjousid1, urakkaid, 2025, 10.00, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '3. työnjohtaja' AND "urakka-id" = urakkaid), 
+                kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (5, tarjousid1, urakkaid, 2025, 10.00, 'johto-ja-hallintokorvaus', 36, kayttajaid, NOW(),
+        VALUES (5, tarjousid1, urakkaid, 2025, 10.00, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" = urakkaid), 
+                kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (6, tarjousid1, urakkaid, 2025, 10.00, 'johto-ja-hallintokorvaus', 37, kayttajaid, NOW(),
+        VALUES (6, tarjousid1, urakkaid, 2025, 10.00, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" = urakkaid), 
+                kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (7, tarjousid1, urakkaid, 2025, 10000.00, 'johto-ja-hallintokorvaus', 38, kayttajaid,
+        VALUES (7, tarjousid1, urakkaid, 2025, 10000.00, 'johto-ja-hallintokorvaus',
+                (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" = urakkaid), 
+                kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (8, tarjousid2, urakkaid, 2026, 90300.00, 'johto-ja-hallintokorvaus', 33, kayttajaid,
+        VALUES (8, tarjousid2, urakkaid, 2026, 90300.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (9, tarjousid2, urakkaid, 2026, 72943.50, 'johto-ja-hallintokorvaus', 34, kayttajaid,
+        VALUES (9, tarjousid2, urakkaid, 2026, 72943.50, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '2. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (10, tarjousid2, urakkaid, 2026, 0.00, 'johto-ja-hallintokorvaus', 35, kayttajaid, NOW(),
+        VALUES (10, tarjousid2, urakkaid, 2026, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '3. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (11, 2, urakkaid, 2026, 0.00, 'johto-ja-hallintokorvaus', 36, kayttajaid, NOW(), null,
+        VALUES (11, 2, urakkaid, 2026, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" = urakkaid), kayttajaid, NOW(), null,
                 null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (12, tarjousid2, urakkaid, 2026, 0.00, 'johto-ja-hallintokorvaus', 37, kayttajaid, NOW(),
+        VALUES (12, tarjousid2, urakkaid, 2026, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (13, tarjousid2, urakkaid, 2026, 10000.00, 'johto-ja-hallintokorvaus', 38, kayttajaid,
+        VALUES (13, tarjousid2, urakkaid, 2026, 10000.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (14, tarjousid3, urakkaid, 2027, 90300.00, 'johto-ja-hallintokorvaus', 33, 3, NOW(), null,
+        VALUES (14, tarjousid3, urakkaid, 2027, 90300.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" = urakkaid), 3, NOW(), null,
                 null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (15, tarjousid3, urakkaid, 2027, 72943.50, 'johto-ja-hallintokorvaus', 34, kayttajaid,
+        VALUES (15, tarjousid3, urakkaid, 2027, 72943.50, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '2. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (16, tarjousid3, urakkaid, 2027, 0.00, 'johto-ja-hallintokorvaus', 35, kayttajaid, NOW(),
+        VALUES (16, tarjousid3, urakkaid, 2027, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '3. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (17, tarjousid3, urakkaid, 2027, 0.00, 'johto-ja-hallintokorvaus', 36, kayttajaid, NOW(),
+        VALUES (17, tarjousid3, urakkaid, 2027, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (18, tarjousid3, urakkaid, 2027, 0.00, 'johto-ja-hallintokorvaus', 37, kayttajaid, NOW(),
+        VALUES (18, tarjousid3, urakkaid, 2027, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (19, tarjousid3, urakkaid, 2027, 10000.00, 'johto-ja-hallintokorvaus', 38, kayttajaid,
+        VALUES (19, tarjousid3, urakkaid, 2027, 10000.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (20, tarjousid4, urakkaid, 2028, 90300.00, 'johto-ja-hallintokorvaus', 33, kayttajaid,
+        VALUES (20, tarjousid4, urakkaid, 2028, 90300.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (21, 4, urakkaid, 2028, 72943.50, 'johto-ja-hallintokorvaus', 34, kayttajaid, NOW(), null,
+        VALUES (21, 4, urakkaid, 2028, 72943.50, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '2. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid, NOW(), null,
                 null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (22, tarjousid4, urakkaid, 2028, 0.00, 'johto-ja-hallintokorvaus', 35, kayttajaid, NOW(),
+        VALUES (22, tarjousid4, urakkaid, 2028, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '3. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (23, tarjousid4, urakkaid, 2028, 0.00, 'johto-ja-hallintokorvaus', 36, kayttajaid, NOW(),
+        VALUES (23, tarjousid4, urakkaid, 2028, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (24, tarjousid4, urakkaid, 2028, 0.00, 'johto-ja-hallintokorvaus', 37, kayttajaid, NOW(),
+        VALUES (24, tarjousid4, urakkaid, 2028, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (25, tarjousid4, urakkaid, 2028, 10000.00, 'johto-ja-hallintokorvaus', 38, kayttajaid,
+        VALUES (25, tarjousid4, urakkaid, 2028, 10000.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (26, tarjousid5, urakkaid, 2029, 90300.00, 'johto-ja-hallintokorvaus', 33, kayttajaid,
+        VALUES (26, tarjousid5, urakkaid, 2029, 90300.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'vastuunalainen työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (27, 5, urakkaid, 2029, 72943.50, 'johto-ja-hallintokorvaus', 34, kayttajaid, NOW(), null,
+        VALUES (27, 5, urakkaid, 2029, 72943.50, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '2. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid, NOW(), null,
                 null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (28, tarjousid5, urakkaid, 2029, 0.00, 'johto-ja-hallintokorvaus', 35, kayttajaid, NOW(),
+        VALUES (28, tarjousid5, urakkaid, 2029, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = '3. työnjohtaja' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (29, tarjousid5, urakkaid, 2029, 0.00, 'johto-ja-hallintokorvaus', 36, kayttajaid, NOW(),
+        VALUES (29, tarjousid5, urakkaid, 2029, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'viherhoidosta vastaava henkilö' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (30, tarjousid5, urakkaid, 2029, 0.00, 'johto-ja-hallintokorvaus', 37, kayttajaid, NOW(),
+        VALUES (30, tarjousid5, urakkaid, 2029, 0.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'hankintavastaava' AND "urakka-id" = urakkaid), kayttajaid, NOW(),
                 null, null,
                 'vuosi');
         INSERT INTO tarjous_johto_ja_hallintokorvaus (id, tarjous_id, urakka_id, hoitokauden_alkuvuosi, summa, osio,
                                                       johto_ja_hallintokorvaus_toimenkuva_id, luoja, luotu, muokattu,
                                                       muokkaaja, maksukausi)
-        VALUES (31, tarjousid5, urakkaid, 2029, 10000.00, 'johto-ja-hallintokorvaus', 38, kayttajaid,
+        VALUES (31, tarjousid5, urakkaid, 2029, 10000.00, 'johto-ja-hallintokorvaus', (SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE toimenkuva = 'harjoittelija' AND "urakka-id" = urakkaid), kayttajaid,
                 NOW(), null, null,
                 'vuosi');
 

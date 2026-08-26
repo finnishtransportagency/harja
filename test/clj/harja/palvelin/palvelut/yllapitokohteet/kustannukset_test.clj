@@ -34,11 +34,11 @@
 
 (deftest hae-kustannusten-selitteet-toimii
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
-        odotettu-vastaus '({:selite "Arvoa muutettiin"} 
-                           {:selite "Indeksimuutos 2017 elokuu"} 
-                           {:selite "Indeksimuutos syyskuu"} 
-                           {:selite "Kalustokustannukset"} 
-                           {:selite "Työvoimakustannukset"} 
+        odotettu-vastaus '({:selite "Arvoa muutettiin"}
+                           {:selite "Indeksimuutos 2017 elokuu"}
+                           {:selite "Indeksimuutos syyskuu"}
+                           {:selite "Kalustokustannukset"}
+                           {:selite "Työvoimakustannukset"}
                            {:selite "Vanha kustannus"})
 
         vastaus (tee-kutsu {:urakka-id urakka-id} :hae-kustannusten-selitteet)]
@@ -77,7 +77,7 @@
                                    {:id "reikapaikkaus-tyomenetelma-6", :tyomenetelma "Sirotepuhalluspaikkaus (SIPU)", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-3", :tyomenetelma "SMA-paikkaus levittäjällä", :kustannustyyppi nil, :kokonaiskustannus 0M, :selite ""}
                                    {:id "reikapaikkaus-tyomenetelma-8", :tyomenetelma "Urapaikkaus (UREM/RREM)", :kustannustyyppi nil, :kokonaiskustannus 215000.0M, :selite ""})
-        
+
         vastaus (tee-kutsu {:aikavali [alkupvm loppupvm]
                             :urakka-id urakka-id} :hae-paikkaus-kustannukset)]
 
@@ -107,3 +107,69 @@
     (is (= (nth (:kustannukset vastaus-ennen) 4) odotettu-vastaus))
     (is (= (nth (:kustannukset vastaus-tallennettu) 4) odotettu-tallennus))
     (is (= (count (:kustannukset vastaus-tallennettu)) (+ (count (:kustannukset vastaus-ennen)) 1)))))
+
+
+(deftest paivita-yllapito-kustannus-toimii
+  (let [vuosi 2024
+        urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+
+        vastaus-ennen (tee-kutsu {:vuosi vuosi
+                                  :urakka-id urakka-id} :hae-paikkaus-kustannukset)
+
+        selite "Korjattiin Juuman karhunkierrosta"
+        _ (tee-kutsu {:urakka-id urakka-id
+                      :selite selite
+                      :luoja nil
+                      :kustannustyyppi "Muut kustannukset"
+                      :vuosi vuosi
+                      :summa 15000}
+            :tallenna-yllapito-kustannus)
+
+        vastaus-tallennettu (tee-kutsu {:vuosi vuosi
+                                        :urakka-id urakka-id} :hae-paikkaus-kustannukset)
+
+        kustannus-id (ffirst
+                       (q (str "SELECT id FROM paikkauskustannukset WHERE selite = '" selite "' AND urakka = '" urakka-id "';")))
+
+        kustannus-avain (str "kustannus-" kustannus-id)
+
+        tallennettu (first
+                      (filter #(= kustannus-avain (:id %))
+                        (:kustannukset vastaus-tallennettu)))
+
+        uusi-selite "Korjattiin Juuman karhunkierrosta + basecamppia"
+        uusi-summa 15555
+
+        ;; :paivita-yllapito-kustannukset odottaa :muokatut-vektoria
+        _ (tee-kutsu {:urakka-id urakka-id
+                      :vuosi vuosi
+                      :muokatut [{:id kustannus-id
+                                  :selite uusi-selite
+                                  :kustannustyyppi "Muut kustannukset"
+                                  :kokonaiskustannus uusi-summa
+                                  :poistettu false}]}
+            :paivita-yllapito-kustannukset)
+
+        vastaus-muokattu (tee-kutsu {:vuosi vuosi
+                                     :urakka-id urakka-id} :hae-paikkaus-kustannukset)
+
+        muokattu (first
+                   (filter #(= kustannus-avain (:id %))
+                     (:kustannukset vastaus-muokattu)))]
+
+    ;; Tallennettu uusi rivi 
+    (is (= 15000M (:kokonaiskustannus tallennettu)))
+    (is (= selite (:selite tallennettu)))
+
+    ;; Sama rivi mutta muokattuna  
+    (is (= 15555M (:kokonaiskustannus muokattu)))
+    (is (= uusi-selite (:selite muokattu)))
+    (is (= "Muut kustannukset" (:kustannustyyppi muokattu)))
+
+    ;; Päivitys ei luo uutta riviä
+    (is (= (count (:kustannukset vastaus-tallennettu))
+          (count (:kustannukset vastaus-muokattu))))
+
+    ;; Alkuperäinen tallennus loi yhden uuden rivin
+    (is (= (inc (count (:kustannukset vastaus-ennen)))
+          (count (:kustannukset vastaus-tallennettu))))))

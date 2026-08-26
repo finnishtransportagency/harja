@@ -34,6 +34,7 @@
 
 (defn kasittele-throw-virhe [vastaus]
   (let [raaka-virhe (get-in vastaus [:parse-error :original-text])
+        raaka-virhe (if (nil? raaka-virhe) "Virhe! Palvelin palautti virheen!" raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
         raaka-virhe (str/replace raaka-virhe #"\"" "")
 
