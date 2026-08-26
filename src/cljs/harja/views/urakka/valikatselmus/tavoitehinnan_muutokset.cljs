@@ -243,7 +243,7 @@
            ;; Peru päätös 
            #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                   paatos
-                  (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanMuutosPaatos paatoksen-tiedot)))))]]]])]))
+                  (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]]])]))
 
 (defn tavoitehinnan-muutokset-2025
   "-25 ja myöhemmin alkaville urakoille näytetään täysin erilainen tavoitehinnan muutokset komponentti. Erotetaan se sen vuoksi
@@ -335,4 +335,4 @@
            ;; Peru päätös 
            #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                   paatos
-                  (fn [] (e! (valikatselmus-tiedot/->PoistaTavoitehinnanPysyvaMuutosPaatos paatoksen-tiedot)))))]]]])]))
+                  (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]]])]))
