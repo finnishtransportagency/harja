@@ -19,11 +19,11 @@ BEGIN
                 rp.aika::DATE
               FROM toteuma t
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
-                JOIN LATERAL unnest(tr.reittipisteet) rp ON true
+                JOIN LATERAL unnest(tr.reittipisteet) rp ON true AND (rp.aika::DATE >= alkupvm::DATE AND rp.aika::DATE < (loppupvm::DATE + interval '1 day')::DATE)
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
-              WHERE rp.aika::DATE BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-                    AND (u IS NULL OR t.urakka = u) 
+              WHERE (u IS NULL OR t.urakka = u)
                     AND t.poistettu IS FALSE
+                AND (t.alkanut >= alkupvm::TIMESTAMP AND t.alkanut < (loppupvm::TIMESTAMP + interval '1 day')::DATE)
               GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
@@ -44,9 +44,10 @@ BEGIN
     FROM toteuma t
              JOIN toteuma_materiaali tm ON tm.toteuma = t.id and tm.poistettu IS FALSE
              JOIN materiaalikoodi m on tm.materiaalikoodi = m.id
-   WHERE t.lahde = 'harja-ui' and
-         t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-         AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
+   WHERE t.lahde = 'harja-ui'
+         AND (u IS NULL OR t.urakka = u)
+         AND t.poistettu IS FALSE
+         AND t.alkanut >= alkupvm::TIMESTAMP AND t.alkanut < (loppupvm::TIMESTAMP + interval '1 day')::DATE
    GROUP BY t.urakka, talvihoitoluokka, soratiehoitoluokka, tm.materiaalikoodi, t.alkanut::DATE
   LOOP
     INSERT INTO urakan_materiaalin_kaytto_hoitoluokittain
