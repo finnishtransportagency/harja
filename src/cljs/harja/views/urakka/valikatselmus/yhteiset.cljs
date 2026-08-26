@@ -1,6 +1,5 @@
 (ns harja.views.urakka.valikatselmus.yhteiset
-  (:require [harja.ui.modal :as modal]
-            [harja.ui.napit :as napit]
+  (:require [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]))
