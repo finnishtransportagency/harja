@@ -178,7 +178,7 @@
 
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.22.0"]
+                         [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
                          [tools.jackson.core/jackson-core "3.2.1"]
                          [com.fasterxml.jackson.core/jackson-core "2.21.4"]
