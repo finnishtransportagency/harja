@@ -183,7 +183,7 @@
                          [tools.jackson.core/jackson-core "3.2.1"]
                          [com.fasterxml.jackson.core/jackson-core "2.21.4"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
-                         [com.google.code.gson/gson "2.8.9"]]
+                         [com.google.code.gson/gson "2.14.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
