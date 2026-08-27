@@ -57,9 +57,6 @@
 (defrecord TallennaKattohinnanOikaisu [uusi-kattohinta hoitokauden-alkuvuosi])
 (defrecord TallennaKattohinnanOikaisuOnnistui [vastaus id])
 (defrecord TallennaKattohinnanOikaisuEpaonnistui [vastaus])
-(defrecord PoistaKattohinnanOikaisu [])
-(defrecord PoistaKattohinnanOikaisuOnnistui [vastaus id])
-(defrecord PoistaKattohinnanOikaisuEpaonnistui [vastaus])
 (defrecord KattohinnanMuokkaaPainettu [kattohinta])
 
 ;; Päätökset
@@ -93,14 +90,6 @@
 (defrecord HaeValikatselmuksenTiedot [urakkaid hoitovuosi])
 
 (defrecord AvaaPaatos [avain])
-
-(defn poista-kattohinnan-oikaisu [app]
-  (tuck-apurit/post! app :poista-kattohinnan-oikaisu
-    {::urakka/id (-> @tila/yleiset :urakka :id)
-     ::valikatselmus/hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi app)}
-    {:onnistui ->PoistaKattohinnanOikaisuOnnistui
-     :epaonnistui ->PoistaKattohinnanOikaisuEpaonnistui
-     :paasta-virhe-lapi? true}))
 
 (defn hae-valikatselmuksen-tiedot [urakkaid hoitovuosi]
   (tuck-apurit/post! :hae-valikatselmuksen-tiedot-hoitovuodelle
@@ -271,27 +260,6 @@
         "Kattohinnan oikaisun tallennuksessa tapahtui virhe.")
       :varoitus)
     (kasittele-valikatselmuksen-vastaus app vastaus))
-
-  PoistaKattohinnanOikaisu
-  (process-event [_ app]
-    (poista-kattohinnan-oikaisu app)
-    app)
-
-  PoistaKattohinnanOikaisuOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (do
-      (viesti/nayta-toast! "Kattohinnan oikaisu poistettu")
-      (hae-valikatselmuksen-tiedot (-> @tila/yleiset :urakka :id) (:hoitokauden-alkuvuosi app))
-      (->
-        app
-        (update-in [:kattohintojen-oikaisut] dissoc (:hoitokauden-alkuvuosi app))
-        (dissoc app :kattohinnan-oikaisu))))
-
-  PoistaKattohinnanOikaisuEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (js/console.warn "PoistaKattohinnanOikaisuEpaonnistui" vastaus)
-    (viesti/nayta-toast! "Kattohinnan oikaisun poistamisessa tapahtui virhe" :varoitus)
-    app)
 
   KattohinnanMuokkaaPainettu
   (process-event [{kattohinta :kattohinta} app]
