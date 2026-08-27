@@ -112,7 +112,7 @@ SELECT
   -s.maara AS summa,
   s.indeksi,
   s.suorasanktio,
-  sl.koodi AS sanktiolaji_koodi,
+  CASE WHEN spr.id IS NOT NULL THEN sl.koodi END AS sanktiolaji_koodi,
   COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
   st.id AS sanktiotyyppi_id,
   st.koodi AS sanktiotyyppi_koodi,
@@ -264,8 +264,9 @@ WHERE ek.laskutuskuukausi BETWEEN :alku AND :loppu
 -- Hakee sanktiot urakkataso-sanktioraportille profiili-driven tavalla
 SELECT
   s.id AS sanktio_id,
-  sl.koodi AS sanktiolaji_koodi,
-  COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
+  s.sakkoryhma,
+  CASE WHEN spr.id IS NOT NULL THEN sl.koodi END AS sanktiolaji_koodi,
+  CASE WHEN spr.id IS NOT NULL THEN COALESCE(splet.nimi, sl.nimi) END AS sanktiolaji_nimi,
   st.id AS sanktiotyyppi_id,
   st.nimi AS sanktiotyyppi_nimi,
   st.koodi AS sanktiotyyppi_koodi,
@@ -277,41 +278,53 @@ SELECT
   u.nimi AS urakan_nimi,
   u.alkupvm AS urakan_alkupvm,
   u.loppupvm AS urakan_loppupvm,
-  o.lyhenne AS elinvoimakeskus_lyhenne
+  o.lyhenne AS elinvoimakeskus_lyhenne,
+  (CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END) AS soveltuvuuskonteksti
 FROM sanktio s
-  JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
-  JOIN urakka u ON tpi.urakka = u.id
+  LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
+  LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+  JOIN urakka u ON u.id = CASE WHEN s.laatupoikkeama IS NULL THEN tpi.urakka ELSE lp.urakka END
   JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
                       AND o.tyyppi = 'elinvoimakeskus'
   LEFT JOIN sanktiotyyppi st ON s.tyyppi = st.id
-  LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
-  -- Liitetään profiili ja rivi
-  -- Valitaan urakalle sopiva profiili urakan alkupäivämäärän perusteella
-  JOIN sanktio_profiili sp
-    ON sp.urakkatyyppi = u.tyyppi::TEXT
-    AND sp.aktiivinen IS TRUE
-    AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
-    AND sp.alkupvm <= u.alkupvm
-    AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
-  -- HUOM: LEFT JOIN, koska sanktiotyypille ei välttämättä löydy profiiliriviä
-  -- (esim. vanhentunut/poistettu sanktiotyyppi, jota ei ole koodattu profiiliin).
-  -- Sanktio ei saa kadota raportilta tällöin - se näytetään "Tunnistamattomat
-  -- sanktiot" -taulukossa (ks. sanktio.clj).
+  LEFT JOIN LATERAL (
+    SELECT sp.*
+    FROM sanktio_profiili sp
+    WHERE sp.urakkatyyppi = u.tyyppi::TEXT
+      AND sp.aktiivinen IS TRUE
+      AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
+      AND sp.alkupvm <= u.alkupvm
+      AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
+    ORDER BY sp.alkupvm DESC, sp.id DESC
+    LIMIT 1
+  ) sp ON TRUE
+  LEFT JOIN sanktio_laji sl
+    ON sl.koodi = s.sakkoryhma::TEXT
+    AND sl.aktiivinen IS TRUE
   LEFT JOIN sanktio_profiili_rivi spr
     ON spr.sanktio_profiili_id = sp.id
+    AND spr.sanktio_laji_id = sl.id
     AND spr.sanktiotyyppi_id = s.tyyppi
-  LEFT JOIN sanktio_laji sl ON spr.sanktio_laji_id = sl.id
+    AND spr.soveltuvuuskonteksti = CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END
+    AND spr.aktiivinen IS TRUE
   LEFT JOIN sanktio_profiili_laji_esitystiedot splet
     ON splet.sanktio_profiili_id = sp.id
     AND splet.sanktio_laji_id = sl.id
 WHERE s.poistettu IS NOT TRUE
+  AND s.sakkoryhma != 'yllapidon_bonus'::SANKTIOLAJI
   AND s.perintapvm BETWEEN :alku AND :loppu
   AND u.alkupvm < :loppu::DATE
   AND u.loppupvm > :alku::DATE
   AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
     OR (:urakka::INTEGER IS NULL
+      AND u.urakkanro IS NOT NULL
       AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
-  AND (lp.yllapitokohde IS NULL OR (SELECT poistettu FROM yllapitokohde WHERE id = lp.yllapitokohde) IS NOT TRUE);
+  AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+    OR CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+            ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END)
+  AND (s.laatupoikkeama IS NULL
+    OR (lp.poistettu IS NOT TRUE AND (lp.yllapitokohde IS NULL OR ypk.id IS NOT NULL)));
 
 -- name: hae-urakkataso-bonukset
 -- Hakee bonukset urakkataso-sanktioraportille profiili-driven tavalla
@@ -332,66 +345,110 @@ SELECT
   o.lyhenne AS elinvoimakeskus_lyhenne
 FROM erilliskustannus ek
   JOIN urakka u ON ek.urakka = u.id
+  JOIN toimenpideinstanssi tpi ON tpi.id = ek.toimenpideinstanssi
+                              AND tpi.urakka = u.id
+  JOIN toimenpide t3 ON t3.id = tpi.toimenpide
+  LEFT JOIN toimenpide t2 ON t2.id = t3.emo
   JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
                       AND o.tyyppi = 'elinvoimakeskus'
-                AND (:urakka::INTEGER IS NOT NULL AND u.id = :urakka
-                  OR :urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus))
-  -- Liitetään bonus_profiili ja rivi
-  -- Valitaan urakalle sopiva profiili urakan alkupäivämäärän perusteella
-  JOIN bonus_profiili bp
-    ON bp.urakkatyyppi = u.tyyppi::TEXT
-    AND bp.aktiivinen IS TRUE
-    AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu)
-    AND bp.alkupvm <= u.alkupvm
-    AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
+  LEFT JOIN LATERAL (
+    SELECT bp.*
+    FROM bonus_profiili bp
+    WHERE bp.urakkatyyppi = u.tyyppi::TEXT
+      AND bp.aktiivinen IS TRUE
+      AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu)
+      AND bp.alkupvm <= u.alkupvm
+      AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
+    ORDER BY bp.alkupvm DESC, bp.id DESC
+    LIMIT 1
+  ) bp ON TRUE
   JOIN bonus_laji bl ON bl.koodi = ek.tyyppi::TEXT
   JOIN bonus_profiili_rivi bpr
     ON bpr.bonus_profiili_id = bp.id
     AND bpr.bonus_laji_id = bl.id
+    AND bpr.aktiivinen IS TRUE
+    AND (bpr.toimenpiderajauksen_tyyppi = 'kaikki'
+      OR (bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
+        AND bpr.toimenpide_t2_koodi = t2.koodi))
+    AND (NOT EXISTS (
+           SELECT 1
+           FROM bonus_profiili_rivi_urakka bpru
+           WHERE bpru.bonus_profiili_rivi_id = bpr.id)
+      OR EXISTS (
+           SELECT 1
+           FROM bonus_profiili_rivi_urakka bpru
+           WHERE bpru.bonus_profiili_rivi_id = bpr.id
+             AND bpru.urakka_id = u.id))
   LEFT JOIN bonus_profiili_laji_esitystiedot bplet
     ON bplet.bonus_profiili_id = bp.id
     AND bplet.bonus_laji_id = bl.id
 WHERE ek.poistettu IS NOT TRUE
   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
-  AND (:urakka::INTEGER IS NOT NULL OR :elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus);
+  AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+    OR (:urakka::INTEGER IS NULL
+      AND u.urakkanro IS NOT NULL
+      AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
+  AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+    OR CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+            ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END);
 
 -- name: hae-urakkataso-sanktiolajit
 -- Hakee kaikki urakan sanktiolajit ja -tyypit profiilista (myös tyhjät = nollasummat)
 -- Tätä käytetään urakkataso-sanktioraportin taulukon rakenteen muodostamiseen
 -- UNIQUE (sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, soveltuvuuskonteksti)
 -- sallii saman (laji_id, tyyppi_id)-yhdistelmän eri soveltuvuuskonteksteissa ('urakka', 'laatupoikkeama').
--- CTE laskee summat kaikista soveltuvuuskonteksteista GROUP BY(laji_id, tyyppi_id).
--- DISTINCT ON (sl.id, st.id) näyttää vain yhden rivin per laji-tyyppi-yhdistelmä.
+-- CTE laskee summat valitulle urakalle ja profiilille.
 WITH sanktio_profiili_rivit AS (
-  SELECT spr_cte.sanktio_laji_id,
-         spr_cte.sanktiotyyppi_id,
+  SELECT spr.sanktio_profiili_id,
+         spr.sanktio_laji_id,
+         spr.sanktiotyyppi_id,
          SUM(s.maara) AS yhteissumma
-  FROM sanktio_profiili_rivi spr_cte
-    JOIN sanktio_profiili sp ON sp.id = spr_cte.sanktio_profiili_id
-    JOIN sanktio_laji sl ON sl.id = spr_cte.sanktio_laji_id AND sl.aktiivinen IS TRUE
-    JOIN sanktiotyyppi st ON st.id = spr_cte.sanktiotyyppi_id
-    JOIN sanktio s ON s.tyyppi = spr_cte.sanktiotyyppi_id
-    JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
-    JOIN urakka u ON tpi.urakka = u.id
-                  AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
-                    OR (:urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
+  FROM sanktio_profiili_rivi spr
+    JOIN sanktio_profiili sp ON sp.id = spr.sanktio_profiili_id
+    JOIN sanktio_laji sl ON sl.id = spr.sanktio_laji_id AND sl.aktiivinen IS TRUE
+    JOIN sanktiotyyppi st ON st.id = spr.sanktiotyyppi_id
+    JOIN sanktio s ON s.tyyppi = spr.sanktiotyyppi_id
+    LEFT JOIN toimenpideinstanssi tpi ON tpi.id = s.toimenpideinstanssi
+    LEFT JOIN laatupoikkeama lp
+      ON lp.id = s.laatupoikkeama
+      AND lp.poistettu IS NOT TRUE
+    LEFT JOIN yllapitokohde ypk
+      ON ypk.id = lp.yllapitokohde
+      AND ypk.poistettu IS NOT TRUE
+    JOIN urakka u ON u.id = CASE WHEN s.laatupoikkeama IS NULL THEN tpi.urakka ELSE lp.urakka END
   WHERE s.poistettu IS NOT TRUE
+    AND s.sakkoryhma != 'yllapidon_bonus'::SANKTIOLAJI
     AND s.perintapvm BETWEEN :alku AND :loppu
-    AND sp.urakkatyyppi = u.tyyppi::TEXT
     AND sp.aktiivinen IS TRUE
+    AND sp.urakkatyyppi = u.tyyppi::TEXT
     AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
     AND sp.alkupvm <= u.alkupvm
     AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
-  GROUP BY spr_cte.sanktio_laji_id, spr_cte.sanktiotyyppi_id
+    AND u.alkupvm < :loppu::DATE
+    AND u.loppupvm > :alku::DATE
+    AND spr.aktiivinen IS TRUE
+    AND spr.soveltuvuuskonteksti = CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END
+    AND s.sakkoryhma::TEXT = sl.koodi
+    AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
+      OR (:urakka::INTEGER IS NULL
+        AND u.urakkanro IS NOT NULL
+        AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
+    AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+      OR CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+              ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END)
+    AND (s.laatupoikkeama IS NULL
+      OR lp.yllapitokohde IS NULL
+      OR ypk.id IS NOT NULL)
+  GROUP BY spr.sanktio_profiili_id, spr.sanktio_laji_id, spr.sanktiotyyppi_id
 )
-SELECT DISTINCT ON (sl.id, st.id)
+SELECT
   sl.koodi AS sanktiolaji_koodi,
   COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
   sl.jarjestys AS sanktiolaji_jarjestys,
   st.id AS sanktiotyyppi_id,
   st.nimi AS sanktiotyyppi_nimi,
   st.koodi AS sanktiotyyppi_koodi,
-  COALESCE(spr_cte.yhteissumma, 0) AS summa
+  COALESCE(spr_summa.yhteissumma, 0) AS summa
 FROM sanktio_profiili sp
   JOIN sanktio_profiili_rivi spr
     ON spr.sanktio_profiili_id = sp.id
@@ -404,7 +461,10 @@ FROM sanktio_profiili sp
   LEFT JOIN sanktio_profiili_laji_esitystiedot splet
     ON splet.sanktio_profiili_id = sp.id
     AND splet.sanktio_laji_id = sl.id
-  LEFT JOIN sanktio_profiili_rivit spr_cte ON spr_cte.sanktio_laji_id = sl.id AND spr_cte.sanktiotyyppi_id = st.id
+  LEFT JOIN sanktio_profiili_rivit spr_summa
+    ON spr_summa.sanktio_profiili_id = sp.id
+    AND spr_summa.sanktio_laji_id = sl.id
+    AND spr_summa.sanktiotyyppi_id = st.id
   JOIN urakka u ON ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
                 OR (:urakka::INTEGER IS NULL AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)))
 WHERE sp.urakkatyyppi = u.tyyppi::TEXT
@@ -412,11 +472,16 @@ WHERE sp.urakkatyyppi = u.tyyppi::TEXT
   AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN sp.hoitovuosi_alku AND sp.hoitovuosi_loppu)
   AND sp.alkupvm <= u.alkupvm
   AND (sp.loppupvm IS NULL OR sp.loppupvm >= u.alkupvm)
+  AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+    OR CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+            ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END)
+GROUP BY sl.id, sl.koodi, sl.nimi, sl.jarjestys,
+         st.id, st.nimi, st.koodi,
+         splet.nimi, spr_summa.yhteissumma
 ORDER BY sl.id, st.id, sl.jarjestys, st.koodi;
 
 -- name: hae-urakkataso-bonuslajit
 -- Hakee kaikki urakan bonuslajit profiilista (myös tyhjät = nollasummat)
--- DISTINCT ON suojaa bonus_profiili_rivi-taulun mahdollisilta duplikaateilta
 SELECT DISTINCT ON (bl.id)
   bl.koodi AS bonuslaji_koodi,
   COALESCE(bplet.nimi, bl.nimi) AS bonuslaji_nimi,
@@ -439,4 +504,7 @@ WHERE bp.urakkatyyppi = u.tyyppi::TEXT
   AND (:hoitovuosi::INTEGER IS NULL OR :hoitovuosi::INTEGER BETWEEN bp.hoitovuosi_alku AND bp.hoitovuosi_loppu)
   AND bp.alkupvm <= u.alkupvm
   AND (bp.loppupvm IS NULL OR bp.loppupvm >= u.alkupvm)
+  AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
+    OR CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
+            ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END)
 ORDER BY bl.id, bl.jarjestys;
