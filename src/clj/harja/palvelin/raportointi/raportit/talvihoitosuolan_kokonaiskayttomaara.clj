@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara
   (:require [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.kyselyt.lampotilat :as lampotilat-kyselyt]
@@ -17,30 +18,23 @@
   [rivi]
   [[:arvo {:arvo (:hoitovuosi rivi)}]
    (if (:keskilampotila-jaksolla rivi)
-     (:keskilampotila-jaksolla rivi)
-     [:arvo {:arvo "Lämpötilatieto puuttuu"
-             :huomio? true}])
+     [:arvo {:arvo (:keskilampotila-jaksolla rivi)
+             :desimaalien-maara 1}]
+     [:arvo {:arvo "Ei vielä saatavilla"}])
    (if (:keskilampotila-pitkalla-aikavalilla rivi)
-     (:keskilampotila-pitkalla-aikavalilla rivi)
-     [:arvo {:arvo "Lämpötilatieto puuttuu"
-             :huomio? true}])
-   (:erotus-celcius rivi)
+     [:arvo {:arvo (:keskilampotila-pitkalla-aikavalilla rivi)
+             :desimaalien-maara 1}]
+     [:arvo {:arvo "Ei vielä saatavilla"}])
+   (if (some? (:erotus-celcius rivi))
+     [:arvo {:arvo (:erotus-celcius rivi)
+             :desimaalien-maara 1}]
+     [:arvo {:arvo "-"}])
    (:lampotilan-vaikutus rivi)
    (if (:kayttoraja rivi)
      (:kayttoraja rivi)
-     [:arvo {:arvo "Käyttöraja puuttuu"
-             :huomio? true}])
+     [:arvo {:arvo "Tieto puuttuu"}])
    (if (:kohtuull-kayttoraja rivi) (:kohtuull-kayttoraja rivi) [:arvo {:arvo "-"}])
-   (if (:toteuma rivi) (:toteuma rivi) [:arvo {:arvo "-"}])
-   [:arvo
-    (merge
-      {:arvo (:erotus-toteuma rivi)
-       :jos-tyhja "-"
-       :desimaalien-maara 2
-       :ryhmitelty? true}
-      (if (> (:erotus-toteuma rivi) 0)
-        {:varoitus? true}
-        {:korosta-hennosti? true}))]])
+   (if (:toteuma rivi) (:toteuma rivi) [:arvo {:arvo "-"}])])
 
 (defn- yhteenvetorivi [rivi]
   {:lihavoi? true
@@ -56,16 +50,9 @@
           (if (= 0 (:kohtuull-kayttoraja-yhteensa rivi))
             [:arvo {:arvo nil :jos-tyhja "-"}]
             (:kohtuull-kayttoraja-yhteensa rivi))
-          (:toteuma-yhteensa rivi)
-          [:arvo
-           (merge
-             {:arvo (:erotus-toteuma-yhteensa rivi)
-              :jos-tyhja "-"
-              :desimaalien-maara 2
-              :ryhmitelty? true}
-             (if (> (:erotus-toteuma-yhteensa rivi) 0)
-               {:varoitus? true}
-               {:korosta-hennosti? true}))]]})
+          (if (= 0 (:toteuma-yhteensa rivi))
+            [:arvo {:arvo nil :jos-tyhja "-"}]
+            (:toteuma-yhteensa rivi))]})
 
 (defn lampotilan-vaikutus-suolan-kulutukseen
   "Joulu-, tammi, ja helmikuun keskilämpötilojen keskiarvo korkempi kuin ns. pitkän aikavälin (30v)
@@ -131,7 +118,7 @@
 
       ;; Jos ollaan maalis-syyskuussa, palautetaan viimeisin lämpötiladatavuosi, mutta ei tulevaisuuden vuosia, vaikka lämpötildataa vahingossa sinne olisi voinut syöttää
       :else
-      (if maalis-syyskuu?
+      (if (and maalis-syyskuu? (last lampotilat))
         (min nyt-vuosi (pvm/vuosi (:loppupvm (last lampotilat))))
         (dec nyt-vuosi)))))
 
@@ -151,14 +138,8 @@
         ;; Haetaan tiedot hoitokausittain - ja siihen tarvitaan urakan kesto
         urakan-tiedot (first (urakat-kyselyt/hae-yksittainen-urakka db {:urakka_id urakka-id}))
         urakan_alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
-        viimeinen-mahdollinen-vuosi (paattele-raportin-viimeinen-hoitovuosi (:loppupvm urakan-tiedot) urakan-lampotilat)
-        ;; Jos urakka on vasta alkanut ja valmistuneita hoitokausia ei ole, niin ei haeta tietoja
-        hoitovuodet (if (not= viimeinen-mahdollinen-vuosi (pvm/vuosi (:alkupvm urakan-tiedot)))
-                      (range
-                        (pvm/vuosi (:alkupvm urakan-tiedot))
-                        ;; Näytetään vain päättyneiltä hoitokausilta
-                        viimeinen-mahdollinen-vuosi)
-                      nil)
+        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+        hoitovuodet (range urakan_alkuvuosi urakan-loppuvuosi)
 
         ;; Koostetaan data map tyyppiseen rakenteeseen
         data (when hoitovuodet
@@ -173,8 +154,8 @@
                                ;; Lämpötilojen erotus celciuksena
                                erotus-c (if (and (not (nil? keskilampo)) (not (nil? keskilampo-pitka)))
                                           (- keskilampo keskilampo-pitka)
-                                          0)
-                               lampotilan-vaikutus (lampotilan-vaikutus-suolan-kulutukseen erotus-c)
+                                           nil)
+                               lampotilan-vaikutus (when (number? erotus-c) (lampotilan-vaikutus-suolan-kulutukseen erotus-c))
 
                                ;; HAetaan suolarajoitukset
                                suolarajoitukset (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
@@ -195,7 +176,9 @@
                                     :keskilampotila-jaksolla keskilampo
                                     :keskilampotila-pitkalla-aikavalilla keskilampo-pitka
                                     :erotus-celcius erotus-c
-                                    :lampotilan-vaikutus (str (when (> lampotilan-vaikutus 0) "+") lampotilan-vaikutus " %")
+                                    :lampotilan-vaikutus (if (number? lampotilan-vaikutus)
+                                                           (str (when (> lampotilan-vaikutus 0) "+") lampotilan-vaikutus " %")
+                                                           (str "-"))
                                     :kayttoraja (:talvisuolan_kayttoraja suolarajoitukset)
                                     :kohtuull-kayttoraja kohtuullistettu-kayttoraja
                                     :toteuma toteuma
@@ -221,10 +204,9 @@
                       {:otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Erotus (°C)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Lämpötilan vaikutus käyttörajaan" :leveys 1 :fmt :teksti :tasaa :oikea}
-                      {:otsikko "Käyttöraja (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
+                      {:otsikko "Käyttöraja tehtävä- ja määräluettelossa (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
                       {:otsikko "Kohtuullistettu käyttöraja (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
-                      {:otsikko "Toteuma (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}
-                      {:otsikko "Erotus (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}]
+                      {:otsikko "Toteuma (kuivatonnia)" :leveys 1 :fmt :numero :tasaa :oikea}]
         datarivit (into [] (map jasenna-datarivi data))
         kohtuullistettu-kayttoraja-yhteensa (apply + (map (fn [rivi]
                                                             (if (:kohtuull-kayttoraja rivi)
@@ -253,9 +235,79 @@
         datarivit (conj datarivit yhteenvetorivi)]
 
     ;; Tehdään raportti täyttämällä raporttipohja aiemmin luoduilla tiedoilla
-    [:raportti {:nimi raportin-nimi
-                :orientaatio :landscape}
-     [:taulukko {:otsikko otsikko
+    [:raportti {:nimi "Talvisuolan kokonaiskäyttö"
+                :otsikon-koko :iso :orientaatio :landscape}
+     [:otsikko-heading-small (str (:nimi urakan-tiedot))]
+
+     [:infolaatikko
+      [:span.talvisuola-info
+       "Mahdollinen talvisuolan kokonaiskäyttöön liittyvä sanktio määrätään vasta urakan päättyessä vastaanottotarkastuksessa. Sanktio kirjataan "
+       [:a {:href (str "/#urakat/laadunseuranta/sanktiot?&hy=" (:elinvoimakeskus_id urakan-tiedot) "&u=" urakka-id)
+            :target "_blank" :rel "noopener noreferrer"}
+        "Sanktiot ja bonukset"]" -välilehdellä."]
+      {:tyyppi :neutraali
+       :toissijainen-viesti ""
+       :leveys 800
+       :rivita? false}]
+     [:yhteenveto-laatikko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
+        [(if (= 0 (:kayttoraja-yhteensa yhteevetodata))
+           {:infolaatikko? true
+            :teksti "Tehtävä- ja määräluettelon mukainen käyttöraja"
+            :toissijainen-viesti "Tieto puuttuu"
+            :tyyppi :vahva-ilmoitus
+            :ikoni :harja-icon-status-alert}
+           {:avain "Tehtävä- ja määräluettelon mukainen käyttöraja"
+            :arvo (fmt/yksikolla
+                    "t"
+                    (fmt/desimaaliluku-opt
+                      (:kayttoraja-yhteensa yhteevetodata)
+                      2
+                      2
+                      true))})
+         {:avain "Kohtuullistettu käyttöraja"
+          :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+                  "-"
+                  (fmt/yksikolla
+                    "t"
+                    (fmt/desimaaliluku-opt
+                      (:kohtuull-kayttoraja-yhteensa yhteevetodata)
+                      2
+                      2
+                      true)))}
+         {:avain "Suurin urakassa sallittu käyttömäärä + 5 %"
+          :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+                  "-"
+                  (fmt/yksikolla
+                    "t"
+                    (fmt/desimaaliluku-opt
+                      (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+                      2
+                      2
+                      true)))}
+         {:avain "Toteuma koko urakka-ajalta"
+          :arvo (if (= 0 (:toteuma-yhteensa yhteevetodata))
+                  "-"
+                  (fmt/yksikolla
+                    "t"
+                    (fmt/desimaaliluku-opt
+                      (:toteuma-yhteensa yhteevetodata)
+                      2
+                      2
+                      true)))
+          :lihavoi? true}
+         {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma"
+          :arvo (if (> (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+                  (fmt/yksikolla
+                    "t"
+                    (fmt/desimaaliluku-opt
+                      (- (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+                      2
+                      2
+                      true))
+                  "Ei ylitystä")
+          :lihavoi? true}]]
+
+     [:taulukko {:otsikko "Erittely hoitovuosittain"
                  :tyhja (when (empty? data) "Ei raportoitavia tietoja.")
                  :sheet-nimi "Talvihoitosuolat"}
       otsikkorivit
