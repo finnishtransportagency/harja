@@ -359,8 +359,9 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3.raportti-otsikko teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali leveysprosentti]}]]
-  [:div {:style (merge
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali leveysprosentti luokka]}]]
+  [:div {:class luokka
+         :style (merge
                   {:color (when vari vari)}
                   (when leveysprosentti {:width (str leveysprosentti "%")})
                   (when rivita? {:white-space "pre-line"})

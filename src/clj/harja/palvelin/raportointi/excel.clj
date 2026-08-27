@@ -437,9 +437,9 @@
                                       sarakkeet data] workbook]
   (try
     (let [sheet-nimi (or (when (and (:excel-urakkataso? raportin-tiedot)
-                                    (not= "Yhteenveto" (or nimi otsikko)))
-                             (:excel-detail-sheet-nimi raportin-tiedot))
-                         sheet-nimi)
+                                 (not= "Yhteenveto" (or nimi otsikko)))
+                           (:excel-detail-sheet-nimi raportin-tiedot))
+                       sheet-nimi)
           viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
           [sheet nolla] (if (and
@@ -472,6 +472,7 @@
           rivi-jalkeen-nro (+ puskuririvien-maara-ennen-rivi-jalkeen (count data))
           rivi-jalkeen-rivi (when rivi-jalkeen (.createRow sheet rivi-jalkeen-nro))
           nolla (if rivi-ennen (inc nolla) nolla)
+          alkutekstien-alkurivi nolla
           nolla (if excel-alkutekstit (+ nolla (count excel-alkutekstit))
                   nolla)
           otsikko-rivi (.createRow sheet nolla)
@@ -485,11 +486,11 @@
                                  uusi-tyyli (doto (excel/create-cell-style! workbook tyyli)
                                               formaatti-fn)]
                              (when (and (string? taustavari)
-                                        (instance? XSSFCellStyle uusi-tyyli))
+                                     (instance? XSSFCellStyle uusi-tyyli))
                                (.setFillForegroundColor uusi-tyyli (XSSFColor. (java.awt.Color/decode taustavari) nil))
                                (.setFillPattern uusi-tyyli org.apache.poi.ss.usermodel.FillPatternType/SOLID_FOREGROUND))
                              (when (and (string? tekstivari)
-                                        (instance? XSSFCellStyle uusi-tyyli))
+                                     (instance? XSSFCellStyle uusi-tyyli))
                                (.setColor (.getFont uusi-tyyli) (XSSFColor. (java.awt.Color/decode tekstivari) nil)))
                              (swap! luodut-tyylit assoc-in [solun-tyyli sarake-fmt] uusi-tyyli)
                              uusi-tyyli))]
@@ -510,7 +511,7 @@
             (fn [rivi-nro rivi]
               (let [[tyyppi teksti] (excel-alkuteksti->elementti rivi)
                     tyyli           (excel-alkuteksti-tyyli workbook tyyppi)]
-                (tee-tekstirivi sheet (+ 2 rivi-nro) teksti tyyli)))
+                (tee-tekstirivi sheet (+ alkutekstien-alkurivi rivi-nro) teksti tyyli)))
             excel-alkutekstit)))
 
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja.
@@ -734,7 +735,7 @@
                                   {:sheet-nimi detail-sheet-nimi}
                                   (when (pos? indeksi)
                                     {:samalle-sheetille? true})))
-                        taulukot)]
+                   taulukot)]
     (concat [(excel-yhteenvetotaulukko yhteenveto-data)] taulukot)))
 
 (defn- lisaa-ajettu-teksti-ensimmaiselle-sheetille!
