@@ -22,7 +22,7 @@
      (when tallennus-kesken?
        [yleiset/ajax-loader-pieni "Tallennetaan tietoja..."])
      
-     (when (not (contains? avatut-paatokset paatos-avain))
+     (when (and (not (:hoitovuosi-kesken? paatos)) (not (contains? avatut-paatokset paatos-avain)))
        [:div
         ;; Tuloksia ei näytetä mikäli tarjouksen tavoitehinta puuttuu
         (when (and (< 0 (:toteutuneet_pisteet paatos)) (:tavoitehinta paatos))
@@ -91,18 +91,24 @@
                    (str " (+ indeksi  " (fmt/euro-opt (:indeksikorotus paatos)) " )"))]]]
               (= (:luvatut_pisteet paatos) (:toteutuneet_pisteet paatos))
               [:<>
-               [:div.big-text.lihavoitu "Ei bonusta eikä sanktiota"]])]])
+               [:div.big-text "Ei bonusta eikä sanktiota"]])]])
 
-        ;; Jos päätöksessä on virhe, niin näytetään se
-        (when (:virhe paatos)
-          [:div [yleiset/info-laatikko :vahva-ilmoitus (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
         [:hr.paatos-hr]
 
+        ;; Jos päätöksessä on virhe, niin näytetään se
+        (when (:virheet paatos)
+          [:div [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+                 (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
+
         ;; Muokkaa, eli poista päätös, tai jos sitä ei ole tehty, niin tee päätös
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and (not (:virheet paatos)) voi-muokata?)
          #(e! (valikatselmus-tiedot/->TallennaLupausPaatos paatos))
          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaLupausPaatos paatos))
                                                                     :teksti "Automaattisesti kirjattu bonus/sanktio poistetaan."})
          #(if (:lupaussanktio paatos)
             [:p "Aluevastaava tekee päätöksen sanktion maksamisesta."]
-            [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])]))
+            [:p "Aluevastaava tekee päätöksen bonuksen maksamisesta."])]])
+
+     ;; Ei näytetä sisältöä, mikäli hoitovuosi on kesken
+     (when (and (:hoitovuosi-kesken? paatos) (not (contains? avatut-paatokset paatos-avain)))
+       [:p "Sisältö nähtävillä vasta, kun hoitokausi päättyy."])]))

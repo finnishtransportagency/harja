@@ -265,7 +265,7 @@
 
     :lupausbonus "Lupausbonus"
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :asiakastyytyvaisyysbonus "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     nil))
 
@@ -273,7 +273,7 @@
   "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]
   (case avainsana
-    :asiakastyytyvaisyysbonus "Asiakastyytyväisyysbonus"
+    :asiakastyytyvaisyysbonus "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     :alihankintabonus "Alihankintasopimusten maksuehtobonus"
     :tavoitepalkkio "Tavoitepalkkio"
