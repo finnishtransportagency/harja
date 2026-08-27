@@ -1371,7 +1371,7 @@
         "Offset määritelty ainakin yhdelle kuukaudelle")
 
       ;; Tarkista, että elokuu (kuukausi 8) käyttää offset=1, jos data löytyy
-      (let [elokuu (first (filter (fn [[kk _offset]] (= 8 kk)) offset-data))]
+      (let [elokuu (second (filter (fn [[kk _offset]] (= 8 kk)) offset-data))]
         (if elokuu
           (let [[_kuukausi offset] elokuu]
             (is (= 1 offset)
