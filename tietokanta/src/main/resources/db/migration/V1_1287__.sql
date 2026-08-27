@@ -1,4 +1,4 @@
 ALTER TABLE tehtava
-ADD COLUMN "nayta-jarjestelmakirjaus-tehtavatoteumissa" BOOLEAN
+ADD COLUMN "laske-api-maara-mukaan?" BOOLEAN;
 
-COMMENT ON COLUMN tehtava.nopeusrajoitus is 'Tehtävän mahdollisen reittitoteuman muodostukseen käytetty nopeusrajoitus km/h. Mikäli reittipisteiden välinen nopeus ylittää tämän, ei piirretä viivaa. Default 108 tulee aiemmin kovakoodatusta arvosta.';
+COMMENT ON COLUMN tehtava."laske-api-maara-mukaan?" is 'True, jos urakoitsijajärjestelmästä Harjaan tuotu, (yleensä) koneellisesti kerätty toteumamäärä lasketaan mukaan tehtävän toteuman yhteismäärään Harjan näkymässä Toteumat > Tehtävät.';
