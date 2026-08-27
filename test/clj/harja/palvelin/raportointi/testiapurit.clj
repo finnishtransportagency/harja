@@ -148,7 +148,8 @@
 (defn hae-osion-taulukot
   "Etsii raportista osion taulukot uudella rakenteella.
    Uusi rakenne: [[:otsikko \"Sanktiot\"] [:taulukko ...] [:taulukko ...] ...]
-   Palauttaa kaikki :taulukko-elementit annetun osion otsikon jälkeen."
+  Jos taulukko toimii itse osion otsikkona, palautetaan vastaava taulukko.
+  Palauttaa kaikki :taulukko-elementit annetun osion otsikon jälkeen."
   [raportti otsikko]
   (let [raportti-osat (drop 2 raportti)
         ;; Etsi [:otsikko otsikko] -elementti (osion otsikko, ei koko-otsikko)
@@ -158,17 +159,21 @@
                                                     (= (second elementti) otsikko))
                                               i))
                               raportti-osat))
-        ;; Jos löytyy, kerää kaikki :taulukko-elementit kunnes tulee uusi :otsikko
-        taulukot (when osio-indeksi
-                   (let [seuraavat (drop (inc osio-indeksi) raportti-osat)
-                         [taulukot-sarja _] (reduce (fn [[taulukot jatkuu] elementti]
-                                                      (if (and (vector? elementti)
-                                                            (= (first elementti) :otsikko))
-                                                        [taulukot false]
-                                                        [(conj taulukot elementti) true]))
-                                              [[] true]
-                                              seuraavat)]
-                     taulukot-sarja))]
+            ;; Jos löytyy, kerää kaikki :taulukko-elementit kunnes tulee uusi :otsikko
+          taulukot (if osio-indeksi
+             (let [seuraavat (drop (inc osio-indeksi) raportti-osat)
+               [taulukot-sarja _] (reduce (fn [[taulukot jatkuu] elementti]
+                        (if (and (vector? elementti)
+                          (= (first elementti) :otsikko))
+                          [taulukot false]
+                            [(conj taulukot elementti) true]))
+                        [[] true]
+                        seuraavat)]
+               taulukot-sarja)
+             (filter #(and (vector? %)
+                (= :taulukko (first %))
+                (= otsikko (get-in % [1 :otsikko])))
+               raportti-osat))]
     taulukot))
 
 

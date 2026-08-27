@@ -87,16 +87,16 @@
       (excel/muodosta-excel vastaus workbook)
       (is (= 2 (.getNumberOfSheets workbook)))
       (is (= "Yhteenveto" (.getSheetName (.getSheetAt workbook 0))))
-            (is (= "Oulun alueurakka 2014-2019"
-              (.getSheetName (.getSheetAt workbook 1))))
-            (let [yhteenveto-tekstit (sheet-tekstit (.getSheetAt workbook 0))
-             erittely-tekstit (sheet-tekstit (.getSheetAt workbook 1))]
-         (is (some #(= "Sanktiot yhteensä" %) yhteenveto-tekstit))
-         (is (some #(= "Bonukset yhteensä" %) yhteenveto-tekstit))
-         (is (some #(= "Arvovähennykset" %) yhteenveto-tekstit))
-         (is (some #(= "Bonukset" %) erittely-tekstit))
-         (is (some #(= "Arvonvähennykset" %) erittely-tekstit))
-         (is (not-any? #(= "Yhteenveto" %) erittely-tekstit))))
+      (is (= "Oulun alueurakka 2014-2019"
+             (.getSheetName (.getSheetAt workbook 1))))
+      (let [yhteenveto-tekstit (sheet-tekstit (.getSheetAt workbook 0))
+            erittely-tekstit (sheet-tekstit (.getSheetAt workbook 1))]
+        (is (some #(= "Sanktiot yhteensä" %) yhteenveto-tekstit))
+        (is (some #(= "Bonukset yhteensä" %) yhteenveto-tekstit))
+        (is (some #(= "Arvovähennykset" %) yhteenveto-tekstit))
+        (is (some #(= "Bonukset" %) erittely-tekstit))
+        (is (some #(= "Arvonvähennykset" %) erittely-tekstit))
+        (is (not-any? #(= "Yhteenveto" %) erittely-tekstit))))
     (let [otsikko "Sanktiot"
           taulukot (apurit/hae-osion-taulukot vastaus otsikko)
           taulukko (first taulukot)]
@@ -104,7 +104,7 @@
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:otsikko "Tyyppi"}
-        {:otsikko "Summa (€)"}))))
+        {:otsikko "Sanktio (€)"}))))
 
 (deftest raportin-suoritus-yllapidon-urakalle-erottelee-sakot-muistutukset-ja-bonukset
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -154,7 +154,7 @@
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:otsikko "Tyyppi"}
-        {:otsikko "Summa (€)"}))))
+        {:otsikko "Sanktio (€)"}))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -178,7 +178,7 @@
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:otsikko "Tyyppi"}
-        {:otsikko "Summa (€)"}))))
+        {:otsikko "Sanktio (€)"}))))
 
 (deftest raportin-excel-elylle-sisaltaa-kaikki-aktiiviset-urakat
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -193,11 +193,88 @@
         workbook (XSSFWorkbook.)]
     (excel/muodosta-excel vastaus workbook)
     (let [sheet-nimet (set (map #(.getSheetName %)
-                              (map #(.getSheetAt workbook %)
-                                (range (.getNumberOfSheets workbook)))))]
+                             (map #(.getSheetAt workbook %)
+                               (range (.getNumberOfSheets workbook)))))]
       (is (contains? sheet-nimet "POP MHU Kajaani 2025-2030"))
       (is (contains? sheet-nimet "POP MHU Suomussalmi 2024-2029"))
       (is (not (contains? sheet-nimet "Yhteenveto"))))))
+
+(deftest raportin-mhu2025-sanktiot-ja-bonukset-kohdistuvat-oikein
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030'"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :sanktioraportti
+                   :konteksti  "urakka"
+                   :urakka-id  urakka-id
+                   :parametrit {:alkupvm      (c/to-date (t/local-date 2026 1 1))
+                                :loppupvm     (c/to-date (t/local-date 2026 2 1))
+                                :urakkatyyppi :hoito}})
+        sanktio-taulukko (some #(when (= "A-ryhmä (tehtäväkohtainen sanktio)"
+                                         (get-in % [1 :otsikko])) %)
+                           (apurit/hae-osion-taulukot vastaus "Sanktiot"))
+        bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))
+        arvonvahennys-taulukko (first (apurit/hae-osion-taulukot vastaus "Arvonvähennykset"))]
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 1000M))
+    (is (= ["Talvihoito, päätiet" 1000M]
+           (hae-taulukon-rivi sanktio-taulukko "Talvihoito, päätiet")))
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Bonukset yhteensä") 1500M))
+    (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" 1500M]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta")))
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Arvovähennykset") 2500M))
+    (is (= ["Arvonvähennys" 2500M]
+           (hae-taulukon-rivi arvonvahennys-taulukko "Arvonvähennys")))))
+
+(deftest raportin-mhu2026-noudattaa-t2-ja-whitelist-rajoja
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :sanktioraportti
+                   :konteksti  "urakka"
+                   :urakka-id  urakka-id
+                   :parametrit {:alkupvm      (c/to-date (t/local-date 2026 10 1))
+                                :loppupvm     (c/to-date (t/local-date 2027 9 30))
+                                :urakkatyyppi :hoito}})
+        sanktio-taulukot (apurit/hae-osion-taulukot vastaus "Sanktiot")
+        sanktio-taulukko (some #(when (= "A - Tehtäväkohtainen sanktio"
+                                         (get-in % [1 :otsikko])) %)
+                           sanktio-taulukot)
+        bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))]
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 1800M))
+    (is (= ["Talvihoito Ise/Is/L" 1800M]
+           (hae-taulukon-rivi sanktio-taulukko "Talvihoito Ise/Is/L")))
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Bonukset yhteensä") 3600M))
+    (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" 1100M]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta")))
+    (is (= ["Bonus alihankkijatyytyväisyyden kyselytutkimuksen tuloksesta" 1200M]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus alihankkijatyytyväisyyden kyselytutkimuksen tuloksesta")))
+    (is (= ["Bonus määräaikaan tehtävien töiden aiemmasta toteutuksesta" 1300M]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus määräaikaan tehtävien töiden aiemmasta toteutuksesta")))
+    (is (= ["Bonus liikennevahinkojen aiheuttajien selvittämisestä" 0]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus liikennevahinkojen aiheuttajien selvittämisestä")))))
+
+(deftest raportin-mhu2026-whitelistin-sallima-bonus-nakyy
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - whitelistin testi'"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :sanktioraportti
+                   :konteksti  "urakka"
+                   :urakka-id  urakka-id
+                   :parametrit {:alkupvm      (c/to-date (t/local-date 2026 10 1))
+                                :loppupvm     (c/to-date (t/local-date 2027 9 30))
+                                :urakkatyyppi :hoito}})
+        bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))]
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Bonukset yhteensä") 1400M))
+    (is (= ["Bonus liikennevahinkojen aiheuttajien selvittämisestä" 1400M]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus liikennevahinkojen aiheuttajien selvittämisestä")))))
 
 
 (deftest raportin-suoritus-koko-maalle-toimii
@@ -243,7 +320,7 @@
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:otsikko "Tyyppi"}
-        {:otsikko "Summa (€)"}))))
+        {:otsikko "Sanktio (€)"}))))
 
 (defn suorita-sanktioraportti
   [konteksti [alkuvuosi alkukk alkupv] [loppuvuosi loppukk loppupv]]
@@ -273,7 +350,7 @@
     (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella))))
     (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (is (=marginaalissa? sanktiosumma 777M))
-    (is (= "Summa (€)" (-> taulukko (nth 2) second :otsikko)))))
+    (is (= "Sanktio (€)" (-> taulukko (nth 2) second :otsikko)))))
 
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-laskee-sanktiot-vain-jos-viimeinen-kuukausi-on-mukana
   (let [urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
@@ -286,7 +363,7 @@
     (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella))))
     (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (is (=marginaalissa? sanktiosumma 0M))
-    (is (= "Summa (€)" (-> taulukko (nth 2) second :otsikko)))))
+    (is (= "Sanktio (€)" (-> taulukko (nth 2) second :otsikko)))))
 
 (defn tarkista-ely-rivit
   [tarkistus-fn]
