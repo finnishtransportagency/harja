@@ -429,7 +429,7 @@
 
    {:nimi :talvisuolanlämpötilaraportti
     :konteksti #{"urakka"},
-    :kuvaus-tarkenne "Talvisuolan lämpötilatarkastelu"
+    :kuvaus-tarkenne "Talvisuolan kokonaiskäyttö"
     :kuvaus "Talvisuolanlämpötilaraportti"
     :suorita #'harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
@@ -491,4 +491,3 @@
 
 (def raportit-nimen-mukaan
   (into {} (map (juxt :nimi identity)) raportit))
-
