@@ -1,11 +1,4 @@
-(ns harja.palvelin.palvelut.valikatselmus.paatostyypit
-  (:require [clojure.string :as str]
-
-            [harja.pvm :as pvm]
-            [harja.tyokalut.yleiset :refer [round2]]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.domain.lupaus-domain :as lupaus-domain]
-            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]))
+(ns harja.palvelin.palvelut.valikatselmus.paatostyypit)
 
 
 (def paatostyypit
