@@ -225,18 +225,6 @@
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos validoinnit-kaytossa? valittu-hoitovuosi mahdolliset-paatokset hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos validoinnit-kaytossa? valittu-hoitovuosi mahdolliset-paatokset)
 
-        ;; Keskeneräiselle tai tulevaisuuden hoitovuodelle näytetään vain yksi päätös - Tavoitehinnan muutospäätös.
-        mahdolliset-paatokset (if (and validoinnit-kaytossa? (or (>= valittu-hoitovuosi nyt-vuosi) hoitovuosi-kesken?))
-                                ;; Poistetaan kaikki muut päätökset, kuin tavoitehinnan muutospäätös
-                                (filter (fn [paatos]
-                                          (when (contains? #{"Hoidonjohtopalkkion muutos" "Lupaukset" "Tavoitehinnan muutokset" "Tavoitehinnan alitus"
-                                                             "Tavoitehinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta"
-                                                             "Kattohinnan ylitys" "Välikatselmuspöytäkirjaan liitettävät raportit"} (:nimi paatos))
-                                            paatos))
-                                  mahdolliset-paatokset)
-                                ;; Palautetaan kaikki päätökset, jos ei ole hoitovuosi menossa tai jos validoinnit on poissa päältä
-                                mahdolliset-paatokset)
-
         ;; Keskeneräiselle tai tulevaisuuden hoitovuodelle näytetään vain tietyt päätökset.
         mahdolliset-paatokset (if (and validoinnit-kaytossa? (or (>= valittu-hoitovuosi nyt-vuosi) hoitovuosi-kesken?))
                                 ;; Poistetaan kaikki muut päätökset, kuin tässä määritellyt päätökset
@@ -1221,6 +1209,7 @@
           (tallenna-tavoitehinnan-oikaisu db user tiedot)))
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu http
         :poista-tavoitehinnan-oikaisu
         (fn [user tiedot]
@@ -1254,6 +1243,7 @@
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
 
       ;; FIXME Poistuu 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-lupauspaatos
         (fn [user tiedot]
@@ -1267,6 +1257,7 @@
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-muutospaatos
         (fn [user tiedot]
@@ -1293,6 +1284,7 @@
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-alituspaatos
         (fn [user tiedot]
@@ -1306,6 +1298,7 @@
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-ylityspaatos
         (fn [user tiedot]
@@ -1319,6 +1312,7 @@
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-kattohinnan-ylityspaatos
         (fn [user tiedot]
@@ -1332,6 +1326,7 @@
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-indeksikorjauspaatos
         (fn [user tiedot]
@@ -1345,6 +1340,7 @@
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoitovuoden-lopun-hintapaatos
         (fn [user tiedot]
@@ -1358,6 +1354,7 @@
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
@@ -1371,6 +1368,7 @@
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
 
       ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-poytakirjan-raporttipaatos
         (fn [user tiedot]
