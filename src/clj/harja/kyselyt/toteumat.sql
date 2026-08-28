@@ -455,7 +455,10 @@ FROM tehtava tk
          LEFT JOIN urakka_tehtavamaara_yhteenveto ut
                    ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
                        AND tk.id = ut.tehtava
-         LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
+         LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi AND
+    -- Rajataan pois urakoitsijajärjestelmästä tuodut toteumamäärät, jos tehtävän määrittely niin vaatii
+                                      ((ot.urakoitsijajarjestelmasta IS FALSE OR ot.urakoitsijajarjestelmasta IS NULL) OR
+                                       (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
          JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
     (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
@@ -471,8 +474,6 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                  'e32341fc-775a-490a-8eab-c98b8849f968',
                                  '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                  'c058933e-58d3-414d-99d1-352929aa8cf9'))
--- Rajataan pois järjestelmäkirjaukset, jos tehtävän määrittely niin vaatii
-  AND ((ot.urakoitsijajarjestelmasta IS FALSE OR ot.urakoitsijajarjestelmasta IS NULL) OR (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
 GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
@@ -481,6 +482,7 @@ ORDER BY o.otsikko asc, tk.nimi asc;
 -- Summataan järjestelmän kautta lisätyt toteumat yhdelle riville, koska niitä tulee kymmeniätuhansia
 -- yhden hoitokauden aikana ja mikään käyttöliittymä ei pysty niitä näyttämään järkevästi.
 -- Käsin lisätyt toteumat sen sijaan listataan yksitellen.
+-- Jos tehtävätaulussa on niin määritelty, ei järjestelmästä kirjattuja toteumia oteta ollenkaan mukaan.
 SELECT 0 as id,
        now() as alkanut,
        sum(tt.maara) as maara,
@@ -490,7 +492,7 @@ SELECT 0 as id,
 FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
      LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
-     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
+     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id AND tk."laske-api-maara-mukaan?" IS NOT FALSE
      JOIN kayttaja k ON k.id = t.luoja AND k.jarjestelma = true
 WHERE t.urakka = :urakka
   AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
