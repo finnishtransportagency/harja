@@ -415,6 +415,8 @@ WHERE e.urakka = :urakka
 -- Ryhmittele ja summaa tiedot toimenpidekoodin eli tehtävän perusteella. Suunnitellut toteumat
 -- haetaan erikseen ja ilman suunnittelua olevat toteumat erikseen, käyttäen unionia.
 -- Haetaan tarpeeksi tietoa, jotta tehtävän sisältämät erilliset toteumat voidaan hakea erikseen.
+-- Urakoitsijajärjestelmästä kirjatut tehtävään liittyvät määrät otetaan mukaan vain, jos tehtava-taulussa
+-- on niin sarakkeessa "laske-api-maara-mukaan?" määritelty. Käsin kirjatut määrät lasketaan mukaan aina.
 WITH osa_toteumat AS
          (SELECT tt.toimenpidekoodi  AS toimenpidekoodi,
                  SUM(tt.maara)       AS maara,
@@ -422,15 +424,17 @@ WITH osa_toteumat AS
                  :urakka             AS urakka,     -- Hakuehtojen perusteella tiedetään urakka, joten käytetään sitä
                  MAX(t.id)           AS toteuma_id, -- Kaikilla on sama toimenpidekoodi, joten on sama mitä toteumaa tietojen yhdistämisessä käytetään
                  MAX(tt.id)          AS toteuma_tehtava_id,
-                 MAX(t.tyyppi::TEXT) AS tyyppi      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
+                 MAX(t.tyyppi::TEXT) AS tyyppi,      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
+                 k.jarjestelma       AS urakoitsijajarjestelmasta -- Joidenkin tehtävien urakoitsijajärjestelmästä tulleita kirjauksia ei oteta mukaan yhteissummaan
           FROM toteuma t
                    JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                   JOIN kayttaja k ON tt.luoja = k.id -- Tallentajan tieto tarvitaan, että tiedetään tuliko määrä järjestelmästä vai kirjattiinko se käsin
                    LEFT JOIN toteuma_materiaali tm
                              ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           WHERE t.urakka = :urakka
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
-          GROUP BY tt.toimenpidekoodi)
+          GROUP BY tt.toimenpidekoodi, k.jarjestelma)
 SELECT tk.id                                     AS toimenpidekoodi_id,
        o.otsikko                                 AS toimenpide,
        tk.nimi                                   AS tehtava,
@@ -443,17 +447,18 @@ SELECT tk.id                                     AS toimenpidekoodi_id,
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END          AS tyyppi
-
 FROM tehtava tk
-     -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
-     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara_yhteenveto ut ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-                    AND tk.id = ut.tehtava
-     LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
-     JOIN urakka u on u.id = :urakka
+         -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+         JOIN tehtavaryhmaotsikko o
+              ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+         LEFT JOIN urakka_tehtavamaara_yhteenveto ut
+                   ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                       AND tk.id = ut.tehtava
+         LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
+         JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-      (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
   AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
@@ -466,6 +471,8 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                  'e32341fc-775a-490a-8eab-c98b8849f968',
                                  '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                  'c058933e-58d3-414d-99d1-352929aa8cf9'))
+-- Rajataan pois järjestelmäkirjaukset, jos tehtävän määrittely niin vaatii
+  AND (ot.urakoitsijajarjestelmasta IS FALSE OR (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
 GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
