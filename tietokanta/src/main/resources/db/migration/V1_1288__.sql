@@ -11,7 +11,7 @@
 -- palteenpoistotehtävien summiin ed. mainitussa näkymässä.
 UPDATE tehtava
 SET "laske-api-maara-mukaan?" = FALSE,
-    muokattu                  = TRUE,
+    muokattu                  = current_timestamp,
     muokkaaja                 = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE "mhu-tehtava?" IS TRUE
   AND "api_seuranta" IS TRUE
@@ -23,12 +23,12 @@ WHERE "mhu-tehtava?" IS TRUE
 -- jos tehtäville Harjassa käsin kirjattuja toteumia löytyy.
 UPDATE tehtava
 SET "laske-api-maara-mukaan?" = TRUE,
-    muokattu                  = TRUE,
+    muokattu                  = current_timestamp,
     muokkaaja                 = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE "mhu-tehtava?" IS TRUE
   AND "api_seuranta" IS TRUE
   AND kasin_lisattava_maara IS TRUE
-  AND nimi in ('Meluesteiden siisteydestä huolehtiminen', 'Sohjo-ojien teko'));
+  AND nimi in ('Meluesteiden siisteydestä huolehtiminen', 'Sohjo-ojien teko');
 
 -- Osalle tehtävistä "laske-api-maara-mukaan?"-sarakkeen arvo jää nulliksi.
--- Määrittelyä on voi täydentää tarvittaessa.
+-- Määrittelyä voi täydentää tarvittaessa.
