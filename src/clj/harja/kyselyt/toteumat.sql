@@ -472,7 +472,7 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                  '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                  'c058933e-58d3-414d-99d1-352929aa8cf9'))
 -- Rajataan pois järjestelmäkirjaukset, jos tehtävän määrittely niin vaatii
-  AND (ot.urakoitsijajarjestelmasta IS FALSE OR (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
+  AND ((ot.urakoitsijajarjestelmasta IS FALSE OR ot.urakoitsijajarjestelmasta IS NULL) OR (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
 GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
