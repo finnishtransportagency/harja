@@ -226,7 +226,7 @@
     (is (= ["Arvonvähennys" 2500M]
            (hae-taulukon-rivi arvonvahennys-taulukko "Arvonvähennys")))))
 
-(deftest raportin-mhu2026-noudattaa-t2-ja-whitelist-rajoja
+(deftest raportin-mhu2026-noudattaa-t2-ja-kohdistusrajoja
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
@@ -259,8 +259,8 @@
            (hae-taulukon-rivi bonus-taulukko
              "Bonus liikennevahinkojen aiheuttajien selvittämisestä")))))
 
-(deftest raportin-mhu2026-whitelistin-sallima-bonus-nakyy
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - whitelistin testi'"))
+(deftest raportin-mhu2026-kohdistuksen-sallima-bonus-nakyy
+  (let [  urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
