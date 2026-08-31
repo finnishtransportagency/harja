@@ -1136,8 +1136,13 @@
 
 
 (defn poista-yksittainen-paatos
-  [db kayttaja {:keys [avain paatostyyppi] :as paatos}]
-  (log/debug "poista-yksittainen-paatos :: avain" (pr-str avain))
+  [db kayttaja {:keys [avain paatostyyppi urakkaid] :as paatos} valittu-urakka-id]
+  (when-not (= urakkaid valittu-urakka-id)
+    ;; Lopettaa funktion ajon, mikäli jostain syystä päätös mappi sisältää toisen urakan päätöksen 
+    (throw+ {:type "Error"
+             :virheet {:koodi "ERROR"
+                       :viesti (str "Yritettiin perua urakan " urakkaid " päätös, valittu urakka: " valittu-urakka-id ".")}}))
+
   (case avain
     :hoitovuoden-lopun-hinta
     (poista-hoitovuoden-lopun-hintapaatos db kayttaja paatos)
@@ -1173,18 +1178,18 @@
 
 
 (defn poista-paatokset-ketjutetusti
-  [db kayttaja {:keys [paatos tehdyt-kumoutuvat-paatokset] :as _tiedot}]
+  [db kayttaja {:keys [paatos tehdyt-kumoutuvat-paatokset urakka-id] :as _tiedot}]
 
-  (let [{:keys [urakkaid hoitokauden_alkuvuosi]} paatos
-        _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
+  (let [{:keys [hoitokauden_alkuvuosi]} paatos
+        _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-lupaukset kayttaja urakka-id)
         ;; Poista itse valittu päätös
-        _ (poista-yksittainen-paatos db kayttaja paatos)]
+        _ (poista-yksittainen-paatos db kayttaja paatos urakka-id)]
 
     ;; Poista kaikki siihen ketjutetut päätökset
     (doseq [paatos tehdyt-kumoutuvat-paatokset]
-      (poista-yksittainen-paatos db kayttaja paatos))
+      (poista-yksittainen-paatos db kayttaja paatos urakka-id))
 
-    (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakkaid :hoitovuosi hoitokauden_alkuvuosi})))
+    (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakka-id :hoitovuosi hoitokauden_alkuvuosi})))
 
 
 (defrecord Valikatselmukset []

@@ -1,15 +1,17 @@
 (ns harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot
-  (:require [clojure.string :as str]
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
+            [clojure.string :as str]
+
+            [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
-            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.viesti :as viesti]
+            [harja.domain.urakka :as urakka]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.ui.nakymasiirrin :as siirrin]
-            [harja.domain.urakka :as urakka]
-            [harja.domain.kulut.valikatselmus :as valikatselmus]
-            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka.urakka :as tila]
-            [harja.pvm :as pvm]))
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.domain.kulut.valikatselmus :as valikatselmus]))
 
 (def valikatselmus-nakymassa? (atom false))
 (def tavoitehinnan-muutostallennus-max (atom 9999))
@@ -33,6 +35,7 @@
         muutokset))))
 
 (defn kasittele-throw-virhe [vastaus]
+
   (let [raaka-virhe (get-in vastaus [:parse-error :original-text])
         raaka-virhe (if (nil? raaka-virhe) "Virhe! Palvelin palautti virheen!" raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
@@ -76,6 +79,7 @@
 (defrecord HaeKumoutuvatOnnistui [vastaus])
 (defrecord SuljePaatosModal [])
 (defrecord PeruValikatselmusPaatos [paatos])
+(defrecord PeruValikatselmusPaatosEpaonnistui [vastaus])
 
 
 (defrecord PaivitaKattohinnanSiirtoCheckbox [uusi-arvo])
@@ -448,15 +452,25 @@
   (process-event [{:keys [paatos]} app]
     (tuck-apurit/post!
       :poista-paatokset-ketjutetusti
-      {:paatos (assoc paatos :luoja (:id @istunto/kayttaja))
+      {:urakka-id @nav/valittu-urakka-id
+       :paatos (assoc paatos :luoja (:id @istunto/kayttaja))
        :tehdyt-kumoutuvat-paatokset (:tehdyt-kumoutuvat-paatokset app)}
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
-       :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui})
+      {:paasta-virhe-lapi? true
+       :onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :epaonnistui ->PeruValikatselmusPaatosEpaonnistui})
     (assoc app
       :tallennus-kesken? true
       :nayta-kumoa-modal? false
       :tehdyt-kumoutuvat-paatokset nil
       :kumottava-paatos-nimi (:nimi paatos)))
+
+  PeruValikatselmusPaatosEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Tapahtui virhe! "
+                           (some->> (get-in vastaus [:response :virheet :viesti]))) :varoitus)
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :tallennus-kesken? false)))
 
   SuljePaatosModal
   (process-event [_ app]
