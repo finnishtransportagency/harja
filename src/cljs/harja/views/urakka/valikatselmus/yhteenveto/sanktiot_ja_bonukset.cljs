@@ -73,7 +73,7 @@
       [:span (fmt/euro-opt false lupaussanktio)]]
 
      ;; Laskutusraja sanktiot ovat vain uudemmille urakoille
-     (when (>= hoitokauden-alkuvuosi 2025)
+     (when (true? (:laskutusraja_kaytossa urakan-parametrit))
        [:div.flex-row.summa-rivi-ylin
         [:span "Laskutus yli laskutusrajan -sanktiot"]
         [:span (fmt/euro-opt false laskutusrajan-ylitys-sanktiot)]])
