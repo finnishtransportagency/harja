@@ -234,17 +234,8 @@
                                 ;; Palautetaan kaikki päätökset, jos ei ole hoitovuosi menossa tai jos validoinnit on poissa päältä
                                 mahdolliset-paatokset)
 
-        ;; Keskeneräiselle tai tulevaisuuden hoitovuodelle näytetään vain tietyt päätökset.
-        mahdolliset-paatokset (if (and validoinnit-kaytossa? (or (>= valittu-hoitovuosi nyt-vuosi) hoitovuosi-kesken?))
-                                ;; Poistetaan kaikki muut päätökset, kuin tässä määritellyt päätökset
-                                (filter (fn [paatos]
-                                          (when (contains? #{"Hoidonjohtopalkkion muutos" "Lupaukset" "Tavoitehinnan muutokset" "Tavoitehinnan alitus"
-                                                             "Tavoitehinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta"
-                                                             "Kattohinnan ylitys" "Välikatselmuspöytäkirjaan liitettävät raportit"} (:nimi paatos))
-                                            paatos))
-                                  mahdolliset-paatokset)
-                                ;; Palautetaan kaikki päätökset, jos ei ole hoitovuosi menossa tai jos validoinnit on poissa päältä
-                                mahdolliset-paatokset)
+        ;; Poista vielä keskenään ristiriitaiset päätökset
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
         paatokset (paatoskone/yhdista-mapit mahdolliset-paatokset tietokanta-paatokset)]

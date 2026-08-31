@@ -410,16 +410,20 @@
                                    0)
           tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
           ;; Tavoitepalkkio on alituksesta max 3% tavoitehinnasta (prosentti tulee parametritaulusta) - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
-          laskennallinen-tavoitepalkkio (when tavoitehinnan-alitus (* (/ tavoitepalkkion-maksuprosentti 100) tavoitehinnan-alitus))
-          tavoitepalkkio (if (= urakan-loppuvuosi kuluva-hoitovuosi)
-                           tavoitehinnan-alitus ;; Viimeisenä vuotena maksetaan kaikki. Muuten 30% tai max 3% , tai versiossa 2 maksetaan 75% alituksesta
+          maksuprosentti (/ tavoitepalkkion-maksuprosentti 100)
+          laskennallinen-tavoitepalkkio (when tavoitehinnan-alitus (* maksuprosentti tavoitehinnan-alitus))
+          ;; Viimeisenä vuotena maksetaan maksuprosentin mukaan. Eli esim 30% alituksesta. (-25 alkavilla 75%)
+          ;; Muina vuosina siirrettäväksi summaksi ja tavoitepalkkioksi tulee maksimimaksuprosentin mukainen summa
+          viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
+          tavoitepalkkio (if viimeinen-hoitokausi?
+                           laskennallinen-tavoitepalkkio
                            (min maksimi-tavoitepalkkio laskennallinen-tavoitepalkkio))
           ;; Jos alituksesta maksettava tavoitepalkkio on suurempi, kuin 3% tavoitehinnasta, siirretään ylittävä osuus seuraavan hoitovuden alennukseksi - Paitsi tietenkin viimeisenä vuotena
           siirron-maara (if (= urakan-loppuvuosi kuluva-hoitovuosi)
                           nil ;; Viimeisenä vuotena maksetaan kaikki. Eli ei siirretä mitään
                           (when (> laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)
                             (- laskennallinen-tavoitepalkkio maksimi-tavoitepalkkio)))
-          viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
+
           tavoitehinnan-alituspaatos (-> tavoitehinnan-alituspaatos
                                        (assoc :hoitokauden_alun_tavoitehinta hoitokauden-alun-tavoitehinta)
                                        (assoc :hoitokauden_lopun_tavoitehinta hoitokauden-lopun-indeksikorjattu-tavoitehinta)
@@ -624,7 +628,7 @@
                     (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
                     (conj "Hoitovuosi on kesken.")
 
-                    (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
+                    (and #_  validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
                       (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
                     (conj "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä.")
 

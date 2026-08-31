@@ -715,6 +715,31 @@
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
       alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)))
 
+(deftest kysely-tavoitehinnan-alitus-lisays-2025-onnistuu-viimeiselle-hoitovuodelle-test
+  (let [hoitokauden-alkuvuosi 2025
+        urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        alituksen-maara 300M
+        toteutuneet-kustannukset (- hoitokauden-alun-tavoitehinta alituksen-maara)
+        siirron-maara 0M ;; Viimeisenä hoitovuotena ei siirretä tietenkään enää mitään tulevaisuuteen
+        ;; Tavoitepalkkio on on urakan prosentit, alituksen määrästä
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkio (* (/ tavoitepalkkion-maksuprosentti 100) alituksen-maara)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        kulu-id 1
+        viimeinen-hoitovuosi true
+        paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id viimeinen-hoitovuosi kayttajaid)
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)]
+    (is (= tavoitepalkkio (:tavoitepalkkio paatos)))
+    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id viimeinen-hoitovuosi kayttajaid)))
+
 (deftest kysely-tavoitehinnan-alitus-lisays-2025-onnistuu-test
   (let [hoitokauden-alkuvuosi 2025
         urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
