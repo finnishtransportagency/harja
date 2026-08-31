@@ -4,7 +4,8 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
-            [harja.domain.urakka :as urakka-domain]))
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]))
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
@@ -83,7 +84,11 @@
            (let [tyyppi-koodi (:sanktiotyyppi_koodi tyyppi)
                  summa (or (get sanktio-data-map [laji-koodi tyyppi-koodi]) 0)]
              {:himmennetty? (zero? summa)
-              :rivi (rivi (:sanktiotyyppi_nimi tyyppi) summa)}))
+              :rivi (rivi (domain-sanktio/sanktiotyypin-nimi
+                            laji-nimi
+                            {:koodi tyyppi-koodi
+                             :nimi (:sanktiotyyppi_nimi tyyppi)})
+                       summa)}))
          tyypit)
        [{:lihavoi? true
          :korosta-hennosti? true

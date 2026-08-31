@@ -62,10 +62,11 @@
                                                                           :nimi (get-in r [:yllapitokohde :nimi])})
                             "Ei liity kohteeseen"))
     yllapitourakka? (conj (domain-sanktio/yllapidon-sanktiofraasin-nimi (:vakiofraasi r)))
-    (not yllapitourakka?) (conj (cond
-                                  (and (:tyyppi r) (= "Ei tarvita sanktiotyyppiä" (get-in r [:tyyppi :nimi]))) "–"
-                                  (and (:tyyppi r) (not= "Ei tarvita sanktiotyyppiä" (get-in r [:tyyppi :nimi]))) (get-in r [:tyyppi :nimi])
-                                  :else "–"))
+    (not yllapitourakka?) (conj (if-let [tyyppi (:tyyppi r)]
+                                  (domain-sanktio/sanktiotyypin-nimi
+                                    (domain-sanktio/sanktiolaji->teksti (:laji r))
+                                    tyyppi)
+                                  "–"))
     (not yllapitourakka?) (conj (sanktion-tai-bonuksen-kuvaus r))
     true (conj (sanktion-tai-bonuksen-perustelu r))
     true (conj (:summa r) )
