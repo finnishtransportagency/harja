@@ -31,10 +31,17 @@
      [:arvo {:arvo "-"}])
    (:lampotilan-vaikutus rivi)
    (if (:kayttoraja rivi)
-     (:kayttoraja rivi)
+     [:arvo {:arvo (:kayttoraja rivi)
+             :desimaalien-maara 2}]
      [:arvo {:arvo "Tieto puuttuu"}])
-   (if (:kohtuull-kayttoraja rivi) (:kohtuull-kayttoraja rivi) [:arvo {:arvo "-"}])
-   (if (:toteuma rivi) (:toteuma rivi) [:arvo {:arvo "-"}])])
+   (if (:kohtuull-kayttoraja rivi)
+     [:arvo {:arvo (:kohtuull-kayttoraja rivi)
+             :desimaalien-maara 2}]
+     [:arvo {:arvo "-"}])
+   (if (:toteuma rivi)
+     [:arvo {:arvo (:toteuma rivi)
+             :desimaalien-maara 2}]
+     [:arvo {:arvo "-"}])])
 
 (defn- yhteenvetorivi [rivi]
   {:lihavoi? true
@@ -46,13 +53,16 @@
           nil
           (if (= 0 (:kayttoraja-yhteensa rivi))
             [:arvo {:arvo nil :jos-tyhja "-"}]
-            (:kayttoraja-yhteensa rivi))
+            [:arvo {:arvo (:kayttoraja-yhteensa rivi)
+                    :desimaalien-maara 2}])
           (if (= 0 (:kohtuull-kayttoraja-yhteensa rivi))
             [:arvo {:arvo nil :jos-tyhja "-"}]
-            (:kohtuull-kayttoraja-yhteensa rivi))
+            [:arvo {:arvo (:kohtuull-kayttoraja-yhteensa rivi)
+                    :desimaalien-maara 2}])
           (if (= 0 (:toteuma-yhteensa rivi))
             [:arvo {:arvo nil :jos-tyhja "-"}]
-            (:toteuma-yhteensa rivi))]})
+            [:arvo {:arvo (:toteuma-yhteensa rivi)
+                    :desimaalien-maara 2}])]})
 
 (defn lampotilan-vaikutus-suolan-kulutukseen
   "Joulu-, tammi, ja helmikuun keskilämpötilojen keskiarvo korkempi kuin ns. pitkän aikavälin (30v)
@@ -127,7 +137,69 @@
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu - Ei valmistuneita hoitovuosia")))
 
-(defn suorita [db _ {:keys [urakka-id elinvoimakeskus-id] :as parametrit}]
+(defn yhteenvetolaatikko [kasittelija yhteevetodata ]
+  (if (= kasittelija :excel)
+    [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"
+                :viimeinen-rivi-yhteenveto? false
+                :sheet-nimi "Talvihoitosuolat"
+                :samalle-sheetille? true}
+     [{:leveys 20 :otsikko ""}
+      {:leveys 5 :otsikko "" :fmt :numero :tasaa :oikea}]
+     [["Tehtävä- ja määräluettelon mukainen käyttöraja"
+       (if (= 0 (:kayttoraja-yhteensa yhteevetodata))
+         "Tieto puuttuu"
+         [:arvo {:arvo (:kayttoraja-yhteensa yhteevetodata)
+                 :desimaalien-maara 2}])]
+      ["Kohtuullistettu käyttöraja"
+       (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+         "-"
+         [:arvo {:arvo (:kohtuull-kayttoraja-yhteensa yhteevetodata)
+                 :desimaalien-maara 2}])]
+      ["Suurin urakassa sallittu käyttömäärä + 5 %"
+       (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+         "-"
+         [:arvo {:arvo (* 1.05 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+                 :desimaalien-maara 2}])]
+      ["Toteuma koko urakka-ajalta"
+       (if (= 0 (:toteuma-yhteensa yhteevetodata))
+         "-"
+         [:arvo {:arvo (:toteuma-yhteensa yhteevetodata)
+                 :desimaalien-maara 2}])]
+      ["josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma"
+       (if (> (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+         [:arvo {:arvo (- (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+                 :desimaalien-maara 2}]
+         "Ei ylitystä")]]]
+
+    [:yhteenveto-laatikko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
+     [(if (= 0 (:kayttoraja-yhteensa yhteevetodata))
+        {:infolaatikko? true
+         :teksti "Tehtävä- ja määräluettelon mukainen käyttöraja"
+         :toissijainen-viesti "Tieto puuttuu"
+         :tyyppi :vahva-ilmoitus
+         :ikoni :harja-icon-status-alert}
+        {:avain "Tehtävä- ja määräluettelon mukainen käyttöraja"
+         :arvo (fmt/yksikolla "t" (fmt/desimaaliluku-opt (:kayttoraja-yhteensa yhteevetodata) 2 2 true))})
+      {:avain "Kohtuullistettu käyttöraja"
+       :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+               "-"
+               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (:kohtuull-kayttoraja-yhteensa yhteevetodata) 2 2 true)))}
+      {:avain "Suurin urakassa sallittu käyttömäärä + 5 %"
+       :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+               "-"
+               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)) 2 2 true)))}
+      {:avain "Toteuma koko urakka-ajalta"
+       :arvo (if (= 0 (:toteuma-yhteensa yhteevetodata))
+               "-"
+               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (:toteuma-yhteensa yhteevetodata) 2 2 true)))
+       :lihavoi? true}
+      {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma"
+       :arvo (if (> (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (- (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata))) 2 2 true))
+               "Ei ylitystä")
+       :lihavoi? true}]]))
+
+(defn suorita [db _ {:keys [urakka-id elinvoimakeskus-id kasittelija] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
                     elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
@@ -137,9 +209,9 @@
 
         ;; Haetaan tiedot hoitokausittain - ja siihen tarvitaan urakan kesto
         urakan-tiedot (first (urakat-kyselyt/hae-yksittainen-urakka db {:urakka_id urakka-id}))
-        urakan_alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
-        hoitovuodet (range urakan_alkuvuosi urakan-loppuvuosi)
+        hoitovuodet (range urakan-alkuvuosi urakan-loppuvuosi)
 
         ;; Koostetaan data map tyyppiseen rakenteeseen
         data (when hoitovuodet
@@ -149,7 +221,7 @@
                                                             rivi))
                                                     urakan-lampotilat)
                                ;; Päätellään pitkän aikajakson keskilämpötila urakan alkuvuodesta
-                               keskilampo-pitka (paattele-kaytettava-keskilampotilajakso urakan_alkuvuosi lampotila-vuodelle)
+                               keskilampo-pitka (paattele-kaytettava-keskilampotilajakso urakan-alkuvuosi lampotila-vuodelle)
                                keskilampo (:keskilampotila lampotila-vuodelle)
                                ;; Lämpötilojen erotus celciuksena
                                erotus-c (if (and (not (nil? keskilampo)) (not (nil? keskilampo-pitka)))
@@ -186,18 +258,15 @@
                  [] hoitovuodet))
 
         ;; Konteksti on tätä kirjoittaessa rajoitettu urakkaan, mutta jos myöhemmin huomataan, että
-        ;; ely tai koko maan taso halutaan, niin riittää, että raportin asetuksista määritellään kontekstiin puuttuvat tiedot
-        ;; Raportin nimeen se ei tule vaikuttamaan, koska se on jo toteuteuttu tässä.
-        nimi (if (nil? (:kasittelija parametrit))
-               ;; HTML raportille raportin nimi muodostetaan kontekstista
-               (case konteksti
-                 :urakka (:nimi urakan-tiedot)
-                 :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
-                 :koko-maa "KOKO MAA")
-               ;; PDF ja Excel raportteihin laitetaan raportille eri nimi, joka tulee tiedoston nimeksi
-               (str "Talvisuolan lämpötilaraportti - " (:nimi urakan-tiedot)))
-        raportin-nimi nimi
-        otsikko (jasenna-raportin-otsikko urakan-tiedot hoitovuodet)
+        ;; ely tai koko maan taso halutaan, niin raportin asetuksista pitää määritellä kontekstiin puuttuvat tiedot
+        ;; ja lisätä aikarajauksen valinta raportille.
+        raportin-konteksti (when (or (= :excel (:kasittelija parametrit)) (= :pdf (:kasittelija parametrit)))
+                              (str ", "
+                                (case konteksti
+                                  :urakka (:nimi urakan-tiedot)
+                                  :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
+                                  :koko-maa "KOKO MAA")))
+        raportin-nimi (str "Talvisuolan kokonaiskäyttö" raportin-konteksti)
 
         otsikkorivit [{:otsikko "Hoitovuosi" :leveys 1 :fmt :kokonaisluku :tasaa :vasen}
                       {:otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)" :leveys 1 :fmt :numero :tasaa :oikea}
@@ -235,8 +304,8 @@
         datarivit (conj datarivit yhteenvetorivi)]
 
     ;; Tehdään raportti täyttämällä raporttipohja aiemmin luoduilla tiedoilla
-    [:raportti {:nimi "Talvisuolan kokonaiskäyttö"
-                :otsikon-koko :iso :orientaatio :landscape}
+    [:raportti {:nimi raportin-nimi
+                :orientaatio :landscape}
      [:otsikko-heading-small (str (:nimi urakan-tiedot))]
 
      [:infolaatikko
@@ -249,66 +318,12 @@
        :toissijainen-viesti ""
        :leveys 800
        :rivita? false}]
-     [:yhteenveto-laatikko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
-        [(if (= 0 (:kayttoraja-yhteensa yhteevetodata))
-           {:infolaatikko? true
-            :teksti "Tehtävä- ja määräluettelon mukainen käyttöraja"
-            :toissijainen-viesti "Tieto puuttuu"
-            :tyyppi :vahva-ilmoitus
-            :ikoni :harja-icon-status-alert}
-           {:avain "Tehtävä- ja määräluettelon mukainen käyttöraja"
-            :arvo (fmt/yksikolla
-                    "t"
-                    (fmt/desimaaliluku-opt
-                      (:kayttoraja-yhteensa yhteevetodata)
-                      2
-                      2
-                      true))})
-         {:avain "Kohtuullistettu käyttöraja"
-          :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
-                  "-"
-                  (fmt/yksikolla
-                    "t"
-                    (fmt/desimaaliluku-opt
-                      (:kohtuull-kayttoraja-yhteensa yhteevetodata)
-                      2
-                      2
-                      true)))}
-         {:avain "Suurin urakassa sallittu käyttömäärä + 5 %"
-          :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
-                  "-"
-                  (fmt/yksikolla
-                    "t"
-                    (fmt/desimaaliluku-opt
-                      (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
-                      2
-                      2
-                      true)))}
-         {:avain "Toteuma koko urakka-ajalta"
-          :arvo (if (= 0 (:toteuma-yhteensa yhteevetodata))
-                  "-"
-                  (fmt/yksikolla
-                    "t"
-                    (fmt/desimaaliluku-opt
-                      (:toteuma-yhteensa yhteevetodata)
-                      2
-                      2
-                      true)))
-          :lihavoi? true}
-         {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma"
-          :arvo (if (> (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
-                  (fmt/yksikolla
-                    "t"
-                    (fmt/desimaaliluku-opt
-                      (- (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
-                      2
-                      2
-                      true))
-                  "Ei ylitystä")
-          :lihavoi? true}]]
+
+     (yhteenvetolaatikko kasittelija yhteevetodata)
 
      [:taulukko {:otsikko "Erittely hoitovuosittain"
                  :tyhja (when (empty? data) "Ei raportoitavia tietoja.")
-                 :sheet-nimi "Talvihoitosuolat"}
+                 :sheet-nimi "Talvihoitosuolat"
+                 :samalle-sheetille? true}
       otsikkorivit
       datarivit]]))
