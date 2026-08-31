@@ -20,6 +20,7 @@
 (def kustannus-selite-leveys "auto")
 (def kustannus-hinta-leveys "144px")
 (def kustannus-pvm-leveys "144px")
+(def kustannus-laji-leveys "75px")
 
 (defn- rivi-poistettavissa? [m]
   (log "rivi-poistettavissa? " (pr-str m))
@@ -63,7 +64,8 @@
              (= tyyppi :muu) "Muu"
              (= tyyppi :sanktio) "Sanktio"
              (= tyyppi :bonus) "Bonus"
-             :else "Muu"))}
+             :else "Muu"))
+    :leveys kustannus-laji-leveys}
    {:otsikko "Kustannuksen kuvaus" :nimi :selite
     :validoi [[:ei-tyhja "Anna kuvaus"]]
     :tyyppi :string :leveys kustannus-selite-leveys}
