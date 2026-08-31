@@ -35,10 +35,10 @@
          [:div.big-text "Tavoitehinnan ylitys"]
          [:div.big-text.lihavoitu (fmt/euro-opt false (:ylityksen_maara paatos))]]
         [:div.flex-row.summa-rivi-valja
-         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) "%)")]
+         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) " %)")]
          [:div.rivi-lukema (fmt/euro-opt false (:tilaaja_maksaa paatos))]]
         [:div.flex-row.summa-rivi-matala
-         [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) "%)")]
+         [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) " %)")]
          [:div.rivi-lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
 
         [:hr.paatos-hr]
@@ -81,10 +81,11 @@
          [:div.big-text "Tavoitehinnan alitus"]
          [:div.big-text.lihavoitu (fmt/euro-opt false (:alituksen_maara paatos))]]
         [:div.flex-row.lista-rivi-ylin
-         [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
+         [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) " %)")]
          [:div.rivi-lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
-        [:div.flex-row
-         [:div.small-text.lisays.harmaa (str "max. " (:tavoitepalkkion_maksimi_prosentti paatos) "% hoitovuoden alun indeksikorjatusta tavoitehinnasta.")]]
+        (when-not (:viimeinen_hoitokausi paatos)
+          [:div.flex-row
+           [:div.small-text.lisays.harmaa (str "max. " (:tavoitepalkkion_maksimi_prosentti paatos) "% hoitovuoden alun indeksikorjatusta tavoitehinnasta.")]])
         ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
         (when (and (:siirron_maara paatos) (not= 0 (:siirron_maara paatos)))
           [:div.flex-row.lista-rivi-korkea
