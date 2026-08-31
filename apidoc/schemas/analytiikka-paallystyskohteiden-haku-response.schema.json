@@ -84,6 +84,9 @@
                 "harjaId": {
                   "type": "number"
                 },
+                "poistettu": {
+                  "type": "boolean"
+                },
                 "geometria": {
                   "type": "string",
                   "format": "wkt",

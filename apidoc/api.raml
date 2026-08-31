@@ -37,7 +37,7 @@ description: |
           </ul>
       </li>
   </ol>
-version: 1.0.66
+version: 1.0.69
 mediaType: application/json
 protocols:
   - HTTPS
@@ -95,20 +95,32 @@ documentation:
 
       <b>Rajapintakutsujen rajoitukset integraatioväylällä:</b>
       <ul>
-        <li>Sanoman maksimikoko: 20 MB</li>
-        <li>Aikakatkaisu: 180 s</li>
+        <li>Sanoman maksimikoko: 10 MB</li>
+        <li>Aikakatkaisu: 60 s</li>
         <li>Harja käsittelee kutsun loppuun omien sääntöjensä mukaan, vaikka integraatioväylä palauttaisi kutsujalle aikakatkaisuun liittyvän virheen.</li>
       </ul>
+
+      <b>Tulossa urakoitsijarajapintaan myöhemmin:</b>
+      <ul>
+        <li>Tulossa myöhemmin: Rajoitusaluerajapinta, jonka kautta urakoitsija voi hakea urakkansa rajoitusalueet ja niihin liittyvät suolan käytön rajoitukset.</li>
+        li>Tulossa myöhemmin: Liiterajapinta, jonka kautta urakoitsija voi lähettää Harjaan eri asioin (esim. siltatarkastuksiin) liittyviä liitteitä yksi kerrallaan.</li>
+        li>Tulossa myöhemmin: Muutoksia reikäpaikkausrajapintaan.</li>
+      </ul>
+
 
   - title: Sijaintitiedot
     content: |
       Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.67</b>
-      <b>Julkaistu: 1.10.2025</b>
+      <b>Nykyinen versio: 1.0.69</b>
+      <b>Julkaistu: 4.3.2026</b>
 
       <b>Versiohistoria:</b>
+       - Versionumero 1.0.69 Julkaistu 4.3.2026
+               - Lisätty suoritettava tehtävä: tieturvallisuustarkastus.
+       - Versionumero 1.0.68 Julkaistu 22.1.2026
+               - Urakoitsija voi ilmoittaa toteuman lähteen. Koneellinen = tieto on työkoneelta. Kasin = tieto on kirjattu käsin urakoitsijajärjestelmään. Korjattu = työkoneelta saatua tietoa on päivitetty käsin.
        - Versionumero 1.0.67 Julkaistu 1.10.2025
                - Lisätty toteuma- ja materiaaliraporttirajapintoihin dokumentaatiota
       - Versionumero 1.0.66 Julkaistu 1.9.2025
@@ -6447,78 +6459,7 @@ types:
   /haku:
     description: Päivystäjätietojen haku
     is:
-      - secured
-    /puhelinnumerolla:
-      get:
-        is:
-          - secured
-        description: Päivystäjätietojen haku puhelinnumerolla.
-        responses:
-          '200':
-            body:
-              application/json:
-                example:
-                  paivystajatiedot:
-                    - urakka:
-                        tiedot:
-                          id: 123456789
-                          nimi: Oulun alueurakka
-                          urakoitsija:
-                            ytunnus: 123456-8
-                            nimi: Asfaltia
-                          vaylamuoto: tie
-                          tyyppi: hoito
-                          alkupvm: '2016-01-30T12:00:00+02:00'
-                          loppupvm: '2016-01-30T12:00:00+02:00'
-                        paivystykset:
-                          - paivystys:
-                              id: 1234
-                              paivystaja:
-                                id: 454653434
-                                etunimi: Päivi
-                                sukunimi: Päivystäjä
-                                email: paivi.paivystaja@test.i
-                                matkapuhelin: '4345455'
-                                tyopuhelin: '7849885769'
-                              alku: '2015-01-30T12:00:00+02:00'
-                              loppu: '2016-01-30T12:00:00+02:00'
-                              vastuuhenkilo: true
-                              varahenkilo: true
-                type: paivystajatietojen-haku-response
-                required: false
-          '400':
-            body:
-              application/json:
-                example:
-                  virheet:
-                    - virhe:
-                        koodi: Tuntematon urakka
-                        viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                type: virhe-response
-                required: false
-          '500':
-            body:
-              application/json:
-                example:
-                  virheet:
-                    - virhe:
-                        koodi: Tuntematon urakka
-                        viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                type: virhe-response
-                required: false
-        queryParameters:
-          puhelinnumero:
-            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta. Huom. maatunnuksen plus-merkki täytyy escapeta muotoon %2B.
-            example: 0414332119
-            type: string
-          alkaen:
-            description: Päivystykset alkaen.
-            example: '2015-01-01'
-            type: date
-          paattyen:
-            description: Päivystykset päättyen.
-            example: '2015-01-01'
-            type: date
+      - secured    
     /sijainnilla:
       get:
         is:

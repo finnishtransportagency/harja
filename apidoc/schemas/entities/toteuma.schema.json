@@ -16,6 +16,17 @@
       "type": ["string", "integer"],
       "required": false
     },
+    "lahde": {
+      "id": "urn:harja/toteumat/0/toteuma/lahde",
+      "description": "Urakoitsija voi ilmoittaa toteuman lähteen. Koneellinen = tieto on työkoneelta. Kasin = tieto on kirjattu käsin urakoitsijajärjestelmään. Korjattu = työkoneelta saatua tietoa on päivitetty käsin.",
+      "type": "string",
+      "required": false,
+      "enum": [
+        "koneellinen",
+        "kasin",
+        "korjaus"
+      ]
+    },
     "sopimusId": {
       "id": "urn:harja/toteumat/0/toteuma/sopimusId",
       "type": "integer"
@@ -49,7 +60,7 @@
     },
     "toteumatyyppi": {
       "id": "urn:harja/toteumat/0/toteuma/kokonaishintainenTyo",
-      "required": true,
+      "required": false,
       "enum": [
         "yksikkohintainen",
         "kokonaishintainen",

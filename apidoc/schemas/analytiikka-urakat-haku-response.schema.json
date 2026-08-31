@@ -55,7 +55,12 @@
             ]
           },
           "hallintayksikko": {
-            "type": "integer"
+            "type": ["integer", "null"],
+            "description": "ELY-keskuksen harja-id, jos urakka on linkittynyt ELY-keskukseen. Tällä id:llä ELY-keskus löytyy organisaatiorajapinnan palauttamasta datasta."
+          },
+          "elinvoimakeskus": {
+            "type": ["integer", "null"],
+            "description": "Elinvoimakeskuksen harja-id, jos urakka on linkittynyt elinvoimakeskukseen. Tällä id:llä elinvoimakeskus löytyy organisaatiorajapinnan palauttamasta datasta."
           },
           "urakoitsija": {
             "type": "integer"

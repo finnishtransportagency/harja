@@ -13,12 +13,14 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 49,
+          "harjaId": 86,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1235,
-          "pituus": 300
+          "pituus": 300,
+          "poistettu": false
+
         },
         {
           "geometria": "MULTILINESTRING((404470.43673149456 7153004.472398268,404509.82 7153070.445,404562.38 7153149.582,404597.509 7153198.329,404670.56997705874 7153291.159323957))",
@@ -31,11 +33,12 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 50,
+          "harjaId": 87,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1236,
+          "poistettu": false,
           "pituus": 350
         },
         {
@@ -49,11 +52,12 @@
             "kaista": 1,
             "ajorata": 1
           },
-          "harjaId": 51,
+          "harjaId": 88,
           "paallystystoimenpide": {
             "paallystetyomenetelma": "Ei menetelmää"
           },
           "yhaId": 1237,
+          "poistettu": false,
           "pituus": 650
         }
       ],
@@ -68,9 +72,9 @@
       },
       "kohdetyyppi": "paallystys",
       "tunnus": "ANALYTIIKKA1",
-      "urakka": 56,
+      "urakka": 62,
       "nimi": "Kirkonkylä - Toppinen",
-      "harjaId": 35,
+      "harjaId": 78,
       "poistettu": false,
       "yhaId": 1234,
       "pituus": 1300,

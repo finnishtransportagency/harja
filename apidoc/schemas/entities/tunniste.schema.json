@@ -8,7 +8,8 @@
       "id": "urn:harja/id",
       "type": "integer",
       "maximum": 2147483647,
-      "required": true
+      "required": true,
+      "description": "Urakoitsijajärjestelmän luoma asiatunniste. Tieto tallennetaan Harjaan, ja se kannattaa tallentaa myös urakoitsijajärjestelmään. Tunnistetta voidaan käyttää apuna ongelmienselvityksessä korrelaatio-id:n tapaan."
     }
   }
 }
