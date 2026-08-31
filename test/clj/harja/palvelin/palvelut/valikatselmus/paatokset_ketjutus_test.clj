@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatokset-ketjutus-test
-  (:require [clojure.test :refer :all]
+  (:require [clojure.string :as str]
+            [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
 
             [harja.testi :refer :all]
@@ -257,3 +258,73 @@
                 "Hoitovuoden lopun tavoite- ja kattohintapäätös poistettiin")
             _ (is (nil? (:id (valitse-paatos (:paatokset poista-paatokset-vastaus) :hoidonjohtopalkkion-muutos)))
                 "Hoidonjohtopalkkion muutospäätös poistettiin")]))))
+
+
+(deftest paatosten-poisto-ketjutetusti-palauttaa-virheen
+  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+
+        ;; -----------------------------
+        ;; Lopun päätös 
+        hoitokauden-alkuvuosi 2024
+        tavoitehinta_ennen 2000000M
+        tavoitehinnan_muutokset 40000M
+        hoitokauden-lopun-indeksikorjaus 40000M
+
+        tavoitehinta_jalkeen (+ tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus tavoitehinnan_muutokset)
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
+
+        lisaa-tavoitehintaan-lopunindeksikorjaus (:lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus urakan-parametrit)
+
+        paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
+                 tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
+
+        vastaus-hintapaatos (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos)
+        _ (is (= urakkaid (:urakkaid vastaus-hintapaatos)))
+        _ (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi vastaus-hintapaatos)))
+        _ (is (= tavoitehinta_ennen (:tavoitehinta_ennen vastaus-hintapaatos)))]
+
+
+    (testing "Päätöksen ketjutus kumoaminen palauttaa virheen, väärä urakka"
+      (let [valikatselmus-vastaus (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle
+                                    (:db jarjestelma) +kayttaja-jvh+
+                                    {:urakkaid urakkaid :hoitovuosi hoitokauden-alkuvuosi})
+
+            _ (is (some? (:id (valitse-paatos (:paatokset valikatselmus-vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)))
+                "Hoitovuoden lopun tavoite- ja kattohintapäätös on olemassa")
+
+            peruttava-paatos (valitse-paatos (:paatokset valikatselmus-vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)
+            _ (is (not (nil? (:urakkaid peruttava-paatos))))
+
+            ;; Assignoi päätökselle väärä urakkaid
+            vaara-urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+            peruttava-paatos (assoc peruttava-paatos :urakkaid vaara-urakkaid)
+
+
+            _ (is (not= vaara-urakkaid urakkaid) "Päätöksellä on väärä urakka")
+
+
+            ;; -----------------------------
+            ;; Hae kaikki kumoutuvat ja kutsu ketjupoistoa 
+            tehdyt-kumoutuvat-paatokset (kutsu-palvelua
+                                          (:http-palvelin jarjestelma)
+                                          :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                          peruttava-paatos)
+
+            poista-paatokset-vastaus (try
+                                       (kutsu-palvelua
+                                         (:http-palvelin jarjestelma)
+                                         :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                                         {:urakka-id urakkaid
+                                          :paatos (assoc peruttava-paatos :luoja kayttajaid)
+                                          :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
+                                       (catch Exception e e))
+
+            ;; Pitäisi johtaa virheeseen koska assignoitiin väärä urakka 
+            _ (is
+                (true? (str/includes?
+                         poista-paatokset-vastaus
+                         (str "Yritettiin perua urakan " vaara-urakkaid " päätös, valittu urakka: " urakkaid)))
+                "Odotettu virhe heitetään, yritettiin perua väärän urakan päätös")]))))
