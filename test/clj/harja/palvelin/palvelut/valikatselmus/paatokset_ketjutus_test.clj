@@ -118,7 +118,7 @@
         odotettu-vastaus {:paatokset :haettu}]
 
     (with-redefs [valikatselmukset/poista-yksittainen-paatos
-                  (fn [_db _kayttaja poistettava]
+                  (fn [_db _kayttaja poistettava _urakkaid]
                     (swap! poistot conj (:id poistettava)))
 
                   valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle
@@ -133,6 +133,7 @@
               (:db jarjestelma)
               +kayttaja-jvh+
               {:paatos paatos
+               :urakka-id urakkaid
                :tehdyt-kumoutuvat-paatokset kumoutuvat}))))
 
     (is (= [1 2 3 4] @poistot))))
