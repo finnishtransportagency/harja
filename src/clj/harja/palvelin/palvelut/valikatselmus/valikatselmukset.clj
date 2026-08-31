@@ -1186,8 +1186,10 @@
         _ (poista-yksittainen-paatos db kayttaja paatos urakka-id)]
 
     ;; Poista kaikki siihen ketjutetut päätökset
-    (doseq [paatos tehdyt-kumoutuvat-paatokset]
-      (poista-yksittainen-paatos db kayttaja paatos urakka-id))
+    ;; Tehdään transaktiossa, jotta yksi faili peruu muutkin
+    (jdbc/with-db-transaction [conn db]
+      (doseq [paatos tehdyt-kumoutuvat-paatokset]
+        (poista-yksittainen-paatos conn kayttaja paatos urakka-id)))
 
     (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid urakka-id :hoitovuosi hoitokauden_alkuvuosi})))
 
