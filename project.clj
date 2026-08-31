@@ -14,7 +14,7 @@
 
                  ;;;;;;; Yleiset ;;;;;;;
 
-                 [prismatic/schema "1.4.1"]
+                 [prismatic/schema "1.4.2"]
                  [org.clojure/core.async "1.7.701"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
@@ -35,7 +35,7 @@
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.3.0"]
+                 [com.taoensso/truss "2.5.1"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "6.8.0"]
@@ -180,8 +180,8 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.1"]
-                         [com.fasterxml.jackson.core/jackson-core "2.21.4"]
+                         [tools.jackson.core/jackson-core "3.2.2"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.2"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.14.0"]]
 
