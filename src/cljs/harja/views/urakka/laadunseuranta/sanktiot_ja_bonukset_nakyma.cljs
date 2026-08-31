@@ -309,11 +309,12 @@
        (if yllapitourakka?
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
-         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
-          :leveys 2.5 :fmt #(cond
-                              (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
-                              (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
-                              :else "–")})
+         {:otsikko "Tyyppi" :nimi :sanktiotyyppi
+          :hae (fn [rivi]
+                 (sanktio-domain/sanktiotyypin-nimi
+                   (sanktio-domain/sanktiolaji->teksti (:laji rivi))
+                   (:tyyppi rivi)))
+          :leveys 2.5 :fmt #(or % "–")})
        (when (not yllapitourakka?)
          {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
           :tyyppi :komponentti :komponentti tiedot/sanktion-tai-bonuksen-kuvaus :leveys 3})

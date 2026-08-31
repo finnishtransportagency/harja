@@ -275,7 +275,11 @@
               :aseta-vaikka-sama? true
               :valinnat tyyppi-valinnat
               :valinta-nayta (fn [arvo]
-                               (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
+                               (if (or (nil? arvo) (nil? (:nimi arvo)))
+                                 "Valitse sanktiotyyppi"
+                                 (sanktio-domain/sanktiotyypin-nimi
+                                   (tiedot/valitun-urakan-sanktiolajin-nimi (:laji @muokattu))
+                                   arvo)))
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
@@ -283,7 +287,10 @@
              ;; joten näytetään tyyppi pelkkänä tekstinä.
              {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
               ::lomake/col-luokka "col-xs-12"
-              :hae (comp :nimi :tyyppi)}))
+              :hae (fn [rivi]
+                     (sanktio-domain/sanktiotyypin-nimi
+                       (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
+                       (:tyyppi rivi)))}))
 
          (when yllapitokohdeurakka?
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde

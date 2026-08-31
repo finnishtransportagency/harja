@@ -111,7 +111,10 @@
         :tyyppi :valinta
         :valinta-arvo identity
         :valinnat tyypit
-        :valinta-nayta #(or (:nimi %) "Valitse sanktiotyyppi")
+        :valinta-nayta #(or (sanktio-domain/sanktiotyypin-nimi
+                              (sanktio-domain/sanktiolaji->teksti (:laji sanktio))
+                              %)
+                          "Valitse sanktiotyyppi")
         :pakollinen? true}
        {:nimi :summa
         :otsikko "Sanktion suuruus"
@@ -203,4 +206,3 @@
 
 (defn laheta-sanktio []
   [tuck tiedot/data laheta-sanktio*])
-
