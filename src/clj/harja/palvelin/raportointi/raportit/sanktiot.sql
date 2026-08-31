@@ -27,12 +27,9 @@ FROM urakka u
      LEFT JOIN sanktio s on tpi.id = s.toimenpideinstanssi
                             AND s.poistettu IS NOT TRUE
                             -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen
-                            AND ((s.perintapvm BETWEEN :alku::DATE AND :loppu::DATE) OR
-                                 (CASE date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer
-                                     AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
-                                      WHEN TRUE THEN s.perintapvm > u.loppupvm
-                                      ELSE FALSE
-                                     END))
+                            AND (s.perintapvm BETWEEN :alku::DATE AND :loppu::DATE OR
+                                 (date_trunc('month', :loppu::DATE) = date_trunc('month', u.loppupvm)
+                                  AND s.perintapvm > u.loppupvm))
      LEFT JOIN sanktiotyyppi st ON s.tyyppi = st.id
      LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
                                  -- Ei kuulu poistettuun ylläpitokohteeseen
@@ -71,9 +68,11 @@ SELECT
   o.id           AS elinvoimakeskus_id,
   o.nimi         AS elinvoimakeskus_nimi,
   o.lyhenne                  AS elinvoimakeskus_lyhenne,
-  (SELECT nimi FROM toimenpide WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
+  t2.nimi AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  LEFT JOIN toimenpide t3 ON t3.id = tpi.toimenpide
+  LEFT JOIN toimenpide t2 ON t2.id = t3.emo
   JOIN sanktiotyyppi st ON s.tyyppi = st.id
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
@@ -90,13 +89,9 @@ WHERE ((:urakka::INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
                                                                                               :elinvoimakeskus) AND u.urakkanro IS NOT NULL))
       AND s.poistettu IS NOT TRUE
       -- jos hakurange sisältää urakan viimeisen kuukauden, mahdolliset urakan päättymisen jälkeen tulleet sanktiot sisällytetään siihen
-      AND ((s.perintapvm BETWEEN :alku AND :loppu) OR
-          (CASE 
-                date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer 
-                AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
-           WHEN TRUE THEN s.perintapvm > u.loppupvm 
-           ELSE FALSE
-           END))
+      AND (s.perintapvm BETWEEN :alku AND :loppu OR
+           (date_trunc('month', :loppu::DATE) = date_trunc('month', u.loppupvm)
+        AND s.perintapvm > u.loppupvm))
     -- Ei kuulu poistettuun ylläpitokohteeseen
       AND (lp.yllapitokohde IS NULL
           OR
@@ -112,7 +107,7 @@ SELECT
   -s.maara AS summa,
   s.indeksi,
   s.suorasanktio,
-  CASE WHEN spr.id IS NOT NULL THEN sl.koodi END AS sanktiolaji_koodi,
+  sl.koodi AS sanktiolaji_koodi,
   COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
   st.id AS sanktiotyyppi_id,
   st.koodi AS sanktiotyyppi_koodi,
@@ -127,11 +122,11 @@ SELECT
   o.lyhenne AS elinvoimakeskus_lyhenne,
   ypk.yllapitoluokka AS yllapitoluokka,
   (CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END) AS soveltuvuuskonteksti,
-  (SELECT nimi
-   FROM toimenpide
-   WHERE id = (SELECT emo FROM toimenpide WHERE id = tpi.toimenpide)) AS toimenpidekoodi_taso2
+  t2.nimi AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
+  LEFT JOIN toimenpide t3 ON t3.id = tpi.toimenpide
+  LEFT JOIN toimenpide t2 ON t2.id = t3.emo
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id AND lp.poistettu IS NOT TRUE
   LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id AND ypk.poistettu IS NOT TRUE
   JOIN urakka u ON u.id = COALESCE(tpi.urakka, lp.urakka)
@@ -163,8 +158,7 @@ WHERE s.poistettu IS NOT TRUE
   -- Jos hakuväli sisältää urakan viimeisen kuukauden, mukaan otetaan myös
   -- urakan päättymisen jälkeen perityt sanktiot.
   AND (s.perintapvm BETWEEN :alku AND :loppu OR
-       (date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer
-        AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+       (date_trunc('month', :loppu::DATE) = date_trunc('month', u.loppupvm)
         AND s.perintapvm > u.loppupvm))
   AND u.alkupvm < :loppu::DATE
   AND u.loppupvm > :alku::DATE
@@ -206,8 +200,7 @@ WHERE s.poistettu IS NOT TRUE
   AND s.sakkoryhma = 'yllapidon_bonus'::SANKTIOLAJI
   -- Sama päättymiskuukauden rajaus kuin vanhassa ylläpitoraportissa.
   AND (s.perintapvm BETWEEN :alku AND :loppu OR
-       (date_part('year', :loppu::date)::integer = date_part('year', u.loppupvm)::integer
-        AND date_part('month', :loppu::date)::integer = date_part('month', u.loppupvm)::integer
+       (date_trunc('month', :loppu::DATE) = date_trunc('month', u.loppupvm)
         AND s.perintapvm > u.loppupvm))
   AND u.alkupvm < :loppu::DATE
   AND u.loppupvm > :alku::DATE
@@ -233,10 +226,7 @@ SELECT ek.id,
        (SELECT korotus
         from erilliskustannuksen_indeksilaskenta(ek.pvm, ek.indeksin_nimi, ek.rahasumma,
                                                  ek.urakka, ek.tyyppi,
-                                                 CASE
-                                                     WHEN u.tyyppi = 'teiden-hoito'::urakkatyyppi THEN TRUE
-                                                     ELSE FALSE
-                                                     END)) AS indeksikorotus,
+                                                 u.tyyppi = 'teiden-hoito'::urakkatyyppi)) AS indeksikorotus,
        o.id           AS elinvoimakeskus_id,
        o.nimi         AS elinvoimakeskus_nimi,
       o.lyhenne                  AS elinvoimakeskus_lyhenne
