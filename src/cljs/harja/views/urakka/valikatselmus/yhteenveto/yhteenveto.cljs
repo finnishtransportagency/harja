@@ -204,7 +204,7 @@
 
 
      ;; ----------------------------------------------------
-     ;; TAVOITEHINNAN YLITYS
+     ;; Tavoitehinnan ylitys
      [:div {:class (when (or tavoitehinnan-ylitys? tavoitehinnan-alitus?) (str "toteutuneet-kustannukset " ympyra-class))}
       ;; Ei näytetä tavoitehinnan ylitystä, mikäli ei ole ylitystä
       (when tavoitehinnan-ylitys?
@@ -226,7 +226,7 @@
 
 
       ;; ----------------------------------------------------
-      ;; TAVOITEHINNAN ALITUS
+      ;; Tavoitehinnan alitus 
       (when tavoitehinnan-alitus?
         [:<>
          [:div.flex-row.summa-rivi
@@ -246,7 +246,7 @@
 
 
      ;; ----------------------------------------------------
-     ;; KATTOHINNAN YLITYS
+     ;; Kattohinnan ylitys
      (when kattohinnan-ylitys?
        ;; Näille erillinen border himmeli
        [:div {:class (str "toteutuneet-kustannukset " ympyra-class)}

@@ -296,6 +296,7 @@
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm
                                                    :hoitokauden-alkuvuosi hoitovuosi})
+
         ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
         arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
                                                                    :alkupvm hoitokauden-alkupvm

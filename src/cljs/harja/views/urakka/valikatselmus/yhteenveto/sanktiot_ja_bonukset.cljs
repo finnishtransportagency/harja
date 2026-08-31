@@ -41,9 +41,21 @@
                      {:keys [yhteenvedon-tiedot arvonvahennykset-yht]}]
   (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
         lupaussanktio (or (luvut/arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
-        muut-sanktiot (apply + (map (fn [a]
-                                      (if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio"} (:sakkoryhma a)))
-                                        (+ (:maara a) (:indeksikorjaus a))
+
+        ;; Tulee omalle rivillensä
+        laskutusrajan-ylitys-sanktiot (apply + (map (fn [sanktio]
+                                                      (if (= "laskutus_yli_laskutusrajan" (:sakkoryhma sanktio))
+                                                        (+ (:maara sanktio) (:indeksikorjaus sanktio))
+                                                        0))
+                                                 (:sanktiot yhteenvedon-tiedot)))
+
+        ;; Niputa muut sanktiot, poissulje laskutusraja, lupaus ja arvovähennykset
+        muut-sanktiot (apply + (map (fn [sanktio]
+                                      (if (not (contains? #{"lupaussanktio"
+                                                            "arvonvahennyssanktio"
+                                                            "laskutus_yli_laskutusrajan"}
+                                                 (:sakkoryhma sanktio)))
+                                        (+ (:maara sanktio) (:indeksikorjaus sanktio))
                                         0))
                                  (:sanktiot yhteenvedon-tiedot)))
 
@@ -60,10 +72,11 @@
       [:span "Lupaussanktio"]
       [:span (fmt/euro-opt false lupaussanktio)]]
 
-     [:div.flex-row.summa-rivi-ylin
-      [:span "Laskutus yli laskutusrajan -sanktiot"]
-      ;; FIXME onkohan tämä nyt tavoitehinnan ylitys 
-      [:span "mikähän tämä on, mate?"]]
+     ;; Laskutusraja sanktiot ovat vain uudemmille urakoille
+     (when (>= hoitokauden-alkuvuosi 2025)
+       [:div.flex-row.summa-rivi-ylin
+        [:span "Laskutus yli laskutusrajan -sanktiot"]
+        [:span (fmt/euro-opt false laskutusrajan-ylitys-sanktiot)]])
 
      [:div.flex-row.summa-rivi
       [:span "Muut sanktiot"]
