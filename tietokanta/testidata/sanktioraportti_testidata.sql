@@ -192,6 +192,32 @@ SELECT 'asiakastyytyvaisyysbonus',
            ('liikennevahinkojen_aiheuttajien_selvitysbonus', 1400)
           ) AS bonus(tyyppi, summa);
 
+-- Profiilissa voi olla sama bonuslaji sekä kaikille toimenpiteille että t2-koodille rajattuna.
+-- Yksi toteutunut bonus saa liittyä tällöin vain kerran.
+INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id,
+                                   toimenpiderajauksen_tyyppi, toimenpide_t2_koodi,
+                                   jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu)
+SELECT bp.id,
+         bl.id,
+         'kaikki',
+         NULL,
+         99,
+         TRUE,
+         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+         CURRENT_TIMESTAMP,
+         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+         CURRENT_TIMESTAMP
+  FROM bonus_profiili bp
+         JOIN bonus_laji bl
+           ON bl.koodi = 'asiakastyytyvaisyysbonus'
+ WHERE bp.nimi = 'teiden-hoito-bonus-mhu2026'
+   AND NOT EXISTS (
+           SELECT 1
+             FROM bonus_profiili_rivi bpr
+            WHERE bpr.bonus_profiili_id = bp.id
+              AND bpr.bonus_laji_id = bl.id
+              AND bpr.toimenpiderajauksen_tyyppi = 'kaikki');
+
 -- Rajaa MHU2026-liikennevahinkobonus vain positiiviseen testikohteeseen.
 INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id,
                                         luoja, luotu, muokkaaja, muokattu)

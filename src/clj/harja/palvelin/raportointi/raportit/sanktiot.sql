@@ -363,27 +363,29 @@ FROM erilliskustannus ek
     LIMIT 1
   ) bp ON TRUE
   JOIN bonus_laji bl ON bl.koodi = ek.tyyppi::TEXT
-  JOIN bonus_profiili_rivi bpr
-    ON bpr.bonus_profiili_id = bp.id
-    AND bpr.bonus_laji_id = bl.id
-    AND bpr.aktiivinen IS TRUE
-    AND (bpr.toimenpiderajauksen_tyyppi = 'kaikki'
-      OR (bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
-        AND bpr.toimenpide_t2_koodi = t2.koodi))
-    AND (NOT EXISTS (
-           SELECT 1
-           FROM bonus_profiili_rivi_urakka bpru
-           WHERE bpru.bonus_profiili_rivi_id = bpr.id)
-      OR EXISTS (
-           SELECT 1
-           FROM bonus_profiili_rivi_urakka bpru
-           WHERE bpru.bonus_profiili_rivi_id = bpr.id
-             AND bpru.urakka_id = u.id))
   LEFT JOIN bonus_profiili_laji_esitystiedot bplet
     ON bplet.bonus_profiili_id = bp.id
     AND bplet.bonus_laji_id = bl.id
 WHERE ek.poistettu IS NOT TRUE
   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
+  AND EXISTS (
+        SELECT 1
+          FROM bonus_profiili_rivi bpr
+         WHERE bpr.bonus_profiili_id = bp.id
+           AND bpr.bonus_laji_id = bl.id
+           AND bpr.aktiivinen IS TRUE
+           AND (bpr.toimenpiderajauksen_tyyppi = 'kaikki'
+             OR (bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
+               AND bpr.toimenpide_t2_koodi = t2.koodi))
+           AND (NOT EXISTS (
+                  SELECT 1
+                    FROM bonus_profiili_rivi_urakka bpru
+                   WHERE bpru.bonus_profiili_rivi_id = bpr.id)
+             OR EXISTS (
+                  SELECT 1
+                    FROM bonus_profiili_rivi_urakka bpru
+                   WHERE bpru.bonus_profiili_rivi_id = bpr.id
+                     AND bpru.urakka_id = u.id)))
   AND ((:urakka::INTEGER IS NOT NULL AND u.id = :urakka)
     OR (:urakka::INTEGER IS NULL
       AND u.urakkanro IS NOT NULL
@@ -441,7 +443,7 @@ WITH sanktio_profiili_rivit AS (
       OR ypk.id IS NOT NULL)
   GROUP BY spr.sanktio_profiili_id, spr.sanktio_laji_id, spr.sanktiotyyppi_id
 )
-SELECT
+SELECT DISTINCT ON (sl.id, st.id)
   sl.koodi AS sanktiolaji_koodi,
   COALESCE(splet.nimi, sl.nimi) AS sanktiolaji_nimi,
   sl.jarjestys AS sanktiolaji_jarjestys,
@@ -477,8 +479,9 @@ WHERE sp.urakkatyyppi = u.tyyppi::TEXT
             ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END)
 GROUP BY sl.id, sl.koodi, sl.nimi, sl.jarjestys,
          st.id, st.nimi, st.koodi,
-         splet.nimi, spr_summa.yhteissumma
-ORDER BY sl.id, st.id, sl.jarjestys, st.koodi;
+         splet.nimi, spr_summa.yhteissumma,
+         sp.id, sp.alkupvm
+ORDER BY sl.id, st.id, sp.alkupvm DESC, sp.id DESC, sl.jarjestys, st.koodi;
 
 -- name: hae-urakkataso-bonuslajit
 -- Hakee kaikki urakan bonuslajit profiilista (myös tyhjät = nollasummat)
@@ -507,4 +510,4 @@ WHERE bp.urakkatyyppi = u.tyyppi::TEXT
   AND (:urakka::INTEGER IS NOT NULL OR :urakkatyyppi::urakkatyyppi IS NULL
     OR CASE WHEN :urakkatyyppi = 'hoito' THEN u.tyyppi IN ('hoito', 'teiden-hoito')
             ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi END)
-ORDER BY bl.id, bl.jarjestys;
+ORDER BY bl.id, bp.alkupvm DESC, bp.id DESC, bl.jarjestys;
