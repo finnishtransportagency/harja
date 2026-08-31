@@ -264,3 +264,81 @@ SELECT bpr.id,
         CURRENT_TIMESTAMP,
         kayttaja
       FROM tiedot;
+
+    -- Sanktioraportin manuaalidata aktiivisille MHU-urakoille.
+    -- Näitä rivejä ei käytetä automaattitesteissä.
+    WITH tiedot AS (
+        SELECT u.nimi AS urakan_nimi,
+         tpi.id AS toimenpideinstanssi,
+         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
+       FROM urakka u
+         JOIN toimenpideinstanssi tpi
+           ON tpi.urakka = u.id
+          AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+      WHERE u.nimi IN ('POP MHU Kajaani 2025-2030',
+              'POP MHU Suomussalmi 2024-2029')
+    )
+    INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+             toimenpideinstanssi, tyyppi, suorasanktio, luoja)
+    SELECT manuaalinen.sakkoryhma::SANKTIOLAJI,
+        manuaalinen.maara,
+        manuaalinen.pvm,
+        manuaalinen.pvm,
+        NULL,
+        tiedot.toimenpideinstanssi,
+        (SELECT id
+        FROM sanktiotyyppi
+          WHERE koodi = manuaalinen.tyyppi_koodi),
+        TRUE,
+        tiedot.kayttaja
+      FROM tiedot
+        JOIN (VALUES
+            ('POP MHU Kajaani 2025-2030', 'A', 450, DATE '2026-03-15', 13),
+            ('POP MHU Kajaani 2025-2030', 'B', 275, DATE '2026-03-20', 14),
+                 ('POP MHU Kajaani 2025-2030', 'C', 125, DATE '2026-04-15', 8),
+            ('POP MHU Kajaani 2025-2030', 'arvonvahennyssanktio', 900, DATE '2026-04-20', 0),
+            ('POP MHU Suomussalmi 2024-2029', 'A', 550, DATE '2026-03-15', 13),
+            ('POP MHU Suomussalmi 2024-2029', 'B', 325, DATE '2026-03-20', 14),
+                 ('POP MHU Suomussalmi 2024-2029', 'C', 175, DATE '2026-04-15', 8),
+            ('POP MHU Suomussalmi 2024-2029', 'arvonvahennyssanktio', 950, DATE '2026-04-20', 0)
+          ) AS manuaalinen(urakan_nimi, sakkoryhma, maara, pvm, tyyppi_koodi)
+          ON manuaalinen.urakan_nimi = tiedot.urakan_nimi;
+
+    WITH tiedot AS (
+        SELECT u.nimi AS urakan_nimi,
+         s.id AS sopimus,
+         u.id AS urakka,
+         tpi.id AS toimenpideinstanssi,
+         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
+       FROM urakka u
+         JOIN sopimus s
+           ON s.urakka = u.id
+          AND s.paasopimus IS NULL
+         JOIN toimenpideinstanssi tpi
+           ON tpi.urakka = u.id
+          AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+      WHERE u.nimi IN ('POP MHU Kajaani 2025-2030',
+              'POP MHU Suomussalmi 2024-2029')
+    )
+    INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi,
+                pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
+                lisatieto, luotu, luoja)
+    SELECT 'asiakastyytyvaisyysbonus'::erilliskustannustyyppi,
+        tiedot.sopimus,
+        tiedot.urakka,
+        tiedot.toimenpideinstanssi,
+        manuaalinen.pvm,
+        manuaalinen.pvm,
+        manuaalinen.maara,
+        NULL,
+        'Sanktioraportin manuaalidata',
+        CURRENT_TIMESTAMP,
+        tiedot.kayttaja
+      FROM tiedot
+        JOIN (VALUES
+            ('POP MHU Kajaani 2025-2030', DATE '2026-03-15', 650),
+            ('POP MHU Kajaani 2025-2030', DATE '2026-04-15', 350),
+            ('POP MHU Suomussalmi 2024-2029', DATE '2026-03-15', 750),
+            ('POP MHU Suomussalmi 2024-2029', DATE '2026-04-15', 450)
+          ) AS manuaalinen(urakan_nimi, pvm, maara)
+          ON manuaalinen.urakan_nimi = tiedot.urakan_nimi;

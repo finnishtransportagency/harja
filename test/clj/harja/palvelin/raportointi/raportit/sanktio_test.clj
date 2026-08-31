@@ -1,7 +1,8 @@
 (ns harja.palvelin.raportointi.raportit.sanktio-test
   (:require [clojure.test :refer :all]
        [harja.pvm :as pvm]
-            [harja.palvelin.raportointi.raportit.sanktio :as sanktio]))
+            [harja.palvelin.raportointi.raportit.sanktio :as sanktio]
+            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as tulosteet]))
 
 (deftest urakkatasoraportin-otsikko-noudattaa-yhteista-rakennetta
   (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
@@ -53,6 +54,35 @@
     (is (= ["Toinen" 0] (:rivi (second rivit))))
     (is (= ["Yhteensä" 0] (:rivi (last rivit))))
     (is (= "Tyyppi" (get-in (last raportin-osat) [2 0 :otsikko])))))
+
+(deftest sanktiotyypin-koodi-nolla-toistaa-sanktiolajin-nimen
+  (let [sanktiolajit [{:sanktiolaji_koodi "tenttikeskiarvo-sanktio"
+                       :sanktiolaji_nimi "Vastuuhenkilön tenttipistemäärän alentuminen"
+                       :sanktiolaji_jarjestys 1
+                       :sanktiotyyppi_koodi 0
+                       :sanktiotyyppi_nimi "Ei tarvita sanktiotyyppiä"}]
+        raportin-osat (vec (#'sanktio/koosta-sanktio-taulukot sanktiolajit {}))
+        taulukko (second raportin-osat)
+        rivi (first (nth taulukko 3))]
+    (is (= ["Vastuuhenkilön tenttipistemäärän alentuminen" 0]
+           (:rivi rivi)))))
+
+(deftest tulosteraportin-sanktiotyyppi-koodi-nolla-toistaa-sanktiolajin-nimen
+  (let [raportti (tulosteet/sanktiot-ja-bonukset-raportti
+                   nil
+                   nil
+                   "Urakka"
+                   false
+                   #{}
+                   #{}
+                   [{:laji :tenttikeskiarvo-sanktio
+                     :tyyppi {:koodi 0
+                              :nimi "Ei tarvita sanktiotyyppiä"}
+                     :summa 100}])
+        taulukko (last raportti)
+        rivi (first (nth taulukko 3))]
+    (is (= "Vastuuhenkilön tenttipistemäärän alentuminen"
+           (nth rivi 2)))))
 
 (deftest arvonvahennys-ei-kuulu-sanktiolajitaulukoihin
   (let [sanktiolajit [{:sanktiolaji_koodi "sakko"

@@ -116,6 +116,20 @@
     (is (= [0] lupaussanktio)
       "Lupaussanktio")))
 
+(deftest sanktiotyypin-nimi-toistaa-lajin-nimen-kun-tyyppia-ei-ole
+  (testing "Sanktiotyypin koodi 0 käyttää sanktiolajin nimeä"
+    (is (= "Vastuuhenkilön tenttipistemäärän alentuminen"
+           (sanktio-domain/sanktiotyypin-nimi
+             "Vastuuhenkilön tenttipistemäärän alentuminen"
+             {:koodi 0
+              :nimi "Ei tarvita sanktiotyyppiä"}))))
+  (testing "Erillinen sanktiotyyppi näytetään omalla nimellään"
+    (is (= "Talvihoito"
+           (sanktio-domain/sanktiotyypin-nimi
+             "Muistutus"
+             {:koodi 2
+              :nimi "Talvihoito"})))))
+
 (deftest sanktio-konfiguraation-adapteri-palauttaa-lajit-ja-tyypit
   (let [sanktio-konfiguraatio {:sanktio-lajit [{:laji :muistutus
                                                 :nimi "Muistutus"

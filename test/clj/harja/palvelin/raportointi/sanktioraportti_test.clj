@@ -226,6 +226,33 @@
     (is (= ["Arvonvähennys" 2500M]
            (hae-taulukon-rivi arvonvahennys-taulukko "Arvonvähennys")))))
 
+(deftest raportin-mhu2024-sanktiot-ja-bonukset-kohdistuvat-oikein
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029'"))
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :sanktioraportti
+                   :konteksti  "urakka"
+                   :urakka-id  urakka-id
+                   :parametrit {:alkupvm      (c/to-date (t/local-date 2026 1 1))
+                                :loppupvm     (c/to-date (t/local-date 2026 2 1))
+                                :urakkatyyppi :hoito}})
+        sanktio-taulukko (some #(when (= "A-ryhmä (tehtäväkohtainen sanktio)"
+                                         (get-in % [1 :otsikko])) %)
+                           (apurit/hae-osion-taulukot vastaus "Sanktiot"))
+        bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))
+        arvonvahennys-taulukko (first (apurit/hae-osion-taulukot vastaus "Arvonvähennykset"))]
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 1200M))
+    (is (= ["Talvihoito, päätiet" 1200M]
+           (hae-taulukon-rivi sanktio-taulukko "Talvihoito, päätiet")))
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Bonukset yhteensä") 1700M))
+    (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" 1700M]
+           (hae-taulukon-rivi bonus-taulukko
+             "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta")))
+    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Arvovähennykset") 2800M))
+    (is (= ["Arvonvähennys" 2800M]
+           (hae-taulukon-rivi arvonvahennys-taulukko "Arvonvähennys")))))
+
 (deftest raportin-mhu2026-noudattaa-t2-ja-kohdistusrajoja
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -260,7 +287,7 @@
              "Bonus liikennevahinkojen aiheuttajien selvittämisestä")))))
 
 (deftest raportin-mhu2026-kohdistuksen-sallima-bonus-nakyy
-  (let [  urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'"))
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
@@ -344,12 +371,17 @@
         (suorita-sanktioraportti "urakka" [2018 10 1] [2019 9 30])
         taulukot (apurit/hae-osion-taulukot urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella "Sanktiot")
         taulukko (first taulukot)
+        tunnistamattomat (first (apurit/hae-osion-taulukot
+                                  urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
+                                  "Tunnistamattomat sanktiot"))
+        tunnistamaton-rivi (hae-taulukon-rivi tunnistamattomat "Määräpäivän ylitys")
         sanktiosumma (apurit/hae-yhteenveto-arvo
                        urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella
                        "Sanktiot yhteensä")]
     (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-tulee-mukaan-viimeisella-hoitokaudella))))
     (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (is (=marginaalissa? sanktiosumma 777M))
+    (is (= ["Määräpäivän ylitys" 777M] tunnistamaton-rivi))
     (is (= "Sanktio (€)" (-> taulukko (nth 2) second :otsikko)))))
 
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-laskee-sanktiot-vain-jos-viimeinen-kuukausi-on-mukana
