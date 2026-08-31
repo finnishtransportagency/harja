@@ -1,6 +1,7 @@
 (ns harja.views.urakka.pot2.alusta
   "POT2-lomakkeen alustarivien näkymä"
   (:require
+    [clojure.string]
     [reagent.core :refer [atom] :as r]
     [harja.loki :refer [log]]
     [harja.pvm :as pvm]
@@ -54,7 +55,7 @@
     (yllapitokohteet-domain/validoi-alustatoimenpide-teksti validoitu)))
 
 (defn- alustalomakkeen-lisakentat
-  [{:keys [alustalomake massat murskeet koodistot] :as alusta}]
+  [{:keys [alustalomake massat murskeet koodistot]}]
   (let [{massatyypit :massatyypit
          mursketyypit :mursketyypit} koodistot
         mukautetut-lisakentat {:murske {:nimi :murske
@@ -74,17 +75,19 @@
                                                           "-"))
                                        :valinnat massat}}
         toimenpidespesifit-lisakentat (pot2-domain/alusta-toimenpidespesifit-metadata alustalomake)
-        lisakentta-generaattori (fn [{:keys [nimi pakollinen? valinnat-koodisto jos] :as kentta-metadata}]
+        lisakentta-generaattori (fn [{:keys [nimi pakollinen? valinnat-koodisto] :as kentta-metadata}]
                                   (let [kentta (get mukautetut-lisakentat nimi)
                                         valinnat (or (:valinnat kentta)
                                                      (get koodistot valinnat-koodisto))
                                         valinnat-ja-nil (if pakollinen?
                                                           valinnat
                                                           (conj valinnat nil))]
-                                    (lomake/rivi (merge kentta-metadata
-                                                        kentta
-                                                        {:palstoja 3
-                                                         :valinnat valinnat-ja-nil}))))]
+                                    (lomake/rivi (dissoc
+                                                   (merge kentta-metadata
+                                                          kentta
+                                                          {:palstoja 3
+                                                           :valinnat valinnat-ja-nil})
+                                                   :validoi-kentta-fn))))]
     (map lisakentta-generaattori toimenpidespesifit-lisakentat)))
 
 (defn- alustalomakkeen-kentat [{:keys [alusta-toimenpiteet alustalomake] :as tiedot}]
