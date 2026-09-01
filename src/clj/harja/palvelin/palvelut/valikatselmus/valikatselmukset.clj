@@ -240,7 +240,6 @@
         ;; Poista vielä keskenään ristiriitaiset päätökset
         mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
-
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
         paatokset (yleiset/yhdista-mapit :nimi mahdolliset-paatokset tietokanta-paatokset)]
     paatokset))
