@@ -1,24 +1,43 @@
 (ns harja.palvelin.raportointi.raportit.sanktio
   (:require [jeesql.core :refer [defqueries]]
+            [clojure.string :as str]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.hallintayksikot :as hallintayksikot-q]
             [harja.pvm :as pvm]
             [harja.domain.urakka :as urakka-domain]
-            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]))
+            [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi]))
 
 (defqueries "harja/palvelin/raportointi/raportit/sanktiot.sql")
 
-(declare hae-sanktiot hae-urakkataso-sanktiot hae-urakkataso-bonukset hae-urakkataso-sanktiolajit hae-urakkataso-bonuslajit
-  hae-sanktiot-yllapidon-raportille hae-urakkataso-yllapito-sanktiot hae-urakkataso-yllapito-bonukset)
+(declare hae-urakkataso-sanktiot hae-urakkataso-bonukset hae-urakkataso-sanktiolajit hae-urakkataso-bonuslajit
+  hae-urakkataso-yllapito-sanktiot hae-urakkataso-yllapito-bonukset)
 
 (defn- muodosta-rahasarake [otsikko]
   {:leveys 15
    :otsikko (str otsikko " (€)")
    :fmt :raha})
 
+(defn- yksiloi-sanktiot [rivit]
+  (loop [jaljella (seq rivit)
+         tunnisteet #{}
+         yksilolliset []]
+    (if-let [rivi (first jaljella)]
+      (let [tunniste (or (:sanktio_id rivi) (:id rivi))
+            avain (if (nil? tunniste)
+                    [:rivi (count yksilolliset)]
+                    tunniste)]
+        (if (contains? tunnisteet avain)
+          (recur (next jaljella) tunnisteet yksilolliset)
+          (recur (next jaljella)
+            (conj tunnisteet avain)
+            (conj yksilolliset rivi))))
+      yksilolliset)))
+
 (defn- koosta-arvonvahennys-taulukko [arvonvahennykset]
-  (let [rivit (if (seq arvonvahennykset)
+  (let [arvonvahennykset (yksiloi-sanktiot arvonvahennykset)
+        rivit (if (seq arvonvahennykset)
                 (mapv (fn [[laji-nimi lajit]]
                         (let [summa (reduce + 0 (map #(or (:summa %) 0) lajit))]
                           (rivi (or laji-nimi "Arvonvähennys") summa)))
@@ -47,7 +66,7 @@
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei tunnistamattomia sanktioita."}
      [{:leveys 12 :otsikko "Tunnistamattomat sanktiot"}
-                  (muodosta-rahasarake "Sanktio")]
+      (muodosta-rahasarake "Sanktio")]
      (into [] (concat rivit
                 [{:lihavoi? true
                   :korosta-hennosti? true
@@ -65,8 +84,7 @@
   (let [ensimmainen (first lajit)
         laji-koodi (:sanktiolaji_koodi ensimmainen)
         laji-nimi (:sanktiolaji_nimi ensimmainen)
-        ;; Jos lajilla on tyyppejä, näytetään kaikki profiilin tyyppirivit.
-        tyypit (if (> (count lajit) 1) lajit [ensimmainen])
+        tyypit lajit
         ;; Laske lajin kokonaissumma
         laji-summa (reduce + 0
                      (map #(or (get sanktio-data-map [laji-koodi (:sanktiotyyppi_koodi %)]) 0)
@@ -76,7 +94,7 @@
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei tietoja."}
      [{:leveys 12 :otsikko "Tyyppi"}
-                  (muodosta-rahasarake "Sanktio")]
+      (muodosta-rahasarake "Sanktio")]
      (concat
        ;; Kaikki profiilin tyyppirivit näytetään, myös yhden tyypin ryhmässä.
        (mapv
@@ -84,7 +102,7 @@
            (let [tyyppi-koodi (:sanktiotyyppi_koodi tyyppi)
                  summa (or (get sanktio-data-map [laji-koodi tyyppi-koodi]) 0)]
              {:himmennetty? (zero? summa)
-              :rivi (rivi (domain-sanktio/sanktiotyypin-nimi
+              :rivi (rivi (sanktiotyyppi/sanktiotyypin-nimi
                             laji-nimi
                             {:koodi tyyppi-koodi
                              :nimi (:sanktiotyyppi_nimi tyyppi)})
@@ -101,13 +119,15 @@
 
 (defn- koosta-yllapito-taulukko
   "Muodostaa ylläpito-urakan sanktiotaulukon ylläpitoluokittain ryhmiteltynä.
-   Data tulee hae-sanktiot-yllapidon-raportille -kyselyltä."
+   Data tulee hae-urakkataso-yllapito-sanktiot-kyselyltä."
   [sanktiot]
   (let [yllapitoluokan-nimi (fn [luokka]
                               (cond
-                                (nil? luokka) "Määrittelemätön"
+                                (nil? luokka) "Ei PK-luokkaa"
+                                (get yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi luokka)
+                                (str "PK-luokka "
+                                  (get yllapitokohteet-domain/yllapitoluokkanumero->lyhyt-nimi luokka))
                                 (keyword? luokka) (name luokka)
-                                (string? luokka) luokka
                                 :else (str luokka)))
         ryhmitelty (group-by :yllapitoluokka sanktiot)
         jarjestetty (sort-by (fn [[luokka _]] (yllapitoluokan-nimi luokka))
@@ -142,8 +162,8 @@
   [sanktiolajit sanktio-data-map]
   (let [;; Erotellaan lupaussanktio muista lajeista
         {lupaussanktio-lajit true
-       muut-lajit false} (group-by #(= "lupaussanktio" (:sanktiolaji_koodi %))
-            (remove #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiolajit))
+         muut-lajit false} (group-by #(= "lupaussanktio" (:sanktiolaji_koodi %))
+                             (remove #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiolajit))
 
         ;; Ryhmitellään muut lajit koodin mukaan
         ryhmitelty (group-by :sanktiolaji_koodi muut-lajit)
@@ -164,8 +184,8 @@
                                    (lisaa-excel-osion-otsikko "Lupaussanktiot")))]
 
     ;; Yhdistetään: lupaussanktio-osio (jos on) + muut sanktiot
-    ;; Huom: palautetaan suorat alkiot (ei kietoutuneita vektoreita),
-    ;; jotta testit löytävät [:otsikko "Sanktiot"] suoraan raportin alkioiden joukosta.
+    ;; Palautetaan suorat alkiot, jotta raportin kaikki esitysmuodot käsittelevät
+    ;; osiot samalla tavalla.
     (concat
       (when (seq lupaussanktio-lajit)
         ;; Lupaussanktiolle oma osio
@@ -191,11 +211,45 @@
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja (when (empty? bonus-lajit) "Ei bonuslajeja profiilissa.")}
      [{:leveys 12 :otsikko "Bonuslaji"}
-                  (muodosta-rahasarake "Bonus")]
+      (muodosta-rahasarake "Bonus")]
      (into [] (concat bonus-rivit
                 [{:lihavoi? true
                   :korosta-hennosti? true
                   :rivi (rivi "Bonukset yhteensä" bonukset-yhteensa)}]))]))
+
+(defn- koosta-yllapidon-bonustaulukko
+  "Muodostaa ylläpidon legacy-bonuksille oman bonus-taulukon."
+  [bonukset]
+  (when (seq bonukset)
+    (let [bonuslajit (->> bonukset
+                       (group-by :bonuslaji_koodi)
+                       (map (fn [[_ rivit]]
+                              (let [ensimmainen (first rivit)]
+                                {:bonuslaji_koodi (:bonuslaji_koodi ensimmainen)
+                                 :bonuslaji_nimi (:bonuslaji_nimi ensimmainen)
+                                 :bonuslaji_jarjestys (or (:bonuslaji_jarjestys ensimmainen) 0)})))
+                       (sort-by (juxt :bonuslaji_jarjestys :bonuslaji_koodi)))
+          bonus-data-map (reduce (fn [summa-map bonus]
+                                   (update summa-map (:bonuslaji_koodi bonus)
+                                     (fnil + 0) (or (:summa bonus) 0)))
+                           {}
+                           bonukset)]
+      (muodosta-bonus-taulukko bonuslajit bonus-data-map))))
+
+(defn- koosta-yllapidon-taulukot [sanktiot bonukset arvonvahennykset]
+  (let [tunnetut (filterv #(some? (:sanktiolaji_koodi %)) sanktiot)
+        tunnistamattomat (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot)]
+    (remove nil?
+      [(koosta-yllapito-taulukko tunnetut)
+       (when (seq tunnistamattomat)
+         (koosta-tunnistamattomat-taulukko tunnistamattomat))
+       (koosta-yllapidon-bonustaulukko bonukset)
+       (into [:taulukko {:otsikko "Arvonvähennykset"
+                         :sheet-nimi "Arvonvähennykset"
+                         :excel-alkutekstit [[:otsikko-heading "Arvonvähennykset"]]
+                         :viimeinen-rivi-yhteenveto? true
+                         :tyhja "Ei arvonvähennyksiä."}]
+         (koosta-arvonvahennys-taulukko arvonvahennykset))])))
 
 (defn- urakka-id [rivi]
   (or (:urakka_id rivi) (:urakka-id rivi)))
@@ -209,88 +263,156 @@
   (let [rivi (first rivit)
         alkupvm (:urakan_alkupvm rivi)
         loppupvm (or (:urakan_loppupvm rivi) (:loppupvm rivi))
-        vuosi (fn [paivamaara]
-                (when paivamaara
-                  (.format (java.text.SimpleDateFormat. "yyyy") paivamaara)))
+        vuosi (fn [paivamaara] (when paivamaara (pvm/vuosi paivamaara)))
         kesto (when (and alkupvm loppupvm)
                 (str (vuosi alkupvm) "-" (vuosi loppupvm)))]
     (str (urakan-nimi rivit)
-      (when (and kesto (not (.contains (urakan-nimi rivit) kesto)))
+      (when (and kesto (not (str/includes? (urakan-nimi rivit) kesto)))
         (str " " kesto)))))
 
-(defn- yksiloi-sanktiot [rivit]
-  (vals (group-by #(or (:sanktio_id %) (:id %)) rivit)))
+(defn- urakan-raportin-tiedot
+  [rivit]
+  (let [rivi (first rivit)
+        alkupvm (:urakan_alkupvm rivi)
+        loppupvm (or (:urakan_loppupvm rivi) (:loppupvm rivi))]
+    {:raportin-nimi (urakan-nimi rivit)
+     :alkupvm (when alkupvm (pvm/pvm alkupvm))
+     :loppupvm (when loppupvm (pvm/pvm loppupvm))}))
 
-(defn- merkitse-aggregaatin-taulukot [taulukot nimi]
-  (map-indexed (fn [indeksi taulukko]
-                 (update taulukko 1 merge
-                   {:aggregaatin-urakkataulukko? true
-                    :sheet-nimi nimi}
-                   (when (pos? indeksi)
-                     {:samalle-sheetille? true})))
-    taulukot))
+(defn- urakan-valilehtien-nimet
+  [urakat]
+  (let [nimet (mapv (fn [[_ rivit]] (urakan-valilehden-nimi rivit)) urakat)
+        toistuvat-nimet (->> nimet
+                          frequencies
+                          (keep (fn [[nimi maara]]
+                                  (when (> maara 1) nimi)))
+                          set)]
+    (mapv (fn [[[urakan-id _] nimi]]
+            [urakan-id
+             (if (contains? toistuvat-nimet nimi)
+               (str nimi " (" urakan-id ")")
+               nimi)])
+      (map vector urakat nimet))))
 
-(defn- koosta-urakka-erittely [sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit]
+(defn- merkitse-taulukot
+  [taulukot nimi & [raportin-tiedot]]
+  (loop [jaljella (seq taulukot)
+         indeksi 0
+         tulos []]
+    (if-let [taulukko (first jaljella)]
+      (if (= :taulukko (first taulukko))
+        (recur (next jaljella)
+          (inc indeksi)
+          (conj tulos
+            (update taulukko 1 merge
+              {:sheet-nimi nimi
+               :samalle-sheetille? (pos? indeksi)}
+              (when raportin-tiedot
+                {:raportin-tiedot raportin-tiedot}))))
+        (recur (next jaljella)
+          indeksi
+          (conj tulos taulukko)))
+      tulos)))
+
+(defn- koosta-urakan-taulukot
+  [sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit]
+  (let [sanktiot (->> sanktiot
+                   (remove #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)))
+                   yksiloi-sanktiot)
+        arvonvahennykset (yksiloi-sanktiot arvonvahennykset)
+        tunnistamattomat (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot)
+        tunnetut (filterv #(some? (:sanktiolaji_koodi %)) sanktiot)
+        sanktio-data-map (reduce (fn [summa-map sanktio]
+                                   (update summa-map
+                                     [(:sanktiolaji_koodi sanktio)
+                                      (:sanktiotyyppi_koodi sanktio)]
+                                     (fnil + 0) (or (:summa sanktio) 0)))
+                           {}
+                           tunnetut)
+        bonus-data-map (reduce (fn [summa-map bonus]
+                                 (update summa-map (:bonuslaji_koodi bonus)
+                                   (fnil + 0) (or (:summa bonus) 0)))
+                         {}
+                         bonukset)
+        taulukot (concat
+                   (koosta-sanktio-taulukot sanktiolajit sanktio-data-map)
+                   [(muodosta-bonus-taulukko (sort-by :bonuslaji_jarjestys bonuslajit)
+                      bonus-data-map)
+                    (into [:taulukko {:otsikko "Arvonvähennykset"
+                                      :sheet-nimi "Arvonvähennykset"
+                                      :excel-alkutekstit [[:otsikko-heading "Arvonvähennykset"]]
+                                      :viimeinen-rivi-yhteenveto? true
+                                      :tyhja "Ei arvonvähennyksiä."}]
+                      (koosta-arvonvahennys-taulukko arvonvahennykset))]
+                   (when (seq tunnistamattomat)
+                     [(koosta-tunnistamattomat-taulukko tunnistamattomat)]))]
+    {:sanktiot sanktiot
+     :arvonvahennykset arvonvahennykset
+     :tunnistamattomat tunnistamattomat
+     :tunnetut tunnetut
+     :sanktio-data-map sanktio-data-map
+     :bonus-data-map bonus-data-map
+     :taulukot taulukot}))
+
+(defn- koosta-excel-yhteenvetotaulukko [yhteenveto-data excel-alkutekstit]
+  [:taulukko {:otsikko "Yhteenveto"
+              :sheet-nimi "Yhteenveto"
+              :excel-alkutekstit excel-alkutekstit}
+   [{:otsikko "Rivi"}
+    {:otsikko "Arvo"}]
+   (mapv (fn [{:keys [avain arvo fmt lihavoi?]}]
+           {:rivi [avain arvo]
+             :fmt fmt
+             :lihavoi? lihavoi?})
+      yhteenveto-data)])
+
+(defn- koosta-urakka-erittely
+  "Muodostaa urakkakohtaisen erittelyn litteänä jonona raporttielementtejä.
+
+   HUOM: alkiot on palautettava raportin suorina sisaralkioina. Jos ne kiedotaan
+   :otsikko-elementin lapsiksi, HTML- ja PDF-muodostimet destrukturoivat vain
+   [_ teksti] ja pudottavat taulukot äänettömästi."
+  [sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit yllapitourakka?]
   (let [rivit (concat sanktiot bonukset arvonvahennykset)
         urakat (->> rivit
                  (group-by urakka-id)
                  (remove (comp nil? first))
-                 (sort-by (comp urakan-nimi second)))]
+                 (sort-by (juxt (comp urakan-nimi second) first)))]
     (when (seq urakat)
-      (into [:otsikko "Urakat"]
-        (mapcat (fn [[_ urakan-rivit]]
+      (cons [:otsikko "Urakat"]
+        (mapcat (fn [[[urakan-id urakan-rivit] [_ valilehden-nimi]]]
                   (let [urakan-nimi (urakan-nimi urakan-rivit)
-                        valilehden-nimi (urakan-valilehden-nimi urakan-rivit)
-                        sanktiot (->> (filter #(and (or (:sanktio_id %) (:id %))
-                                                 (not= "arvonvahennyssanktio" (:sanktiolaji_koodi %)))
-                                        urakan-rivit)
-                                   yksiloi-sanktiot
-                                   (mapcat identity))
+                        urakan-sanktiolajit (filter #(= urakan-id (urakka-id %)) sanktiolajit)
+                        urakan-bonuslajit (filter #(= urakan-id (urakka-id %)) bonuslajit)
+                        sanktiot (filter #(and (or (:sanktio_id %) (:id %))
+                                            (not= "arvonvahennyssanktio" (:sanktiolaji_koodi %)))
+                                  urakan-rivit)
                         bonukset (filter :bonuslaji_koodi urakan-rivit)
-                        arvonvahennykset (->> (filter #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) urakan-rivit)
-                                           yksiloi-sanktiot
-                                           (mapcat identity))
-                        sanktiot-uniikit (map first (vals (group-by :sanktio_id sanktiot)))
-                        tunnistamattomat (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot-uniikit)
-                        tunnetut (filterv #(some? (:sanktiolaji_koodi %)) sanktiot-uniikit)
-                        sanktio-data-map (reduce (fn [summa-map sanktio]
-                                                   (update summa-map
-                                                     [(:sanktiolaji_koodi sanktio)
-                                                      (:sanktiotyyppi_koodi sanktio)]
-                                                     (fnil + 0) (or (:summa sanktio) 0)))
-                                           {}
-                                           tunnetut)
-                        bonus-data-map (reduce (fn [summa-map bonus]
-                                                 (update summa-map (:bonuslaji_koodi bonus)
-                                                   (fnil + 0) (or (:summa bonus) 0)))
-                                         {}
-                                         bonukset)
-                        taulukot (filter #(= :taulukko (first %))
-                                   (concat
-                                     (koosta-sanktio-taulukot sanktiolajit sanktio-data-map)
-                                     [(muodosta-bonus-taulukko (sort-by :bonuslaji_jarjestys bonuslajit)
-                                        bonus-data-map)
-                                      (into [:taulukko {:otsikko "Arvonvähennykset"
-                                                        :sheet-nimi "Arvonvähennykset"
-                                                        :excel-alkutekstit [[:otsikko-heading "Arvonvähennykset"]]
-                                                        :viimeinen-rivi-yhteenveto? true
-                                                        :tyhja "Ei arvonvähennyksiä."}]
-                                        (koosta-arvonvahennys-taulukko arvonvahennykset))]
-                                     (when (seq tunnistamattomat)
-                                       [(koosta-tunnistamattomat-taulukko tunnistamattomat)])))]
+                        arvonvahennykset (filter #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %))
+                                           urakan-rivit)
+                        taulukot (if yllapitourakka?
+                                   (koosta-yllapidon-taulukot sanktiot bonukset arvonvahennykset)
+                                   (:taulukot (koosta-urakan-taulukot
+                                                sanktiot
+                                                bonukset
+                                                arvonvahennykset
+                                                urakan-sanktiolajit
+                                                urakan-bonuslajit)))]
                     (into [[:otsikko urakan-nimi]]
-                      (merkitse-aggregaatin-taulukot taulukot valilehden-nimi))))
-          urakat)))))
+                      (merkitse-taulukot taulukot valilehden-nimi
+                        (urakan-raportin-tiedot urakan-rivit)))))
+          (map vector urakat (urakan-valilehtien-nimet urakat)))))))
 
 (defn- koosta-urakkataso-runko
   "Muodostaa urakkataso-sanktioraportin raporttirakennelman.
 
-   Hoito-urakka: käyttää profiili-driven kyselyitä jotka palauttavat
+   Hoito-urakka: käyttää profiilivetoisia kyselyitä, jotka palauttavat
    sanktiolaji/bonuslaji-tiedot suoraan tietokannasta.
 
    Ylläpito-urakka: näyttää sakot ylläpitoluokittain ryhmiteltynä.
-   Parametri yllapitourakka? määrittää käytettävän layoutin."
-  [urakan-nimi alkupvm loppupvm sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit & [yllapitourakka? urakka-erittely?]]
+   Parametri yllapitourakka? määrittää käytettävän rakenteen."
+  [urakan-nimi alkupvm loppupvm sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit
+   & [yllapitourakka? urakka-erittely? kasittelija]]
   (let [raportin-otsikko (if yllapitourakka?
                            "Sakko- ja bonusraportti"
                            "Sanktiot, bonukset ja arvonvähennykset")
@@ -306,53 +428,47 @@
                                               muistutusten-maara (count muistutukset)
                                               suorasakot (filterv :suorasanktio sanktiot)
                                               suorasakkojen-summa (reduce + 0 (map #(or (:summa %) 0) suorasakot))
-                                              bonukset-summa (reduce + 0 (map #(or (:summa %) 0) (or bonukset [])))]
+                                               bonukset-summa (reduce + 0 (map #(or (:summa %) 0) (or bonukset [])))
+                                               arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0)
+                                                                                    (or arvonvahennykset [])))]
                                           [[{:avain "Sakot yhteensä" :arvo sakkosumma :fmt :raha}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-summa :fmt :raha}
                                             {:avain "Muistutukset" :arvo (str muistutusten-maara " kpl")}
                                             {:avain "Suorasakot" :arvo suorasakkojen-summa :fmt :raha}
-                                            {:avain "Yhteensä" :arvo (+ sakkosumma bonukset-summa) :fmt :raha :lihavoi? true}]
-                                           (list (koosta-yllapito-taulukko sanktiot))])
+                                            {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}
+                                            {:avain "Yhteensä" :arvo (+ sakkosumma bonukset-summa arvonvahennykset-summa)
+                                              :fmt :raha :lihavoi? true}]
+                                           (merkitse-taulukot
+                                              (koosta-yllapidon-taulukot sanktiot bonukset arvonvahennykset)
+                                              urakan-nimi)])
 
                                         ;; HOITO-URAKKA
-                                        (let [sanktiot-ilman-arvonvahennyksia (filterv #(not= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiot)
-                                              arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0) arvonvahennykset))
+                                        (let [kooste (koosta-urakan-taulukot
+                                                       sanktiot
+                                                       (or bonukset [])
+                                                       arvonvahennykset
+                                                       sanktiolajit
+                                                       bonuslajit)
+                                              sanktiot-uniikit (:sanktiot kooste)
+                                              arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0) (:arvonvahennykset kooste)))
+                                              sanktiot-tunnistetut-uniikit (:tunnetut kooste)
 
                                               ;; HUOM: hae-urakkataso-sanktiot palauttaa yhden rivin per
                                               ;; sanktiolaji/sanktiotyyppi-yhdistelmä, joten samalla sanktio_id:llä
                                               ;; voi olla useita rivejä. Yhteenvetolukuja (summa, määrät) varten
                                               ;; sanktiot pitää ottaa kertaalleen per sanktio_id.
-                                              sanktiot-uniikit (map first (vals (group-by :sanktio_id sanktiot-ilman-arvonvahennyksia)))
-
                                               ;; HUOM: sanktiolla ei välttämättä ole sanktio_profiili_riviä
                                               ;; (esim. vanhentunut/poistettu sanktiotyyppi). Nämä sanktiot
                                               ;; erotetaan omaan taulukkoonsa, mutta niiden summa lasketaan
                                               ;; mukaan "Sanktiot yhteensä" -lukuun - rahaa ei saa kadota.
-                                              tunnistamattomat-uniikit (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot-uniikit)
-                                              sanktiot-tunnistetut-uniikit (filterv #(some? (:sanktiolaji_koodi %)) sanktiot-uniikit)
-
                                               sanktiot-yhteensa (reduce + 0 (map #(or (:summa %) 0) sanktiot-uniikit))
                                               bonukset-yhteensa (reduce + 0 (map #(or (:summa %) 0) (or bonukset [])))
-                                              muistutusten-maara (count (filterv #(= "muistutus" (:sanktiolaji_koodi %)) sanktiot-tunnistetut-uniikit))
+                                              muistutusten-maara (count (filterv #(= "muistutus" (:sanktiolaji_koodi %)) (:tunnetut kooste)))
                                               vastuuhenkilon-vaihto-summa (reduce + 0
                                                                             (map #(or (:summa %) 0)
                                                                               (filterv #(= "vastuuhenkilon-vaihto" (:sanktiotyyppi_koodi %)) sanktiot-tunnistetut-uniikit)))
 
-                                              sanktio-data-map (reduce
-                                                                 (fn [m s]
-                                                                   (let [key [(:sanktiolaji_koodi s) (:sanktiotyyppi_koodi s)]]
-                                                                     (update m key (fnil + 0) (or (:summa s) 0))))
-                                                                 {}
-                                                                 sanktiot-tunnistetut-uniikit)
-
-                                              bonus-data-map (reduce
-                                                               (fn [m b]
-                                                                 (update m (:bonuslaji_koodi b) (fnil + 0) (or (:summa b) 0)))
-                                                               {}
-                                                               (or bonukset []))
-
-                                              bonus-lajit-jarjestyksessa (sort-by :bonuslaji_jarjestys bonuslajit)
-                                              arvonvahennys-taulukko (koosta-arvonvahennys-taulukko arvonvahennykset)]
+                                              ]
 
                                           [[{:avain "Sanktiot yhteensä" :arvo sanktiot-yhteensa :fmt :raha}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-yhteensa :fmt :raha}
@@ -361,51 +477,46 @@
                                             {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}
                                             {:avain "Yhteensä" :arvo (+ sanktiot-yhteensa bonukset-yhteensa arvonvahennykset-summa) :fmt :raha :lihavoi? true}]
 
-                                           (concat
-                                             (koosta-sanktio-taulukot sanktiolajit sanktio-data-map)
-                                             [(muodosta-bonus-taulukko bonus-lajit-jarjestyksessa bonus-data-map)
-                                              (into [:taulukko {:otsikko "Arvonvähennykset"
-                                                                :sheet-nimi "Arvonvähennykset"
-                                                                :excel-alkutekstit [[:otsikko-heading "Arvonvähennykset"]]
-                                                                :viimeinen-rivi-yhteenveto? true
-                                                                :tyhja (when (empty? arvonvahennykset) "Ei arvonvähennyksiä.")}]
-                                                arvonvahennys-taulukko)]
-                                             (when (seq tunnistamattomat-uniikit)
-                                               [(koosta-tunnistamattomat-taulukko tunnistamattomat-uniikit)]))]))]
+                                           (merkitse-taulukot (:taulukot kooste) urakan-nimi)]))]
 
     (into [:raportti {:nimi urakan-nimi
                       :orientaatio :landscape
-              :urakan-nimi urakan-nimi
-              :aikajakso aikajakso
-              :otsikon-koko :iso
-          :raportin-yleiset-tiedot {:raportin-nimi urakan-nimi}
-                :piilota-otsikko? true
-              :alkupvm alkupvm
-              :loppupvm loppupvm
-                      :excel-vain-urakka-erittely? urakka-erittely?
-                      :excel-urakkataso? (not urakka-erittely?)
-                      :excel-detail-sheet-nimi (when-not urakka-erittely?
-                                                 urakan-nimi)}
-         [:otsikko-title raportin-otsikko]
-         [:teksti (str urakan-nimi " | Aikaväli: " aikajakso)
-          {:luokka "raportin-otsikkorivi"}]
-           [:display-flex
-            [:sininen-laatikko {:otsikko "Yhteenveto"}
-             yhteenveto-data]]]
+                      :urakan-nimi urakan-nimi
+                      :aikajakso aikajakso
+                      :otsikon-koko :iso
+                      :raportin-yleiset-tiedot {:raportin-nimi urakan-nimi}
+                      :piilota-otsikko? true
+                      :alkupvm alkupvm
+                      :loppupvm loppupvm}
+      [:otsikko-title raportin-otsikko]
+      [:teksti (str urakan-nimi " | Aikaväli: " aikajakso)
+       {:luokka "raportin-otsikkorivi"}]
+      [:display-flex
+       [:sininen-laatikko {:otsikko "Yhteenveto"}
+        yhteenveto-data]]]
       (concat
-        (remove nil? rungon-osat)
+        (when (and (= :excel kasittelija)
+                (not urakka-erittely?))
+          [(koosta-excel-yhteenvetotaulukko
+             yhteenveto-data
+             [[:otsikko-title raportin-otsikko]
+              [:teksti (str urakan-nimi " | Aikaväli: " aikajakso)]])])
+        (when-not (and (= :excel kasittelija)
+                    urakka-erittely?)
+          (remove nil? rungon-osat))
         (when urakka-erittely?
-          [(koosta-urakka-erittely sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit)])))))
+          (koosta-urakka-erittely sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit
+            yllapitourakka?))))))
 
 
 
 (defn suorita
   "Raportin suoritin urakkataso-sanktioraportille (MHU25+).
-   Käyttää profiili-driven SQL-kyselyitä: hae-urakkataso-sanktiot ja hae-urakkataso-bonukset.
+   Käyttää profiilivetoisia SQL-kyselyitä: hae-urakkataso-sanktiot ja hae-urakkataso-bonukset.
    
    Tukee sekä hoito-urakkatyyppiä (profiilivetoiset kyselyt) että ylläpito-urakkatyyppiä 
    (ylläpitoluokka-ryhmittely)."
-  [db _user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm hoitovuosi urakkatyyppi]}]
+  [db _user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm hoitovuosi urakkatyyppi kasittelija]}]
   (let [urakan-tiedot (when urakka-id
                         (first (urakat-kyselyt/hae-urakka db urakka-id)))
         urakan-nimi (or (:nimi urakan-tiedot)
@@ -415,82 +526,44 @@
                         "Koko maa")
                       "")
 
-        ;; Tunnista urakkatyyppi (Default: hoito)
+        ;; Tunnista urakkatyyppi (oletus: hoito)
         yllapitourakka? (urakka-domain/yllapitourakka? (or urakkatyyppi
                                                          (keyword (:tyyppi urakan-tiedot))
                                                          :hoito))
+        hoitovuosi (or hoitovuosi
+                      (when-let [urakan-alkupvm (:alkupvm urakan-tiedot)]
+                        (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm alkupvm)))
+        kyselyparametrit (select-keys
+                           {:urakka urakka-id
+                            :elinvoimakeskus elinvoimakeskus-id
+                            :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
+                            :alku alkupvm
+                            :loppu loppupvm
+                            :hoitovuosi hoitovuosi}
+                           [:urakka :elinvoimakeskus :urakkatyyppi :alku :loppu :hoitovuosi])
 
         ;; Valitse kyselyt urakkatyypin mukaan
         [sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit]
         (if yllapitourakka?
           ;; Ylläpito-urakka: käytetään ylläpito-kyselyä
-          (let [hoitovuosi (or hoitovuosi
-                             (when-let [urakan-alkupvm (:alkupvm urakan-tiedot)]
-                               (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm alkupvm)))
-                kyselyparametrit {:urakka urakka-id
-                                  :elinvoimakeskus elinvoimakeskus-id
-                                  :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                  :alku alkupvm
-                                  :loppu loppupvm
-                                  :hoitovuosi hoitovuosi}
-                sanktiot-yllapito (hae-urakkataso-yllapito-sanktiot db kyselyparametrit)
+          (let [sanktiot-yllapito (hae-urakkataso-yllapito-sanktiot db kyselyparametrit)
                 bonukset-yllapito (hae-urakkataso-yllapito-bonukset db kyselyparametrit)
                 arvonvahennykset (filterv #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %))
                                    sanktiot-yllapito)]
-            [sanktiot-yllapito bonukset-yllapito arvonvahennykset nil nil])
+            [(remove #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %))
+               sanktiot-yllapito)
+             bonukset-yllapito
+             arvonvahennykset
+             nil
+             nil])
           ;; Hoito-urakka: käytetään profiilivetoisia kyselyitä
-          (let [hoitovuosi (or hoitovuosi
-                             (when-let [urakan-alkupvm (:alkupvm urakan-tiedot)]
-                               (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm alkupvm)))
-                vanhan-muodon-sanktiot (hae-sanktiot db {:urakka urakka-id
-                                                         :elinvoimakeskus elinvoimakeskus-id
-                                                         :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))
-                                                         :alku alkupvm
-                                                         :loppu loppupvm})
-                sanktiolajit (hae-urakkataso-sanktiolajit db {:urakka urakka-id
-                                                              :elinvoimakeskus elinvoimakeskus-id
-                                                              :hoitovuosi hoitovuosi
-                                                              :alku alkupvm
-                                                              :loppu loppupvm
-                                                              :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))})
-                bonuslajit (hae-urakkataso-bonuslajit db {:urakka urakka-id
-                                                          :elinvoimakeskus elinvoimakeskus-id
-                                                          :hoitovuosi hoitovuosi
-                                                          :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))})
-                profiili-sanktiot (hae-urakkataso-sanktiot db {:urakka urakka-id
-                                                               :elinvoimakeskus elinvoimakeskus-id
-                                                               :alku alkupvm
-                                                               :loppu loppupvm
-                                                               :hoitovuosi hoitovuosi
-                                                               :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))})
-                tunnetut-sanktio-idt (into #{} (keep :sanktio_id) profiili-sanktiot)
-                puuttuvat-sanktiot (->> vanhan-muodon-sanktiot
-                                     (filter #(and (:id %)
-                                                (not (contains? tunnetut-sanktio-idt (:id %)))))
-                                     (map #(assoc %
-                                             :sanktio_id (:id %)
-                                             :sanktiolaji_koodi (when (= "arvonvahennyssanktio" (:sakkoryhma %))
-                                                                  "arvonvahennyssanktio")
-                                             :sanktiolaji_nimi (when (= "arvonvahennyssanktio" (:sakkoryhma %))
-                                                                 "Arvonvähennys")))
-                                     vec)
-                sanktiot (into profiili-sanktiot puuttuvat-sanktiot)
-                bonukset (hae-urakkataso-bonukset db {:urakka urakka-id
-                                                      :elinvoimakeskus elinvoimakeskus-id
-                                                      :alku alkupvm
-                                                      :loppu loppupvm
-                                                      :hoitovuosi hoitovuosi
-                                                      :urakkatyyppi (when urakkatyyppi (name urakkatyyppi))})
-                arvonvahennykset (filterv #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiot)
-                tunnetut-arvonvahennys-idt (into #{} (keep :sanktio_id) arvonvahennykset)
-                puuttuvat-arvonvahennykset (->> vanhan-muodon-sanktiot
-                                             (filter #(= "arvonvahennyssanktio" (:sakkoryhma %)))
-                                             (remove #(contains? tunnetut-arvonvahennys-idt (:id %)))
-                                             (map #(assoc %
-                                                     :sanktio_id (:id %)
-                                                     :sanktiolaji_koodi "arvonvahennyssanktio"
-                                                     :sanktiolaji_nimi "Arvonvähennys")))]
-            [sanktiot bonukset (into arvonvahennykset puuttuvat-arvonvahennykset) sanktiolajit bonuslajit]))]
+          (let [sanktiot (hae-urakkataso-sanktiot db kyselyparametrit)
+                bonukset (hae-urakkataso-bonukset db kyselyparametrit)
+                sanktiolajit (hae-urakkataso-sanktiolajit db kyselyparametrit)
+                bonuslajit (hae-urakkataso-bonuslajit db kyselyparametrit)
+                arvonvahennykset (filterv #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiot)]
+            [sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit]))]
     (koosta-urakkataso-runko urakan-nimi alkupvm loppupvm sanktiot bonukset arvonvahennykset sanktiolajit bonuslajit
       yllapitourakka?
-      (nil? urakka-id))))
+      (nil? urakka-id)
+      kasittelija)))
