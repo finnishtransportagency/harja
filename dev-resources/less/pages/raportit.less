@@ -15,16 +15,16 @@
       display: inline-block;
   }
 
-    > h1.raportti-otsikko {
-            line-height: 2rem;
-            margin: 2rem 0;
-            display: block;
-    }
+  > h1.raportti-otsikko {
+    line-height: 2rem;
+    margin: 2rem 0;
+    display: block;
+  }
 
-    .raportin-otsikkorivi {
-            padding-bottom: 0.5rem;
-            margin-bottom: 2rem;
-      border-bottom: 1px solid #d6d6d6;
+  .raportin-otsikkorivi {
+    padding-bottom: 0.5rem;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid @harmaa-vaalea;
   }
 
   .raportin-ajotiedot {
@@ -64,7 +64,7 @@
         }
         > tr:first-child {
             > th {
-                border-top: 1px solid #d6d6d6;
+                border-top: 1px solid @harmaa-vaalea;
             }
         }
         > tr:last-child {
@@ -93,10 +93,10 @@
             background-color: @gray240;
         }
         &.himmennetty-rivi {
-            color: #858585 !important;
+            color: @black-lighter;
             td,
             td * {
-                color: #858585 !important;
+                color: @black-lighter;
             }
         }
         &.valkoinen-rivi {
@@ -107,7 +107,7 @@
         border-color: @raportin-tehostevari;
     }
     table.grid {
-        border: 1px solid #d6d6d6;
+        border: 1px solid @harmaa-vaalea;
     }
     tr.yhteenveto {
         background-color: @harmaa13;
@@ -115,7 +115,7 @@
         border-top: 2px solid @raportin-tehostevari;
         font-weight: bold;
     }
-    
+
     td, th {
         &.hennosti-korostettu-solu {
             background-color: @hento-korostusvari;
