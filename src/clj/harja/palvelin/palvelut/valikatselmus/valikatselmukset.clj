@@ -500,8 +500,8 @@
                 {:id (:erilliskustannus_id paatos-tietokannasta) :urakka-id (:urakkaid paatos-tietokannasta)}))
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
-              (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                                                       :urakka-id (:urakkaid paatos-tietokannasta)}))
+              (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
+                                        :urakka-id (:urakkaid paatos-tietokannasta)}))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
