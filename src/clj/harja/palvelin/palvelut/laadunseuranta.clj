@@ -520,7 +520,7 @@
     (sanktiot/merkitse-maksuera-likaiseksi! c sanktio-id)
     sanktio-id))
 
-(defn poista-suorasanktio
+(defn poista-sanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n.
 
   Laatupoikkeaman kautta määrätty (ei-suora)sanktio poistetaan poista-laatupoikkeaman-sanktio
@@ -570,9 +570,9 @@
           (get-in tiedot [:laatupoikkeama :urakka])
           (:hoitokausi tiedot)))
 
-      :poista-suorasanktio
+      :poista-sanktio
       (fn [user tiedot]
-        (poista-suorasanktio db user tiedot))
+        (poista-sanktio db user tiedot))
 
       :hae-laatupoikkeaman-tiedot
       (fn [user {:keys [urakka-id laatupoikkeama-id]}]
@@ -641,7 +641,7 @@
       :hae-bonus-profiilit-admin
       :hae-bonus-profiilin-detalji-admin
       :tallenna-suorasanktio
-      :poista-suorasanktio
+      :poista-sanktio
       :hae-urakan-laatupoikkeama-liitteet
       :hae-sanktion-liitteet
       :hae-bonuksen-liitteet)
