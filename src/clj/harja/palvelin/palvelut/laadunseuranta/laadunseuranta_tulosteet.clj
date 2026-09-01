@@ -3,6 +3,7 @@
             [harja.pvm :as pvm]
             [harja.fmt :as fmt]
             [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as domain-sanktiotyyppi]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.tierekisteri :as tierekisteri]))
 
@@ -63,7 +64,7 @@
                             "Ei liity kohteeseen"))
     yllapitourakka? (conj (domain-sanktio/yllapidon-sanktiofraasin-nimi (:vakiofraasi r)))
     (not yllapitourakka?) (conj (if-let [tyyppi (:tyyppi r)]
-                                  (domain-sanktio/sanktiotyypin-nimi
+                                  (domain-sanktiotyyppi/sanktiotyypin-nimi
                                     (domain-sanktio/sanktiolaji->teksti (:laji r))
                                     tyyppi)
                                   "–"))

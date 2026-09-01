@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [slingshot.test]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.pvm :as pvm]))
 
 (deftest urakan-mahdolliset-sanktiolajit
@@ -119,13 +120,13 @@
 (deftest sanktiotyypin-nimi-toistaa-lajin-nimen-kun-tyyppia-ei-ole
   (testing "Sanktiotyypin koodi 0 käyttää sanktiolajin nimeä"
     (is (= "Vastuuhenkilön tenttipistemäärän alentuminen"
-           (sanktio-domain/sanktiotyypin-nimi
+           (sanktiotyyppi-domain/sanktiotyypin-nimi
              "Vastuuhenkilön tenttipistemäärän alentuminen"
              {:koodi 0
               :nimi "Ei tarvita sanktiotyyppiä"}))))
   (testing "Erillinen sanktiotyyppi näytetään omalla nimellään"
     (is (= "Talvihoito"
-           (sanktio-domain/sanktiotyypin-nimi
+           (sanktiotyyppi-domain/sanktiotyypin-nimi
              "Muistutus"
              {:koodi 2
               :nimi "Talvihoito"})))))

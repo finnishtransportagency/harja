@@ -27,6 +27,7 @@
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -311,7 +312,7 @@
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
          {:otsikko "Tyyppi" :nimi :sanktiotyyppi
           :hae (fn [rivi]
-                 (sanktio-domain/sanktiotyypin-nimi
+                 (sanktiotyyppi-domain/sanktiotyypin-nimi
                    (sanktio-domain/sanktiolaji->teksti (:laji rivi))
                    (:tyyppi rivi)))
           :leveys 2.5 :fmt #(or % "–")})

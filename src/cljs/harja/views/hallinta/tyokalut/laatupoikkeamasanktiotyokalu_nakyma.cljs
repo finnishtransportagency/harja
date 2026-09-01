@@ -3,6 +3,7 @@
   (:require [tuck.core :refer [tuck]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
@@ -111,7 +112,7 @@
         :tyyppi :valinta
         :valinta-arvo identity
         :valinnat tyypit
-        :valinta-nayta #(or (sanktio-domain/sanktiotyypin-nimi
+        :valinta-nayta #(or (sanktiotyyppi-domain/sanktiotyypin-nimi
                               (sanktio-domain/sanktiolaji->teksti (:laji sanktio))
                               %)
                           "Valitse sanktiotyyppi")

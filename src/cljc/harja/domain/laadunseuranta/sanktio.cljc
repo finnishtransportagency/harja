@@ -272,13 +272,6 @@
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     nil))
 
-(defn sanktiotyypin-nimi
-  "Palauttaa sanktiotyypin nimen. Koodilla 0 sanktiotyyppi käyttää sanktiolajin nimeä."
-  [sanktiolajin-nimi sanktiotyyppi]
-  (if (= 0 (:koodi sanktiotyyppi))
-    sanktiolajin-nimi
-    (:nimi sanktiotyyppi)))
-
 (defn bonuslaji->teksti
   "Erilliskustannustyypin (ja 'yllapidon_bonus' sanktion) teksti avainsanaa vastaan"
   [avainsana]

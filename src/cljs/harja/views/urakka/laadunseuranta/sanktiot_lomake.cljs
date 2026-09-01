@@ -2,6 +2,7 @@
   "Sanktiolomake"
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
@@ -277,7 +278,7 @@
               :valinta-nayta (fn [arvo]
                                (if (or (nil? arvo) (nil? (:nimi arvo)))
                                  "Valitse sanktiotyyppi"
-                                 (sanktio-domain/sanktiotyypin-nimi
+                                 (sanktiotyyppi-domain/sanktiotyypin-nimi
                                    (tiedot/valitun-urakan-sanktiolajin-nimi (:laji @muokattu))
                                    arvo)))
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
@@ -288,7 +289,7 @@
              {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
               ::lomake/col-luokka "col-xs-12"
               :hae (fn [rivi]
-                     (sanktio-domain/sanktiotyypin-nimi
+                     (sanktiotyyppi-domain/sanktiotyypin-nimi
                        (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
                        (:tyyppi rivi)))}))
 
