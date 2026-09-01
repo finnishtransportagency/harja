@@ -1,8 +1,10 @@
 (ns harja.palvelin.raportointi.raportit.sanktio-test
   (:require [clojure.test :refer :all]
-       [harja.pvm :as pvm]
+            [harja.pvm :as pvm]
+            [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.raportointi.raportit.sanktio :as sanktio]
-            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as tulosteet]))
+            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as tulosteet])
+  (:import (org.apache.poi.xssf.usermodel XSSFWorkbook)))
 
 (deftest urakkatasoraportin-otsikko-noudattaa-yhteista-rakennetta
   (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
@@ -28,6 +30,36 @@
     (is (= "Urakka" (get-in raportti [1 :urakan-nimi])))
     (is (= aikajakso (get-in raportti [1 :aikajakso])))
     (is (= :iso (get-in raportti [1 :otsikon-koko])))))
+
+(deftest urakkatasoraportin-excel-yhteenveto-sailyttaa-otsikon
+  (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
+        loppupvm #inst "2026-09-30T00:00:00.000-00:00"
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+        raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  alkupvm
+                  loppupvm
+                  []
+                  []
+                  []
+                  []
+                  []
+                  false
+                  false
+                  :excel)
+        workbook (XSSFWorkbook.)]
+    (excel/muodosta-excel raportti workbook)
+    (let [sheet (.getSheetAt workbook 0)
+          tekstit (mapcat (fn [rivi]
+                            (keep (fn [solu]
+                                    (when (= org.apache.poi.ss.usermodel.CellType/STRING
+                                             (.getCellType solu))
+                                      (.getStringCellValue solu)))
+                                  (iterator-seq (.cellIterator rivi))))
+                          (iterator-seq (.rowIterator sheet)))]
+      (is (= "Yhteenveto" (.getSheetName sheet)))
+      (is (some #(= "Sanktiot, bonukset ja arvonvähennykset" %) tekstit))
+      (is (some #(= (str "Urakka | Aikaväli: " aikajakso) %) tekstit)))))
 
 (deftest sanktiolajit-ja-tyypit-naytetaan-ilman-toteutuneita-arvoja
   (let [sanktiolajit [{:sanktiolaji_koodi "sakko"
@@ -251,9 +283,181 @@
                   false)
         taulukko (some #(when (and (vector? %)
                                 (= :taulukko (first %))
-                                (= "sakko" (get-in % [1 :sheet-nimi])))
+                                (= "Sakko" (get-in % [1 :otsikko])))
                           %)
                    raportti)
         rivit (nth taulukko 3)]
     (is (= ["Sakko" 100] (:rivi (first rivit))))
     (is (= ["Yhteensä" 100] (:rivi (last rivit))))))
+
+(deftest urakkaerittely-tuotetaan-raportin-suorina-alkioina
+  ;; Regressio: urakkaerittely palautettiin aiemmin muodossa
+  ;; [:otsikko "Urakat" [:otsikko urakka] [:taulukko ...] ...], jolloin HTML- ja
+  ;; PDF-muodostimet destrukturoivat vain [_ teksti] ja pudottivat taulukot
+  ;; äänettömästi. Erittelyn alkioiden pitää olla raportin suoria sisaralkioita.
+  (let [sanktio {:sanktio_id 1
+                 :urakka_id 42
+                 :urakan_nimi "Testiurakka"
+                 :sanktiolaji_koodi "sakko"
+                 :sanktiolaji_nimi "Sakko"
+                 :sanktiolaji_jarjestys 1
+                 :sanktiotyyppi_koodi "sakko"
+                 :sanktiotyyppi_nimi "Sakko"
+                 :summa 100}
+        raportti (#'sanktio/koosta-urakkataso-runko
+                   "Koko maa"
+                   (java.util.Date.)
+                   (java.util.Date.)
+                   [sanktio]
+                   []
+                   []
+                   [sanktio]
+                   []
+                   false
+                   true)
+        alkiot (vec (drop 2 raportti))]
+    (is (every? #(and (vector? %) (keyword? (first %))) alkiot)
+      "Kaikki raportin alkiot ovat raporttielementtejä")
+    (is (some #(= [:otsikko "Urakat"] %) alkiot)
+      "Urakat-otsikko on oma alkionsa")
+    (is (some #(= [:otsikko "Testiurakka"] %) alkiot)
+      "Urakan otsikko on oma alkionsa")
+    (is (every? #(= 2 (count %))
+          (filter #(= :otsikko (first %)) alkiot))
+      "Otsikkoalkioissa ei ole kiedottuja lapsielementtejä")
+    (is (some #(and (= :taulukko (first %))
+                 (= "Testiurakka" (:sheet-nimi (second %))))
+          alkiot)
+      "Urakkaerittelyn taulukot ovat raportin suoria alkioita")))
+
+(deftest arvonvahennys-lasketaan-yhteen-vain-kerran
+  (let [arvonvahennys {:sanktio_id 42
+                       :sanktiolaji_koodi "arvonvahennyssanktio"
+                       :sanktiolaji_nimi "Arvonvähennys"
+                       :summa 100}
+        raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  []
+                  []
+                  [arvonvahennys arvonvahennys]
+                  []
+                  []
+                  false)
+        yhteenveto (some #(when (and (vector? %)
+                                  (= :sininen-laatikko (first %)))
+                            %)
+                     (tree-seq coll? seq raportti))
+        yhteensa (some #(when (= "Yhteensä" (:avain %)) %)
+                       (nth yhteenveto 2))]
+    (is (= 100 (:arvo yhteensa)))))
+
+(deftest urakkaerittelyn-arvonvahennys-lasketaan-yhteen-vain-kerran
+  (let [arvonvahennys {:sanktio_id 42
+                       :urakka_id 7
+                       :urakan_nimi "Urakka"
+                       :sanktiolaji_koodi "arvonvahennyssanktio"
+                       :sanktiolaji_nimi "Arvonvähennys"
+                       :summa 100}
+        raportti (#'sanktio/koosta-urakkataso-runko
+                  "Koko maa"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  []
+                  []
+                  [arvonvahennys arvonvahennys]
+                  []
+                  []
+                  false
+                  true)
+        taulukko (some #(when (and (vector? %)
+                                (= :taulukko (first %))
+                                (= "Arvonvähennykset" (get-in % [1 :otsikko])))
+                          %)
+                   raportti)
+        yhteensa (some #(when (= "Yhteensä" (first (:rivi %))) %)
+                       (nth taulukko 3))]
+    (is (= 100 (second (:rivi yhteensa))))))
+
+(deftest yllapitoluokat-esitetaan-pk-luokkina
+  (let [sanktiot [{:yllapitoluokka 4 :summa 100}
+                  {:yllapitoluokka nil :summa 200}]
+        taulukko (#'sanktio/koosta-yllapito-taulukko sanktiot)
+        rivit (map :rivi (nth taulukko 3))]
+    (is (some #(= ["PK-luokka 2a" 1 100] %) rivit))
+    (is (some #(= ["Ei PK-luokkaa" 1 200] %) rivit))))
+
+(deftest samannimiset-urakat-saavat-vakaat-valilehtinimet
+  (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
+        loppupvm #inst "2030-09-30T00:00:00.000-00:00"
+        sanktio (fn [urakka-id sanktio-id]
+                  {:urakka_id urakka-id
+                   :sanktio_id sanktio-id
+                   :urakan_nimi "Sama urakka"
+                   :urakan_alkupvm alkupvm
+                   :urakan_loppupvm loppupvm
+                   :sanktiolaji_koodi "sakko"
+                   :sanktiolaji_nimi "Sakko"
+                   :sanktiolaji_jarjestys 1
+                   :sanktiotyyppi_koodi "sakko"
+                   :sanktiotyyppi_nimi "Sakko"
+                   :summa 100})
+        sanktiolaji (fn [urakka-id]
+                      {:urakka_id urakka-id
+                       :sanktiolaji_koodi "sakko"
+                       :sanktiolaji_nimi "Sakko"
+                       :sanktiolaji_jarjestys 1
+                       :sanktiotyyppi_koodi "sakko"
+                       :sanktiotyyppi_nimi "Sakko"})
+        raportti (#'sanktio/koosta-urakkataso-runko
+                  "Koko maa"
+                  alkupvm
+                  loppupvm
+                  [(sanktio 2 22) (sanktio 1 11)]
+                  []
+                  []
+                  [(sanktiolaji 2) (sanktiolaji 1)]
+                  []
+                  false
+                  true
+                  :excel)
+        sheet-nimet (->> raportti
+                      (tree-seq coll? seq)
+                      (filter #(and (vector? %)
+                                 (= :taulukko (first %))))
+                      (map #(get-in % [1 :sheet-nimi]))
+                      distinct
+                      vec)]
+    (is (= ["Sama urakka 2025-2030 (1)"
+            "Sama urakka 2025-2030 (2)"]
+           sheet-nimet))))
+
+(deftest tunnistamaton-yllapitosanktio-erotellaan-sakoista
+  (let [tunnettu {:sanktio_id 1
+                  :sanktiolaji_koodi "yllapidon_sakko"
+                  :yllapitoluokka 1
+                  :summa -100}
+        tunnistamaton {:sanktio_id 2
+                       :sanktiolaji_koodi nil
+                       :sanktiotyyppi_nimi "Tuntematon"
+                       :summa -50}
+        rivin-haku (fn [taulukko otsikko]
+                     (some #(let [rivi (or (:rivi %) %)]
+                              (when (= otsikko (first rivi))
+                                rivi))
+                       (nth taulukko 3)))
+        taulukot (#'sanktio/koosta-yllapidon-taulukot
+                   [tunnettu tunnistamaton]
+                   []
+                   [])
+        sakko-taulukko (first (filter #(= "Sakot ylläpitoluokittain"
+                                          (get-in % [1 :otsikko]))
+                                  taulukot))
+        tunnistamattomat-taulukko (first (filter #(= "Tunnistamattomat sanktiot"
+                                                       (get-in % [1 :otsikko]))
+                                           taulukot))]
+    (is (= ["Yhteensä" 1 -100]
+           (rivin-haku sakko-taulukko "Yhteensä")))
+    (is (= ["Tuntematon" -50]
+           (rivin-haku tunnistamattomat-taulukko "Tuntematon")))))
