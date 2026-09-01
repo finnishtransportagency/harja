@@ -777,11 +777,11 @@
    "Tilaajan_laadunvalvoja" #{"R*"},
    "Tilaajan_turvallisuusvastaava" #{"R"},
    "vastuuhenkilo" #{"R"}}}
- {:sym raportit-talvisuolankokonaiskaytto,
+ {:sym raportit-talvisuolanlampotilaraportti,
   :osio "Raportit",
-  :nakyma "Talvisuolan kokonaiskäyttö",
-  :taso1 "raportit-talvisuolan",
-  :kuvaus "Osio 'Raportit' näkymä 'Talvisuolan kokonaiskäyttö'",
+  :nakyma "Talvisuolanlämpötilaraportti",
+  :taso1 "raportit-talvisuolanlampotilaraportti",
+  :kuvaus "Osio 'Raportit' näkymä 'Talvisuolanlämpötilaraportti'",
   :roolien-oikeudet
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
