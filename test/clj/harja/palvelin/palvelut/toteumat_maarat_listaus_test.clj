@@ -182,7 +182,6 @@
                                    {:urakka-id urakka-id
                                     :tehtavaryhma rajaus
                                     :hoitokauden-alkuvuosi 2024})
-        _ (println maara-jarjestelmakirjaus)
         _ (u "UPDATE kayttaja SET jarjestelma = FALSE WHERE kayttajanimi = 'jvh'; ") ] ;; Palautetaan käyttäjä normaaliin tilaan.
         (is (= 5M (reduce + (map #(or (:maara %) 0) maara-kasinkirjaus))) "Käsin kirjattu määrä palautuu tehtävälle Päällystettyjen teiden palteiden poisto.")
         (is (= 0 (reduce + (map #(or (:maara %) 0) maara-jarjestelmakirjaus))) "Järjestelmän kirjaus ei palaudu tehtävälle Päällystettyjen teiden palteiden poisto.")))
