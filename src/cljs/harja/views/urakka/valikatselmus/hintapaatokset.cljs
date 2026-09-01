@@ -112,6 +112,7 @@
         [:div.muokkaustoiminnot
          (when (:virheet paatos)
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+
          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (not (:virheet paatos))
           ;; Vahvista 
           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatos))
@@ -189,15 +190,15 @@
            [:div.rivi-lukema (fmt/euro-opt false (:siirrettava_maara paatos))]])
         [:hr.paatos-hr]
 
-        (when (:virhe paatos)
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]])
+        [:div.muokkaustoiminnot
+         (when (:virheet paatos)
+           [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
-        ;; Päätöksenteko napit
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-         ;; Vahvista
-         #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
-         ;; Peru päätös 
-         #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
-                paatos
-                (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]])]))
+         ;; Päätöksenteko napit
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+          ;; Vahvista
+          #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
+          ;; Peru päätös
+          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                 paatos
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))

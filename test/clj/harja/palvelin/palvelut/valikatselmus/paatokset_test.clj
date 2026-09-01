@@ -1487,7 +1487,8 @@
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                        :tavoitehinta-oikaistu (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
-                                       :kirjallisesti-sovitut-muutokset muutokset}]
+                                       :kirjallisesti-sovitut-muutokset muutokset
+                                       :hoitovuoden-lopun-kattohinta (+ hv_lopun_tavoitehinta_ennen_indkorj 100000M)}]
         vastaus (try
                   (with-redefs [;; valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
@@ -1553,7 +1554,7 @@
 
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun indeksikorjaus" (:nimi poistettu-paatos)))
-    (is (not (nil? (:virhe poistettu-paatos))))))
+    (is (not (nil? (:virheet poistettu-paatos))))))
 
 ;; Hoitokauden lopun hinnat - lisäys
 (deftest kysely-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-2024-test
