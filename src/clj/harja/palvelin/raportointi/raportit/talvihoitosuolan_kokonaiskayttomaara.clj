@@ -88,10 +88,9 @@
   Vaikutus on arvo 0 - 30, joka kertoo prosenteista. 10 = 10%."
   [kayttoraja vaikutus]
   ;; Varmista, että molemmat arvot ovat annettu
-  (when (and kayttoraja vaikutus (<= vaikutus 30) (>= vaikutus 0))
-    (* (float kayttoraja) (+ (/ vaikutus 100) 1))))
-
-
+  (if (and kayttoraja vaikutus (<= vaikutus 30) (>= vaikutus 0))
+    (* (float kayttoraja) (+ (/ vaikutus 100) 1))
+    kayttoraja))
 
 (defn paattele-kaytettava-keskilampotilajakso
   "Päätellään pitkän aikajakson keskilämpötila urakan alkuvuodesta"
@@ -137,7 +136,7 @@
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu - Ei valmistuneita hoitovuosia")))
 
-(defn yhteenvetolaatikko [kasittelija yhteevetodata ]
+(defn yhteenvetolaatikko [kasittelija yhteevetodata]
   (if (= kasittelija :excel)
     [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"
                 :viimeinen-rivi-yhteenveto? false
@@ -158,7 +157,7 @@
       ["Suurin urakassa sallittu käyttömäärä + 5 %"
        (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
          "-"
-         [:arvo {:arvo (* 1.05 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
+         [:arvo {:arvo (* 1.05M (:kohtuull-kayttoraja-yhteensa yhteevetodata))
                  :desimaalien-maara 2}])]
       ["Toteuma koko urakka-ajalta"
        (if (= 0 (:toteuma-yhteensa yhteevetodata))
@@ -166,8 +165,8 @@
          [:arvo {:arvo (:toteuma-yhteensa yhteevetodata)
                  :desimaalien-maara 2}])]
       ["josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma"
-       (if (> (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
-         [:arvo {:arvo (- (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+       (if (> (:toteuma-yhteensa yhteevetodata) (* 1.05M (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+         [:arvo {:arvo (- (:toteuma-yhteensa yhteevetodata) (* 1.05M (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
                  :desimaalien-maara 2}]
          "Ei ylitystä")]]]
 
@@ -187,15 +186,15 @@
       {:avain "Suurin urakassa sallittu käyttömäärä + 5 %"
        :arvo (if (= 0 (:kohtuull-kayttoraja-yhteensa yhteevetodata))
                "-"
-               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)) 2 2 true)))}
+               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (* 1.05M (:kohtuull-kayttoraja-yhteensa yhteevetodata)) 2 2 true)))}
       {:avain "Toteuma koko urakka-ajalta"
        :arvo (if (= 0 (:toteuma-yhteensa yhteevetodata))
                "-"
                (fmt/yksikolla "t" (fmt/desimaaliluku-opt (:toteuma-yhteensa yhteevetodata) 2 2 true)))
        :lihavoi? true}
       {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma"
-       :arvo (if (> (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
-               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (- (:toteuma-yhteensa yhteevetodata) (* 1,05 (:kohtuull-kayttoraja-yhteensa yhteevetodata))) 2 2 true))
+       :arvo (if (> (:toteuma-yhteensa yhteevetodata) (* 1.05M (:kohtuull-kayttoraja-yhteensa yhteevetodata)))
+               (fmt/yksikolla "t" (fmt/desimaaliluku-opt (- (:toteuma-yhteensa yhteevetodata) (* 1.05M (:kohtuull-kayttoraja-yhteensa yhteevetodata))) 2 2 true))
                "Ei ylitystä")
        :lihavoi? true}]]))
 
