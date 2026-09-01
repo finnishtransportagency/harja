@@ -15,7 +15,7 @@
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [harja.ui.grid :as grid]
-            [harja.loki :refer [log error]]
+            [harja.loki :refer [log warn error]]
             [harja.tiedot.urakka :as u]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -35,18 +35,34 @@
       :vain-arvo)))
 
 (defn- validoi-raporttielementti! [indeksi elementti]
-  (when (and (vector? elementti)
-          (not (keyword? (first elementti))))
-    (throw (js/Error.
-             (str "Raportin sisältöelementti ei ole raporttielementti indeksissä " indeksi
-               ". Odotettiin avainsanalla alkavaa vektoria, saatiin: " (pr-str elementti)
-               ". Tarkista, ettei raporttirungossa ole ylimääräistä vektoria, esimerkiksi [[[:taulukko ...]]]."))))
-  elementti)
+  (if (and (vector? elementti)
+        (not (keyword? (first elementti))))
+    (do
+      (warn
+        (str "Raportin sisältöelementti ei ole raporttielementti indeksissä " indeksi
+          ". Odotettiin avainsanalla alkavaa vektoria, saatiin: " (pr-str elementti)
+          ". Elementti ohitetaan. Tarkista, ettei raporttirungossa ole ylimääräistä vektoria, "
+          "esimerkiksi [[[:taulukko ...]]]."))
+      nil)
+    elementti))
 
 (defn- avaimellinen-html [html avain]
-  (if (vector? html)
-    (with-meta html {:key avain})
-    html))
+  (cond
+    (vector? html) (with-meta html (assoc (meta html) :key avain))
+    (seq? html) (map-indexed
+                  (fn [indeksi elementti]
+                    (avaimellinen-html elementti (str avain "-" indeksi)))
+                  html)
+    :else html))
+
+(defn- muodosta-raporttielementti [elementti avain]
+  (avaimellinen-html (muodosta-html elementti) avain))
+
+(defn- muodosta-avaimellinen-html [indeksi avain elementti]
+  (let [elementti (validoi-raporttielementti! indeksi elementti)]
+    (when (some? elementti)
+      (with-meta [muodosta-raporttielementti elementti avain]
+        {:key avain}))))
 
 (defmethod muodosta-html :vain-arvo [arvo] arvo)
 
@@ -367,14 +383,14 @@
                   (when rivita? {:white-space "pre-line"})
                   (when alamarginaali {:margin-bottom alamarginaali}))}
    teksti
-  (when infopallura (muodosta-html [:infopallura infopallura]))])
+   (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :teksti-paksu [[_ teksti {:keys [vari infopallura leveysprosentti]}]]
   [:div {:style (merge
                   {:font-weight 700
                    :color (when vari vari)}
                   (when leveysprosentti {:width (str leveysprosentti "%")}))} teksti
-  (when infopallura (muodosta-html [:infopallura infopallura]))])
+   (when infopallura (muodosta-html [:infopallura infopallura]))])
 
 (defmethod muodosta-html :varoitusteksti [[_ teksti]]
   (muodosta-html [:teksti teksti {:vari "#dd0000"}]))
@@ -454,10 +470,8 @@
     [:div.display-flex.display-container]
     (map-indexed
       (fn [i d]
-        (avaimellinen-html
-          (muodosta-html
-            (validoi-raporttielementti! i d))
-          (str "display-flex-" i)))
+        (let [avain (str "display-flex-" i)]
+          (muodosta-avaimellinen-html i avain d)))
       data)))
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
@@ -466,7 +480,7 @@
 
 (defmethod muodosta-html :raportti [[_ raportin-tunnistetiedot & sisalto]]
   (log "muodosta html raportin-tunnistetiedot " (pr-str raportin-tunnistetiedot))
-  (let [html [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
+  [:div.raportti {:class (:tunniste raportin-tunnistetiedot)}
 
    ;; Raporteille mahdollista nyt antaa isompi otsikko
    (when (:nimi raportin-tunnistetiedot)
@@ -487,16 +501,12 @@
 
    (keep-indexed (fn [i elementti]
                    (when elementti
-                     (avaimellinen-html
-                       (muodosta-html
-                         (validoi-raporttielementti! i elementti))
-                       i)))
+                     (muodosta-avaimellinen-html i i elementti)))
      (mapcat (fn [sisalto]
                (if (list? sisalto)
                  sisalto
                  [sisalto]))
-       sisalto))]]
-    html))
+       sisalto))])
 
 (defmethod muodosta-html :aikajana [[_ optiot rivit]]
   (aikajana/aikajana optiot rivit))
