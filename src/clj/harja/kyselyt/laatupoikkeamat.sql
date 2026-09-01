@@ -330,6 +330,16 @@ SELECT l.id                  AS id,
  WHERE el.bonus = :bonus
  ORDER BY l.luotu ASC;
 
+-- name: hae-laatupoikkeaman-tallennuksen-perustiedot
+-- Hakee laatupoikkeaman ne kentät, joita sanktiolomake ei näytä/käsittele, mutta jotka
+-- päivitetään perustietojen tallennuksessa. Näitä tarvitaan, jotta laatupoikkeaman kautta
+-- tehdyn sanktion muokkaus ei tyhjennä kyseisiä kenttiä.
+SELECT lp.tekija                        AS tekija,
+       lp.selvitys_pyydetty             AS selvitys_pyydetty,
+       lp."sisaltaa-poikkeamaraportin?" AS "sisaltaa-poikkeamaraportin?"
+  FROM laatupoikkeama lp
+ WHERE lp.id = :id;
+
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
 UPDATE laatupoikkeama
@@ -399,6 +409,19 @@ SET kasittelyaika   = :kasittelyaika,
   muokkaaja         = :muokkaaja,
   muokattu          = current_timestamp
 WHERE id = :id;
+
+-- name: peru-laatupoikkeaman-paatos!
+-- Peruu laatupoikkeaman päätöksen nollaamalla käsittelytiedot ja päätöksen. Tämä poistaa
+-- laatupoikkeaman lukituksen, jolloin laatupoikkeamaa voi taas muokata (vrt. HARJA-1954).
+UPDATE laatupoikkeama
+   SET kasittelyaika     = NULL,
+       paatos            = NULL,
+       perustelu         = NULL,
+       kasittelytapa     = NULL,
+       muu_kasittelytapa = NULL,
+       muokkaaja         = :muokkaaja,
+       muokattu          = current_timestamp
+ WHERE id = :id;
 
 -- name: liita-kommentti<!
 -- Liittää laatupoikkeamaon uuden kommentin
