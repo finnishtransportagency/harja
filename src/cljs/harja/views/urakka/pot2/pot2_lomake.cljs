@@ -237,7 +237,7 @@
        (or (seq kulutuskerroksen-tekstit)
          (seq alustan-tekstit)
          (some? perustietojen-virheet))
-       [yleiset/info-laatikko :varoitus
+      [yleiset/info-laatikko :varoitus
         "Lomakkeessa on virheitä. Lomaketta ei voi lähettää tarkistettavaksi ennen virheiden korjausta. "
         [:<>
          (when (some? perustietojen-virheet)
@@ -257,7 +257,7 @@
             [:br]
             [:div [:b "Alustan virheet ja varoitukset"]]
             (into [:<>] alustan-tekstit)])]
-        nil])
+          nil])
 
      ;; YHA-lähetyksen tila näytetään omassa info-laatikossaan, mutta saman virhe-elementin alla.
      [yha-lahetyksen-tila lahetyksen-tila perustiedot]]))
@@ -318,12 +318,16 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj [] (-> perustiedot ::lomake/virheet))
               puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
-              valmis-tallennettavaksi? (and
+              valmis-luonnokseksi? (and
                                          (not= tila :lukittu)
                                          (empty? (flatten (keep vals virheet)))
                                          (empty? puuttuvat-pakolliset-kentat)
                                          (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
                                          (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
+              valmis-tarkistettavaksi? (and
+                                         valmis-luonnokseksi?
+                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-varoitukset-atom)))
+                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-varoitukset-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
@@ -384,6 +388,7 @@
 
            [pot-yhteinen/tallenna e! perustiedot-app tallenna-app {:kayttaja kayttaja
                                                                    :urakka-id (:id urakka)
-                                                                   :valmis-tallennettavaksi? valmis-tallennettavaksi?
+                                                                   :valmis-luonnokseksi? valmis-luonnokseksi?
+                                                                   :valmis-tarkistettavaksi? valmis-tarkistettavaksi?
                                                                    :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))

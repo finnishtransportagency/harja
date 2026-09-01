@@ -491,7 +491,9 @@ ja kaikki pakolliset kentät on täytetty"
                         (:virheteksti s)) :virhe virhe-optiot])
       (when (and muokattu?
               (not (empty? varoitukset)))
-        [virheen-ohje varoitukset :varoitus virhe-optiot])
+        (if-let [varoitus-laatikko (:varoitus-laatikko virhe-optiot)]
+          [yleiset/varoitus-laatikko varoitus-laatikko]
+          [virheen-ohje varoitukset :varoitus virhe-optiot]))
       (when (and muokattu?
               (not (empty? huomautukset)))
         [virheen-ohje huomautukset :huomautus virhe-optiot])

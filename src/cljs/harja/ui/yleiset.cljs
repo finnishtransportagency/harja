@@ -131,13 +131,24 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (when max-width
               {:style {:max-width max-width}}))
      (doall (for* [v (distinct virheet)]
-
               [:span (when virheet-ulos?
                        {:style {:display "block"}})
                #_(case tyyppi
                    :huomautus (ikonit/livicon-info-circle)
                    (ikonit/livicon-warning-sign))
                (str " " v)]))]]))
+
+(defn varoitus-laatikko
+  "Näyttää otsikollisen varoituksen leipäteksteineen ja optionaalisen ikonipaikan."
+  [{:keys [otsikko tekstit ikoni]}]
+  [:div.varoitukset
+   [:div.varoitus-laatikko
+    (when ikoni
+      [:div.varoitus-laatikko-ikoni ikoni])
+    [:div.varoitus-laatikko-sisalto
+     [:div.varoitus-laatikko-otsikko otsikko]
+     (for* [teksti tekstit]
+       [:div.varoitus-laatikko-teksti teksti])]]])
 
 
 (defn linkki

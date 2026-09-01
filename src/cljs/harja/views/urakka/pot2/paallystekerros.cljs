@@ -15,6 +15,7 @@
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
     [harja.ui.yleiset :as yleiset]
     [harja.validointi :as v]
     [harja.fmt :as fmt]
@@ -377,9 +378,10 @@
         :tyyppi :positiivinen-numero
         :tasaa :oikea
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]
-        :varoita [(fn [arvo rivi]
-                    (when (> (:massamenekki rivi) 200)
-                      "Massamenekki on yleensä välillä 10-150. Tarkistaisitko vielä massaan ja leveyden."))]
+        :varoita [pot2-validoinnit/varoita-rem-massamenekista]
+        :varoitus-laatikko {:otsikko "Massamenekki saa olla maksimissaan 50 kg/m2"
+                            :tekstit ["Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."
+                                      "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]}
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
 
        {:otsikko "Pinta-ala (m²)"
