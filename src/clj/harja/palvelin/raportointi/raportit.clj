@@ -427,10 +427,10 @@
     :suorita      #'harja.palvelin.raportointi.raportit.rajoitusalueiden-suolat/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
-   {:nimi :talvisuolanlämpötilaraportti
+   {:nimi :talvisuolankokonaiskaytto
     :konteksti #{"urakka"},
     :kuvaus-tarkenne "Talvisuolan kokonaiskäyttö"
-    :kuvaus "Talvisuolanlämpötilaraportti"
+    :kuvaus "Talvisuolan kokonaiskäyttö"
     :suorita #'harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara/suorita
     :urakkatyyppi #{:hoito :teiden-hoito}}
 
