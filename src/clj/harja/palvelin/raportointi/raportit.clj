@@ -131,6 +131,7 @@
     :kuvaus-tarkenne "Sanktiot, bonukset ja arvonvähennykset"
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"elinvoimakeskus" "koko maa" "urakka" "hankinta-alue"}
+    :html-kontekstit #{"urakka"}
     :kuvaus       "Sanktioiden yhteenveto"
     :suorita      #'harja.palvelin.raportointi.raportit.sanktio/suorita
     :urakkatyyppi #{:hoito :teiden-hoito :paallystys :paikkaus :tiemerkinta}}
