@@ -60,6 +60,32 @@
   (fn [[_ {:keys [kaava]}] _ _]
     kaava))
 
+(def ^:private excel-sheet-nimen-enimmaispituus 31)
+
+(defn- turvallinen-sheet-nimi
+  [nimi]
+  (let [nimi (str (or nimi ""))
+        nimi (if (str/blank? nimi) "Raportti" nimi)
+        nimi (WorkbookUtil/createSafeSheetName nimi)]
+    (if (str/blank? nimi) "Raportti" nimi)))
+
+(defn- yksiloi-sheet-nimi
+  [workbook nimi]
+  (let [pohjanimi (turvallinen-sheet-nimi nimi)
+        varattu? (fn [ehdokas]
+                   (some #(= true (.equalsIgnoreCase ehdokas (.getSheetName %)))
+                     (excel/sheet-seq workbook)))]
+    (if-not (varattu? pohjanimi)
+      pohjanimi
+      (loop [numero 2]
+        (let [paate (str " (" numero ")")
+              pohjan-enimmais-pituus (- excel-sheet-nimen-enimmaispituus (count paate))
+              ehdokas (str (subs pohjanimi 0 (min (count pohjanimi) pohjan-enimmais-pituus))
+                         paate)]
+          (if (varattu? ehdokas)
+            (recur (inc numero))
+            ehdokas))))))
+
 (defn- evaluoi-kaava
   "Luo kaavaevaluaattorin ja evaluoi kaavan. Parametrina sisään workbook ja solu."
   [workbook cell]
@@ -108,7 +134,13 @@
 (defmethod muodosta-solu :arvo [[_ {:keys [arvo lihavoi? korosta?
                                            korosta-hennosti? ala-korosta? korosta-harmaa?
                                            varoitus? huomio?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel
+                      {:lihavoi? lihavoi?
+                       :korosta? korosta?
+                       :korosta-hennosti? korosta-hennosti?
+                       :korosta-harmaa? korosta-harmaa?
+                       :varoitus? varoitus?
+                       :huomio? huomio?})
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)]
@@ -141,7 +173,13 @@
                    :else "+ ")
         arvo (Math/abs (float arvo))
         prosentti (Math/abs (float prosentti))
-        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+        oletustyyli (raportti-domain/solun-oletustyyli-excel
+                      {:lihavoi? lihavoi?
+                       :korosta? korosta?
+                       :korosta-hennosti? korosta-hennosti?
+                       :korosta-harmaa? korosta-harmaa?
+                       :varoitus? varoitus?
+                       :huomio? huomio?})
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -163,7 +201,13 @@
 (defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
                                                                  korosta-hennosti? korosta-harmaa? ala-korosta?
                                                                  varoitus? huomio?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel
+                      {:lihavoi? lihavoi?
+                       :korosta? korosta?
+                       :korosta-hennosti? korosta-hennosti?
+                       :korosta-harmaa? korosta-harmaa?
+                       :varoitus? varoitus?
+                       :huomio? huomio?})
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -436,11 +480,7 @@
                                                 rivi-ennen rivi-jalkeen] :as optiot}
                                       sarakkeet data] workbook]
   (try
-    (let [sheet-nimi (or (when (and (:excel-urakkataso? raportin-tiedot)
-                                 (not= "Yhteenveto" (or nimi otsikko)))
-                           (:excel-detail-sheet-nimi raportin-tiedot))
-                       sheet-nimi)
-          viimeinen-rivi (last data)
+    (let [viimeinen-rivi (last data)
           aiempi-sheet (last (excel/sheet-seq workbook))
           [sheet nolla] (if (and
                               (or samalle-sheetille? (nil? sheet-nimi))
@@ -448,8 +488,7 @@
                               aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
-                             (WorkbookUtil/createSafeSheetName
-                               (or sheet-nimi nimi))) 0])
+                             (yksiloi-sheet-nimi workbook (or sheet-nimi nimi))) 0])
           ;; mahdollista haluttujen sheetien sisällä solujen lukitseminen (sheet protection)
           _ (when (:varjele-sheet-muokkauksilta? optiot)
               (.enableLocking sheet))
@@ -565,7 +604,14 @@
                                      (:fmt (second arvo-datassa)))
                           formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
-                          oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio? negatiivinen?)
+                          oletustyyli (raportti-domain/solun-oletustyyli-excel
+                                        {:lihavoi? lihavoi?
+                                         :korosta? korosta?
+                                         :korosta-hennosti? korosta-hennosti?
+                                         :korosta-harmaa? korosta-harmaa?
+                                         :varoitus? varoitus?
+                                         :huomio? huomio?
+                                         :negatiivinen? negatiivinen?})
                           [naytettava-arvo solun-tyyli formaatti]
                           (if (and (raportti-domain/raporttielementti? arvo-datassa)
                                 (not (raportti-domain/excel-kaava? arvo-datassa)))
@@ -651,7 +697,7 @@
     (if (= :taulukko e) ;; on optiomappi
       (assoc-in elementti [1 :raportin-tiedot]
         (merge (:raportin-yleiset-tiedot tunnistetiedot)
-          (select-keys tunnistetiedot [:excel-urakkataso? :excel-detail-sheet-nimi])))
+          (get-in elementti [1 :raportin-tiedot])))
       elementti)))
 
 (defmethod muodosta-excel :jakaja [_ _] nil)
@@ -714,30 +760,6 @@
               []))
     elementit))
 
-(defn- excel-yhteenvetotaulukko
-  [yhteenveto-data]
-  [:taulukko {:otsikko "Yhteenveto"
-              :sheet-nimi "Yhteenveto"}
-   [{:otsikko "Rivi"}
-    {:otsikko "Arvo"}]
-   (mapv (fn [{:keys [avain arvo fmt lihavoi?]}]
-           {:rivi [avain arvo]
-            :fmt fmt
-            :lihavoi? lihavoi?})
-     yhteenveto-data)])
-
-(defn- excel-urakkatasosisalto
-  [sisalto raportin-tiedot yhteenveto-data]
-  (let [detail-sheet-nimi (:excel-detail-sheet-nimi raportin-tiedot)
-        taulukot (filter #(= :taulukko (first %)) sisalto)
-        taulukot (map-indexed (fn [indeksi taulukko]
-                                (update taulukko 1 merge
-                                  {:sheet-nimi detail-sheet-nimi}
-                                  (when (pos? indeksi)
-                                    {:samalle-sheetille? true})))
-                   taulukot)]
-    (concat [(excel-yhteenvetotaulukko yhteenveto-data)] taulukot)))
-
 (defn- lisaa-ajettu-teksti-ensimmaiselle-sheetille!
   "Lisää 'Ajettu'-tekstin ensimmäisen sheetin viimeiselle riville.
   Kutsutaan kaikkien elementtien kirjoituksen jälkeen."
@@ -749,19 +771,7 @@
       (excel/set-cell! cell (str "Ajettu " nyt)))))
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (let [yhteenveto-data (some (fn [elementti]
-                                (when (and (vector? elementti)
-                                        (= :sininen-laatikko (first elementti)))
-                                  (last elementti)))
-                          (tree-seq coll? seq sisalto))
-        sisalto (raporttielementit sisalto)
-        sisalto (if (:excel-vain-urakka-erittely? raportin-tunnistetiedot)
-                  (filter #(and (= :taulukko (first %))
-                             (:aggregaatin-urakkataulukko? (second %)))
-                    sisalto)
-                  (if (:excel-urakkataso? raportin-tunnistetiedot)
-                    (excel-urakkatasosisalto sisalto raportin-tunnistetiedot yhteenveto-data)
-                    sisalto))
+  (let [sisalto (raporttielementit sisalto)
         tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)
         ;; Tulostuspäivä
         nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
