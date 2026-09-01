@@ -44,10 +44,9 @@
     {:otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
     {:otsikko "Erotus (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
     {:otsikko "Lämpötilan vaikutus käyttörajaan", :leveys 1, :fmt :teksti, :tasaa :oikea}
-    {:otsikko "Käyttöraja (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
+    {:otsikko "Käyttöraja tehtävä- ja määräluettelossa (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
     {:otsikko "Kohtuullistettu käyttöraja (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
-    {:otsikko "Toteuma (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
-    {:otsikko "Erotus (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}))
+    {:otsikko "Toteuma (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}))
 
 (def lampotiladata '({:id 1906, :alkupvm #inst "2021-09-30T21:00:00.000-00:00", :loppupvm #inst "2022-09-29T21:00:00.000-00:00", :keskilampotila -9.20M, :keskilampotila-1991-2020 nil, :keskilampotila-1981-2010 -9.90M, :keskilampotila-1971-2000 nil}
                      {:id 2008, :alkupvm #inst "2022-09-30T21:00:00.000-00:00", :loppupvm #inst "2023-09-29T21:00:00.000-00:00", :keskilampotila -6.30M, :keskilampotila-1991-2020 -8.80M, :keskilampotila-1981-2010 -9.90M, :keskilampotila-1971-2000 nil}
@@ -162,49 +161,73 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :talvisuolanlämpötilaraportti
+                  {:nimi :talvisuolankokonaiskaytto
                    :konteksti "urakka"
                    :urakka-id urakka-id})
-        otsikko (talvisuola-rap/jasenna-raportin-otsikko urakan-tiedot hoitovuodet)]
+        otsikko "Erittely hoitovuosittain"]
     (is (vector? vastaus))
     (let [taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
 
       (tarkista-sarakkeet taulukko)
 
       (is (= vastaus
-            [:raportti {:nimi "Oulun MHU 2019-2024"
-                        :orientaatio :landscape
-                        :rajoita-pdf-rivimaara nil}
-             [:taulukko {:otsikko (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu 01.10.2019 - 30.09." (inc (apply max hoitovuodet))), :tyhja nil, :sheet-nimi "Talvihoitosuolat"}
+            [:raportti
+             {:nimi "Talvisuolan kokonaiskäyttö",
+              :orientaatio :landscape, :rajoita-pdf-rivimaara nil}
+             [:otsikko-heading-small "Oulun MHU 2019-2024"]
+             [:infolaatikko [:span.talvisuola-info "Mahdollinen talvisuolan kokonaiskäyttöön liittyvä sanktio määrätään vasta urakan päättyessä vastaanottotarkastuksessa. Sanktio kirjataan " [:a {:href "/#urakat/laadunseuranta/sanktiot?&hy=12&u=35", :target "_blank", :rel "noopener noreferrer"} "Sanktiot ja bonukset"]
+                             " -välilehdellä."] {:tyyppi :neutraali, :toissijainen-viesti "", :leveys 800, :rivita? false}]
+             [:yhteenveto-laatikko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
+              [{:infolaatikko? true, :teksti "Tehtävä- ja määräluettelon mukainen käyttöraja", :toissijainen-viesti "Tieto puuttuu", :tyyppi :vahva-ilmoitus, :ikoni :harja-icon-status-alert}
+               {:avain "Kohtuullistettu käyttöraja", :arvo "-"} {:avain "Suurin urakassa sallittu käyttömäärä + 5 %", :arvo "-"}
+               {:avain "Toteuma koko urakka-ajalta", :arvo "1 300,00 t", :lihavoi? true}
+               {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma", :arvo "1 300,00 t", :lihavoi? true}]]
+             [:taulukko {:otsikko "Erittely hoitovuosittain", :tyhja nil, :sheet-nimi "Talvihoitosuolat", :samalle-sheetille? true}
               [{:otsikko "Hoitovuosi", :leveys 1, :fmt :kokonaisluku, :tasaa :vasen}
                {:otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
-               {:otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)", :leveys 1, :fmt :numero, :tasaa :oikea} {:otsikko "Erotus (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
-               {:otsikko "Lämpötilan vaikutus käyttörajaan", :leveys 1, :fmt :teksti, :tasaa :oikea}
-               {:otsikko "Käyttöraja (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
+               {:otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)",  :leveys 1, :fmt :numero, :tasaa :oikea}
+               {:otsikko "Erotus (°C)", :leveys 1, :fmt :numero, :tasaa :oikea}
+               {:otsikko "Lämpötilan vaikutus käyttörajaan", :leveys 1,  :fmt :teksti, :tasaa :oikea}
+               {:otsikko "Käyttöraja tehtävä- ja määräluettelossa (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
                {:otsikko "Kohtuullistettu käyttöraja (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
-               {:otsikko "Toteuma (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}
-               {:otsikko "Erotus (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}]
-              (concat
-                [[[:arvo {:arvo "2019-2020"}] -3.50M -5.60M 2.10M "+10 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] 1300M
-                  [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]]]
-
-                (mapv
-                  (fn [vuosi]
-                    [[:arvo {:arvo (str vuosi "-" (inc vuosi))}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] [:arvo {:arvo "Lämpötilatieto puuttuu", :huomio? true}] 0 "0 %" [:arvo {:arvo "Käyttöraja puuttuu", :huomio? true}] [:arvo {:arvo "-"}] [:arvo {:arvo "-"}] [:arvo {:arvo 0, :jos-tyhja "-", :desimaalien-maara 2, :ryhmitelty? true, :korosta-hennosti? true}]])
-                  (rest hoitovuodet))
-
-                [{:lihavoi? true, :korosta-hennosti? true,
-                  :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil
-                         [:arvo
-                          {:arvo nil
-                           :jos-tyhja "-"}]
-                         [:arvo
-                          {:arvo nil
-                           :jos-tyhja "-"}]
-                         1300M
-                         [:arvo
-                          {:arvo 0
-                           :desimaalien-maara 2
-                           :jos-tyhja "-"
-                           :korosta-hennosti? true
-                           :ryhmitelty? true}]]}])]])))))
+               {:otsikko "Toteuma (kuivatonnia)", :leveys 1, :fmt :numero, :tasaa :oikea}]
+              [[[:arvo {:arvo "2019-2020"}]
+                [:arvo {:arvo -3.50M, :desimaalien-maara 1}]
+                [:arvo {:arvo -5.60M, :desimaalien-maara 1}]
+                [:arvo {:arvo 2.10M, :desimaalien-maara 1}] "+10 %"
+                [:arvo {:arvo "Tieto puuttuu"}]
+                [:arvo {:arvo "-"}]
+                [:arvo {:arvo 1300M, :desimaalien-maara 2}]]
+               [[:arvo {:arvo "2020-2021"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "-"}] "-"
+                [:arvo {:arvo "Tieto puuttuu"}]
+                [:arvo {:arvo "-"}]
+                [:arvo {:arvo "-"}]]
+               [[:arvo {:arvo "2021-2022"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "-"}] "-"
+                [:arvo {:arvo "Tieto puuttuu"}]
+                [:arvo {:arvo "-"}]
+                [:arvo {:arvo "-"}]]
+               [[:arvo {:arvo "2022-2023"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "-"}] "-"
+                [:arvo {:arvo "Tieto puuttuu"}]
+                [:arvo {:arvo "-"}]
+                [:arvo {:arvo "-"}]]
+               [[:arvo {:arvo "2023-2024"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "Ei vielä saatavilla"}]
+                [:arvo {:arvo "-"}] "-"
+                [:arvo {:arvo "Tieto puuttuu"}]
+                [:arvo {:arvo "-"}]
+                [:arvo {:arvo "-"}]]
+               {:lihavoi? true, :korosta-hennosti? true,
+                :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil
+                       [:arvo {:arvo nil, :jos-tyhja "-"}]
+                       [:arvo {:arvo nil, :jos-tyhja "-"}]
+                       [:arvo {:arvo 1300M, :desimaalien-maara 2}]]}]]])))))
