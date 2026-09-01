@@ -51,7 +51,7 @@
     (is (contains? r :materiaaliraportti) "Materiaaliraportti löytyy raporteista")
     (is (contains? r :yks-hint-tyot) "Yksikköhintaiset työt löytyy raporteista")
     (is (contains? r :yks-hint-tehtavien-summat) "yks-hint-tehtavien-summat löytyy raporteista")
-    (is (nil? (:html-kontekstit (:sanktioraportti r))))
+    (is (= #{"urakka"} (:html-kontekstit (:sanktioraportti r))))
     (is (not (contains? r :olematon-raportti)))))
 
 (deftest kuukaudet-apuri-test
