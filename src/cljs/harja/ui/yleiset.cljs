@@ -138,19 +138,6 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                    (ikonit/livicon-warning-sign))
                (str " " v)]))]]))
 
-(defn varoitus-laatikko
-  "Näyttää otsikollisen varoituksen leipäteksteineen ja optionaalisen ikonipaikan."
-  [{:keys [otsikko tekstit ikoni]}]
-  [:div.varoitukset
-   [:div.varoitus-laatikko
-    (when ikoni
-      [:div.varoitus-laatikko-ikoni ikoni])
-    [:div.varoitus-laatikko-sisalto
-     [:div.varoitus-laatikko-otsikko otsikko]
-     (for* [teksti tekstit]
-       [:div.varoitus-laatikko-teksti teksti])]]])
-
-
 (defn linkki
   ([otsikko toiminto]
    (linkki otsikko toiminto {}))
