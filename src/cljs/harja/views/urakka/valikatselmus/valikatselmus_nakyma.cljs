@@ -1,27 +1,32 @@
 (ns harja.views.urakka.valikatselmus.valikatselmus-nakyma
   (:require [tuck.core :as tuck]
-            [harja.domain.roolit :as roolit]
-            [harja.domain.lupaus-domain :as lupaus-domain]
+
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
-            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
-            [harja.tiedot.urakka.urakka :as tila]
+            [harja.ui.modal :as modal]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
             [harja.ui.ikonit :as ikonit]
-            [harja.ui.komponentti :as komp]
-            [harja.ui.debug :as debug]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]
-            [harja.views.urakka.valikatselmus.yhteenvetolaatikko :as yhteevetolaatikko]
-            [harja.views.urakka.valikatselmus.tavoitehinnan-muutokset :as tavoitehinnan-muutokset]
+
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
+            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
+
+            [harja.ui.komponentti :as komp]
+            [harja.domain.roolit :as roolit]
+            [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.views.urakka.valikatselmus.raportit :as raportit]
             [harja.views.urakka.valikatselmus.lupaukset :as lupaukset]
             [harja.views.urakka.valikatselmus.hintapaatokset :as hintapaatokset]
-            [harja.views.urakka.valikatselmus.raportit :as raportit]
+            [harja.views.urakka.valikatselmus.indeksikorjaus :as indeksikorjaus]
+            [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]
+            [harja.views.urakka.valikatselmus.yhteenvetolaatikko :as yhteevetolaatikko]
             [harja.views.urakka.valikatselmus.hoidonjohtopalkkio :as hoidonjohtopalkkio]
-            [harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat :as hoitovuoden-lopun-hinnat]
-            [harja.views.urakka.valikatselmus.indeksikorjaus :as indeksikorjaus])
+            [harja.views.urakka.valikatselmus.tavoitehinnan-muutokset :as tavoitehinnan-muutokset]
+            [harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat :as hoitovuoden-lopun-hinnat])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- onko-hoitokausi-tulevaisuudessa? [hoitokausi nykyhetki]
@@ -95,7 +100,8 @@
         [ikonit/harja-icon-status-alert]
         [:span "Hoitovuosi on lukittu vuoden vaihteessa ja välikatselmusta ei voi enää muokata."]])]))
 
-(defn paatoskomponentit [e! {:keys [valittu-hoitokausi tallennus-kesken? paatokset] :as app}]
+(defn paatoskomponentit [e! {:keys [valittu-hoitokausi tallennus-kesken? paatokset
+                                    kumottava-paatos-nimi tehdyt-kumoutuvat-paatokset nayta-kumoa-modal? peru-fn] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         nykyhetki (pvm/nyt)
         poikkeusvuosi? (lupaus-domain/vuosi-19-20? urakan-alkuvuosi)
@@ -110,29 +116,62 @@
                                 (not (valikatselmus-yhteiset/onko-hoitokausi-menneisyydessa? valittu-hoitokausi nykyhetki urakan-alkuvuosi)))))
         hoitovuosi-kesken? (pvm/valissa? nykyhetki (first valittu-hoitokausi) (second valittu-hoitokausi))
         hoitokausi-tulevaisuudessa? (onko-hoitokausi-tulevaisuudessa? valittu-hoitokausi (pvm/nyt))]
+
     [:<>
-     (when (and (<= (count paatokset) 1) (or hoitovuosi-kesken? hoitokausi-tulevaisuudessa?))
+     (when (or hoitovuosi-kesken? hoitokausi-tulevaisuudessa?)
        [:div.hoitovuosi-info
         (when hoitovuosi-kesken?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä päättynyt."
-           (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi))" alkaen. "
-             (when (<= urakan-alkuvuosi 2024) " Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.")) nil])
+           (str "Välikatselmuksen päätökset voi tallentaa 1.10. " (pvm/vuosi (second valittu-hoitokausi)) " alkaen. "
+             (when (<= urakan-alkuvuosi 2024) " Voit lisätä tavoitehinnan muutoksia myös kesken hoitovuoden.")) nil {:luokka "koko-levea"}])
         (when hoitokausi-tulevaisuudessa?
           [yleiset/info-laatikko :neutraali "Hoitovuosi ei ole vielä alkanut." nil nil])])
+
      [:div
+      [modal/modal
+       {:nakyvissa? nayta-kumoa-modal?
+        :sulje-fn #(e! (valikatselmus-tiedot/->SuljePaatosModal))
+        :leveys "567px"
+        :content-tyyli {:margin "0" :padding "16px"}
+        :body-tyyli {:margin "0"}}
+
+       [lomake/lomake
+        {:ei-borderia? true
+         :voi-muokata? true
+         :tarkkaile-ulkopuolisia-muutoksia? true
+         :header [:div.col-md-12
+                  [:h2.header-yhteiset "Haluatko perua päätöksen?"]
+                  (if tallennus-kesken?
+                    [yleiset/ajax-loader-pieni "Haetaan tietoja..."]
+                    [:div.body
+                     [:<>
+                      "“"
+                      [:span.lihavoitu kumottava-paatos-nimi]
+                      "“"
+                      "-päätöksen peruminen peruuttaa  myös automaattiset kulut, 
+                      bonus- tai sanktiomaksut sekä tietojen lukitukset, jotka mahdollisesti syntyivät päätöksestä."]
+
+                     (when (> (count tehdyt-kumoutuvat-paatokset) 0)
+                       [:<>
+                        [:div.padding-top-24 "Päätöksen peruminen peruuttaa myös seuraavat päätökset:"]
+                        (for* [x tehdyt-kumoutuvat-paatokset]
+                          [:div.sisennys "• " (:nimi x)])])])]
+
+         :footer [:<>
+                  [:div.muokkaus-modal-napit.padding-top-16
+                   [napit/tallenna "Kyllä, peru päätös" #(peru-fn) {:disabled tallennus-kesken?}]
+                   [napit/yleinen-toissijainen "Peruuta" #(e! (valikatselmus-tiedot/->SuljePaatosModal)) {:disabled tallennus-kesken?}]]]}]]
+
       (doall
         (for* [paatos paatokset]
           (cond
             (= (ffirst paatos) :lupaukset) [lupaukset/lupauspaatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
-            (= (ffirst paatos) :tavoitehinnan-muutokset)
-            (if (>= urakan-alkuvuosi 2025)
-              [:div {:style {:height "90px" :width "100%"}}
-               [yleiset/info-laatikko :huolto "Tavoitehinnan muutokset uudistuvat. Päivityksen ajan osio on pois käytöstä. Tiedotamme muutoksesta tarkemmin sähköpostitse." nil nil nil]]
-              [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?])
+            (= (ffirst paatos) :tavoitehinnan-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-muutokset e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-muutokset app) hoitovuosi-kesken?]
+            (= (ffirst paatos) :tavoitehinnan-pysyvat-muutokset) [tavoitehinnan-muutokset/tavoitehinnan-muutokset-2025 e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset (:tavoitehinnan-pysyvat-muutokset app) hoitovuosi-kesken?]
             (= (ffirst paatos) :tavoitehinnan-ylitys) [hintapaatokset/tavoitehinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-            (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
+            (= (ffirst paatos) :tavoitehinnan-alitus) [hintapaatokset/tavoitehinnan-alitus e! (second (first paatos)) tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :kattohinnan-ylitys) [hintapaatokset/kattohinnan-ylitys e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
-            (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
+            (= (ffirst paatos) :valikatselmuspoytakirjaan-liitettavat-raportit) [raportit/raportit e! (second (first paatos)) tallennus-kesken? hoitokauden-alkuvuosi avatut-paatokset]
             (= (ffirst paatos) :hoitovuoden-lopun-indeksikorjaus) [indeksikorjaus/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :hoidonjohtopalkkion-muutos) [hoidonjohtopalkkio/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
             (= (ffirst paatos) :hoitovuoden-lopun-tavoite-ja-kattohinta) [hoitovuoden-lopun-hinnat/paatos e! (second (first paatos)) oikeudet-muokata? tallennus-kesken? avatut-paatokset]
@@ -182,7 +221,6 @@
            [:div.valikatselmus-haku
             [yleiset/ajax-loader-pieni "Haetaan välikatselmuksen tietoja..."]]
            [:div.valikatselmus-container
-            #_ [debug/debug app]
             [:div.col-xs-12.col-md-7
 
              [valikatselmus-otsikko-ja-tiedot e! app]

@@ -49,8 +49,8 @@ WITH tavoitehinnan_oikaisut AS
           FROM paatos_hoitokauden_indeksikorjaus phi
           WHERE phi.poistettu = FALSE
             AND phi.urakkaid = :urakka),
-    mhu_muutokset AS (
-        -- Pysyvät sekä JJH muutokset, jotka astunut voimaan tänä hoitokautena
+    mhu_pysyvat_muutokset AS (
+        -- Pysyvät muutokset
          SELECT SUM(mmk.summa) as summa, mm.urakka, mmk.hoitokauden_alkuvuosi
            FROM mhu_muutos mm
                    JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
@@ -60,13 +60,27 @@ WITH tavoitehinnan_oikaisut AS
             AND mm.voimassa_alkaen BETWEEN
                 (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))
                 AND (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
-            AND mm.tyyppi IN ('pysyva', 'muutostyo')
+            AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
             AND mm.poistettu IS FALSE
             AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
-          GROUP BY mmk.hoitokauden_alkuvuosi, mm.urakka
-
-          UNION ALL
-
+          GROUP BY mmk.hoitokauden_alkuvuosi, mm.urakka),
+     mhu_muutostyot_muutokset AS (
+         -- Muutostyot (erillisrahoitetutu)
+         SELECT SUM(mmk.summa) as summa, mm.urakka, mmk.hoitokauden_alkuvuosi
+         FROM mhu_muutos mm
+                  JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
+                  JOIN urakka_tavoite ut ON ut.urakka = mm.urakka
+                  JOIN urakka u ON ut.urakka = u.id AND u.id = mm.urakka
+         WHERE mm.urakka = :urakka
+           AND mm.voimassa_alkaen BETWEEN
+             (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))
+             AND (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
+           AND mm.tyyppi = 'muutostyo'::MHU_MUUTOSTYYPPI
+           AND mm.poistettu IS FALSE
+           AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+         GROUP BY mmk.hoitokauden_alkuvuosi, mm.urakka),
+    mhu_jjh_muutokset AS (
+        -- Johto- ja hallintokorvauksen muutokset
           SELECT SUM(kokonaissumma) as summa, mm.urakka, EXTRACT (YEAR from u.alkupvm) + ut.hoitokausi - 1 as hoitokauden_alkuvuosi
             FROM mhu_muutos mm
                  JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
@@ -113,7 +127,11 @@ SELECT ut.id,
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
        ut.laskutusraja                                                                        AS "laskutusraja",
        ut.laskutusraja_alkuperainen                                                           AS "laskutusraja-alkuperainen",
-       SUM(hmum.summa)                                                                        AS "muutos-summa",
+       (COALESCE(SUM(pmuutokset.summa),0) + COALESCE(SUM(mmuutokset.summa),0)
+            + COALESCE(SUM(jmuutokset.summa), 0))                                             AS "kirjallisesti-sovitut-muutokset",
+       SUM(pmuutokset.summa)                                                                  AS "pysyvat-muutokset",
+       SUM(mmuutokset.summa)                                                                  AS "muutostyo-muutokset",
+       SUM(jmuutokset.summa)                                                                  AS "jjh-muutokset",
        up.laskutusraja_kaytossa                                                               AS "laskutusraja-kaytossa",
        -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
        indeksikorjaa(
@@ -140,7 +158,9 @@ FROM urakka_tavoite ut
          LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND ko."hoitokauden-alkuvuosi" = x.hk_alkuvuosi AND NOT ko.poistettu)
          LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND t."hoitokauden-alkuvuosi" = x.hk_alkuvuosi
          LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  x.hk_alkuvuosi
-         LEFT JOIN mhu_muutokset hmum ON hmum.urakka = u.id AND hmum.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN mhu_pysyvat_muutokset pmuutokset ON pmuutokset.urakka = u.id AND pmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN mhu_muutostyot_muutokset mmuutokset ON mmuutokset.urakka = u.id AND mmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN mhu_jjh_muutokset jmuutokset ON jmuutokset.urakka = u.id AND jmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
          LEFT JOIN urakka_parametrit up ON up.urakkaid = u.id
 WHERE ut.urakka = :urakka
 GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm, up.laskutusraja_kaytossa

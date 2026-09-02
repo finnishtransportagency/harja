@@ -5,4 +5,4 @@
   {:positional? false})
 
 (declare hae-paikkaus-kustannukset hae-kustannusten-selitteet
-  tallenna-yllapito-kustannus! )
+  tallenna-yllapito-kustannus! paivita-yllapito-kustannus!)
