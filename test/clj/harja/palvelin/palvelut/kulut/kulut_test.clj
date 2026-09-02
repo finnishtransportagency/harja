@@ -517,7 +517,7 @@
       (apply conj kaikki rivit))))
 
 (def odotettu-kulu_kohdistus-id-9
-  {:maksuera-numero 108 :id 9, :tyyppi "lisatyo",
+  {:maksuera-numero 115 :id 9, :tyyppi "lisatyo",
    :kokonaissumma 400.77M, :erapaiva #inst "2019-10-15T21:00:00.000-00:00",
    :laskun-numero nil, :maksuera-alias nil, :koontilaskun-kuukausi "lokakuu/1-hoitovuosi",
    :liitteet [], :lisatyon-lisatieto nil, :maksueratyyppi "lisatyo",
