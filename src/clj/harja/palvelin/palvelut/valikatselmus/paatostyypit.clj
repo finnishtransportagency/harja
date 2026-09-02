@@ -60,7 +60,8 @@
     :jarjestys 4
     :paatostyyppi "hoitovuoden-lopun-hinta"
     :avain :hoitovuoden-lopun-hinta
-    :riippuu [{:avain :tavoitehinnan-muutokset}]}
+    :riippuu [{:avain :tavoitehinnan-muutokset}
+              {:avain :indeksikorjaus}]}
 
    {:nimi "Hoitovuoden lopun tavoite- ja kattohinta"
     :tyyppi "B"
