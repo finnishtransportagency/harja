@@ -414,6 +414,14 @@
                  (:kokonaismassamaara rivi)
                  (:pinta_ala rivi)))
         :tayta-alas? pot2-tiedot/tayta-alas?-fn
+        :solun-luokka-fn (fn [rivi]
+                           (when (pot2-validoinnit/varoita-rem-massamenekista
+                                   (paikkaus/massamaara-ja-pinta-ala->massamenekki
+                                     (:kokonaismassamaara rivi)
+                                     (:pinta_ala rivi))
+                                   rivi
+                                   nil)
+                             "massamenekki-varoitus"))
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
 
        {:otsikko "RC%"
