@@ -1,137 +1,12 @@
 (ns harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone
   (:require [clojure.string :as str]
+
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :refer [round2]]
             [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
-            [harja.domain.lupaus-domain :as lupaus-domain]))
+            [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.palvelin.palvelut.valikatselmus.apurit :as apurit]))
 
-(def paatostyypit
-  [{:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
-   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2021 :nakyvyys_asti 2028 :hoitotyyppi #{"MHU"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
-   {:nimi "Tavoitehinnan muutokset" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-muutokset"}
-   {:nimi "Tavoitehinnan pysyvät muutokset" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 2 :paatostyyppi "tavoitehinnan-pysyvat-muutokset"}
-   {:nimi "Hoitovuoden lopun indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :paatostyyppi "indeksikorjaus"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "A" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :nakyvyys_asti 2024 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta-v2"}
-   {:nimi "Hoitovuoden lopun tavoite- ja kattohinta" :tyyppi "C" :urakan_alkuvuosi 2025 :nakyvyys_alkaen 2025 :hoitotyyppi #{"MHU"} :jarjestys 4 :paatostyyppi "hoitovuoden-lopun-hinta-v2"}
-   {:nimi "Tavoitehinnan alitus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 5 :paatostyyppi "tavoitehinta"}
-   {:nimi "Tavoitehinnan alitus" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 5 :paatostyyppi "tavoitehinta"}
-   {:nimi "Tavoitehinnan ylitys" :tyyppi "A" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 6 :paatostyyppi "tavoitehinta"}
-   {:nimi "Tavoitehinnan ylitys" :tyyppi "B" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 6 :paatostyyppi "tavoitehinta"}
-   {:nimi "Kattohinnan ylitys" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU"} :jarjestys 7 :paatostyyppi "kattohinta"}
-   {:nimi "Kattohinnan ylitys" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU+"} :jarjestys 7 :paatostyyppi "kattohinta"}
-   {:nimi "Lupaukset" :tyyppi "bonus" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "lupaus"}
-   {:nimi "Lupaukset" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "lupaus"}
-   {:nimi "Lupaukset" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :nakyvyys_alkaen 2019 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :paatostyyppi "lupaus"}
-   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2021 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 9 :paatostyyppi "hoidonjohtopalkkio"}
-   {:nimi "Hoidonjohtopalkkion muutos" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 9 :paatostyyppi "hoidonjohtopalkkio"}
-   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2020 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU"} :jarjestys 10 :paatostyyppi "raportti"}
-   {:nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :urakan_alkuvuosi 2024 :nakyvyys_alkaen 2024 :hoitotyyppi #{"MHU" "MHU+"} :jarjestys 10 :paatostyyppi "raportti"}])
-
-(defn distinct-by [vektori avain]
-  (:result (reduce
-             (fn [{:keys [seen result]} m]
-               (let [arvo (get-in m [avain])]
-                 (if (contains? seen arvo)
-                   {:seen seen :result result}
-                   {:seen (conj seen arvo) :result (conj result m)})))
-             {:seen #{}, :result []}
-             vektori)))
-
-(defn urakan-hoitotyyppi
-  "Erittäin vaativat hoitourakat merkitään päätöstauluun hoitotyyppinä MHU+"
-  [erittain_vaativa_hoitourakka]
-  (if erittain_vaativa_hoitourakka "MHU+" "MHU"))
-
-(defn mahdolliset-paatokset-tyypilla [mhu-tyyppi paatokset]
-  (filter #(contains? (:hoitotyyppi %) mhu-tyyppi) paatokset))
-
-(defn mahdolliset-paatokset-urakan-alkuvuodella [urakan-alkuvuosi paatokset]
-  (filter (fn [paatos]
-            (<= (:urakan_alkuvuosi paatos) urakan-alkuvuosi))
-    paatokset))
-
-(defn mahdolliset-paatokset-nakyvyys-asti [urakan-alkuvuosi paatokset]
-  (filter #(or (nil? (:nakyvyys_asti %))
-             (and (:nakyvyys_asti %) (>= (:nakyvyys_asti %) urakan-alkuvuosi))) paatokset))
-
-(defn mahdolliset-paatokset-nakyvyys-vuodella [kuluva-vuosi paatokset]
-  (filter #(<= (:nakyvyys_alkaen %) kuluva-vuosi) paatokset))
-
-(defn vain-yksi-paatos-per-tyyppi [paatokset]
-  (let [uniikit-tyypit (map (fn [paatos]
-                              (assoc paatos :uniikki-tyyppi (str (:tyyppi paatos) (:nimi paatos)))) paatokset)
-        uniikit (distinct-by uniikit-tyypit :uniikki-tyyppi)
-        paatokset (map (fn [paatos]
-                         (dissoc paatos :uniikki-tyyppi)) uniikit)]
-    paatokset))
-
-(defn kaikki-mahdolliset-paatokset [mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi]
-  (let [mahdollset-tyypilla (mahdolliset-paatokset-tyypilla mhu-tyyppi paatostyypit)
-        mahdolliset-aloitusvuodella (mahdolliset-paatokset-urakan-alkuvuodella urakan-alkuvuosi mahdollset-tyypilla)
-        mahdolliset-nakyvyys-asti (mahdolliset-paatokset-nakyvyys-asti urakan-alkuvuosi mahdolliset-aloitusvuodella)
-        mahdolliset-kuluvalle-vuodelle (mahdolliset-paatokset-nakyvyys-vuodella kuluva-hoitovuosi mahdolliset-nakyvyys-asti)
-        paatokset (vain-yksi-paatos-per-tyyppi mahdolliset-kuluvalle-vuodelle)]
-    paatokset))
-
-(defn yhdista-mapit
-  "Yhdistetään tietokannasta tulevat ja päätöskoneelta tulevat päätökset niin, että
-   käytetään päätöskoneen päätöksiä, jos niitä ei ole vielä tietokannassa ja muuten tietokannan päätöksiä.
-   Vertailussa käytetään :nimi avainta. Se täytyy löytyä molemmista mapeistä."
-  [pk-paatokset db-paatokset]
-  (let [index-map (into {} (map (fn [m] [(:nimi m) m]) db-paatokset))]
-    (map (fn [m1]
-           (if-let [m2 (index-map (:nimi m1))]
-             m2
-             m1))
-      pk-paatokset)))
-
-(defn lisaa-paatos-virheellisena
-  "Jos päätös on mukana päätöslistassa, mutta sille ei ole antaa tarkentavia tietoja, niin lisätään siihen virhe.
-  Mikäli päätöstä ei löydy listasta, niin älä lisää mitään."
-  [paatokset nimi virhe lisataan? jarjestys & args]
-  (let [virhepaatos (merge (first args) ;; Ensimmäinen parametri on päätös
-                      {:nimi nimi :virhe virhe :jarjestys jarjestys})]
-    (keep identity
-      (sort-by :jarjestys
-        (if (some #(= (:nimi %) nimi) paatokset)
-          (conj
-            (filter #(not= (:nimi %) nimi) paatokset)
-            ;; Jos ehdot eivät täyttyneet, niin päätöstä ei voida lisätä edes virheellisenä
-            (when lisataan?
-              virhepaatos))
-          paatokset)))))
-
-(defn laske-indeksikorotus-lupaukselle [db urakkaid paatos-pvm indeksi summa sanktio?]
-  (let [indeksikorotus-parametrit {:pvm paatos-pvm
-                                   :indeksi indeksi
-                                   :maara summa
-                                   :urakka-id urakkaid
-                                   :sanktiolaji (if sanktio? "lupaussanktio" nil)}
-        ;; Taustalla ajetaan tämmönen: SELECT korotus FROM sanktion_indeksikorotus(:pvm::DATE, :indeksi,:maara::NUMERIC, :urakka-id::INTEGER, :sanktiolaji::sanktiolaji);
-        indeksikorotus (:korotus (first (lupaus-kyselyt/hae-indeksikorotus-summalle db indeksikorotus-parametrit)))]
-    indeksikorotus))
-
-(defn hoitovuosi-paattynyt?
-  "Tarkista, onko saatu aika myöhemmin kuin 30.9."
-  [valittu-hoitovuosi]
-  (let [nyt (pvm/nyt)
-        nykyvuosi (pvm/vuosi nyt)
-        kuukausi (pvm/kuukausi nyt)
-        ;; valittu-hoitovuosi on aina hoitokauden alkuvuosi, mutta hoitokausi päättyy vasta seuraavan vuoden syyskuussa, joten korotetaan yhdellä
-        valittu-hoitovuosi (inc valittu-hoitovuosi)]
-    (cond
-      (> nykyvuosi valittu-hoitovuosi) true
-      (and (= nykyvuosi valittu-hoitovuosi) (>= kuukausi 10)) true
-      :else false)))
-
-(defn paatos-tallennettu-tietokantaan? [tietokanta-paatokset nimi]
-  (:id (first (filter #(when (= (:nimi %) nimi) %) tietokanta-paatokset))))
-
-(defn paatos-mahdollinen? [mahdolliset-paatokset nimi]
-  (boolean (seq (filter #(when (= (:nimi %) nimi) %) mahdolliset-paatokset))))
 
 (defn valmistele-lupauspaatokset [db validoinnit-kaytossa? valittu-hoitovuosi urakkaid paatokset toteutuneet-pisteet
                                   luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset
@@ -141,9 +16,8 @@
   ;; Hoitovuodelle on syötetty tarjouksen tavoitehinta
   ;; Hoitovuodelle on syötetty kaikkien lupausten toteumat
   ;; 2024 vuodesta alkaen Hoitovuoden lopun tavoite- ja kattohinta -päätös pitää olla tehtynä ensin
-  (let [
-        virheet (cond-> []
-                  (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
+  (let [virheet (cond-> []
+                  (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? valittu-hoitovuosi)))
                   (conj "Hoitovuosi on kesken.")
 
                   (nil? luvatut-pisteet)
@@ -158,7 +32,7 @@
                   ;; Vaaditaan hoitovuoden lopun tavoite-ja kattohinta vain jos kuluva hoitovuosi on 2024 tai myöemmin
                   ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
                   (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 valittu-hoitovuosi)
-                    (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
+                    (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
                   (conj "Hoitovuoden lopun tavoite- ja kattohinta -päätöstä ei ole vahvistettu."))
 
         ;; Urakan parametreista lupaussanktion ja bonuksen prosentit
@@ -198,10 +72,10 @@
                               paatokset))
         indeksikorotus (cond
                          (and (= tyyppi "bonus") (:indeksi_kaytossa_bonuksella urakan-parametrit))
-                         (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupausbonus false)
+                         (apurit/laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupausbonus false)
 
                          (and (= tyyppi "sanktio") (:indeksi_kaytossa_sanktiolla urakan-parametrit))
-                         (laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio true)
+                         (apurit/laske-indeksikorotus-lupaukselle db urakkaid paatospaiva indeksi lupaussanktio true)
 
                          :else nil)
 
@@ -218,13 +92,14 @@
                        (assoc :bonusprosentti bonusprosentti)
                        (assoc :indeksi indeksi)
                        (assoc :indeksikorotus indeksikorotus)
-                       (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi))))
+                       (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? valittu-hoitovuosi))))
                        (assoc :virheet (when-not (empty? virheet) virheet)))
         ;; Poista kaikki lupauspäätökset listasta
         paatokset (remove (fn [paatos] (= (:nimi paatos) "Lupaukset")) paatokset)
         ;; Ja lisää muokattu takaisin
         paatokset (sort-by :jarjestys (conj paatokset lupauspaatos))]
     paatokset))
+
 
 (defn valmistele-tavoitehinnan-muutospaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta kattohinta
                                              muokkaa-kattohinta? kuluva-hoitovuosi]
@@ -234,7 +109,7 @@
   (if-not (first (filter #(when (= (:nimi %) "Tavoitehinnan muutokset") %) paatokset))
     paatokset
     (let [virheet (cond-> []
-                    (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+                    (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken.")
 
                     (not oikaistu-tavoitehinta)
@@ -249,7 +124,7 @@
                                        (assoc :tavoitehinta oikaistu-tavoitehinta)
                                        (assoc :kattohinta kattohinta)
                                        (assoc :muokkaa_kattohinta muokkaa-kattohinta?)
-                                       (assoc :hoitovuosi-kesken? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+                                       (assoc :hoitovuosi-kesken? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                                        (assoc :virheet (when-not (empty? virheet) virheet)))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-muutospaatos))]
@@ -268,7 +143,7 @@
 
     ;; Kokeillaan tähän erilaista lähestymistapaa. Kirjoitetaan validoinnit päätösmäppiin sisälle
     (let [virheet (cond-> []
-                    (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+                    (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken."))
 
           tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0) (or pysyvat-muutokset 0) (or muutostyo-muutokset 0)
@@ -286,11 +161,12 @@
                                               (assoc :rahavarausten_muutokset (or rahavarausmuutos-summa 0))
                                               (assoc :arvonvahennysten_muutokset (or arvonvahennykset-yht 0))
                                               (assoc :tavoitehinnan_muutokset_yhteensa (or tavoitehinna-muutokset-yhteensa 0))
-                                              (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi))))
+                                              (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi))))
                                               (assoc :virheet (when-not (empty? virheet) virheet)))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan pysyvät muutokset")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
       paatokset)))
+
 
 (defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
                                        taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
@@ -305,16 +181,16 @@
     (cond
       ;; Jos validoinnit on asetuksista laitettu päälle, tavoitehinta pitää olla vahvistettu
       (and validoinnit-kaytossa? (not tavoitehinta-vahvistettu?))
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuoden alun indeksikorjattu tavoitehinta on vahvistamatta.
+      (apurit/lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuoden alun indeksikorjattu tavoitehinta on vahvistamatta.
       Voit vahvistaa tiedon hoitovuoden alun tavoitehinta -välilehdeltä." true 3)
 
       ;; Jos validoinnit on asetuksista laitettu päälle, niin hoitovuoden pitää olla päättynyt
-      (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? hoitokauden-alkuvuosi)))
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuosi on vielä kesken." true 3)
+      (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? hoitokauden-alkuvuosi)))
+      (apurit/lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuosi on vielä kesken." true 3)
 
       ;; Jos validoinnit on asetuksista laitettu päälle, niin Tavoitehinnan muutokset -päätös pitää olla tallennettu
-      (and validoinnit-kaytossa? (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuoden lopun indeksikorjaus
+      (and validoinnit-kaytossa? (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
+      (apurit/lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Hoitovuoden lopun indeksikorjaus
       laskentaan automaattisesti, kun tavoitehintamuutokset on vahvistettu." true 3)
 
       (and oikaistu-tavoitehinta hoitokauden-indeksikuukaudet)
@@ -369,7 +245,8 @@
 
       ;; Ehdot eivät täyttyneet, otetaan indeksipäätökset pois listasta ja lisätään virheilmoitus päätökselle
       :else
-      (lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Tavoitehintaa, tavoitehinnan muutoksia tai hoitokauden indeksikuukausia ei ole määritelty." true 3))))
+      (apurit/lisaa-paatos-virheellisena paatokset "Hoitovuoden lopun indeksikorjaus" "Tavoitehintaa, tavoitehinnan muutoksia tai hoitokauden indeksikuukausia ei ole määritelty." true 3))))
+
 
 (defn valmistele-tavoitehinnan-alituspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi
                                              hoitokauden-alun-tavoitehinta hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset
@@ -386,15 +263,15 @@
     paatokset
     (let [virheet (cond-> []
                     (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
-                      (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
+                      (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
                     (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
                     (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not tavoitehinta-vahvistettu?))
                     (conj "Kustannussuunnitelma on vahvistamatta.")
                     (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
-                      (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
+                      (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
                     (conj "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä.")
 
-                    (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+                    (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken."))
           urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
           tavoitehinnan-alitus (if (and hoitokauden-lopun-indeksikorjattu-tavoitehinta kustannukset)
@@ -434,7 +311,8 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-alituspaatos))]
       paatokset)))
 
-(defn valmistele-tavoitehinnan-ylityspaatos [db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi
+
+(defn valmistele-tavoitehinnan-ylityspaatos [_db validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi
                                              urakan-loppuvuosi kuluva-hoitovuosi hoitovuoden-lopun-tavoitehinta
                                              hoitovuoden-lopun-kattohinta kustannukset tietokanta-paatokset
                                              tavoitehinta-vahvistettu? urakan-parametrit]
@@ -447,14 +325,14 @@
                   (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not tavoitehinta-vahvistettu?))
                   (conj "Kustannussuunnitelma on vahvistamatta.")
                   (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
-                    (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
+                    (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
                   (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
                   (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
-                    (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
+                    (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
                   (conj "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä.")
 
-                  (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? kuluva-hoitovuosi)))
+                  (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                   (conj "Hoitovuosi on kesken."))
 
         ;; Ylitys + tavoitehinta ei voi ylittää kattohintaa. Eli maksettavat rahat on aina tavoitehinnan ja
@@ -487,6 +365,7 @@
                     paatokset)]
     paatokset))
 
+
 (defn valmistele-kattohinnan-paatokset [db validoinnit-kaytossa? urakkaid paatokset hoitovuoden-lopun-kattohinta kustannukset
                                         kuluva-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu?]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
@@ -496,27 +375,27 @@
   ;; Hoitovuoden lopun tavoitehintapäätös tallennettu
   ;; Ja vielä lisäksi: Tavoitehinnan ylityspäätös tallennettu
   (if-not (and hoitovuoden-lopun-kattohinta kustannukset (> kustannukset hoitovuoden-lopun-kattohinta))
-    (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Poistetaan vain koko päätös." false 7)
+    (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Poistetaan vain koko päätös." false 7)
 
     (cond
       (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not tavoitehinta-vahvistettu?))
-      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kustannussuunnitelma on vahvistamatta." true 7)
+      (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kustannussuunnitelma on vahvistamatta." true 7)
 
       (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi)
-        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
-      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 7)
+        (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
+      (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan muutokset -päätös on vielä tekemättä." true 7)
 
       ;; Vaaditaan hoitovuoden lopun tavoite-ja kattohinta vain jos kuluva hoitovuosi on 2024 tai myöemmin
       ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
       (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
-        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
-      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
+        (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
+      (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä." true 7)
 
       ;; Vaaditaan Tavoitehinnan ylitys päätös, pitää olla tallennettuna
       ;; Ja, jos urakka on alkanut 2021 tai myöhemmin
       (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
-        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan ylitys")))
-      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan ylitys -päätös on vielä tekemättä." true 7)
+        (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan ylitys")))
+      (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Tavoitehinnan ylitys -päätös on vielä tekemättä." true 7)
 
       (and hoitovuoden-lopun-kattohinta kustannukset (> kustannukset hoitovuoden-lopun-kattohinta))
       (let [urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit db {:urakkaid urakkaid}))
@@ -552,7 +431,8 @@
 
       ;; Jos tarvittavia tietoja ei ole, niin poistetaan kattohinnan ylitys
       :else
-      (lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kattohintaa tai toteutuneita kustannuksia ei ole määritelty." false 7))))
+      (apurit/lisaa-paatos-virheellisena paatokset "Kattohinnan ylitys" "Kattohintaa tai toteutuneita kustannuksia ei ole määritelty." false 7))))
+
 
 ;; Hoitovuoden lopun tavoite- ja kattohinta
 (defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
@@ -568,12 +448,12 @@
   (if-not (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) paatokset))
     paatokset
     (let [virheet (cond-> [] (and validoinnit-kaytossa? (<= 2024 valittu-hoitovuosi)
-                               (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
+                               (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
                     (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
                     (and validoinnit-kaytossa?
                       (and
-                        (paatos-mahdollinen? mahdolliset-paatokset "Hoitovuoden lopun indeksikorjaus")
-                        (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun indeksikorjaus"))))
+                        (apurit/paatos-mahdollinen? mahdolliset-paatokset "Hoitovuoden lopun indeksikorjaus")
+                        (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun indeksikorjaus"))))
                     (conj "Hoitovuoden lopun indeksikorjaus -päätös on vielä tekemättä.")
 
                     (not tavoitehinta-indeksikorjattu)
@@ -585,7 +465,7 @@
                     (and validoinnit-kaytossa? (<= 2024 valittu-hoitovuosi) (not tavoitehinta-vahvistettu?))
                     (conj "Kustannussuunnitelma on vahvistamatta.")
 
-                    (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
+                    (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? valittu-hoitovuosi)))
                     (conj "Hoitovuosi on kesken."))
 
           hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
@@ -609,6 +489,7 @@
           paatokset (sort-by :jarjestys (conj paatokset hintapaatos))]
       paatokset)))
 
+
 (defn valmistele-hoidonjohtopalkkionmuutospaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset hv-lopun-tavoitehinta-ilman-indeksia
                                                   tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
@@ -621,11 +502,11 @@
   (if-not (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
     paatokset
     (let [virheet (cond-> []
-                    (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
+                    (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? valittu-hoitovuosi)))
                     (conj "Hoitovuosi on kesken.")
 
                     (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021)
-                      (not (paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
+                      (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
                     (conj "Hoitovuoden lopun tavoite- ja kattohinta -päätös on vielä tekemättä.")
 
                     (not hv-lopun-tavoitehinta-ilman-indeksia)
@@ -660,7 +541,7 @@
                    (assoc :hoidonjohtopalkkio hoidonjohtopalkkio)
                    (assoc :muutosprosentti muutosprosentti)
                    (assoc :hoidonjohtopalkkio_muutos hoidonjohtopalkkio-muutos)
-                   (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi))))
+                   (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? valittu-hoitovuosi))))
                    (assoc :virheet (when-not (empty? virheet) virheet)))
 
           paatokset (remove
@@ -670,11 +551,12 @@
           paatokset (sort-by :jarjestys (conj paatokset paatos))]
       paatokset)))
 
+
 (defn valmistele-raporttipaatos [validoinnit-kaytossa? valittu-hoitovuosi paatokset]
   (if (first (filter #(= (:nimi %) "Välikatselmuspöytäkirjaan liitettävät raportit") paatokset))
     ;; Mikäli raporttipäätös on olemassa
     (let [paatos (first (filter #(= (:nimi %) "Välikatselmuspöytäkirjaan liitettävät raportit") paatokset))
-          paatos (if (and validoinnit-kaytossa? (not (hoitovuosi-paattynyt? valittu-hoitovuosi)))
+          paatos (if (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? valittu-hoitovuosi)))
                    (assoc paatos :virhe "Hoitovuosi on kesken.")
                    paatos)
           paatokset (remove #(= (:nimi %) "Välikatselmuspöytäkirjaan liitettävät raportit") paatokset)]
@@ -688,6 +570,7 @@
                              (str/replace #"ä" "a")
                              (str/replace #" " "-")
                              (str/replace #"--" "-")))))
+
 
 (defn filtteroi-mahdolliset-paatokset
   "Poistetaan mahdollisista päätöksistä kaikki päätökset, jotka kuuluvat jo olemassa olevaan luokkaan.
