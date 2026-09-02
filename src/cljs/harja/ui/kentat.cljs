@@ -1219,7 +1219,7 @@
                                           :aria-label "päiväys"
                                           :id elementin-id}]]
            (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
-           [:span.pvm-kentta
+           [:span.pvm-kentta.input-default
             {:on-click #(do (.stopPropagation %)
                           (.preventDefault %)
                           (reset! auki true) nil)}
