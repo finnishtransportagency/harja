@@ -449,7 +449,6 @@
                        (nth taulukko 3)))
         taulukot (#'sanktio/koosta-yllapidon-taulukot
                    [tunnettu tunnistamaton]
-                   []
                    [])
         sakko-taulukko (first (filter #(= "Sakot ylläpitoluokittain"
                                           (get-in % [1 :otsikko]))

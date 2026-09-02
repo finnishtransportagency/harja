@@ -176,8 +176,8 @@
       (finally
         (u (str "DELETE FROM sanktio_profiili_rivi WHERE id = " profiilirivi-id))))))
 
-(deftest raportin-suoritus-yllapidolle-erottelee-arvonvahennyksen-sakoista
-  (let [testi-indeksi "raportin-suoritus-yllapidolle-erottelee-arvonvahennyksen-sakoista"]
+(deftest raportin-suoritus-yllapidolle-ei-nayta-arvonvahennysosiota
+  (let [testi-indeksi "raportin-suoritus-yllapidolle-ei-nayta-arvonvahennysosiota"]
     (try
       (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))
       (u (str "INSERT INTO sanktio "
@@ -211,8 +211,7 @@
       (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -3100M))
       (is (= ["Yhteensä" 5 -4500M]
              (hae-taulukon-rivi sanktiot-taulukko "Yhteensä")))
-      (is (= ["Arvonvähennys" -600M]
-             (hae-taulukon-rivi arvonvahennys-taulukko "Arvonvähennys"))))
+      (is (nil? arvonvahennys-taulukko)))
       (finally
       (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))))))
 

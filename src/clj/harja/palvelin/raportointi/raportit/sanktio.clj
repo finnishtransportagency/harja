@@ -236,20 +236,14 @@
                            bonukset)]
       (muodosta-bonus-taulukko bonuslajit bonus-data-map))))
 
-(defn- koosta-yllapidon-taulukot [sanktiot bonukset arvonvahennykset]
+(defn- koosta-yllapidon-taulukot [sanktiot bonukset]
   (let [tunnetut (filterv #(some? (:sanktiolaji_koodi %)) sanktiot)
         tunnistamattomat (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot)]
     (remove nil?
       [(koosta-yllapito-taulukko tunnetut)
        (when (seq tunnistamattomat)
          (koosta-tunnistamattomat-taulukko tunnistamattomat))
-       (koosta-yllapidon-bonustaulukko bonukset)
-       (into [:taulukko {:otsikko "Arvonvähennykset"
-                         :sheet-nimi "Arvonvähennykset"
-                         :excel-alkutekstit [[:otsikko-heading "Arvonvähennykset"]]
-                         :viimeinen-rivi-yhteenveto? true
-                         :tyhja "Ei arvonvähennyksiä."}]
-         (koosta-arvonvahennys-taulukko arvonvahennykset))])))
+       (koosta-yllapidon-bonustaulukko bonukset)])))
 
 (defn- urakka-id [rivi]
   (or (:urakka_id rivi) (:urakka-id rivi)))
@@ -391,7 +385,7 @@
                         arvonvahennykset (filter #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %))
                                            urakan-rivit)
                         taulukot (if yllapitourakka?
-                                   (koosta-yllapidon-taulukot sanktiot bonukset arvonvahennykset)
+                                   (koosta-yllapidon-taulukot sanktiot bonukset)
                                    (:taulukot (koosta-urakan-taulukot
                                                 sanktiot
                                                 bonukset
@@ -439,7 +433,7 @@
                                             {:avain "Yhteensä" :arvo (+ sakkosumma bonukset-summa arvonvahennykset-summa)
                                               :fmt :raha :lihavoi? true}]
                                            (merkitse-taulukot
-                                              (koosta-yllapidon-taulukot sanktiot bonukset arvonvahennykset)
+                                              (koosta-yllapidon-taulukot sanktiot bonukset)
                                               urakan-nimi)])
 
                                         ;; HOITO-URAKKA
