@@ -120,7 +120,8 @@
            :paattynyt  (konv/sql-date loppupvm)
            :tyyppi     (name tyyppi)
            :toimenpide toimenpide-id
-           :tehtava    tehtava-id})))
+           :tehtava    tehtava-id
+           :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))})))
 
 (defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät tyypillä ja toimenpidekoodilla: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi)
@@ -137,12 +138,13 @@
               muunna-desimaaliluvut-xf)
         (toteumat-q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
           db
-          urakka-id
-          sopimus-id
-          (konv/sql-timestamp alkupvm)
-          (konv/sql-timestamp loppupvm)
-          (name tyyppi)
-          toimenpidekoodi)))
+          {:urakka urakka-id
+           :sopimus sopimus-id
+           :alkupvm (konv/sql-timestamp alkupvm)
+           :loppupvm (konv/sql-timestamp loppupvm)
+           :tyyppi (name tyyppi)
+           :toimenpidekoodi toimenpidekoodi
+           :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))})))
 
 (defn- kasittele-toteumatehtava [c user toteuma tehtava]
   (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
@@ -328,7 +330,8 @@
                                                                                  :alkupvm         alkupvm
                                                                                  :loppupvm        loppupvm
                                                                                  :tyyppi          tyyppi
-                                                                                 :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
+                                                                                 :toimenpidekoodi (:toimenpidekoodi (first tehtavat))
+                                                                                 :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))})
         paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
                                                                  {:urakka-id     urakka-id
                                                                   :sopimus-id    sopimus-id
