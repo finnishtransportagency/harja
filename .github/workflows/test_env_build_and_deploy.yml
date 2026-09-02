@@ -17,13 +17,13 @@ on:
         required: true
         type: choice
         options:
-          - test-qa1
+          - test-qa2
 
 permissions: {}
 
 concurrency:
   ## TODO: Myöhemmin ei kovakoodata
-  group: test-qa1-deploy
+  group: test-qa2-deploy
   cancel-in-progress: false
   
 jobs:
@@ -33,7 +33,7 @@ jobs:
     name: "Deploy branch to QA1"
     runs-on: ubuntu-latest
     ## TODO: Myöhemmin ei kovakoodata
-    environment: 'test-qa1'
+    environment: 'test-qa2'
 
     permissions:
       id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
