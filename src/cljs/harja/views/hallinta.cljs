@@ -34,7 +34,7 @@
             [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
-            [harja.views.hallinta.urakkatiedot.urakkaparametrit_nakyma :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.urakkaparametrit-nakyma :as urakkaparametrit]
             [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
             [harja.tiedot.istunto :as istunto]))
 
