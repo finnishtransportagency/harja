@@ -45,12 +45,32 @@ SET laskutusraja_kaytossa = true
 WHERE urakkaid = (SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030');
 
 -- Asetetaan hoitovuoden alun tavoitehinta käyttöön kaikille urakoille, jotka alkavat vuonna 2025 tai sen jälkeen
+-- -25 alkavilla urakoilla on virhe tavoitehinnan ylityksen maksuprosenteissa. Korjataan ne tässä
 UPDATE urakka_parametrit up
-   SET hoitovuoden_alun_tavoitehinta_kaytossa = true
+   SET hoitovuoden_alun_tavoitehinta_kaytossa = true,
+       tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti = 75.00,
+       tavoitehinnan_ylityksen_tilaajan_maksuprosentti = 25.00
   FROM urakka u
  WHERE u.id = up.urakkaid
    AND EXTRACT(YEAR FROM u.alkupvm) >= 2025
    AND u.tyyppi = 'teiden-hoito';
+
+-- Myös -24 alkavilla urakoilla on kattohintaylityksen siirron prosenttirajoitus käytössä.
+UPDATE urakka_parametrit up SET kattohintaylityksen_siirron_prosenttirajoitus = 0.03
+FROM urakka u
+WHERE u.id = up.urakkaid
+  AND EXTRACT (YEAR FROM u.alkupvm) = 2024;
+
+-- Testiaineistossa on mhu+ urakka vuodelle -25, jolle menee defaulttina virheelliset prosentit. Säädetään se tässä kuntoon. Koskee siis vain lokaalikantaa
+-- ja tästä ei tarvitse huolehtia tuotannossa
+UPDATE urakka_parametrit up
+SET tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti = 50.00,
+    tavoitehinnan_ylityksen_tilaajan_maksuprosentti = 50.00
+FROM urakka u
+WHERE u.id = up.urakkaid
+  AND EXTRACT(YEAR FROM u.alkupvm) >= 2025
+  AND u.tyyppi = 'teiden-hoito'
+  AND u.sopimustyyppi = 'mhu+';
 
 -- Kalustoresurssit-alasivun testaamista varten tarvittava testidata.
 -- Luodaan MHU26-urakka (alkuvuosi 2026) Suunnittelu/Kalustoresurssit-alasivun testaamista varten.
