@@ -12,39 +12,58 @@ on:
     inputs:
       environment:
         description: "Valitse deploy-ympäristö"
-        type: environment
         required: true
+        type: choice
+        options:
+          - dev
+          - stg
+          - prod
+
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
 
 jobs:
   shutdown-fargate-tasks:
+    name: "Shutdown Fargate tasks"
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment:
+      name: ${{ inputs.environment }}
+      # Käytä ympäristökohtaisia salaisuuksia, mutta estä GitHub deployment-objektin luonti, jotta ei synny turhaa kohinaa.
+      deployment: false
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC token is needed for AWS actions assume the role
-      id-token: write
-      # Contents is needed for the checkout action
-      contents: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: List used environment variables
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+          ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}
+          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+          ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
         run: |
-          echo "Target environment: ${{ inputs.environment }}"
+          echo "Target environment: ${ENVIRONMENT}"
           echo "Environment variables:"
-          echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
-          echo "  ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}"
-          echo "  ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}"
-          echo "  ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}"
-          echo "  ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}"
-
+          echo "  ECR_REPOSITORY_NAME: ${ECR_REPOSITORY_NAME}"
+          echo "  ECS_TASK_DEFINITION_NAME: ${ECS_TASK_DEFINITION_NAME}"
+          echo "  ECS_CONTAINER_NAME: ${ECS_CONTAINER_NAME}"
+          echo "  ECS_CLUSTER_NAME: ${ECS_CLUSTER_NAME}"
+          echo "  ECS_SERVICE_NAME: ${ECS_SERVICE_NAME}"
         shell: bash
 
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           aws-region: "eu-west-1"
           role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"

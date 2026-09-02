@@ -153,7 +153,8 @@
             (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
           (false? (get-in app [:yhteenveto :valikatselmus-tehty-urakalle?])))
-        input-id (str "input-sitoutuminen-pisteet")]
+        input-id (str "input-sitoutuminen-pisteet")
+        kokonaismaksimi (reduce + 0 (map :pisteet-max (:lupausryhmat app)))]
     (when muokkaa?
       ;; Aseta focus input kenttään, jos muokkaustila on laitettu päälle
       (yleiset/fn-viiveella
@@ -172,10 +173,7 @@
                             :vayla-tyyli? true
                             :input-luokka "lupaus-sitoutumis-pisteet"
                             :kokonaisluku? true
-                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0
-                                                              ;; Asetetaan pisteiden yläraja 200 2025 alkaville urakoille ja 100 muille
-                                                              (if (= 2025 (pvm/vuosi (:alkupvm urakka))) 200 100)
-                                                              1))
+                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0 kokonaismaksimi 1))
                             :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
                                             (e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset))))
                             :on-blur #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))}
@@ -275,6 +273,10 @@
            (ennuste-opaste [ikonit/harja-icon-status-alert]
              (str "Hoitokauden tavoitehinta puuttuu")
              "Täytä tarjouksen alkuperäinen tavoitehinta suunnitteluosiossa valitulle hoitokaudelle.")
+           (get-in app [:yhteenveto :lupausprosentit-puuttuu?])
+           (ennuste-opaste [ikonit/harja-icon-status-alert]
+             "Lupausbonus- tai sanktioprosentit puuttuvat"
+             "Urakan parametreista puuttuvat lupauspäätöksen laskentaan tarvittavat prosentit.")
            (= :ei-viela-ennustetta ennusteen-tila)
            (ennuste-opaste [ikonit/harja-icon-status-help]
              "Ei vielä ennustetta"
@@ -339,6 +341,8 @@
      [nykyhetki (r/wrap
                   (:nykyhetki app)
                   #(e! (lupaus-tiedot/->AsetaNykyhetki %)))]
+     [napit/yleinen-toissijainen "Generoi vastaukset"
+      #(e! (lupaus-tiedot/->GeneroiLupausvastaukset))]
      [debug app {:otsikko "TUCK STATE"}]]))
 
 (defn lupaukset-alempi-valilehti*

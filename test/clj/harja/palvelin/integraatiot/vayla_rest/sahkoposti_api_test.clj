@@ -120,7 +120,7 @@
         ;; Lähetetään viesti ja tarkistetaan kuittaus
         viesti-id (str (UUID/randomUUID))
         vastaus (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                              integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                              integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                                      {:status 200
                                                                       :header "jotain"
                                                                       :body (onnistunut-sahkopostikuittaus viesti-id)})]
@@ -137,7 +137,7 @@
     (is (true? (:onnistunut vastaus)) "Kuittauksen mukaan viesitn lähetys epäonnistui")
 
     (let [db (:db jarjestelma)
-          integraatio-id (integraatio-kyselyt/integraation-id db "api" "sahkoposti-ja-liite-lahetys")
+          integraatio-id (integraatio-kyselyt/integraation-id db "sahkoposti" "sahkoposti-ja-liite-lahetys")
           integraatioviestit (q-map (str "select id, integraatiotapahtuma, suunta, sisaltotyyppi, siirtotyyppi, sisalto, otsikko, parametrit, osoite, kasitteleva_palvelin
           FROM integraatioviesti;"))
           integraatiotapahtumat (q-map (str "select id, integraatio, alkanut, paattynyt, lisatietoja, onnistunut, ulkoinenid FROM integraatiotapahtuma"))]
@@ -148,10 +148,10 @@
 
 (deftest laheta-ihan-tavallinen-sahkoposti-onnistuu
   (let [viesti-id (str (UUID/randomUUID))
-        integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys")
         vastaus
         (try+ (future (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                                    integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                                    integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                                            {:status 200
                                                                             :header "jotain"
                                                                             :body (onnistunut-sahkopostikuittaus viesti-id)})]
@@ -174,7 +174,7 @@
 
 ;; Simuloi tilannetta, jossa sähköpostipalvelin ei vastaa
 (deftest laheta-tavallinen-sahkoposti-epaonnistuu-api-palvelun-jalkeen
-  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys")
         sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))
         vastaus (future (with-fake-http [{:url sahkoposti-lahetys-url :method :post} {:status 400
@@ -197,7 +197,7 @@
 
 ;; Simuloi tilannetta, jossa Harja lähettää onnistuneesti, mutta saadaan virheellinen kuittaus
 (deftest laheta-tavallinen-sahkoposti-epaonnistuu-virheelliseen-kuittaukseen
-  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys")
         sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))
         vastaus (future (with-fake-http [{:url sahkoposti-lahetys-url :method :post} {:status 400
@@ -219,7 +219,7 @@
     (is (= false (:onnistunut (first integraatiotapahtumat))))))
 
 (deftest laheta-tavallinen-sahkoposti-vaarallinen-kuittaus
-  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+  (let [integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys")
         sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         viesti-id (str (UUID/randomUUID))
         vaarallinen-kuittaus (str "<!DOCTYPE foo [ <!ENTITY xxe SYSTEM \"file:///etc/passwd\"> ]>\n"
@@ -253,7 +253,7 @@
 ;; Simuloi tilannetta, jossa api ei vastaa
 (deftest laheta-tavallinen-sahkoposti-epaonnistuu-api-kutsulla
   (let [viesti-id (str (UUID/randomUUID))
-        integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "api" "sahkoposti-lahetys")
+        integraatio-id (integraatio-kyselyt/integraation-id (:db jarjestelma) "sahkoposti" "sahkoposti-lahetys")
         sahkoposti-lahetys-url "http://localhost:8084/harja/api/sahkoposti/xml"
         vastaus
         (sahkoposti/laheta-viesti! (:api-sahkoposti jarjestelma)
@@ -378,7 +378,7 @@
                            :vastuuhenkilo true
                            :varahenkilo true}))
                   sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                  integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                  integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                          {:status 200
                                                           :header "jotain"
                                                           :body (onnistunut-sahkopostikuittaus viesti-id)})]
@@ -486,7 +486,7 @@
 
 (deftest vastaanota-haro-sahkoposti-xml-api-rajapintaan
   (with-redefs [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-                integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+                integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                                        {:status 200
                                                         :header "jotain"
                                                         :body (onnistunut-sahkopostikuittaus nil)})]

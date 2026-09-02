@@ -43,7 +43,7 @@
     (filter #(or
                (not (::voimassa? %))
                (pvm/jalkeen? (pvm/nyt) (::loppuaika %))))
-    (sort-by ::loppupvm)))
+    (sort-by ::loppuaika)))
 
 (defn aikavalit-leikkaavat-sivuaminen-sallittu? [ensimmainen-alku ensimmainen-loppu toinen-alku toinen-loppu]
   (boolean (or
@@ -96,9 +96,10 @@
 (defn onko-paallekkainen? [uusialku uusiloppu vanhat]
   (boolean (some #(aikavalit-leikkaavat-sivuaminen-sallittu? (::alkuaika %) (::loppuaika %) uusialku uusiloppu) vanhat)))
 
-(defn voimassaoleva-hairio
+(defn voimassaolevat-hairiot
+  "Palauttaa kaikki voimassaolevat häiriöilmoitukset annetulla ajanhetkellä."
   ([hairiot]
-   (voimassaoleva-hairio hairiot (pvm/nyt)))
+   (voimassaolevat-hairiot hairiot (pvm/nyt)))
   ([hairiot aika]
    (->> hairiot
      (filter #(and
@@ -114,5 +115,22 @@
                   (pvm/sama-tai-ennen? aika (::loppuaika %) false)
 
                   :else true)))
-     (sort-by ::pvm)
-     first)))
+     (sort-by ::pvm))))
+
+(defn voimassaoleva-hairio
+  ([hairiot]
+   (voimassaoleva-hairio hairiot (pvm/nyt)))
+  ([hairiot aika]
+   (first (voimassaolevat-hairiot hairiot aika))))
+
+(defn voimassaolevat-hairiot-tyypeittain
+  "Palauttaa mapin, jossa avaimina häiriöilmoitustyypit (:hairio ja :tiedote)
+   ja arvoina tuorein voimassaoleva ilmoitus kyseistä tyyppiä.
+   Palauttaa nil-arvot tyypeille joilla ei ole voimassaolevaa ilmoitusta."
+  ([hairiot]
+   (voimassaolevat-hairiot-tyypeittain hairiot (pvm/nyt)))
+  ([hairiot aika]
+   (let [voimassaolevat (voimassaolevat-hairiot hairiot aika)
+         tyypeittain (group-by ::tyyppi voimassaolevat)]
+     {:hairio (first (get tyypeittain :hairio))
+      :tiedote (first (get tyypeittain :tiedote))})))

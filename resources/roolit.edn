@@ -1,0 +1,110 @@
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+;;; HUOM: Tämä tiedosto on AUTOMAATTISESTI GENEROITU KOPIO!
+;;; Lähde: resources/roolit.xlsx
+;;;
+;;; ÄLÄ MUOKKAA TÄTÄ TIEDOSTOA SUORAAN!
+;;; Muokkaa sen sijaan resources/roolit.xlsx Excel-tiedostoa.
+;;;
+;;; AUTOMAATTINEN GENEROINTI:
+;;;   - Kehitysympäristössä: Generoidaan automaattisesti käynnistyksessä
+;;;     jos resources/roolit.xlsx on muuttunut (aikaleima-tarkistus)
+;;;   - Manuaalinen generointi: lein run -m harja.tyokalut.oikeudet-edn-export
+;;;
+;;; MUISTA COMMITOIDA:
+;;;   git add resources/roolit.xlsx resources/roolit.edn resources/oikeudet.edn
+;;;   git commit -m "Päivitä oikeudet"
+;;;
+;;; GITHUB ACTIONS:
+;;;   - CI validoi että EDN:t ovat ajan tasalla Excelin kanssa
+;;;   - Jos validointi failaa, käynnistä Harja uudelleen paikallisesti
+;;;     (generoi EDN:t automaattisesti) tai aja manuaalinen komento
+;;;
+;;; Tämä tiedosto on tarkoitettu:
+;;;   - Dokumentaatioksi (helppo lukea tekstieditorilla)
+;;;   - Versionhallinnan helpottamiseksi (Git-diffit näkyvät)
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+[{:nimi "ELY_Kayttaja",
+  :kuvaus "ELY käyttäjä",
+  :osapuoli "ELY",
+  :linkki nil}
+ {:nimi "ELY_Laadunvalvoja",
+  :kuvaus "ELY laadunvalvoja",
+  :osapuoli "ELY",
+  :linkki "urakka"}
+ {:nimi "ELY_Paakayttaja",
+  :kuvaus "ELY pääkäyttäjä",
+  :osapuoli "ELY",
+  :linkki nil}
+ {:nimi "ELY_Peruskayttaja",
+  :kuvaus "ELY peruskäyttäjä",
+  :osapuoli "ELY",
+  :linkki nil}
+ {:nimi "ELY_Urakanvalvoja",
+  :kuvaus "ELY urakanvalvoja",
+  :osapuoli "ELY",
+  :linkki "urakka"}
+ {:nimi "ELY_turvallisuusvastaava",
+  :kuvaus "ELY turvallisuusvastaava",
+  :osapuoli "ELY",
+  :linkki "urakka"}
+ {:nimi "Jarjestelmavastaava",
+  :kuvaus "Järjestelmävastaava",
+  :osapuoli "Liikennevirasto",
+  :linkki nil}
+ {:nimi "Kayttaja",
+  :kuvaus "Yrityksen käyttäjä",
+  :osapuoli "Urakoitsija",
+  :linkki "urakoitsija"}
+ {:nimi "Kelikeskus",
+  :kuvaus "Kelikeskus",
+  :osapuoli "Urakoitsija",
+  :linkki "urakka"}
+ {:nimi "Laadunvalvoja",
+  :kuvaus "Urakan laadunvalvoja",
+  :osapuoli "Urakoitsija",
+  :linkki "urakka"}
+ {:nimi "Laatupaallikko",
+  :kuvaus "Yrityksen laatupäällikkö",
+  :osapuoli "Urakoitsija",
+  :linkki "urakoitsija"}
+ {:nimi "Paakayttaja",
+  :kuvaus "Yrityksen pääkäyttäjä",
+  :osapuoli "Urakoitsija",
+  :linkki "urakoitsija"}
+ {:nimi "Paivystaja",
+  :kuvaus "Urakan päivystäjä",
+  :osapuoli "Urakoitsija",
+  :linkki "urakka"}
+ {:nimi "Rakennuttajakonsultti",
+  :kuvaus "ELY rakennuttajakonsultti",
+  :osapuoli "ELY",
+  :linkki "urakka"}
+ {:nimi "Tilaajan_Asiantuntija",
+  :kuvaus "Tilaajan asiantuntija",
+  :osapuoli "Liikennevirasto",
+  :linkki nil}
+ {:nimi "Tilaajan_Kayttaja",
+  :kuvaus "Tilaajan käyttäjä",
+  :osapuoli "Liikennevirasto",
+  :linkki nil}
+ {:nimi "Tilaajan_Rakennuttajakonsultti",
+  :kuvaus "Tilaajan rakennuttajakonsultti",
+  :osapuoli "Liikennevirasto",
+  :linkki "urakka"}
+ {:nimi "Tilaajan_Urakanvalvoja",
+  :kuvaus "Tilaajan urakanvalvoja",
+  :osapuoli "Liikennevirasto",
+  :linkki "urakka"}
+ {:nimi "Tilaajan_laadunvalvoja",
+  :kuvaus "Tilaajan laadunvalvoja",
+  :osapuoli "Liikennevirasto",
+  :linkki "urakka"}
+ {:nimi "Tilaajan_turvallisuusvastaava",
+  :kuvaus "Tilaajan turvallisuusvastaava",
+  :osapuoli "Liikennevirasto",
+  :linkki "urakka"}
+ {:nimi "vastuuhenkilo",
+  :kuvaus "Urakan vastuuhenkilö",
+  :osapuoli "Urakoitsija",
+  :linkki "urakka"}]

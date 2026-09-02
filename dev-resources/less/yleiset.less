@@ -22,6 +22,11 @@
   .viesti {
     align-content: center;
   }
+
+  &.keskitetty-pysty {
+    flex-direction: column;
+    align-items: center;
+  }
 }
 
 .ajax-loader-valistys-kustannukset {
@@ -31,15 +36,15 @@
   justify-content: right;
 }
 
+.poista-ajax-loader-valistykset {
+  padding: 0;
+}
+
 div.tietorivi {
   border-bottom: solid 1px lightGray;
 
   & .nappi-alasveto {
-    height: @input-korkeus-matalampi;
-
-    > .livicon-chevron-down {
-      height: 4px;
-    }
+    height: @input-korkeus-vayla;
   }
 
   .pvm-kentta {
@@ -173,17 +178,15 @@ button > .ajax-loader {
 
 .label-ja-kentta {
   display: inline-block;
-  vertical-align: top;
   margin: @valistys-4;
   .kentan-otsikko {
     .caption-small-strong();
-    margin-bottom: @valistys-4;
   }
   .livi-alasveto(@valintakontrollin-leveys);
   input:not([type="checkbox"]) {
     // Vaaditaan, että label-ja-kenttä elementissä input-itemit ovat aina 100% leveyisiä ja standardikorkeita.
     // Rajataan pois checkboksit, koska nämä säädöt eivät toimi checkboksien kanssa kovin hyvin.
-    height: @valintakontrollin-korkeus;
+    /* height: @valintakontrollin-korkeus; */
     width: 100%;
   }
 }
@@ -198,6 +201,12 @@ button > .ajax-loader {
   }
   .pvm-kentta {
     width: 46%;
+    input {
+      height: @valintakontrollin-korkeus;
+      width: 100%;
+      border: 1px solid @harmaa7;
+      border-radius: 0.25rem;
+    }
   }
   
   .input-default {
@@ -211,6 +220,8 @@ button > .ajax-loader {
     input {
       height: @valintakontrollin-korkeus;
       width: 100%;
+      border: 1px solid @harmaa7;
+      border-radius: 0.25rem;
     }
   }
 
@@ -231,13 +242,14 @@ button > .ajax-loader {
 }
 
 .label-ja-aikavali {
-  .label-ja-vali-tpl(@valintakontrollin-leveys);
+  .label-ja-vali-tpl(@valintakontrollin-leveys, @valistys-4);
   &.ei-tiukkaa-leveytta {
       width:fit-content;
   }
 }
 .label-ja-aikavali-lyhyt {
   .label-ja-vali-tpl(85px);
+  margin: 0px;
 }
 
 .label-ja-aikavali-lomake {
@@ -495,6 +507,8 @@ button > .ajax-loader {
 
 .tierekisteriosoite-flex { 
     display: flex;
+    height: 60px;
+
     & > div {
       width:58px;
     }
@@ -789,6 +803,8 @@ button > .ajax-loader {
 }
 
 .vahvistamaton {
+    border-bottom: 1px solid @black-light;
+    border-top: 1px solid @black-light;
     background-color: @yellow;
 }
 

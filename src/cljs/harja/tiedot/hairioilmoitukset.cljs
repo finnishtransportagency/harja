@@ -10,10 +10,15 @@
 (def tarkkaile-hairioilmoituksia? (atom false))
 (def nayta-hairioilmoitus? (atom true))
 
+;; Tyyppikohtaiset ilmoitukset ja piilotustilat
+(def hairioilmoitukset-tyypeittain (atom nil))
+(def nayta-hairioilmoitus-tyypeittain? (atom {:hairio true :tiedote true}))
+
 (defn hae-tuorein-hairioilmoitus! []
   (go (let [vastaus (<! (k/post! :hae-voimassaoleva-hairioilmoitus {}))]
         (when-not (k/virhe? vastaus)
-          (reset! tuore-hairioilmoitus vastaus)))))
+          (reset! tuore-hairioilmoitus vastaus)
+          (reset! hairioilmoitukset-tyypeittain (:hairioilmoitukset-tyypeittain vastaus))))))
 
 (defn tarkkaile-hairioilmoituksia! []
   (when-not @tarkkaile-hairioilmoituksia?
@@ -29,3 +34,10 @@
   (go
     (<! (timeout hairion-piilotusaika-ms))
     (reset! nayta-hairioilmoitus? true)))
+
+(defn piilota-hairioilmoitus-tyypilla! [tyyppi]
+  (swap! nayta-hairioilmoitus-tyypeittain? assoc tyyppi false)
+  (go
+    (<! (timeout hairion-piilotusaika-ms))
+    (swap! nayta-hairioilmoitus-tyypeittain? assoc tyyppi true)))
+

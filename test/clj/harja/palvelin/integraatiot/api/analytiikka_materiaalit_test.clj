@@ -59,7 +59,7 @@
 (deftest hae-toimenpiteet-onnistuu-test
   (let [;; Löydetään n. 1080 toimenpidettä
         toimenpiteet-kannasta (q-map
-                            (str "SELECT id, nimi, koodi as toimenpidekoodi, luotu, muokattu, poistettu
+                                (str "SELECT id, nimi, koodi as toimenpidekoodi, luotu, muokattu, poistettu
                                     FROM toimenpide
                                    WHERE taso = 3"))
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toimenpiteet")] kayttaja-analytiikka portti)
@@ -225,7 +225,7 @@
 
         ;; Luo suolalle suunnitelma
         talvisuolaraja 500
-        suolaustehtava "Suolaus"
+        suolaustehtava "Liukkaudentorjunta suolaamalla (materiaali)"
         tehtava-id (:id (first (q-map (format "SELECT id FROM tehtava WHERE nimi = '%s'" suolaustehtava))))
         _ (u (format "insert into urakka_tehtavamaara (urakka, \"hoitokauden-alkuvuosi\", tehtava, maara) values
         (%s, %s, %s, %s)" urakka-id (pvm/vuosi alkupvm) tehtava-id talvisuolaraja))

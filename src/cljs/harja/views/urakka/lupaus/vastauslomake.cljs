@@ -14,6 +14,7 @@
             [harja.fmt :as fmt]
             [harja.views.urakka.lupaus.kuukausipaatos-tilat :as kuukausitilat]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.lupaus.kustannusennuste-domain :as kustannusennuste-domain]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.siirtymat :as siirtymat]))
 
@@ -208,7 +209,7 @@
         tiedot-syotetty-ajoissa? (and kuukauden-kustannusennuste
                                    (:tavoitehinta kuukauden-kustannusennuste)
                                    (:toteutuneet-kustannukset kuukauden-kustannusennuste))
-        maarapaiva-paattely (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva-pvm tiedot-syotetty-ajoissa? disabled?)
+        maarapaiva-paattely (kustannusennuste-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva-pvm tiedot-syotetty-ajoissa? disabled?)
         maarapaiva-mennyt-ohi? (:maarapaiva-mennyt-ohi? maarapaiva-paattely)
         ei-maarapaivan-kuukausi? (:ei-maarapaivan-kuukausi? maarapaiva-paattely)
         kayta-readonly-nakymaa? (:kayta-readonly-nakymaa? maarapaiva-paattely)

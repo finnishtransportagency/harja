@@ -206,7 +206,7 @@ tr.uusitehtavakoodi td {
 
   .alasvedon-otsikko {
     display: inline-block;
-    font-weight: bold;
+    font-weight: 600;
   }
 
   &.col-md-1, &.col-md-2, &.col-md-3 {
@@ -259,6 +259,7 @@ tr.uusitehtavakoodi td {
   display: inline-block;
   position: relative;
   width: 100%;
+  height: @input-korkeus-vayla;
 }
 
 .flash-viesti {
@@ -271,9 +272,9 @@ tr.uusitehtavakoodi td {
 }
 
 
-@keyframes toast-liuku-vasemmalta {
+@keyframes toast-liuku-oikealta {
   from {
-    transform: translateX(calc(-100% - 20px));
+    transform: translateX(calc(+100% - 20px));
   }
 
   to {
@@ -292,10 +293,10 @@ tr.uusitehtavakoodi td {
 .toast-viesti-container {
   position: fixed;
   bottom: 10px;
-  left: 20px;
+  right: 20px;
   width: 350px;
   z-index: 10000;
-  animation: toast-liuku-vasemmalta 0.3s cubic-bezier(0.48, 1.09, 0.54, 1.17);
+  animation: toast-liuku-oikealta 0.3s cubic-bezier(0.48, 1.09, 0.54, 1.17);
   cursor: pointer;
   min-height: 40px;
 
@@ -419,10 +420,8 @@ tr.uusitehtavakoodi td {
   }
   > .infolaatikon-ikoni {
     font-size: 22px;
-    margin-bottom: auto;
-    margin-top: auto;
-    padding-right: 12px;
-    padding-left: 8px;
+    padding: @valistys-8 0;
+    margin-right: @valistys-16;
   }
   > .infolaatikon-teksti {
     width: 95%;
@@ -434,6 +433,9 @@ tr.uusitehtavakoodi td {
     margin-bottom: auto;
     margin-top: auto;
     font-size: 1.5rem;
+  }
+  &.koko-levea {
+    max-width: 100%;
   }
   padding-left: 16px;
   padding-right: 16px;

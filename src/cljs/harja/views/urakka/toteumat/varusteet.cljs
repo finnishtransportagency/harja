@@ -150,7 +150,7 @@
       [:span
        [debug/debug app]
        [yleiset/info-laatikko :vahva-ilmoitus "Varusteiden syöttäminen Harjan kautta päättyy" "Varusteet syötetään jatkossa urakoitsijoiden omien järjestelmien kautta.
-        Siirtymävaiheessa varustekirjaukset voidaan kirjata urakoitsijan järjestelmään tai Velhon excel-lomakkeella.
+        Siirtymävaiheessa varustekirjaukset voidaan kirjata urakoitsijan järjestelmään tai Velhon Excel-lomakkeella.
         Vanhat varustekirjaukset löytyvät Harjasta edelleen, mutta varusteiden yksityiskohtaisia tietoja ei voida tarkastella.
         Velhon varustetiedot tulevat Harjaan näkyviin arviolta kesällä 2023." "100%"]
        (when virhe

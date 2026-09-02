@@ -33,7 +33,7 @@
    [tee-otsikollinen-kentta
     (merge
       {:otsikko "Kohdenumero"
-       :otsikon-luokka "alasvedon-otsikko-vayla"
+       :otsikon-luokka "alasvedon-otsikko"
        :kentta-params (merge {:tyyppi :string :placeholder "Rajaa kohdenumerolla" :toiminta-f toiminta-f} kentan-parametrit)
        :arvo-atom kohdenumero-atom
        :luokka "label-ja-kentta-puolikas"}
@@ -175,16 +175,13 @@
              ;; oikeaan korkeuteen. Lopullisessa moodissa label ei ole enää boldilla, mutta nyt vielä on, kun muutos on kesken.
              (if vayla-tyyli?
                [:label.alasvedon-otsikko (or otsikko "Aikaväli")]
-               [:span.alasvedon-otsikko (or otsikko "Aikaväli")])
+               [:label.alasvedon-otsikko (or otsikko "Aikaväli")])
              [livi-pudotusvalikko {:valinta @valinta
                                    :format-fn first
                                    :valitse-fn (partial valitse urakka)}
               aikavali-valinnat]]
             (when @vapaa-aikavali?
               [valinnat/aikavali valittu-aikavali {:aikavalin-rajoitus aikavalin-rajoitus}])]))))))
-
-(defn urakan-toimenpide []
-  (valinnat/urakan-toimenpide u/urakan-toimenpideinstanssit u/valittu-toimenpideinstanssi u/valitse-toimenpideinstanssi!))
 
 (defn urakan-toimenpide+kaikki []
   (valinnat/urakan-toimenpide

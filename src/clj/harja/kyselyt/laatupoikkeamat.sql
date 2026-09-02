@@ -330,6 +330,16 @@ SELECT l.id                  AS id,
  WHERE el.bonus = :bonus
  ORDER BY l.luotu ASC;
 
+-- name: hae-laatupoikkeaman-tallennuksen-perustiedot
+-- Hakee laatupoikkeaman ne kentät, joita sanktiolomake ei näytä/käsittele, mutta jotka
+-- päivitetään perustietojen tallennuksessa. Näitä tarvitaan, jotta laatupoikkeaman kautta
+-- tehdyn sanktion muokkaus ei tyhjennä kyseisiä kenttiä.
+SELECT lp.tekija                        AS tekija,
+       lp.selvitys_pyydetty             AS selvitys_pyydetty,
+       lp."sisaltaa-poikkeamaraportin?" AS "sisaltaa-poikkeamaraportin?"
+  FROM laatupoikkeama lp
+ WHERE lp.id = :id;
+
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
 UPDATE laatupoikkeama
@@ -400,6 +410,19 @@ SET kasittelyaika   = :kasittelyaika,
   muokattu          = current_timestamp
 WHERE id = :id;
 
+-- name: peru-laatupoikkeaman-paatos!
+-- Peruu laatupoikkeaman päätöksen nollaamalla käsittelytiedot ja päätöksen. Tämä poistaa
+-- laatupoikkeaman lukituksen, jolloin laatupoikkeamaa voi taas muokata (vrt. HARJA-1954).
+UPDATE laatupoikkeama
+   SET kasittelyaika     = NULL,
+       paatos            = NULL,
+       perustelu         = NULL,
+       kasittelytapa     = NULL,
+       muu_kasittelytapa = NULL,
+       muokkaaja         = :muokkaaja,
+       muokattu          = current_timestamp
+ WHERE id = :id;
+
 -- name: liita-kommentti<!
 -- Liittää laatupoikkeamaon uuden kommentin
 INSERT INTO laatupoikkeama_kommentti (laatupoikkeama, kommentti) VALUES (:laatupoikkeama, :kommentti);
@@ -432,6 +455,7 @@ SET
   tr_loppuosa      = :tr_loppuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuetaisyys = :tr_loppuetaisyys,
+  yllapitokohde    = :yllapitokohde_id, -- kaikilla urakoilla ei ole ylläpitokohteita, joten voi olla null
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
   "sisaltaa-poikkeamaraportin?" = :sisaltaa_poikkeamaraportin
@@ -502,7 +526,7 @@ FROM laatupoikkeama lp
   LEFT JOIN laatupoikkeama_liite ON lp.id = laatupoikkeama_liite.laatupoikkeama
   LEFT JOIN liite ON laatupoikkeama_liite.liite = liite.id
   LEFT JOIN  yllapitokohde ypk ON lp.yllapitokohde = ypk.id
-WHERE lp.urakka IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko
+WHERE lp.urakka IN (SELECT id FROM urakka WHERE elinvoimakeskus_id = :elinvoimakeskus
                     AND (TRUE IN (SELECT unnest(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])))
       AND (lp.aika >= :alku AND lp.aika <= :loppu)
       AND lp.poistettu IS NOT TRUE

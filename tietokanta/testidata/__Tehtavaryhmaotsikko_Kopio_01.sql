@@ -1,0 +1,16 @@
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (1, '1.0 TALVIHOITO', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (2, '2.1 LIIKENNEYMPÄRISTÖN HOITO / Liikennemerkkien, liikenteen ohjauslaitteiden ja reunapaalujen hoito sekä uusiminen', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (3, '2.2 LIIKENNEYMPÄRISTÖN HOITO / Tie-, levähdys- ja liitännäisalueiden puhtaanapito ja kalusteiden hoito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (4, '2.3 LIIKENNEYMPÄRISTÖN HOITO / Viheralueiden hoito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (5, '2.4 LIIKENNEYMPÄRISTÖN HOITO / Kuivatusjärjestelmän kaivojen, putkistojen ja pumppaamoiden hoito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (6, '2.6 LIIKENNEYMPÄRISTÖN HOITO / Kaiteiden, riista- ja suoja-aitojen sekä kiveysten kunnossapito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (7, '2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (8, '2.8 LIIKENNEYMPÄRISTÖN HOITO / Siltojen ja laitureiden hoito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (9, '3 SORATEIDEN HOITO', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (10, '4 PÄÄLLYSTEIDEN PAIKKAUS', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (11, '5 LIIKENTEEN VARMISTAMINEN ERIKOISTILANTEESSA', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (12, '6.1 YLLÄPITO / Rumpujen uusiminen', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (13, '6.2 YLLÄPITO / Avo-ojien kunnossapito', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (14, '7 KORVAUSINVESTOINTI', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (15, '8 MUUTA', '2025-11-20 11:16:04.770173 +00:00', null, null, null);
+INSERT INTO public.tehtavaryhmaotsikko(id, otsikko, luotu, luoja, muokattu, muokkaaja) VALUES (16, '9 LISÄTYÖT', '2025-11-20 11:16:04.770173 +00:00', null, null, null);

@@ -13,14 +13,14 @@ WHERE ut.urakka = :urakka
 
 -- name: hae-tehtavamaarat-ja-toteumat-aikavalilla
 -- Raportin hakuhimmeli
-with urakat as (select u.id, u.hallintayksikko
-                from urakka u
-                where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
-                  and case
+with urakat as (select u.id, u.elinvoimakeskus_id
+                  from urakka u
+                 where (u.alkupvm, u.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
+                   and case
                         when :urakka::integer is not null then
                           u.id = :urakka
-                        when :hallintayksikko::integer is not null then
-                          u.hallintayksikko = :hallintayksikko
+                        when :elinvoimakeskus::integer is not null then
+                          u.elinvoimakeskus_id = :elinvoimakeskus
                         else true
                   end
                   and u.tyyppi = 'teiden-hoito'),
@@ -34,22 +34,21 @@ with urakat as (select u.id, u.hallintayksikko
                          case when :urakka::integer is not null then rtm.urakka_id = :urakka else true end
                      AND (rtm.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
                    GROUP by rtm.toimenpidekoodi, rtm.urakka_id),
-     suunnitelmat as (select sum(ut.maara) as "maara",
-                             ut.tehtava,
-                             ut.urakka
-                      from urakka_tehtavamaara ut
-                      where ut.urakka in (select id from urakat)
-                        and ut."hoitokauden-alkuvuosi" in (:hoitokausi)
-                        and ut.poistettu is not true
-                      group by ut.urakka, ut.tehtava)
+     suunnitelmat as (select sum(v.laskettu_maara) as "maara",
+                             v.tehtava,
+                             v.urakka
+                      from urakka_tehtavamaara_yhteenveto v
+                      where v.urakka in (select id from urakat)
+                        and v.hoitokauden_alkuvuosi in (:hoitokausi)
+                      group by v.urakka, v.tehtava)
 select tpk.nimi                 as "nimi", --tehtävän nimi
        tpk.jarjestys            as "jarjestys",
        suunnitelmat.maara       as "suunniteltu",
        tpk.suunnitteluyksikko   as "suunnitteluyksikko",
        tpk.yksikko              as "yksikko",
        tpk.id                   as "toimenpidekoodi",
-       u.hallintayksikko        as "hallintayksikko",
-       o.elynumero              as elynumero,
+       u.elinvoimakeskus_id     as elinvoimakeskus_id,
+       o.elinvoimakeskusnumero  as elinvoimakeskusnumero,
        tpk3.nimi                as "toimenpide",
        toteumat.maara           as "toteuma",
        toteumat.materiaalimaara as "toteutunut-materiaali",
@@ -65,7 +64,7 @@ select tpk.nimi                 as "nimi", --tehtävän nimi
 from toimenpideinstanssi tpi
        join urakat u
        join organisaatio o
-            on o.id = u.hallintayksikko
+            on o.id = u.elinvoimakeskus_id
             on u.id = tpi.urakka
        join tehtava tpk on tpi.toimenpide = tpk.emo AND tpk.yksikko NOT ilike 'euro%' AND tpk."raportoi-tehtava?" = TRUE
        join toimenpide tpk3 on tpi.toimenpide = tpk3.id
@@ -78,9 +77,9 @@ from toimenpideinstanssi tpi
        join tehtavaryhma tr on tpk.tehtavaryhma = tr.id
 where tpi.urakka in (select id from urakat)
 group by tpk.id, tpk.nimi, tpk.yksikko, tpk.jarjestys, tpk3.nimi, tpk3.koodi, tpk.suunnitteluyksikko,
-         u.hallintayksikko, o.elynumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
+         u.elinvoimakeskus_id, o.elinvoimakeskusnumero, suunnitelmat.maara, toteumat.maara, toteumat.materiaalimaara
 having coalesce(suunnitelmat.maara, toteumat.maara) >= 0
-order by o.elynumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
+order by o.elinvoimakeskusnumero ASC, "toimenpide-jarjestys" ASC, tpk.jarjestys ASC;
 
 
 -- name: lisaa-tehtavamaara<!
@@ -122,6 +121,8 @@ FROM tehtavaryhma tr
        JOIN toimenpide tp ON t.emo = tp.id
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakka
  WHERE tr.nimi not like ('%Lisätyöt%')
+   -- Rajaa johto- ja hallinto pois, jos muutokset on käytössä 
+   AND (:muutokset-kaytossa? IS FALSE OR tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54'))
    AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= :urakka-voimassaolo-alkuvuosi::INTEGER)
    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
@@ -143,6 +144,10 @@ WITH maaramitattavat_tehtavat AS (
     AND tpk."mhu-tehtava?" IS TRUE
     AND tpk.piilota IS NOT true
     AND tpk.poistettu IS NOT true
+    -- Tehtävän voimassaoloa verrataan aina urakan alkuvuoteen. Eli kun uudet urakat alkavat,
+    -- niin voimassaolon perusteella voidaan urakalle määritellä jotain tiettyjä poikkeuksia tehtävien suhteen.
+    AND (tpk.voimassaolo_alkuvuosi IS NULL OR tpk.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+    AND (tpk.voimassaolo_loppuvuosi IS NULL OR tpk.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
 )
 -- 1. Palautetaan kaikki maaramitattavat tehtävät
 SELECT
@@ -176,6 +181,10 @@ WHERE
       AND t2."mhu-tehtava?" IS TRUE
       AND t2.piilota IS NOT true
       AND t2.poistettu IS NOT true
+      -- Tehtävän voimassaoloa verrataan aina urakan alkuvuoteen. Eli kun uudet urakat alkavat,
+      -- niin voimassaolon perusteella voidaan urakalle määritellä jotain tiettyjä poikkeuksia tehtävien suhteen.
+      AND (t2.voimassaolo_alkuvuosi IS NULL OR t2.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+      AND (t2.voimassaolo_loppuvuosi IS NULL OR t2.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
   )
 ORDER BY jarjestys, nimi;
 
@@ -215,12 +224,12 @@ DELETE
                  JOIN rahavaraus_tehtava rt ON rvu.rahavaraus_id = rt.rahavaraus_id
        WHERE rvu.urakka_id = :urakka
   )
-SELECT ut.urakka                    AS "urakka",
-       ut."hoitokauden-alkuvuosi"   AS "hoitokauden-alkuvuosi",
+SELECT v.urakka                    AS "urakka",
+       v.hoitokauden_alkuvuosi   AS "hoitokauden-alkuvuosi",
        t.jarjestys               AS "jarjestys",
        t.id                      AS "tehtava-id",
-       ut.maara                     AS "suunniteltu-maara",
-       ut."muuttunut-tarjouksesta?" AS "muuttunut-tarjouksesta?",
+       v.laskettu_maara             AS "suunniteltu-maara",
+       NULL AS "muuttunut-tarjouksesta?",
        o.otsikko                    AS "otsikko",
        tp.nimi                    AS "Toimenpide",
        tp.koodi                   AS "Toimenpidekoodi",
@@ -243,9 +252,9 @@ FROM tehtavaryhma tr
                                 AND t.poistettu is not true 
                                 AND t.piilota is not true 
        JOIN toimenpide tp ON t.emo = tp.id
-       LEFT OUTER JOIN urakka_tehtavamaara ut ON t.id = ut.tehtava
-                                                     AND ut.urakka = :urakka
-                                                     AND (ut."hoitokauden-alkuvuosi" in (:hoitokausi) OR t.aluetieto IS TRUE)
+       LEFT OUTER JOIN urakka_tehtavamaara_yhteenveto v ON t.id = v.tehtava
+                                                     AND v.urakka = :urakka
+                                                     AND (v.hoitokauden_alkuvuosi in (:hoitokausi) OR t.aluetieto IS TRUE)
        LEFT JOIN sopimuksen_tehtavamaarat_tallennettu sp ON sp.urakka = :urakka
        JOIN tehtavaryhmaotsikko o ON tr.tehtavaryhmaotsikko_id = o.id,
      urakka u
@@ -282,26 +291,26 @@ SELECT
     ml.yksikko AS materiaaliluokka_yksikko,
     ml.materiaalityyppi AS materiaaliluokka_tyyppi,
     NULL AS "hoito-materiaalimaara-id",
-    ut.id AS "mhu-materiaalimaara-id",
+    v.id AS "mhu-materiaalimaara-id",
     NULL AS "suolaraja-id",
-    ut.tehtava AS "tehtava-id",
-    ut."hoitokauden-alkuvuosi",
-    SUM(ut.maara) as maara,
-    ut.muokattu,
-    ut.luotu
-FROM urakka_tehtavamaara ut
-         JOIN urakka u ON ut.urakka = u.id AND u.urakkanro IS NOT NULL
-         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
+    v.tehtava AS "tehtava-id",
+    v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+    SUM(v.laskettu_maara) as maara,
+    v.muokattu as muokattu,
+    v.luotu as luotu
+FROM urakka_tehtavamaara_yhteenveto v
+         JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
+         JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
          JOIN materiaaliluokka ml ON tk.materiaaliluokka_id = ml.id
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
-         JOIN sopimuksen_tehtavamaarat_tallennettu stt on u.id = stt.urakka AND stt.tallennettu IS TRUE
-WHERE ut.poistettu IS NOT TRUE
-  AND u.id = :urakka
-GROUP BY ut."hoitokauden-alkuvuosi", mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, ut.muokattu, ut.luotu, ut.id, ut.tehtava;
+WHERE u.id = :urakka
+  AND EXISTS (SELECT 1 FROM sopimuksen_tehtavamaarat_tallennettu stt 
+              WHERE stt.urakka = u.id AND stt.tallennettu IS TRUE)
+GROUP BY v.hoitokauden_alkuvuosi, mk.id, ml.nimi, ml.yksikko, ml.materiaalityyppi, v.id, v.tehtava, v.muokattu, v.luotu;
 
 -- name: hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
-select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", NULL AS "mhu-tehtavamaara-id", yt.id as "hoito-tehtavamaara-id", MAX(yt.luotu) as luotu,
-       MAX(yt.muokattu) as muokattu,
+select sum(yt.maara) as "maara", tk.nimi as "tehtava", tk.id as "tehtava-id", NULL AS "mhu-tehtavamaara-id", yt.id as "hoito-tehtavamaara-id", yt.luotu as luotu,
+       yt.muokattu as muokattu,
        CASE
            WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 1 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN (EXTRACT(YEAR FROM yt.alkupvm) -1)::INT
            WHEN EXTRACT(MONTH FROM yt.alkupvm)::int = 10 AND EXTRACT(DAY FROM yt.alkupvm)::int = 1 THEN EXTRACT(YEAR FROM yt.alkupvm)::INT
@@ -314,24 +323,25 @@ where yt.urakka = :urakka-id
   -- joten käytetään varmuuden vuoksi overlaps funktiota, joka palauttaa tiedot, mikäli edes osa suunnitellusta
   -- aikavälistä osuu annettuun ajankohtaan.
   and (yt.alkupvm, yt.loppupvm) overlaps (:alkupvm, :loppupvm)
-group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi";
+group by yt.urakka, yt.tehtava, tk.id, yt.id, "hoitokauden-alkuvuosi", yt.luotu, yt.muokattu;
 
 -- name: hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle
 -- Hakee materiaalien suunnittelutiedot urakalle.
 -- Varmistetaan, että tarjouksen tiedot on syötetty. Muuten ei palauteta mitään.
 SELECT
-    SUM(ut.maara) as maara,
+    SUM(v.laskettu_maara) as maara,
     tk.nimi as tehtava,
     tk.id as "tehtava-id",
-    ut.id as "mhu-tehtavamaara-id",
+    v.id as "mhu-tehtavamaara-id",
     NULL AS "hoito-tehtavamaara-id",
-    ut."hoitokauden-alkuvuosi",
-    ut.muokattu,
-    ut.luotu
-FROM urakka_tehtavamaara ut
-         JOIN tehtava tk ON ut.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
-         JOIN sopimuksen_tehtavamaarat_tallennettu stt on ut.urakka = stt.urakka AND stt.tallennettu IS TRUE
-WHERE ut.poistettu IS NOT TRUE
-  AND ut.urakka = :urakka-id
-  AND ut."hoitokauden-alkuvuosi" in (:hoitokauden-alkuvuodet)
-GROUP BY ut."hoitokauden-alkuvuosi", tk.id, ut.muokattu, ut.luotu, ut.id;
+    v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+    v.muokattu as muokattu,
+    v.luotu as luotu
+FROM urakka_tehtavamaara_yhteenveto v
+         JOIN urakka u ON v.urakka = u.id
+         JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NULL AND tk.materiaalikoodi_id IS NULL
+WHERE v.urakka = :urakka-id
+  AND v.hoitokauden_alkuvuosi in (:hoitokauden-alkuvuodet)
+  AND EXISTS (SELECT 1 FROM sopimuksen_tehtavamaarat_tallennettu stt 
+              WHERE stt.urakka = u.id AND stt.tallennettu IS TRUE)
+GROUP BY v.hoitokauden_alkuvuosi, tk.id, v.id, v.muokattu, v.luotu;

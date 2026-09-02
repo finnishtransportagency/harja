@@ -4,7 +4,7 @@
 (defqueries "harja/kyselyt/materiaalit.sql"
   {:positional? true})
 
-(declare hae-materiaalikoodit listaa-materiaalikoodit hae-materiaaliluokat
+(declare hae-materiaalikoodit hae-materiaalikoodin-id-nimella listaa-materiaalikoodit hae-materiaaliluokat
   hae-urakan-suunniteltu-materiaalin-kaytto-analytiikalle hae-talvisuolan-materiaaliluokka
   hae-urakan-toteutuneet-materiaalit-raportille hae-urakan-suunnitellut-materiaalit-raportille
   hae-hallintayksikon-toteutuneet-materiaalit-raportille hae-koko-maan-toteutuneet-materiaalit-raportille
@@ -14,4 +14,6 @@
   hae-materiaalikoodit-ilman-talvisuolaa hae-urakan-materiaalit hae-urakassa-kaytetyt-materiaalit
   hae-urakan-toteumat-materiaalille hae-toteuman-materiaalitiedot poista-urakan-materiaalinkaytto!
   poista-materiaalinkaytto-id! paivita-materiaalinkaytto-maara! luo-materiaalinkaytto<!
-  paivita-toteuma-materiaali! luo-toteuma-materiaali<! paivita-sopimuksen-materiaalin-kaytto-toteumapvm)
+  paivita-toteuma-materiaali! luo-toteuma-materiaali<! paivita-sopimuksen-materiaalin-kaytto-toteumapvm
+  hae-suolauksen-toimenpidekoodi hae-talvisuolan-hoitovuoden-kokonaismaara
+  paivita-urakan-materiaalinkaytto-hoitoluokittain-muutospaivalla paivita-sopimuksen-materiaalikaytto-muutospaivalla)

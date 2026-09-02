@@ -12,15 +12,23 @@
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?
+  raporttioikeudet
+  raportit
   raportit-tyomaapaivakirja
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
   urakat-suunnittelu-suola
+  urakat-suunnittelu-kalustoresurssit
   urakat-toteumat-suola
+  urakat-toteumat-erilliskustannukset
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
+  hallinta-lupaukset
+  urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
+  urakat-laadunseuranta-sanktiot
+  urakat-laadunseuranta-hairiotilanteet
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
@@ -29,14 +37,44 @@
   urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
+  urakat-laadunseuranta-tarkastukset
+  urakat-laadunseuranta-laatupoikkeamat
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
+  urakat-kohdeluettelo-paallystyskohteet
+  urakat-kohdeluettelo-paallystysilmoitukset
   urakat-vesivaylatoimenpiteet-kokonaishintaiset
   urakat-vesivaylatoimenpiteet-yksikkohintaiset
+  urakat-vesivayla-materiaalit
+  urakat-vesivaylatoimenpiteet
+  urakat-kanavat-liikenne
+  urakat-toteumat-kokonaishintaisettyot
+  urakat-toteumat-erilliskustannukset
+  urakat-toteumat-muutos-ja-lisatyot
+  urakat-toteumat-vesivaylaerilliskustannukset
+  urakat-toteumat-varusteet
+  urakat-toteutus-muutkustannukset
+  urakat-toteutus-yksikkohintaisettyot
+  urakat-tyomaapaivakirja
+  urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit
+  hallinta-api-jarjestelmatunnukset
   urakat-yleiset
   hallinta-tarjoushinnat
   hallinta-rahavaraukset
+  hallinta-koulutusvideot
+  hallinta-hairioilmoitukset
+  hallinta-yhteydenpito
+  hallinta-palautevayla
+  hallinta-integraatiotilanne
+  hallinta-laadunseuranta-profiilit
+  hallinta-urakkahenkilot
+  hallinta-paallystysilmoitukset
+  hallinta-lupaukset
+  hallinta-vesivaylat
+  hallinta-lampotilat
+  hallinta-valitavoitteet
+  hallinta-tehtavat
   urakat-suunnittelu-tehtava-ja-maaraluettelo
   urakat-suunnittelu-kokonaishintaisettyot
   urakat-suunnittelu-yksikkohintaisettyot
@@ -44,7 +82,23 @@
   urakat-suunnittelu-materiaalit
   urakat-vesivaylasuunnittelu-kiintiot
   urakat-toteumat-materiaalit
-  roolit)
+  urakat-toteumat-yksikkohintaisettyot
+  urakat-suunnittelu
+  urakat-toteumat
+  urakat-toteutus
+  urakat-paikkaukset
+  urakat-aikataulu
+  urakat-laadunseuranta
+  urakat-turvallisuus
+  urakat-kulut-maksuerat
+  urakat-kulut
+  urakat-kulut-vesivaylalaskutusyhteenveto
+  urakat-tiemerkinta-kustannukset
+  roolit
+  tilannekuva-nykytilanne
+  tilannekuva-historia
+  urakkatilanne
+  ilmoitukset-ilmoitukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

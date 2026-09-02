@@ -35,9 +35,9 @@
   "Olettaa saavansa molemmat parametrit big arvoina."
   [toteuma suunniteltu]
   (if (or (nil? toteuma)
-          (nil? suunniteltu)
-          (big/eq (big/->big 0) toteuma)
-          (big/eq (big/->big 0) suunniteltu))
+        (nil? suunniteltu)
+        (big/eq (big/->big 0) toteuma)
+        (big/eq (big/->big 0) suunniteltu))
     0
     (big/fmt (big/mul (big/->big 100) (big/div toteuma suunniteltu)) 2)))
 
@@ -57,11 +57,11 @@
         tehtava (some (fn [t]
                         (when (= tehtavan-nimi (:tehtava t))
                           t))
-                      (get-in app [:tehtavat]))
+                  (get-in app [:tehtavat]))
         toimenpide (some (fn [t]
                            (when (= tehtavaryhma-otsikko (:otsikko t))
                              t))
-                         (get-in app [:toimenpiteet]))]
+                     (get-in app [:toimenpiteet]))]
     [:a {:href "#"
          :aria-label "Lisää uusi toteuma"
          :data-cy (str "lisaa-toteuma-" (str/replace tehtavan-nimi #" " ""))
@@ -78,9 +78,9 @@
     (:yk rivi)
 
     (or (= (:tyyppi rivi) "lisatyo")
-        (= (:tyyppi rivi) "akillinen-hoitotyo")
-        (= (:tyyppi rivi) "vahinkojen-korjaukset")
-        (= (:tyyppi rivi) "muut-rahavaraukset"))
+      (= (:tyyppi rivi) "akillinen-hoitotyo")
+      (= (:tyyppi rivi) "vahinkojen-korjaukset")
+      (= (:tyyppi rivi) "muut-rahavaraukset"))
     "kpl"
 
     :else
@@ -129,7 +129,7 @@
                                                                  (avaa-tai-sulje-rivi rivi))})
                                               {:class (str "table-default-" (if (odd? @row-index-atom) "even" "odd") " " (when kasin-lisattava? "klikattava"))})
                                         [:td.strong {:style {:width (:tehtava leveydet)}} (first rivi) (when (and (:haetut-toteumat-lataa app)
-                                                                                                                  (= (:avattu-tehtava app) (first rivi)))
+                                                                                                               (= (:avattu-tehtava app) (first rivi)))
                                                                                                          [:span {:style {:padding-left "10px"}} [yleiset/ajax-loader-pieni]])]
                                         [:td {:style {:width (:caret leveydet)}} (if
                                                                                    (= (:avattu-tehtava app) (first rivi))
@@ -140,15 +140,15 @@
                                         [:td {:style {:width (:toteuma leveydet)}} (str (big/fmt toteutunut-maara 1) " " (maarita-yksikko (first (second rivi))))]
                                         [:td {:style {:width (:suunniteltu leveydet)
                                                       :color fontin-vari}} (cond
-                                                                              rahavaraus? "-"
-                                                                              (big/eq (big/->big -1) suunniteltu-maara)
-                                                                              (case tehtava-tyyppi
-                                                                                "kokonaishintainen" [:span.tila-virhe "---"]
-                                                                                "---")
-                                                                              :else
-                                                                              (str (if (big/gt suunniteltu-maara (big/->big -1))
-                                                                                       (big/fmt suunniteltu-maara 1)
-                                                                                       0) " " (:yk (first (second rivi)))))]
+                                                                             rahavaraus? "-"
+                                                                             (big/eq (big/->big -1) suunniteltu-maara)
+                                                                             (case tehtava-tyyppi
+                                                                               "kokonaishintainen" [:span.tila-virhe "---"]
+                                                                               "---")
+                                                                             :else
+                                                                             (str (if (big/gt suunniteltu-maara (big/->big -1))
+                                                                                    (big/fmt suunniteltu-maara 1)
+                                                                                    0) " " (:yk (first (second rivi)))))]
                                         [:td {:style {:width (:prosentti leveydet)
                                                       :color fontin-vari}} (cond
                                                                              rahavaraus? "-"
@@ -172,7 +172,7 @@
                                           [:td {:style {:width (:prosentti leveydet)}} ""]]])
 
                                       (when (and toteumat
-                                                 (= (:tehtava (first (second rivi))) (:avattu-tehtava app)))
+                                              (= (:tehtava (first (second rivi))) (:avattu-tehtava app)))
                                         (mapcat
                                           (fn [toteuma]
                                             (let [toteuma-linkki (if (= "muu" (:tyyppi toteuma))
@@ -197,7 +197,7 @@
               (concat [^{:key (str "otsikko-" (hash tehtavaryhma))}
                        [:tr.header
                         [:td {:colSpan "5"} tehtavaryhma]]]
-                      muodostetut)))
+                muodostetut)))
           r)]
     [:div.table-default.margin-top-16
      [:table
@@ -227,7 +227,7 @@
 (defn maarien-toteumalistaus
   "Määrien toteumat listattuna taulukkoon"
   [e! app]
-  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka)  ;; Ota urakan alkamis päivä
+  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
         ryhmitellyt-maarat (get-in app [:toteutuneet-maarat-grouped])
@@ -243,7 +243,9 @@
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
 
-     #_ [debug/debug app]
+     [:h1 "Tehtävät"]
+
+     #_[debug/debug app]
      [:div
       [yleiset/info-laatikko :vahva-ilmoitus "Ohje: tehtävämäärien, materiaalien ja rahavarausten kirjaaminen"
        (gstring/unescapeEntities "&ensp;&#x2022;&ensp; Kirjaa tällä välilehdellä vain sellaisten tehtävien toteumat, jotka eivät ole materiaaleja (liikennemerkkien kappale- ja neliömäärät, rumpujen metrit jne.) \t
@@ -251,20 +253,22 @@
        &ensp;&#x2022;&ensp; Rahavarausten käyttö kirjataan kuluihin. Kirjatut rahavaraukset näkyvät Kustannusten seuranta -välilehdellä \t") "70%"]]
      [:div.row {:style {:margin-left "-15px"}}
       [:div.col-xs-12.col-md-6
-       [:label.alasvedon-otsikko-vayla "Toimenpide"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-toimenpide
+       [:label.alasvedon-otsikko {:for "toimenpide-valikko"} "Toimenpide"]
+       [yleiset/livi-pudotusvalikko {:elementin-id "toimenpide-valikko"
+                                     :valinta valittu-toimenpide
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
       [:div.col-xs-6.col-md-3
-       [:label.alasvedon-otsikko-vayla "Hoitokausi"]
-       [yleiset/livi-pudotusvalikko {:valinta valittu-hoitokausi
+       [:label.alasvedon-otsikko {:for "hoitokausi-valikko"} "Hoitokausi"]
+       [yleiset/livi-pudotusvalikko {:elementin-id "hoitokausi-valikko"
+                                     :valinta valittu-hoitokausi
                                      :vayla-tyyli? true
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
                                      :format-fn #(str "1.10." % "-30.9." (inc %))}
         hoitokaudet]]
-      [:div.col-xs-6.col-md-3 {:style {:padding-top "41px"}}
+      [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
         "Lisää toteuma"
         (r/partial #(e! (maarien-toteumat/->ToteumanSyotto (not syottomoodi) nil (dissoc (:valittu-toimenpide app) :id))))
@@ -284,7 +288,7 @@
                                         (when polku
                                           (polku tila)))}
        (r/wrap filtterit
-               (constantly true))]]
+         (constantly true))]]
      [ryhmitellyt-taulukko e! app ryhmitellyt-maarat toteumat]]))
 
 (defn maarien-toteumat* [e! app]
@@ -292,7 +296,7 @@
     (komp/lippu toteumat/maarien-toteumat-nakymassa?)
     (komp/sisaan-ulos
       #(do
-      (kartta-tasot/taso-paalle! :maarien-toteumat)
+         (kartta-tasot/taso-paalle! :maarien-toteumat)
          (e! (maarien-toteumat/->HaeKaikkiTehtavat))
          (e! (maarien-toteumat/->HaeToimenpiteet))
          ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää

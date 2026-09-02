@@ -134,15 +134,15 @@
       // Häkki, jolla saadaan avattuihin riveihin sininen marginaaliviiva.
       > tr.avattava-rivi td:first-child {
         border-bottom: none;
-
+        position: relative;
+        
         > div {
-          height: 100%;
-          padding: 8px 0;
-          margin-top: -8px;
-          border-right: 3px solid @blue-default;
-          // Taikanumero, jotta täsmää keskelle.
-          width: 11px;
           position: absolute;
+          top: 0;
+          bottom: 0;
+          width: 11px;
+          border-right: 3px solid @blue-default;
+          left: 25px;
         }
       }
 
@@ -808,6 +808,15 @@ tr.otsikko {
 
     .grid-valiotsikko-custom-komponentti {
       position: absolute;
+    }
+  }
+  &.tyhja-rivi {
+    background-color: @gray250;
+    color: @black-lighter;
+
+    > td {
+      text-align: center;
+      vertical-align: middle;
     }
   }
 }

@@ -356,11 +356,11 @@
                          (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                 [napit/poista
                  ""
-                 #(do (.preventDefault %)
-                    (muokkaa! muokatut-atom
-                      virheet varoitukset huomautukset skeema
-                      id assoc
-                      :poistettu true))
+                 (fn []
+                   (muokkaa! muokatut-atom
+                     virheet varoitukset huomautukset skeema
+                     id assoc
+                     :poistettu true))
                  {:teksti-nappi? false
                   :vayla-tyyli? true
                   :tooltip "Poista rivi"
@@ -529,7 +529,7 @@
   :disabloi-rivi?                 funktio, joka päättää onko rivi disabloitu tai ei. Palauta true jos on disabloitu
   :rivinumerot?                   Lisää ylimääräisen sarakkeen, joka listaa rivien numerot alkaen ykkösestä
   :jarjesta                       jos annettu funktio, sortataan rivit tämän mukaan
-  :jarjesta-avaimen-mukaan        jos annettu funktio, sortataan avaimen mukaan
+  :jarjesta-avaimen-mukaan        jos annettu funktio, sortataan avaimen mukaan - Tämä myös korjaa Reagentin bugin, jossa ei voi lisätä enempää kuin 31 riviä.
   :jarjesta-kun-kasketaan         Järjestetään tämän funktion mukaan, kun datalle annetaan {:jarjesta-gridissa true} metadata.
                                   Tämä metadata poistetaan jarjestämisen jälkeen.
   :paneelikomponentit             vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.

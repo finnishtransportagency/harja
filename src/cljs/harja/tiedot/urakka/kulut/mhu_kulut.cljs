@@ -7,6 +7,7 @@
     [harja.ui.viesti :as viesti]
     [harja.domain.kulut :as kulut]
     [harja.asiakas.kommunikaatio :as k]
+    [harja.tiedot.istunto :as istunto]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tiedot.navigaatio :as navigaatio])
@@ -29,6 +30,18 @@
 (defrecord KoontilaskunNumero [koontilaskunnumero])
 (defrecord KulunLisatieto [lisatieto])
 (defrecord ValitseHoitokausi [vuosi])
+(defrecord HaeLaskutusraja [vuosi])
+(defrecord HaeLaskutusrajaOnnistui [vastaus])
+(defrecord HaeLaskutusrajaEpaonnistui [vastaus])
+(defrecord HaeHoitokaudenKulujenSumma [alkupvm loppupvm])
+(defrecord HaeHoitokaudenKulujenSummaOnnistui [vastaus])
+(defrecord HaeHoitokaudenKulujenSummaEpaonnistui [vastaus])
+(defrecord HaeKulutYhteensaHakukuukauteenAsti [alkupvm loppupvm])
+(defrecord HaeKulutYhteensaHakukuukauteenAstiOnnistui [vastaus])
+(defrecord HaeKulutYhteensaHakukuukauteenAstiEpaonnistui [vastaus])
+(defrecord HaeUrakanTavoitehintojenTilat [])
+(defrecord TavoitehintojenTilatVastaanotettu [vastaus])
+(defrecord TavoitehintojenTilojenHakuEpaonnistui [vastaus])
 
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
@@ -76,7 +89,17 @@
 (defrecord HaeUrakanRahavarauksetOnnistui [vastaus])
 (defrecord HaeUrakanRahavarauksetEpaonnistui [vastaus])
 
+(defrecord HaeKaikkiTehtavaryhmat [hakuparametrit])
+(defrecord HaeKaikkiTehtavaryhmatOnnistui [vastaus])
+
 (defonce kuukaudet [:lokakuu :marraskuu :joulukuu :tammikuu :helmikuu :maaliskuu :huhtikuu :toukokuu :kesakuu :heinakuu :elokuu :syyskuu])
+
+(def muu-tehtava
+  {:id -1
+   :nimi "Muu tehtävä (ei määrämitattava)"
+   :jarjestys 99999
+   :emo nil
+   :maaramitattava? true})
 
 (def vuoden-paatoksen-kulun-tyypit
   {:tavoitepalkkio "Tavoitepalkkio"
@@ -171,7 +194,11 @@
                                               (assoc :toimenpide toimenpide)
                                               (assoc :tehtavaryhma tehtavaryhma)
                                               (assoc :valittu-muutostyo valittu-muutostyo)
-                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi))))
+                                              (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
+                                              (assoc :tehtava (if (and (nil? (:tehtava kohdistus))
+                                                                    (:muu-tehtava-kaytossa kohdistus))
+                                                                muu-tehtava
+                                                                (:tehtava kohdistus))))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
@@ -423,7 +450,10 @@
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
-    (assoc-in app [:lomake :kohdistukset nro :tehtava] tehtava))
+    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)]
+      (-> app
+        (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
+        (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))))
 
   KohdistuksenLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]
@@ -468,9 +498,7 @@
       ;; Haetaan koko hoitovuoden kulut
       (tuck/action!
         (fn [e!]
-          ;; TODO 
-          ;;   Enabloi kun muutokset viedään tuotantoon
-          (when (k/kehitysymparistossa?)
+          (when (istunto/ominaisuus-kaytossa? :mhu-muutokset)
             (e! (->HaeUrakanMuutostyot {:alkupvm alkupvm
                                         :loppupvm loppupvm})))
           (e! (->HaeUrakanKulut {:id (-> @tila/tila :yleiset :urakka :id)
@@ -484,6 +512,91 @@
         (assoc-in [:parametrit :haun-kuukausi] nil)
         (assoc-in [:parametrit :haun-alkupvm] nil)
         (assoc-in [:parametrit :haun-loppupvm] nil))))
+
+  HaeLaskutusraja
+  (process-event [{vuosi :vuosi} app]
+    (tuck-apurit/post! :hae-urakan-laskutusraja
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id) :hoitovuosi vuosi}
+      {:onnistui ->HaeLaskutusrajaOnnistui
+       :epaonnistui ->HaeLaskutusrajaEpaonnistui})
+    (-> app
+      (assoc :haku-kaynnissa? (boolean vuosi))))
+
+  HaeLaskutusrajaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :haku-kaynnissa? false)
+      (assoc :laskutusraja-kaytossa? (:laskutusraja-kaytossa vastaus))
+      (assoc :laskutusraja (:laskutusraja vastaus))))
+
+  HaeLaskutusrajaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :haku-kaynnissa? false))
+
+  HaeHoitokaudenKulujenSumma
+  (process-event [{:keys [alkupvm loppupvm]} app]
+    (tuck-apurit/post! :hae-hoitokauden-kulujen-summa
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :alkupvm alkupvm
+       :loppupvm loppupvm}
+      {:onnistui ->HaeHoitokaudenKulujenSummaOnnistui
+       :epaonnistui ->HaeHoitokaudenKulujenSummaEpaonnistui})
+    (-> app
+      (assoc :hoitokauden-kulujen-summa-haku-kaynnissa? true)))
+
+  HaeHoitokaudenKulujenSummaOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :hoitokauden-kulujen-summa-haku-kaynnissa? false)
+      (assoc :hoitokauden-kulujen-summa vastaus)))
+
+  HaeHoitokaudenKulujenSummaEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Hoitokauden kulujen summan haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :hoitokauden-kulujen-summa-haku-kaynnissa? false))
+
+  HaeKulutYhteensaHakukuukauteenAsti
+  (process-event [{:keys [alkupvm loppupvm]} app]
+    (tuck-apurit/post! :hae-hoitokauden-kulujen-summa
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :alkupvm alkupvm
+       :loppupvm loppupvm}
+      {:onnistui ->HaeKulutYhteensaHakukuukauteenAstiOnnistui
+       :epaonnistui ->HaeKulutYhteensaHakukuukauteenAstiEpaonnistui})
+    (-> app
+      (assoc :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? true)))
+
+  HaeKulutYhteensaHakukuukauteenAstiOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? false)
+      (assoc :kulut-yhteensa-hakukuukauteen-asti vastaus)))
+
+  HaeKulutYhteensaHakukuukauteenAstiEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Kumulatiivisten kulujen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? false))
+
+  HaeUrakanTavoitehintojenTilat
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-urakan-tavoitehintojen-tilat
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+      {:onnistui ->TavoitehintojenTilatVastaanotettu
+       :epaonnistui ->TavoitehintojenTilojenHakuEpaonnistui})
+    (-> app
+      (assoc :tavoitehintojen-tilojen-haku-kaynnissa? true)))
+
+  TavoitehintojenTilatVastaanotettu
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :tavoitehintojen-tilojen-haku-kaynnissa? false)
+      (assoc :urakan-tavoitehintojen-tilat vastaus)))
+
+  TavoitehintojenTilojenHakuEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Tavoitehintojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :tavoitehintojen-tilojen-haku-kaynnissa? false))
 
   NakymastaPoistuttiin
   (process-event [_ _app]
@@ -603,7 +716,8 @@
   (process-event [{:keys [hakuparametrit]} app]
     (varmista-kasittelyjen-jarjestys
       (tuck-apurit/post! :tehtavaryhmat-ja-toimenpiteet
-        {:urakka-id (:id hakuparametrit)}
+        {:urakka-id (:id hakuparametrit)
+         :muutokset-kaytossa? (istunto/ominaisuus-kaytossa? :mhu-muutokset)}
         {:onnistui ->ToimenpidehakuOnnistui
          :epaonnistui ->KutsuEpaonnistui
          :epaonnistui-parametrit [{:viesti "Urakan tehtäväryhmien ja toimenpiteiden haku epäonnistui"}]
@@ -689,6 +803,23 @@
         ;; Aseta ainoa tehtävä valinnaksi
         (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
         app)))
+
+  HaeKaikkiTehtavaryhmat
+  (process-event [{:keys [hakuparametrit]} app]
+    (varmista-kasittelyjen-jarjestys
+      (tuck-apurit/post! :hae-kaikkien-tehtavaryhmien-nimet
+        {:urakka-id (:id hakuparametrit)}
+        {:onnistui ->HaeKaikkiTehtavaryhmatOnnistui
+         :epaonnistui ->KutsuEpaonnistui
+         :epaonnistui-parametrit [{:viesti "Tehtäväryhmien haku epäonnistui"}]
+         :paasta-virhe-lapi? true}))
+    (update-in app [:parametrit :haetaan] inc))
+
+  HaeKaikkiTehtavaryhmatOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (update-in [:parametrit :haetaan] dec)
+      (assoc :kaikkien_tehtavaryhmien_nimet vastaus)))
 
   HaeTehtavatKaikilleKohdistuksille
   (process-event [{lomake :lomake} app]
@@ -799,7 +930,9 @@
       {:onnistui ->PoistoOnnistui
        :epaonnistui ->KutsuEpaonnistui
        :epaonnistui-parametrit [{:viesti "Poisto epäonistui"}]})
-    (update-in app [:parametrit :haetaan] inc))
+    (-> app
+      (assoc-in [:parametrit :haku-menossa] true)
+      (update-in [:parametrit :haetaan] inc)))
 
   AsetaHakukuukausi
   (process-event [{:keys [kuukausi]} app]

@@ -27,7 +27,7 @@
 
 (deftest hae-ely
   (let [db (luo-testitietokanta)
-        uudenmaan-elyn-id (ffirst (q "select id from organisaatio where elynumero = 1;"))]
+        uudenmaan-elyn-id (ffirst (q "select id from organisaatio where lyhenne = 'UUD' AND tyyppi = 'hallintayksikko';"))]
 
     (is (= {::tielupa/ely uudenmaan-elyn-id} (tieluvat/hae-ely db "Uusimaa" {})))
     (is (thrown+?
@@ -90,7 +90,7 @@
                   ::tielupa/otsikko "Lupa lisätä mainos tielle"
                   ::tielupa/hakija-postinosoite "Liitintie 1"
                   ::tielupa/urakoiden-nimet ["Oulun alueurakka"]
-                  ::tielupa/ely 12
+                  ::tielupa/ely 22                          ;; organisaatio.id
                   ::tielupa/kohde-postinumero "90900"
                   ::tielupa/ulkoinen-tunniste 3453455
                   ::tielupa/saapumispvm #inst "2017-09-21T21:00:00.000-00:00"

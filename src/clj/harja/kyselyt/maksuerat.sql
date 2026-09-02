@@ -68,17 +68,17 @@ GROUP BY tpi_id;
 -- Teidenhoidon urakoissa (MHU) maksuerätyyppejä on vain yksi (kokonaishintainen).
 SELECT tpi_id,
        :urakka_id                       as urakka_id,
-       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden viimeisenä päivänä.
+       SUM(kokonaishintaisten_summa)    AS kokonaishintainen -- Kaikki Sampon maksuerään ajankohtaan mennessä kuuluvat kulut. Suunnitellut HJ-kustannukset siirtyvät kuukauden 10. päivä.
 FROM (SELECT
-          SUM((mhu_laskutusyhteenveto_teiden_hoito).kaikki_laskutettu) AS kokonaishintaisten_summa,
+          SUM((mhu_laskutusyhteenveto_tuotekohtainen).kaikki_laskutettu) AS kokonaishintaisten_summa,
           lyht.alkupvm,
           lyht.loppupvm,
-          (mhu_laskutusyhteenveto_teiden_hoito).tpi                                  AS tpi_id
+          (mhu_laskutusyhteenveto_tuotekohtainen).tpi                                  AS tpi_id
       FROM (-- laskutusyhteenvedot menneiden hoitokausien viimeisille kuukausille
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
-                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                   mhu_laskutusyhteenveto_tuotekohtainen(hk.alkupvm, hk.loppupvm,
                                                        date_trunc('month', hk.loppupvm) :: DATE,
                                                        (date_trunc('month', hk.loppupvm) + INTERVAL '1 month') :: DATE,
                                                        :urakka_id :: INTEGER)
@@ -89,7 +89,7 @@ FROM (SELECT
                SELECT
                    hk.alkupvm,
                    hk.loppupvm,
-                   mhu_laskutusyhteenveto_teiden_hoito(hk.alkupvm, hk.loppupvm,
+                   mhu_laskutusyhteenveto_tuotekohtainen(hk.alkupvm, hk.loppupvm,
                                                        date_trunc('month', now()::DATE) ::DATE,
                                                        (SELECT CASE
                                                                    WHEN
@@ -115,6 +115,7 @@ GROUP BY tpi_id;
 -- muodostaa ne laskutusyhteenvetoa kutsumalla.
 SELECT
   m.numero                 AS numero,
+  m.maksuera_alias         AS maksuera_alias,
   m.tyyppi                 AS maksuera_tyyppi,
   m.nimi                   AS maksuera_nimi,
   m.tila                   AS maksuera_tila,
@@ -184,6 +185,7 @@ WHERE tpi.urakka = :urakkaid;
 -- muodostaa ne laskutusyhteenvetoa kutsumalla.
 SELECT
     m.numero                 AS numero,
+    m.maksuera_alias         AS maksuera_alias,
     m.tyyppi                 AS maksuera_tyyppi,
     m.nimi                   AS maksuera_nimi,
     m.tila                   AS maksuera_tila,
@@ -422,4 +424,9 @@ SELECT
 
 FROM toimenpideinstanssi tpi
 WHERE tpi.urakka = :urakka
-GROUP BY tpi.id
+GROUP BY tpi.id;
+
+-- name: maksuearat-ilman-kustannussuunnitelmaa
+SELECT m.numero
+  FROM maksuera m
+ WHERE m.numero not in (SELECT DISTINCT maksuera FROM kustannussuunnitelma);

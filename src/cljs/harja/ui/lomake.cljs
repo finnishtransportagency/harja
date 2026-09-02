@@ -42,9 +42,39 @@
              {:ulkoasu :oletus} skeemat)))
 
 (defn palstat
-  "Asetetaan annetut skeemat samaan vertikaaliseen palstaan
-  Flex-optiolla voidaan tehdä käärivästä luokasta flex, kts. luokka lomakepalsta-flex,
-  ja kentille voidaan passata ::col/luokka-arvoksi kokonainen tai puolikas, jolla voidaan säädellä rivitystä."
+  "Jakaa lomakkeen kentät vertikaalisiin palstoihin (sarakkeet).
+    
+    Käyttö:
+    (palstat {:lukumaara 2} palsta1-optiot kentta1 kentta2 palsta2-optiot kentta3 kentta4)
+    
+    Pääoptiot (ensimmäinen parametri):
+    :lukumaara  Palstojen määrä (1-3), vaikuttaa leveyteen
+    :puolikas   Jos true, palstat vievät vain puolet leveydestä
+    :flex?      Jos true, käytetään flexbox-layoutia
+    
+    Palsta-optiot (ennen palstan kenttiä):
+    :otsikko    Palstan otsikko (string tai nil)
+    :flex?      Ylikirjoittaa pääoptioiden flex?
+    
+    Esimerkki - kaksi palstaa vierekkäin:
+    [lomake/lomake
+     {:muokkaa! #(reset! data %)}
+     [(palstat
+        {:lukumaara 2}
+        {:otsikko \"Vasemman palstan kentät\"}
+        {:nimi :nimi :otsikko \"Nimi\" :tyyppi :string}
+        {:nimi :kuvaus :otsikko \"Kuvaus\" :tyyppi :text}
+        {:otsikko \"Oikean palstan kentät\"}
+        {:nimi :email :otsikko \"Sähköposti\" :tyyppi :email}
+        {:nimi :puhelin :otsikko \"Puhelin\" :tyyppi :string})]
+     @data]
+    
+    Esimerkki - flex-layout:
+    (palstat
+      {:lukumaara 2 :flex? true}
+      {:otsikko nil}
+      {:nimi :alkupvm :otsikko \"Alkaa\" :tyyppi :pvm}
+      {:nimi :loppupvm :otsikko \"Päättyy\" :tyyppi :pvm})"
   [{:keys [lukumaara puolikas flex?]} & palstan-optiot-ja-skeemat]
   (->Palstat {:lukumaara lukumaara
               :puolikas puolikas
@@ -344,15 +374,19 @@ ja kaikki pakolliset kentät on täytetty"
           (when (not= @arvo
                       data-arvo)
             (do
-              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo) "nimi:" (pr-str nimi))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
       (let [lomakkeen-opts (merge opts (assoc s :lomake? true))
             tyyppi-string? (= (get lomakkeen-opts :tyyppi) :string)
             aputeksti (get lomakkeen-opts :aputeksti)
             kentta (cond
-                     (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                                   :data              data} komponentti-args)]
+                     (= tyyppi :komponentti) (let [sisalto (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data              data} komponentti-args)]
+                                               (if muokattava?
+                                                 [:div.komponentti sisalto]
+                                                 [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
+                                                  sisalto]))
                      (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                                   :data              data}]
                                                                               komponentti-args))]
@@ -402,67 +436,67 @@ ja kaikki pakolliset kentät on täytetty"
 
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
-  [{:keys [palstoja nimi otsikko tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
+  [{:keys [palstoja nimi otsikko label-for-id tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
-  
-  [:div.form-group {:class (str 
-                             ;; Korostaa input/tekstikentän reunat, jos on virhe
-                             (when (some? virheet) "lomake-validointivirhe ")
-                             (or
-                                  ;; salli skeeman ylikirjoittaa ns-avaimella
-                                  (::col-luokka s)
-                                  col-luokka
-                                  (case (or palstoja 1)
-                                    1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
-                                    2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
-                                    3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
-                                (when (and pakollinen? muokattava?)
-                                  " required")
-                                (when-not (empty? virheet)
-                                  " sisaltaa-virheen")
-                                (when-not (empty? varoitukset)
-                                  " sisaltaa-varoituksen")
-                                (when-not (empty? huomautukset)
-                                  " sisaltaa-huomautuksen"))}
-   [:div {:class (yleiset/luokat
-                   (when sisallon-leveys?
-                     "sisallon-leveys lomake-kentan-leveys")
-                   (when kaariva-luokka kaariva-luokka)
-                   (when label-ja-kentta-samalle-riville? "flex-row"))}
-    (when-not (or (+piilota-label+ tyyppi)
-                  piilota-label?)
-      [:label.control-label
-       (merge {:for nimi} (when label-ja-kentta-samalle-riville? {:class "basis256"}))
-       [:span
-        [:span.kentan-label
-         (if tyhja-otsikko?
-           (gstring/unescapeEntities "&nbsp;")
-           otsikko)]
-        (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
-    [kentan-input s data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
-     (as-> opts opts
-           (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
-           (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
-           (assoc opts :muokattu? muokattu?)
-           (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
+  (let [kentan-id (or label-for-id (str (when (and nimi (keyword? nimi)) (name nimi)) "-" (gensym)))]
+    [:div.form-group {:class (str
+                               ;; Korostaa input/tekstikentän reunat, jos on virhe
+                               (when (some? virheet) "lomake-validointivirhe ")
+                               (or
+                                 ;; salli skeeman ylikirjoittaa ns-avaimella
+                                 (::col-luokka s)
+                                 col-luokka
+                                 (case (or palstoja 1)
+                                   1 "col-xs-12 col-sm-6 col-md-5 col-lg-4"
+                                   2 "col-xs-12 col-sm-12 col-md-10 col-lg-8"
+                                   3 "col-xs-12 col-sm-12 col-md-12 col-lg-12"))
+                               (when (and pakollinen? muokattava?)
+                                 " required")
+                               (when-not (empty? virheet)
+                                 " sisaltaa-virheen")
+                               (when-not (empty? varoitukset)
+                                 " sisaltaa-varoituksen")
+                               (when-not (empty? huomautukset)
+                                 " sisaltaa-huomautuksen"))}
+     [:div {:class (yleiset/luokat
+                     (when sisallon-leveys?
+                       "sisallon-leveys lomake-kentan-leveys")
+                     (when kaariva-luokka kaariva-luokka)
+                     (when label-ja-kentta-samalle-riville? "flex-row"))}
+      (when-not (or (+piilota-label+ tyyppi)
+                    piilota-label?)
+        [:label.control-label
+         (merge {:for kentan-id} (when label-ja-kentta-samalle-riville? {:class "basis256"}))
+         [:span
+          [:span.kentan-label
+           (if tyhja-otsikko?
+             (gstring/unescapeEntities "&nbsp;")
+             otsikko)]
+          (when (and yksikko (not piilota-yksikko-otsikossa?)) [:span.kentan-yksikko yksikko])]])
+      [kentan-input (merge s {:elementin-id kentan-id}) data muokattava? muokkaa muokkaa-kenttaa-fn aseta-vaikka-sama?
+       (as-> opts opts
+         (assoc opts :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?)
+         (assoc opts :label-ja-kentta-samalle-riville? label-ja-kentta-samalle-riville?)
+         (assoc opts :muokattu? muokattu?)
+         (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
-    (when (and muokattu?
-               (not (empty? virheet)))
-      [virheen-ohje virheet :virhe virhe-optiot])
-    (when (:virheteksti s)
-      [virheen-ohje (if-not (vector? (:virheteksti s))
-                      (conj [] (:virheteksti s))
-                      (:virheteksti s)) :virhe virhe-optiot])
-    (when (and muokattu?
-               (not (empty? varoitukset)))
-      [virheen-ohje varoitukset :varoitus virhe-optiot])
-    (when (and muokattu?
-               (not (empty? huomautukset)))
-      [virheen-ohje huomautukset :huomautus virhe-optiot])
+      (when (and muokattu?
+              (not (empty? virheet)))
+        [virheen-ohje virheet :virhe virhe-optiot])
+      (when (:virheteksti s)
+        [virheen-ohje (if-not (vector? (:virheteksti s))
+                        (conj [] (:virheteksti s))
+                        (:virheteksti s)) :virhe virhe-optiot])
+      (when (and muokattu?
+              (not (empty? varoitukset)))
+        [virheen-ohje varoitukset :varoitus virhe-optiot])
+      (when (and muokattu?
+              (not (empty? huomautukset)))
+        [virheen-ohje huomautukset :huomautus virhe-optiot])
 
-    [kentan-vihje s]]])
+      [kentan-vihje s]]]))
 
 (def ^:private col-luokat
   ;; PENDING: hyvin vaikea sekä 2 että 3 komponentin määrät saada alignoitua
@@ -587,25 +621,93 @@ ja kaikki pakolliset kentät on täytetty"
                   ja tekee sille jotain (oletettavasti swap! tai reset! atomille,
                   joka sisältää lomakkeen tiedot)
 
+  :voi-muokata?   voiko lomaketta muokata, oletuksena true
+
+  :validoi-alussa?  
+                  validoidaanko lomake heti alussa, oletuksena false
+
+  :validoitavat-avaimet
+                  vektori avaimia, jotka validoidaan. Jos annettu, validoidaan vain nämä kentät.
+
+  :kutsu-muokkaa-renderissa?
+                  kutsutaanko :muokkaa! funktiota joka renderöinnissä jos virheet muuttuvat
+
+  :tarkkaile-ulkopuolisia-muutoksia?
+                  päivittääkö lomake kenttien arvot automaattisesti kun data muuttuu
+                  ulkopuolelta (esim. rajapinnasta). Oletuksena false
+
   :header         Komponentti, joka asetetaan lomakkeen header sijaintiin, ennen otsikkoa
 
-  :header-fn      Sama kuin footer-fn, mutta headerille
+  :header-fn      Funktio joka palauttaa header komponentin. Saa parametrina validoidun
+                  datan (sisältää ::virheet, ::varoitukset, ::huomautukset, ::skeema)
 
   :footer         Komponentti, joka asetetaan lomakkeen footer sijaintiin, yleensä
                   submit nappi tms.
 
-  :footer-fn      vaihtoehto :footer'lle, jolle annetaan footerin muodostava funktio
-                  funktiolle annetaan validoitu data parametrina. Parametriin on liitetty
-                  avaimet ::virheet, ::varoitukset, ::huomautukset, ja ::puuttuvat-pakolliset-kentat.
+  :footer-fn      Funktio joka palauttaa footer komponentin. Saa parametrina validoidun
+                  datan (sisältää ::virheet, ::varoitukset, ::huomautukset, 
+                  ::puuttuvat-pakolliset-kentat, ::skeema)
                   
-  :footer-luokka  Mahdollinen luokka footerille, joka ylikirjoittaa vakion col-md-12.
+  :footer-luokka  CSS-luokka footerille, ylikirjoittaa vakion col-md-12
 
-  :voi-muokata?   voiko lomaketta muokata, oletuksena true
+  :otsikko        Lomakkeen otsikko (string)
 
+  :otsikko-elementti
+                  HTML-elementti otsikkolle, oletuksena :h2
+
+  :otsikko-komp   Komponentti joka korvaa otsikon. Saa parametrina validoidun datan.
+
+  :luokka         CSS-luokka lomakkeen pääelementille
+
+  :ei-borderia?   piilottaa lomakkeen borderin
+
+  :vayla-tyyli?   käyttää Väylä-tyyliä lomakkeessa
+
+  :data-cy        data-cy attribuutti testausta varten
+
+  :overlay        jos annettu, lomake näytetään overlay-tilassa
+                  {:leveys \"400px\"} määrittää leveyden
+
+  :ryhman-luokka  CSS-luokka ryhmille
+
+  :virhe-optiot   optiot virheiden näyttämiselle
+
+  :blurrissa!     callback joka kutsutaan kun kenttä menettää fokuksen
+                  Saa parametrina kentän :nimi
+  
+   ## KENTTIEN YLEISET OPTIOT
+  
+  Kaikki kentät tukevat seuraavia yleisiä optioita:
+  
+  :nimi           Kentän avain datassa (keyword)
+  :otsikko        Kentän näytettävä otsikko
+  :tyyppi         Kentän tyyppi (:string, :number, :pvm, :valinta, jne.)
+  :pakollinen?    Onko kenttä pakollinen
+  :muokattava?    Funktio tai boolean, joka määrittää onko kenttä muokattavissa
+  :palstoja       Kentän leveys (1-3)
+  :validoi        Vektori validointisääntöjä
+  :varoita        Vektori varoitussääntöjä
+  :huomauta       Vektori huomautussääntöjä
+  
+  ### :valinta kentän erityisoptiot
+  
+  :valinnat       Vektori tai map valittavista vaihtoehdoista
+  :valinnat-fn    Funktio joka palauttaa valinnat (ottaa rivin parametrina)
+  :valinta-arvo   Funktio joka poimii arvon valinnasta (esim. :id)
+  :valinta-nayta  Funktio joka muotoilee valinnan näytettäväksi tekstiksi
+  :nil-valinta    Lisää valintojen alkuun vaihtoehdon jolla voi asettaa arvon nil.
+                  Voi olla string tai map (esim. {:id nil :nimi \"Ei valintaa\"})
+  :jos-tyhja      Teksti joka näytetään kun valintalista on tyhjä
+  :valitse-oletus? Jos true ja vain yksi vaihtoehto, valitsee sen automaattisesti
+  
+  #### :komponentti (custom komponentti)
+
+  :sulje-fn       funktio joka kutsutaan kun lomake suljetaan (näyttää X-napin)
+  
   Jos :tyyppi:n arvoksi on määritetty :komponentti, niin :komponentti avain ottaa funktion. Tämä funktio ottaa yhden
   parametrin, joka on map avaimilla :muokkaa-lomaketta ja :data.
 
-  :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla
+  :muokkaa-lomaketta    Funktio, joka ottaa lomakkeen data-mapin ja päivittää ::muokatut avaimen skeeman :nimi arvolla 
   :data                 validoitu data
   "
   [{:keys [validoi-alussa? validoitavat-avaimet muokkaa! kutsu-muokkaa-renderissa? voi-muokata? sulje-fn]} skeema data]
@@ -619,7 +721,7 @@ ja kaikki pakolliset kentät on täytetty"
     (when (and validoi-alussa? voi-muokata?)
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-elementti otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
-                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? palstoita? footer-luokka
+                 voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? footer-luokka
                  tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot blurrissa!] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
@@ -696,11 +798,12 @@ ja kaikki pakolliset kentät on täytetty"
                      (if otsikko
                        ^{:key (str otsikko "-" i)}
                        [:div {:class (get-in otsikko [:optiot :ryhman-luokka])}
-                        (if-let [nappi (get-in otsikko [:optiot :nappi])]
-                          [:div.lomake-ryhman-otsikko.napilla
-                           [:h3 (:otsikko otsikko)]
-                           nappi]
-                          [:h3.lomake-ryhman-otsikko (:otsikko otsikko)])
+                        (when (:otsikko otsikko)            ;; Ei tehdä tyhjää otsikkoa, jos se on nil
+                         (if-let [nappi (get-in otsikko [:optiot :nappi])]
+                           [:div.lomake-ryhman-otsikko.napilla
+                            [:h3 (:otsikko otsikko)]
+                            nappi]
+                           [:h3.lomake-ryhman-otsikko (:otsikko otsikko)]))
                         rivi-ui]
                        ^{:key (str "rivi-ui-with-meta-" i)}
                        (with-meta rivi-ui {:key (str "rivi-ui-" i)}))))

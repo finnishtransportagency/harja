@@ -97,17 +97,14 @@
 
 (s/def ::ennen-urakkaa? boolean?)
 
-;; TODO: Lisää ::muutos
 (s/def ::tallenna-johto-ja-hallintokorvaukset-kysely (s/keys :req-un [::urakka-id ::ennen-urakkaa? ::jhk-tiedot]
                                                              :opt-un [::toimenkuva-id ::toimenkuva ::maksukausi]))
 (s/def ::tallenna-johto-ja-hallintokorvaukset-vastaus any?)
 
-;; TODO: Lisää ::muutos
 (s/def ::tallenna-kustannusarvioitu-tyo-kysely (s/keys :req-un [::osio ::urakka-id ::tallennettava-asia ::toimenpide-avain ::ajat]
                                                        :opt-un [::summa]))
 (s/def ::tallenna-kustannusarvioitu-tyo-vastaus any?)
 
-;; TODO: Lisää ::muutos
 (s/def ::tallenna-kiinteahintaiset-tyot-kysely (s/keys :req-un [::urakka-id ::toimenpide-avain ::ajat]
                                                        :opt-un [::summa]))
 (s/def ::tallenna-kiinteahintaiset-tyot-vastaus any?)

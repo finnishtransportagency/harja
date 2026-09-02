@@ -259,6 +259,7 @@
      [:lisaaine
       [:tyyppi 2]
       [:pitoisuus 25.5M]]]]
+   nil
    [:murske
     [:mursketyyppi 2]
     [:rakeisuus "string"] 

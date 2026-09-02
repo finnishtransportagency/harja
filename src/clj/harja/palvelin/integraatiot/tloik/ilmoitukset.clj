@@ -44,7 +44,9 @@
     ;; Jos varsinaiselle urakalle ei löydy yhtään päivystäjää, haetaan oletuksena hoidon urakka
     (if (yhteyshenkilot/onko-urakalla-paivystajia? db (:id urakka))
       urakka
-      (hae-urakka "hoito"))))
+      (do
+        (log/warn "Urakalle " (:id urakka) " ei löydy päivystäjiä, haetaan hoidon urakka.")
+        (hae-urakka "hoito")))))
 
 (defn- merkitse-automaattisesti-vastaanotetuksi [db ilmoitus ilmoitus-id jms-lahettaja]
   (log/info "Ilmoittaja urakan organisaatiossa, merkitään automaattisesti vastaanotetuksi.")
@@ -137,7 +139,7 @@
         ilmoitus-muuttui-toimenpidepyynnoksi? (and ilmoituksen-tyyppi-kannassa
                                                 (not= "toimenpidepyynto" ilmoituksen-tyyppi-kannassa)
                                                 (= "toimenpidepyynto" (:ilmoitustyyppi ilmoitus)))
-        {:keys [lisatietoja ilmoitus]}
+        {:keys [lisatietoja ilmoitus laheta-paivystajille? ilmoitus-paivystajille]}
         (jdbc/with-db-transaction [db db]
           (let [;; Jos kyseessä on harvinainen tilanne, että ilmoitus on lähetetty väärälle urakalle ensin, niin korjataan
                 ;; ilmoitustauluun urakka-id oikeaksi tällä toisella kerralla
@@ -158,30 +160,21 @@
                                   (ilmoituksen-kesto (Math/floor ilmoituksen-alkuperainen-kesto))))
                               (str "Illmoituksella kesti " (ilmoituksen-kesto kulunut-aika) " saapua HARJA:an"))
                 ilmoitus (assoc ilmoitus :id ilmoitus-kanta-id)
-                tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)]
+                tieosoite (ilmoitus/hae-ilmoituksen-tieosoite db ilmoitus-kanta-id)
+                laheta-paivystajille? (or (not uudelleen-lahetys?)
+                                        (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
+                                        ilmoitus-muuttui-toimenpidepyynnoksi?)
+                ilmoitus-paivystajille (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))]
 
-            ;; Ilmoita kaikki ilmoitustapahtumat, ja vielä erikseen urakkakohtaisesti
-            (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta ilmoitus-id)
-            (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
-
-            ;; Kuitataan ilmoitus vastaanotetuksi, jos ilmoittaja on urakan organisaatiossa
-            (when ilmoittaja-urakan-urakoitsijan-organisaatiossa?
-              (merkitse-automaattisesti-vastaanotetuksi db ilmoitus ilmoitus-kanta-id jms-lahettaja))
-
-            ;; Tee tähän joku logiikka, että lähetetään uusiksi, mikäli päivystäjä on eri, kuin edellisellä kerralla
-            ;; Voisko olla niin, että päivystäjille lähetetään, jos päivystäjä on eri kuin edellisellä kerralla
-            ;; HARJA-631: Jos päivitetty ilmoitus on tyyppiä TPP, lähetetään aina viestit uudelleen
-            (if (or (not uudelleen-lahetys?) (and uudelleen-lahetys? (not ilmoitus-on-lahetetty-urakalle?))
-                  ilmoitus-muuttui-toimenpidepyynnoksi?)
-              (laheta-ilmoitus-paivystajille db
-                (assoc ilmoitus :sijainti (merge (:sijainti ilmoitus) tieosoite))
-                paivystajat urakka-id ilmoitusasetukset)
-              (log/warn "Päivitetty ilmoitus saapui. Ei lähetetä päivystäjille, koska samat päivystäjät ovat jo saaneet viestin."))
             {:lisatietoja lisatietoja
-             :ilmoitus ilmoitus}))]
+             :ilmoitus ilmoitus
+             :laheta-paivystajille? laheta-paivystajille?
+             :ilmoitus-paivystajille ilmoitus-paivystajille}))]
     ;; Tallennus-transaktion jälkeen lähetetään Ack-viesti T-Loikiin. Se onnistuu lähes aina. Vaikka se epäonnistuisi,
-    ;; tallennetaan ilmoitus Harjaan, ja päivystäjille on lähetetty viestit. Tällöin T-Loik lähettää aikanaan ilmoituksen
-    ;; uudelleen, mikä Harjassa havaitaan päivitykseksi ja samasta ilmoituksesta ei enää lähde turhaan duplikaattina viestintää.
+    ;; tallennetaan ilmoitus Harjaan. Automaattinen vastaanottokuittaus ja päivystäjille lähetettävät viestit tehdään
+    ;; vasta Ack-yrityksen jälkeen.
+    ;; Tällöin T-Loik lähettää aikanaan ilmoituksen uudelleen, mikä Harjassa havaitaan päivitykseksi ja samasta
+    ;; ilmoituksesta ei enää lähde turhaan duplikaattina viestintää.
     ;; Ilmoituksen tila päivitetään normaaliin "kuittaamaton" aloitustilaan, jos ja kun T-Loikiin menevä Ack-viesti onnistuu
     ;; Muutoin ilmoitus jää harvinaiseen välitilaan "ei-valitetty", mikä tarkoittaa ettei T-Loikille ole lähetetty "valitetty" kuittausta (eli Ack) onnistuneesti
     (try
@@ -190,7 +183,20 @@
           (ilmoitukset-q/paivita-ilmoitus-valitetty! db {:id (:id ilmoitus)})))
       (catch Exception e
         (log/error (format "Ilmoituksen välityskuittausta (Ack) ei saatu välitettyä T-Loikiin. Tarkastele kokonaistilannetta,
-      ja ole tarvittaessa yhteydessä T-Loikiin, heidän järjestelmässä voi olla ongelmatilanne päällä. Virhe: %s" (pr-str e)))))))
+      ja ole tarvittaessa yhteydessä T-Loikiin, heidän järjestelmässä voi olla ongelmatilanne päällä. Virhe: %s" (pr-str e)))))
+
+    ;; Ilmoita kaikki ilmoitustapahtumat, ja vielä erikseen urakkakohtaisesti.
+    (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta ilmoitus-id)
+    (notifikaatiot/ilmoita-saapuneesta-ilmoituksesta urakka-id ilmoitus-id)
+
+    ;; Kuitataan ilmoitus vastaanotetuksi, jos ilmoittaja on urakan organisaatiossa.
+    (when ilmoittaja-urakan-urakoitsijan-organisaatiossa?
+      (merkitse-automaattisesti-vastaanotetuksi db ilmoitus (:id ilmoitus) jms-lahettaja))
+
+    ;; HARJA-631: Jos päivitetty ilmoitus on tyyppiä TPP, lähetetään viestit aina uudelleen.
+    (if laheta-paivystajille?
+      (laheta-ilmoitus-paivystajille db ilmoitus-paivystajille paivystajat urakka-id ilmoitusasetukset)
+      (log/warn "Päivitetty ilmoitus saapui. Ei lähetetä päivystäjille, koska samat päivystäjät ovat jo saaneet viestin."))))
 
 (defn kasittele-tuntematon-urakka [itmf lokittaja kuittausjono viesti-id ilmoitus-id
                                    korrelaatio-id tapahtuma-id]

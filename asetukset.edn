@@ -6,6 +6,7 @@
 
  :clojure-async-thread-poolin-koko 12
  :http-palvelin {:threads 16
+                 :portti #=(eval (harja.tyokalut.env/env "HARJA_HTTP_PORTTI" 3000))
                  :anti-csrf-token #=(slurp "../.harja/anti-csrf-token")
                  :salli-oletuskayttaja? #=(eval (harja.tyokalut.env/env "HARJA_SALLI_OLETUSKAYTTAJA" false))
                  :dev-resources-path #=(eval (harja.tyokalut.env/env "HARJA_DEV_RESOURCES_PATH" "dev-resources"))}
@@ -50,6 +51,13 @@
        :tiedosto "dev-resources/fim.edn"
        :kayttajatunnus ""
        :salasana ""}
+
+ ;; MIAM käyttäjäroolit
+ :kayttajaroolit {:url "https://localhost:3001/miam/harja/user/roles?uid="
+                  :apiavain ""
+                  :timeout 30000
+                  :max-yritykset 3}
+
  :log {:gelf {:taso :debug
               :palvelin "localhost"}
        :testidata? true
@@ -86,7 +94,7 @@
                        ;; :palvelin "solita-service-1.solita.fi"
                        }
 
- :api-sahkoposti {:suora? false                              ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
+ :api-sahkoposti {:suora? false ;; Lokaalisti voit lähettää sähköpostit suoraa ilman apia
                   :vastausosoite "harja-ala-vastaa@vayla.fi"
                   :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
                   :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
@@ -111,57 +119,67 @@
 
  ;; Voit hallinnoida geometria-aineistojen päivitystä GEOMETRIAPAIVITYS-taulussa.
  ;; Jos aineiston nimi muuttuu, voit tallentaa nimen ja sen voimassaolon GEOMETRIAAINEISTO-tauluun.
- :geometriapaivitykset {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
-                        :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
-                        :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
+ :geometriapaivitykset #=(eval
+                           ;; Voit halutessa kytkeä kehityksessä nämä pois, harvoin tarvitsee.
+                           ;; Defaulttina tämä on false, eli päivitykset on PÄÄLLÄ.
+                           (if (harja.tyokalut.env/env "HARJA_GEOMETRIAPAIVITYKSET_POIS" false)
+                             {}
+                             {:tieosoiteverkon-shapefile "file://shp/Tieosoiteverkko/tieosoiteverkkoLine.shp"
+                              :tieosoiteverkon-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieosoiteverkko&outputFormat=SHAPE-ZIP"
+                              :tieosoiteverkon-tuontikohde "./shp/Tieosoiteverkko/tieosoiteverkkoLine.shz"
 
-                        :laajennetun-tieosoiteverkon-tiedot "../.harja/kaista-aineisto.csv"
+                              :laajennetun-tieosoiteverkon-tiedot "../.harja/kaista-aineisto.csv"
 
-                        :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
-                        :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
-                        :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/pohjavesialueetLine.shz"
+                              :pohjavesialueen-shapefile "file://shp/Pohjavesialueet/pohjavesialueetLine.shp"
+                              :pohjavesialueen-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:pohjavesialueet&outputFormat=SHAPE-ZIP"
+                              :pohjavesialueen-tuontikohde "./shp/Pohjavesialueet/pohjavesialueetLine.shz"
 
-                        :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/talvihoitoluokkaLine.shp"
-                        :talvihoidon-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:talvihoitoluokka&outputFormat=SHAPE-ZIP"
-                        :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/talvihoitoluokkaLine.shz"
+                              :talvihoidon-hoitoluokkien-shapefile "file://shp/Talvihoitoluokat/talvihoitoluokkaLine.shp"
+                              :talvihoidon-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:talvihoitoluokka&outputFormat=SHAPE-ZIP"
+                              :talvihoidon-hoitoluokkien-tuontikohde "./shp/Talvihoitoluokat/talvihoitoluokkaLine.shz"
 
-                        :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/soratieluokkaLine.shp"
-                        :soratien-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:soratieluokka&outputFormat=SHAPE-ZIP"
-                        :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
+                              :soratien-hoitoluokkien-shapefile "file://shp/Soratieluokat/soratieluokkaLine.shp"
+                              :soratien-hoitoluokkien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:soratieluokka&outputFormat=SHAPE-ZIP"
+                              :soratien-hoitoluokkien-tuontikohde "./shp/Soratieluokat/soratieluokkaLine.shz"
 
-                        :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
-                        :siltojen-osoite nil #_"https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
-                        :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
+                              :siltojen-shapefile "file://shp/Sillat/siltaPoint.shp"
+                              :siltojen-osoite nil #_"https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=taitorakenteet:silta&outputFormat=SHAPE-ZIP"
+                              :siltojen-tuontikohde "./shp/Sillat/siltaPoint.shz"
 
-                        :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
-                        :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:tie_hoitourakat&outputformat=shape-zip"
-                        :urakoiden-tuontikohde "./shp/Hoitourakat/tie_hoitourakatPolygon.shz"
+                              :urakoiden-shapefile "file://shp/Hoitourakat/tie_hoitourakatPolygon.shp"
+                              :urakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:tie_hoitourakat&outputformat=shape-zip"
+                              :urakoiden-tuontikohde "./shp/Hoitourakat/tie_hoitourakatPolygon.shz"
 
-                        :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
+                              :ely-alueiden-shapefile "file://shp/ELYt/ULKOISET_Elyt_infra.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/palvelusopimusLine.shp"
-                        :valaistusurakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
-                        :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/palvelusopimukset.shz"
+                              ;; Lokaalisti elinvoimakeskusten geometriat tulevat testidatasta. Nämä on esimerkkinä tässä, etteivät unohdu. STG ja PROD ympäristöissä nämä on oikeasti käytössä
+                              ;:elinvoimakeskusten-shapefile "file://shp/Elinvoimakeskukset/elinvoimakeskusalueet_10kPolygon.shp" ;; Päivitä tarvittaessa manuaalisesti
+                              ;:elinvoimakeskusten-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=rajaus_aineistot:elinvoimakeskusalueet_10k&outputformat=shape-zip"
+                              ;:elinvoimakeskusten-tuontikohde "./shp/Elinvoimakeskukset/elinvoimakeskusalueet_10kPolygon.shz"
 
-                        :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/palvelusopimusLine.shp"
-                        :paallystyspalvelusopimusten-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
-                        :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/palvelusopimukset.shz"
+                              :valaistusurakoiden-shapefile "file://shp/Valaistusurakat/palvelusopimusLine.shp"
+                              :valaistusurakoiden-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
+                              :valaistusurakoiden-tuontikohde "./shp/Valaistusurakat/palvelusopimukset.shz"
 
-                        :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
+                              :paallystyspalvelusopimusten-shapefile "file://shp/Paallystyspalvelusopimukset/palvelusopimusLine.shp"
+                              :paallystyspalvelusopimusten-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=getfeature&service=wfs&version=1.1.0&typename=tiestotiedot:palvelusopimus&outputformat=shape-zip" ;; Valaistusurakoiden ja päällystyspalvelusopimusten lähdetiedosto on nykyään sama.
+                              :paallystyspalvelusopimusten-tuontikohde "./shp/Paallystyspalvelusopimukset/palvelusopimukset.shz"
 
-                        :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
+                              :tekniset-laitteet-urakat-shapefile "file://shp/Tekniset_laitteet_urakat/tekniset_laitteet_urakat.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat_uusiPolygon.shp"
-                        :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat_uusi&outputFormat=SHAPE-ZIP"
-                        :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat_uusiPolygon.shz"
+                              :siltojenpalvelusopimusten-shapefile "file://shp/Siltapalvelusopimukset/siltapalvelusopimukset.shp" ;; Aineisto ei ole saatavilla avoimista aineistoista, päivitetään puolimanuaalisesti.
 
-                        :tieturvallisuustarkastus-tieverkko-shapefile "file://shp/Tieturvallisuus/tieturvallisuustarkastettavat_tietLine.shp"
-                        :tieturvallisuustarkastus-tieverkko-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieturvallisuustarkastettavat_tiet&outputFormat=SHAPE-ZIP"
-                        :tieturvallisuustarkastus-tieverkko-tuontikohde "./shp/Tieturvallisuus/tieturvallisuustarkastettavat.shz"
+                              :kanavien-shapefile "file://shp/Vesivaylien_kanavat/sulkukanavat_uusiPolygon.shp"
+                              :kanavien-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=vesivaylatiedot:sulkukanavat_uusi&outputFormat=SHAPE-ZIP"
+                              :kanavien-tuontikohde "./shp/Vesivaylien_kanavat/Sulkukanavat_uusiPolygon.shz"
 
-                        :paallysteen-korjausluokka-shapefile "file://shp/PaallysteenKorjausluokka/paallysteen_korjausluokkaLine.shp"
-                        :paallysteen-korjausluokka-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:paallysteen_korjausluokka&outputFormat=SHAPE-ZIP"
-                        :paallysteen-korjausluokka-tuontikohde "./shp/PaallysteenKorjausluokka/paallysteen_korjausluokkaLine.shz"}
+                              :tieturvallisuustarkastus-tieverkko-shapefile "file://shp/Tieturvallisuus/tieturvallisuustarkastettavat_tietLine.shp"
+                              :tieturvallisuustarkastus-tieverkko-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:tieturvallisuustarkastettavat_tiet&outputFormat=SHAPE-ZIP"
+                              :tieturvallisuustarkastus-tieverkko-tuontikohde "./shp/Tieturvallisuus/tieturvallisuustarkastettavat.shz"
+
+                              :paallysteen-korjausluokka-shapefile "file://shp/PaallysteenKorjausluokka/paallysteen_korjausluokkaLine.shp"
+                              :paallysteen-korjausluokka-osoite "https://avoinapi.vaylapilvi.fi/vaylatiedot/wfs?request=GetFeature&service=WFS&version=1.1.0&typeName=tiestotiedot:paallysteen_korjausluokka&outputFormat=SHAPE-ZIP"
+                              :paallysteen-korjausluokka-tuontikohde "./shp/PaallysteenKorjausluokka/paallysteen_korjausluokkaLine.shz"}))
 
  :yha {:url "https://api.testivaylapilvi.fi/yha/rest/"
        :api-key #=(slurp "../.harja/yha-api-key")} ;; Testipalvelimen avain projektin jakamassa LastPass-kansiossa.
@@ -201,6 +219,7 @@
  ;; :reittitarkistukset
  ;; :toteumatyokalu - sallittu vain gc ja local ympäristöissä, muualla estetty
  ;; :kustannussuunnitelma-tarjous - sallittu vain gc ja local ympäristöissä tällä hetkellä, muualla estetty
+ ;; :header-roolit - Jos nämä on kytketty pois, niin käyttäjäroolit haetaan miam käyttäjärajapinnasta
  :pois-kytketyt-ominaisuudet #{; :tietyoilmoitusten-lahetys
                                :itmf
                                :sonja-uudelleen-kaynnistys
@@ -214,7 +233,8 @@
                                ;; Sampoapi, vai apisampo? 
                                ;; Ei tartte kehitysmoodissa
                                :sampo-api
-                               :api-sampo}
+                               :api-sampo
+                               :header-roolit}
 
  :vaylat {:geometria-url "https://extranet.vayla.fi/inspirepalvelu/avoin/wfs?Request=GetFeature&typename=vaylat&OUTPUTFORMAT=application/json"
           :paivittainen-tarkistusaika [12 22 00]

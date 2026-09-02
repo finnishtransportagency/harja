@@ -10,4 +10,5 @@
 (defn onko-olemassa? [db urakka-id sopimus-id]
   (:exists (first (onko-olemassa db urakka-id sopimus-id))))
 
-(declare hae-urakan-sopimus-idt)
+(declare hae-urakan-sopimus-idt paivita-urakka-sampoidlla! poista-kaikki-sopimukset-urakasta!
+  aseta-sopimuksien-paasopimus! aseta-sopimus-paasopimukseksi! liita-sopimukset-urakkaan!)

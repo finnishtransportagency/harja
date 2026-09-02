@@ -15,6 +15,28 @@ WHERE sopimus = :sopimus-id
       OR (vuosi = :vuosi + 1 AND kuukausi >= 1 AND kuukausi <= 9))
   AND toimenpideinstanssi = :toimenpideinstanssi-id;
 
+-- name: hae-pysyvat-hankintakus-muutokset 
+SELECT
+    mmk.muutos,
+    :vuosi::INTEGER              AS vuosi,
+    NULL::INTEGER                AS kuukausi,
+    mmk.summa,
+    mmk.toimenpideinstanssi
+FROM mhu_muutos_kustannusvaikutus mmk
+         JOIN mhu_muutos m ON m.id = mmk.muutos
+         JOIN toimenpideinstanssi tpi ON tpi.id = mmk.toimenpideinstanssi
+         JOIN toimenpide tp ON tp.id = tpi.toimenpide
+WHERE m.urakka = :urakka
+  AND mmk.toimenpideinstanssi = :toimenpideinstanssi-id
+  AND m.poistettu IS NOT TRUE
+  AND m.tyyppi = 'pysyva'
+  -- TALVIHOITO, LIIKENNEYMPÄRISTÖN HOITO 
+  -- SORATEIDENHOITO, PÄÄLLYSTEIDEN PAIKKAUS
+  -- YLLÄPITO, KORVAUSINVESTOINTI
+  AND tp.koodi IN ('23104', '23116', '23124', '20107', '20191', '14301')
+  AND (extract(YEAR FROM m.voimassa_alkaen) < :vuosi
+  AND mmk.hoitokauden_alkuvuosi = :vuosi::INTEGER);
+
 -- name: hae-viimeisin-muokkaaja-kiinteahintaiselle-kustannukselle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
        CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
@@ -88,6 +110,7 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtavaryhma = :tehtavaryhma-id;
 
+
 -- name: hae-kuukauden-erillishankinta
 SELECT id,
        kuukausi,
@@ -100,6 +123,24 @@ SELECT id,
        sopimus
 FROM kustannusarvioitu_tyo
 WHERE id = :id;
+
+
+-- name: hae-tallennetun-kuukauden-erillishankinta
+SELECT id,
+       kuukausi,
+       vuosi,
+       summa,
+       summa_indeksikorjattu,
+       toimenpideinstanssi,
+       tehtavaryhma,
+       tehtava,
+       sopimus
+ FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id
+  AND vuosi = :vuosi
+  AND kuukausi = :kuukausi
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtavaryhma = :tehtavaryhma-id;
 
 
 -- name: hae-viimeisin-muokkaaja-erillishankinnoille
@@ -161,6 +202,26 @@ SELECT id,
        muokkaaja
 FROM johto_ja_hallintokorvaus
 WHERE id = :id;
+
+
+-- name: hae-tallennettu-kuukauden-johto-ja-hallintokorvaus
+SELECT id,
+       kuukausi,
+       vuosi,
+       tunnit,
+       tuntipalkka,
+       tuntipalkka_indeksikorjattu,
+       "urakka-id",
+       luotu,
+       luoja,
+       muokattu,
+       muokkaaja
+ FROM johto_ja_hallintokorvaus
+WHERE "urakka-id" = :urakka-id
+  AND kuukausi = :kuukausi
+  AND vuosi = :vuosi
+  AND "toimenkuva-id" = :toimenkuva-id;
+
 
 -- name: hae-toimenkuvan-kuukauden-johto-ja-hallintokorvaus
 -- Käytetään -24 ja aiemmin alkaville urakoille, kun yksittäisellä toimenkuvalla on kaikki merkitys
@@ -228,7 +289,7 @@ WHERE sopimus = :sopimus-id
   AND toimenpideinstanssi = :toimenpideinstanssi-id
   AND tehtava = :tehtava-id;
 
--- name: hae-kuukauden-hoidonjohtopalkkio
+-- name: hae-olemassa-oleva-hoidonjohtopalkkio
 SELECT id,
        kuukausi,
        vuosi,
@@ -237,8 +298,12 @@ SELECT id,
        toimenpideinstanssi,
        tehtava,
        sopimus
-FROM kustannusarvioitu_tyo
-WHERE id = :id;
+ FROM kustannusarvioitu_tyo
+WHERE sopimus = :sopimus-id 
+  AND vuosi = :vuosi 
+  AND kuukausi = :kuukausi
+  AND toimenpideinstanssi = :toimenpideinstanssi-id
+  AND tehtava = :tehtava-id;
 
 -- name: hae-viimeisin-muokkaaja-hoidonjohtopalkkiolle
 SELECT GREATEST(kt.muokattu, kt.luotu) AS viimeisin_muokkaus,
@@ -320,7 +385,26 @@ UPDATE urakka_tavoite ut
 SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
     vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END,
     tavoitehinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.tavoitehinta_indeksikorjattu END,
-    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.kattohinta_indeksikorjattu END
+    kattohinta_indeksikorjattu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN indeksikorjaa(ut.kattohinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) ELSE ut.kattohinta_indeksikorjattu END,
+    laskutusraja = CASE
+                       WHEN EXISTS (
+                             SELECT 1
+                               FROM urakka_parametrit up
+                              WHERE up.urakkaid = ut.urakka
+                                AND up.laskutusraja_kaytossa = TRUE)
+                       THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER) + :laskutusrajan-tarkistus-summa::NUMERIC
+                       ELSE ut.laskutusraja
+                   END,
+    laskutusraja_alkuperainen = CASE
+                                    WHEN :vahvista?::BOOLEAN = TRUE
+                                     AND EXISTS (
+                                          SELECT 1
+                                            FROM urakka_parametrit up
+                                           WHERE up.urakkaid = ut.urakka
+                                             AND up.laskutusraja_kaytossa = TRUE)
+                                    THEN indeksikorjaa(ut.tavoitehinta::NUMERIC, :vuosi::INTEGER, :urakka-id::INTEGER, :urakka-id::INTEGER)
+                                    ELSE ut.laskutusraja_alkuperainen
+                                END
 WHERE ut.urakka = :urakka-id
   -- hoitokausi ei ole hoitovuosi e.g. 2020, vaan hoitovuoden järjestysnumero e.g. 1
   AND ut.hoitokausi = :hoitovuosi-nro;
@@ -370,15 +454,23 @@ RETURNING id;
 -- name: paivita-tavoite-ja-kattohinta<!
 UPDATE urakka_tavoite
 SET tavoitehinta = :tavoitehinta,
+    tavoitehinta_indeksikorjattu = :tavoitehinta_indeksikorjattu,
     kattohinta = :kattohinta,
+    kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
     muokkaaja = :muokkaaja
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :kattohinta, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, NOW(), :luoja);
+
+-- name: hae-urakan-hoitovuoden-tarjous
+SELECT * FROM tarjous WHERE urakka_id = :urakka_id AND hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi;
+
+-- name: hae-vanhan-urakan-hoitovuoden-tarjous
+SELECT * FROM urakka_tavoite WHERE urakka = :urakka_id  AND hoitokausi = :hoitokausi;
 
 -- name: indeksikorjaukset-vahvistettu?
 -- Tarkisetaan löytyykö kiinteähintainen_tyo, Kustannusarvioitu_tyo tai Johto_ja_hallintokorvaus tauluista rivejä,
@@ -483,45 +575,143 @@ SELECT id, nimi, yksikko, suunnitteluyksikko, tehtavaryhma, luoja, luotu, muokka
    AND poistettu IS NOT TRUE;
 
 -- name: tulevilla-hoitovuosilla-arvoja?
--- Käyttöliittymässä on mahdollista kopioida nykyisen hoitovuoden arvot tuleville hoitovuosille.
--- Tämä kysely tarkistaa, onko tulevilla hoitovuosilla jo arvoja, jotta käyttäjää osataan varoittaa arvojen menettämisestä.
--- Ensin toimenkuvat
-SELECT COUNT(jjh.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM johto_ja_hallintokorvaus jjh
+-------------------------------- Johto ja hallinto
+SELECT 'jjh' AS tyyppi, 
+       SUM(jjh.tuntipalkka) > 0 AS "arvoja?"
+ FROM johto_ja_hallintokorvaus jjh
 WHERE jjh."urakka-id" = :urakka-id
-  AND ((jjh.vuosi > :vuosi AND jjh.kuukausi IN (10, 11, 12))
-    OR (jjh.vuosi > :vuosi + 1 AND jjh.kuukausi >= 1 AND jjh.kuukausi <= 9))
+  AND (CONCAT(jjh.vuosi, '-', jjh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+GROUP BY tyyppi
 UNION ALL
--- Erillishankinnat
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kustannusarvioitu_tyo kt
+-------------------------------- Hoidonjohtopalkkiot
+SELECT 'hoidonjohto' AS tyyppi,
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
+WHERE sopimus = :sopimus-id
+  AND (CONCAT(vuosi, '-', kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+  AND toimenpideinstanssi = :hoidon-johdon-tpi-id
+  AND tehtava = :tehtava-id
+GROUP BY tyyppi
+UNION ALL
+-------------------------------- Erillishankinnat
+SELECT 'erillishankinnat' AS tyyppi, 
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
 WHERE kt.sopimus = :sopimus-id
-  AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.toimenpideinstanssi = :hoidon-johdon-tpi-id
   AND kt.tehtavaryhma = :erillishankinnat-tehtavaryhma-id
+GROUP BY tyyppi
 UNION ALL
--- Muut kulut
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kustannusarvioitu_tyo kt
+-------------------------------- Muut kulut
+SELECT 'muut' AS tyyppi, 
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
          JOIN tehtava t ON kt.tehtava = t.id AND t.yksiloiva_tunniste = '8376d9c4-3daf-4815-973d-cd95ca3bb388' -- Muut kulut
 WHERE kt.sopimus = :sopimus-id
-  AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND kt.toimenpideinstanssi = :hoidon-johdon-tpi-id
+GROUP BY tyyppi
 UNION ALL
--- Rahavaraukset
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kustannusarvioitu_tyo kt
-    WHERE kt.rahavaraus_id IS NOT NULL
-    AND kt.sopimus = :sopimus-id
-    AND ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-        OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
--- Hankinnat
+-------------------------------- Rahavaraukset
+SELECT 'rahavaraukset' AS tyyppi, 
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kustannusarvioitu_tyo kt
+WHERE kt.rahavaraus_id IS NOT NULL
+  AND kt.sopimus = :sopimus-id
+  AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+GROUP BY tyyppi
+-------------------------------- Hankinnat
 UNION ALL
-SELECT COUNT(kt.*) > 0 AS "arvoja-tulevilla-hoitovuosilla?"
-FROM kiinteahintainen_tyo kt
-WHERE ((kt.vuosi > :vuosi AND kt.kuukausi IN (10, 11, 12))
-    OR (kt.vuosi > :vuosi + 1 AND kt.kuukausi >= 1 AND kt.kuukausi <= 9))
+SELECT 'hankinnat' AS tyyppi,
+       SUM(kt.summa) > 0 AS "arvoja?"
+ FROM kiinteahintainen_tyo kt
+WHERE (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
   AND toimenpideinstanssi IN (:hankinnan-toimenpideinstanssit)
-  AND sopimus = :sopimus-id;
+  AND sopimus = :sopimus-id
+GROUP BY tyyppi;
+
+-- name: hae-laskutusrajan-tarkistukset
+WITH hoitokausi AS (
+    SELECT GREATEST((:hoitokauden_alkuvuosi + 1)
+                        - EXTRACT(YEAR FROM u.alkupvm)::INTEGER, 1) AS hoitokausinro
+      FROM urakka u
+     WHERE u.id = :urakka
+),
+alkuperainen_laskutusraja AS (
+    SELECT ut.laskutusraja_alkuperainen
+      FROM urakka_tavoite ut
+      JOIN hoitokausi hk ON hk.hoitokausinro = ut.hoitokausi
+     WHERE ut.urakka = :urakka
+     LIMIT 1
+),
+muutokset AS (
+    SELECT m.id,
+           m.versio,
+           m.voimassa_alkaen,
+           m.tyyppi,
+           -- Tavoitehinnan muutos lasketaan summana kustannusvaikutuksista
+           -- Laskutusrajaan tarvitaan pelkästään eurot
+           COALESCE((SELECT SUM(kust.summa)
+                       FROM ONLY mhu_muutos_kustannusvaikutus kust
+                      WHERE kust.muutos = m.id
+                        AND kust.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                    ), 0) AS tavoitehinnan_muutos
+      -- Laskutusrajaan otetaan mukaan pelkästään pysyvät sekä muutostyöt
+      FROM ONLY mhu_muutos m
+     WHERE m.urakka = :urakka
+       AND m.poistettu IS FALSE
+       AND m.tyyppi IN ('pysyva', 'muutostyo')
+       AND m.voimassa_alkaen BETWEEN TO_DATE(:hoitokauden_alkuvuosi || '-10-01', 'YYYY-MM-DD')
+                                 AND TO_DATE((:hoitokauden_alkuvuosi + 1) || '-09-30', 'YYYY-MM-DD')
+),
+laskettavat AS (
+    SELECT *
+      FROM muutokset
+     WHERE tyyppi = 'muutostyo'
+        OR (tyyppi = 'pysyva' AND tavoitehinnan_muutos > 0)
+),
+kertymat AS (
+    SELECT *,
+           -- Kumulatiivinen summa, lasketaan mukaan kaikki aiemmat rivit ja nykyinen rivi
+           SUM(tavoitehinnan_muutos) OVER (
+               ORDER BY voimassa_alkaen, id, versio
+               ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+           ) AS yhteensa
+      FROM laskettavat
+),
+prosentit AS (
+    SELECT *,
+           -- Prosenttiosuus lasketaan suhteessa indeksikorjattuun tavoitehintaan,
+           -- pyöristettynä kahteen desimaaliin
+           CASE
+               WHEN :hoitovuoden_indeksikorjattu_tavoitehinta > 0
+               THEN ROUND(100.0 * yhteensa / :hoitovuoden_indeksikorjattu_tavoitehinta, 2)
+               ELSE NULL
+           END AS prosenttiosuus
+      FROM kertymat
+),
+tarkistukset AS (
+    SELECT *,
+           -- Laskutusrajan tarkistus jos prosenttiosuus on 3.00 tai enemmän, muuten 0
+           CASE
+               WHEN prosenttiosuus >= 3.00 THEN yhteensa
+               ELSE 0
+           END AS laskutusrajan_tarkistus
+      FROM prosentit
+)
+SELECT t.tavoitehinnan_muutos                                          AS summa,
+       t.yhteensa,
+       t.prosenttiosuus,
+       t.laskutusrajan_tarkistus                                       AS "laskutusrajan-tarkistus",
+       CASE
+           WHEN al.laskutusraja_alkuperainen IS NOT NULL
+           THEN al.laskutusraja_alkuperainen + t.laskutusrajan_tarkistus
+           ELSE NULL
+       END                                                             AS "tarkistettu-laskutusraja",
+       t.id,
+       t.tyyppi,
+       t.voimassa_alkaen
+  FROM tarkistukset t
+  LEFT JOIN alkuperainen_laskutusraja al ON TRUE
+ ORDER BY t.voimassa_alkaen, t.id, t.versio;

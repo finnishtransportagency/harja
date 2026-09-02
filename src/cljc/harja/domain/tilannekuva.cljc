@@ -11,7 +11,7 @@
 (defrecord Suodatin [id nimi otsikko])
 (defrecord Aluesuodatin [id nimi otsikko alue])
 (defn suodatin? [s] (or (instance? Suodatin s)
-                        (instance? Aluesuodatin s)))
+                      (instance? Aluesuodatin s)))
 
 (maarittele-suodattimet
   [laatupoikkeamat :laatupoikkeamat "Laatupoikkeamat"]
@@ -46,7 +46,7 @@
   [jyra "jyrays" "Jyrät"]
 
   [auraus-ja-sohjonpoisto "auraus ja sohjonpoisto" "Auraus ja sohjonpoisto"]
-  [suolaus "suolaus" "Suolaus"]
+  [suolaus "suolaus" "Liukkaudentorjunta suolaamalla (materiaali)"]
   [sohjo-ojien-teko "sohjo-ojien teko" "Sohjo-ojien teko"]
   [pistehiekoitus "pistehiekoitus" "Pistehiekoitus"]
   [linjahiekoitus "linjahiekoitus" "Linjahiekoitus"]
@@ -76,6 +76,7 @@
    "Sorateiden muokkaushöyläys"]
   [sorateiden-polynsidonta "sorateiden polynsidonta" "Sorateiden pölynsidonta"]
   [sorateiden-tasaus "sorateiden tasaus" "Sorateiden tasaus"]
+  [sorateiden-pinnan-hoito "sorateiden pinnan hoito" "Sorateiden pinnan hoito"]
   [sorastus "sorastus" "Sorastus"]
   [paallysteiden-paikkaus "paallysteiden paikkaus" "Päällysteiden paikkaus"]
   [paallysteiden-juotostyot "paallysteiden juotostyot"
@@ -93,8 +94,9 @@
   [lumensiirto "lumensiirto" "Lumensiirto"]
   [paannejaan-poisto "paannejaan poisto" "Paannejään poisto"]
 
-  [huoltokierros "huoltokierros" "Huoltokierros"]
   [ryhmavaihto "ryhmavaihto" "Ryhmävaihto"]
+  [huoltokierros "huoltokierros" "Huoltokierros"]
+  [valaistusurakoiden-tarkastusajo "valaistusurakoiden tarkastusajo" "Tarkastusajo"]
   [muut-valaistusurakoiden-toimenpiteet "muut valaistusurakoiden toimenpiteet" "Muut toimenpiteet"])
 
 (def tehtavien-jarjestys
@@ -134,6 +136,7 @@
           sorateiden-polynsidonta
           sorastus
           sorateiden-tasaus
+          sorateiden-pinnan-hoito
           sorateiden-muokkaushoylays
           paallysteiden-paikkaus
           paallysteiden-juotostyot
@@ -153,6 +156,7 @@
           muu]
    :valaistus [ryhmavaihto
                huoltokierros
+               valaistusurakoiden-tarkastusajo
                muut-valaistusurakoiden-toimenpiteet]})
 
 (def yllapidon-reaaliaikaseurattavat
@@ -166,6 +170,7 @@
 (def valaistuksen-reaaliaikaseurattavat
   #{(:id ryhmavaihto)
     (:id huoltokierros)
+    (:id valaistusurakoiden-tarkastusajo)
     (:id muut-valaistusurakoiden-toimenpiteet)})
 
 (defn valitut-suodattimet
@@ -181,17 +186,17 @@
       m
 
       (and (map? arvo)
-           (every? suodatin? (keys arvo)))
+        (every? suodatin? (keys arvo)))
       ;; Seuraavalla tasolla on suodattimia, ota vain valitut
       (let [valitut (into #{}
-                          (keep (fn [[suodatin valittu?]]
-                                  (when valittu?
-                                    (:id suodatin))))
-                          (seq arvo))]
+                      (keep (fn [[suodatin valittu?]]
+                              (when valittu?
+                                (:id suodatin))))
+                      (seq arvo))]
         (if (empty? valitut)
           (recur (dissoc m avain) loput)
           (recur (assoc m avain valitut)
-                 loput)))
+            loput)))
 
       (map? arvo)
       (recur (assoc m avain (valitut-suodattimet arvo)) loput)
@@ -213,15 +218,15 @@
       m
 
       (and (map? arvo)
-           (every? suodatin? (keys arvo)))
+        (every? suodatin? (keys arvo)))
       (let [loytyy? (some #(id-set (:id %)) (keys arvo))
             tulos (if-not loytyy?
                     arvo
                     (into {}
-                          (map
-                            (fn [[suodatin valittu? :as pari]]
-                              (if (id-set (:id suodatin)) (funktio suodatin valittu?) pari))
-                            (seq arvo))))]
+                      (map
+                        (fn [[suodatin valittu? :as pari]]
+                          (if (id-set (:id suodatin)) (funktio suodatin valittu?) pari))
+                        (seq arvo))))]
         (recur (assoc m avain tulos) loput))
 
       (map? arvo)
@@ -233,7 +238,7 @@
 (defn valittu? [valitut-set suodatin]
   (some?
     (and valitut-set
-         (valitut-set (:id suodatin)))))
+      (valitut-set (:id suodatin)))))
 
 (defn- valitut-kentat* [taulukko suodattimet]
   (loop [t taulukko

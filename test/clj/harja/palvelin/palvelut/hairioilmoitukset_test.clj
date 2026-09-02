@@ -39,9 +39,8 @@
         ;; -----------------------------------
         ;; Inserttaa häiriöilmoitus
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :aseta-hairioilmoitus +kayttaja-jvh+ uusi-hairio)
-
-        id (-> vastaus first ::hairio/id)
-        viesti (-> vastaus first ::hairio/viesti)
+        id (-> vastaus :vanhat first ::hairio/id)
+        viesti (-> vastaus :vanhat first ::hairio/viesti)
 
         _ (is (some? id) "Uusi häiriö pitäisi olla kannassa")
         _ (is (= (::hairio/viesti uusi-hairio) viesti) "Uusi häiriö pitäisi olla kannassa")
@@ -59,7 +58,7 @@
         paivitetyt {:tiedot (list paivitetty-hairio)}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hairioilmoitukset +kayttaja-jvh+ paivitetyt)
         odotettu-viesti (-> paivitetty-hairio ::hairio/viesti)
-        vastaus-viesti (-> vastaus first ::hairio/viesti)
+        vastaus-viesti (-> vastaus :vanhat first ::hairio/viesti)
         _ (is (= vastaus-viesti odotettu-viesti) "Päivityksen pitäisi onnistua")
 
         ;; -----------------------------------
@@ -67,14 +66,14 @@
         poistettu-hairio (assoc paivitetty-hairio :poistettu true)
         paivitetyt {:tiedot (list poistettu-hairio)}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hairioilmoitukset +kayttaja-jvh+ paivitetyt)
-        _ (is (= (count vastaus) 0) "Ilmoitus pitäisi poistua kannasta")
+        _ (is (= (count (:vanhat vastaus)) 0) "Ilmoitus pitäisi poistua kannasta")
 
 
         ;; -----------------------------------
         ;; Tee 2 ilmoitusta 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :aseta-hairioilmoitus +kayttaja-jvh+ uusi-hairio)
-        id (-> vastaus first ::hairio/id)
-        viesti (-> vastaus first ::hairio/viesti)
+        id (-> vastaus :vanhat first ::hairio/id)
+        viesti (-> vastaus :vanhat first ::hairio/viesti)
 
         _ (is (some? id) "Uusi häiriö pitäisi olla kannassa")
         _ (is (= (::hairio/viesti uusi-hairio) viesti) "Uusi häiriö pitäisi olla kannassa")
@@ -86,7 +85,7 @@
                        ::hairio/tyyppi :hairio}
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :aseta-hairioilmoitus +kayttaja-jvh+ toinen-hairio)
-        _ (is (= (count vastaus) 2) "Kannassa pitäisi olla 2 ilmoitusta")
+        _ (is (= (count (:vanhat vastaus)) 2) "Kannassa pitäisi olla 2 ilmoitusta")
 
         
         hairio-2-id (-> vastaus second ::hairio/id)
@@ -126,7 +125,7 @@
         ;; Virhe pitäisi syntyä leikkavasta aikavälistä 
         virhe (-> vastaus first :virhe)
         _ (is (some? virhe) "Virhe pitäisi olla olemassa")
-        _ (is (= virhe "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.") "Odotettu virhe tapahtuu")]))
+        _ (is (= virhe "Annettu aikaväli on päällekäinen olemassaolevan häiriöilmoituksen kanssa.") "Odotettu virhe tapahtuu")]))
 
 (deftest kaikki-saavat-hakea-tuoreimman-hairioilmoituksen
   (let [vastaus (kutsu-palvelua
@@ -208,14 +207,14 @@
                              (:http-palvelin jarjestelma)
                              :aseta-hairioilmoitus-pois
                              +kayttaja-jvh+
-                             {::hairio/id (::hairio/id (first vastaus))})
+                             {::hairio/id (::hairio/id (:hairio (:voimassaolevat-tyypeittain vastaus)))})
         poiston-jalkeen (kutsu-palvelua
                           (:http-palvelin jarjestelma)
                           :hae-hairioilmoitukset
                           +kayttaja-jvh+
                           {})]
-    (is (is (::hairio/voimassa? (first vastaus))))
-    (is (= (::hairio/voimassa? (first poiston-jalkeen)) false))))
+    (is (is (::hairio/voimassa? (:hairio (:voimassaolevat-tyypeittain vastaus)))))
+    (is (= (::hairio/voimassa? (first  (:vanhat poiston-jalkeen))) false))))
 
 (deftest hairion-loppuaika-ennen-alkuaikaa
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -256,7 +255,7 @@
                      ::hairio/alkuaika (pvm/dateksi (t/from-now (t/days 1)))
                      ::hairio/loppuaika (pvm/dateksi (t/from-now (t/days 3)))})]
       (is (:virhe (first vastaus)))
-      (is (= (:virhe (first vastaus)) "Aikaväli leikkaa olemassaolevaa häiriöilmoitusta.")))))
+      (is (= (:virhe (first vastaus)) "Annettu aikaväli on päällekäinen olemassaolevan ilmoituksen kanssa.")))))
 
 (deftest hairion-pois-paalta-laittaminen-ei-toimi-ilman-oikeuksia
   (try+

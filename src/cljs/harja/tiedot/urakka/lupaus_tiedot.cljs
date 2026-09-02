@@ -75,6 +75,9 @@
 
 ;; Testaus
 (defrecord AsetaNykyhetki [nykyhetki])
+(defrecord GeneroiLupausvastaukset [])
+(defrecord GeneroiLupausvastauksetOnnistui [vastaus])
+(defrecord GeneroiLupausvastauksetEpaonnistui [vastaus])
 
 ;; Monivalintojen naytettavat valinnat alustus
 (def naytettavat-valinnat-alustus [1])
@@ -485,6 +488,26 @@
   PaivitaKustannusennuste
   (process-event [{kuukausi :kuukausi kentta :kentta arvo :arvo} app]
     (paivita-kuukauden-kustannusennuste app kuukausi kentta arvo))
+
+  GeneroiLupausvastaukset
+  (process-event [_ app]
+    (tuck-apurit/post! :generoi-lupausvastaukset
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)
+       :valittu-hoitokausi (:valittu-hoitokausi app)}
+      {:onnistui ->TallennaKustannusennusteOnnistui
+       :epaonnistui ->TallennaKustannusennusteEpaonnistui})
+    app)
+
+  GeneroiLupausvastauksetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (hae-urakan-lupaustiedot app (-> @tila/tila :yleiset :urakka))
+    (viesti/nayta-toast! "Tiedot generoitiin onnistuneesti" :onnistui)
+    app)
+
+  GeneroiLupausvastauksetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Generointi epäonnistui!" :varoitus)
+    app)
 
   AsetaNykyhetki
   (process-event [{nykyhetki :nykyhetki} app]

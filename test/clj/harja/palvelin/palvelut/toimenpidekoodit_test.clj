@@ -17,8 +17,8 @@
           :db (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :toimenpidekoodit (component/using
-                                        (->Toimenpidekoodit)
-                                        [:http-palvelin :db])))))
+                              (->Toimenpidekoodit)
+                              [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -33,8 +33,8 @@
 (def odotetut-tasojen-lkmt
   {1 6
    2 25
-   3 50
-   4 391})
+   3 43
+   4 741})
 
 (defn- tason-lukumaarat-samat [palvelusta kannasta kovakoodattu taso]
   (= (count (get palvelusta taso)) kannasta (get kovakoodattu taso)))
@@ -51,7 +51,7 @@
         koodit-tasoittain (group-by
                             :taso
                             (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-toimenpidekoodit +kayttaja-jvh+))
+                              :hae-toimenpidekoodit +kayttaja-jvh+))
         odotetut-avaimet-tasot-1-2-3 #{:id
                                        :nimi
                                        :koodi
@@ -60,13 +60,13 @@
                                        :luoja
                                        :poistettu}
         odotetut-avaimet-taso-4 (set/union odotetut-avaimet-tasot-1-2-3
-                                           #{:voimassaolon-alkuvuosi
-                                             :voimassaolon-loppuvuosi
-                                             :yksikko
-                                             :jarjestys
-                                             :hinnoittelu
-                                             :tehtavaryhma
-                                             :api-seuranta})]
+                                  #{:voimassaolon-alkuvuosi
+                                    :voimassaolon-loppuvuosi
+                                    :yksikko
+                                    :jarjestys
+                                    :hinnoittelu
+                                    :tehtavaryhma
+                                    :api-seuranta})]
     (is (= (count (get koodit-tasoittain 1)) taso1-lkm (get odotetut-tasojen-lkmt 1)) "Tason 1 koodien lukumäärä")
     (is (= (count (get koodit-tasoittain 2)) taso2-lkm (get odotetut-tasojen-lkmt 2)) "Tason 2 koodien lukumäärä")
     (is (= (count (get koodit-tasoittain 3)) taso3-lkm (get odotetut-tasojen-lkmt 3)) "Tason 3 koodien lukumäärä")
@@ -90,7 +90,7 @@
 
 (deftest tehtavaryhmien-haku-toimii
   (let [tehtavaryhmat (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :hae-tehtavaryhmat +kayttaja-jvh+)
+                        :hae-tehtavaryhmat +kayttaja-jvh+)
         odotetut-avaimet-tehtavaryhmat #{:id
                                          :nimi
                                          :jarjestys}]

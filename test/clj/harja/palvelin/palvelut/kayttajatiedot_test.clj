@@ -30,12 +30,10 @@
   (let [urakka-id-saimaa (hae-urakan-id-nimella "Saimaan kanava")
         urakka-id-joensuu (hae-urakan-id-nimella "Joensuun kanava")
         urakka-id-yha (hae-urakan-id-nimella "YHA-päällystysurakka")
-        urakka-id-oulu (hae-urakan-id-nimella "Oulun päällystyksen palvelusopimus")
-
+        urakka-id-oulu (hae-urakan-id-nimella "Aktiivinen Oulu Päällystys Testi")
         ;; Testikannan hallintayksiköt
         kanava-hallintayksikko 1
-        pohjanmaa-hallintayksikko 12
-
+        pohjanmaa-hallintayksikko (first (first (q "SELECT id FROM organisaatio WHERE elinvoimakeskusnumero = 380048;")))
         ;; Aseta Saimaan kanava päättyneeksi 
         _ (u "UPDATE urakka SET alkupvm = '1996-12-19', loppupvm = '1996-12-20' WHERE id = " urakka-id-saimaa " AND hallintayksikko = " kanava-hallintayksikko ";")
         ;; Aseta Joensuun kanava käynnissä olevaksi  

@@ -5,6 +5,7 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tehtavat-maarat-kyselyt]
+            [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]))
 
 (defn tallenna-tehtavat-ja-maarat
@@ -17,6 +18,9 @@
           vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)
           _ (doseq [vuosi vuodet]
               (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) vuosi (:tehtavat tiedot)))
+          ;; Merkitään sopimuksen tehtävämäärät tallennetuksi 
+          ;; (tarvitaan suolarajoitus- ja analytiikkakyselyille)
+          _ (tehtavamaarat-kyselyt/tallenna-sopimuksen-tila db {:urakka-id urakka-id} true)
           ;; Haetaan tallennetut tiedot
           tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id hk-alkuvuosi)]
       tehtavat-ja-maarat)))

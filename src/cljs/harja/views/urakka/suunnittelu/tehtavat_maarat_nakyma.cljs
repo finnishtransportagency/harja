@@ -1,5 +1,6 @@
 (ns harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma
-  (:require [harja.pvm :as pvm]
+  (:require [reagent.core :as r]
+            [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [tuck.core :as tuck]
             [harja.fmt :as fmt]
@@ -11,6 +12,7 @@
             [harja.ui.komponentti :as komp]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.ui.napit :as napit]
+            [harja.ui.kentat :as kentat]
 
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka :as u]
@@ -55,7 +57,8 @@
           {:disabled (or tallennus-kesken? false)
            :luokka "ikoni-16"
            :vayla-tyyli? false
-           :ikoni (ikonit/action-copy)}]])
+           :ikoni (ikonit/action-copy)
+           :data-cy "btn-kopioi-tuleville-hoitovuosille"}]])
       ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
       (when (and (k/kehitysymparistossa?)
               (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava))
@@ -76,7 +79,10 @@
 
      [:div.painikkeet.text-right.grid-status-viestit
       [:span {:style {:margin-left "1rem"}}
-       [napit/muokkaa "Muokkaa sopimuksen määriä" #(e! (tiedot/->ToggleTallennusTila))]]])])
+       [napit/muokkaa
+         "Muokkaa alkuperäisen sopimuksen määriä"
+        #(e! (tiedot/->ToggleTallennusTila))
+        {:data-cy "btn-muokkaa-sopimuksen-maaria"}]]])])
 
 (defn- avaa-tai-sulje-haitari [event e! valiotsikko]
   (when (dom/enter-nappain? event)
@@ -98,9 +104,8 @@
 (defn muutoksen-vaikutus-fn [arvo]
   (cond
     (nil? arvo) "-"
-    (pos? arvo) (str "+" arvo)
-    (neg? arvo) (str "-" arvo)
-    :else arvo))
+    (pos? arvo) (str "+" (fmt/desimaaliluku-opt-ilman-nollia arvo))
+    :else (fmt/desimaaliluku-opt-ilman-nollia arvo)))
 
 (defn tehtava-vetolaatikko
   "Näyttää tehtävän muutokset vetolatikossa"
@@ -124,12 +129,15 @@
         :tunniste :id
         :voi-kumota? false}
        [{:otsikko "Voimassa alkaen" :nimi :voimassa_alkaen :tyyppi :string :fmt pvm/pvm :leveys "10%"}
-        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
-        {:otsikko "Muutoksen vaikutus" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
+        {:otsikko "Edellinen määrä" :nimi :edellinen_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
+        {:otsikko "Pysyvät muutokset (+/-)" :nimi :maaramuutos :leveys "10%" :tyyppi :numero :tasaa :oikea
          :fmt (fn [arvo] (muutoksen-vaikutus-fn arvo))}
-        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :tasaa :oikea}
+        {:otsikko "Muuttunut määrä" :nimi :uusi_maara :leveys "10%" :tyyppi :numero :desimaalien-maara 2 :tasaa :oikea
+         :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
         {:otsikko "Lisätieto" :nimi :syy :leveys "60%" :tyyppi :string :tasaa :vasen}]
        muutokset]]]))
+
 
 (defn tehtava-taulukko [e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
   (let [;; Filtteröidään listasta pois ne rivit, joita ei ole aukaistu
@@ -160,30 +168,34 @@
                                    (if tehtava_id
                                      [:<> nimi]
                                      [:div.body-text.strong valiotsikko]))}
-                   {:otsikko "Sopimuksen määrä" :leveys "12.5%" :nimi :tarjous_maara :tyyppi :positiivinen-numero :tasaa :oikea
-                    :muokattava? #(and
+                     {:otsikko "Alkuperäisen sopimuksen määrä"
+                      :leveys "12.5%"
+                      :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
+                      :nimi :tarjous_maara
+                      :tyyppi :positiivinen-numero
+                      :desimaalien-maara 2
+                      :tasaa :oikea
+                      :muokattava? #(and
                                     tallennustila?
                                     ;; Älä anna muokata väliotsikkorivejä
                                     (nil? (:valiotsikko %)))
                     :solun-luokka solun-luokka-fn}
-                   {:otsikko "Muutoksen vaikutus" :leveys "12.5%"
-                    :nimi :muutos_maaramuutos
-                    :solun-luokka solun-luokka-fn
-                    :tasaa :oikea
-                    :tyyppi :komponentti
-                    :komponentti (fn [{:keys [tehtava_id muutos_maaramuutos] :as rivi}]
-                                   (if tehtava_id
-                                     [:span (muutoksen-vaikutus-fn muutos_maaramuutos)]
-                                     [:span]))}
-                   {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
-                    :tyyppi :komponentti
-                    :solun-luokka solun-luokka-fn
-                    :tasaa :oikea
-                    :komponentti (fn [{:keys [tehtava_id yhteensa] :as rivi}]
-                                   (if tehtava_id
-                                     [:span yhteensa]
-                                     [:span]))}
-                   {:otsikko "Yksikkö" :leveys "12.5%" :nimi :yksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
+                     {:otsikko "Pysyvät muutokset (+/-)" :leveys "12.5%"
+                      :nimi :muutos_maaramuutos
+                      :solun-luokka solun-luokka-fn
+                      :tasaa :oikea
+                      :tyyppi :numero
+                      :desimaalien-maara 2
+                      :muokattava? (constantly false)
+                      :fmt muutoksen-vaikutus-fn}
+                     {:otsikko "Muuttunut määrä" :leveys "12.5%" :nimi :yhteensa
+                      :tyyppi :numero
+                      :desimaalien-maara 2
+                      :muokattava? (constantly false)
+                      :solun-luokka solun-luokka-fn
+                        :tasaa :oikea
+                        :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)}
+                     {:otsikko "Yksikkö" :leveys "12.5%" :nimi :suunnitteluyksikko :tyyppi :teksti :tasaa :vasen :muokattava? (constantly false) :solun-luokka solun-luokka-fn}]]
     (if haku-kaynnissa?
       [ajax-loader-pieni]
       [grid/grid
@@ -215,21 +227,32 @@
        tehtavat-ja-maarat])))
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                         tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia?] :as app}]
+                         tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
     [:div#vayla
      [:div.row
-      [:h1 "Tehtävät ja määrät"]]
+      [:h1 "Tehtävä ja määräluettelo"]]
 
-     [:div.flex-row {:style {:justify-content "flex-start"}}
-      [:div.filtteri {:style {:width "200px"}}
-       [urakka-valinnat/paivittava-urakkavuosi-tuck
-        @u/valittu-aikavali
-        #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
+     [:div.flex-row {:style {:justify-content "space-between"}}
+      [:div.filtteri
+       [:div {:style {:width "300px"}}
+        [urakka-valinnat/paivittava-urakkavuosi-tuck
+         @u/valittu-aikavali
+         #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
+      [:div.label-ja-alasveto
+       [:span.alasvedon-otsikko "Haku"]
+       [:div.kentta {:style {:width "300px"}}
+             [kentat/tee-kentta {:tyyppi :string
+                                 :nimi :haku
+                                 :placeholder "Hae tehtävää..."
+                                 :vayla-tyyli? true
+                                 :on-blur  #(e! (tiedot/->FiltteroiTehtavat (.. % -target -value)))
+                                 :toiminta-f #(e! (tiedot/->FiltteroiTehtavat %))}
+              (r/atom haku)]]]]
      [:div.flex-row
-      [:span "Sovitut muutokset alkuperäisiin sopimuksen tehtävämääriin kirjataan muutokset-sivulla. "
+                [:span "Pysyvät muutokset sopimuksen määriin kirjataan muutokset-sivulla. "
        [yleiset/linkki "Siirry muutokset-sivulle"
         #(siirtymat/siirry-annettuun-valilehteen
            @nav/valittu-hallintayksikko-id (:id @nav/valittu-urakka)

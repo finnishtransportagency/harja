@@ -1,0 +1,121 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: '[Scheduled] Process stale PRs'
+run-name: '[Scheduled] Process stale PRs'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref_name }}
+  cancel-in-progress: true
+
+on:
+  # Manuaalisen käynnistyksen asetukset
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: 'Dry-run (ei tee muutoksia)'
+        required: false
+        default: false
+        type: boolean
+
+  # Ajastettu käynnistys
+  # Ajetaan joka arkipäivä klo 9
+  # GitHub actions on UTC-aikavyöhykkeessä, joten erilliset säännöt karkeasti kesä- ja talviaikaan
+  schedule:
+    - cron: '0 7 * 11-12,1-3 1-5'
+    - cron: '0 6 * 4-10 1-5'
+
+# Aseta least-privilege default permissionit workflowille
+# Jos jokin job tarvitsee enemmän oikeuksia, ne pitää erikseen määritellä job-kohtaisesti
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-secrets
+# https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
+permissions: {}
+
+jobs:
+  # Note: https://github.com/actions/stale
+  process-stale-prs:
+    name: "Process stale PRs"
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read # Vaaditaan oletusarvoinen lukuoikeus repoon
+      pull-requests: write # Vaaditaan PR:ien kommentointiin ja sulkemiseen
+      actions: write # Vaaditaan cachen luomiseen ja poistamiseen
+    steps:
+      - name: Find and label stale PRs
+        id: label-stale-prs
+        uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
+        with:
+          debug-only: ${{ github.event.inputs.dry-run }}
+          stale-pr-label: "Stale"
+          days-before-pr-stale: 3
+          # Ei lisätä PR:iin automaattista kommenttia vanhentumisesta
+          stale-pr-message: ''
+          # Ei automaattisesti suljeta vanhentuneita PR:itä, vaan lähetetään niistä lista Slackiin
+          days-before-pr-close: -1
+          days-before-close: -1
+          remove-pr-stale-when-updated: true
+          # Avoimeen PR:ään voi myös lisätä WIP-labelin, jolloin se ei vanhene
+          exempt-pr-labels: "WIP"
+          # Draft-PR:iä ei ole tarpeen merkitä vanhentuneiksi, seurataan vain avoimia PR:iä
+          exempt-draft-pr: true
+          # Älä merkitse issueita vanhentuneiksi, seurataan vain avoimia PR:iä
+          days-before-issue-stale: -1
+          days-before-issue-close: -1
+
+      - name: Get and format stale PRs list
+        id: stale-prs-list
+        uses: actions/github-script@3a2844b7e9c422d3c10d287c895573f7108da1b3 # v9.0.0
+        with:
+          script: |
+            const { data: pullRequests } = await github.rest.pulls.list({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            state: 'open',
+            per_page: 100,
+            });
+
+            const stalePRs = pullRequests.filter(pr => 
+              pr.labels.some(label => label.name === 'Stale')
+            );
+            
+            console.log(`Found ${stalePRs.length} stale PR(s).`);
+            console.log(stalePRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
+            
+            
+            const dependencyPRs = pullRequests.filter(pr => 
+              pr.labels.some(label => label.name === 'dependencies')
+            );
+            
+            console.log(`Found ${dependencyPRs.length} dependency PR(s).`);
+            console.log(dependencyPRs.map(pr => `#${pr.number}: ${pr.title}`).join('\n'));
+            
+            // Combine PRs listings, ensuring no duplicates (in case some PRs have both labels)
+            const prs = [...stalePRs, ...dependencyPRs.filter(depPR => !stalePRs.some(stalePR => stalePR.number === depPR.number))];
+            
+            const formattedList = prs
+              .map(pr => `- <https://github.com/finnishtransportagency/harja/pull/${pr.number}|#${pr.number}>: ${pr.title}`)
+              .join('\\n');
+            
+            console.log("Formatted Stale PRs List:");
+            console.log(formattedList);
+            
+            return formattedList;
+
+      - name: Send a summary of stale PRs into Slack
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
+        if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
+        with:
+          webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
+          webhook-type: incoming-webhook
+          payload: |
+            {
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": ":please-cat: Katselmointia tai muutoksia kaipaavat PRt:\n ${{ fromJSON( steps.stale-prs-list.outputs.result ) }}"
+                  }
+                }
+              ]
+            }

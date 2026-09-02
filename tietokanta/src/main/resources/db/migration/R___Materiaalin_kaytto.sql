@@ -21,8 +21,9 @@ BEGIN
                 JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
                 JOIN LATERAL unnest(tr.reittipisteet) rp ON true
                 JOIN LATERAL unnest(rp.materiaalit) mat ON true
-              WHERE t.alkanut BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
-                    AND (u IS NULL OR t.urakka = u) AND t.poistettu IS FALSE
+              WHERE rp.aika::DATE BETWEEN alkupvm::DATE AND (loppupvm + interval '1 day')::DATE
+                    AND (u IS NULL OR t.urakka = u) 
+                    AND t.poistettu IS FALSE
               GROUP BY t.urakka, rp.talvihoitoluokka, rp.soratiehoitoluokka, mat.materiaalikoodi, rp.aika::DATE
   -- Tässä otetaan talteen erikoiskäsittelyllä kaikki käsin syötetyt toteumat, ja annetaan niille
   -- hoitoluokaksi 99 eli 'Käsin kirjattu'
@@ -62,6 +63,75 @@ BEGIN
                muokattu = current_timestamp;
   END LOOP;
 
+END;
+$$ LANGUAGE plpgsql;
+
+
+-- Käytetään ajastetussa tehtävässä, joka päivittää urakan_materiaalinkaytto_hoitoluokittain välimuistitaulun joka yö.
+CREATE OR REPLACE FUNCTION paivita_urakan_materiaalinkaytto_hoitoluokittain_muutospaivalla (
+    urakka_id INTEGER, muutospvm DATE
+) RETURNS void AS $$
+DECLARE
+    rivi RECORD;
+    u_id INTEGER := urakka_id;
+    kasitellyt_muutos_idt INTEGER[];
+BEGIN
+    kasitellyt_muutos_idt := ARRAY[]::INTEGER[];
+    
+    FOR rivi IN 
+        -- Valitaan viime päivältä muokatut/luodut toteumat 
+        SELECT DISTINCT 
+            NULL::INTEGER AS muutos_id,
+            rp.aika::date AS pvm
+         FROM toteuma t
+            JOIN toteuman_reittipisteet tr ON tr.toteuma = t.id
+            JOIN LATERAL unnest(tr.reittipisteet) rp ON TRUE
+        WHERE t.urakka = urakka_id
+          AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+           OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+        
+        UNION
+        -- Valitaan viime päivältä muokatut/luodut käsin (UI) syötetyt toteumat
+        SELECT DISTINCT
+            NULL::INTEGER AS muutos_id,
+            t.alkanut::date AS pvm
+         FROM toteuma t
+        WHERE t.urakka = urakka_id
+          AND t.lahde = 'harja-ui'
+          AND ((t.luotu >= muutospvm AND t.luotu < muutospvm + INTERVAL '1 day')
+                   OR (t.muokattu >= muutospvm AND t.muokattu < muutospvm + INTERVAL '1 day'))
+        
+        UNION
+        -- Päivitetään urakan materiaalin käyttö päiviltä, joilta materiaalia on poistettu TOTEUMA.alkanut-ajankohtaa muuttamalla. 
+        -- Vanha alkanut-ajankohta löytyy taulusta MATERIAALIVALIMUISTI_PAIVITYSTARVE.
+        SELECT DISTINCT
+          mp.id AS muutos_id,
+          mp.toteuma_alkanut_vanha::date AS pvm
+        FROM materiaalivalimuisti_paivitystarve mp
+        WHERE mp.urakka_id = u_id
+          AND mp.urakan_valimuisti_paivitetty = FALSE
+    LOOP
+        BEGIN
+            -- Aja rivin päivämäärälle cache puhtaaksi ja päivitä 
+            PERFORM paivita_urakan_materiaalin_kaytto_hoitoluokittain(urakka_id, rivi.pvm, rivi.pvm);
+            
+            -- Kerää toteuma_muutos-rivien id:t talteen
+            IF rivi.muutos_id IS NOT NULL THEN
+                kasitellyt_muutos_idt := array_append(kasitellyt_muutos_idt, rivi.muutos_id);
+            END IF;
+        EXCEPTION WHEN OTHERS THEN
+            RAISE WARNING 'Materiaalin käytön päivitys epäonnistui urakalle %, päivälle %: %', urakka_id, rivi.pvm, SQLERRM;
+        END;
+    END LOOP;
+
+    -- Merkitään vain käsitellyt toteuma_muutos rivit päivitetyiksi
+    IF array_length(kasitellyt_muutos_idt, 1) > 0 THEN
+        UPDATE materiaalivalimuisti_paivitystarve
+        SET urakan_valimuisti_paivitetty = TRUE,
+            muokattu = CURRENT_TIMESTAMP,
+            muokkaaja = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+        WHERE id = ANY(kasitellyt_muutos_idt);
+    END IF;
 END;
 $$ LANGUAGE plpgsql;
 

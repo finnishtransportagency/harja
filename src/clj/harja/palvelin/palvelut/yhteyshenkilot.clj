@@ -91,7 +91,7 @@
       ;; tallenna jokainen yhteyshenkilö
       (doseq [{:keys [id rooli] :as yht} yhteyshenkilot]
         (log/debug "Tallennetaan yhteyshenkilö " yht " urakkaan " urakka-id)
-        (if (> id 0)
+        (if (pos-int? id)
           ;; Olemassaoleva yhteyshenkilö, päivitetään kentät
           (if-not (nykyiset-yhteyshenkilot id)
             (log/warn "Yritettiin päivittää urakan " urakka-id " yhteyshenkilöä " id
@@ -165,7 +165,20 @@
   (try
     (jdbc/with-db-transaction [c db]
       (doseq [id poistettu]
-        (q/poista-paivystaja! c id urakka-id))
+        ;; Haetaan päivystyksen yhteyshenkilö-id ennen poistoa
+        (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c {:id id
+                                                                                    :urakka urakka-id})))]
+          ;; Poistetaan päivystys
+          (q/poista-paivystaja! c id urakka-id)
+
+          ;; Jos yhteyshenkilö ei ole liitetty urakkaan yhteyshenkilönä, poistetaan myös yhteyshenkilö
+          (when yht-id
+            (let [liitetty-urakkaan? (:liitetty_urakkaan (first (q/onko-yhteyshenkilo-liitetty-muualle c
+                                                                  {:yhteyshenkilo_id yht-id
+                                                                   :urakka urakka-id})))]
+              (when-not liitetty-urakkaan?
+                (log/debug "Poistetaan yhteyshenkilö " yht-id " koska ei ole liitetty urakkaan yhteyshenkilönä")
+                (q/poista-yhteyshenkilo-idlla! c {:id yht-id}))))))
 
       (doseq [p paivystajat
               :let [yhteyshenkilo {:etunimi (:etunimi p)
@@ -178,21 +191,32 @@
                                    :kayttajatunnus nil
                                    :ulkoinen_id nil
                                    :luoja (:id user)}
+                    yhteyshenkilo_id (:yhteyshenkilo_id p)
                     paivystys {:alku (Date. (.getTime (:alku p)))
                                :loppu (Date. (.getTime (:loppu p)))
                                :urakka urakka-id
                                :varahenkilo (not (:vastuuhenkilo p))
                                :vastuuhenkilo (:vastuuhenkilo p)}]]
-        (if (< (:id p) 0)
-          ;; Luodaan uusi yhteyshenkilö
+        (cond
+          ;; Valittiin olemassa oleva yhteyshenkilö
+          (and (< (:id p) 0) yhteyshenkilo_id)
+          (q/luo-paivystys<! c
+            (assoc paivystys
+              :yhteyshenkilo yhteyshenkilo_id
+              :ulkoinen_id nil
+              :kayttaja_id (:id user)))
+
+          ;; Luodaan uusi yhteyshenkilö ja päivystys
+          (< (:id p) 0)
           (let [_ (vaadi-alkuaika-ei-menneisyydessa p)
                 yht (q/luo-yhteyshenkilo<! c yhteyshenkilo)]
             (q/luo-paivystys<! c
-                               (assoc paivystys
-                                 :yhteyshenkilo (:id yht)
-                                 :ulkoinen_id nil
-                                 :kayttaja_id (:id user))))
+              (assoc paivystys
+                :yhteyshenkilo (:id yht)
+                :ulkoinen_id nil
+                :kayttaja_id (:id user))))
 
+          :else
           ;; Päivitetään yhteyshenkilön / päivystyksen tietoja
           (let [yht-id (:yhteyshenkilo (first (q/hae-paivystyksen-yhteyshenkilo-id c {:id (:id p)
                                                                                       :urakka urakka-id})))
@@ -205,7 +229,6 @@
                                       :id (:id p)
                                       :yhteyshenkilo yht-id
                                       :kayttaja_id (:id user))))))
-
 
       ;; Haetaan lopuksi uuden päivystäjät
       (hae-urakan-paivystajat c user urakka-id))

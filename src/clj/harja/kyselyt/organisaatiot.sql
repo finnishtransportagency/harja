@@ -50,7 +50,8 @@ WHERE id = :id;
 -- name: hae-ely
 SELECT *
 FROM organisaatio
-WHERE elynumero = :elynumero;
+WHERE elynumero = :elynumero
+  and tyyppi = 'hallintayksikko';
 
 -- name: luo-ely<!
 INSERT INTO organisaatio (nimi, lyhenne, liikennemuoto, elynumero, alue, tyyppi)
@@ -65,12 +66,14 @@ SET
   liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO,
   elynumero     = :elynumero,
   alue          = ST_GeomFromText(:alue) :: GEOMETRY
-WHERE elynumero = :elynumero;
+WHERE elynumero = :elynumero
+  and tyyppi = 'hallintayksikko';
 
--- name: hae-ely-id-sampo-hashilla
+-- name: hae-elinvoimakeskus-id-kustannuspaikalla
 SELECT id
 FROM organisaatio
-WHERE sampo_ely_hash = :ely_hash;
+WHERE elinvoimakeskusnumero = :elinvoimakeskusnumero
+  AND tyyppi = 'elinvoimakeskus';
 
 -- name: listaa-organisaatiot
 SELECT
@@ -80,13 +83,32 @@ SELECT
   tyyppi
 FROM organisaatio;
 
--- name: hae-id-lyhenteella
+-- name: hae-vesivayla-organisaation-id-lyhenteella
 SELECT id
 FROM organisaatio
-WHERE lyhenne = :lyhenne;
+WHERE lyhenne = :lyhenne
+  AND liikennemuoto = 'V';
 
 -- name: listaa-organisaatiot-analytiikalle
 SELECT id, ytunnus, nimi, lyhenne, tyyppi,
        liikennemuoto, katuosoite, postinumero, postitoimipaikka, sampoid, elynumero, poistettu, luotu, muokattu
   FROM organisaatio
  ORDER BY nimi ASC;
+
+-- name: paivita-elinvoimakeskus-geometria!
+UPDATE organisaatio
+SET alue = ST_SimplifyPreserveTopology(
+    ST_GeomFromText(:alue)::geometry,
+    5)
+WHERE tyyppi = 'elinvoimakeskus'
+  AND lyhenne = :lyhenne;
+
+-- name: hae-elinvoimakeskus
+-- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE id = :id;
+
+-- name: hae-elinvoimakeskus-nimella
+-- Hakee elinvoimakeskuksen organisaation id:n ja tyypin perusteella
+SELECT id,nimi,tyyppi FROM organisaatio
+WHERE tyyppi = 'elinvoimakeskus' AND nimi = :nimi;

@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/kojelauta.sql"
             {:positional? true})
+
+(declare hae-hoidon-urakat-kojelautaan hae-paallystysurakat-kojelautaan)

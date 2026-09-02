@@ -1,0 +1,179 @@
+# Security hardening for GitHub Actions
+# https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
+
+name: 'Scan GitHub Actions with zizmor'
+description: 'Scan GitHub Actions workflow and composite action files for security issues using zizmor. Repository must be checked out before using this action.'
+
+inputs:
+  gh-token:
+    description: 'GitHub token for online mode (enables API-dependent audits). Pass secrets.GITHUB_TOKEN or similar.'
+    required: false
+    default: ''
+  persona:
+    description: 'zizmor persona: "regular" (default, high-signal findings), "pedantic" (code smells too), or "auditor" (everything, including likely false positives).'
+    required: false
+    default: 'regular'
+  min-severity:
+    description: 'Minimum severity to report: "informational", "low", "medium", or "high".'
+    required: false
+    default: ''
+  min-confidence:
+    description: 'Minimum confidence to report: "informational", "low", "medium", or "high".'
+    required: false
+    default: ''
+  scan-targets:
+    description: |
+      Newline-separated list of file paths and/or directories for zizmor to scan.
+      These are passed directly as positional arguments to zizmor, so it will only
+      scan what you explicitly list. Example:
+        .github/workflows/fishy.yml
+        my-actions/
+    required: true
+  offline:
+    description: 'Run in offline mode (no API access). Set to "true" to enable.'
+    required: false
+    default: 'false'
+  config:
+    description: 'Path to a zizmor.yml configuration file for custom ignore rules.'
+    required: false
+    default: ''
+  fail-on-findings:
+    description: 'Fail the step if zizmor finds issues. Set to "false" to only report without failing.'
+    required: false
+    default: 'true'
+  upload-sarif:
+    description: 'Upload SARIF report to GitHub Security tab. Requires security-events: write permission.'
+    required: false
+    default: 'true'
+  sarif-category:
+    description: 'Category for the SARIF upload (used to distinguish multiple analyses).'
+    required: false
+    default: 'zizmor'
+
+runs:
+  using: "composite"
+  steps:
+    - name: Install uv
+      uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+
+    - name: Run zizmor (SARIF report)
+      id: zizmor-sarif
+      if: ${{ inputs.upload-sarif == 'true' }}
+      shell: bash
+      env:
+        INPUT_SCAN_TARGETS: ${{ inputs.scan-targets }}
+        INPUT_GH_TOKEN: ${{ inputs.gh-token }}
+        INPUT_OFFLINE: ${{ inputs.offline }}
+        INPUT_PERSONA: ${{ inputs.persona }}
+        INPUT_MIN_SEVERITY: ${{ inputs.min-severity }}
+        INPUT_MIN_CONFIDENCE: ${{ inputs.min-confidence }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_INPUTS: ${{ inputs.inputs }}
+      # SARIF-muodossa zizmor palauttaa aina exit code 0 (paitsi virhetilanteissa),
+      # joten tämä step ei koskaan faila löydösten takia.
+      run: |
+        ZIZMOR_ARGS="--format=sarif"
+
+        if [[ -n "$INPUT_GH_TOKEN" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --gh-token=$INPUT_GH_TOKEN"
+        fi
+
+        if [[ "$INPUT_OFFLINE" == "true" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --offline"
+        fi
+
+        if [[ "$INPUT_PERSONA" != "regular" && -n "$INPUT_PERSONA" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --persona=$INPUT_PERSONA"
+        fi
+
+        if [[ -n "$INPUT_MIN_SEVERITY" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --min-severity=$INPUT_MIN_SEVERITY"
+        fi
+
+        if [[ -n "$INPUT_MIN_CONFIDENCE" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --min-confidence=$INPUT_MIN_CONFIDENCE"
+        fi
+
+        if [[ -n "$INPUT_CONFIG" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --config=$INPUT_CONFIG"
+        fi
+
+        echo "::debug::Running: uvx zizmor $ZIZMOR_ARGS ${INPUT_SCAN_TARGETS[*]}"
+        uvx zizmor $ZIZMOR_ARGS ${INPUT_SCAN_TARGETS} > zizmor-results.sarif
+
+
+    - name: Upload SARIF file
+      uses: github/codeql-action/upload-sarif@cdf488f595d80d6e07e03d4674febd5ab45fa938 # v4.37.9
+      if: ${{ inputs.upload-sarif == 'true' }}
+      with:
+        sarif_file: zizmor-results.sarif
+        category: ${{ inputs.sarif-category }}
+
+    - name: Run zizmor (plain output)
+      id: zizmor-plain
+      shell: bash
+      env:
+        INPUT_GH_TOKEN: ${{ inputs.gh-token }}
+        INPUT_OFFLINE: ${{ inputs.offline }}
+        INPUT_PERSONA: ${{ inputs.persona }}
+        INPUT_MIN_SEVERITY: ${{ inputs.min-severity }}
+        INPUT_MIN_CONFIDENCE: ${{ inputs.min-confidence }}
+        INPUT_CONFIG: ${{ inputs.config }}
+        INPUT_INPUTS: ${{ inputs.inputs }}
+        INPUT_FAIL_ON_FINDINGS: ${{ inputs.fail-on-findings }}
+
+      # Tämä step tuottaa luettavan tulosteen ja mahdollisesti failaa jobin.
+      # zizmor exit codet: 0 = ei löydöksiä, 11-14 = löydöksiä (severity), 1 = virhe, 3 = ei inputteja.
+      # https://docs.zizmor.sh/usage/#exit-codes
+      run: |
+        ZIZMOR_ARGS="--format=plain --color=always"
+
+        if [[ -n "$INPUT_GH_TOKEN" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --gh-token=$INPUT_GH_TOKEN"
+        fi
+
+        if [[ "$INPUT_OFFLINE" == "true" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --offline"
+        fi
+
+        if [[ "$INPUT_PERSONA" != "regular" && -n "$INPUT_PERSONA" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --persona=$INPUT_PERSONA"
+        fi
+
+        if [[ -n "$INPUT_MIN_SEVERITY" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --min-severity=$INPUT_MIN_SEVERITY"
+        fi
+
+        if [[ -n "$INPUT_MIN_CONFIDENCE" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --min-confidence=$INPUT_MIN_CONFIDENCE"
+        fi
+
+        if [[ -n "$INPUT_CONFIG" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --config=$INPUT_CONFIG"
+        fi
+
+        if [[ "$INPUT_FAIL_ON_FINDINGS" != "true" ]]; then
+          ZIZMOR_ARGS="$ZIZMOR_ARGS --no-exit-codes"
+        fi
+
+        echo "::debug::Running: uvx zizmor $ZIZMOR_ARGS ${INPUT_SCAN_TARGETS[*]}"
+        uvx zizmor $ZIZMOR_ARGS ${INPUT_SCAN_TARGETS} | tee zizmor-results.txt
+
+        EXIT_CODE=${PIPESTATUS[0]}
+
+        # Kirjoitetaan tulokset job summaryyn
+        if [[ -s zizmor-results.txt ]]; then
+          {
+            echo "### 🌈 zizmor - GitHub Actions Security Analysis"
+            echo "<details><summary>Click to expand</summary>"
+            echo ""
+            echo '```'
+            cat zizmor-results.txt
+            echo '```'
+            echo "</details>"
+          } >> "$GITHUB_STEP_SUMMARY"
+        else
+          echo "### 🌈 zizmor - No findings to report." >> "$GITHUB_STEP_SUMMARY"
+        fi
+
+        exit "$EXIT_CODE"

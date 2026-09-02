@@ -2,14 +2,19 @@
   "Usein resultsettien dataa joudutaan jotenkin muuntamaan sopivampaan muotoon Clojure maailmaa varten.
   Tähän nimiavaruuteen voi kerätä yleisiä. Yleisesti konversioiden tulee olla funktioita, jotka prosessoivat
   yhden rivin resultsetistä, mutta myös koko resultsetin konversiot ovat mahdollisia."
-  (:require [cheshire.core :as cheshire]
+  (:require [clj-time.coerce :as c]
+            [clojure.string :as str]
             [clojure.data.json :as json]
             [clojure.java.jdbc :as jdbc]
-            [clojure.string :as str]
-            [harja.pvm :as pvm]
+            [clojure.data.xml :as data-xml]
+
             [digest :as digest]
-            [clojure.data.xml :as data-xml])
+            [harja.pvm :as pvm]
+            [cheshire.core :as cheshire])
   (:import (clojure.lang Keyword)
+           (java.sql Array)
+           (org.postgresql.jdbc PgArray)
+           (org.postgresql.util PGobject)
            (java.io ByteArrayOutputStream ObjectOutputStream)
            (java.text SimpleDateFormat)))
 
@@ -24,12 +29,12 @@
   "Muuntaa (ja poistaa) :org_* kentät muotoon :organisaatio {:id ..., :nimi ..., ...}."
   [rivi]
   (-> rivi
-      (assoc :organisaatio {:id (:org_id rivi)
-                            :nimi (:org_nimi rivi)
-                            :tyyppi (some-> rivi :org_tyyppi keyword)
-                            :lyhenne (:org_lyhenne rivi)
-                            :ytunnus (:org_ytunnus rivi)})
-      (dissoc :org_id :org_nimi :org_tyyppi :org_lyhenne :org_ytunnus)))
+    (assoc :organisaatio {:id (:org_id rivi)
+                          :nimi (:org_nimi rivi)
+                          :tyyppi (some-> rivi :org_tyyppi keyword)
+                          :lyhenne (:org_lyhenne rivi)
+                          :ytunnus (:org_ytunnus rivi)})
+    (dissoc :org_id :org_nimi :org_tyyppi :org_lyhenne :org_ytunnus)))
 
 (defn sarakkeet-vektoriin
   "Muuntaa muodon: [{:id 1 :juttu {:id 1}} {:id 1 :juttu {:id 2}}]
@@ -76,35 +81,35 @@
          (if-not sarake
            rivi
            (recur (-> rivi
-                      (dissoc sarake)
-                      (assoc vektori (vec (into #{}
-                                                (keep #(when-let [lapsi (get % sarake)]
-                                                        (when (lapsi-ok-fn lapsi)
-                                                          lapsi))
-                                                      rivit)))))
-                  sarakkeet)))))))
+                    (dissoc sarake)
+                    (assoc vektori (vec (into #{}
+                                          (keep #(when-let [lapsi (get % sarake)]
+                                                   (when (lapsi-ok-fn lapsi)
+                                                     lapsi))
+                                            rivit)))))
+             sarakkeet)))))))
 
 (defn alaviiva->rakenne
   "Muuntaa mäpin avaimet alaviivalla sisäiseksi rakenteeksi, esim.
   {:id 1 :urakka_hallintayksikko_nimi \"POP ELY\"} => {:id 1 :urakka {:hallintayksikko {:nimi \"POP ELY\"}}}"
   [m]
   (let [ks (into []
-                 (comp (map name)
-                       (filter #(when (not= -1 (.indexOf % "_")) %))
-                       (map (fn [k]
-                              [(keyword k)
-                               (into []
-                                     (map keyword)
-                                     (.split k "_"))])))
-                 (keys m))]
+             (comp (map name)
+               (filter (fn [^String s] (when (not= -1 (.indexOf s "_")) s)))
+               (map (fn [^String k]
+                      [(keyword k)
+                       (into []
+                         (map keyword)
+                         (.split k "_"))])))
+             (keys m))]
     (loop [m m
            [[vanha-key uusi-key] & ks] ks]
       (if-not vanha-key
         m
         (let [arvo (get m vanha-key)]
           (recur (assoc-in (dissoc m vanha-key)
-                           uusi-key arvo)
-                 ks))))))
+                   uusi-key arvo)
+            ks))))))
 
 (defn vector-mappien-alaviiva->rakenne
   "Muuntaa vectorissa olevien mäppien avaimet alaviivalla sisäiseksi rakenteeksi."
@@ -123,12 +128,12 @@
           (recur (if arvo
                    (assoc-in rivi k (muunnos-fn arvo))
                    rivi)
-                 kentat))
+            kentat))
         (let [arvo (get rivi k)]
           (recur (if arvo
                    (assoc rivi k (muunnos-fn arvo))
                    rivi)
-                 kentat))))))
+            kentat))))))
 
 (defn string->keyword
   "Muuttaa annetut kentät keywordeiksi, jos ne eivät ole NULL."
@@ -139,15 +144,15 @@
   "Muuntaa annetussa polussa olevan stringin Clojure-keywordiksi"
   [data avainpolku]
   (-> data
-      (assoc-in avainpolku (keyword (get-in data avainpolku)))))
+    (assoc-in avainpolku (keyword (get-in data avainpolku)))))
 
 (defn string-poluista->keyword
   "Muuntaa annetuissa poluissa olevan stringin Clojure-keywordiksi"
   [data avainpolut]
   (reduce (fn [data polku]
             (assoc-in data polku (keyword (get-in data polku))))
-          data
-          avainpolut))
+    data
+    avainpolut))
 
 (defn decimal->double
   "Muuntaa postgresin tarkan numerotyypin doubleksi."
@@ -169,8 +174,8 @@
    ne muunnetaan aina tekstiksi."
   [collection]
   (let [kasittele #(if (= Keyword (type %))
-                    (name %)
-                    (str %))]
+                     (name %)
+                     (str %))]
     (str "{" (clojure.string/join "," (map kasittele collection)) "}")))
 
 (defn seq->pg-object-literal
@@ -180,7 +185,7 @@
   (when-not (empty? collection)
     (map
       #(str "(" (clojure.string/join "," %)
-            ")") collection)))
+         ")") collection)))
 
 (defn string-vector->keyword-vector
   "Muuntaa mapin kentän vectorissa olevat stringit keywordeiksi."
@@ -192,25 +197,28 @@
   [rivi kentta]
   (assoc rivi kentta (set (map keyword (kentta rivi)))))
 
+(defn- sql-array->vec [v]
+  (cond
+    (nil? v) []
+    (vector? v) v
+    (instance? Array v) (vec (.getArray ^Array v))
+    :else [v]))
+
 (defn array->vec
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure-vektoriksi."
   [rivi kentta]
-  (assoc rivi
-    kentta (if-let [a (get rivi kentta)]
-             (vec (.getArray a))
-             [])))
+  (assoc rivi kentta (sql-array->vec (get rivi kentta))))
 
 (defn array->set
   "Muuntaa rivin annetun kentän JDBC array tyypistä Clojure hash setiksi.
   Yhden arityn versio ottaa JDBC arrayn ja paluttaa setin ilman mäppiä."
   ([a]
-   (into #{} (and a (.getArray a))))
-  ([rivi kentta] (array->set rivi kentta identity))
+   (set (sql-array->vec a)))
+  ([rivi kentta]
+   (array->set rivi kentta identity))
   ([rivi kentta muunnos]
    (assoc rivi
-     kentta (if-let [a (get rivi kentta)]
-              (into #{} (map muunnos (.getArray a)))
-              #{}))))
+     kentta (into #{} (map muunnos) (sql-array->vec (get rivi kentta))))))
 
 (defn array->keyword-set
   "Muuntaa rivin annentun kentän JDBC array tyypistä Clojure keyword hash setiksi."
@@ -233,6 +241,12 @@
   (when dt
     (java.sql.Timestamp. (.getTime dt))))
 
+(defn joda-datetime->sql-timestamp
+  "Muuntaa annetun org.joda.time.DateTime -olion java.sql.Timestampiksi. Palauttaa nil jos syöte on nil."
+  [^org.joda.time.DateTime joda-dt]
+  (when joda-dt
+    (java.sql.Timestamp. (.getMillis joda-dt))))
+
 (defn java-date
   "Luo java.util.Date objektin annetusta java.sql.Date  objektista."
   [^java.sql.Date dt]
@@ -245,12 +259,19 @@
   (let [j-date (java-date dt)]
     (str (pvm/pvm j-date) " " (pvm/aika j-date))))
 
+(defn datetime-string->joda-datetime
+  "Parsii annetusta stringistä Joda DateTime objektin.
+   Oletetaan että stringi on muodossa 'yyyy-MM-dd'T'HH:mm:ss'Z'."
+  [paivamaara]
+  (when paivamaara
+    (c/from-date (.parse (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ss'Z'") paivamaara))))
+
 (defn unix-date->java-date
   "Luo java.util.Date objektin annetusta unix-timestampista (sekunteja)."
   [unix-date]
-  (java.util.Date. unix-date))
+  (java.util.Date. ^long unix-date))
 
-(defn onko-json? 
+(defn onko-json?
   "Palauttaa booleanin onko datatyyppi jsonia"
   [data]
   (try
@@ -261,23 +282,23 @@
 (defn jsonb->clojuremap
   "Muuntaa JSONin Clojuremapiksi"
   ([json]
-   (some-> json
-           .getValue
-           (cheshire/decode true)))
+   (cond
+     (nil? json) nil
+     (map? json) json
+     (instance? PGobject json)
+     (let [v (.getValue ^PGobject json)]
+       (if (str/blank? v) nil (cheshire/decode v true)))
+     (string? json) (cheshire/decode json true)
+     :else json))
   ([json avain]
-   (-> json
-       (assoc avain
-              (some-> json
-                      avain
-                      .getValue
-                      (cheshire/decode true))))))
+   (update json avain jsonb->clojuremap)))
 
 (defn pvm->json
   "Sopii json/write-str:n :value-fn käyttöön"
   [key value]
   (if (or (= java.sql.Date (type value))
-          (= java.sql.Timestamp (type value))
-          (= java.util.Date (type value)))
+        (= java.sql.Timestamp (type value))
+        (= java.util.Date (type value)))
     (pvm/aika-iso8601-aikavyohykkeen-kanssa value)
     value))
 
@@ -285,19 +306,19 @@
   "Kuin alaviiva->rakenne, mutta vain TR kentille."
   [rivi]
   (-> rivi
-      (assoc
-       :tr {:numero (:tr_numero rivi)
-            :alkuosa (:tr_alkuosa rivi)
-            :alkuetaisyys (:tr_alkuetaisyys rivi)
-            :loppuosa (:tr_loppuosa rivi)
-            :loppuetaisyys (:tr_loppuetaisyys rivi)})
-      (dissoc :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys)))
+    (assoc
+      :tr {:numero (:tr_numero rivi)
+           :alkuosa (:tr_alkuosa rivi)
+           :alkuetaisyys (:tr_alkuetaisyys rivi)
+           :loppuosa (:tr_loppuosa rivi)
+           :loppuetaisyys (:tr_loppuetaisyys rivi)})
+    (dissoc :tr_numero :tr_alkuosa :tr_alkuetaisyys :tr_loppuosa :tr_loppuetaisyys)))
 
 (defn- lue-pgobject [pgobject]
   (let [string (str pgobject)]
     (assert (and (str/starts-with? string "(")
-                 (str/ends-with? string ")"))
-            "PGobject tulee alkaa '(' ja päättyä ')'")
+              (str/ends-with? string ")"))
+      "PGobject tulee alkaa '(' ja päättyä ')'")
     (let [string (subs string 1 (dec (count string)))
           len (count string)]
       (loop [acc []
@@ -311,10 +332,10 @@
             ;; Quotattu merkkijono, etsitään loppuquote
             (let [new-pos (.indexOf string (int \") (inc pos))]
               (assert (not= -1 new-pos)
-                      "Päättymätön merkkijono, päättävää \" merkkiä ei löydy.")
+                "Päättymätön merkkijono, päättävää \" merkkiä ei löydy.")
               (recur (conj acc (subs string (inc pos) new-pos))
-                     ;; Hypätään " ja , merkkien yli
-                     (+ new-pos 2)))
+                ;; Hypätään " ja , merkkien yli
+                (+ new-pos 2)))
 
             (= \, (.charAt string pos))
             ;; Tyhjä arvo
@@ -329,7 +350,7 @@
 
                 ;; Pilkku löytyy, lisää arvoja
                 (recur (conj acc (subs string pos new-pos))
-                       (inc new-pos))))))))))
+                  (inc new-pos))))))))))
 
 (def ^:private lue-pgobject-date
   (partial pvm/parsi pvm/pgobject-format-date))
@@ -371,76 +392,73 @@
   Tierekisteriosoite mäpiksi. Esim. \"(20,1,0,5,100,102012010220)\"."
   [osoite]
   (and osoite
-       (str/starts-with? osoite "(")
-       (str/ends-with? osoite ")")
-       (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
-               (mapv (fn [arvo]
-                       (when (not-empty arvo)
-                         (Integer/parseInt arvo)))
-                     (take 5
-                           (str/split (str/replace osoite #"\(|\)" "") #","))))))
+    (str/starts-with? osoite "(")
+    (str/ends-with? osoite ")")
+    (zipmap [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys]
+      (mapv (fn [arvo]
+              (when (not-empty arvo)
+                (Integer/parseInt arvo)))
+        (take 5
+          (str/split (str/replace osoite #"\(|\)" "") #","))))))
 
 (defn pgarray->vector
   "Muuntaa annetun pg array vectoriksi"
-  [array]
-  (when (and (not (nil? array))
-             (= org.postgresql.jdbc.PgArray (type array)))
-    (vec(.getArray array))))
+  [^PgArray array]
+  (when (and
+          (not (nil? array))
+          (= PgArray (type array)))
+    (vec (.getArray array))))
 
 (defn lue-tr-piste
   [osoite]
   (select-keys (lue-tr-osoite osoite)
-               [:numero :alkuosa :alkuetaisyys]))
+    [:numero :alkuosa :alkuetaisyys]))
 
 (extend-protocol jdbc/ISQLValue
   java.util.Date
   (sql-value [v]
     (sql-timestamp v)))
 
-(defn turvalaiteryhman-turvalaitteet->array
-  [turvalaiteryhma]
-  (assoc turvalaiteryhma :turvalaitteet (seq->array (map #(Integer. %) (:turvalaitteet turvalaiteryhma)))))
-
 (defn str->hx [teksti]
   (apply str
-         (map #(case %
-                 \space "%20"
-                 \! "%21"
-                 \" "%22"
-                 \# "%23"
-                 \% "%25"
-                 \& "%26"
-                 \' "%27"
-                 \( "%28"
-                 \) "%29"
-                 \* "%2A"
-                 \+ "%2B"
-                 \´ "%2C"
-                 \- "%2D"
-                 \. "%2E"
-                 \/ "%2F"
-                 \: "%3A"
-                 \; "%3B"
-                 \< "%3C"
-                 \= "%3D"
-                 \> "%3E"
-                 \? "%3F"
-                 \@ "%40"
-                 \[ "%5B"
-                 \\ "%5C"
-                 \] "%5D"
-                 \^ "%5E"
-                 \_ "%5F"
-                 \` "%60"
-                 \{ "%7B"
-                 \} "%7D"
-                 \| "%7C"
-                 \~ "%7E"
-                 %)
-              teksti)))
+    (map #(case %
+            \space "%20"
+            \! "%21"
+            \" "%22"
+            \# "%23"
+            \% "%25"
+            \& "%26"
+            \' "%27"
+            \( "%28"
+            \) "%29"
+            \* "%2A"
+            \+ "%2B"
+            \´ "%2C"
+            \- "%2D"
+            \. "%2E"
+            \/ "%2F"
+            \: "%3A"
+            \; "%3B"
+            \< "%3C"
+            \= "%3D"
+            \> "%3E"
+            \? "%3F"
+            \@ "%40"
+            \[ "%5B"
+            \\ "%5C"
+            \] "%5D"
+            \^ "%5E"
+            \_ "%5F"
+            \` "%60"
+            \{ "%7B"
+            \} "%7D"
+            \| "%7C"
+            \~ "%7E"
+            %)
+      teksti)))
 
 (def null-writer (proxy [java.io.Writer]
-                        []
+                   []
                    (append ([_]) ([_ _ _]))
                    (write ([_]) ([_ _ _]))))
 

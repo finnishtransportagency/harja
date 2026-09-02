@@ -8,7 +8,7 @@
     [harja.palvelin.raportointi.raportit.laatupoikkeama :as laatupoikkeamat]
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto :as laskutusyhteenveto]
     [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto-tuotekohtainen]
-    [harja.palvelin.raportointi.raportit.muutos-ja-lisatyot :as muutos-ja-lisatyot]
+    [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
     [harja.palvelin.raportointi.raportit.ilmoitus :as ilmoitus]
     [harja.palvelin.raportointi.raportit.sanktio :as sanktiot]
     [harja.palvelin.raportointi.raportit.kelitarkastus :as kelitarkastukset]
@@ -48,7 +48,7 @@
             [:laatupoikkeamaraportti "Laatupoikkeamat" laatupoikkeamat/suorita]
             [:laskutusyhteenveto "Laskutusyhteenveto" urakkatyypin-laskutusyhteenveto]
             [:materiaaliraportti "Materiaaliraportti" materiaalit/suorita]
-            [:muutos-ja-lisatyot "Muutos- ja lisätyöt" muutos-ja-lisatyot/suorita]
+            [:muutos-ja-lisatyoraportti "Muutos- ja lisätyöraportti" muutos-ja-lisatyoraportti/suorita]
             [:sanktioraportti "Sanktioiden yhteenveto" sanktiot/suorita]
             [:soratietarkastusraportti "Soratietarkastukset" soratietarkastukset/suorita]
             [:tehtavamaarat "Tehtävämäärät" tehtavamaarat/suorita]
@@ -58,5 +58,5 @@
             [:yks-hint-kuukausiraportti "Yksikköhintaiset työt kuukausittain" yks-hint-kuukausittain/suorita]
             [:yksikkohintaiset-tyot "Yksikköhintaiset työt päivittäin" yks-hint-paivittain/suorita]
             [:yks-hint-tehtavien-summat "Yksikköhintaiset työt tehtävittäin" yks-hint-tehtavittain/suorita]
-            [:ymparisto "Ympäristöraportti" ymparisto/suorita]
-            [:valitavoiteraportti "Välitavoitteet" valitavoiteraportti/suorita]])])
+            [:valitavoiteraportti "Välitavoitteet" valitavoiteraportti/suorita]
+            [:ymparisto "Ympäristöraportti" (fn [db user tiedot] (ymparisto/suorita db user (assoc tiedot :tyomaakokousraportti? true)))]])])

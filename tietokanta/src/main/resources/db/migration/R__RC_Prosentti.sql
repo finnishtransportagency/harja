@@ -20,9 +20,9 @@ BEGIN
     IF toimenpide IN ('REM','REMO') THEN
         IF paallystekerros.massamenekki < 100 THEN
             IF asfalttirouhe_runkoaine.massaprosentti IS DISTINCT FROM NULL THEN
-                RETURN (100 - paallystekerros.massamenekki) + paallystekerros.massamenekki * (asfalttirouhe_runkoaine.massaprosentti / 100);
+                RETURN ROUND((100 - paallystekerros.massamenekki) + paallystekerros.massamenekki * (asfalttirouhe_runkoaine.massaprosentti / 100));
             ELSE
-                RETURN 100 - paallystekerros.massamenekki;
+                RETURN ROUND(100 - paallystekerros.massamenekki);
             END IF;
         ELSE
             -- Jos REM-toimenpiteen massamenekki on yli 100, ei voida laskea RC-prosenttia oikein.
@@ -36,7 +36,7 @@ BEGIN
     END IF;
 
     IF asfalttirouhe_runkoaine.massaprosentti IS DISTINCT FROM NULL THEN
-        RETURN asfalttirouhe_runkoaine.massaprosentti;
+        RETURN ROUND(asfalttirouhe_runkoaine.massaprosentti);
     END IF;
 
     RETURN NULL;
@@ -67,7 +67,9 @@ BEGIN
     IF toimenpide IN ('REM-TAS') THEN
         IF alusta.massamenekki < 100 THEN
             IF asfalttirouhe_runkoaine.massaprosentti IS DISTINCT FROM NULL THEN
-                RETURN (100 - alusta.massamenekki) + alusta.massamenekki * (asfalttirouhe_runkoaine.massaprosentti / 100);
+                RETURN ROUND((100 - alusta.massamenekki) + alusta.massamenekki * (asfalttirouhe_runkoaine.massaprosentti / 100));
+            ELSE
+                RETURN ROUND(100 - alusta.massamenekki);
             END IF;
         END IF;
     END IF;

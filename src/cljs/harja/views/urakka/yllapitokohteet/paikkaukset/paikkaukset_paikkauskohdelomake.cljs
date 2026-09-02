@@ -21,6 +21,7 @@
             [harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as t-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-toteumalomake :as v-toteumalomake]
             [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-pmrlomake :as v-pmrlomake]
+            [harja.views.urakka.yllapitokohteet.paikkaukset.paikkaukset-apurit :as apurit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.domain.tierekisteri :as tr-domain]))
 
@@ -150,6 +151,7 @@
                    true)}
      {:otsikko "Yksikkö"
       :tyyppi :valinta
+      :label-for-id "form-paikkauskohde-yksikko"
       :valinnat (vec paikkaus/paikkauskohteiden-yksikot)
       :nimi :yksikko
       :pakollinen? true
@@ -628,19 +630,6 @@
                 sijainti
                 suunnitelma)))))
 
-(defn- nayta-pot-valinta?
-  " Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
-  Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
-  Kolme työmenetelmää ovat: AB-paikkaus levittäjällä, PAB-paikkaus levittäjällä, SMA-paikkaus levittäjällä"
-  [lomake tyomenetelmat]
-  (let [
-        nayta? (and (roolit/kayttaja-on-laajasti-ottaen-tilaaja?
-                      (roolit/urakkaroolit @istunto/kayttaja (-> @tila/tila :yleiset :urakka :id))
-                      @istunto/kayttaja)
-                    (= "ehdotettu" (:paikkauskohteen-tila lomake))
-                    (paikkaus/levittimella-tehty? lomake tyomenetelmat))]
-    nayta?))
-
 (defn- lomake-otsikko [lomake]
   [:<>
    [:div {:style {:padding-left "16px" :padding-top "32px"}}
@@ -785,7 +774,7 @@
           [napit/tallenna
            "Tallenna"
            (t-paikkauskohteet/nayta-modal
-             (str "Merkitääntkö kohde \"" (:nimi lomake) "\" valmiiksi?")
+             (str "Merkitäänkö kohde \"" (:nimi lomake) "\" valmiiksi?")
              "Tilaaja saa sähköpostiin ilmoituksen kohteen valmistumisesta."
              [napit/palvelinkutsu-nappi
               "Merkitse valmiiksi"
@@ -883,6 +872,7 @@
                                                              (dissoc :toteumatyyppi)))
                                                          lomake)))
             {:paksu? true
+             :ajax-luokka "poista-ajax-loader-valistykset"
              :ikoni (ikonit/check)
              :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeOnnistui vastaus)))
              :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->TilaaPaikkauskohdeEpaonnistui vastaus)))}]
@@ -916,6 +906,7 @@
              "Peru tilaus"
              #(t-paikkauskohteet/tallenna-tilamuutos! (assoc (lomake/ilman-lomaketietoja lomake) :paikkauskohteen-tila "ehdotettu"))
              {:paksu? true
+              :ajax-luokka "poista-ajax-loader-valistykset"
               :ikoni (ikonit/check)
               :kun-onnistuu (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausOnnistui vastaus)))
               :kun-virhe (fn [vastaus] (e! (t-paikkauskohteet/->PeruPaikkauskohteenTilausEpaonnistui vastaus)))}]
@@ -1026,7 +1017,7 @@
                          ;; Tilaajalle näytetään kolmen työmenetelmän kohdalla erillinen pot/toteuma radiobutton valinta.
                          ;; Mikäli tilaaja valitsee pot vaihtoehdon, toteumia ei kirjata normaaliprossin mukaan, vaan pot-lomakkeelta
                         (when (and (not muokkaustila?)
-                                (nayta-pot-valinta? lomake tyomenetelmat))
+                                (apurit/nayta-pot-valinta? lomake tyomenetelmat))
                           [:div.row {:style {:background-color "#F0F0F0" :margin-bottom "24px" :padding-bottom "8px"}}
                            [:div.row
                             [:div.col-xs-12

@@ -143,20 +143,20 @@
              voi-tallentaa? (and (or muokattu? @tuleville?) (not virheita?))
              voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-materiaalit (:id ur))]
          [:div.materiaalit
+          [:div.flex-row {:style {:justify-content "flex-start"}}
+           [valinnat/urakan-sopimus-ja-hoitokausi ur]
 
-          [valinnat/urakan-sopimus-ja-hoitokausi ur]
-
-          [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
-                                     :virheet yleiset-materiaalit-virheet}
-           ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
-           @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
+           [yleiset-materiaalit-grid {:voi-muokata? voi-muokata?
+                                      :virheet yleiset-materiaalit-virheet}
+            ur @u/valittu-hoitokausi @u/valittu-sopimusnumero
+            @yleiset-materiaalikoodit yleiset-materiaalit-muokattu]
 
 
-          (when voi-muokata?
-            [kentat/raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
-                         :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
-                         :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
-             tuleville?])
+           (when voi-muokata?
+             [kentat/raksiboksi {:teksti (s/monista-tuleville-teksti (:tyyppi ur))
+                                 :info-teksti [:div.raksiboksin-info (ikonit/livicon-warning-sign) "Tulevilla hoitokausilla eri tietoa, jonka tallennus ylikirjoittaa."]
+                                 :nayta-infoteksti? (and @tuleville? @varoita-ylikirjoituksesta?)}
+              tuleville?])]
 
           [:div.toiminnot
            (yleiset/wrap-if

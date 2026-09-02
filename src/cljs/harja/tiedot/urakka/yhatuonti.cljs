@@ -75,7 +75,7 @@
      (when-not (empty? epaonnistuneet-vkm-muunnokset)
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tieosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
+         "Seuraavien päällystyskohteiden tieosoitteiden päivittäminen Harjan käyttämälle tieverkolle viitekehysmuuntimella ei onnistunut.
          Kohteet on kuitenkin tallennettu Harjaan."]
         [:ul
          (for [kohde epaonnistuneet-vkm-muunnokset]
@@ -84,11 +84,14 @@
      (when-not (empty? epaonnistuneet-tallennukset)
        [:div
         [:p
-         "Seuraavien YHA-kohteiden tallentaminen Harjaan epäonnistui:"]
+         "Seuraavien päällystyskohteiden tallentaminen Harjaan epäonnistui:"]
         [:ul
          (for [kohde epaonnistuneet-tallennukset]
            ^{:key (:yha-id kohde)}
            [epaonnistunut-kohde kohde])]])
+     (when (and (empty? epaonnistuneet-tallennukset) (empty? epaonnistuneet-vkm-muunnokset))
+       [:div
+        [:p "Päällystyskohteiden tietojen päivittäminen epäonnistui"]])
 
      [:p "Tarkista kohteiden osoitteet ja varmista, että ne ovat oikein YHA:ssa."]]))
 
@@ -119,21 +122,21 @@
   (cond (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+          {:otsikko "Päällystyskohteen tieosoitteen päivittäminen epäonnistui"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+          {:otsikko "Päällystyskohteen tallentaminen epäonnistui"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])
 
         (and (= (:status vastaus) :error)
              (= (:koodi vastaus) :vkm-muunnos-ja-kohteiden-tallentaminen-epaonnistui-osittain))
         (modal/nayta!
-          {:otsikko "Kaikkia kohteita ei voitu käsitellä"
+          {:otsikko "Kaikkia päällystyskohteita ei voitu käsitellä"
            :footer [napit/sulje #(modal/piilota!)]}
           [vkm-yhdistamistulos-dialogi {:epaonnistuneet-vkm-muunnokset (:epaonnistuneet-vkm-muunnokset vastaus)
                                         :epaonnistuneet-tallennukset (:epaonnistuneet-tallennukset vastaus)}])

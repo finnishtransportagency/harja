@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.yllapitokohteet.paikkaukset.paikkaukset-paikkauskohteet
-  (:require [reagent.core :refer [atom]]
+  (:require [harja.ui.napit :as napit]
+            [reagent.core :refer [atom]]
             [clojure.data :refer [diff]]
             [clojure.string :as str]
             [tuck.core :as tuck]
@@ -46,11 +47,11 @@
 
 (defn lomakkeen-hash [lomake]
   (as-> lomake vertailtava-lomake
-        (lomake/ilman-lomaketietoja lomake)
-        (dissoc vertailtava-lomake ::tila/validius ::tila/validi? :tyyppi :alku-hash)
-        (assoc vertailtava-lomake :alkupvm (str (:alkupvm vertailtava-lomake)))
-        (assoc vertailtava-lomake :loppupvm (str (:loppupvm vertailtava-lomake)))
-        (hash vertailtava-lomake)))
+    (lomake/ilman-lomaketietoja lomake)
+    (dissoc vertailtava-lomake ::tila/validius ::tila/validi? :tyyppi :alku-hash)
+    (assoc vertailtava-lomake :alkupvm (str (:alkupvm vertailtava-lomake)))
+    (assoc vertailtava-lomake :loppupvm (str (:loppupvm vertailtava-lomake)))
+    (hash vertailtava-lomake)))
 
 (defn- fmt-aikataulu
   "Formatoi paikkauskohteen aikataulun."
@@ -82,7 +83,7 @@
 (defrecord FiltteriValitseTila [uusi-tila valittu?])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma valittu?])
-(defrecord FiltteriValitseEly [uusi-ely valittu?])
+(defrecord FiltteriValitseElinvoimakeskus [uusi-evk valittu?])
 (defrecord TiedostoLadattu [vastaus])
 (defrecord HaePaikkauskohteet [nakymaan?])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
@@ -109,6 +110,16 @@
 (defrecord AsetaToteumatyyppi [uusi-tyyppi])
 (defrecord AvaaVihje [])
 (defrecord AsetaTiemerkinnanTila [tila paikkauskohde])
+(defrecord VahvistaRaportointitavatModalissa [])
+(defrecord TilaustilaAktivoituToggle [])
+(defrecord RaportointitapaModalToggle [])
+(defrecord TilaaModalToggle [])
+(defrecord ValitsePaikkauskohde [paikkauskohde valittu?])
+(defrecord ValitseKaikkiPaikkauskohteet [valittu?])
+(defrecord AsetaToteumatyyppiKohteelle [paikkauskohde toteumatyyppi])
+(defrecord TilaaValitutPaikkauskohteet [])
+(defrecord TilaaValitutPaikkauskohteetOnnistui [vastaus])
+(defrecord TilaaValitutPaikkauskohteetEpaonnistui [vastaus])
 
 (defn- tilat-hakuun [tilat]
   (let [sql-tilat {"Kaikki" "kaikki",
@@ -122,20 +133,23 @@
 
 (defn- siivoa-ennen-lahetysta [lomake]
   (-> lomake
-      (update :ajorata (fn [nykyinen-arvo]
-                         (if (= "Ei ajorataa" nykyinen-arvo)
-                           nil
-                           nykyinen-arvo)))
-      (dissoc :sijainti
-              :pituus
-              :harja.tiedot.urakka.urakka/validi?
-              :harja.tiedot.urakka.urakka/validius
-              :valiaika-takuuaika
-              :valiaika-valmistumispvm
-              :paikkaustyo-valmis?
-              :erotus
-              :toteutus-alkuaika
-              :toteutus-loppuaika)))
+    (update :ajorata (fn [nykyinen-arvo]
+                       (if (= "Ei ajorataa" nykyinen-arvo)
+                         nil
+                         nykyinen-arvo)))
+    (dissoc
+      :sijainti
+      :formatoitu-sijainti
+      :pituus
+      :harja.tiedot.urakka.urakka/validi?
+      :harja.tiedot.urakka.urakka/validius
+      :valiaika-takuuaika
+      :valiaika-valmistumispvm
+      :paikkaustyo-valmis?
+      :erotus
+      :toteutus-alkuaika
+      :toteutus-loppuaika
+      :alasveto-valinnat)))
 
 (defn laske-paikkauskohteen-pituus [lomake parametrit]
   (let [;; Tarkistetaan ensin, että onko pituuskentät muuttuneet, jos ei niin ei lasketa pituutta
@@ -154,18 +168,18 @@
                   (not (nil? (:let lomake)))
                   ;; Ja pituus on muuttunut
                   (or (not (nil? (first pituus-diff)))
-                      (not (nil? (second pituus-diff)))))
+                    (not (nil? (second pituus-diff)))))
             (do
               (reset! lomakkeen-pituuskentat nykyiset-pituuskentat)
               (tuck-apurit/post! :laske-paikkauskohteen-pituus
-                                 nykyiset-pituuskentat
-                                 {:onnistui ->LaskePituusOnnistui
-                                  :onnistui-parametrit parametrit
-                                  :epaonnistui ->LaskePituusEpaonnistui
-                                  :paasta-virhe-lapi? true})))]
+                nykyiset-pituuskentat
+                {:onnistui ->LaskePituusOnnistui
+                 :onnistui-parametrit parametrit
+                 :epaonnistui ->LaskePituusEpaonnistui
+                 :paasta-virhe-lapi? true})))]
     lomake))
 
-(defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
+(defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-evkt hae-aluekohtaiset-paikkauskohteet?] :as app}]
   ;; Piilottaa kartan kun haku tehdään, kartta on näkymässä hyvä, mutta taulukossa asiat tapahtuu
   (nav/vaihda-kartan-koko! :S)
 
@@ -177,7 +191,7 @@
        :alkupvm alkupvm
        :loppupvm loppupvm
        :tyomenetelmat valitut-tyomenetelmat
-       :elyt valitut-elyt
+       :evkt valitut-evkt
        :hae-alueen-kohteet? hae-aluekohtaiset-paikkauskohteet?}
       {:onnistui ->HaePaikkauskohteetOnnistui
        :epaonnistui ->HaePaikkauskohteetEpaonnistui
@@ -194,7 +208,7 @@
                         (assoc :takuuaika (or (:valiaika-takuuaika paikkauskohde) (:takuuaika paikkauskohde))))
         paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
     (k/post! :tallenna-paikkauskohde-urakalle
-             paikkauskohde)))
+      paikkauskohde)))
 
 (defn- tallenna-paikkauskohde
   ([paikkauskohde onnistui epaonnistui]
@@ -202,12 +216,12 @@
   ([paikkauskohde onnistui epaonnistui parametrit]
    (let [paikkauskohde (siivoa-ennen-lahetysta paikkauskohde)]
      (tuck-apurit/post! :tallenna-paikkauskohde-urakalle
-                        paikkauskohde
-                        {:onnistui onnistui
-                         :onnistui-parametrit parametrit
-                         :epaonnistui epaonnistui
-                         :epaonnistui-parametrit parametrit
-                         :paasta-virhe-lapi? true}))))
+       paikkauskohde
+       {:onnistui onnistui
+        :onnistui-parametrit parametrit
+        :epaonnistui epaonnistui
+        :epaonnistui-parametrit parametrit
+        :paasta-virhe-lapi? true}))))
 
 ;; Nämä validointi funktiot ajetaan vain kerran ja sinne annettu toteumalomake ei päivity.
 ;; Joten siirrytään käyttämään atomia, jossa on ajantasainen toteumalomake
@@ -224,25 +238,25 @@
        :aet [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)]
        :let [tila/ei-nil tila/ei-tyhja tila/numero #(tila/maksimiarvo 90000 %)
              (tila/silloin-kun #(not (nil? (:aet @lomake-atom)))
-                               (fn [arvo]
-                                 ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                 (cond
-                                   ;; Jos alkuosa ja loppuosa on sama
-                                   ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
-                                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
-                                   arvo
-                                   ;; Alkuetäisyys on suurempi kuin loppuetäisyys
-                                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
-                                   nil
-                                   :else arvo)))]
+               (fn [arvo]
+                 ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                 (cond
+                   ;; Jos alkuosa ja loppuosa on sama
+                   ;; Ja alkuetäisyys on pienempi kuin loppuetäisyys)
+                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (< (:aet @lomake-atom) arvo))
+                   arvo
+                   ;; Alkuetäisyys on suurempi kuin loppuetäisyys
+                   (and (= (:aosa @lomake-atom) (:losa @lomake-atom)) (>= (:aet @lomake-atom) arvo))
+                   nil
+                   :else arvo)))]
        :alkupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara]
        :loppupvm [tila/ei-nil tila/ei-tyhja tila/paivamaara
                   (tila/silloin-kun #(not (nil? (:alkupvm @lomake-atom)))
-                                    (fn [arvo]
-                                      ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
-                                      (when (or (pvm/sama-pvm? (:alkupvm @lomake-atom) arvo) ;; Joko sama päivä
-                                                (pvm/ennen? (:alkupvm @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
-                                        arvo)))]
+                    (fn [arvo]
+                      ;; Validointi vaatii "nil" vastauksen, kun homma on pielessä ja kentän arvon, kun kaikki on ok
+                      (when (or (pvm/sama-pvm? (:alkupvm @lomake-atom) arvo) ;; Joko sama päivä
+                              (pvm/ennen? (:alkupvm @lomake-atom) arvo)) ;; Tai alkupäivämäärä tulee ennen loppupäivää
+                        arvo)))]
        :suunniteltu-maara [tila/ei-nil tila/ei-tyhja tila/numero]
        :yksikko [tila/ei-nil tila/ei-tyhja]
        :suunniteltu-hinta [tila/ei-nil tila/ei-tyhja tila/numero]
@@ -269,38 +283,38 @@
 
 (defn- validoi-lomake [lomake]
   (apply tila/luo-validius-tarkistukset
-         (if-not (= :pot (:toteumatyyppi @lomake-atom))
-           [[:nimi] (validoinnit :nimi)
-            [:ulkoinen-id] (validoinnit :ulkoinen-id)
-            [:tyomenetelma] (validoinnit :tyomenetelma)
-            [:tie] (validoinnit :tie)
-            [:aosa] (validoinnit :aosa)
-            [:losa] (validoinnit :losa)
-            [:aet] (validoinnit :aet)
-            [:let] (validoinnit :let)
-            [:alkupvm] (validoinnit :alkupvm)
-            [:loppupvm] (validoinnit :loppupvm)
-            [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
-            [:yksikko] (validoinnit :yksikko)
-            [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)]
-           ;; Pot raportoitavalla on erilaiset  validoinnit
-           [[:nimi] (validoinnit :nimi)
-            [:ulkoinen-id] (validoinnit :ulkoinen-id)
-            [:tyomenetelma] (validoinnit :tyomenetelma)
-            [:tie] (validoinnit :tie)
-            [:aosa] (validoinnit :aosa)
-            [:losa] (validoinnit :losa)
-            [:aet] (validoinnit :aet)
-            [:let] (validoinnit :let)
-            [:alkupvm] (validoinnit :alkupvm)
-            [:loppupvm] (validoinnit :loppupvm)
-            [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
-            [:yksikko] (validoinnit :yksikko)
-            [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)
-            [:pot-tyo-alkoi] (validoinnit :pot-tyo-alkoi)
-            [:pot-tyo-paattyi] (validoinnit :pot-tyo-paattyi)
-            [:pot-valmistumispvm] (validoinnit :pot-valmistumispvm)]
-           )))
+    (if-not (= :pot (:toteumatyyppi @lomake-atom))
+      [[:nimi] (validoinnit :nimi)
+       [:ulkoinen-id] (validoinnit :ulkoinen-id)
+       [:tyomenetelma] (validoinnit :tyomenetelma)
+       [:tie] (validoinnit :tie)
+       [:aosa] (validoinnit :aosa)
+       [:losa] (validoinnit :losa)
+       [:aet] (validoinnit :aet)
+       [:let] (validoinnit :let)
+       [:alkupvm] (validoinnit :alkupvm)
+       [:loppupvm] (validoinnit :loppupvm)
+       [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
+       [:yksikko] (validoinnit :yksikko)
+       [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)]
+      ;; Pot raportoitavalla on erilaiset  validoinnit
+      [[:nimi] (validoinnit :nimi)
+       [:ulkoinen-id] (validoinnit :ulkoinen-id)
+       [:tyomenetelma] (validoinnit :tyomenetelma)
+       [:tie] (validoinnit :tie)
+       [:aosa] (validoinnit :aosa)
+       [:losa] (validoinnit :losa)
+       [:aet] (validoinnit :aet)
+       [:let] (validoinnit :let)
+       [:alkupvm] (validoinnit :alkupvm)
+       [:loppupvm] (validoinnit :loppupvm)
+       [:suunniteltu-maara] (validoinnit :suunniteltu-maara)
+       [:yksikko] (validoinnit :yksikko)
+       [:suunniteltu-hinta] (validoinnit :suunniteltu-hinta)
+       [:pot-tyo-alkoi] (validoinnit :pot-tyo-alkoi)
+       [:pot-tyo-paattyi] (validoinnit :pot-tyo-paattyi)
+       [:pot-valmistumispvm] (validoinnit :pot-valmistumispvm)]
+      )))
 
 (defn- validoi-tiemerkintamodal-lomake [lomake]
   (apply tila/luo-validius-tarkistukset [[:tiemerkinta-urakka] (validoinnit :tiemerkinta-urakakka)
@@ -439,28 +453,28 @@
                        (disj valitut-tyomenetelmat (:id uusi-menetelma)))]
       (assoc app :valitut-tyomenetelmat menetelmat)))
 
-  FiltteriValitseEly
-  (process-event [{uusi-ely :uusi-ely valittu? :valittu?} app]
-    (let [valitut-elyt (:valitut-elyt app)
-          elyt (cond
+  FiltteriValitseElinvoimakeskus
+  (process-event [{uusi-evk :uusi-evk valittu? :valittu?} app]
+    (let [valitut-evkt (:valitut-evkt app)
+          evkt (cond
                  ;; Valitaan joku muu kuin "kaikki"
-                 (and valittu? (not= 0 (:id uusi-ely)))
-                 (-> valitut-elyt
-                   (conj (:id uusi-ely))
+                 (and valittu? (not= 0 (:id uusi-evk)))
+                 (-> valitut-evkt
+                   (conj (:id uusi-evk))
                    (disj 0))
 
                  ;; Valitaan "kaikki"
-                 (and valittu? (= 0 (:id uusi-ely)))
+                 (and valittu? (= 0 (:id uusi-evk)))
                  #{0} ;; Palautetaan kaikki valinnalla
 
                  ;; Poistetaan "kaikki" valinta
-                 (and (not valittu?) (= 0 (:id uusi-ely)))
-                 (disj valitut-elyt 0)
+                 (and (not valittu?) (= 0 (:id uusi-evk)))
+                 (disj valitut-evkt 0)
 
                  ;; Poistetaan joku muu kuin "kaikki" valinta
-                 (and (not valittu?) (not= 0 (:id uusi-ely)))
-                 (disj valitut-elyt (:id uusi-ely)))]
-      (assoc app :valitut-elyt elyt)))
+                 (and (not valittu?) (not= 0 (:id uusi-evk)))
+                 (disj valitut-evkt (:id uusi-evk)))]
+      (assoc app :valitut-evkt evkt)))
 
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]
@@ -510,7 +524,11 @@
           ;; Kun tullaan näkymään, aseta suodattimeen kuluva/viimeinen vuosi 
           app (if nakymaan?
                 (assoc app :valittu-vuosi vuosi)
-                app)]
+                app)
+          app (assoc app :tilaustila-aktiivinen? false
+                :vahvista-tilaus-modal-auki? false
+                :raportointimodal-aktiivinen? false
+                :valitut-tilattavat-kohteet [])]
 
       (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app)))
 
@@ -537,8 +555,8 @@
           ;; tallennettu uusi toteuma kohteelle. Joten haetaan app-statesta samalla id:llä olevan paikkauskohteen tiedot lomakkeelle
           app (if (:toteuma-lisatty? app)
                 (-> app
-                    ;; Jos paikkauskohdelomake oli raportointitilassa ja muokkaustilassa laitetaan sama tila päälle
-                    ;; :raportointila? true - appin juuressa
+                  ;; Jos paikkauskohdelomake oli raportointitilassa ja muokkaustilassa laitetaan sama tila päälle
+                  ;; :raportointila? true - appin juuressa
                   (assoc :lomake (some #(when (= (get-in app [:lomake :id]) (:id %))
                                           %) paikkauskohteet))
                   (assoc-in [:lomake :tyyppi] (:raportointi-tila? app))
@@ -771,10 +789,12 @@
           kaanteinen? (if (= jarjestys vanha-jarjestys)
                         (not (get-in app [:jarjestys :kaanteinen?]))
                         false)]
-      (-> app
-        (assoc-in [:jarjestys :nimi] jarjestys)
-        (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
-        (assoc :paikkauskohteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:paikkauskohteet app))))))
+      (if jarjestys
+        (-> app
+          (assoc-in [:jarjestys :nimi] jarjestys)
+          (assoc-in [:jarjestys :kaanteinen?] kaanteinen?)
+          (assoc :paikkauskohteet (sort-by jarjestys (if kaanteinen? kaanteinen-jarjestaja compare) (:paikkauskohteet app))))
+        app)))
 
   AsetaToteumatyyppi
   (process-event [{uusi-tyyppi :uusi-tyyppi} app]
@@ -793,7 +813,98 @@
         ->TallennaPaikkauskohdeOnnistui
         ->TallennaPaikkauskohdeEpaonnistui
         [(not (nil? (:id paikkauskohde)))])
-      (assoc app :haku-kaynnissa? true :paikkauskohteet nil))))
+      (assoc app :haku-kaynnissa? true :paikkauskohteet nil)))
+
+  TilaustilaAktivoituToggle
+  (process-event [_ app]
+    (let [uusi-tila (not (:tilaustila-aktiivinen? app))]
+      (-> app
+        (assoc :tilaustila-aktiivinen? uusi-tila)
+        ;; Tyhjennetään valitut kohteet kun tila muuttuu
+        (assoc :valitut-tilattavat-kohteet []))))
+
+  RaportointitapaModalToggle
+  (process-event [_ app]
+    (let [uusi-tila (not (:raportointimodal-aktiivinen? app))]
+      (assoc app :raportointimodal-aktiivinen? uusi-tila)))
+
+  TilaaModalToggle
+  (process-event [_ app]
+    (let [uusi-tila (not (:vahvista-tilaus-modal-auki? app))]
+      (assoc app :vahvista-tilaus-modal-auki? uusi-tila)))
+
+  ValitsePaikkauskohde
+  (process-event [{:keys [paikkauskohde valittu?]} app]
+    (let [valitut (set (:valitut-tilattavat-kohteet app))]
+      (assoc app :valitut-tilattavat-kohteet
+        (if valittu?
+          (conj valitut (:id paikkauskohde))
+          (disj valitut (:id paikkauskohde))))))
+
+  ValitseKaikkiPaikkauskohteet
+  (process-event [{:keys [valittu?]} app]
+    (let [ehdotetut (filter #(= "ehdotettu" (:paikkauskohteen-tila %)) (:paikkauskohteet app))]
+      (if valittu?
+        (assoc app :valitut-tilattavat-kohteet (set (map :id ehdotetut)))
+        (assoc app :valitut-tilattavat-kohteet #{}))))
+
+
+  VahvistaRaportointitavatModalissa
+  (process-event [_ app]
+    (-> app
+      (assoc :raportointimodal-aktiivinen? false)
+      ;; Avataan toinen modal, jossa pyydetään lopullinen vahvistus tilauksesta, ja jos vahvistetaan, niin tilataan kohteet
+      (assoc :vahvista-tilaus-modal-auki? true)))
+
+  AsetaToteumatyyppiKohteelle
+  (process-event [{:keys [paikkauskohde toteumatyyppi]} app]
+    ;; Vaihda tälle kohteelle toteumatyyppi halutuksi
+    (let [kohteet (map (fn [kohde]
+                         (if (= (:id kohde) (:id paikkauskohde))
+                           (assoc kohde
+                             :pot? (= toteumatyyppi :pot)
+                             :toteumatyyppi toteumatyyppi)
+                           kohde))
+                    (:paikkauskohteet app))]
+      (assoc app :paikkauskohteet kohteet)))
+
+
+  TilaaValitutPaikkauskohteet
+  (process-event [_ app]
+    (let [valitut-kohteet (:valitut-tilattavat-kohteet app)
+          kaikki-kohteet (:paikkauskohteet app)
+
+          ;; Merkitse kohteet tilatuiksi
+          tilattavat-kohteet (->> kaikki-kohteet
+                               (filter #(contains? valitut-kohteet (:id %)))
+                               (map (fn [kohde]
+                                      (-> kohde
+                                        (assoc :paikkauskohteen-tila "tilattu")
+                                        (siivoa-ennen-lahetysta)))))]
+
+      (tuck-apurit/post! :tilaa-valitut-paikkauskohteet
+        {:tilattavat-paikkauskohteet tilattavat-kohteet}
+        {:onnistui ->TilaaValitutPaikkauskohteetOnnistui
+         :epaonnistui ->TilaaValitutPaikkauskohteetEpaonnistui
+         :paasta-virhe-lapi? true})
+      (-> app
+        (assoc
+          :paikkauskohteet nil
+          :haku-kaynnissa? true
+          :tilaustila-aktiivinen? false
+          :vahvista-tilaus-modal-auki? false))))
+
+  TilaaValitutPaikkauskohteetOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Kohteet " (vastaus :onnistuneet) " kpl tilattu"))
+    (hae-paikkauskohteet (-> @tila/yleiset :urakka :id) app))
+
+  TilaaValitutPaikkauskohteetEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (modal/piilota!)
+    (viesti/nayta-toast! (str "Tilauksessa tapahtui virhe!")
+      :varoitus viesti/viestin-nayttoaika-aareton)
+    app))
 
 (defn kayttaja-on-urakoitsija? [urakkaroolit]
   (let [urakkaroolit (if (set? urakkaroolit)
@@ -814,7 +925,7 @@
       (some (fn [rooli]
               (true?
                 (some #(= rooli %) urakoitsijaroolit)))
-            urakkaroolit)
+        urakkaroolit)
       true
       :else false)))
 

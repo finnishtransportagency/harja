@@ -1,0 +1,167 @@
+## Testiympäristöjen pystytykseen alustava deployment prosessi
+## -> antaa valita branchin 
+## -> buildaa imagen testi ECR:rään (erillään prodista)
+## -> deployaa imagen <test-env> ECS konttiin  
+##
+## Ei koske prod pipelineen  
+## 
+
+name: '[Test-envs] Build and deploy'
+
+## TODO: Tähän tulee oikeat valinnat myöhemmin 
+on:
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Valitse deploy-ympäristö"
+        required: true
+        type: choice
+        options:
+          - test-qa1
+
+permissions: {}
+
+concurrency:
+  ## TODO: Myöhemmin ei kovakoodata
+  group: test-qa1-deploy
+  cancel-in-progress: false
+  
+jobs:
+
+  ## TODO: Nimi vaihtuu myöhemmin
+  deploy-qa1:
+    name: "Deploy branch to QA1"
+    runs-on: ubuntu-latest
+    ## TODO: Myöhemmin ei kovakoodata
+    environment: 'test-qa1'
+
+    permissions:
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+
+    steps:
+      - name: '[Test-envs] Checkout code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      
+      ## Buildi tarvii tietokannan 
+      - name: '[Test-envs] Start database for build'
+        uses: ./.github/actions/start-test-db
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+          service-name: harjadb-latest
+
+      ## rev-parse == commit 
+      - name: '[Test-envs] Resolve checked out commit'
+        id: git-sha
+        run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+
+      ## ref_name == branchi
+      ## Tagataan image näillä 
+      ## TODO.. Jos halutaan sallia että esim QA1 & QA2 käyttää samaa branchia
+      ##        -> täytyy tagittaa vielä environment
+      - name: '[Test-envs] Resolve sanitized ref tag'
+        id: ref-tag
+        env:
+          RAW_REF: ${{ github.ref_name }}
+        run: |
+          REF_TAG=$(echo "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          echo "ref_tag=$REF_TAG" >> "$GITHUB_OUTPUT"
+      
+      - name: '[Test-envs] Build Harja Uberjar'
+        uses: ./.github/actions/build-harja-app
+        with:
+          build-laadunseuranta: 'false'
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c
+        with:
+          aws-region: 'eu-west-1'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      # https://github.com/aws-actions/amazon-ecr-login
+      # mask-password: 'true' käyttö on suositeltavaa, jotta docker-salasanaa ei tulosteta mikäli debug-lokitus on enabloitu.
+      # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
+      - name: '[Test-envs] Authenticate with AWS ECR'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        with:
+          mask-password: 'true'
+
+      - name: '[Test-envs] Build and tag Harja Docker image'
+        id: build-image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          REF_TAG: ${{ steps.ref-tag.outputs.ref_tag }}
+          COMMIT_SHA: ${{ steps.git-sha.outputs.sha }}
+          DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
+        run: |
+          docker build --provenance=false \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA" \
+            --file "$DOCKERFILE_PATH" .
+
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
+          
+      - name: '[Test-envs] Run migrations'
+        uses: ./.github/actions/run-migrations-to-test-env
+        with:
+          commit-sha: ${{ steps.git-sha.outputs.sha }}
+          function-name: HarjaTestMigrationRunner-${{ inputs.environment }}
+
+      - name: '[Test-envs] Push image to ECR'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          REF_TAG: ${{ steps.ref-tag.outputs.ref_tag }}
+          COMMIT_SHA: ${{ steps.git-sha.outputs.sha }}
+        run: |
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
+          
+      - name: '[Test-envs] Download task definition'
+        env:
+          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+        run: |
+          aws ecs describe-task-definition \
+            --region eu-west-1 \
+            --task-definition "$ECS_TASK_DEFINITION_NAME" \
+            --query taskDefinition \
+            > harja-task-definition.json
+
+      - name: Update ECS task definition
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea
+        with:
+          task-definition: harja-task-definition.json
+          container-name: ${{ vars.ECS_CONTAINER_NAME }}
+          image: ${{ steps.build-image.outputs.image }}
+
+      - name: Deploy ECS task definition
+        uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          wait-for-service-stability: false
+
+      - name: '[Test-envs] Start ECS service'
+        env:
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
+        ## TODO:
+        ## Käytetään desired count muuttujaa jälkikäteen
+        ## Tähän spikeen == 1, hallinnoidaan infran puolella 
+        run: |
+          aws ecs update-service \
+            --region eu-west-1 \
+            --cluster "$ECS_CLUSTER_NAME" \
+            --service "$ECS_SERVICE_NAME" \
+            --desired-count 1

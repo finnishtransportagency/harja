@@ -104,8 +104,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :toimenpidepaivat
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2005 10 1))
                                               :loppupvm (c/to-date (t/local-date 2006 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 7 9 10}
@@ -192,6 +192,33 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Teh­tä­vä"}
+      {:fmt     :kokonaisluku
+       :otsikko "IsE"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "Is"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "I"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "Ib"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "Ic"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "II"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "III"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "K1"
+       :tasaa   :oikea}
+      {:fmt     :kokonaisluku
+       :otsikko "K2"
+       :tasaa   :oikea}
       {:fmt     :kokonaisluku
        :otsikko "IsE"
        :tasaa   :oikea}

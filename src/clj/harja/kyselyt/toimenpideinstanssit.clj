@@ -6,7 +6,9 @@
   {:positional? true})
 
 (declare hae-urakan-toimenpideinstanssi-toimenpidekoodilla onko-tuotu-samposta onko-urakalla-toimenpide
-  sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja)
+  sallitaanko-urakassa-toimenpidekoodille-useita-toimenpideinstansseja hae-hoidon-maksuerattomat-toimenpideistanssit
+  luo-yllapidon-toimenpideinstanssi<! paivita-urakka-sampoidlla! hae-id-sampoidlla luo-toimenpideinstanssi<!
+  paivita-toimenpideinstanssi!)
 
 (defn onko-tuotu-samposta? [db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid]
   (:exists (first (onko-tuotu-samposta db sampo_toimenpidekoodi sampo-toimenpide-id urakka_sampoid))))

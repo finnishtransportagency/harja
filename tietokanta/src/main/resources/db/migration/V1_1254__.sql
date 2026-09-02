@@ -1,0 +1,10 @@
+UPDATE organisaatio SET nimi = 'Uusimaa' WHERE nimi = 'Uudenmaan elinvoimakeskus' AND lyhenne = 'UUD' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Lounais-Suomi' WHERE nimi = 'Lounais-Suomen elinvoimakeskus' AND lyhenne = 'LOU' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Kaakkois-Suomi' WHERE nimi = 'Kaakkois-Suomen elinvoimakeskus' AND lyhenne = 'KAS' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Sisä-Suomi' WHERE nimi = 'Sisä-Suomen elinvoimakeskus' AND lyhenne = 'SIS' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Keski-Suomi' WHERE nimi = 'Keski-Suomen elinvoimakeskus' AND lyhenne = 'KES' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Itä-Suomi' WHERE nimi = 'Itä-Suomen elinvoimakeskus'	AND lyhenne = 'ITA' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Etelä-Pohjanmaa' WHERE nimi = 'Etelä-Pohjanmaan elinvoimakeskus' AND lyhenne = 'EPO' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Pohjanmaa' WHERE nimi = 'Pohjanmaan elinvoimakeskus'	AND lyhenne = 'POH' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Pohjois-Suomi' WHERE nimi = 'Pohjois-Suomen elinvoimakeskus'	AND lyhenne = 'PSU' and tyyppi = 'elinvoimakeskus';
+UPDATE organisaatio SET nimi = 'Lappi' WHERE nimi = 'Lapin elinvoimakeskus' AND lyhenne = 'LAP' and tyyppi = 'elinvoimakeskus';

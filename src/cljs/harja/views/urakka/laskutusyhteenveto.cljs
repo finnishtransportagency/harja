@@ -24,7 +24,7 @@
             [harja.asiakas.kommunikaatio :as k]
             [harja.transit :as t]
             [harja.ui.yleiset :as yleiset])
-  
+
   (:require-macros [harja.atom :refer [reaction<! reaction-writable]]
                    [cljs.core.async.macros :refer [go]]
                    [reagent.ratom :refer [reaction run!]]
@@ -32,7 +32,7 @@
 
 
 (def valittu-vuosi (reaction-writable
-                    (pvm/vuosi (pvm/nyt))))
+                     (pvm/vuosi (pvm/nyt))))
 
 (defonce laskutusyhteenveto-nakyvissa? (atom false))
 (defonce vapaa-aikavali? (atom false))
@@ -54,18 +54,18 @@
 
 (defn raportin-nimi-avain [urakkatyyppi]
   (cond (and
-         ;; MHU / HJU -urakoille näytetään työmaakokous ja tuotekohtainen yhteenveto
-         ;; Tuotekohtainen
-         (= :teiden-hoito urakkatyyppi)
-         (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tuotekohtainen
+          ;; MHU / HJU -urakoille näytetään työmaakokous ja tuotekohtainen yhteenveto
+          ;; Tuotekohtainen
+          (= :teiden-hoito urakkatyyppi)
+          (= :tuotekohtainen @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tuotekohtainen
 
-        (and
-         ;; Työmaakokous
-         (= :teiden-hoito urakkatyyppi)
-         (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
+    (and
+      ;; Työmaakokous
+      (= :teiden-hoito urakkatyyppi)
+      (= :tyomaakokous @valittu-yhteenveto-muoto)) :laskutusyhteenveto-tyomaa
 
-        ;; Muille urakoille näytetään "perus" yhteenveto
-        (not= :teiden-hoito urakkatyyppi) :laskutusyhteenveto))
+    ;; Muille urakoille näytetään "perus" yhteenveto
+    (not= :teiden-hoito urakkatyyppi) :laskutusyhteenveto))
 
 (defonce laskutusyhteenvedon-parametrit
   (reaction (let [ur @nav/valittu-urakka
@@ -77,7 +77,7 @@
                             (if (nil? alkupvm) (first @u/valittu-hoitokausi) alkupvm)
 
                             (= @valittu-yhteenveto-aikarajaus :kalenterivuosi)
-                            (if @valittu-kuukausi 
+                            (if @valittu-kuukausi
                               (first @valittu-kuukausi)
                               (pvm/vuoden-eka-pvm @valittu-vuosi))
 
@@ -97,30 +97,35 @@
 
                   nakymassa? @laskutusyhteenveto-nakyvissa?
                   raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
-              
+
               (when (and ur alkupvm loppupvm nakymassa?)
                 (raportit/urakkaraportin-parametrit
-                 (:id ur)
-                 raportin-nimi
-                 {:alkupvm alkupvm
-                  :loppupvm loppupvm
-                  :valittu-kk @valittu-kuukausi
-                  :aikarajaus @valittu-yhteenveto-aikarajaus
-                  :urakkatyyppi (:tyyppi ur)})))))
+                  (:id ur)
+                  raportin-nimi
+                  {:alkupvm alkupvm
+                   :loppupvm loppupvm
+                   :valittu-kk @valittu-kuukausi
+                   :aikarajaus @valittu-yhteenveto-aikarajaus
+                   :urakkatyyppi (:tyyppi ur)})))))
 
 (defonce laskutusyhteenvedon-tiedot
   (reaction<! [p @laskutusyhteenvedon-parametrit]
-              {:nil-kun-haku-kaynnissa? true}
-              (when p
-                (raportit/suorita-raportti p))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when p
+      (raportit/suorita-raportti p))))
 
 (defonce kuukaudet (reaction-writable
-                    (let [hk @u/valittu-hoitokausi
-                          vuosi @valittu-vuosi]
-                      (into [] (concat [nil] (cond
-                                               hk (pvm/aikavalin-kuukausivalit hk)
-                                               vuosi (pvm/vuoden-kuukausivalit vuosi)
-                                               :else []))))))
+                     (let [hk @u/valittu-hoitokausi
+                           vuosi @valittu-vuosi
+                           aikarajaus @valittu-yhteenveto-aikarajaus]
+                       (into [] (concat [nil] (cond
+                                                (and (= aikarajaus :hoitokausi) hk)
+                                                (pvm/aikavalin-kuukausivalit hk)
+
+                                                vuosi
+                                                (pvm/vuoden-kuukausivalit vuosi)
+
+                                                :else []))))))
 
 (defn suorita-raportti [raportin-nimi]
   (if-let [tiedot @laskutusyhteenvedon-tiedot]
@@ -133,101 +138,103 @@
 (defn laskutusyhteenveto
   []
   (komp/luo
-   (komp/lippu laskutusyhteenveto-nakyvissa?)
-   (fn []
-     (let [ur @nav/valittu-urakka
-           vuosi-eka (if ur (pvm/vuosi (:alkupvm ur)) 2010)
-           vuosi-vika (if ur (pvm/vuosi (:loppupvm ur)) (pvm/vuosi (pvm/nyt)))
-           raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
+    (komp/lippu laskutusyhteenveto-nakyvissa?)
+    (fn []
+      (let [ur @nav/valittu-urakka
+            vuosi-eka (if ur (pvm/vuosi (:alkupvm ur)) 2010)
+            vuosi-vika (if ur (pvm/vuosi (:loppupvm ur)) (pvm/vuosi (pvm/nyt)))
+            raportin-nimi (raportin-nimi-avain (:tyyppi ur))]
 
-       [:div.laskutusyhteenveto.margin-top-16
-        [:div.flex-row.alkuun
+        [:div.laskutusyhteenveto
+         [:h1 "Laskutusyhteenveto"]
+         [:div.body-caption (:nimi ur)]
+         [:div.flex-row.alkuun
 
-         ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto
-         (when (= :teiden-hoito (:tyyppi ur))
-           [:div {:class "mhu-radio"}
-            [:div {:class "laskutus-yhteensa"} "Laskutusyhteenvedon muoto"
-             [:div {:class "kentta"}
+          ;; MHU / HJU -urakoille näytetään valinnat työmaakokous & tuotekohtainen yhteenveto
+          (when (= :teiden-hoito (:tyyppi ur))
+            [:div {:class "mhu-radio"}
+             [:div {:class "laskutus-yhteensa"} "Laskutusyhteenvedon muoto"
+              [:div {:class "kentta"}
 
-              [kentat/tee-kentta {:tyyppi :radio-group
-                                  :space-valissa? true
-                                  :vaihtoehdot [:tyomaakokous :tuotekohtainen]
-                                  :vayla-tyyli? true
-                                  :nayta-rivina? false
-                                  :valitse-fn #(do
-                                                 (reset! u/valittu-hoitokauden-kuukausi nil)
-                                                 (reset! valittu-yhteenveto-aikarajaus :hoitokausi))
-                                  :vaihtoehto-nayta yhteenvedeon-valinnat}
-               valittu-yhteenveto-muoto]]]
+               [kentat/tee-kentta {:tyyppi :radio-group
+                                   :space-valissa? true
+                                   :vaihtoehdot [:tyomaakokous :tuotekohtainen]
+                                   :vayla-tyyli? true
+                                   :nayta-rivina? false
+                                   :valitse-fn #(do
+                                                  (reset! u/valittu-hoitokauden-kuukausi nil)
+                                                  (reset! valittu-yhteenveto-aikarajaus :hoitokausi))
+                                   :vaihtoehto-nayta yhteenvedeon-valinnat}
+                valittu-yhteenveto-muoto]]]
 
-            [:div {:class "laskutus-yhteensa"} "Aikarajaus"
-             [:div {:class "kentta"}
+             [:div {:class "laskutus-yhteensa"} "Aikarajaus"
+              [:div {:class "kentta"}
 
-              [kentat/tee-kentta {:tyyppi :radio-group
-                                  :vaihtoehdot (cond
-                                                 ;; Työmaakokoukselle ei anneta vuosivalintaa
-                                                 (= @valittu-yhteenveto-muoto :tyomaakokous) [:hoitokausi :valittu-aikakvali]
-                                                 :else [:hoitokausi :kalenterivuosi :valittu-aikakvali])
-                                  :vayla-tyyli? true
-                                  :nayta-rivina? false
-                                  ;; Kun vaihdetaan yhteenvedon muotoa resetoidaan kalenteri arvoja
-                                  :valitse-fn #(do
-                                                 (reset! u/valittu-hoitokauden-kuukausi nil)
-                                                 (reset! u/valittu-hoitokausi nil)
-                                                 (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
-                                                 (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
-                                  :vaihtoehto-nayta aikarajaus-valinnat}
-               valittu-yhteenveto-aikarajaus]]]])
+               [kentat/tee-kentta {:tyyppi :radio-group
+                                   :vaihtoehdot (cond
+                                                  ;; Työmaakokoukselle ei anneta vuosivalintaa
+                                                  (= @valittu-yhteenveto-muoto :tyomaakokous) [:hoitokausi :valittu-aikakvali]
+                                                  :else [:hoitokausi :kalenterivuosi :valittu-aikakvali])
+                                   :vayla-tyyli? true
+                                   :nayta-rivina? false
+                                   ;; Kun vaihdetaan yhteenvedon muotoa resetoidaan kalenteri arvoja
+                                   :valitse-fn #(do
+                                                  (reset! u/valittu-hoitokauden-kuukausi nil)
+                                                  (reset! kuukaudet (pvm/vuoden-kuukausivalit (pvm/vuosi (pvm/nyt))))
+                                                  (reset! valittu-vuosi (pvm/vuosi (pvm/nyt))))
+                                   :vaihtoehto-nayta aikarajaus-valinnat}
+                valittu-yhteenveto-aikarajaus]]]])
 
-         (cond
-           ;; Hoitokausi valittuna
-           (= @valittu-yhteenveto-aikarajaus :hoitokausi)
-           [:div
-            [valinnat/urakan-hoitokausi ur]
-            [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
-                                   :nil-valinta "Koko hoitokausi"
-                                   :disabloi-tulevat-kk? true}
-             @kuukaudet u/valittu-hoitokauden-kuukausi]]
+          (cond
+            ;; Hoitokausi valittuna
+            (= @valittu-yhteenveto-aikarajaus :hoitokausi)
+            [:div
+             [valinnat/urakan-hoitokausi ur]
+             [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
+                                    :nil-valinta "Koko hoitovuosi"
+                                    ;; En tiedä, miksi tämä haluttaisiin rajata
+                                    ;; Sallitaan vaan kaikkien kuukausien valinta?
+                                    :disabloi-tulevat-kk? false}
+              @kuukaudet u/valittu-hoitokauden-kuukausi]]
 
-           ;; Tietty vuosi valittuna
-           (= @valittu-yhteenveto-aikarajaus :kalenterivuosi)
-           [:div
-            [ui-valinnat/vuosi {:disabled false}
-             vuosi-eka vuosi-vika valittu-vuosi
-             #(do
-                (reset! valittu-vuosi %)
-                (reset! u/valittu-hoitokauden-kuukausi nil)
-                (reset! u/valittu-hoitokausi nil)
-                (reset! valittu-kuukausi nil))]
+            ;; Tietty vuosi valittuna
+            (= @valittu-yhteenveto-aikarajaus :kalenterivuosi)
+            [:div
+             [ui-valinnat/vuosi {:disabled false}
+              vuosi-eka vuosi-vika valittu-vuosi
+              #(do
+                 (reset! valittu-vuosi %)
+                 (reset! u/valittu-hoitokauden-kuukausi nil)
+                 (reset! valittu-kuukausi nil))]
 
-            [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
-                                   :nil-valinta "Koko vuosi"
-                                   :disabloi-tulevat-kk? true}
-             @kuukaudet u/valittu-hoitokauden-kuukausi]]
+             [ui-valinnat/kuukausi {:disabled @vapaa-aikavali?
+                                    :nil-valinta "Koko vuosi"
+                                    :disabloi-tulevat-kk? true}
+              @kuukaudet u/valittu-hoitokauden-kuukausi]]
 
-           ;; Valittuna kustomi aikaväli
-           :else
-           [:div
-            [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [raportit-ui/+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
-                                                  :validointi :korkeintaan-kuluva-paiva}]
-            ;; Käytetään täälläkin rajaa samoin kun raporttien puolella, niin ei mene queryt tukkoon
-            [vihje (str "Raportin pisin sallittu aikaväli on " raportit-ui/+raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])
+            ;; Valittuna kustomi aikaväli
+            :else
+            [:div
+             [ui-valinnat/aikavali vapaa-aikavali {:aikavalin-rajoitus [raportit-ui/+raportin-aikavalin-max-pituus-vuotta+ :vuosi]
+                                                   :validointi :korkeintaan-kuluva-paiva}]
+             ;; Käytetään täälläkin rajaa samoin kun raporttien puolella, niin ei mene queryt tukkoon
+             [vihje (str "Raportin pisin sallittu aikaväli on " raportit-ui/+raportin-aikavalin-max-pituus-vuotta+ " vuotta") "raportit-valittuaikavali-vihje"]])
 
-         (when-let [p @laskutusyhteenvedon-parametrit]
-           [upotettu-raportti/raportin-vientimuodot p])]
+          (when-let [p @laskutusyhteenvedon-parametrit]
+            [upotettu-raportti/raportin-vientimuodot p])]
 
-        ;; Jos hoitokautta ei ole valittuna, näytä viesti
-        (if (and (= @valittu-yhteenveto-aikarajaus :hoitokausi) (nil? @u/valittu-hoitokausi))
-          [:div "Valitse hoitokausi"]
+         ;; Jos hoitokautta ei ole valittuna, näytä viesti
+         (if (and (= @valittu-yhteenveto-aikarajaus :hoitokausi) (nil? @u/valittu-hoitokausi))
+           [:div "Valitse hoitokausi"]
 
-          (if (= @valittu-yhteenveto-aikarajaus :valittu-aikakvali)
-            
-            ;; Jos käytetään kustomi aikaväliä, katsotaan että molemmat arvot ovat olemassa
-            (let [alku (first @vapaa-aikavali)
-                  loppu (second @vapaa-aikavali)]
+           (if (= @valittu-yhteenveto-aikarajaus :valittu-aikakvali)
 
-              (if (and alku loppu)
-                (suorita-raportti raportin-nimi)
-                [:div "Valitse aikaväli"]))
+             ;; Jos käytetään kustomi aikaväliä, katsotaan että molemmat arvot ovat olemassa
+             (let [alku (first @vapaa-aikavali)
+                   loppu (second @vapaa-aikavali)]
 
-            (suorita-raportti raportin-nimi)))]))))
+               (if (and alku loppu)
+                 (suorita-raportti raportin-nimi)
+                 [:div "Valitse aikaväli"]))
+
+             (suorita-raportti raportin-nimi)))]))))

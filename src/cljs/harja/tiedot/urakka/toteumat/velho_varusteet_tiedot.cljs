@@ -44,7 +44,7 @@
                          (filter #(and
                                     (:otsikko %)
                                     (not= (.indexOf (.toLowerCase (:otsikko %))
-                                            (.toLowerCase teksti)) -1))
+                                                    (.toLowerCase teksti)) -1))
                            varustetyypit))]
             (vec (sort-by :otsikko itemit)))))))
 
@@ -60,8 +60,41 @@
       ;; Erityistapaukset, kuten puuttuva kuntoluokka, on avainsanoja.
       (:nimi param))))
 
+(defn hae-toimenpide-id [toimenpide toimenpiteet-nimikkeisto]
+  (let [raakakoodi (when (string? toimenpide)
+                     (last (str/split toimenpide #"/")))]
+    (:id
+     (first
+       (filter (fn [{:keys [otsikko nimi nimiavaruus]}]
+                 (or (= otsikko toimenpide)
+                   (= nimi raakakoodi)
+                   (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
+         toimenpiteet-nimikkeisto)))))
+
+(defn hae-toimenpide-naytolle [toimenpide toimenpiteet-nimikkeisto]
+  (let [raakakoodi (when (string? toimenpide)
+                     (last (str/split toimenpide #"/")))
+        nimike (first
+                 (filter (fn [{:keys [otsikko nimi nimiavaruus]}]
+                           (or (= otsikko toimenpide)
+                             (= nimi raakakoodi)
+                             (= (str/join "/" [nimiavaruus nimi]) toimenpide)))
+                   toimenpiteet-nimikkeisto))]
+    (or (:otsikko nimike)
+      toimenpide)))
+
+(defn rikasta-varusterivi [rivi toimenpiteet-nimikkeisto]
+  (let [toimenpide (:toimenpide rivi)]
+    (cond-> (assoc rivi
+              :toimenpide (hae-toimenpide-naytolle toimenpide toimenpiteet-nimikkeisto)
+              :toimenpide-id (hae-toimenpide-id toimenpide toimenpiteet-nimikkeisto))
+      (:tr-numero rivi) (assoc :tr-osoite (muodosta-tr-osoite rivi)))))
+
 (defn hakuparametrit [{:keys [valinnat]}]
-  (let [varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
+  (let [valinnat (if (:hoitokauden-alkuvuosi valinnat)
+                   valinnat
+                   (assoc valinnat :hoitovuoden-kuukausi nil))
+        varustetyypit (map muodosta-varustetyypin-hakuparametri @varustetyypit)
         kuntoluokat (map muodosta-kuntoluokan-hakuparametri (:kuntoluokat valinnat))
         toimenpide (:toimenpide (:toimenpide valinnat))]
     (merge
@@ -115,7 +148,8 @@
 
   ValitseHoitokausi
   (process-event [{uusi-alkuvuosi :hoitokauden-alkuvuosi} app]
-    (assoc-in app [:valinnat :hoitokauden-alkuvuosi] uusi-alkuvuosi))
+    (cond-> (assoc-in app [:valinnat :hoitokauden-alkuvuosi] uusi-alkuvuosi)
+      (nil? uusi-alkuvuosi) (assoc-in [:valinnat :hoitovuoden-kuukausi] nil)))
 
   ValitseHoitovuodenKuukausi
   (process-event [{hoitovuoden-kuukausi :hoitovuoden-kuukausi} app]
@@ -164,16 +198,12 @@
 
   HaeVarusteetOnnistui
   (process-event [{:keys [vastaus]} app]
-    (reset! varusteet-kartalla/karttataso-varusteet
-      (map (fn [t]
-             (-> t
-               (assoc :tr-osoite (muodosta-tr-osoite t))
-               (assoc :toimenpide-id (:id (first (filter #(= (:otsikko %) (:toimenpide t))
-                                                   (:toimenpiteet-nimikkeisto app)))))))
-        (:toteumat vastaus)))
-    (-> app
-      (assoc :haku-paalla false)
-      (assoc :varusteet (:toteumat vastaus))))
+    (let [varusteet (mapv #(rikasta-varusterivi % (:toimenpiteet-nimikkeisto app))
+                      (:toteumat vastaus))]
+      (reset! varusteet-kartalla/karttataso-varusteet varusteet)
+      (-> app
+        (assoc :haku-paalla false)
+        (assoc :varusteet varusteet))))
 
   HaeVarusteetEpaonnistui
   (process-event [_ app]
@@ -184,11 +214,11 @@
       (assoc :varusteet [])))
 
   HaeVarusteenHistoria
-  (process-event [{{:keys [kohdeluokka ulkoinen-oid]} :varuste} app]
+  (process-event [{{:keys [kohdevarusteen-kohdeluokka kohdevarusteen-oid kohdeluokka ulkoinen-oid]} :varuste} app]
     (tuck-apurit/post! :hae-varusteen-historia
       {:urakka-id @nav/valittu-urakka-id
-       :kohdeluokka kohdeluokka
-       :ulkoinen-oid ulkoinen-oid}
+       :kohdeluokka (or kohdevarusteen-kohdeluokka kohdeluokka)
+       :ulkoinen-oid (or kohdevarusteen-oid ulkoinen-oid)}
       {:onnistui ->HaeVarusteenHistoriaOnnistui
        :epaonnistui ->HaeVarusteenHistoriaEpaonnistui})
     (assoc app :historia-haku-paalla? true))
@@ -197,7 +227,8 @@
   (process-event [{:keys [vastaus]} app]
     (-> app
       (assoc :historia-haku-paalla? false)
-      (assoc-in [:valittu-varuste :historia] vastaus)))
+      (assoc-in [:valittu-varuste :historia]
+        (mapv #(rikasta-varusterivi % (:toimenpiteet-nimikkeisto app)) vastaus))))
 
   HaeVarusteenHistoriaEpaonnistui
   (process-event [{:keys [_]} app]

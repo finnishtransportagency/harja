@@ -9,7 +9,9 @@
   onko-kayttajalla-lisaoikeus-urakkaan onko-kayttaja-organisaatiossa onko-kayttaja-nimella-urakan-organisaatiossa
   onko-jarjestelma? luo-kayttaja<! paivita-kayttaja! piilota-jvh-nimi!
   hae-kayttaja-kayttajanimella hae-urakan-id-sampo-idlla hae-urakoitsijan-id-ytunnuksella
-  hae-organisaatio-y-tunnuksella hae-organisaatio-idlla hae-organisaatio-nimella hae-ely-numerolla)
+  hae-organisaatio-y-tunnuksella hae-organisaatio-idlla hae-organisaatio-nimella hae-ely-numerolla
+  hae-elinvoimakeskus-numerolla jarjestelmakysely-poista-urakan-kayttajien-lisaoikeudet!
+  liikenneviraston-jarjestelma?)
 
 (defn onko-kayttaja-urakan-organisaatiossa? [db urakka-id kayttaja-id]
   (:exists (first (onko-kayttaja-urakan-organisaatiossa db urakka-id kayttaja-id))))

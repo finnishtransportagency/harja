@@ -11,9 +11,9 @@
 
 (def jarjestelma-fixture
   (laajenna-integraatiojarjestelmafixturea kayttaja
-                                           :api-urakat (component/using
-                                                         (api-urakat/->Urakat)
-                                                         [:http-palvelin :db :integraatioloki])))
+    :api-urakat (component/using
+                  (api-urakat/->Urakat)
+                  [:http-palvelin :db :integraatioloki])))
 
 (use-fixtures :once jarjestelma-fixture)
 
@@ -25,7 +25,7 @@
     "Pinnan tasaus"
     "Pistehiekoitus"
     "Sulamisveden haittojen torjunta"
-    "Suolaus"
+    "Liukkaudentorjunta suolaamalla (materiaali)"
     "L- ja p-alueiden puhdistus"
     "Koneellinen niitto"
     "Koneellinen vesakonraivaus"
@@ -60,15 +60,15 @@
     (let [kokonaishintaiset (get-in encoodattu-body [:urakka :tehtavat :kokonaishintaiset])
           yksikkohintaiset (get-in encoodattu-body [:urakka :tehtavat :yksikkohintaiset])]
       (is (some #{"Auraus ja sohjonpoisto"}
-             (set (distinct (map (comp :selite :tehtava) kokonaishintaiset)))))
-      (is (= 34 (count yksikkohintaiset)))
+            (set (distinct (map (comp :selite :tehtava) kokonaishintaiset)))))
+      (is (= 60 (count yksikkohintaiset)))
       (is (= materiaalien-lkm (count (get-in encoodattu-body [:urakka :materiaalit])))))))
 
 (deftest urakan-haku-idlla-ei-toimi-ilman-oikeuksia
   (let [_ (anna-lukuoikeus "Erkki Esimerkki")
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/" urakka] "Erkki Esimerkki" portti)]
     (is (= 403 (:status vastaus)))
-    (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki" ))))
+    (is (.contains (:body vastaus) "Tuntematon käyttäjätunnus: Erkki Esimerkki"))))
 
 (deftest urakan-haku-ytunnuksella-toimii
   (let [ytunnus "1565583-5"

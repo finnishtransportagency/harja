@@ -12,8 +12,7 @@
 
 (defn- laskenta-modaali [paatos]
   (let [keskiarvo (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1) "," "."))
-        alkuperainen (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) "," "."))
-        pistelukujen-muutos (fmt/desimaaliluku-opt (* 100 (/ (- keskiarvo alkuperainen) keskiarvo)) 1)]
+        alkuperainen (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) "," "."))]
     [:div
      [:div.flex-row
       [:p.laskenta-rivi "Hoitovuoden päätyttyä lasketaan hoitovuotta edeltävän syyskuun ja hoitovuoden elokuun välisten
@@ -33,9 +32,16 @@
         [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
         [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]])
 
+     ;; Jos kaikkia indeksikuukausia ei ole vielä hallintaan lisätty, niin näytetään nolla arvoilla puuttuvat kuukaudet
+     (when (> (count (:puuttuvat_kuukaudet paatos)) 0)
+       (for* [kuukausi (:puuttuvat_kuukaudet paatos)]
+         [:div.flex-row.kuukausi-rivi
+          [:div (str/join " " (reverse (str/split (:kuukausi kuukausi) #"\s+")))]
+          [:div (fmt/desimaaliluku-opt (:indeksiluku kuukausi) 1)]]))
+
      (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
        [yleiset/info-laatikko :vahva-ilmoitus
-       "Kaikkien kuukausien indeksin pistelukua ei ole vielä saatavilla."
+        "Kaikkien kuukausien indeksin pistelukua ei ole vielä saatavilla."
         nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
      [:hr.hr-tiivis]
@@ -54,24 +60,26 @@
          [:span (fmt/desimaaliluku-opt (:indeksiluku k) 1) " + "])
        (str " ... / " (count (:hoitokauden_kuukaudet paatos)) ")")
        (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")]
-      [:div pistelukujen-muutos " %"]]]))
+      [:div (:pistelukujen_muutos_prosentteina paatos) " %"]]]))
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :hoidonjohtopalkkion-muutos
+  (let [paatos-avain :indeksikorjaus
         paatos-tehty? (some? (:id paatos))
-
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
+
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
+
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Hoitovuoden lopun indeksikorjaus" paatos-tehty? paatos-avain avatut-paatokset
       (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         (if-not (:virhe paatos)
           [:div
            [:div.flex-row.lista-rivi
             [:div "Hoitovuoden alun indeksikorjattu tavoitehinta"]
-            [:div [:strong (fmt/euro-opt false (:tavoitehinta paatos))]]]
+            [:div [:strong (fmt/euro-opt false (:hv_alun_indkorj_tavoitehinta paatos))]]]
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Tavoitehinnan muutokset"]
@@ -79,7 +87,7 @@
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta"]
-            [:div [:strong (fmt/euro-opt false (:tavoitehinta_ennen paatos))]]]
+            [:div [:strong (fmt/euro-opt false (:hv_lopun_tavoitehinta_ennen_indkorj paatos))]]]
 
            [:div.flex-row.lista-rivi-korkeampi
             [:div "Indeksin pistelukujen muutos"]
@@ -109,7 +117,12 @@
            [:hr.paatos-hr]
 
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+            ;; Vahvista
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
-            #(e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos))]]
+            ;; Peru päätös
+            #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                   paatos
+                   (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]
+
           [:div.muokkaustoiminnot
            [yleiset/info-laatikko :neutraali (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))

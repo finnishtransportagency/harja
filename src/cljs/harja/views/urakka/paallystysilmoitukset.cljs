@@ -5,7 +5,6 @@
             [cljs-time.core :as t]
 
             [harja.ui.grid :as grid]
-            [harja.ui.debug :refer [debug]]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.komponentti :as komp]
             [harja.ui.napit :as napit]
@@ -76,28 +75,28 @@
 
 (defn- lahetys-yha-nappi [e! {:keys [oikeus urakka-id sopimus-id vuosi paallystysilmoitus kohteet-yha-lahetyksessa]}]
   (let [lahetys-kaynnissa-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa]
-                                                          (if (not-empty kohteet-yha-lahetyksessa)
-                                                            (conj kohteet-yha-lahetyksessa %)
-                                                            #{%})))
+                                    (if (not-empty kohteet-yha-lahetyksessa)
+                                      (conj kohteet-yha-lahetyksessa %)
+                                      #{%})))
         lahetys-tehty-fn #(e! (paallystys/->MuutaTila [:kohteet-yha-lahetyksessa]
-                                                      (disj kohteet-yha-lahetyksessa %)))
+                                (disj kohteet-yha-lahetyksessa %)))
         kun-onnistuu-fn #(e! (paallystys/->YHAVientiOnnistui %))
         kun-virhe-fn #(e! (paallystys/->YHAVientiEpaonnistui %))
         kohde-id (:paallystyskohde-id paallystysilmoitus)]
     [napit/palvelinkutsu-nappi
      (ikonit/ikoni-ja-teksti (ikonit/envelope) "Lähetä")
-     #(do 
+     #(do
         (log "[YHA] Lähetetään urakan (id:" urakka-id ") sopimuksen (id: " sopimus-id ") kohde (id" (pr-str kohde-id) ") YHA:n")
         (lahetys-kaynnissa-fn kohde-id)
-        (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id 
-                                        :sopimus-id sopimus-id 
-                                        :kohde-idt kohde-id 
+        (k/post! :laheta-kohteet-yhaan {:urakka-id urakka-id
+                                        :sopimus-id sopimus-id
+                                        :kohde-idt kohde-id
                                         :vuosi vuosi}
-           nil
-           true)) 
+          nil
+          true))
      {:luokka :napiton-nappi
       :disabled (or false
-                    (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
+                  (not (oikeudet/on-muu-oikeus? "sido" oikeus urakka-id @istunto/kayttaja)))
       :virheviestin-nayttoaika viesti/viestin-nayttoaika-pitka
       :kun-valmis #(do
                      ;; Tämä on jätetty tähän, koska paallystysilmoitukset atomia käytetään muuallakin kuin
@@ -120,15 +119,15 @@
         lahetys-kesken? (contains? kohteet-yha-lahetyksessa kohde-id)
         ilmoituksen-voi-lahettaa? (fn [{:keys [paatos-tekninen-osa tila] :as paallystysilmoitus}]
                                     (and (= :hyvaksytty paatos-tekninen-osa)
-                                         (contains? #{:valmis :lukittu} tila)
-                                         (not lahetys-kesken?)))
+                                      (contains? #{:valmis :lukittu} tila)
+                                      (not lahetys-kesken?)))
         ilmoitus-on-lahetetty? (fn [{:keys [lahetys-onnistunut]}]
                                  (true? lahetys-onnistunut))
 
         nayta-kielto? (<= valittu-urakan-vuosi 2019)
         nayta-nappi? (and (or (not (ilmoitus-on-lahetetty? rivi))
-                              muokattu-yhaan-lahettamisen-jalkeen?)
-                          (ilmoituksen-voi-lahettaa? rivi))
+                            muokattu-yhaan-lahettamisen-jalkeen?)
+                       (ilmoituksen-voi-lahettaa? rivi))
         nayta-lahetyksen-aika? (ilmoitus-on-lahetetty? rivi)
         nayta-lahetyksen-virhe? (lahetys-epaonnistunut? rivi)]
     (cond
@@ -174,7 +173,7 @@
         :voi-kumota? false
         :voi-poistaa? (constantly false)
         :voi-muokata? true
-        :piilota-muokkaus? (when paikkauskohteet? true)     ; piilottaa muokkausnapin, kun sitä ei paikkauskohteiden kautta tarkastellessa käytetä
+        :piilota-muokkaus? (when paikkauskohteet? true) ; piilottaa muokkausnapin, kun sitä ei paikkauskohteiden kautta tarkastellessa käytetä
         :piilota-toiminnot? true
         :data-cy "paallystysilmoitukset-grid"}
        [{:otsikko "Kohde\u00ADnumero" :nimi :kohdenumero :muokattava? (constantly false) :tyyppi :string :leveys 14}
@@ -193,7 +192,7 @@
          :tyyppi :komponentti :leveys 25
          :komponentti kuvaile-ilmoituksen-tila}
         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                   (< 2019 valittu-urakan-vuosi))
+                (< 2019 valittu-urakan-vuosi))
           {:otsikko "Lähetys YHA:an" :nimi :lahetys-yha :muokattava? (constantly false) :tyyppi :reagent-komponentti
            :leveys 25
            :komponentti laheta-pot-yhaan-komponentti
@@ -222,46 +221,44 @@
                       :position "relative"
                       :top "28px"}}
         (when-not paikkauskohteet?
-          [:h3.inline-block "Päällystysilmoitukset"])
-        (when-not paikkauskohteet?
-          [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))
-           {:margin-left "24px"}])]
+          [pot2-lomake/avaa-materiaalikirjasto-nappi #(e! (mk-tiedot/->NaytaModal true))])]
        [paallystysilmoitukset-taulukko e! app]
        (when-not paikkauskohteet?
          [yleiset/vihje "Tilaajan täytyy hyväksyä ilmoitus ennen kuin se voidaan lähettää YHA:an"])])))
 
 (defn valinnat [e! {:keys [urakka pot-jarjestys]}]
-  [:div.paallystys-valinnat
-   
-   [valinnat/vuosi {:vayla-tyyli? true}
-    (t/year (:alkupvm urakka))
-    (t/year (:loppupvm urakka))
-    urakka/valittu-urakan-vuosi
-    #(do
-       (urakka/valitse-urakan-vuosi! %)
-       (e! (paallystys/->HaePaallystysilmoitukset)))]
-   
-   [yleiset/pudotusvalikko
-    "Järjestä kohteet"
-    {:valinta pot-jarjestys
-     :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
-     :vayla-tyyli? true
-     :format-fn {:tila "Tilan mukaan"
-                 :kohdenumero "Kohdenumeron mukaan"
-                 :muokkausaika "Muokkausajan mukaan"}}
-    [:tila :kohdenumero :muokkausaika]]
-   
-   [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [valittu-arvo]
-                                                                         ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
-                                                                         ;; joskus refaktoroitua
-                                                                         (reset! yllapito-tiedot/kohdenumero valittu-arvo)
-                                                                         (e! (paallystys/->SuodataYllapitokohteet)))]
-   [u-valinnat/tienumero yllapito-tiedot/tienumero (fn [valittu-arvo]
-                                                     ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
-                                                     ;; joskus refaktoroitua
-                                                     (reset! yllapito-tiedot/tienumero valittu-arvo)
-                                                     (e! (paallystys/->SuodataYllapitokohteet)))
-    {:otsikon-luokka "alasvedon-otsikko-vayla"}]])
+  [:div
+   [:div
+    [:span
+     [yleiset/pudotusvalikko
+      "Järjestä kohteet"
+      {:valinta pot-jarjestys
+       :valitse-fn #(e! (paallystys/->JarjestaYllapitokohteet %))
+       :vayla-tyyli? true
+       :format-fn {:tila "Tilan mukaan"
+                   :kohdenumero "Kohdenumeron mukaan"
+                   :muokkausaika "Muokkausajan mukaan"}}
+      [:tila :kohdenumero :muokkausaika]]]
+
+    [valinnat/vuosi {:vayla-tyyli? true}
+     (t/year (:alkupvm urakka))
+     (t/year (:loppupvm urakka))
+     urakka/valittu-urakan-vuosi
+     #(do
+        (urakka/valitse-urakan-vuosi! %)
+        (e! (paallystys/->HaePaallystysilmoitukset)))]]
+
+   [:div [u-valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero (fn [valittu-arvo]
+                                                                               ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
+                                                                               ;; joskus refaktoroitua
+                                                                               (reset! yllapito-tiedot/kohdenumero valittu-arvo)
+                                                                               (e! (paallystys/->SuodataYllapitokohteet)))]
+    [u-valinnat/tienumero yllapito-tiedot/tienumero (fn [valittu-arvo]
+                                                      ;; Tämänkin voi ottaa pois, jos koko ylläpidon saa
+                                                      ;; joskus refaktoroitua
+                                                      (reset! yllapito-tiedot/tienumero valittu-arvo)
+                                                      (e! (paallystys/->SuodataYllapitokohteet)))
+     {:otsikon-luokka "alasvedon-otsikko"}]]])
 
 (defn paallystysilmoitukset
   [e! app]
@@ -281,18 +278,17 @@
        (when-not (and paikkauskohteet? paallystysilmoitus-lomakedata)
          [:<>
           [kartta/kartan-paikka]])
-       [debug app {:otsikko "TUCK STATE"}]
        ;; Toistaiseksi laitetaan sekä POT1 että POT2 tarvitsemat tiedot avaimeen
        ;; paallystysilmoitus-lomakedata, mutta tiedot tallennetaan eri rakenteella
        ;; Muistattava asettaa lomakedata arvoon nil, aina kun poistutaan lomakkeelta
        (if paallystysilmoitus-lomakedata
          (if (= 1 (get-in paallystysilmoitus-lomakedata [:perustiedot :versio]))
-               [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
-               [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
-                                                              :massat :murskeet :materiaalikoodistot
-                                                              :pot2-massa-lomake :pot2-murske-lomake
-                                                              :paikkauskohteet?})
-                lukko urakka kayttaja])
+           [pot1-lomake/pot1-lomake e! paallystysilmoitus-lomakedata lukko urakka kayttaja]
+           [pot2-lomake/pot2-lomake e! (select-keys app #{:paallystysilmoitus-lomakedata
+                                                          :massat :murskeet :materiaalikoodistot
+                                                          :pot2-massa-lomake :pot2-murske-lomake
+                                                          :paikkauskohteet?})
+            lukko urakka kayttaja])
          (when-not paikkauskohteet?
            [:div
             [valinnat e! (select-keys app #{:urakka :pot-jarjestys})]

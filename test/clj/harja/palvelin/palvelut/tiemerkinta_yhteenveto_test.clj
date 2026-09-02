@@ -60,10 +60,10 @@
        "INSERT INTO tiemerkinta_korjauskustannus (urakka,luoja,luotu,muokattu,muokkaaja,kustannusvuosi,kustannus,pk1,pk2,pk3) 
         VALUES
         (
-        (SELECT id FROM urakka WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024')::INT,
+        (SELECT id FROM urakka WHERE nimi = 'Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P')::INT,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,
-        '2025-06-07 11:32:45.526504',
-        '2025-06-07 11:32:45.524',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,
         %s,
         %s,
@@ -79,8 +79,8 @@
         VALUES (
         (SELECT id FROM yllapitokohde WHERE nimi = 'Ouluntie 2')::INT,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,
-        '2025-06-08 22:16:02.354937',
-        '2025-06-08 22:16:02.354',
+        CURRENT_TIMESTAMP,
+        CURRENT_TIMESTAMP,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')::INT,
         %s,
         %s,
@@ -89,9 +89,10 @@
 
 
 (defn- lisaa-tiemerkinta-sanktio [selite summa urakka-id]
-  (let [tehty (pvm/->pvm-aika "01.02.2025 00:00")
-        alku (pvm/->pvm-aika "01.01.2025 00:00")
-        loppu (pvm/->pvm-aika "12.12.2025 00:00")
+  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+        tehty (pvm/->pvm-aika (str "01.02." nykyinen-vuosi " 00:00"))
+        alku (pvm/->pvm-aika (str "01.01." nykyinen-vuosi " 00:00"))
+        loppu (pvm/->pvm-aika (str "12.12." nykyinen-vuosi " 00:00"))
         toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Tiemerkinnän TP'"))
         params {:sanktio {:kasittelyaika tehty,
                           :suorasanktio true,
@@ -116,9 +117,10 @@
 
 
 (defn- lisaa-tiemerkinta-bonus [selite summa urakka-id]
-  (let [tehty (pvm/->pvm-aika "02.01.2025 00:00")
-        alku (pvm/->pvm-aika "01.01.2025 00:00")
-        loppu (pvm/->pvm-aika "12.12.2025 00:00")
+  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+        tehty (pvm/->pvm-aika (str "02.01." nykyinen-vuosi " 00:00"))
+        alku (pvm/->pvm-aika (str "01.01." nykyinen-vuosi " 00:00"))
+        loppu (pvm/->pvm-aika (str "12.12." nykyinen-vuosi " 00:00"))
         toimenpideinstanssi (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE nimi = 'Tiemerkinnän TP'"))
         params {:sanktio {:id nil,
                           :laji :yllapidon_bonus,
@@ -145,9 +147,10 @@
 
 
 (defn- lisaa-tiemerkinta-muu-kustannus [maara tyyppi selite urakka sopimus yp-luokka]
-  (let [tehty (pvm/->pvm-aika "02.02.2025 00:00")
-        alku (pvm/->pvm-aika "01.01.2025 00:00")
-        loppu (pvm/->pvm-aika "01.01.2026 00:00")
+  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+        tehty (pvm/->pvm-aika (str "02.02." nykyinen-vuosi " 00:00"))
+        alku (pvm/->pvm-aika (str "01.01." nykyinen-vuosi " 00:00"))
+        loppu (pvm/->pvm-aika (str "01.01." (inc nykyinen-vuosi) " 00:00"))
         params {:toteumat [{:id nil,
                             :pvm tehty,
                             :hinta maara,
@@ -167,10 +170,11 @@
   ;; Halutaan erityisesti testata prosenttilaskelmat
   (tyhjenna-tiemerkinta-tietokanta-kokonaan)
 
-  (let [alkuaika (pvm/->pvm-aika "01.01.2025 00:00")
-        loppuaika (pvm/->pvm-aika "01.01.2026 00:00")
-        urakka-id (hae-urakan-id-nimella "Oulun tiemerkinnän palvelusopimus 2017-2024")
-        sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE nimi = 'Oulun tiemerkinnän palvelusopimus 2017-2024';"))
+  (let [nykyinen-vuosi (pvm/vuosi (pvm/nyt))
+        alkuaika (pvm/->pvm-aika (str "01.01." nykyinen-vuosi " 00:00"))
+        loppuaika (pvm/->pvm-aika (str "01.01." (inc nykyinen-vuosi) " 00:00"))
+        urakka-id (hae-urakan-id-nimella "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P")
+        sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE nimi = 'Utajärven Tiemerkintäurakka Sopimus';"))
         paasopimus-id (ffirst (q "SELECT id FROM sopimus WHERE nimi = 'Oulun tiemerkinnän palvelusopimuksen pääsopimus 2017-2024'"))
 
         params {:kaikki? false,
@@ -178,7 +182,7 @@
                 :valittu-aikavali [alkuaika loppuaika],
                 :urakan-tiedot {:id urakka-id
                                 :alkupvm (pvm/->pvm-aika "01.01.2017 00:00")
-                                :loppupvm (pvm/->pvm-aika "01.01.2026 00:00")}}
+                                :loppupvm (pvm/->pvm-aika "01.01.2027 00:00")}}
 
         yhteenvedon-sarakkeet [:kustannus
                                :pk1-hinta
@@ -216,17 +220,17 @@
     (testing "Yhteenvedon Tiemerkintöjen korjaus laskennat toimii"
       (let [_ (tyhjenna-tiemerkinta-tietokanta-kokonaan)
             ;; -----------------------------------
-            ;; Lisää toteuma 2025 
+            ;; Lisää toteuma nykyiselle vuodelle
             korjaus-yht-maara 5000.0
             pk1-prosentti 25.0
             pk2-prosentti 25.0
             pk3-prosentti 50.0
-            _ (lisaa-korjauskustannus 2025 korjaus-yht-maara pk1-prosentti pk2-prosentti pk3-prosentti)
+            _ (lisaa-korjauskustannus nykyinen-vuosi korjaus-yht-maara pk1-prosentti pk2-prosentti pk3-prosentti)
 
             ;; Hae tiedot uudelleen
             vastaus (tee-kutsu :hae-tiemerkinta-yhteenveto params)
 
-            ;; Dataa pitäisi löytyä 2025 vuodelta 
+            ;; Dataa pitäisi löytyä nykyiseltä vuodelta
             _ (is (not (kaikki-sarakkeet-tyhjia? vastaus)) "Yhteenvedon sarakkeet EI pitäisi näyttää nollaa")
 
             ;; Hae vastauksesta korjauskustannukset
@@ -278,14 +282,14 @@
       (let [_ (tyhjenna-tiemerkinta-tietokanta-kokonaan)
             ;; -----------------------------------
             ;; Lisää sakko
-            selite "Sakko 2025"
+            selite (str "Sakko " nykyinen-vuosi)
             odotettu-maara 100
             _ (lisaa-tiemerkinta-sanktio selite odotettu-maara urakka-id)
 
             ;; Hae tiedot uudelleen
             vastaus (tee-kutsu :hae-tiemerkinta-yhteenveto params)
 
-            ;; Dataa pitäisi löytyä 2025 vuodelta 
+            ;; Dataa pitäisi löytyä nykyiseltä vuodelta
             _ (is (not (kaikki-sarakkeet-tyhjia? vastaus)) "Yhteenvedon sarakkeet EI pitäisi näyttää nollaa - sakko")
 
             ;; Hae vastauksesta sakot 
@@ -297,7 +301,7 @@
 
             ;; -----------------------------------
             ;; Lisää bonus 
-            selite "Bonus 2025"
+            selite (str "Bonus " nykyinen-vuosi)
             odotettu-maara 1000
             _ (lisaa-tiemerkinta-bonus selite odotettu-maara urakka-id)
 

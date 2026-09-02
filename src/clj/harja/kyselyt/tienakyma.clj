@@ -3,6 +3,9 @@
             [harja.geo :as geo]
             [harja.kyselyt.konversio :as konv]))
 
+(declare hae-ilmoitukset hae-laatupoikkeamat hae-reittipisteet hae-turvallisuuspoikkeamat hae-tarkastukset
+  hae-toteumat)
+
 (def muunna-tehtavat
   (comp (fn [rivi]
           (update rivi :tehtavat

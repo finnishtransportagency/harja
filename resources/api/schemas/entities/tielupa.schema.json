@@ -70,9 +70,25 @@
           "id": "urn:harja/tielupa/perustiedot/katselmus-url",
           "type": "string"
         },
+        "elinvoimakeskus": {
+          "id": "urn:harja/tielupa/perustiedot/elinvoimakeskus",
+          "required": false,
+          "enum": [
+            "Uusimaa",
+            "Lounais-Suomi",
+            "Kaakkois-Suomi",
+            "Sisä-Suomi",
+            "Keski-Suomi",
+            "Itä-Suomi",
+            "Etelä-Pohjanmaa",
+            "Pohjanmaa",
+            "Pohjois-Suomi",
+            "Lappi"
+          ]
+        },
         "ely": {
           "id": "urn:harja/tielupa/perustiedot/ely",
-          "required": true,
+          "required": false,
           "enum": [
             "Uusimaa",
             "Keski-Suomi",
@@ -570,9 +586,15 @@
           "id": "urn:harja/tielupa/mainosilmoitus/korvaava-paatos",
           "type": "boolean"
         },
+        "tiedoksi-hallintoyksikkoon": {
+          "id": "urn:harja/tielupa/mainosilmoitus/tiedoksi-hallintoyksikkoon",
+          "type": "boolean",
+          "required": false
+        },
         "tiedoksi-elykeskukselle": {
           "id": "urn:harja/tielupa/mainosilmoitus/tiedoksi-elykeskukselle",
-          "type": "boolean"
+          "type": "boolean",
+          "required": false
         },
         "asemakaava-alueella": {
           "id": "urn:harja/tielupa/mainosilmoitus/asemakaava-alueella",
@@ -625,9 +647,15 @@
           "id": "urn:harja/tielupa/mainosilmoitus/korvaava-paatos",
           "type": "boolean"
         },
+        "tiedoksi-hallintoyksikkoon": {
+          "id": "urn:harja/tielupa/mainosilmoitus/tiedoksi-hallintoyksikkoon",
+          "type": "boolean",
+          "required": false
+        },
         "tiedoksi-elykeskukselle": {
           "id": "urn:harja/tielupa/mainosilmoitus/tiedoksi-elykeskukselle",
-          "type": "boolean"
+          "type": "boolean",
+          "required": false
         },
         "asemakaava-alueella": {
           "id": "urn:harja/tielupa/mainoslupa/asemakaava-alueella",

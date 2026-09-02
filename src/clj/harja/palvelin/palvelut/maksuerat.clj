@@ -44,19 +44,20 @@
   [db user urakka-id]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-maksuerat user urakka-id)
   (log/debug "Haetaan maksuerät urakalle: " urakka-id)
-  (let [summat (into {}
-                     (map (juxt :tpi_id identity))
-                     (q/hae-urakan-maksueran-summat db urakka-id))
+  (let [urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        summat (into {}
+                 (map (juxt :tpi_id identity))
+                 (q/hae-urakan-maksueran-summat db urakka-id))
         maksuerat (into []
-                        (comp maksuera-xf
-                              (map (fn [maksuera]
-                                     (let [tpi (get-in maksuera [:toimenpideinstanssi :id])
-                                           tyyppi (get-in maksuera [:maksuera :tyyppi])]
-                                       (assoc-in maksuera
-                                                 [:maksuera :summa]
-                                                 (get-in summat [tpi tyyppi]))))))
-                        (q/hae-urakan-maksuerat db urakka-id))]
-    maksuerat))
+                    (comp maksuera-xf
+                      (map (fn [maksuera]
+                             (let [tpi (get-in maksuera [:toimenpideinstanssi :id])
+                                   tyyppi (get-in maksuera [:maksuera :tyyppi])]
+                               (assoc-in maksuera
+                                 [:maksuera :summa]
+                                 (get-in summat [tpi tyyppi]))))))
+                    (q/hae-urakan-maksuerat db urakka-id))]
+    (mapv #(assoc % :urakan-parametrit urakan-parametrit) maksuerat)))
 
 (defn laheta-maksuerat-sampoon
   "Palvelu, joka lähettää annetut maksuerät Sampoon."

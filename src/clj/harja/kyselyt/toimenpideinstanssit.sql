@@ -1,7 +1,7 @@
 -- name: luo-toimenpideinstanssi<!
 -- Luo uuden toimenpideinstanssin.
 INSERT INTO toimenpideinstanssi (sampoid, nimi, alkupvm, loppupvm, vastuuhenkilo_id, talousosasto_id, talousosastopolku,
-                                 tuote_id, tuotepolku, urakka_sampoid, toimenpide, urakka)
+                                 tuote_id, tuotepolku, urakka_sampoid, toimenpide, urakka, luoja, luotu)
 VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_id, :talousosasto_polku, :tuote_id,
                   :tuote_polku, :urakka_sampoid,
                   (SELECT id
@@ -9,11 +9,11 @@ VALUES (:sampoid, :nimi, :alkupvm, :loppupvm, :vastuuhenkilo_id, :talousosasto_i
                    WHERE koodi = :sampo_toimenpidekoodi),
         (SELECT id
          FROM urakka
-         WHERE sampoid = :urakka_sampoid));
+         WHERE sampoid = :urakka_sampoid), (select id from kayttaja where kayttajanimi = 'Integraatio'), NOW());
 
 -- name: luo-yllapidon-toimenpideinstanssi<!
 -- Luo uuden ylläpidon toimenpideinstanssin.
-INSERT INTO toimenpideinstanssi (nimi, alkupvm, loppupvm, toimenpide, urakka)
+INSERT INTO toimenpideinstanssi (nimi, alkupvm, loppupvm, toimenpide, urakka, luoja, luotu)
 VALUES ((SELECT nimi
          from toimenpide
          WHERE koodi = :toimenpidekoodi),
@@ -21,7 +21,7 @@ VALUES ((SELECT nimi
         (SELECT id
          from toimenpide
          WHERE koodi = :toimenpidekoodi),
-        :urakkaid);
+        :urakkaid, (select id from kayttaja where kayttajanimi = 'Integraatio'), NOW());
 
 -- name: onko-tuotu-samposta
 -- Tarkistaa onko Samposta tuodulla urakalla jo toimenpidekoodilla tuotu toimenpideinstanssi
@@ -52,7 +52,9 @@ SET
                        WHERE koodi = :sampo_toimenpidekoodi),
   urakka            = (SELECT id
                        FROM urakka
-                       WHERE sampoid = :urakka_sampoid)
+                       WHERE sampoid = :urakka_sampoid),
+  muokattu          = NOW(),
+  muokkaaja         = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE id = :id;
 
 -- name: hae-id-sampoidlla
@@ -67,7 +69,9 @@ UPDATE toimenpideinstanssi
 SET urakka = (
   SELECT id
   FROM urakka
-  WHERE sampoid = :urakka_sampoid)
+  WHERE sampoid = :urakka_sampoid),
+    muokattu = NOW(),
+    muokkaaja = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE urakka_sampoid = :urakka_sampoid;
 
 -- name: hae-urakan-toimenpideinstanssi

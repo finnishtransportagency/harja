@@ -14,6 +14,8 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/yleinen.sql")
 
+(declare hae-kontekstin-urakat hae-kontekstin-elinvoimakeskukset)
+
 (def materiaalitoteumien-paivitysinfo
   "Ympäristö- ja materiaaliraporttien laskelmat päivitetään kerran vuorokaudessa raporttien nopeuttamiseksi. Laskenta tehdään öisin, eli uudet arvot näkyvät raportilla seuraavana päivänä. Jos haluat tarkistaa tänään syötettyjä arvoja, voit tehdä sen Toteumat-osion välilehdiltä Suola ja Materiaalit.")
 
@@ -210,7 +212,7 @@
                                  (urakka/vesivaylaurakkatyyppi? (-> parametrit :urakkatyyppi first keyword)))
                               "V" "T")]
      (into []
-           (hae-kontekstin-hallintayksikot db {:liikennemuoto liikennemuoto})))
+           (hae-kontekstin-elinvoimakeskukset db {:liikennemuoto liikennemuoto})))
     (into []
           (hae-kontekstin-urakat db parametrit))))
 

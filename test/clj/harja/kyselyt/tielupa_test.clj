@@ -41,7 +41,8 @@
    ::tielupa/otsikko "Testilupa mainosten pystyttämiseen"
    ::tielupa/hakija-postinosoite "Liitintie 1"
    ::tielupa/urakoiden-nimet ["Oulu"]
-   ::tielupa/ely 12
+   ::tielupa/elinvoimakeskus_id 1
+   ::tielupa/ely 1
    ::tielupa/kohde-postinumero "90900"
    ::tielupa/ulkoinen-tunniste testiluvan-ulkoinen-tunniste
    ::tielupa/hakija-maakoodi "FI"
@@ -74,22 +75,31 @@
 
 (deftest tallenna-tielupa
   (let [db (:db jarjestelma)
+        tallennettu-yhteyshenkilo "Lilli Liikenteenohjaaja"
         hae-maara #(ffirst (q "select count (id) from tielupa;"))
         maara-alussa (hae-maara)
-        maara-luonnin-jalkeen (+ maara-alussa 1)]
+        maara-luonnin-jalkeen (+ maara-alussa 1)
+        tallennettu (tielupa-q/hae-ulkoisella-tunnistella db testiluvan-ulkoinen-tunniste)]
 
     ;; uuden luominen
     (tielupa-q/tallenna-tielupa db testitielupa)
-    (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db 666123)))
+    (is (true? (tielupa-q/onko-olemassa-ulkoisella-tunnisteella? db testiluvan-ulkoinen-tunniste)))
     (is (= maara-luonnin-jalkeen (hae-maara)))
+    (is tallennettu-yhteyshenkilo (::tielupa/tienpitoviranomainen-yhteyshenkilo tallennettu))
+    (is 1 (::tielupa/elinvoimakeskus_id tallennettu))
+    (is 1 (::tielupa/ely tallennettu))
 
     ;; paivittaminen ulkoisella tunnisteella
     (let [paivitetty-yhteyshenkilo "Teijo 'TESTIMIES' Tienpitäjä"
-          paivitettava (assoc testitielupa ::tielupa/tienpitoviranomainen-yhteyshenkilo paivitetty-yhteyshenkilo)
+          paivitettava (assoc testitielupa ::tielupa/tienpitoviranomainen-yhteyshenkilo paivitetty-yhteyshenkilo
+                         ::tielupa/elinvoimakeskus_id 9
+                         ::tielupa/ely 12)
           paivitetty (tielupa-q/hae-ulkoisella-tunnistella db testiluvan-ulkoinen-tunniste)]
       (tielupa-q/tallenna-tielupa db paivitettava)
       (is (= maara-luonnin-jalkeen (hae-maara)))
-      (is paivitetty-yhteyshenkilo (::tielupa/tienpitoviranomainen-yhteyshenkilo paivitetty)))
+      (is paivitetty-yhteyshenkilo (::tielupa/tienpitoviranomainen-yhteyshenkilo paivitetty))
+      (is 9 (::tielupa/elinvoimakeskus_id paivitetty))
+      (is 12 (::tielupa/ely paivitetty)))
 
     ;; paivittaminen Harjan id:lla
     (let [id (::tielupa/id (tielupa-q/hae-ulkoisella-tunnistella db testiluvan-ulkoinen-tunniste))

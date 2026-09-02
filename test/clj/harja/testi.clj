@@ -598,6 +598,12 @@
 (defn hae-urakoitsijan-id-ytunnuksella [ytunnus]
   (ffirst (q (str "SELECT id FROM organisaatio WHERE tyyppi = 'urakoitsija' AND ytunnus = '" ytunnus "';"))))
 
+(defn hae-urakan-laskutusraja
+  "Hakee laskutusrajan urakka_tavoite-taulusta"
+  [urakka-id]
+  (:laskutusraja (first (q-map (format "SELECT laskutusraja FROM urakka_tavoite
+                                        WHERE urakka = %s AND hoitokausi = 1" urakka-id)))))
+
 (defn kutsu-http-palvelua
   "Lyhyt muoto testijärjestelmän HTTP palveluiden kutsumiseen."
   ([nimi kayttaja]
@@ -607,6 +613,7 @@
 
 (def testikayttajien-lkm (atom nil))
 (def pohjois-pohjanmaan-hallintayksikon-id (atom nil))
+(def pohjois-suomen-evk-id (atom nil))
 (def oulun-alueurakan-2005-2010-id (atom nil))
 (def oulun-alueurakan-2014-2019-id (atom nil))
 (def tampereen-alueurakan-2017-2022-id (atom nil))
@@ -892,6 +899,11 @@
                    FROM   urakka
                    WHERE  nimi = 'POP MHU Kajaani 2025-2030'"))))
 
+(defn hae-kajaanin-maanteiden-hoitourakan-2025-2030-sopimus-id []
+  (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
+                   FROM   urakka
+                   WHERE  nimi = 'POP MHU Kajaani 2025-2030')"))))
+
 (defn hae-kajaani-hoitourakan-2025-2030-sopimus-id []
   (ffirst (q (str "SELECT id FROM sopimus where urakka = (SELECT id
                    FROM   urakka
@@ -990,7 +1002,19 @@
 (defn hae-pohjois-pohjanmaan-hallintayksikon-id []
   (ffirst (q (str "SELECT id
                    FROM   organisaatio
-                   WHERE  nimi = 'Pohjois-Pohjanmaa'"))))
+                   WHERE  nimi = 'Pohjois-Pohjanmaa' and tyyppi = 'hallintayksikko'"))))
+
+(defn hae-hallintoyksikon-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                   FROM   organisaatio
+                   WHERE  tyyppi = 'hallintayksikko' and nimi = '%s'"
+               nimi))))
+
+(defn hae-pohjois-suomen-evk-id []
+  (ffirst (q (str "SELECT id
+                   FROM   organisaatio
+                   WHERE  nimi = 'Pohjois-Suomi' AND tyyppi = 'elinvoimakeskus'"))))
+
 
 (defn hae-oulun-alueurakan-toimenpideinstanssien-idt []
   (into [] (flatten (q (str "SELECT tpi.id
@@ -1030,6 +1054,12 @@
   (ffirst (q (format "SELECT id
                       FROM   organisaatio
                       WHERE  nimi = '%s';"
+               nimi))))
+
+(defn hae-elinvoimakeskus-id-nimella [nimi]
+  (ffirst (q (format "SELECT id
+                      FROM   organisaatio
+                      WHERE  nimi = '%s' AND tyyppi = 'elinvoimakeskus';"
                nimi))))
 
 (defn hae-kayttajan-id-kayttajanimella [kayttajanimi]
@@ -1141,6 +1171,12 @@
 (defn hae-yllapitokohteen-id-nimella
   [kohteen-nimi]
   (let [query (str "SELECT id FROM yllapitokohde ypk
+                   WHERE nimi = '" kohteen-nimi "';")]
+    (ffirst (q query))))
+
+(defn hae-kohdeosan-id-nimella
+  [kohteen-nimi]
+  (let [query (str "SELECT id FROM yllapitokohdeosa ypko
                    WHERE nimi = '" kohteen-nimi "';")]
     (ffirst (q query))))
 
@@ -1325,6 +1361,7 @@
   (reset! vantaan-alueurakan-2014-2019-id (hae-vantaan-alueurakan-2014-2019-id))
   (reset! oulun-alueurakan-lampotila-hk-2014-2015 (hae-oulun-alueurakan-lampotila-hk-2014-2015))
   (reset! pohjois-pohjanmaan-hallintayksikon-id (hae-pohjois-pohjanmaan-hallintayksikon-id))
+  (reset! pohjois-suomen-evk-id (hae-pohjois-suomen-evk-id))
   (reset! muhoksen-paallystysurakan-id (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
   (reset! muhoksen-paallystysurakan-paasopimuksen-id (hae-muhoksen-paallystysurakan-paasopimuksen-id))
   (reset! muhoksen-paikkausurakan-id (hae-urakan-id-nimella "Muhoksen paikkausurakka"))
@@ -1883,6 +1920,27 @@
     [(inc (first edellinen))]
     (map vector edellinen (next edellinen) loput-seq)))
 
+(defn luo-kulu
+  "Luo tällä hetkellä aina tavoitehintaisen kulun. Lisää uusi parametri, jos se on ongelma."
+  [urakka-id tyyppi erapaiva kohdistustyyppi koontilaskun-kuukausi
+   summa toimenpideinstanssi-id tehtavaryhma-id tehtava-id rahavaraus]
+  {:id nil
+   :urakka urakka-id
+   :viite "123456781"
+   :erapaiva erapaiva
+   :kokonaissumma summa
+   :tyyppi tyyppi
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :toimenpideinstanssi toimenpideinstanssi-id
+                   :tehtavaryhma tehtavaryhma-id
+                   :tehtava tehtava-id
+                   :tyyppi kohdistustyyppi
+                   :rahavaraus rahavaraus
+                   :tavoitehintainen :true}]
+   :koontilaskun-kuukausi koontilaskun-kuukausi})
+
 (defn poista-kulut-aikavalilta [urakka-id hk_alkupvm hk_loppupvm]
   (let [kulut (flatten (q (format "SELECT id FROM kulu k WHERE k.urakka = %s and k.erapaiva BETWEEN '%s'::DATE AND '%s'::DATE;" urakka-id hk_alkupvm hk_loppupvm)))
         _ (when-not (empty? kulut) (u (format "DELETE FROM kulu_kohdistus WHERE kulu IN (%s)" (str/join "," kulut))))
@@ -1926,30 +1984,26 @@
                       VALUES (0, %s, %s, %s, %s, '%s', '%s', now());"
                kulu-id summa tpi-id tryhma-id maksueratyyppi kohdistustyyppi))]))
 
-(defn lisaa-sanktio-urakalle
-  "Anna sakkoryhma 'C'
-  Anna määrä integerina
-  pvm on perintäpäivämäärä
-  urakka-id on urakan id
+(defn lisaa-suorasanktio-urakalle
+  "Anna sakkoryhma (esim: 'A','C', 'arvonvahennyssanktio', 'vaihtosanktio'
+  Anna määrä integerina (Esim 5)
+  pvm on perintäpäivämäärä tekstinä - esim 2025-12-12
+  urakka-id on urakan id - integer
   tpi on toimenpideinstanssi, jolle sanktio laitetaan, anna integer.
-  sanktiotyyppi taulusta id, "
-  [maara sakkoryhma pvm urakka-id tpi sanktiotyyppi-id]
+  sanktiotyyppi taulusta id,
+  tehtavaryhma-id on arvonvähennyksille sopiva tehtäväryhmä, integer - ei ole pakko antaa,
+  tehtava-id on arvonvähennyksille sopiva tehtävä, integer - ei ole pakko antaa"
+  [maara sakkoryhma pvm-str urakka-id tpi sanktiotyyppi-id tehtavaryhma-id tehtava-id]
   (let [;; Lisätään ensin laatupoikkeama, jotta voidaan lisätä sanktio
-        aika (pvm/iso-8601->pvm pvm)
-        _ (u (format "INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, paatos, perustelu, luotu, aika,
+        aika (pvm/iso-8601->pvm pvm-str)
+        laatupoikkeama-id (i (format "INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, paatos, perustelu, luotu, aika,
         kasittelyaika, urakka, lahde)
         VALUES ('xx', 'tilaaja','puhelin','sanktio', 'xx', now(), '%s', '%s', %s, 'harja-ui');"
-               aika aika urakka-id))
-
-        ;; HAetaan viimeisin id
-        laatupoikkeama-id (:id (first (q-map (format "SELECT id FROM laatupoikkeama
-                                            WHERE urakka = %s
-                                            ORDER BY ID DESC LIMIT 1" urakka-id))))
-
-        _ (u (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
-        luotu, sakkoryhma)
-        VALUES (%s, '%s', %s, %s, %s, true, now(), '%s');"
-               maara pvm laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma))]))
+                               aika aika urakka-id))
+        sanktio_id (i (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
+        luotu, sakkoryhma, tehtavaryhma, tehtava)
+        VALUES (%s, '%s', %s, %s, %s, true, now(), '%s', %s, %s);"
+                        maara pvm-str laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma tehtavaryhma-id tehtava-id))]))
 
 (defn lahes-sama?
   "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.

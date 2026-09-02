@@ -1,4 +1,6 @@
 import transit from "transit-js";
+import {avaaHarjaTimeoutilla} from "../support/apurit.js";
+
 
 /**
  * Testaa kustannussuunnitelman pääyhteenvedon osioiden tietoja.
@@ -7,8 +9,6 @@ import transit from "transit-js";
  * @param {string} osionNimi
  * @param {boolean|undefined} onkoVahvistettu
  */
-
-const ladataanHarjaaTimeout = 30000;
 
 export function testaaTilayhteenveto(hoitovuosi, osionNimi, onkoVahvistettu) {
     // Valitse aluksi haluttu hoitovuosi, jotta kohdistetaan testaus tietylle hoitovuodelle yhteenvedossa.
@@ -112,12 +112,16 @@ export function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinI
             if (blurEvent) {
                 cy.wrap($input).blur();
             }
+        })
+        .then(($input) => {
+            // Asetetaan focus takaisin, että "Kopioi allaoleviin" nappula tulee takaisin näkyviin.
+            cy.wrap($input).focus();
         });
 
     // Odota hetki, jotta tallennusfunktio triggeröityy varmasti.
     // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
     // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
-    cy.wait(1000)
+    cy.wait(500)
 }
 
 export function summaaLuvut() {
@@ -428,10 +432,7 @@ export function alustaKanta(urakkaNimi) {
 export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
     cy.intercept('POST', '_/budjettisuunnittelun-indeksit').as('budjettisuunnittelun-indeksit');
 
-    cy.visit("/");
-
-    // Varmista, että pääsivu on ladattu ennen testien aloitusta
-    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+    avaaHarjaTimeoutilla();
 
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
@@ -462,10 +463,7 @@ export function avaaKustannussuunnittelu(urakkaNimi, alue, indeksiArray) {
  * @param indeksiArray Array, johon indeksit pusketaan.
  */
 export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
-    cy.visit("/");
-
-    // Varmista, että pääsivu on ladattu ennen testien aloitusta
-    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+    avaaHarjaTimeoutilla();
 
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');
@@ -486,10 +484,7 @@ export function avaaUusiKustannussuunnittelu(urakkaNimi, alue) {
  * @param indeksiArray Array, johon indeksit pusketaan.
  */
 export function avaaTarjous(urakkaNimi, alue) {
-    cy.visit("/");
-
-    // Varmista, että pääsivu on ladattu ennen testien aloitusta
-    cy.get('.ladataan-harjaa', { timeout: ladataanHarjaaTimeout }).should('not.exist')
+    avaaHarjaTimeoutilla();
 
     cy.contains('.haku-lista-item', alue, {timeout: 30000}).click();
     cy.get('.ajax-loader', {timeout: 10000}).should('not.exist');

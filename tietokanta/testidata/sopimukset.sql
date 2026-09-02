@@ -26,7 +26,10 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Tamperee
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Raahen MHU 23 pääsopimus','2023-10-01','2028-09-30', '2FSD6HO4/01', (SELECT id FROM urakka WHERE nimi = 'Raahen MHU 2023-2028'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Kajaanin MHU 24 pääsopimus','2025-10-01','2030-09-30', '2023.3095.1-T00015732', (SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030'));
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Suomussalmen MHU 24 pääsopimus','2024-10-01','2029-09-30', '2023.3097.1-T00015733', (SELECT id FROM urakka WHERE nimi = 'POP MHU Suomussalmi 2024-2029'));
-
+-- TODO: Tunkkaa paremmaksi, ja tee järkevämpi kovakoodattu 2024 alkanut testiurakka + sopimus. Kovakoodattuja 2024 urakoita pitäisi olla vähintään kaksi. Tätä käytetään lupausten testeissä.
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('Suomussalmen MHU 24 pääsopimus KOPIO','2024-10-01','2029-09-30', '2023.3097.1-T00015734', (SELECT id FROM urakka WHERE nimi = 'KOPIO POP MHU Suomussalmi 2024-2029'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('EPO MHU Kauhajoki 2023 pääsopimus','2023-10-01','2028-09-30', '2023.PR00053529', (SELECT id FROM urakka WHERE nimi = 'EPO MHU Kauhajoki 2023-2028, P'));
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka) VALUES ('EPO MHU Kokkola 2024 pääsopimus','2024-10-01','2029-09-30', '2024.PR00054027', (SELECT id FROM urakka WHERE nimi = 'EPO MHU Kokkola 2024-2029, P'));
 
 -- Kajaanin pääsopimus
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
@@ -80,10 +83,8 @@ BEGIN
     ('Rovaniemen MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-ROV', (SELECT id FROM urakka WHERE nimi='Rovaniemen MHU testiurakka (1. hoitovuosi)')),
     ('Pellon MHU testiurakan sopimus',urakan_aloitus_pvm - interval '2 years',urakan_paattymis_pvm - interval '2 years','MHU-TESTI-LAP-PEL', (SELECT id FROM urakka WHERE nimi='Pellon MHU testiurakka (3. hoitovuosi)')),
     ('Kemin MHU testiurakan sopimus',urakan_aloitus_pvm - interval '5 years', urakan_paattymis_pvm - interval '5 years','MHU-TESTI-LAP-KEM', (SELECT id FROM urakka WHERE nimi='Kemin MHU testiurakka (5. hoitovuosi)')),
-    ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka (uusi)')),
+    ('Ivalon MHU testiurakan sopimus',urakan_aloitus_pvm, urakan_paattymis_pvm,'MHU-TESTI-LAP-IVA', (SELECT id FROM urakka WHERE nimi='Ivalon MHU testiurakka (uusi)'));
 
-    -- Päällystysurakat
-    ('Utajärven päällystyksen pääsopimus', (SELECT alkupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),(SELECT loppupvm FROM urakka WHERE nimi='Utajärven päällystysurakka'),'5H05339/10', (SELECT id FROM urakka WHERE nimi='Utajärven päällystysurakka'));
 END $$;
 
 -- Aktiivinen oulu

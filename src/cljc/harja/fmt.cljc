@@ -61,18 +61,9 @@
                 (or (nil? eur) (and (string? eur) (empty? eur)))
                 (frontin-formatointivirheviestit tulos))
             (throw (js/Error. (str "Arvoa ei voi formatoida euroksi: " (pr-str eur))))
-            (cond
-              (and nayta-euromerkki nayta-plus (< 0 eur))
-              (str "\u002B" tulos " \u20AC")
-
-              (and nayta-euromerkki (not nayta-plus))
-              (str tulos " \u20AC")
-
-              (and (not nayta-euromerkki) nayta-plus (< 0 eur))
-              (str "\u002B" tulos)
-
-              :else
-              tulos)))
+            (str (when (and nayta-plus (< 0 eur)) "\u002B")
+              tulos
+              (when nayta-euromerkki " \u20AC"))))
 
         :clj
         (s/replace (.format
@@ -689,9 +680,65 @@
                #?(:clj (catch Exception _ arvo)))]
     arvo))
 
-(defn trimmaa-normaali-luku
-  "Monet formatointifunktiot formatoivat luvut ikään kuin ne olisivat rahoja. Eli kahteen desimaaliin.
-  Tällä formatoinnilla muutetaan luvun piste '.' pilkuksi ja leikataan kolmannen desimaalin jälkeen ylimääräiset pois."
+(defn pyorista-desimaaliin
+  "Pyöristää luvun haluttuun desimaalitarkkuuteen käyttäen HALF_UP pyöristystaktiikkaa.
+   
+   Käyttää Math/round -funktiota, joka pyöristää lähimpään kokonaislukuun:
+   - 0.5 pyöristyy ylöspäin 1:ksi
+   - -0.5 pyöristyy ylöspäin 0:ksi (kohti positiivista ääretöntä)
+   
+   Parametrit:
+   - arvo: Pyöristettävä desimaaliluku
+   - desimaalien-maara: Kuinka monen desimaalin tarkkuuteen pyöristetään (0-n)
+   
+   Palauttaa:
+   - Luvun pyöristettynä haluttuun desimaalitarkkuuteen
+   
+   Esimerkit:
+   (pyorista-desimaaliin 3.14159 2)  => 3.14
+   (pyorista-desimaaliin 3.14159 0)  => 3.0
+   (pyorista-desimaaliin 0.12345 1)  => 0.1
+   (pyorista-desimaaliin 12.345 1)   => 12.3
+   
+   Edge-caset ja huomioitavaa:
+   - Käyttää Math/round joka pyöristää .5 arvot YLÖSPÄIN (HALF_UP)
+     * 2.5 => 3, 3.5 => 4, -2.5 => -2
+   - Jos tarvitaan eri pyöristystaktiikkaa (esim. HALF_EVEN/pankkiirit pyöristys),
+     käytä Java BigDecimal luokkaa CLJ:ssä tai toteuta custom logiikka CLJS:ssä
+   - Liukulukujen rajoitteet: Hyvin suurilla tai pienillä luvuilla saattaa esiintyä
+     IEEE 754 liukulukujen tarkkuusongelmia
+   - Nolla desimaalilla palauttaa kokonaisluvun double-muodossa (esim. 3.0 ei 3)"
+  [arvo desimaalien-maara]
+  {:pre [(number? arvo)
+         (integer? desimaalien-maara)
+         (>= desimaalien-maara 0)]}
+  (let [kerroin #?(:clj (Math/pow 10 desimaalien-maara)
+                   :cljs (js/Math.pow 10 desimaalien-maara))]
+    #?(:clj (/ (Math/round (* arvo kerroin)) kerroin)
+       :cljs (/ (js/Math.round (* arvo kerroin)) kerroin))))
+
+(defn desimaaliluku-opt-ilman-nollia
+  "Formatoi luvun näyttämään desimaalit vain tarvittaessa, ilman pakotettuja nollia.
+  
+  Käyttö:
+  - Kun halutaan jättää kokonaisluvut ilman desimaaleja (ei \" ,00\"-päätettä)
+  - Kun lähdedata voi olla numero tai numeric-string (tämä toimii myös stringeillä)
+  
+  Toiminta:
+  - Kokonaisluvut näytetään ilman desimaaleja: 10
+  - Desimaaliluvut näytetään tarpeen mukaan: 10,5 tai 10,25
+  - Muuntaa pisteen pilkuksi automaattisesti
+  - Jos desimaaleja on >3, pyöristää 2-3 desimaaliin (ks. pyorista-ehka-kolmeen)
+  
+  Esimerkit:
+  (desimaaliluku-opt-ilman-nollia 10)       => \"10\"
+  (desimaaliluku-opt-ilman-nollia 10.0)     => \"10\"
+  (desimaaliluku-opt-ilman-nollia 10.5)     => \"10,5\"
+  (desimaaliluku-opt-ilman-nollia 10.25)    => \"10,25\"
+  (desimaaliluku-opt-ilman-nollia 10.123)   => \"10,123\"
+  (desimaaliluku-opt-ilman-nollia 10.12345) => \"10,123\" (pyöristetty)
+  
+  Vrt. desimaaliluku-opt, kun haluat määrittää min/max desimaalit tarkasti."
   [luku]
   (when luku
     (let [desimaalit (s/split (str luku) #"\.")

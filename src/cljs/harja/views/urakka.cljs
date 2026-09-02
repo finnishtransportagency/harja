@@ -1,14 +1,12 @@
 (ns harja.views.urakka
   "Urakan näkymät: sisältää urakan perustiedot ja tabirakenteen"
-  (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.bootstrap :as bs]
-            [harja.asiakas.tapahtumat :as t]
+  (:require [harja.ui.bootstrap :as bs]
+            [harja.pvm :as pvm]
             [harja.views.urakka.yleiset :as urakka-yleiset]
             [harja.views.urakka.suunnittelu :as suunnittelu]
             [harja.views.urakka.toteumat :as toteumat]
             [harja.views.urakka.toteutus :as toteutus]
             [harja.views.urakka.yllapitokohteet.kustannukset-nakyma :as kustannukset-nakyma]
-            [harja.views.urakka.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
             [harja.views.urakka.tyomaapaivakirja.paivakirja :as paivakirja]
             [harja.views.urakka.laskutus :as laskutus]
             [harja.views.vesivaylat.urakka.laskutus :as laskutus-vesivaylat]
@@ -36,13 +34,11 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.urakka :as urakka]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.domain.roolit :as roolit])
+            [harja.asiakas.kommunikaatio :as k])
 
-  (:require-macros [cljs.core.async.macros :refer [go]]
-                   [reagent.ratom :refer [reaction run!]]))
+  (:require-macros [cljs.core.async.macros :refer [go]]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id alkupvm] :as urakka}]
   (case valilehti
     :yleiset true
     :suunnittelu (and
@@ -143,11 +139,6 @@
                                (oikeudet/urakat-tiemerkinta-kustannukset id)
                                (= tyyppi :tiemerkinta))
 
-    :paikkaukset-mpu (and
-                       (oikeudet/urakat-paikkaukset id)
-                       (= tyyppi :paallystys)
-                       (= :mpu sopimustyyppi))
-
     :valikatselmus (and
                      (oikeudet/urakat-kulut-valikatselmus id)
                      (= tyyppi :teiden-hoito))
@@ -159,37 +150,42 @@
 
     :mhu-muutokset (and
                      (oikeudet/urakat-suunnittelu-kustannussuunnittelu id)
-                     ;; Tässä kohti näytetään MHU-muutokset vain muissa kuin tuotantoympäristöissä
-                     ;; TODO: Kun viet tuontatoon, enabloi myös mhu_kulut.cljs -> (e! (->HaeUrakanMuutostyot 
-                     (k/kehitysymparistossa?)
-                     (= tyyppi :teiden-hoito))
+                     (istunto/ominaisuus-kaytossa? :mhu-muutokset)
+                     (= tyyppi :teiden-hoito)
+                     ;; Älä näytä ollenkaan alle 25 urakoille toistaiseksi 
+                     (or
+                       ;; Näytä kuitenkin kehitysympäristössä
+                       (k/kehitysymparistossa?)
+                       (>= (pvm/vuosi alkupvm) 2025)))
     false))
 
 (defn urakka
   "Urakkanäkymä"
   []
   (let [ur (dissoc @nav/valittu-urakka :alue)
-        _ (when-not (valilehti-mahdollinen? (nav/valittu-valilehti :urakat) ur)
+        nykyinen-valilehti (nav/valittu-valilehti :urakat)
+        _ (when-not (valilehti-mahdollinen? nykyinen-valilehti ur)
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         mhu-urakka? (= :teiden-hoito
                       (:tyyppi ur))
         sopimustyyppi (:sopimustyyppi ur)
-        valittu-valilehti (nav/valittu-valilehti :urakat)
-        _ (js/console.log "Urakkanäkymä :: valittu välilehti:" (pr-str valittu-valilehti))
-        _ (js/console.log "Urakkanäkymä :: valittu sivu" (pr-str (nav/valittu-valilehti valittu-valilehti)))
         hae-urakan-tyot (fn [ur]
                           ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia tai lupauksia tai kustannusten seurantaa. Joten
                           ;; skipataan töiden haku
                           ;; TODO: Näitä on varmasti noin miljoona muutakin, joten tee tästä funkkari/setti, johon näitä voi määritellä
-                          (when-not (or (= :paikkaukset-yllapito (nav/valittu-valilehti :urakat))
-                                      (= :kustannukset (nav/valittu-valilehti :urakat))
+                          (when-not (or
+                                      (= :paikkaukset-yllapito nykyinen-valilehti)
+                                      (= :paikkaukset-hoito nykyinen-valilehti)
+                                      (= :kustannukset nykyinen-valilehti)
                                       (= :lupaukset (nav/valittu-valilehti :valitavoitteet))
                                       (= :kustannusten-seuranta (nav/valittu-valilehti :laskutus))
                                       (= :maarien-toteumat (nav/valittu-valilehti :toteumat))
                                       (= :suola (nav/valittu-valilehti :suunnittelu))
                                       (= :tehtavat (nav/valittu-valilehti :suunnittelu))
+                                      (= :tarjous (nav/valittu-valilehti :suunnittelu))
+                                      (= :uusi-kustannussuunnitelma (nav/valittu-valilehti :suunnittelu))
                                       (= :pohjavesialueiden-suola (nav/valittu-valilehti :toteumat))
-                                      (= :valikatselmus valittu-valilehti))
+                                      (= :valikatselmus nykyinen-valilehti))
                             (when (oikeudet/urakat-suunnittelu-kokonaishintaisettyot (:id ur))
                               (go (reset! u/urakan-kok-hint-tyot (<! (kok-hint-tyot/hae-urakan-kokonaishintaiset-tyot ur)))))
                             (when (or (oikeudet/urakat-suunnittelu-yksikkohintaisettyot (:id ur))
@@ -198,10 +194,14 @@
                                     (s/prosessoi-tyorivit ur
                                       (<! (yks-hint-tyot/hae-urakan-yksikkohintaiset-tyot (:id ur)))))))))]
 
-    ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä
-    @u/valittu-toimenpideinstanssi
+    ;; Luetaan toimenpideinstanssi, jotta se ei menetä arvoaan kun vaihdetaan välilehtiä - Tarvitaanko tätä vielä?
+    ;@u/valittu-toimenpideinstanssi
 
-    (hae-urakan-tyot ur)
+    ;; HAetaan urakan työt vain, jos ollaan hoito urakoita
+    (when (= :hoito (:tyyppi ur))
+      (hae-urakan-tyot ur))
+
+    ;; Urakan tiedot ladattu - Hässäkkä tarkistaa lähinnä vain toimenpideinstanssit, joita ei tarvita läheskään aina.
     (if @u/urakan-tiedot-ladattu?
       [bs/tabs {:style :tabs :classes "tabs-taso1"
                 :active (nav/valittu-valilehti-atom :urakat)
@@ -284,25 +284,11 @@
          ^{:key "paallystykset"}
          [paallystyksen-kohdeluettelo/kohdeluettelo ur])
 
-       (if (= sopimustyyppi :mpu)
-         "Muut paikkaukset"
-         "Paikkaukset")
+       "Paikkaukset"
        :paikkaukset-yllapito
        (when (valilehti-mahdollinen? :paikkaukset-yllapito ur)
          ^{:key "paikkaukset"}
          [paikkaukset/paikkaukset ur])
-
-       "Reikäpaikkaukset"
-       :paikkaukset-mpu
-       (when (valilehti-mahdollinen? :paikkaukset-mpu ur)
-         ^{:key "paikkaukset-mpu"}
-         [reikapaikkaukset/reikapaikkaukset ur])
-
-       "Kustannukset"
-       :kustannukset
-       (when (valilehti-mahdollinen? :kustannukset ur)
-         ^{:key "kustannukset"}
-         [kustannukset-nakyma/kustannukset])
 
        "Laadunseuranta"
        :laadunseuranta

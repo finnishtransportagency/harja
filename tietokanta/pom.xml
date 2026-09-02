@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>11.15.0</version>
+            <version>13.3.0</version>
         </dependency>
     </dependencies>
 
@@ -41,8 +41,15 @@
                 <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>11.15.0</version>
+                <version>13.3.0</version>
                 <configuration>
+                    <!--
+                    Asetetaan Flywayn historiataulu saman nimiseksi kuin tuotannossa, jotta voidaan
+                    testata migraatioiden ajamista stg/prod-ympäristöjen toimintaa simuloiden.
+                    Default-asetuksella historiataulu on nimeltään: "flyway_schema_history",
+                    mutta tuotannossa se on "schema_version".
+                    -->
+                    <table>schema_version</table>
                     <baselineOnMigrate>true</baselineOnMigrate>
                     <baselineVersion>0</baselineVersion>
                     <!--
@@ -68,7 +75,7 @@
                     <dependency>
                         <groupId>org.postgresql</groupId>
                         <artifactId>postgresql</artifactId>
-                        <version>42.7.8</version>
+                        <version>42.7.13</version>
                     </dependency>
                 </dependencies>
             </plugin>

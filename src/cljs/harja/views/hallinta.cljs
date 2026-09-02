@@ -1,7 +1,6 @@
 (ns harja.views.hallinta
   "Päätason sivu Hallinta, josta kaikkeen ylläpitötyöhön pääsee käsiksi."
-  (:require [reagent.core :refer [atom] :as reagent]
-            [harja.ui.bootstrap :as bs]
+  (:require [harja.ui.bootstrap :as bs]
             [harja.domain.oikeudet :as oikeudet]
             [harja.tiedot.navigaatio :as nav]
             [harja.views.toimenpidekoodit :as tp]
@@ -10,17 +9,20 @@
             [harja.views.hallinta.lampotilat :as lampotilat]
             [harja.views.hallinta.urakoiden-lyhytnimet :as lyhytnimet]
             [harja.views.hallinta.integraatiotilanne :as integraatiotilanne]
-            [harja.views.hallinta.hairiot :as hairiot]
+            [harja.views.hallinta.tyokalut.hairiot :as hairiot]
             [harja.views.hallinta.valtakunnalliset-valitavoitteet :as valitavoitteet]
             [harja.views.hallinta.api-jarjestelmatunnukset :as api-jarjestelmatunnukset]
             [harja.views.vesivaylat.hallinta :as vu]
             [harja.views.hallinta.raporttien-suoritustieto :as raporttien-suoritustieto]
             [harja.views.hallinta.jarjestelma-asetukset :as jarjestelma-asetukset]
             [harja.views.hallinta.tyokalut.toteumatyokalu-nakyma :as toteumatyokalu-nakyma]
+            [harja.views.hallinta.tyokalut.ilmoitustyokalu-nakyma :as ilmoitustyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tyomaapaivakirjatyokalu-nakyma :as paivakirjatyokalu-nakyma]
             [harja.views.hallinta.tyokalut.talvihoitoreitit-tyokalu-nakyma :as talvihoitoreitit-tyokalu-nakyma]
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.tyokalut.ajastukset-nakyma :as ajastukset-nakyma]
+            [harja.views.hallinta.tyokalut.raporttityokalu-nakyma :as raporttityokalu-nakyma]
+            [harja.views.hallinta.tyokalut.laatupoikkeamasanktiotyokalu-nakyma :as laatupoikkeamasanktiotyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -33,6 +35,7 @@
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
             [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -94,20 +97,20 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat]) 
-    
+      [tarjoushinnat/tarjoushinnat])
+
     "Lupaukset"
     :lupaukset
     (when (oikeudet/hallinta-lupaukset)
       ^{:key "lupaukset"}
       [lupaukset/lupaukset])
-    
+
     "Paallystysilmoitukset"
     :paallystysilmoitukset
     (when (oikeudet/hallinta-paallystysilmoitukset)
       ^{:key "paallystysilmoitukset"}
       [paallystysilmoitukset/paallystysilmoitukset])
-    
+
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)
@@ -137,7 +140,13 @@
     ;; TODO: Varmista oikeiat oikeudet
     (when (oikeudet/hallinta-urakkahenkilot)
       ^{:key "urakkahenkilot"}
-      [urakkaparametrit/urakkaparametrit])]
+      [urakkaparametrit/urakkaparametrit])
+
+    "Sanktio- ja bonusprofiilit"
+    :sanktio-profiilit
+    (when (oikeudet/hallinta-laadunseuranta-profiilit)
+      ^{:key "sanktio-profiilit"}
+      [sanktio-profiilit/sanktio-profiilit])]
 
    "Seuranta"
    :hallinta-seuranta
@@ -213,6 +222,13 @@
       ^{:key "toteumatyokalu"}
       [toteumatyokalu-nakyma/simuloi-toteuma])
 
+    "Ilmoitustyökalu"
+    :ilmoitustyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "ilmoitustyokalu"}
+      [ilmoitustyokalu-nakyma/simuloi-ilmoitus])
+
     "Työmaapäiväkirjatyökalu"
     :tyomaapaivakirjatyokalu
     (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
@@ -240,6 +256,20 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "ajastukset"}
       [ajastukset-nakyma/nayta-ajastukset])
+
+    "Raporttityökalut"
+    :raportittityokalut
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "raporttityokalut"}
+      [raporttityokalu-nakyma/nayta-raporttityokalut])
+
+    "Sanktiotyökalu"
+    :sanktiotyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "sanktiotyokalu"}
+      [laatupoikkeamasanktiotyokalu-nakyma/laheta-sanktio])
 
     "Viestitestaus"
     :viestitestaus

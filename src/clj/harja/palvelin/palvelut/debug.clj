@@ -15,6 +15,9 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodit-kyselyt]
             [cheshire.core :as cheshire]
+            [harja.palvelin.integraatiot.tloik.kasittely.ilmoitus :as ilmoitus-kasittely]
+            [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitussanoma]
+            [harja.palvelin.integraatiot.tloik.ilmoitukset :as tloik-ilmoitukset]
             [harja.palvelin.integraatiot.api.reittitoteuma :as reittitoteuma]
             [harja.palvelin.palvelut.ilmoitukset :as ilmoitukset]
             [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-q]
@@ -319,6 +322,48 @@
      :pk2 geometriat_pk2
      :pk3 geometriat_pk3}))
 
+(defn ilmoitus-xml
+  "Tallentaa ilmoituksen annetun XML:n perusteella. Tällä simuloidaan tloikista tullutta ilmoitusta.
+  Tätä voi käyttää vain lokaalisti ongelmien debuggaamisessa. Ota siis vaikka tuotannosta ilmoitus xml ja aja se tähän
+  ja simuloi, että mitä se tekee."
+  [db tiedot]
+  (try
+    (log/info "Käsitellään ilmoitus xml")
+    (when-not (:xml tiedot)
+      (throw (ex-info "XML-sisältö puuttuu" {:tiedot tiedot})))
+
+    (let [ilmoitus (ilmoitussanoma/lue-viesti (:xml tiedot))
+          _ (log/debug "Parsittu ilmoitus:" (pr-str ilmoitus))
+          urakka (tloik-ilmoitukset/hae-urakka db ilmoitus)]
+
+      (when-not urakka
+        (throw (ex-info "Urakkaa ei löytynyt ilmoitukselle"
+                 {:ilmoitus-id (:ilmoitus-id ilmoitus)
+                  :sijainti (:sijainti ilmoitus)})))
+
+      (let [ilmoitus-id (ilmoitus-kasittely/tallenna-ilmoitus db (:id urakka) ilmoitus)]
+        (log/info (format "Ilmoitus tallennettu onnistuneesti. Ilmoitus-id: %s, Urakka-id: %s"
+                    ilmoitus-id (:id urakka)))
+        {:status "OK"
+         :ilmoitus-id ilmoitus-id
+         :urakka-id (:id urakka)
+         :urakka-nimi (:nimi urakka)}))
+
+    (catch Exception e
+      (log/error e "Virhe käsiteltäessä debug-ilmoitusta")
+      {:status "VIRHE"
+       :viesti (.getMessage e)
+       :virhe (pr-str e)})))
+
+(defn hae-tierekisteriosoite-koordinaateista
+  "Palauttaa tierekisteriosoitteen annetuista alkusijainti/loppusijainti-koordinaateista.
+  Käyttää samaa päättelylogiikkaa kuin integraatioiden laatupoikkeama-API."
+  [db {:keys [alkusijainti loppusijainti]}]
+  (let [tr-osoite (sijainnit/hae-tierekisteriosoite db alkusijainti loppusijainti)]
+    {:tr-osoite tr-osoite
+     :alkusijainti alkusijainti
+     :loppusijainti loppusijainti}))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -372,7 +417,11 @@
       :debug-hae-yllapitokohteen-geometriat
       (vaadi-jvh! (partial #'hae-yllapitokohteen-geometriat db))
       :debug-hae-pkluokkageometriat
-      (vaadi-jvh! (partial #'hae-pkluokkageometriat db)))
+      (vaadi-jvh! (partial #'hae-pkluokkageometriat db))
+      :debug-ilmoitus-xml
+      (vaadi-jvh! (partial #'ilmoitus-xml db))
+      :debug-hae-tierekisteriosoite-koordinaateista
+      (vaadi-jvh! (partial #'hae-tierekisteriosoite-koordinaateista db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -394,5 +443,7 @@
       :debug-laheta-tekstiviesti
       :debug-hae-tieturvalliusuus-geometriat
       :debug-hae-yllapitokohteen-geometriat
-      :debug-hae-pkluokkageometriat)
+      :debug-hae-pkluokkageometriat
+      :debug-ilmoitus-xml
+      :debug-hae-tierekisteriosoite-koordinaateista)
     this))

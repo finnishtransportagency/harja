@@ -40,6 +40,7 @@
     ::otsikko
     ::liite-url
     ::katselmus-url
+    ::elinvoimakeskus_id
     ::ely
     ::urakat
     ::urakoiden-nimet

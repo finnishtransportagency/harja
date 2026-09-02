@@ -5,7 +5,8 @@
              [tehtavamaarat :as tm-q]
              [hallintayksikot :as hallinta-q]]
             [harja.pvm :as pvm]
-            [taoensso.timbre :as log])
+            [taoensso.timbre :as log]
+            [harja.palvelin.tyokalut.tyokalut :as tyokalut])
   (:import (java.math RoundingMode)))
 
 (def vemtr-elementit 5)
@@ -14,7 +15,7 @@
 (defn- sama-tehtava-ja-ely?
   [e t]
   (and (= (:nimi e) (:nimi t))
-    (= (:hallintayksikko e) (:hallintayksikko t))))
+    (= (:elinvoimakeskus_id e) (:elinvoimakeskus_id t))))
 
 (defn laske-yhteen
   [e t]
@@ -54,7 +55,7 @@
     (range alku-hoitokausi (inc loppu-hoitokausi))))
 
 (defn- hae-tehtavamaarat
-  [db kysely-fn {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+  [db kysely-fn {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm] :as parametrit}]
   (log/debug "hae-tehtavamaarat: saatiin alku/loppupvm:t" alkupvm loppupvm)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         vain-mhut? (parametrit "Vain MHUt ja HJU:t")]
@@ -64,13 +65,8 @@
        :loppupvm loppupvm
        :hoitokausi hoitokaudet
        :urakka urakka-id
-       :hallintayksikko hallintayksikko-id
+       :elinvoimakeskus elinvoimakeskus-id
        :vain-mhut? vain-mhut?})))
-
-(defn pyorista-kahteen-decimaaliin [arvo]
-  (when (not (nil? arvo))
-    (.setScale
-      (with-precision 2 (bigdec arvo)) 2 RoundingMode/HALF_UP)))
 
 (defn- laske-toteuma-% ;:TODO voisko olla sql:ssä?
   [rivi]
@@ -83,8 +79,8 @@
                       (zero? toteuma) ""
                       (zero? suunniteltu) "!"
                       :default (.setScale (* 100 (with-precision 2 (/ toteuma suunniteltu))) 0 RoundingMode/HALF_UP)))
-        suunniteltu (pyorista-kahteen-decimaaliin suunniteltu)
-        toteuma (pyorista-kahteen-decimaaliin toteuma)
+        suunniteltu (tyokalut/pyorista-kahteen-decimaaliin suunniteltu)
+        toteuma (tyokalut/pyorista-kahteen-decimaaliin toteuma)
         rivi-toteumaprosentilla (filter some?
                                   (conj (into [] (take 2 rivi)) suunniteltu toteuma toteuma-% toteutunut-materiaalimaara))]
 
@@ -164,49 +160,48 @@
 (declare db-haku-fn)
 
 (defn muodosta-taulukko
-  [db user kysely-fn {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
+  [db user kysely-fn {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id] :as parametrit}]
   ;; (log/debug "muodosta-taulukko: parametrit" parametrit)
   (let [hoitokaudet (laske-hoitokaudet alkupvm loppupvm)
         vemtr? (not= kysely-fn db-haku-fn)
-        urakan-hallintayksikko-tiedot (when urakka-id 
-                                        (urakat-q/urakan-hallintayksikko db {:id urakka-id}))
+        urakan-elinvoimakeskus-tiedot (when urakka-id (urakat-q/urakan-elinvoimakeskus db {:id urakka-id}))
         urakan-tiedot (when urakka-id 
                         (urakat-q/hae-urakka db {:id urakka-id}))
-        hallintayksikko-tiedot (cond 
-                              urakka-id 
-                              (hallinta-q/hae-organisaatio db {:id (-> urakan-hallintayksikko-tiedot first :hallintayksikko-id)})
-                              
-                              (not (or urakka-id hallintayksikko-id))
-                              (hallinta-q/hallintayksikot-ilman-geometriaa db)
-                                  
-                              hallintayksikko-id
-                              (hallinta-q/hae-organisaatio db {:id hallintayksikko-id}))
+        elinvoimakeskus-tiedot (cond
+                                 urakka-id
+                                 (hallinta-q/hae-organisaatio db {:id (-> urakan-elinvoimakeskus-tiedot first :elinvoimakeskus_id)})
+
+                                 (not (or urakka-id elinvoimakeskus-id))
+                                 (hallinta-q/hallintayksikot-ilman-geometriaa db)
+
+                                 elinvoimakeskus-id
+                                 (hallinta-q/hae-organisaatio db {:id elinvoimakeskus-id}))
         raportin-taustatiedot (into [] (keep identity) 
                                 (mapcat identity 
-                                  [urakan-hallintayksikko-tiedot
+                                  [urakan-elinvoimakeskus-tiedot
                                    urakan-tiedot
-                                   hallintayksikko-tiedot]))
+                                   elinvoimakeskus-tiedot]))
         suunnitellut-ryhmissa (->> parametrit
                                 (hae-tehtavamaarat db kysely-fn))
         ;; Varmistetaan vielä, että kaikki tehtävät ovat oikeassa järjestyksessä
-        suunnitellut-ryhmissa (into [] (sort-by (juxt :elynumero :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
+        suunnitellut-ryhmissa (into [] (sort-by (juxt :elinvoimakeskusnumero :toimenpide-jarjestys :jarjestys) suunnitellut-ryhmissa))
         kaikki (if (and urakka-id (not (empty? suunnitellut-ryhmissa))) [{:nimi (-> urakan-tiedot first :nimi)}] [])
         suunnitellut-valiotsikoineen (loop [rivit suunnitellut-ryhmissa
                                             toimenpiteet #{}
-                                            hallintayksikot #{}
+                                            elinvoimakeskukset #{}
                                             kaikki kaikki]
                                        (if (empty? rivit)
                                          kaikki
                                          (let [rivi (first rivit)
                                                uusi-toimenpide? (not (contains? toimenpiteet
-                                                                       (str (:toimenpide rivi) (:hallintayksikko rivi))))
-                                               uusi-hallintayksikko? (not (contains? hallintayksikot (:hallintayksikko rivi)))
-                                               hallintayksikko (:hallintayksikko rivi)
+                                                                       (str (:toimenpide rivi) (:elinvoimakeskus_id rivi))))
+                                               uusi-elinvoimakeskus? (not (contains? elinvoimakeskukset (:elinvoimakeskus_id rivi)))
+                                               elinvoimakeskus (:elinvoimakeskus_id rivi)
                                                toimenpide (:toimenpide rivi)
                                                ; luodaan väliotsikkoelementti
-                                               kaikki-rivit (if (and (not urakka-id) uusi-hallintayksikko?) ; turha tieto jos urakalle haetaan
+                                               kaikki-rivit (if (and (not urakka-id) uusi-elinvoimakeskus?) ; turha tieto jos urakalle haetaan
                                                               (conj kaikki
-                                                                {:nimi (some #(when (= (:id %) hallintayksikko) (:nimi %)) hallintayksikko-tiedot)})
+                                                                {:nimi (some #(when (= (:id %) elinvoimakeskus) (:nimi %)) elinvoimakeskus-tiedot)})
                                                               kaikki)
                                                kaikki-rivit (if uusi-toimenpide?
                                                               (conj kaikki-rivit
@@ -214,8 +209,8 @@
                                                               kaikki-rivit)
                                                kaikki-rivit (conj kaikki-rivit rivi)]
                                            (recur (rest rivit) ;; loput suunnitellut-ryhmissä
-                                             (conj toimenpiteet (str (:toimenpide rivi) (:hallintayksikko rivi))) ;; Toimenpide set
-                                             (conj hallintayksikot hallintayksikko) ;; Hallintayksikkö set
+                                             (conj toimenpiteet (str (:toimenpide rivi) (:elinvoimakeskus_id rivi))) ;; Toimenpide set
+                                             (conj elinvoimakeskukset elinvoimakeskus) ;; Elinvoimakeskus set
                                              kaikki-rivit)))) ;; Pidetään kirjaa kaikista riveistä, joita raporttiin laitetaan
         muodosta-rivi (comp
                         (map nayta-suunniteltu-jos-sama-yksikko-kuin-toteumalla)

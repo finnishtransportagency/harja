@@ -155,12 +155,24 @@ WHERE id = :id AND id IN (SELECT yhteyshenkilo
                           FROM yhteyshenkilo_urakka
                           WHERE urakka = :urakka);
 
+-- name: onko-yhteyshenkilo-liitetty-muualle
+-- Tarkistaa onko yhteyshenkilö liitetty muihin urakoihin tai yhteyshenkilönä samaan urakkaan
+SELECT EXISTS(
+  SELECT 1
+  FROM yhteyshenkilo_urakka
+  WHERE yhteyshenkilo = :yhteyshenkilo_id
+    AND urakka = :urakka
+) AS liitetty_urakkaan;
+
 -- name: poista-paivystaja!
--- Poista päivystäjän annetusta urakasta.,
+-- Poista päivystäjä annetusta urakasta
+DELETE FROM paivystys
+WHERE id = :id AND urakka = :urakka;
+
+-- name: poista-yhteyshenkilo-idlla!
+-- Poistaa yhteyshenkilön id:llä
 DELETE FROM yhteyshenkilo
-WHERE id = (SELECT yhteyshenkilo
-            FROM paivystys
-            WHERE id = :id AND urakka = :urakka);
+WHERE id = :id;
 
 -- name: luo-paivystys<!
 -- Luo annetulle yhteyshenkilölle päivystyksen urakkaan

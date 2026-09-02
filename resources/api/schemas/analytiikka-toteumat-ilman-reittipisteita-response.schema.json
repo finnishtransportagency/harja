@@ -1,0 +1,107 @@
+{  
+  "$schema": "http://json-schema.org/draft-07/schema#",  
+  "title": "Analytiikka, toteumien palautus ilman reittipisteitä",  
+  "description": "Skeema analytiikan /api/analytiikka/toteumat-ilman-gps endpointille, joka palauttaa toteumat ilman GPS-reittitietoja. Skeema on dokumentaatioksi eikä käytössä ajonaikaisesti suorituskykysyistä.",  
+  "type": "object",  
+  "properties": {  
+    "toteumat": {  
+      "type": "array",  
+      "items": {  
+        "type": "object",  
+        "properties": {  
+          "toteuma": {  
+            "type": "object",  
+            "properties": {  
+              "tunniste": {  
+                "type": "object",  
+                "properties": {"id": {"type": "integer"}},  
+                "additionalProperties": false  
+              },  
+              "sopimusId": {  
+                "type": "object",  
+                "properties": {"id": {"type": "integer"}},  
+                "additionalProperties": false  
+              },  
+              "alkanut": {"type": "string", "format": "date-time"},  
+              "paattynyt": {"type": "string", "format": "date-time"},  
+              "suorittaja": {  
+                "type": "object",  
+                "properties": {  
+                  "id": {"type": "integer"},  
+                  "nimi": {"type": "string"},  
+                  "ytunnus": {"type": "string"}  
+                },  
+                "additionalProperties": false  
+              },  
+              "toteumatyyppi": {"type": "string"},  
+              "lisatieto": {"type": "string"},  
+              "tehtavat": {  
+                "type": "array",  
+                "items": {"$ref": "#/definitions/tehtavat-elementti"}  
+              },  
+              "materiaalit": {  
+                "type": "array",  
+                "items": {"$ref": "#/definitions/materiaalit-elementti"}  
+              },  
+              "tiesijainti": {  
+                "type": "object",  
+                "properties": {  
+                  "nimi": {"type": "string"},  
+                  "numero": {"type": "integer"},  
+                  "aet": {"type": "integer"},  
+                  "aosa": {"type": "integer"},  
+                  "let": {"type": "integer"},  
+                  "losa": {"type": "integer"}  
+                },  
+                "additionalProperties": false  
+              },  
+              "muutostiedot": {  
+                "type": "object",  
+                "properties": {  
+                  "luotu": {"type": "string", "format": "date-time"},  
+                  "luoja": {"type": "string"},  
+                  "muokattu": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]},  
+                  "muokkaaja": {"type": "string"},
+                  "poistettu": {"type": "boolean"}
+                },  
+                "additionalProperties": false  
+              }
+            },  
+            "additionalProperties": true  
+          }  
+        },  
+        "additionalProperties": false  
+      }  
+    }  
+  },  
+  "definitions": {  
+    "tehtavat-elementti": {  
+      "type": "object",  
+      "properties": {  
+        "id": {"type": "integer"},  
+        "tehtavaryhmaid": {"type": "integer"},  
+        "maara": {"type": "object", "properties": {"yksikko": {"type": "string"}, "maara": {"type": "number"}}, "additionalProperties": false},  
+        "selite": {"type": "string"},  
+        "tehtava-rivi-id": {"type": ["integer", "null"]},  
+        "tehtava-poistettu": {"type": "boolean"},  
+        "tehtava-luotu": {"type": "string","format": "date-time"},  
+        "tehtava-muokattu": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]}  
+      },  
+      "additionalProperties": true  
+    },  
+    "materiaalit-elementti": {  
+      "type": "object",  
+      "properties": {  
+        "id": {"type": "integer"},  
+        "materiaali": {"type": "string"},  
+        "maara": {"type": "object", "properties": {"yksikko": {"type": "string"}, "maara": {"type": "number"}}, "additionalProperties": false},  
+        "materiaali-rivi-id": {"type": ["integer", "null"]},  
+        "materiaali-poistettu": {"type": "boolean"},  
+        "materiaali-luotu": {"type": "string","format": "date-time"},  
+        "materiaali-muokattu": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]}  
+      },  
+      "additionalProperties": true  
+    }  
+  },  
+  "additionalProperties": false  
+}

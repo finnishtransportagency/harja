@@ -32,7 +32,7 @@
   ([teksti optiot]
    (assert (not (nil? teksti)) "Anna otsikolle teksti.")
    (let [id (or (:id optiot)
-                (str (str "harja-grid-valiotsikko-" (gensym))))]
+              (str (str "harja-grid-valiotsikko-" (gensym))))]
      (->Otsikko teksti (merge {:id id} optiot)))))
 
 (defn otsikko? [x]
@@ -158,7 +158,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
    (when-let [vetolaatikko (get vetolaatikot id)]
      (let [auki (@vetolaatikot-auki id)]
        ^{:key (str "vetolaatikko" id)}
-       [:tr.vetolaatikko {:class (apply conj #{} (keep identity [(if auki "vetolaatikko-auki" "vetolaatikko-kiinni")]) )}
+       [:tr.vetolaatikko {:class (apply conj #{} (keep identity [(if auki "vetolaatikko-auki" "vetolaatikko-kiinni")]))}
         [:td {:colSpan colspan
               :class (apply conj #{} (keep identity [(when ei-paddingia "vetolaatikko-ei-paddingia")]))}
          [:div.vetolaatikko-sisalto
@@ -193,7 +193,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                      ;; Estetään mahdollinen rivin blur-efekti vetolaatikon avaamisen tai sulkemisen jälkeen
                      (.preventDefault %)
                      (.stopPropagation %))}
-        [:div.inline-block.vetolaatikon-pylvas]
+        [:div.vetolaatikon-pylvas]
         (if (vetolaatikko-auki? ohjaus id)
           [ikonit/navigation-ympyrassa :down]
           [ikonit/navigation-ympyrassa :right])])]))
@@ -208,7 +208,7 @@ Annettu rivin-tiedot voi olla tyhjä tai se voi alustaa kenttien arvoja.")
                       (.preventDefault %)
                       (.stopPropagation %)
                       (avaa-tai-sulje-avattavat-rivit! ohjaus id))}
-        [:div.inline-block.vetolaatikon-pylvas]
+        [:div.vetolaatikon-pylvas]
         (if (avattavat-rivit-auki? ohjaus id)
           [ikonit/navigation-ympyrassa :down]
           [ikonit/navigation-ympyrassa :right])])]))

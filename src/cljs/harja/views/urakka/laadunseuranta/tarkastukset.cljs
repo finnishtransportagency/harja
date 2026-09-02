@@ -72,127 +72,127 @@
 (defn valitse-tarkastus [tarkastus-id]
   (go
     (reset! tiedot/valittu-tarkastus
-            (<! (tiedot/hae-tarkastus (:id @nav/valittu-urakka) tarkastus-id)))))
+      (<! (tiedot/hae-tarkastus (:id @nav/valittu-urakka) tarkastus-id)))))
 
 (defn tarkastuslistaus
   "Tarkastuksien listauskomponentti"
   []
-   (komp/luo
-     (komp/sisaan #(when (u-domain/vesivaylaurakka? @nav/valittu-urakka)
-                     ;; VV-urakassa nämä filtterit eivät saa vaikuttaa.
-                     (reset! tiedot/tienumero nil)
-                     (reset! tiedot/tarkastustyyppi nil)))
-     (fn []
-       (let [urakka @nav/valittu-urakka
-             urakkatyyppi (:tyyppi urakka)
-             vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
-             tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
-         [:div.tarkastukset
-          [ui-valinnat/urakkavalinnat {:urakka urakka}
-           ^{:key "aikavali"}
-           [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
+  (komp/luo
+    (komp/sisaan #(when (u-domain/vesivaylaurakka? @nav/valittu-urakka)
+                    ;; VV-urakassa nämä filtterit eivät saa vaikuttaa.
+                    (reset! tiedot/tienumero nil)
+                    (reset! tiedot/tarkastustyyppi nil)))
+    (fn []
+      (let [urakka @nav/valittu-urakka
+            urakkatyyppi (:tyyppi urakka)
+            vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)
+            tarkastukset (reverse (sort-by :aika @tiedot/urakan-tarkastukset))]
+        [:div.tarkastukset
+         [ui-valinnat/urakkavalinnat {:urakka urakka}
+          ^{:key "aikavali"}
+          [valinnat/aikavali-nykypvm-taakse urakka tiedot/valittu-aikavali {:vayla-tyyli? true}]
 
-           (when-not vesivaylaurakka?
-             ^{:key "tyyppi"}
-             [tee-otsikollinen-kentta
-              {:otsikko "Tyyppi"
-               :kentta-params {:tyyppi :valinta
-                               :valinnat (conj (tarkastustyypit-urakkatyypille urakkatyyppi) nil)
-                               :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "Kaikki")}
-               :arvo-atom tiedot/tarkastustyyppi}])
+          (when-not vesivaylaurakka?
+            ^{:key "tyyppi"}
+            [tee-otsikollinen-kentta
+             {:otsikko "Tyyppi"
+              :kentta-params {:tyyppi :valinta
+                              :valinnat (conj (tarkastustyypit-urakkatyypille urakkatyyppi) nil)
+                              :valinta-nayta #(or (tiedot/+tarkastustyyppi->nimi+ %) "Kaikki")}
+              :arvo-atom tiedot/tarkastustyyppi}])
 
-           ^{:key "tarkastusvalinnat"}
-           [tee-otsikollinen-kentta
-            {:otsikko "Näytä"
-             :kentta-params {:tyyppi :valinta
-                             :valinnat tiedot/+naytettevat-tarkastukset-valinnat+
-                             :valinta-nayta second}
-             :arvo-atom tiedot/naytettavat-tarkastukset}]
+          ^{:key "tarkastusvalinnat"}
+          [tee-otsikollinen-kentta
+           {:otsikko "Näytä"
+            :kentta-params {:tyyppi :valinta
+                            :valinnat tiedot/+naytettevat-tarkastukset-valinnat+
+                            :valinta-nayta second}
+            :arvo-atom tiedot/naytettavat-tarkastukset}]
 
-           ^{:key "tekija"}
-           [tee-otsikollinen-kentta
-            {:otsikko "Tekijä"
-             :kentta-params {:tyyppi :valinta
-                             :valinnat tiedot/+tarkastuksen-tekija-valinnat+
-                             :valinta-nayta second}
-             :arvo-atom tiedot/tarkastuksen-tekija}]
+          ^{:key "tekija"}
+          [tee-otsikollinen-kentta
+           {:otsikko "Tekijä"
+            :kentta-params {:tyyppi :valinta
+                            :valinnat tiedot/+tarkastuksen-tekija-valinnat+
+                            :valinta-nayta second}
+            :arvo-atom tiedot/tarkastuksen-tekija}]
 
-           (when-not vesivaylaurakka?
-             ^{:key "tienumero"}
-             [valinnat/tienumero tiedot/tienumero])
+          (when-not vesivaylaurakka?
+            ^{:key "tienumero"}
+            [valinnat/tienumero tiedot/tienumero])
 
-           ^{:key "urakkatoiminnot"}
-           [ui-valinnat/urakkatoiminnot {:urakka urakka}
-            (let [oikeus? (oikeudet/voi-kirjoittaa?
-                            oikeudet/urakat-laadunseuranta-tarkastukset
-                            (:id urakka))]
-              (yleiset/wrap-if
-                (not oikeus?)
-                [yleiset/tooltip {} :%
-                 (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
-                ^{:key "uusi-tarkastus"}
-                [napit/uusi "Uusi tarkastus"
-                 #(reset! tiedot/valittu-tarkastus (uusi-tarkastus urakkatyyppi))
-                 {:disabled (not oikeus?)}]))]]
+          ^{:key "urakkatoiminnot"}
+          [ui-valinnat/urakkatoiminnot {:urakka urakka}
+           (let [oikeus? (oikeudet/voi-kirjoittaa?
+                           oikeudet/urakat-laadunseuranta-tarkastukset
+                           (:id urakka))]
+             (yleiset/wrap-if
+               (not oikeus?)
+               [yleiset/tooltip {} :%
+                (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-tarkastukset)]
+               ^{:key "uusi-tarkastus"}
+               [napit/uusi "Uusi tarkastus"
+                #(reset! tiedot/valittu-tarkastus (uusi-tarkastus urakkatyyppi))
+                {:disabled (not oikeus?)}]))]]
 
-          [grid/grid
-           {:otsikko "Tarkastukset"
-            :tyhja (if (nil? @tiedot/urakan-tarkastukset)
-                     [yleiset/ajax-loader "Tarkastuksia ladataan"]
-                     "Ei tarkastuksia")
-            :rivi-klikattu #(valitse-tarkastus (:id %))
-            :jarjesta :aika
-            :max-rivimaara 500
-            :max-rivimaaran-ylitys-viesti
-            "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
+         [grid/grid
+          {:otsikko "Tarkastukset"
+           :tyhja (if (nil? @tiedot/urakan-tarkastukset)
+                    [yleiset/ajax-loader "Tarkastuksia ladataan"]
+                    "Ei tarkastuksia")
+           :rivi-klikattu #(valitse-tarkastus (:id %))
+           :jarjesta :aika
+           :max-rivimaara 500
+           :max-rivimaaran-ylitys-viesti
+           "Tarkastuksia yli 500, tarkenna aikaväliä tai muita hakuehtoja."}
 
-           [{:otsikko "Pvm ja aika"
-             :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
-             :nimi :aika}
+          [{:otsikko "Pvm ja aika"
+            :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 1
+            :nimi :aika}
 
-            {:otsikko "Tyyppi"
-             :nimi :tyyppi
-             :fmt tiedot/+tarkastustyyppi->nimi+
-             :leveys 1}
+           {:otsikko "Tyyppi"
+            :nimi :tyyppi
+            :fmt tiedot/+tarkastustyyppi->nimi+
+            :leveys 1}
 
-            (when (or (= :paallystys urakkatyyppi)
-                    (= :paikkaus urakkatyyppi)
-                    (= :tiemerkinta urakkatyyppi))
-              {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
-               :hae (fn [rivi]
-                      (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                                    :nimi (get-in rivi [:yllapitokohde :nimi])}))})
-            (when-not (u-domain/vesivaylaurakka? urakka)
-              {:otsikko "Tieosoite"
-               :nimi :tr
-               :leveys 2
-               :fmt tierekisteri/tierekisteriosoite-tekstina})
-            {:otsikko "Havainnot"
-             :nimi :havainnot
-             :leveys 4
-             :tyyppi :komponentti
-             :komponentti (fn [rivi]
-                            (let [havainnot (:havainnot rivi)
-                                  havainnot-max-pituus 50
-                                  havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
-                                                      (str (.substring havainnot 0 havainnot-max-pituus) "...")
-                                                      havainnot)
-                                  vakiohavainnot (domain-tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot rivi))
-                                  talvihoitomittaukset (domain-tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
-                                  soratiemittaukset (domain-tarkastukset/formatoi-soratiemittaukset (:soratiemittaus rivi))]
-                              [:ul.tarkastuksen-havaintolista
-                               (when-not (str/blank? vakiohavainnot)
-                                 [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
-                               (when-not (str/blank? talvihoitomittaukset)
-                                 [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
-                               (when-not (str/blank? soratiemittaukset)
-                                 [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
-                               (when-not (str/blank? havainnot-rajattu)
-                                 [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
-            {:otsikko "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
-             :komponentti (fn [rivi]
-                            (liitteet/liitteet-numeroina (:liitteet rivi)))}]
-           tarkastukset]]))))
+           (when (or (= :paallystys urakkatyyppi)
+                   (= :paikkaus urakkatyyppi)
+                   (= :tiemerkinta urakkatyyppi))
+             {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 2
+              :hae (fn [rivi]
+                     (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                                   :nimi (get-in rivi [:yllapitokohde :nimi])}))})
+           (when-not (u-domain/vesivaylaurakka? urakka)
+             {:otsikko "Tieosoite"
+              :nimi :tr
+              :leveys 2
+              :fmt tierekisteri/tierekisteriosoite-tekstina})
+           {:otsikko "Havainnot"
+            :nimi :havainnot
+            :leveys 4
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           (let [havainnot (:havainnot rivi)
+                                 havainnot-max-pituus 50
+                                 havainnot-rajattu (if (> (count havainnot) havainnot-max-pituus)
+                                                     (str (.substring havainnot 0 havainnot-max-pituus) "...")
+                                                     havainnot)
+                                 vakiohavainnot (domain-tarkastukset/formatoi-vakiohavainnot (:vakiohavainnot rivi))
+                                 talvihoitomittaukset (domain-tarkastukset/formatoi-talvihoitomittaukset (:talvihoitomittaus rivi))
+                                 soratiemittaukset (domain-tarkastukset/formatoi-soratiemittaukset (:soratiemittaus rivi))]
+                             [:ul.tarkastuksen-havaintolista
+                              (when-not (str/blank? vakiohavainnot)
+                                [:li.tarkastuksen-vakiohavainnot vakiohavainnot])
+                              (when-not (str/blank? talvihoitomittaukset)
+                                [:li.tarkastuksen-talvihoitomittaukset talvihoitomittaukset])
+                              (when-not (str/blank? soratiemittaukset)
+                                [:li.tarkastuksen-soratiemittaukset soratiemittaukset])
+                              (when-not (str/blank? havainnot-rajattu)
+                                [:li.tarkastuksen-havainnot havainnot-rajattu])]))}
+           {:otsikko "Liit\u00ADteet" :nimi :liitteet :leveys 1 :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           (liitteet/liitteet-numeroina (:liitteet rivi)))}]
+          tarkastukset]]))))
 
 (defn talvihoitomittaus []
   (lomake/ryhma
@@ -230,29 +230,29 @@
                       "Anna arvo 0 - 100"))]
     (lomake/ryhma {:otsikko "Soratiemittaus"
                    :rivi? true}
-                  {:otsikko "Tasaisuus" :tyyppi :numero
-                   :nimi :tasaisuus :palstoja 1
-                   :hae (comp :tasaisuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :tasaisuus] %2)
-                   :validoi [kuntoluokka]}
+      {:otsikko "Tasaisuus" :tyyppi :numero
+       :nimi :tasaisuus :palstoja 1
+       :hae (comp :tasaisuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :tasaisuus] %2)
+       :validoi [kuntoluokka]}
 
-                  {:otsikko "Kiinteys" :tyyppi :numero
-                   :nimi :kiinteys :palstoja 1
-                   :hae (comp :kiinteys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :kiinteys] %2)
-                   :validoi [kuntoluokka]}
+      {:otsikko "Kiinteys" :tyyppi :numero
+       :nimi :kiinteys :palstoja 1
+       :hae (comp :kiinteys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :kiinteys] %2)
+       :validoi [kuntoluokka]}
 
-                  {:otsikko "Pölyävyys" :tyyppi :numero
-                   :nimi :polyavyys :palstoja 1
-                   :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
-                   :validoi [kuntoluokka]}
+      {:otsikko "Pölyävyys" :tyyppi :numero
+       :nimi :polyavyys :palstoja 1
+       :hae (comp :polyavyys :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :polyavyys] %2)
+       :validoi [kuntoluokka]}
 
-                  {:otsikko "Sivukalt." :tyyppi :numero :yksikko "%"
-                   :nimi :sivukaltevuus :palstoja 1 :validoi [prosentti]
-                   :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)}
+      {:otsikko "Sivukalt." :tyyppi :numero :yksikko "%"
+       :nimi :sivukaltevuus :palstoja 1 :validoi [prosentti]
+       :hae (comp :sivukaltevuus :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :sivukaltevuus] %2)}
 
-                  {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
-                   :nimi :hoitoluokka :palstoja 1
-                   :hae (comp :hoitoluokka :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :hoitoluokka] %2)
-                   :valinnat [1 2 3]})))
+      {:otsikko "Soratiehoitoluokka" :tyyppi :valinta
+       :nimi :hoitoluokka :palstoja 1
+       :hae (comp :hoitoluokka :soratiemittaus) :aseta #(assoc-in %1 [:soratiemittaus :hoitoluokka] %2)
+       :valinnat [1 2 3]})))
 
 (defn avaa-tarkastuksen-laatupoikkeama [laatupoikkeama-id]
   (reset! tiedot-laatupoikkeamat/valittu-laatupoikkeama-id laatupoikkeama-id)
@@ -277,9 +277,9 @@
         tarkastus @tarkastus-atom
         jarjestelmasta? (:jarjestelma tarkastus)
         voi-kirjoittaa? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-tarkastukset
-                                                  urakka-id)
+                          urakka-id)
         voi-muokata? (and voi-kirjoittaa?
-                          (not jarjestelmasta?))
+                       (not jarjestelmasta?))
         kohde-muuttui? (fn [vanha uusi] (not= vanha uusi))
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
         yllapidon-palvelusopimus? (tiedot-urakka/yllapidon-palvelusopimus? valittu-urakka)
@@ -290,19 +290,19 @@
        [napit/takaisin "Takaisin tarkastusluetteloon" #(reset! tarkastus-atom nil)]
 
        (when (and jarjestelmasta?
-                  (not (:nayta-urakoitsijalle tarkastus))
-                  (oikeudet/on-muu-oikeus? "aseta-näkyviin-urakoitsijalle"
-                                           oikeudet/urakat-laadunseuranta-tarkastukset
-                                           urakka-id @istunto/kayttaja))
+               (not (:nayta-urakoitsijalle tarkastus))
+               (oikeudet/on-muu-oikeus? "aseta-näkyviin-urakoitsijalle"
+                 oikeudet/urakat-laadunseuranta-tarkastukset
+                 urakka-id @istunto/kayttaja))
          [:div {:style {:margin-top "1em" :margin-bottom "1em"}}
           [napit/yleinen-ensisijainen "Näytä tarkastus urakoitsijalle"
            (fn []
              (go (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? true)
-                 (let [vastaus (<! (tiedot/aseta-tarkastus-nakymaan-urakoitsijalle urakka-id (:id tarkastus)))]
-                   (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? false)
-                   (if (k/virhe? vastaus)
-                     (viesti/nayta! "Tarkastuksen asettaminen näkyviin urakoitsijalle epäonnistui." :danger)
-                     (reset! tarkastus-atom vastaus)))))
+               (let [vastaus (<! (tiedot/aseta-tarkastus-nakymaan-urakoitsijalle urakka-id (:id tarkastus)))]
+                 (reset! tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa? false)
+                 (if (k/virhe? vastaus)
+                   (viesti/nayta! "Tarkastuksen asettaminen näkyviin urakoitsijalle epäonnistui." :danger)
+                   (reset! tarkastus-atom vastaus)))))
            {:tallennus-kaynnissa? @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?
             :disabled @tiedot/tarkastuksen-avaaminen-urakoitsijalle-kaynnissa?}]])
 
@@ -362,11 +362,11 @@
                        [[:ei-tyhja "Anna tarkastuksen kohde"]])})
 
          (if vesivaylaurakka?
-           {:otsikko "Tar\u00ADkastus" 
-            :nimi :tyyppi 
+           {:otsikko "Tar\u00ADkastus"
+            :nimi :tyyppi
             :tyyppi :string
             :hae (constantly "Katselmus") :muokattava? (constantly false)}
-           {:otsikko "Tar\u00ADkastus" 
+           {:otsikko "Tar\u00ADkastus"
             :nimi :tyyppi
             :pakollinen? true
             :tyyppi :valinta
@@ -388,7 +388,7 @@
             :ala-nayta-virhetta-komponentissa? true
             :varoita [[:validi-tr "Reittiä ei saada tehtyä" [:sijainti]]]
             :sijainti (r/wrap (:sijainti tarkastus)
-                              #(swap! tarkastus-atom assoc :sijainti %))})
+                        #(swap! tarkastus-atom assoc :sijainti %))})
 
          {:otsikko "Tar\u00ADkastaja"
           :nimi :tarkastaja
@@ -433,8 +433,8 @@
           :fmt fmt/totuus}
 
          (when (and (not= (roolit/osapuoli @istunto/kayttaja) :urakoitsija)
-                    (not (and (nav/yllapitourakka-valittu?)
-                              (= (:tyyppi tarkastus) :katselmus))))
+                 (not (and (nav/yllapitourakka-valittu?)
+                        (= (:tyyppi tarkastus) :katselmus))))
            {:otsikko (when-not voi-muokata?
                        ;; Näytä otsikko näyttömuodossa
                        "Näytä urakoitsijalle")
@@ -459,7 +459,7 @@
             :komponentti (fn [_]
                            [liitteet/liitteet-ja-lisays urakka-id (:liitteet tarkastus)
                             {:uusi-liite-atom (r/wrap (:uusi-liite tarkastus)
-                                                      #(swap! tarkastus-atom assoc :uusi-liite %))
+                                                #(swap! tarkastus-atom assoc :uusi-liite %))
                              :uusi-liite-teksti "Lisää liite tarkastukseen"
                              :salli-poistaa-lisatty-liite? true
                              :poista-lisatty-liite-fn #(swap! tarkastus-atom dissoc :uusi-liite)
@@ -473,9 +473,9 @@
                                   :liite-id liite-id
                                   :poistettu-fn (fn []
                                                   (swap! tarkastus-atom assoc :liitteet
-                                                         (filter (fn [liite]
-                                                                   (not= (:id liite) liite-id))
-                                                                 (:liitteet tarkastus))))}))}])})
+                                                    (filter (fn [liite]
+                                                              (not= (:id liite) liite-id))
+                                                      (:liitteet tarkastus))))}))}])})
          (when voi-kirjoittaa?
            {:rivi? true
             :uusi-rivi? true
@@ -506,7 +506,7 @@
   (some (fn [urakan-tarkastus]
           (when (= (:id urakan-tarkastus) (:id klikattu-tarkastus))
             urakan-tarkastus))
-        @tiedot/urakan-tarkastukset))
+    @tiedot/urakan-tarkastukset))
 
 (defn tarkastukset
   "Tarkastuksien pääkomponentti"
@@ -525,13 +525,15 @@
                            {:tarkastus {:toiminto (fn [klikattu-tarkastus] ;; asiat-pisteessa -asia joka on tyypiltään tarkastus
                                                     (reset! tiedot/valittu-tarkastus (vastaava-tarkastus klikattu-tarkastus)))
                                         :teksti "Valitse tarkastus"}})
-                         (nav/vaihda-kartan-koko! :M))
-                      #(do
-                         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-                         (reset! tarkastukset-kartalla/karttataso-tarkastukset false)
-                         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+                         (nav/vaihda-kartan-koko! :M)
+                         (kartta-tiedot/piilota-infopaneeli!))
+      #(do
+         (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+         (reset! tarkastukset-kartalla/karttataso-tarkastukset false)
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn []
       [:span.tarkastukset
+       [:h1 "Tarkastukset"]
        (when @nav/kartta-nakyvissa?
          [ui-valinnat/segmentoitu-ohjaus
           [{:nimi :tarkastukset

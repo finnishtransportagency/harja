@@ -12,6 +12,7 @@
                             :paatoksen-diaarinumero "123456789"
                             :saapumispvm "2020-09-22T12:00:00+02:00"
                             :otsikko "Lupa tehdä töitä"
+                            :elinvoimakeskus "Pohjois-Suomi"
                             :ely "Pohjois-Pohjanmaa"
                             :liite-url "https://liite.tilu.fi/1234.pdf"
                             :katselmus-url "https://tilu.fi/1234"
@@ -234,6 +235,7 @@
 
 (deftest mainoslupa
   (let [data {:sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+              :tiedoksi-elinvoimakeskukselle false
               :tiedoksi-elykeskukselle true
               :asemakaava-alueella true
               :suoja-alueen-leveys 1.2M
@@ -251,6 +253,7 @@
                   :harja.domain.tielupa/mainoslupa-sijainnin-kuvaus
                   "Kiimingin keskustasta 10 km pohjoiseen."
                   :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elinvoimakeskukselle false
                   :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
                   :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
                   :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M
@@ -267,6 +270,7 @@
 
 (deftest mainosilmoitus
   (let [data {:sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
+              :tiedoksi-elinvoimakeskukselle false
               :tiedoksi-elykeskukselle true
               :mainostettava-asia "Hyvä hitutinteri"
               :asemakaava-alueella true
@@ -283,6 +287,7 @@
                   :sijoitus "oikea"}}}]}
         odotettu {:harja.domain.tielupa/mainoslupa-sijainnin-kuvaus "Kiimingin keskustasta 10 km pohjoiseen."
                   :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elinvoimakeskukselle false
                   :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
                   :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
                   :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M
@@ -448,6 +453,7 @@
 
 (deftest mainoslupa-ilman-sijaintia
   (let [data {:sijainnin-kuvaus "Sijainti jota ei ole ilmoitettu tr-osoitteella."
+              :tiedoksi-elinvoimakeskukselle false
               :tiedoksi-elykeskukselle true
               :asemakaava-alueella true
               :suoja-alueen-leveys 1.2M
@@ -458,6 +464,7 @@
                   :harja.domain.tielupa/mainoslupa-sijainnin-kuvaus
                   "Sijainti jota ei ole ilmoitettu tr-osoitteella."
                   :harja.domain.tielupa/mainoslupa-korvaava-paatos nil
+                  :harja.domain.tielupa/mainoslupa-tiedoksi-elinvoimakeskukselle false
                   :harja.domain.tielupa/mainoslupa-tiedoksi-elykeskukselle true
                   :harja.domain.tielupa/mainoslupa-asemakaava-alueella true
                   :harja.domain.tielupa/mainoslupa-suoja-alueen-leveys 1.2M

@@ -143,7 +143,8 @@
              :kohdeid kohde-id
              :lahettaja (:id user)})))
       (when-not onnistunut?
-        {:virhe virhe-viestit}))))
+        (throw+ {:type +virhe-kohteen-lahetyksessa+
+                 :virheet [{:koodi :yha-virhe :viesti virhe-viestit}]})))))
 
 (defn lisaa-http-parametri [parametrit avain arvo]
   (if arvo

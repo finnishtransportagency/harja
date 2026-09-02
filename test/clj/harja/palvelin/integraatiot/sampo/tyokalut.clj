@@ -31,7 +31,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"TESTIHANKE\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\"
+        financialDepartmentHash=\"3800481310\"
         vv_alueurakkanro=\"TH-123\">
         <documentLinks/>
       </Project>
@@ -43,7 +43,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"TESTIHANKE\" vv_transferred_harja=\"2019-09-19T20:27:14+03:00\"
         schedule_start=\"2025-10-01T08:00:00.0\" schedule_finish=\"2030-09-30T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\"
+        financialDepartmentHash=\"3800481310\"
         vv_alueurakkanro=\"THJ-321\">
         <documentLinks/>
       </Project>
@@ -55,7 +55,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"muho1\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\"
+        financialDepartmentHash=\"3800481310\"
         vv_alueurakkanro=\"TYP-456\">
         <documentLinks/>
       </Project>
@@ -67,7 +67,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"tiem1\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\"
+        financialDepartmentHash=\"3800481310\"
         vv_alueurakkanro=\"TYT-789\">
         <documentLinks/>
       </Project>
@@ -79,7 +79,7 @@
       <Project id=\"TESTIURAKKA\" message_Id=\"UrakkaMessageId\" name=\"Testiurakka\" resourceId=\"TESTIHENKILO\"
         programId=\"valai1\" vv_transferred_harja=\"2006-08-19T20:27:14+03:00\"
         schedule_start=\"2013-01-01T08:00:00.0\" schedule_finish=\"2020-12-31T17:00:00.0\"
-        financialDepartmentHash=\"KP981303\"
+        financialDepartmentHash=\"3800481310\"
         vv_alueurakkanro=\"TYV-987\">
         <documentLinks/>
       </Project>
@@ -154,7 +154,7 @@
                id=\"TESTITPKTPI2\" managerId=\"A009864\" messageId=\"ToimenpideMessageId\"
                name=\"TESTITPKTPI2\" productHash=\"\" productOBS=\"\" projectId=\"TESTIURAKKA\"
                schedule_finish=\"2015-12-31T23:59:59.0\" schedule_start=\"2010-01-01T00:00:00.0\" vv_code=\"\"
-               vv_operation=\"31114\">
+               vv_operation=\"23103\">
         <documentLinks/>
     </Operation>
 </Sampo2harja>")
@@ -183,17 +183,25 @@
   ([] (tuo-urakka nil))
   ([sampo-id]
    (let [sanoma (if sampo-id
-                  (str/replace +testi-hoitourakka-sanoma+ "TESTIURAKKA" sampo-id )
+                  (str/replace +testi-hoitourakka-sanoma+ "TESTIURAKKA" sampo-id)
                   +testi-hoitourakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))
 
 (defn tuo-maanteiden-hoidon-urakka
-  ([] (tuo-maanteiden-hoidon-urakka nil))
-  ([sampo-id]
-   (let [sanoma (if sampo-id
-                  (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id )
-                  +testi-maanteiden-hoidon-urakka-sanoma+)
+  ([] (tuo-maanteiden-hoidon-urakka {:sampo-id nil :ennen-2025? nil}))
+  ([{:keys [sampo-id ennen-2025?]}]
+   (let [sanoma (cond
+                  (and sampo-id ennen-2025?)
+                  (-> +testi-maanteiden-hoidon-urakka-sanoma+
+                    (str/replace "TESTIURAKKA" sampo-id)
+                    (str/replace "2025" "2024"))
+                  sampo-id
+                    (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "TESTIURAKKA" sampo-id)
+                  ennen-2025?
+                    (str/replace +testi-maanteiden-hoidon-urakka-sanoma+ "2025" "2024")
+                  :else
+                    +testi-maanteiden-hoidon-urakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))
 
@@ -213,7 +221,7 @@
   (first (first (q "select tyyppi from urakka where sampoid = 'TESTIURAKKA';"))))
 
 (defn hae-urakan-hallintayksikon-nimi []
-  (first (first (q "SELECT o.nimi FROM urakka u INNER JOIN organisaatio o on o.id = u.hallintayksikko WHERE u.sampoid = 'TESTIURAKKA';"))))
+  (first (first (q "SELECT o.nimi FROM urakka u INNER JOIN organisaatio o on o.id = u.elinvoimakeskus_id WHERE u.sampoid = 'TESTIURAKKA';"))))
 
 (defn onko-yhteyshenkilo-sidottu-urakkaan? []
   (first (first (q "SELECT exists(

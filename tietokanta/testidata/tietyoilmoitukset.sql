@@ -88,10 +88,10 @@ VALUES (NULL,
    WHERE sahkoposti = 'yit_pk2@example.org')) :: tietyon_henkilo,
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   (SELECT nimi
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   (SELECT id
    FROM kayttaja
    WHERE sahkoposti = 'tero.toripolliisi@example.com'),
@@ -194,10 +194,10 @@ VALUES (NULL,
    WHERE sahkoposti = 'yit_pk2@example.org')) :: tietyon_henkilo,
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'LAP'),
+   WHERE lyhenne = 'LAP' and tyyppi = 'hallintayksikko'),
   (SELECT nimi
    FROM organisaatio
-   WHERE lyhenne = 'LAP'),
+   WHERE lyhenne = 'LAP' and tyyppi = 'hallintayksikko'),
   (SELECT id
    FROM kayttaja
    WHERE sahkoposti = 'tero.toripolliisi@example.com'),
@@ -346,10 +346,10 @@ VALUES (1,
    WHERE sahkoposti = 'yit_pk2@example.org')) :: TIETYON_HENKILO,
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   (SELECT nimi
    FROM organisaatio
-   WHERE lyhenne = 'POP'),
+   WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
   (SELECT id
    FROM kayttaja
    WHERE sahkoposti = 'tero.toripolliisi@example.com'),
@@ -454,10 +454,10 @@ VALUES (1,
    WHERE sahkoposti = 'yit_pk2@example.org')) :: TIETYON_HENKILO,
   (SELECT id
    FROM organisaatio
-   WHERE lyhenne = 'LAP'),
+   WHERE lyhenne = 'LAP' and tyyppi = 'hallintayksikko'),
   (SELECT nimi
    FROM organisaatio
-   WHERE lyhenne = 'LAP'),
+   WHERE lyhenne = 'LAP' and tyyppi = 'hallintayksikko'),
   (SELECT id
    FROM kayttaja
    WHERE sahkoposti = 'tero.toripolliisi@example.com'),

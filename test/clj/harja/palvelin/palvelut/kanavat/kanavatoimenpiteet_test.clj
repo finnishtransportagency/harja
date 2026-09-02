@@ -22,75 +22,75 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db ds
-                        :http-palvelin (testi-http-palvelin)
-                        :kan-toimenpiteet (component/using
-                                            (kan-toimenpiteet/->Kanavatoimenpiteet)
-                                            [:http-palvelin :db])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db ds
+          :http-palvelin (testi-http-palvelin)
+          :kan-toimenpiteet (component/using
+                              (kan-toimenpiteet/->Kanavatoimenpiteet)
+                              [:http-palvelin :db])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture
-                                      jarjestelma-fixture))
+                      jarjestelma-fixture))
 
 #_(deftest toimenpiteiden-haku
-  (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
-        hakuargumentit {::kanavan-toimenpide/urakka-id urakka-id
-                        ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
-                        ::toimenpidekoodi/id 534
-                        :alkupvm (pvm/luo-pvm 2017 1 1)
-                        :loppupvm (pvm/luo-pvm 2018 1 1)
-                        ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
-                        ::kanavan-toimenpide/kohde-id nil}
-        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :hae-kanavatoimenpiteet
-                                +kayttaja-jvh+
-                                hakuargumentit)]
-    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuargumentit) "Kutsu on validi")
-    (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus (hae-kanavatoimenpiteet) on validi")
+    (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+          hakuargumentit {::kanavan-toimenpide/urakka-id urakka-id
+                          ::kanavan-toimenpide/sopimus-id (hae-saimaan-kanavaurakan-paasopimuksen-id)
+                          ::toimenpidekoodi/id 534
+                          :alkupvm (pvm/luo-pvm 2017 1 1)
+                          :loppupvm (pvm/luo-pvm 2018 1 1)
+                          ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen
+                          ::kanavan-toimenpide/kohde-id nil}
+          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                    :hae-kanavatoimenpiteet
+                    +kayttaja-jvh+
+                    hakuargumentit)]
+      (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuargumentit) "Kutsu on validi")
+      (is (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-vastaus vastaus) "Vastaus (hae-kanavatoimenpiteet) on validi")
 
-    (is (>= (count vastaus) 1))
-    (is (every? ::kanavan-toimenpide/id vastaus))
-    (is (every? ::kanavan-toimenpide/kohde vastaus))
-    (is (every? ::kanavan-toimenpide/toimenpidekoodi vastaus))
-    (is (every? ::kanavan-toimenpide/huoltokohde vastaus))
+      (is (>= (count vastaus) 1))
+      (is (every? ::kanavan-toimenpide/id vastaus))
+      (is (every? ::kanavan-toimenpide/kohde vastaus))
+      (is (every? ::kanavan-toimenpide/toimenpidekoodi vastaus))
+      (is (every? ::kanavan-toimenpide/huoltokohde vastaus))
 
-    (testing "Aikavälisuodatus toimii"
-      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-kanavatoimenpiteet
-                                        +kayttaja-jvh+
-                                        (assoc hakuargumentit :alkupvm (pvm/luo-pvm 2030 1 1)
-                                                              :loppupvm (pvm/luo-pvm 2040 1 1)))))))
+      (testing "Aikavälisuodatus toimii"
+        (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :hae-kanavatoimenpiteet
+                            +kayttaja-jvh+
+                            (assoc hakuargumentit :alkupvm (pvm/luo-pvm 2030 1 1)
+                              :loppupvm (pvm/luo-pvm 2040 1 1)))))))
 
-    (testing "Toimenpidekoodisuodatus toimii"
-      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-kanavatoimenpiteet
-                                        +kayttaja-jvh+
-                                        (assoc hakuargumentit ::toimenpidekoodi/id -1))))))
+      (testing "Toimenpidekoodisuodatus toimii"
+        (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :hae-kanavatoimenpiteet
+                            +kayttaja-jvh+
+                            (assoc hakuargumentit ::toimenpidekoodi/id -1))))))
 
-    (testing "Sopimussuodatus toimii"
-      (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
-                                        :hae-kanavatoimenpiteet
-                                        +kayttaja-jvh+
-                                        (assoc hakuargumentit ::kanavan-toimenpide/sopimus-id -1))))))
+      (testing "Sopimussuodatus toimii"
+        (is (zero? (count (kutsu-palvelua (:http-palvelin jarjestelma)
+                            :hae-kanavatoimenpiteet
+                            +kayttaja-jvh+
+                            (assoc hakuargumentit ::kanavan-toimenpide/sopimus-id -1))))))
 
-    (testing "Tyyppisuodatus toimii"
-      (is (every? #(= (::kanavan-toimenpide/tyyppi %) :kokonaishintainen)
-                  (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-kanavatoimenpiteet
-                                  +kayttaja-jvh+
-                                  (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
-                                                        :kokonaishintainen))))
+      (testing "Tyyppisuodatus toimii"
+        (is (every? #(= (::kanavan-toimenpide/tyyppi %) :kokonaishintainen)
+              (kutsu-palvelua (:http-palvelin jarjestelma)
+                :hae-kanavatoimenpiteet
+                +kayttaja-jvh+
+                (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                  :kokonaishintainen))))
 
-      (is (every? #(= (::kanavan-toimenpide/tyyppi %) :muutos-lisatyo)
-                  (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :hae-kanavatoimenpiteet
-                                  +kayttaja-jvh+
-                                  (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
-                                                        :muutos-lisatyo)))))))
+        (is (every? #(= (::kanavan-toimenpide/tyyppi %) :muutos-lisatyo)
+              (kutsu-palvelua (:http-palvelin jarjestelma)
+                :hae-kanavatoimenpiteet
+                +kayttaja-jvh+
+                (assoc hakuargumentit ::kanavan-toimenpide/kanava-toimenpidetyyppi
+                  :muutos-lisatyo)))))))
 
 
 (deftest toimenpiteiden-haku-tyhjalla-urakalla-ei-toimi
@@ -102,7 +102,7 @@
                         ::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen}]
 
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
-                       hakuargumentit)))))
+               hakuargumentit)))))
 
 (deftest toimenpiteiden-haku-ilman-oikeutta-ei-toimi
   (let [parametrit {::kanavan-toimenpide/urakka-id (hae-urakan-id-nimella "Saimaan kanava")
@@ -114,78 +114,78 @@
                     ::kanavan-toimenpide/kohde-id nil}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :hae-kanavatoimenpiteet
-                                           +kayttaja-ulle+
-                                           parametrit)))))
+                             :hae-kanavatoimenpiteet
+                             +kayttaja-ulle+
+                             parametrit)))))
 
 #_(deftest kanavatoimenpiteiden-siirtaminen-lisatoihin-ja-kokonaishintaisiin
-  (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
-        kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
-                                                         (apply concat
-                                                                (q "SELECT tk4.id
+    (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
+          kokonaishintaisten-toimenpiteiden-tehtavat (into #{}
+                                                       (apply concat
+                                                         (q "SELECT tk4.id
                                                                     FROM tehtava tk4
                                                                      JOIN toimenpide tk3 ON tk4.emo=tk3.id
                                                                     WHERE tk3.koodi='27105' AND
                                                                           'kokonaishintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
-        muutoshintaisten-toimenpiteiden-tehtavat (into #{}
-                                                       (apply concat
-                                                              (q "SELECT tk4.id
+          muutoshintaisten-toimenpiteiden-tehtavat (into #{}
+                                                     (apply concat
+                                                       (q "SELECT tk4.id
                                                                   FROM tehtava tk4
                                                                    JOIN toimenpide tk3 ON tk4.emo=tk3.id
                                                                   WHERE tk3.koodi='27105' AND
                                                                         'muutoshintainen'::hinnoittelutyyppi=ANY(tk4.hinnoittelu);")))
-        ei-yksiloity-tehtava (into #{}
-                                   (first (q "SELECT tk4.id
+          ei-yksiloity-tehtava (into #{}
+                                 (first (q "SELECT tk4.id
                                               FROM tehtava tk4
                                                JOIN toimenpide tk3 ON tk4.emo=tk3.id
                                               WHERE tk4.nimi='Ei yksilöity' AND
                                                     tk3.koodi='27105';")))
-        tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
-                                               (when (= %1 (:tyyppi toimenpide))
-                                                 (:id toimenpide)))
-                                             %2))
-        kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
-        muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
-        urakka-id (hae-urakan-id-nimella "Saimaan kanava")
-        parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
-                    ::kanavan-toimenpide/urakka-id urakka-id
-                    ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
-        _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                          :siirra-kanavatoimenpiteet
-                          +kayttaja-jvh+
-                          parametrit)
-        paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
-        ei-kokonaishintaisia-toimenpiteita? (empty? (transduce
-                                                      (comp (map #(nil? ((set/union muutoshintaisten-toimenpiteiden-tehtavat
-                                                                                    ei-yksiloity-tehtava)
-                                                                          (:toimenpidekoodi %))))
-                                                            (filter true?))
-                                                      conj paivitetyt-toimenpiteet))]
-    (is (= (tyypin-toimenpiteet "muutos-lisatyo" paivitetyt-toimenpiteet)
-           (set/union kokonaishintaisten-toimenpiteiden-idt
-                      muutos-ja-lisatyo-toimenpiteiden-idt)))
-    (is ei-kokonaishintaisia-toimenpiteita?)
-    (let [uudet-parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
-                            ::kanavan-toimenpide/urakka-id urakka-id
-                            ::kanavan-toimenpide/tyyppi :kokonaishintainen}
+          tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
+                                                 (when (= %1 (:tyyppi toimenpide))
+                                                   (:id toimenpide)))
+                                           %2))
+          kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
+          muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
+          urakka-id (hae-urakan-id-nimella "Saimaan kanava")
+          parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                      ::kanavan-toimenpide/urakka-id urakka-id
+                      ::kanavan-toimenpide/tyyppi :muutos-lisatyo}
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                            :siirra-kanavatoimenpiteet
-                            +kayttaja-jvh+
-                            uudet-parametrit)
+              :siirra-kanavatoimenpiteet
+              +kayttaja-jvh+
+              parametrit)
           paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
-          ei-muutoshintaisia-toimenpiteita? (empty? (transduce
-                                                      (comp (map #(nil? (kokonaishintaisten-toimenpiteiden-tehtavat (:toimenpidekoodi %))))
-                                                            (filter true?))
-                                                      conj paivitetyt-toimenpiteet))]
-      (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet)))
-      (is ei-muutoshintaisia-toimenpiteita?))))
+          ei-kokonaishintaisia-toimenpiteita? (empty? (transduce
+                                                        (comp (map #(nil? ((set/union muutoshintaisten-toimenpiteiden-tehtavat
+                                                                             ei-yksiloity-tehtava)
+                                                                           (:toimenpidekoodi %))))
+                                                          (filter true?))
+                                                        conj paivitetyt-toimenpiteet))]
+      (is (= (tyypin-toimenpiteet "muutos-lisatyo" paivitetyt-toimenpiteet)
+            (set/union kokonaishintaisten-toimenpiteiden-idt
+              muutos-ja-lisatyo-toimenpiteiden-idt)))
+      (is ei-kokonaishintaisia-toimenpiteita?)
+      (let [uudet-parametrit {::kanavan-toimenpide/toimenpide-idt kokonaishintaisten-toimenpiteiden-idt
+                              ::kanavan-toimenpide/urakka-id urakka-id
+                              ::kanavan-toimenpide/tyyppi :kokonaishintainen}
+            _ (kutsu-palvelua (:http-palvelin jarjestelma)
+                :siirra-kanavatoimenpiteet
+                +kayttaja-jvh+
+                uudet-parametrit)
+            paivitetyt-toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet true)
+            ei-muutoshintaisia-toimenpiteita? (empty? (transduce
+                                                        (comp (map #(nil? (kokonaishintaisten-toimenpiteiden-tehtavat (:toimenpidekoodi %))))
+                                                          (filter true?))
+                                                        conj paivitetyt-toimenpiteet))]
+        (is (= (into #{} paivitetyt-toimenpiteet) (into #{} toimenpiteet)))
+        (is ei-muutoshintaisia-toimenpiteita?))))
 
 (deftest toimenpiteiden-siirtaminen-ilman-oikeutta-ei-toimi
   (let [toimenpiteet (hae-saimaan-kanavaurakan-toimenpiteet)
         tyypin-toimenpiteet #(into #{} (keep (fn [toimenpide]
                                                (when (= %1 (second toimenpide))
                                                  (first toimenpide)))
-                                             %2))
+                                         %2))
         kokonaishintaisten-toimenpiteiden-idt (tyypin-toimenpiteet "kokonaishintainen" toimenpiteet)
         muutos-ja-lisatyo-toimenpiteiden-idt (tyypin-toimenpiteet "muutos-lisatyo" toimenpiteet)
         urakka-id (hae-urakan-id-nimella "Saimaan kanava")
@@ -194,14 +194,14 @@
                     ::kanavan-toimenpide/tyyppi :muutos-lisatyo}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :siirra-kanavatoimenpiteet
-                                           +kayttaja-ulle+
-                                           parametrit)))
+                             :siirra-kanavatoimenpiteet
+                             +kayttaja-ulle+
+                             parametrit)))
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :siirra-kanavatoimenpiteet
-                                           +kayttaja-ulle+
-                                           (assoc parametrit ::kanavan-toimenpide/tyyppi :kokonaishintainen
-                                                             ::kanavan-toimenpide/toimenpide-idt muutos-ja-lisatyo-toimenpiteiden-idt))))))
+                             :siirra-kanavatoimenpiteet
+                             +kayttaja-ulle+
+                             (assoc parametrit ::kanavan-toimenpide/tyyppi :kokonaishintainen
+                               ::kanavan-toimenpide/toimenpide-idt muutos-ja-lisatyo-toimenpiteiden-idt))))))
 
 (deftest toimenpiteiden-haku-ilman-tyyppia-ei-toimi
   (let [parametrit {::kanavan-toimenpide/urakka-id (hae-urakan-id-nimella "Saimaan kanava")
@@ -211,7 +211,7 @@
                     :loppupvm (pvm/luo-pvm 2018 1 1)}]
 
     (is (not (s/valid? ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely
-                       parametrit)))))
+               parametrit)))))
 
 (deftest toimenpiteen-tallentaminen-toimii
   (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
@@ -224,9 +224,9 @@
                                                from toimenpide tpk1
                                                 join toimenpide tpk2 on tpk1.id = tpk2.emo
                                                   join toimenpide tpk3 on tpk2.id = tpk3.emo
-                                                  where tpk1.nimi ILIKE '%Hoito, meri%' and
-                                                        tpk2.nimi ILIKE '%Väylänhoito%' and
-                                                              tpk3.nimi ilike '%Laaja toimenpide%';"))
+                                                  where tpk1.nimi ILIKE '%Käyttö, meri%' and
+                                                        tpk2.nimi ILIKE '%Vesiliikenteen käyttöpalvelut%' and
+                                                              tpk3.nimi ilike '%Vesiliikenteen käyttöpalvelut laaja TPI%';"))
         tehtava-id (ffirst (q (format "select id from tehtava where emo = %s" kolmostason-toimenpide-id)))
         toimenpideinstanssi (ffirst (q "select id from toimenpideinstanssi where nimi = 'Saimaan kanava, sopimukseen kuuluvat työt, TP';"))
         toimenpide-template {::kanavan-toimenpide/suorittaja "suorittaja"
@@ -255,13 +255,14 @@
                                                           -1,
                                                           ::materiaali/lisatieto
                                                           "foo"})})
+
             hakuehdot (merge hakuehdot-template {::kanavan-toimenpide/kanava-toimenpidetyyppi :kokonaishintainen})
             argumentit {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
                         ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                    :tallenna-kanavatoimenpide
-                                    +kayttaja-jvh+
-                                    argumentit)]
+                      :tallenna-kanavatoimenpide
+                      +kayttaja-jvh+
+                      argumentit)]
         (is (some #(= "tämä on testitoimenpide" (::kanavan-toimenpide/lisatieto %)) (:kanavatoimenpiteet vastaus)))
         (is (= "foo" (->> vastaus :materiaalilistaus (mapcat ::materiaali/muutokset) (keep ::materiaali/lisatieto) first)))))
 
@@ -278,32 +279,32 @@
                                                           maara-ampareita,
                                                           ::materiaali/lisatieto
                                                           "foo"}
-                                                         {::materiaali/urakka-id urakka-id,
-                                                          ::materiaali/nimi "Naulat",
-                                                          ::materiaali/maara
-                                                          maara-nauloja,
-                                                          ::materiaali/lisatieto
-                                                          "bar"})})
+                                                     {::materiaali/urakka-id urakka-id,
+                                                      ::materiaali/nimi "Naulat",
+                                                      ::materiaali/maara
+                                                      maara-nauloja,
+                                                      ::materiaali/lisatieto
+                                                      "bar"})})
             hakuehdot (merge hakuehdot-template {::kanavan-toimenpide/kanava-toimenpidetyyppi :muutos-lisatyo})
             toimenpide-argumentit {::kanavan-toimenpide/tallennettava-kanava-toimenpide toimenpide
                                    ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}
             toimenpide-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                               :tallenna-kanavatoimenpide
-                                               +kayttaja-jvh+
-                                               toimenpide-argumentit)
+                                 :tallenna-kanavatoimenpide
+                                 +kayttaja-jvh+
+                                 toimenpide-argumentit)
             ;; Hinnoittelun tallentaminen toimenpiteelle
             toimenpide-id (some #(when (= (::kanavan-toimenpide/lisatieto %)
-                                          "Testataan poistamista hintatietoineen")
+                                         "Testataan poistamista hintatietoineen")
                                    (::kanavan-toimenpide/id %))
-                                (:kanavatoimenpiteet toimenpide-vastaus))
+                            (:kanavatoimenpiteet toimenpide-vastaus))
             amparin-yksikkohinta 2
             materiaalit (flatten (map (fn [materiaali]
                                         (keep #(when (= toimenpide-id (::materiaali/toimenpide %))
                                                  {:maara (::materiaali/maara %)
                                                   :materiaali-id (::materiaali/id %)
                                                   :nimi (::materiaali/nimi materiaali)})
-                                              (::materiaali/muutokset materiaali)))
-                                      (:materiaalilistaus toimenpide-vastaus)))
+                                          (::materiaali/muutokset materiaali)))
+                                   (:materiaalilistaus toimenpide-vastaus)))
             hinnoittelu-argumentit {::kanavan-toimenpide/urakka-id urakka-id
                                     ::kanavan-toimenpide/id toimenpide-id
                                     ::hinta/tallennettavat-hinnat
@@ -329,9 +330,9 @@
                                       ::hinta/maara (- maara-nauloja)
                                       ::hinta/yksikkohinta 2
                                       ::hinta/materiaali-id (some #(when (and (= "Naulat" (:nimi %))
-                                                                              (= maara-nauloja (:maara %)))
+                                                                           (= maara-nauloja (:maara %)))
                                                                      (:materiaali-id %))
-                                                                  materiaalit)
+                                                              materiaalit)
                                       ::hinta/yksikko "kpl"}
                                      {::hinta/yleiskustannuslisa 0
                                       ::hinta/otsikko "Ämpäreitä"
@@ -340,9 +341,9 @@
                                       ::hinta/maara (- maara-ampareita)
                                       ::hinta/yksikkohinta amparin-yksikkohinta
                                       ::hinta/materiaali-id (some #(when (and (= "Ämpäreitä" (:nimi %))
-                                                                              (= maara-ampareita (:maara %)))
+                                                                           (= maara-ampareita (:maara %)))
                                                                      (:materiaali-id %))
-                                                                  materiaalit)
+                                                              materiaalit)
                                       ::hinta/yksikko "kpl"}
                                      {::hinta/yleiskustannuslisa 12
                                       ::hinta/otsikko "foo-muutyo"
@@ -378,45 +379,45 @@
                                       ::tyo/maara 2
                                       ::tyo/toimenpidekoodi-id 4714}]}
             hinnoittelu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                :tallenna-kanavatoimenpiteen-hinnoittelu
-                                                +kayttaja-jvh+
-                                                hinnoittelu-argumentit)
+                                  :tallenna-kanavatoimenpiteen-hinnoittelu
+                                  +kayttaja-jvh+
+                                  hinnoittelu-argumentit)
 
             ;; Ämpärin poistaminen toimenpiteeltä
             amparin-poisto-argumentit (-> toimenpide-argumentit
-                                          (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/materiaalipoistot]
-                                                    [{::materiaali/id (some #(when (and (= "Ämpäreitä" (:nimi %))
-                                                                                        (= maara-ampareita (:maara %)))
-                                                                               (:materiaali-id %))
-                                                                            materiaalit)}])
-                                          (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/id] toimenpide-id)
-                                          (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/materiaalikirjaukset] nil))
+                                        (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/materiaalipoistot]
+                                          [{::materiaali/id (some #(when (and (= "Ämpäreitä" (:nimi %))
+                                                                           (= maara-ampareita (:maara %)))
+                                                                     (:materiaali-id %))
+                                                              materiaalit)}])
+                                        (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/id] toimenpide-id)
+                                        (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/materiaalikirjaukset] nil))
             amparin-poisto-toimenpiteelta-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                                  :tallenna-kanavatoimenpide
-                                                                  +kayttaja-jvh+
-                                                                  amparin-poisto-argumentit)
+                                                    :tallenna-kanavatoimenpide
+                                                    +kayttaja-jvh+
+                                                    amparin-poisto-argumentit)
             toimenpiteen-hinnat (some #(when (= toimenpide-id (::kanavan-toimenpide/id %))
                                          (::kanavan-toimenpide/hinnat %))
-                                      (:kanavatoimenpiteet amparin-poisto-toimenpiteelta-vastaus))
+                                  (:kanavatoimenpiteet amparin-poisto-toimenpiteelta-vastaus))
 
             ;; Koko toimenpiteen poistaminen
             toimenpiteen-poisto-argumentit (-> amparin-poisto-argumentit
-                                               (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/materiaalipoistot] nil)
-                                               (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::muokkaustiedot/poistettu?] true))
+                                             (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::kanavan-toimenpide/materiaalipoistot] nil)
+                                             (assoc-in [::kanavan-toimenpide/tallennettava-kanava-toimenpide ::muokkaustiedot/poistettu?] true))
             toimenpiteen-poisto-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                        :tallenna-kanavatoimenpide
-                                                        +kayttaja-jvh+
-                                                        toimenpiteen-poisto-argumentit)
+                                          :tallenna-kanavatoimenpide
+                                          +kayttaja-jvh+
+                                          toimenpiteen-poisto-argumentit)
             toimenpiteen-poiston-jalkeiset-hinnat (q-toimenpide/hae-toimenpiteen-hinnat (:db jarjestelma) toimenpide-id)
             toimenpiteen-poiston-jalkeiset-tyot (q-toimenpide/hae-toimenpiteen-tyot (:db jarjestelma) toimenpide-id)]
         (is (= (bigdec amparin-yksikkohinta) (some #(when (= (::hinta/otsikko %) "Ämpäreitä")
                                                       (::hinta/yksikkohinta %))
-                                                   (::kanavan-toimenpide/hinnat hinnoittelu-vastaus))))
+                                               (::kanavan-toimenpide/hinnat hinnoittelu-vastaus))))
         (is (nil? (some #(= "Ämpäreitä" (::hinta/otsikko %))
-                        toimenpiteen-hinnat)))
+                    toimenpiteen-hinnat)))
 
         (is (nil? (some #(= toimenpide-id (::kanavan-toimenpide/id %))
-                        (:kanavatoimenpiteet toimenpiteen-poisto-vastaus))))
+                    (:kanavatoimenpiteet toimenpiteen-poisto-vastaus))))
         (is (empty? toimenpiteen-poiston-jalkeiset-hinnat))
         (is (empty? toimenpiteen-poiston-jalkeiset-tyot))))))
 
@@ -446,9 +447,9 @@
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
 
     (is (thrown? Exception (kutsu-palvelua (:http-palvelin jarjestelma)
-                                           :tallenna-kanavatoimenpide
-                                           +kayttaja-ulle+
-                                           argumentit)))))
+                             :tallenna-kanavatoimenpide
+                             +kayttaja-ulle+
+                             argumentit)))))
 
 (deftest toimenpiteen-tallentaminen-eri-urakkaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
@@ -478,9 +479,9 @@
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-kanavatoimenpide
-                                                   +kayttaja-jvh+
-                                                   argumentit)))))
+                                     :tallenna-kanavatoimenpide
+                                     +kayttaja-jvh+
+                                     argumentit)))))
 
 (deftest toimenpiteen-tallentaminen-eri-kohteen-kohdeosalle
   (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
@@ -512,9 +513,9 @@
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-kanavatoimenpide
-                                                   +kayttaja-jvh+
-                                                   argumentit)))))
+                                     :tallenna-kanavatoimenpide
+                                     +kayttaja-jvh+
+                                     argumentit)))))
 
 (deftest toimenpiteen-tallentaminen-eri-kohteelle
   (let [urakka-id (hae-urakan-id-nimella "Saimaan kanava")
@@ -544,6 +545,6 @@
                     ::kanavan-toimenpide/hae-kanavatoimenpiteet-kysely hakuehdot}]
 
     (is (thrown? SecurityException (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                   :tallenna-kanavatoimenpide
-                                                   +kayttaja-jvh+
-                                                   argumentit)))))
+                                     :tallenna-kanavatoimenpide
+                                     +kayttaja-jvh+
+                                     argumentit)))))

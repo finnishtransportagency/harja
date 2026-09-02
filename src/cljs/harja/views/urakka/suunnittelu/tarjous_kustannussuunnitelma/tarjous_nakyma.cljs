@@ -17,6 +17,7 @@
 
 (defonce virheet-atom (atom {}))
 
+
 ;; Määritellään kaikkien kolumnien leveyksiä
 (def nimi-leveys 20)
 (def yhteensa-leveys 20)
@@ -470,7 +471,13 @@
              [:div.col-xs-12.col-md-6
               [:h1 "Tarjouksen tiedot"]]]
             [:div.row
-             [yleiset/info-laatikko :neutraali "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen." nil nil {:sulje-nappi-id (gensym)}]]
+             [yleiset/info-laatikko :neutraali
+              [:span
+               "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen "
+               [yleiset/linkki "Hoitovuoden alun tavoitehinta -näkymästä"
+                #(nav/aseta-valittu-valilehti! :suunnittelu :uusi-kustannussuunnitelma)]
+               "."]
+              nil nil {:sulje-nappi-id (gensym)}]]
             [tarjous-nakyma e! app]
             [debug/debug app]])]))))
 

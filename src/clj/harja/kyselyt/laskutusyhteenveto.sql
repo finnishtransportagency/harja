@@ -1,16 +1,15 @@
 -- name: hae-laskutusyhteenvedon-tiedot
--- Hakee laskutusyhteenvetoon tarvittavat tiedot
+-- Hakee alueurakan laskutusyhteenvetoon tarvittavat tiedot
 SELECT * FROM laskutusyhteenveto(
     :hk_alkupvm::DATE, :hk_loppupvm::DATE,
     :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
     :urakka::INTEGER);
 
--- name: hae-laskutusyhteenvedon-tiedot-teiden-hoito
+-- name: hae-laskutusyhteenvedon-tiedot-tuotekohtainen
 -- Hakee laskutusyhteenvetoon tarvittavat tiedot teiden hoidon urakassa (MHU)
-SELECT * FROM mhu_laskutusyhteenveto_teiden_hoito(
-                  :hk_alkupvm::DATE, :hk_loppupvm::DATE,
-                  :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
-                  :urakka::INTEGER);
+SELECT * FROM mhu_laskutusyhteenveto_tuotekohtainen(:hk_alkupvm::DATE, :hk_loppupvm::DATE,
+                                                                 :aikavali_alkupvm::DATE, :aikavali_loppupvm::DATE,
+                                                                 :urakka::INTEGER);
 
 -- name: laske-erilliskustannuksen-indeksi
 SELECT * FROM erilliskustannuksen_indeksilaskenta(:pvm::DATE, :indeksinimi, :summa,

@@ -51,22 +51,22 @@
     (let [otsikko (fn [rivi] (tyyppi-enum->string-monikko (:tyyppi (:maksuera rivi))))
           otsikon-mukaan (group-by otsikko (sort-by
                                              #(sorttausjarjestys
-                                               (:tyyppi (:maksuera %))
-                                               (:numero %))
+                                                (:tyyppi (:maksuera %))
+                                                (:numero %))
                                              rivit))]
       (doall (mapcat (fn [[otsikko rivit]]
                        (concat [(grid/otsikko otsikko)] rivit))
-                     (seq otsikon-mukaan))))))
+               (seq otsikon-mukaan))))))
 
 (defn- rakenna-kuittausta-odottavat-maksuerat [maksuerat]
   (into #{}
-        (mapv
-          (fn [rivi] (:numero rivi))
-          (filter
-            (fn [rivi]
-              (or (= (:tila (:maksuera rivi)) :odottaa_vastausta)
-                  (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
-            maksuerat))))
+    (mapv
+      (fn [rivi] (:numero rivi))
+      (filter
+        (fn [rivi]
+          (or (= (:tila (:maksuera rivi)) :odottaa_vastausta)
+            (= (:tila (:kustannussuunnitelma rivi)) :odottaa_vastausta)))
+        maksuerat))))
 
 (def maksuerarivit (reaction-writable (ryhmittele-maksuerat @maksuerat/maksuerat)))
 (def kuittausta-odottavat-maksuerat (reaction-writable (rakenna-kuittausta-odottavat-maksuerat @maksuerat/maksuerat)))
@@ -79,8 +79,8 @@
           (let [m (first (filter (fn [maksuera]
                                    (= (:numero maksuera) (:numero uusi-maksuera))) @maksuerat/maksuerat))]
             (assoc-in (assoc-in m [:maksuera :tila] (:tila (:maksuera uusi-maksuera)))
-                      [:kustannussuunnitelma :tila] (:tila (:kustannussuunnitelma uusi-maksuera)))))
-        paivittyneiden-maksuerien-tilat))
+              [:kustannussuunnitelma :tila] (:tila (:kustannussuunnitelma uusi-maksuera)))))
+    paivittyneiden-maksuerien-tilat))
 
 (defn- odottanut-vastausta-liian-kauan?
   "Palauttaa true jos annettu maksuerä tai kustannnussuunnitelma on ollut lähetyksessä yli tunnin."
@@ -92,15 +92,15 @@
 
     (if (and lahetyksessa? lahetetty)
       (t/after? (pvm/nyt)
-                (t/plus lahetetty max-odotusaika))
+        (t/plus lahetetty max-odotusaika))
       false)))
 
 (defn- hae-lahetettavat-maksueranumerot [maksuerat kuittausta-odottavat-maksuerat]
   (into #{} (filter
               #(or (not (contains? kuittausta-odottavat-maksuerat (:numero %)))
-                   (and (contains? kuittausta-odottavat-maksuerat (:numero %))
-                        (or (odottanut-vastausta-liian-kauan? (:maksuera %))
-                            (odottanut-vastausta-liian-kauan? (:kustannussuunnitelma %)))))
+                 (and (contains? kuittausta-odottavat-maksuerat (:numero %))
+                   (or (odottanut-vastausta-liian-kauan? (:maksuera %))
+                     (odottanut-vastausta-liian-kauan? (:kustannussuunnitelma %)))))
               maksuerat)))
 
 (defn- rakenna-samana-pysyneet-maksuerat [lahetettavat-maksueranumerot maksuerat]
@@ -120,22 +120,22 @@
                                     (if (contains? lahetetetyt-maksueranumerot (:numero rivi))
                                       (assoc rivi :tila :virhe)
                                       rivi))
-                                  @maksuerarivit))
-      (reset! kuittausta-odottavat-maksuerat uudet-kuittausta-odottavat)))
+                              @maksuerarivit))
+    (reset! kuittausta-odottavat-maksuerat uudet-kuittausta-odottavat)))
 
 (defn- laheta-maksuerat [maksuerat urakka-id]
   (let [lahetettavat-maksueranumerot (hae-lahetettavat-maksueranumerot maksuerat @kuittausta-odottavat-maksuerat)]
     (go (reset! kuittausta-odottavat-maksuerat (into #{} (clojure.set/union @kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot)))
-        (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot urakka-id))
-              paivittyneet-maksuerat (rakenna-paivittyneet-maksuerat vastaus)
-              samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat/maksuerat)
-              uudet-maksuerat (rakenna-uudet-maksuerat samana-pysyneet paivittyneet-maksuerat)
-              uudet-kuittausta-odottavat (rakenna-uudet-kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot @kuittausta-odottavat-maksuerat)]
-          (if (k/virhe? vastaus)
-            (do
-              (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat)
-              (viesti/nayta! "Lähetys epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt))
-            (kasittele-onnistunut-siirto uudet-maksuerat))))))
+      (let [vastaus (<! (maksuerat/laheta-maksuerat lahetettavat-maksueranumerot urakka-id))
+            paivittyneet-maksuerat (rakenna-paivittyneet-maksuerat vastaus)
+            samana-pysyneet (rakenna-samana-pysyneet-maksuerat lahetettavat-maksueranumerot @maksuerat/maksuerat)
+            uudet-maksuerat (rakenna-uudet-maksuerat samana-pysyneet paivittyneet-maksuerat)
+            uudet-kuittausta-odottavat (rakenna-uudet-kuittausta-odottavat-maksuerat lahetettavat-maksueranumerot @kuittausta-odottavat-maksuerat)]
+        (if (k/virhe? vastaus)
+          (do
+            (kasittele-epaonnistunut-siirto lahetettavat-maksueranumerot uudet-kuittausta-odottavat)
+            (viesti/nayta! "Lähetys epäonnistui" :warning viesti/viestin-nayttoaika-lyhyt))
+          (kasittele-onnistunut-siirto uudet-maksuerat))))))
 
 (defn- pollaa-kantaa
   "Jos on olemassa maksueriä tai kustannussuunnitelmia, jotka odottavat kuittausta, hakee uusimmat tiedot kannasta. Muussa tapauksessa lopettaa pollauksen."
@@ -153,7 +153,7 @@
                 urakka-id-nyt (:id @nav/valittu-urakka)]
             (if (= urakka-id-nyt urakka-id-haettaessa)
               (do (log "[MAKSUERAT] Pollattu uudet maksuerät urakalle " urakka-id-nyt)
-                  (reset! maksuerat/maksuerat result))
+                (reset! maksuerat/maksuerat result))
               (log "[MAKSUERAT] Maksuerät pollattu, mutta urakka vaihtui. Hylätään."))))
         (recur)))))
 
@@ -173,7 +173,6 @@
 (defn maksuerat-listaus
   "Maksuerien pääkomponentti"
   []
-
   (komp/luo
     (komp/sisaan #(pollaa-kantaa))
     (komp/ulos #(lopeta-pollaus))
@@ -184,8 +183,10 @@
             maksuerarivit @maksuerarivit
             maksuerarivit-ilman-otsikkoja (filter (fn [rivi]
                                                     (not (contains? rivi :teksti)))
-                                                  maksuerarivit)]
-        [:div.margin-top-32
+                                            maksuerarivit)
+            urakan-parametrit (:urakan-parametrit(first @maksuerat/maksuerat))
+            maksuera-lahetys-estetty (not (:maksuera_lahetys_sampo urakan-parametrit))]
+        [:div
          [:h1 "Maksuerät"]
          [grid/grid
           {:tyhja (if (nil? maksuerarivit) [ajax-loader "Maksueriä haetaan..."] "Ei maksueriä")
@@ -193,7 +194,12 @@
            :piilota-muokkaus? true
            :tunniste :numero}
           [{:otsikko "Numero" :nimi :numero :tyyppi :numero :leveys "9%" :pituus 16
-            :hae (fn [rivi] (:numero rivi)) :tasaa :oikea}
+            :hae (fn [rivi]
+                   (let [alias (:alias (:maksuera rivi))]
+                     (if alias
+                       (str (:numero rivi) " / " alias)
+                       (str (:numero rivi)))))
+            :tasaa :oikea}
            {:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys "33%" :pituus 16
             :hae (fn [rivi] (:nimi (:maksuera rivi)))}
            {:otsikko "Kust.suunnitelman summa" :nimi :kustannussuunnitelma-summan :tyyppi :numero :leveys "16%"
@@ -213,25 +219,31 @@
                 [:button.nappi-ensisijainen.nappi-grid
                  (merge
                    (when (and (contains? kuittausta-odottavat maksueranumero)
-                              (not maksuera-odottanut-liian-kauan)
-                              (not kustannussuunnitelma-odottanut-liian-kauan))
+                           (not maksuera-odottanut-liian-kauan)
+                           (not kustannussuunnitelma-odottanut-liian-kauan))
                      {:disabled true})
+                   (when maksuera-lahetys-estetty
+                     {:disabled true :title "Lähetys estetty"})
                    {:type "button"
                     :on-click #(laheta-maksuerat #{maksueranumero} urakka-id)})
                  "Lähetä"]))
             :leveys "10%"}]
           maksuerarivit]
-         [yleiset/vihje (str "Lähetetyt maksuerät luetaan Sampoon klo 12 ja klo 16."
-                             " Jos maksuerät pitää saada Sampoon nopeammin, ne on täytettävä Sampoon käsin.")]
+         [yleiset/vihje (if (and (some? maksuerarivit) maksuera-lahetys-estetty)
+                          [yleiset/varoitus-vihje
+                           "Maksuerien lähetys Sampoon estetty Elinvoimakeskusmuutoksen vuoksi." nil]
+                          (str "Lähetetyt maksuerät luetaan Sampoon klo 12 ja klo 16."
+                            " Jos maksuerät pitää saada Sampoon nopeammin, ne on täytettävä Sampoon käsin."))]
 
          [:button.nappi-ensisijainen
           {:class (if (= (count kuittausta-odottavat)
                          (count maksuerarivit-ilman-otsikkoja))
                     "disabled"
                     "")
-           :disabled (nil? maksuerarivit)
+           :disabled (or (nil? maksuerarivit) maksuera-lahetys-estetty)
+           :title (when maksuera-lahetys-estetty "Lähetys estetty")
            :on-click #(do (.preventDefault %)
-                          (laheta-maksuerat
-                            (into #{} (map :numero maksuerarivit-ilman-otsikkoja))
-                            urakka-id))}
+                        (laheta-maksuerat
+                          (into #{} (map :numero maksuerarivit-ilman-otsikkoja))
+                          urakka-id))}
           "Lähetä kaikki"]]))))

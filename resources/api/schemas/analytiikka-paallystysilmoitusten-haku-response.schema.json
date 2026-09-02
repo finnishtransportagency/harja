@@ -32,8 +32,19 @@
           "poistettu": {
             "type": "boolean"
           },
+          "paallystysIlmoituksenTila": {
+            "type": "string",
+            "description": "Päällystysilmoituksen tila Harjassa. Valmis tarkoittaa valmis tarkastettavaksi. Hyväksytty tarkoittaa tarkastettu ja hyväksytty. Hylätty tarkoittaa tarkastettu ja hylätty.",
+            "enum": [
+              "Kesken",
+              "Valmis",
+              "Hyväksytty",
+              "Hylätty"
+            ]
+          },
           "yhaLahetyksenTila": {
             "type": "string",
+            "description": "Tila kertoo, onko POT lähetetty YHAan. Lähetyksen yrittäminen on mahdollista, kun POT-ilmoituksen tila on Hyväksytty.  Joskus POT-ilmoituksen tiedot on kirjattu käsin YHAan, koska sitä ei virheen taika ole saatu siirrettyä automaattisesti. ",
             "enum": [
               "Ei lähetetty",
               "Lähetetty onnistuneesti",
@@ -208,6 +219,10 @@
                 },
                 "murske": {
                   "$ref": "#/definitions/murske"
+                },
+                "rc%": {
+                  "type": "number",
+                  "description": "Asfalttirouheen osuus massasta"
                 }
               }
             }

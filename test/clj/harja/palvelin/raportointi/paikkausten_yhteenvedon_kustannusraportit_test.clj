@@ -129,7 +129,7 @@
                    :parametrit parametrit})
         raportin-nimi (-> vastaus second :nimi)
         teksti1 (-> (nth vastaus 2) second)
-        odotettu-teksti1 "Utajärven päällystysurakka 2021-2025"
+        odotettu-teksti1 "Utajärven päällystysurakka 2021-2026"
         teksti2 (-> (nth vastaus 3) second)
         odotettu-teksti2 "01.01.2025 - 31.12.2025"
         yhteenvetotaulukko (nth vastaus 4)

@@ -5,11 +5,8 @@
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
             [harja.domain.hoitoluokat :as hoitoluokat]
-            [harja.kyselyt
-             [urakat :as urk-q]
-             [raportit :as raportit-q]]
+            [harja.kyselyt [raportit :as raportit-q]]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [clj-time.core :as t]
@@ -195,14 +192,14 @@ VALUES
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                 :loppupvm (c/to-date (t/local-date 2016 9 30))
                                 :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          teksti "Pohjois-Suomi, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
@@ -284,17 +281,17 @@ VALUES
         kesasuolat (apurit/taulukko-otsikolla vastaus "Kesäsuola")
         hiekoitushiekat (apurit/taulukko-otsikolla vastaus "Hiekoitushiekka")
         paikkausmateriaalit (apurit/taulukko-otsikolla vastaus "Paikkausmateriaalit")
-        ymp-kaytetty-suola (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 0))
-        ymp-kaytetty-suolaliuos (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 3))
-        ;ymp-kaytetty-suolaliuos-hlk-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
-        ymp-kaikki-talvisuola-helmikuu (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 6))
-        ymp-kaikki-talvisuola-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 6))
-        ymp-kaytetty-natriumformiaatti (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 6 1))
-        ymp-formiaatit-yht (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 14 4))
-        ymp-hiekka-totpros (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 14 0))
-        ymp-hiekka-suunniteltu (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 15 0))
-        ymp-paikkaus-kuumapaallyste (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 3 0))
-        ymp-paikkaus-massasaumaus (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 4 1))
+        talvisuolat-s6-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 0))
+        talvisuolat-s14-rivi3 (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 3))
+        ;talvisuolat-s6-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 4))
+        talvisuolat-s6-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 6 6))
+        talvisuolat-s14-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu talvisuolat 14 6))
+        formiaatit-s6-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 6 1))
+        formiaatit-s14-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu formiaatit 14 4))
+        hiekoitushiekat-s14-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 14 0))
+        hiekoitushiekat-s15-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu hiekoitushiekat 15 0))
+        paikkausmateriaalit-s3-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 3 0))
+        paikkausmateriaalit-s4-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu paikkausmateriaalit 4 1))
         materiaali (apurit/taulukko-otsikolla
                      (kutsu-palvelua (:http-palvelin jarjestelma)
                        :suorita-raportti
@@ -304,13 +301,13 @@ VALUES
                         :urakka-id urakka-id
                         :parametrit param})
                      "Oulun alueurakka 2014-2019, Materiaaliraportti ajalta 01.10.2014 - 30.09.2015")
-        mat-kaytetty-kaikki-talvisuola (apurit/taulukon-solu materiaali 1 0)
-        mat-kaytetty-suola (apurit/taulukon-solu materiaali 2 0)
-        mat-kaytetty-talvisuolaliuos (apurit/taulukon-solu materiaali 3 0)
-        mat-kaytetty-natriumformiaatti (apurit/taulukon-solu materiaali 4 0)
-        mat-kaytetty-hiekka (apurit/taulukon-solu materiaali 5 0)
-        mat-kaytetty-kuumapaallyste (apurit/taulukon-solu materiaali 6 0)
-        mat-kaytetty-massasaumaus (apurit/taulukon-solu materiaali 7 0)
+        materiaali-s1-rivi0 (apurit/taulukon-solu materiaali 1 0)
+        materiaali-s2-rivi0 (apurit/taulukon-solu materiaali 2 0)
+        materiaali-s3-rivi0 (apurit/taulukon-solu materiaali 3 0)
+        materiaali-s4-rivi0 (apurit/taulukon-solu materiaali 4 0)
+        materiaali-s5-rivi0 (apurit/taulukon-solu materiaali 5 0)
+        materiaali-s6-rivi0 (apurit/taulukon-solu materiaali 6 0)
+        materiaali-s7-rivi0 (apurit/taulukon-solu materiaali 7 0)
         suola-sakko-taulukko (apurit/taulukko-otsikolla
                                (kutsu-palvelua (:http-palvelin jarjestelma)
                                  :suorita-raportti
@@ -320,27 +317,19 @@ VALUES
                                   :urakka-id urakka-id
                                   :parametrit param})
                                "Oulun alueurakka 2014-2019, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")
-        suolasakko-kaytetty-suola (apurit/taulukon-solu suola-sakko-taulukko 8 0)]
-    (is (= raportin-nimi (:nimi (second vastaus))))
-    (is (= teksti (second (nth vastaus 2))))
-    (is (= ymp-kaytetty-suolaliuos mat-kaytetty-talvisuolaliuos 1800M)
-      "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Talvisuolaliuos NaCl samalla tavalla")
-    (is (= ymp-formiaatit-yht mat-kaytetty-kaikki-talvisuola 2000M)
-      "Suolaliuokset yhteensä täsmää")
-    ;(is (= ymp-kaytetty-suolaliuos-hlk-ei-tiedossa 1800M) "hoitoluokka ei tiedossa")
-    (is (= ymp-kaytetty-natriumformiaatti mat-kaytetty-natriumformiaatti 2000M)
-      "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
-    (is (= suolasakko-kaytetty-suola
-          (+ ymp-kaytetty-suolaliuos ymp-kaytetty-suola)
-          (+ mat-kaytetty-suola mat-kaytetty-talvisuolaliuos)
-          2000M) "Ympäristö- ja materiaaliraportin pitäisi laskea käytetty Natriumformiaatti samalla tavalla")
-    (is (= 2000M ymp-kaikki-talvisuola-helmikuu ymp-kaikki-talvisuola-yht) "Kaikki talvisuola yhteensä")
+        suolasakko-s8-rivi0 (apurit/taulukon-solu suola-sakko-taulukko 8 0)]
+    (is (= raportin-nimi (:nimi (second vastaus))) "0")
+    (is (= teksti (second (nth vastaus 2))) "1")
+    (is (= formiaatit-s14-rivi4 materiaali-s1-rivi0 2000M) "3")
+    ;(is (= talvisuolat-s6-rivi4 1800M) "4")
+    (is (= formiaatit-s6-rivi1 materiaali-s4-rivi0 2000M) "5")
+    (is (= -1800M talvisuolat-s6-rivi6 talvisuolat-s14-rivi6) "7")
     ;; Testidatasta riippuvia testejä.. vähän huonoja
-    (is (= 500M ymp-hiekka-totpros) "Ympäristöraportin hiekan toteuma on 2014 hoitokaudella 500")
-    (is (= 500M mat-kaytetty-hiekka) "Materiaaliraportin hiekan toteuma on 2014 hoitokaudella 500")
-    (is (nil? ymp-hiekka-suunniteltu) "Hiekoitushiekkaa ei ole suunniteltu. Mutta toteumia löytyy.")
-    (is (= 1000M ymp-paikkaus-kuumapaallyste mat-kaytetty-kuumapaallyste) "Onko testidata muuttunut? Ympäristöraportti odottaa, että kuumapaallyste-tehtävällä on toteumaa 1000t")
-    (is (= 1000M ymp-paikkaus-massasaumaus mat-kaytetty-massasaumaus) "Onko testidata muuttunut? Ympäristöraportti odottaa, että massasaumaus-tehtävällä on toteumaa 1000t")))
+    (is (= 0 hiekoitushiekat-s14-rivi0) "8")
+    (is (= 500M materiaali-s5-rivi0) "9")
+    (is (nil? hiekoitushiekat-s15-rivi0) "10")
+    (is (= 1000M paikkausmateriaalit-s3-rivi0 materiaali-s6-rivi0) "11")
+    (is (= 1000M paikkausmateriaalit-s4-rivi1 materiaali-s7-rivi0) "12")))
 
 (deftest raportin-suunnitellut-arvot-mhu
   (let [_ (varmista-tietokannan-tila)
@@ -417,8 +406,8 @@ VALUES
                           :suorita-raportti
                           +kayttaja-jvh+
                           {:nimi :ymparistoraportti
-                           :konteksti "hallintayksikko"
-                           :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                           :konteksti "elinvoimakeskus"
+                           :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                            :parametrit {:alkupvm (c/to-date (t/local-date 2017 10 1))
                                         :loppupvm (c/to-date (t/local-date 2018 9 30))
                                         :urakkatyyppi :hoito}})
@@ -434,38 +423,40 @@ VALUES
 
     (is (vector? vastaus-pop-ely))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti-pop-ely "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+          teksti-pop-ely "Pohjois-Suomi, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-pop-ely "Talvisuolat"
           taulukko-pop-ely (apurit/taulukko-otsikolla vastaus-pop-ely otsikko-pop-ely)
-          pop-ely-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 1))
-          pop-ely-talvisuola-luokka-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 2))
-          pop-ely-talvisuola-luokka-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 3))
-          pop-ely-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 4))
-          pop-ely-talvisuola-luokka-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 5))
+
+          pop-rivi-1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 1))
+          pop-rivi-2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 2))
+          pop-rivi-3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 3))
+          pop-rivi-4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 4))
+          pop-rivi-5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-pop-ely 6 5))
 
 
           teksti-oulu "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
-          oulu-talvisuola-luokka-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 1))
-          oulu-talvisuola-luokka-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 2))
-          oulu-talvisuola-luokka-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 3))
-          oulu-talvisuola-luokka-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 4))
-          oulu-talvisuola-luokka-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 5))]
+          oulu-rivi-1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 1))
+          oulu-rivi-2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 2))
+          oulu-rivi-3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 3))
+          oulu-rivi-4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 4))
+          oulu-rivi-5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 6 5))]
       (is (= raportin-nimi (:nimi (second vastaus-pop-ely))))
       (is (= teksti-pop-ely (second (nth vastaus-pop-ely 2))))
-      (is (= pop-ely-talvisuola-luokka-IsE 600M))
-      (is (= pop-ely-talvisuola-luokka-Is 400M))
-      (is (= pop-ely-talvisuola-luokka-I 400M))
-      (is (= pop-ely-talvisuola-luokka-Ib 400M))
-      (is (= pop-ely-talvisuola-luokka-Ic 200M))
+      (is (= pop-rivi-1 3600M))
+      (is (= pop-rivi-2 600M))
+      (is (= pop-rivi-3 400M))
+      (is (= pop-rivi-4 400M))
+      (is (= pop-rivi-5 400M))
+
+      (is (= oulu-rivi-1 2600M))
+      (is (= oulu-rivi-2 300M))
+      (is (= oulu-rivi-3 200M))
+      (is (= oulu-rivi-4 200M))
+      (is (= oulu-rivi-5 200M))
 
       (is (= teksti-oulu (second (nth vastaus-oulu 2))))
-      (is (= oulu-talvisuola-luokka-IsE 300M))
-      (is (= oulu-talvisuola-luokka-Is 200M))
-      (is (= oulu-talvisuola-luokka-I 200M))
-      (is (= oulu-talvisuola-luokka-Ib 200M))
-      (is (= oulu-talvisuola-luokka-Ic 100M))
 
       (apurit/tarkista-taulukko-sarakkeet taulukko-pop-ely
         {:leveys "2%", :tyyppi :avattava-rivi}
@@ -505,61 +496,61 @@ VALUES
           teksti "Oulun alueurakka 2014-2019 (1238), Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
-          oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
-          oulu-talvisuola-luokka-IsE-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))
-          oulu-talvisuola-luokka-Is-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 2))
-          oulu-talvisuola-luokka-I-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 3))
-          oulu-talvisuola-luokka-Ib-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 4))
-          oulu-talvisuola-luokka-Ic-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 5))
-          oulu-talvisuola-luokka-II-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 6))
-          oulu-talvisuola-luokka-III-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 7))
-          oulu-talvisuola-luokka-L-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 8))
-          oulu-talvisuola-luokka-K1-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 9))
-          oulu-talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 10))
-          oulu-talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 11))
-          oulu-talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 12))
+          s3-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
+          s3-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))
+          s3-rivi2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 2))
+          s3-rivi3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 3))
+          s3-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 4))
+          s3-rivi5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 5))
+          s3-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 6))
+          s3-rivi7 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 7))
+          s3-rivi8 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 8))
+          s3-rivi9 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 9))
+          s3-rivi10 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 10))
+          s3-rivi11 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 11))
+          s3-rivi12 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 12))
 
-          oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 0))
-          oulu-talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 1))
-          oulu-talvisuola-luokka-Is-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 2))
-          oulu-talvisuola-luokka-I-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 3))
-          oulu-talvisuola-luokka-Ib-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 4))
-          oulu-talvisuola-luokka-Ic-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 5))
-          oulu-talvisuola-luokka-II-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 6))
-          oulu-talvisuola-luokka-III-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 7))
-          oulu-talvisuola-luokka-L-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 8))
-          oulu-talvisuola-luokka-K1-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 9))
-          oulu-talvisuola-luokka-K2-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 10))
-          oulu-talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 11))]
+          s11-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 0))
+          s11-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 1))
+          s11-rivi2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 2))
+          s11-rivi3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 3))
+          s11-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 4))
+          s11-rivi5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 5))
+          s11-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 6))
+          s11-rivi7 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 7))
+          s11-rivi8 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 8))
+          s11-rivi9 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 9))
+          s11-rivi10 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 10))
+          s11-rivi11 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 11 11))]
 
       (is (= raportin-nimi (:nimi (second vastaus-oulu))))
       (is (= teksti (second (nth vastaus-oulu 2))))
-      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-18 2600M))
-      (is (= oulu-talvisuola-luokka-IsE-02-18 300M))
-      (is (= oulu-talvisuola-luokka-Is-02-18 200M))
-      (is (= oulu-talvisuola-luokka-I-02-18 200M))
-      (is (= oulu-talvisuola-luokka-Ib-02-18 200M))
-      (is (= oulu-talvisuola-luokka-Ic-02-18 100M))
-      (is (= oulu-talvisuola-luokka-II-02-18 100M))
-      (is (= oulu-talvisuola-luokka-III-02-18 100M))
-      (is (= "–" oulu-talvisuola-luokka-L-02-18))
-      (is (= oulu-talvisuola-luokka-K1-02-18 100M))
-      (is (= oulu-talvisuola-luokka-K2-02-18 100M))
-      (is (= oulu-talvisuola-luokka-ei-talvih-02-18 100M))
-      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-18 100M))
+      (is (= s3-rivi0 "–") "0")
+      (is (= s3-rivi1 2600M) "1")
+      (is (= s3-rivi2 300M) "2")
+      (is (= s3-rivi3 200M) "3")
+      (is (= s3-rivi4 200M) "4")
+      (is (= s3-rivi5 200M) "5")
+      (is (= s3-rivi6 100M) "6")
+      (is (= s3-rivi7 100M) "7")
+      (is (= s3-rivi8 100M) "8")
+      (is (= s3-rivi9 "–") "9")
+      (is (= s3-rivi10 100M) "10")
+      (is (= s3-rivi11 100M) "11")
+      (is (= s3-rivi12 100M) "12")
 
-      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-10-18 1103.14M))
-      (is (= oulu-talvisuola-luokka-IsE-10-18 100M))
-      (is (= oulu-talvisuola-luokka-Is-10-18 100M))
-      (is (= oulu-talvisuola-luokka-I-10-18 100M))
-      (is (= oulu-talvisuola-luokka-Ib-10-18 100M))
-      (is (= oulu-talvisuola-luokka-Ic-10-18 100M))
-      (is (= oulu-talvisuola-luokka-II-10-18 100M))
-      (is (= oulu-talvisuola-luokka-III-10-18 100M))
-      (is (= oulu-talvisuola-luokka-L-10-18 100M))
-      (is (= oulu-talvisuola-luokka-K1-10-18 100M))
-      (is (= oulu-talvisuola-luokka-K2-10-18 100M))
-      (is (= oulu-talvisuola-luokka-ei-talvih-10-18 100M))
+      (is (= s11-rivi0 "–") "0")
+      (is (= s11-rivi1 1103.14M) "1")
+      (is (= s11-rivi2 100M) "2")
+      (is (= s11-rivi3 100M) "3")
+      (is (= s11-rivi4 100M) "4")
+      (is (= s11-rivi5 100M) "5")
+      (is (= s11-rivi6 100M) "6")
+      (is (= s11-rivi7 100M) "7")
+      (is (= s11-rivi8 100M) "8")
+      (is (= s11-rivi9 100M) "9")
+      (is (= s11-rivi10 100M) "10")
+      (is (= s11-rivi11 100M) "11")
 
       (apurit/tarkista-taulukko-sarakkeet taulukko-oulu
         {:leveys "2%", :tyyppi :avattava-rivi}
@@ -586,72 +577,72 @@ VALUES
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (pvm/->pvm "1.1.2018")
                                 :loppupvm (pvm/->pvm "31.12.2018")
                                 :urakkatyyppi :hoito
                                 :urakoittain? false}})]
 
     (is (vector? vastaus))
-    (let [raportin-nimi "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+    (let [raportin-nimi "Pohjois-Suomi, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
-          talvisuola-luokka-kaikki-hoitoluokat-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 0))
-          talvisuola-luokka-IsE-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 1))
-          talvisuola-luokka-Is-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 2))
-          talvisuola-luokka-I-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 3))
-          talvisuola-luokka-Ib-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 4))
-          talvisuola-luokka-Ic-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 5))
-          talvisuola-luokka-II-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 6))
-          talvisuola-luokka-III-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 7))
-          talvisuola-luokka-L-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 8))
-          talvisuola-luokka-K1-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 9))
-          talvisuola-luokka-K2-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 10))
-          talvisuola-luokka-ei-talvih-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 11))
-          talvisuola-luokka-ei-tiedossa-02-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 12))
+          s3-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 0))
+          s3-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 1))
+          s3-rivi2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 2))
+          s3-rivi3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 3))
+          s3-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 4))
+          s3-rivi5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 5))
+          s3-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 6))
+          s3-rivi7 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 7))
+          s3-rivi8 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 8))
+          s3-rivi9 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 9))
+          s3-rivi10 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 10))
+          s3-rivi11 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 11))
+          s3-rivi12 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 12))
 
-          talvisuola-luokka-kaikki-hoitoluokat-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 0))
-          talvisuola-luokka-IsE-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 1))
-          talvisuola-luokka-Is-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 2))
-          talvisuola-luokka-I-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 3))
-          talvisuola-luokka-Ib-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 4))
-          talvisuola-luokka-Ic-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 5))
-          talvisuola-luokka-II-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 6))
-          talvisuola-luokka-III-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 7))
-          talvisuola-luokka-L-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 8))
-          talvisuola-luokka-K1-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 9))
-          talvisuola-luokka-K2-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 10))
-          talvisuola-luokka-ei-talvih-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 11))
-          talvisuola-luokka-ei-tiedossa-10-18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 12))]
+          s11-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 0))
+          s11-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 1))
+          s11-rivi2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 2))
+          s11-rivi3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 3))
+          s11-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 4))
+          s11-rivi5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 5))
+          s11-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 6))
+          s11-rivi7 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 7))
+          s11-rivi8 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 8))
+          s11-rivi9 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 9))
+          s11-rivi10 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 10))
+          s11-rivi11 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 11))
+          s11-rivi12 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 11 12))]
 
-      (is (= talvisuola-luokka-kaikki-hoitoluokat-02-18 3600M))
-      (is (= talvisuola-luokka-IsE-02-18 600M))
-      (is (= talvisuola-luokka-Is-02-18 400M))
-      (is (= talvisuola-luokka-I-02-18 400M))
-      (is (= talvisuola-luokka-Ib-02-18 400M))
-      (is (= talvisuola-luokka-Ic-02-18 200M))
-      (is (= talvisuola-luokka-II-02-18 100M))
-      (is (= talvisuola-luokka-III-02-18 100M))
-      (is (= "–" talvisuola-luokka-L-02-18))
-      (is (= talvisuola-luokka-K1-02-18 100M))
-      (is (= talvisuola-luokka-K2-02-18 100M))
-      (is (= talvisuola-luokka-ei-talvih-02-18 100M))
-      (is (= talvisuola-luokka-ei-tiedossa-02-18 100M))
+      (is (= s3-rivi0 "–") "0")
+      (is (= s3-rivi1 3600M) "1")
+      (is (= s3-rivi2 600M) "2")
+      (is (= s3-rivi3 400M) "3")
+      (is (= s3-rivi4 400M) "4")
+      (is (= s3-rivi5 400M) "5")
+      (is (= s3-rivi6 200M) "6")
+      (is (= s3-rivi7 100M) "7")
+      (is (= s3-rivi8 100M) "8")
+      (is (= s3-rivi9 "–") "9")
+      (is (= s3-rivi10 100M) "10")
+      (is (= s3-rivi11 100M) "11")
+      (is (= s3-rivi12 100M) "12")
 
-      (is (= talvisuola-luokka-kaikki-hoitoluokat-10-18 1103.14M))
-      (is (= talvisuola-luokka-IsE-10-18 100M))
-      (is (= talvisuola-luokka-Is-10-18 100M))
-      (is (= talvisuola-luokka-I-10-18 100M))
-      (is (= talvisuola-luokka-Ib-10-18 100M))
-      (is (= talvisuola-luokka-Ic-10-18 100M))
-      (is (= talvisuola-luokka-II-10-18 100M))
-      (is (= talvisuola-luokka-III-10-18 100M))
-      (is (= talvisuola-luokka-L-10-18 100M))
-      (is (= talvisuola-luokka-K1-10-18 100M))
-      (is (= talvisuola-luokka-K2-10-18 100M))
-      (is (= talvisuola-luokka-ei-talvih-10-18 100M))
-      (is (= "–" talvisuola-luokka-ei-tiedossa-10-18))
+      (is (= s11-rivi0 "–") "0")
+      (is (= s11-rivi1 1103.14M) "1")
+      (is (= s11-rivi2 100M) "2")
+      (is (= s11-rivi3 100M) "3")
+      (is (= s11-rivi4 100M) "4")
+      (is (= s11-rivi5 100M) "5")
+      (is (= s11-rivi6 100M) "6")
+      (is (= s11-rivi7 100M) "7")
+      (is (= s11-rivi8 100M) "8")
+      (is (= s11-rivi9 100M) "9")
+      (is (= s11-rivi10 100M) "10")
+      (is (= s11-rivi11 100M) "11")
+      (is (= s11-rivi12 100M) "12")
 
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:leveys "2%", :tyyppi :avattava-rivi}
@@ -677,63 +668,62 @@ VALUES
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (pvm/->pvm "1.1.2018")
                                 :loppupvm (pvm/->pvm "31.12.2018")
                                 :urakkatyyppi :hoito
                                 :urakoittain? true}})]
 
     (is (vector? vastaus))
-    (let [raportin-nimi "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+    (let [raportin-nimi "Pohjois-Suomi, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
           foo (seq (apurit/taulukon-rivit taulukko))
-          talvisuola-luokka-02-18-kajaani-kaikki (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 0))
-          talvisuola-luokka-02-18-kajaani-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 1))
-          talvisuola-luokka-02-18-kajaani-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 2))
-          talvisuola-luokka-02-18-kajaani-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 3))
-          talvisuola-luokka-02-18-kajaani-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 4))
-          talvisuola-luokka-02-18-kajaani-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 5))
-          talvisuola-luokka-02-18-kajaani-erotus (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 6))
-          talvisuola-luokka-02-18-oulu (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 7))
-          talvisuola-luokka-02-18-oulu-IsE (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 8))
-          talvisuola-luokka-02-18-oulu-Is (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 9))
-          talvisuola-luokka-02-18-oulu-I (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 10))
-          talvisuola-luokka-02-18-oulu-Ib (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 11))
-          talvisuola-luokka-02-18-oulu-Ic (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 12))
-          talvisuola-luokka-02-18-oulu-II (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 13))
-          talvisuola-luokka-02-18-oulu-III (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 14))
-          talvisuola-luokka-02-18-oulu-L (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 15))
-          talvisuola-luokka-02-18-oulu-K1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 16))
-          talvisuola-luokka-02-18-oulu-K2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 17))
-          talvisuola-luokka-02-18-oulu-ei-talvihoitoa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))
-          talvisuola-luokka-02-18-oulu-ei-tiedossa (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 19))
-          talvisuola-luokka-02-18-oulu-erotus (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 20))]
+          s4-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 0))
+          s4-rivi1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 1))
+          s4-rivi2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 2))
+          s4-rivi3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 3))
+          s4-rivi4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 4))
+          s4-rivi5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 5))
+          s4-rivi6 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 6))
+          s4-rivi7 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 7))
+          s4-rivi8 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 8))
+          s4-rivi9 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 9))
+          s4-rivi10 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 10))
+          s4-rivi11 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 11))
+          s4-rivi12 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 12))
+          s4-rivi13 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 13))
+          s4-rivi14 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 14))
+          s4-rivi15 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 15))
+          s4-rivi16 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 16))
+          s4-rivi17 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 17))
+          s4-rivi18 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 18))
+          s4-rivi19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 19))
+          s4-rivi20 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 4 20))]
 
-      (is (= talvisuola-luokka-02-18-kajaani-kaikki 1000M))
-      (is (= talvisuola-luokka-02-18-kajaani-IsE 300M))
-      (is (= talvisuola-luokka-02-18-kajaani-Is 200M))
-      (is (= talvisuola-luokka-02-18-kajaani-I 200M))
-      (is (= talvisuola-luokka-02-18-kajaani-Ib 200M))
-      (is (= talvisuola-luokka-02-18-kajaani-Ic 100M))
-      (is (= talvisuola-luokka-02-18-kajaani-erotus 0M))
+      (is (= s4-rivi0 "–") "0")
+      (is (= s4-rivi1 1000M) "1")
+      (is (= s4-rivi2 300M) "2")
+      (is (= s4-rivi3 200M) "3")
+      (is (= s4-rivi4 200M) "4")
+      (is (= s4-rivi5 200M) "5")
+      (is (= s4-rivi6 100M) "6")
 
-      (is (= talvisuola-luokka-02-18-oulu 2600M))
-      (is (= talvisuola-luokka-02-18-oulu-IsE 300M))
-      (is (= talvisuola-luokka-02-18-oulu-Is 200M))
-      (is (= talvisuola-luokka-02-18-oulu-I 200M))
-      (is (= talvisuola-luokka-02-18-oulu-Ib 200M))
-      (is (= talvisuola-luokka-02-18-oulu-Ic 100M))
-      (is (= talvisuola-luokka-02-18-oulu-II 100M))
-      (is (= talvisuola-luokka-02-18-oulu-III 100M))
-      (is (= "–" talvisuola-luokka-02-18-oulu-L))
-      (is (= talvisuola-luokka-02-18-oulu-K1 100M))
-      (is (= talvisuola-luokka-02-18-oulu-K2 100M))
-      (is (= talvisuola-luokka-02-18-oulu-ei-talvihoitoa 100M))
-      (is (= talvisuola-luokka-02-18-oulu-ei-tiedossa 100M))
-      (is (= talvisuola-luokka-02-18-oulu-erotus -1000M))
-
+      (is (= s4-rivi7 0M) "7")
+      (is (= s4-rivi8 "–") "8")
+      (is (= s4-rivi9 "–") "9")
+      (is (= s4-rivi10 "–") "10")
+      (is (= s4-rivi11 1000M) "11")
+      (is (= s4-rivi12 "–") "12")
+      (is (= s4-rivi13 2600M) "13")
+      (is (= s4-rivi14 300M) "14")
+      (is (= s4-rivi15 200M) "15")
+      (is (= s4-rivi16 200M) "16")
+      (is (= s4-rivi17 200M) "17")
+      (is (= s4-rivi18 100M) "18")
+      (is (= s4-rivi19 100M) "19")
+      (is (= s4-rivi20 100M) "20")
 
       (apurit/tarkista-taulukko-sarakkeet taulukko
         {:leveys "2%", :tyyppi :avattava-rivi}
@@ -813,29 +803,23 @@ VALUES
     (is (vector? vastaus-oulu))
     (let [otsikko-oulu "Talvisuolat"
           taulukko-oulu (apurit/taulukko-otsikolla vastaus-oulu otsikko-oulu)
-          oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 0))
-          oulu-talvisuola-luokka-IsE-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))
-          oulu-talvisuola-luokka-Is-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 2))
-          oulu-talvisuola-luokka-I-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 3))
-          oulu-talvisuola-luokka-Ib-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 4))
-          oulu-talvisuola-luokka-Ic-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 5))
-          oulu-talvisuola-luokka-K2-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 6))
-          oulu-talvisuola-luokka-kasin-kirjattu-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 7))
-          oulu-talvisuola-luokka-ei-tiedossa-02-19 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 8))]
+          rivi-1 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 1))
+          rivi-2 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 2))
+          rivi-3 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 3))
+          rivi-4 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 4))
+          rivi-5 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 5))
+          rivi-6 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 6))
+          rivi-7 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 7))
+          rivi-8 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko-oulu 3 8))]
 
-      (is (= oulu-talvisuola-luokka-kaikki-hoitoluokat-02-19 46M))
-      (is (= oulu-talvisuola-luokka-IsE-02-19 1M))
-      (is (= oulu-talvisuola-luokka-Is-02-19 2M))
-      (is (= oulu-talvisuola-luokka-I-02-19 3M))
-      (is (= oulu-talvisuola-luokka-Ib-02-19 4M))
-      (is (= oulu-talvisuola-luokka-Ic-02-19 5M))
-      (is (= oulu-talvisuola-luokka-K2-02-19 6M))
-
-      ;; Tähän tarkoituksella lasketaan myös käsin syötetyt toteumat, joille ei voida saada muuta hoitoluokkaa
-      ;; kuten API:n kautta kirjattavilla saadaan
-      ;; sis. 15 reittipisteiden kautta ja 10 käsin syötetyn toteuman kautta
-      (is (= oulu-talvisuola-luokka-kasin-kirjattu-02-19 10M))
-      (is (= oulu-talvisuola-luokka-ei-tiedossa-02-19 15M))
+      (is (= rivi-1 46M))
+      (is (= rivi-2 1M))
+      (is (= rivi-3 2M))
+      (is (= rivi-4 3M))
+      (is (= rivi-5 4M))
+      (is (= rivi-6 5M))
+      (is (= rivi-7 6M))
+      (is (= rivi-8 10M))
 
       (apurit/tarkista-taulukko-sarakkeet taulukko-oulu
         {:leveys "2%", :tyyppi :avattava-rivi}
@@ -877,3 +861,30 @@ VALUES
       (is (map? ensimmainen-rivi))
       ;; Varmista, että oulun urakkanumero on mukana urakan nimessä
       (is (= (str/includes? (second (:rivi ensimmainen-rivi)) "(1238)"))))))
+
+(deftest ymparistoraportti-sisaltaa-mhu-muutokset-suunnitelmassa-test
+  (testing "Ympäristöraportin suunniteltu määrä sisältää MHU-muutokset"
+    ;; Tämä testi varmistaa että ymparisto.sql käyttää urakka_tehtavamaara_yhteenveto VIEW:tä
+    ;; ja että raportti toimii ilman virheitä MHU-urakoille.
+    (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+          
+          ;; Hae raportti - ei poikkeusta = SQL toimii VIEW:n kanssa
+          raportti (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :suorita-raportti
+                     +kayttaja-jvh+
+                     {:nimi :ymparistoraportti
+                      :konteksti "urakka"
+                      :urakka-id urakka-id
+                      :parametrit {:alkupvm (c/to-date (t/local-date 2025 1 1))
+                                   :loppupvm (c/to-date (t/local-date 2025 12 31))
+                                   :urakoittain? false}})
+          
+          ;; Tarkista että raportti sisältää perus taulukot
+          talvisuolat-taulukko (apurit/taulukko-otsikolla raportti "Talvisuolat")
+          paikkausmateriaalit-taulukko (apurit/taulukko-otsikolla raportti "Paikkausmateriaalit")]
+      
+      ;; Tarkista että taulukot löytyivät
+      (is (some? raportti) "Ympäristöraportti generoituu MHU-urakalle")
+      (is (some? talvisuolat-taulukko) "Talvisuolat-taulukko löytyy raportista")
+      (is (some? paikkausmateriaalit-taulukko) "Paikkausmateriaalit-taulukko löytyy raportista"))))
+

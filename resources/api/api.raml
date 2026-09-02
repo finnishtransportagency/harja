@@ -37,7 +37,7 @@ description: |
           </ul>
       </li>
   </ol>
-version: 1.0.66
+version: 1.0.68
 mediaType: application/json
 protocols:
   - HTTPS
@@ -105,10 +105,12 @@ documentation:
       Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.67</b>
-      <b>Julkaistu: 1.10.2025</b>
+      <b>Nykyinen versio: 1.0.68</b>
+      <b>Julkaistu: 4.3.2026</b>
 
       <b>Versiohistoria:</b>
+       - Versionumero 1.0.68 Julkaistu 4.3.2026
+               - Lisätty suoritettava tehtävä: tieturvallisuustarkastus.
        - Versionumero 1.0.67 Julkaistu 1.10.2025
                - Lisätty toteuma- ja materiaaliraporttirajapintoihin dokumentaatiota
       - Versionumero 1.0.66 Julkaistu 1.9.2025
@@ -2034,7 +2036,7 @@ types:
         type: file_resources_api_schemas_entities_otsikko.schema.json
         additionalProperties: false
       tyomaapaivakirja:
-        type: file_resources_api_schemas_entities_tyomaapaivakirja-kirjaus.schema.json
+        type: !include schemas/tyomaapaivakirja-kirjaus-request.schema.json
         additionalProperties: false
     additionalProperties: false
   tyomaapaivakirja-paivitys-request:
@@ -2048,10 +2050,38 @@ types:
         additionalProperties: false
         required: false
     additionalProperties: false
+  tyomaapaivakirja-kirjaus-v2:
+    type: !include schemas/entities/tyomaapaivakirja-kirjaus-v2.schema.json
   tyomaapaivakirja-kirjaus-v2-request:
-    type: string
+    type: object
+    properties:
+      otsikko:
+        type: otsikko
+        required: true
+      tyomaapaivakirja:
+        type: tyomaapaivakirja-kirjaus-v2
+        required: true
   tyomaapaivakirja-paivitys-v2-request:
-    type: string
+    type: object
+      properties:
+        otsikko:
+          type: otsikko
+          required: true
+        tyomaapaivakirja:
+          type: tyomaapaivakirja-kirjaus-v2
+          required: true
+        urakoitsijan-merkinnat:
+            type: array
+            items:
+              type: object
+              properties:
+                kuvaus:
+                  type: string
+                  required: true
+                nimi:
+                  type: string
+                   required: true
+                additionalProperties: false
   tyomaapaivakirja-kirjaus-ok-response:
     type: object
     properties:
@@ -2339,7 +2369,7 @@ types:
                     kokonaishintaiset:
                       - tehtava:
                           id: 1400
-                          selite: Suolaus
+                          selite: Liukkaudentorjunta suolaamalla (materiaali)
                           yksikko: km
                     yksikkohintaiset:
                       - tehtava:
@@ -5318,7 +5348,7 @@ types:
       post:
         is:
           - secured
-        description: 'Deprekoituu 31.12.2025. Käytä uudempaa rajapintaa, jossa asetetaan query parametri'
+        description: 'Uusi versio odottaa uuden skeeman mukaisen datan ja queryparametrin: api_versio=2. Uudessa skeemassa pakollisuusvalidoinnit vastaavat Väyläviraston vaatimuksia.'
         responses:
           '200':
             body:
@@ -5348,213 +5378,59 @@ types:
                     - kalusto/0/lopetus puuttuu.
                 type: tyomaapaivakirja-kirjaus-nok-response
                 required: false
+        queryParameters:
+          api_version:
+            type: integer
+            required: true
+            description: 'API version. Käytä arvoa 2 uudelle versiolle.'
+            enum: [2]
         body:
           application/json:
-            example:
-              otsikko:
-                lahettaja:
-                  jarjestelma: Urakoitsijan järjestelmä
-                  organisaatio:
-                    nimi: Urakoitsija
-                    ytunnus: 1234567-8
-                viestintunniste:
-                  id: 123
-                lahetysaika: '2016-01-30T12:00:00+02:00'
-              tyomaapaivakirja:
-                tunniste:
-                  id: päiväkirjan sivun id urakoitsijan järjestelmässä
-                  versio: 1
-                  paivamaara: '2023-05-31'
-                saatiedot:
-                  - saatieto:
-                      havaintoaika: '2016-01-30T12:00:00+02:00'
-                      aseman-tunniste: '101500'
-                      aseman-tietojen-paivityshetki: '2016-01-30T12:00:00+02:00'
-                      ilman-lampotila: 20
-                      tien-lampotila: 5
-                      keskituuli: 16
-                      sateen-olomuoto: 23
-                      sadesumma: 5
-                poikkeukselliset-saahavainnot:
-                  - poikkeuksellinen-saahavainto:
-                      havaintoaika: '2016-01-30T12:00:00+02:00'
-                      paikka: Kauhava
-                      kuvaus: Jäätävä sade
-                kaluston-kaytto:
-                  - kalusto:
-                      aloitus: '2016-01-30T12:00:00+02:00'
-                      lopetus: '2017-01-30T12:00:00+02:00'
-                      tyokoneiden-lkm: 2
-                      lisakaluston-lkm: 4
-                paivystajan-tiedot:
-                  - paivystaja:
-                      aloitus: '2016-01-30T12:00:00+02:00'
-                      lopetus: '2017-01-30T12:00:00+02:00'
-                      nimi: Erkki Esimerkki
-                tyonjohtajan-tiedot:
-                  - tyonjohtaja:
-                      aloitus: '2016-01-30T12:00:00+02:00'
-                      lopetus: '2017-01-30T12:00:00+02:00'
-                      nimi: Essi Esimerkki
-                tieston-toimenpiteet:
-                  - tieston-toimenpide:
-                      aloitus: '2016-01-30T12:00:00+02:00'
-                      lopetus: '2017-01-30T12:00:00+02:00'
-                      tehtavat:
-                        - tehtava:
-                            id: 20
-                tieston-muut-toimenpiteet:
-                  - tieston-muu-toimenpide:
-                      aloitus: '2016-01-30T12:00:00+02:00'
-                      lopetus: '2017-01-30T12:00:00+02:00'
-                      tehtavat:
-                        - tehtava:
-                            kuvaus: Esimerkki kuvaus
-                liikenteenohjaus-muutokset:
-                  - liikenteenohjaus-muutos:
-                      kuvaus: Paljon muutoksia
-                onnettomuudet:
-                  - onnettomuus:
-                      kuvaus: Onnettomuus tiellä 4
-                viranomaisen-avustaminen:
-                  - viranomaisen-avustus:
-                      kuvaus: Katselmointi pidetty hyvässä ymmärryksessä
-                      tunnit: 4.75
-                palautteet:
-                  - palaute:
-                      kuvaus: Esimerkki palaute
-                muut-kirjaukset:
-                  kuvaus: Huomatus vielä että kiire tuli hommissa
-                tilaajan-yhteydenotot:
-                  - tilaajan-yhteydenotto:
-                      kuvaus: Tilaajan huomautukset työmaapäiväkirjaan
-            type: tyomaapaivakirja-kirjaus-request
-            required: false
-      '/{tyomaapaivakirjaid}':
-        put:
-          is:
-            - secured
-          description: 'Työmaapäiväkirjan päivittäminen. Deprekoituu 31.12.2024. Siirry käyttämään uudempaa versiota, jossa versionumero annetaan query parametrilla ja päivitettävä työmaapäiväkirja päätellään päivästä, eikä url parametrista.'
-          responses:
-            '200':
-              body:
-                application/json:
-                  example:
-                    ilmoitukset: Kaikki toteumat kirjattu onnistuneesti
-                    kohteet:
-                      - tunniste:
-                          id: 123
-                        tiedotukset:
-                          - tiedotus: ''
-                  type: kirjaus-response
-                  required: false
-            '400':
-              body:
-                application/json:
-                  example:
-                    virheet:
-                      - virhe:
-                          koodi: Tuntematon urakka
-                          viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                  type: virhe-response
-                  required: false
-            '500':
-              body:
-                application/json:
-                  example:
-                    virheet:
-                      - virhe:
-                          koodi: Tuntematon urakka
-                          viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                  type: virhe-response
-                  required: false
-          body:
-            application/json:
-              example:
-                otsikko:
-                  lahettaja:
-                    jarjestelma: Urakoitsijan järjestelmä
-                    organisaatio:
-                      nimi: Urakoitsija
-                      ytunnus: 1234567-8
-                  viestintunniste:
-                    id: 123
-                  lahetysaika: '2016-01-30T12:00:00+02:00'
-                tyomaapaivakirja:
-                  tunniste:
-                    id: päiväkirjan sivun id urakoitsijan järjestelmässä
-                    versio: 2
-                    paivamaara: '2023-05-31'
-                  saatiedot:
-                    - saatieto:
-                        havaintoaika: '2016-01-30T12:00:00+02:00'
-                        aseman-tunniste: '101500'
-                        aseman-tietojen-paivityshetki: '2016-01-30T12:00:00+02:00'
-                        ilman-lampotila: 20
-                        tien-lampotila: 5
-                        keskituuli: 16
-                        sateen-olomuoto: 23
-                        sadesumma: 5
-                  poikkeukselliset-saahavainnot:
-                    - poikkeuksellinen-saahavainto:
-                        havaintoaika: '2016-01-30T12:00:00+02:00'
-                        paikka: Kauhava
-                        kuvaus: Jäätävä sade
-                  kaluston-kaytto:
-                    - kalusto:
-                        aloitus: '2016-01-30T12:00:00+02:00'
-                        lopetus: '2017-01-30T12:00:00+02:00'
-                        tyokoneiden-lkm: 2
-                        lisakaluston-lkm: 4
-                  paivystajan-tiedot:
-                    - paivystaja:
-                        aloitus: '2016-01-30T12:00:00+02:00'
-                        lopetus: '2017-01-30T12:00:00+02:00'
-                        nimi: Erkki Esimerkki
-                  tyonjohtajan-tiedot:
-                    - tyonjohtaja:
-                        aloitus: '2016-01-30T12:00:00+02:00'
-                        lopetus: '2017-01-30T12:00:00+02:00'
-                        nimi: Essi Esimerkki
-                  tieston-toimenpiteet:
-                    - tieston-toimenpide:
-                        aloitus: '2016-01-30T12:00:00+02:00'
-                        lopetus: '2017-01-30T12:00:00+02:00'
-                        tehtavat:
-                          - tehtava:
-                              id: 20
-                  tieston-muut-toimenpiteet:
-                    - tieston-muu-toimenpide:
-                        aloitus: '2016-01-30T12:00:00+02:00'
-                        lopetus: '2017-01-30T12:00:00+02:00'
-                        tehtavat:
-                          - tehtava:
-                              kuvaus: Esimerkki kuvaus
-                  liikenteenohjaus-muutokset:
-                    - liikenteenohjaus-muutos:
-                        kuvaus: Paljon muutoksia
-                  onnettomuudet:
-                    - onnettomuus:
-                        kuvaus: Onnettomuus tiellä 4
-                  viranomaisen-avustaminen:
-                    - viranomaisen-avustus:
-                        kuvaus: Katselmointi pidetty hyvässä ymmärryksessä
-                        tunnit: 4.75
-                  palautteet:
-                    - palaute:
-                        kuvaus: Esimerkki palaute
-                  muut-kirjaukset:
-                    kuvaus: Huomatus vielä että kiire tuli hommissa
-                  tilaajan-yhteydenotot:
-                    - tilaajan-yhteydenotto:
-                        kuvaus: Tilaajan huomautukset työmaapäiväkirjaan
-                  urakoitsijan-merkinnat:
-                    kuvaus: Urakoitsijan merkinnät jälkikäteen
-                    nimi: Ulla Urakoitsija
-              type: tyomaapaivakirja-paivitys-request
-              required: false
-        uriParameters:
-          tyomaapaivakirjaid: {}
+            example: !include examples/tyomaapaivakirja-kirjaus-request.json
+            type: tyomaapaivakirja-kirjaus-v2-request
+      put:
+        is:
+          - secured
+        description: 'Tämä rajapinta on ollut käytössä 1.1.2026 alkaen. Tämä versio odottaa erilaisen schematiedoston mukaisen datan ja queryparametrin: api_versio=2. Käytä uudempaa rajapintaa, jossa asetetaan query parametri. Huomaa käyttää HTTP POST, kun lähetät tiedot ensimmäisen kerran ja päivityksellä HTTP PUT'
+        responses:
+          '200':
+            body:
+              application/json:
+                example:
+                  status: OK
+                  tyomaapaivakirja-id: 1
+                type: tyomaapaivakirja-kirjaus-ok-response
+                required: false
+          '400':
+            body:
+              application/json:
+                example:
+                  status: VIRHE
+                  virheet:
+                    - kalusto/0/aloitus puuttuu.
+                    - kalusto/0/lopetus puuttuu.
+                type: tyomaapaivakirja-kirjaus-nok-response
+                required: false
+          '500':
+            body:
+              application/json:
+                example:
+                  status: VIRHE
+                  virheet:
+                    - kalusto/0/aloitus puuttuu.
+                    - kalusto/0/lopetus puuttuu.
+                type: tyomaapaivakirja-kirjaus-nok-response
+                required: false
+        queryParameters:
+          api_version:
+            type: integer
+            required: true
+            description: 'API version. Käytä arvoa 2 uudelle versiolle.'
+            enum: [2]
+        body:
+          application/json:
+            example: !include examples/tyomaapaivakirja-paivitys-request.json
+            type: tyomaapaivakirja-kirjaus-v2-request
     /talvihoitoreitti:
         post:
           is:
@@ -5732,7 +5608,7 @@ types:
                           maara:
                             yksikko: t
                             maara: 2
-                        - materiaali: Kesäsuola päällystettyjen teiden pölynsidonta
+                        - materiaali: Talvisuolaliuos CaCl2, päällystettyjen teiden pölynsidonta
                           maara:
                             yksikko: t
                             maara: 2
@@ -6573,78 +6449,7 @@ types:
   /haku:
     description: Päivystäjätietojen haku
     is:
-      - secured
-    /puhelinnumerolla:
-      get:
-        is:
-          - secured
-        description: Päivystäjätietojen haku puhelinnumerolla.
-        responses:
-          '200':
-            body:
-              application/json:
-                example:
-                  paivystajatiedot:
-                    - urakka:
-                        tiedot:
-                          id: 123456789
-                          nimi: Oulun alueurakka
-                          urakoitsija:
-                            ytunnus: 123456-8
-                            nimi: Asfaltia
-                          vaylamuoto: tie
-                          tyyppi: hoito
-                          alkupvm: '2016-01-30T12:00:00+02:00'
-                          loppupvm: '2016-01-30T12:00:00+02:00'
-                        paivystykset:
-                          - paivystys:
-                              id: 1234
-                              paivystaja:
-                                id: 454653434
-                                etunimi: Päivi
-                                sukunimi: Päivystäjä
-                                email: paivi.paivystaja@test.i
-                                matkapuhelin: '4345455'
-                                tyopuhelin: '7849885769'
-                              alku: '2015-01-30T12:00:00+02:00'
-                              loppu: '2016-01-30T12:00:00+02:00'
-                              vastuuhenkilo: true
-                              varahenkilo: true
-                type: paivystajatietojen-haku-response
-                required: false
-          '400':
-            body:
-              application/json:
-                example:
-                  virheet:
-                    - virhe:
-                        koodi: Tuntematon urakka
-                        viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                type: virhe-response
-                required: false
-          '500':
-            body:
-              application/json:
-                example:
-                  virheet:
-                    - virhe:
-                        koodi: Tuntematon urakka
-                        viesti: 'Annetulle id:lle ei löydy urakkaa.'
-                type: virhe-response
-                required: false
-        queryParameters:
-          puhelinnumero:
-            description: Puhelinnumero jolla haku suoritetaan. Haku tukee puhelinnumeroita maatunnuksella sekä ilman tunnusta. Huom. maatunnuksen plus-merkki täytyy escapeta muotoon %2B.
-            example: 0414332119
-            type: string
-          alkaen:
-            description: Päivystykset alkaen.
-            example: '2015-01-01'
-            type: date
-          paattyen:
-            description: Päivystykset päättyen.
-            example: '2015-01-01'
-            type: date
+      - secured    
     /sijainnilla:
       get:
         is:

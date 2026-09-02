@@ -60,7 +60,8 @@
               "kulukohdistus": {
                 "kohdistus": {
                   "toimenpide": 618,
-                  "tehtavaryhma": 2
+                  "tehtavaryhma": 2,
+                  "tehtava": 3072
                 },
                 "poistettu": false,
                 "kulukohdistus-id": 50,

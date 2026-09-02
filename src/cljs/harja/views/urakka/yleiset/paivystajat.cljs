@@ -15,12 +15,15 @@
             [harja.fmt :as fmt]
             [harja.loki :refer [log]]
             [harja.asiakas.kommunikaatio :as k]
-            [harja.asiakas.tapahtumat :as tapahtumat]
-            [harja.ui.napit :as napit]
             [harja.ui.kentat :as kentat]
             [harja.ui.aikajana :as aikajana]
-            [harja.ui.on-off-valinta :as on-off])
+            [harja.ui.on-off-valinta :as on-off]
+            [harja.ui.protokollat :as protokollat])
   (:require-macros [cljs.core.async.macros :refer [go]]))
+
+(def yhteyshenkilot (r/atom []))
+(def yhteyshenkilot-haettu? (r/atom false))
+(def paivystajaksi-merkityt (r/atom nil))
 
 (defn tallenna-paivystajat [ur paivystajat uudet-paivystajat]
   (log "tallenna päivystäjät!" (pr-str uudet-paivystajat))
@@ -28,12 +31,16 @@
             (into []
                   ;; Kaikki tiedon mankelointi ennen lähetystä tähän
                   (comp (filter #(not (:poistettu %)))
-                        (map #(if-let [nimi (:nimi %)]
-                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                  (assoc %
-                                    :etunimi (str/trim etu)
-                                    :sukunimi (str/trim suku)))
-                                %)))
+                    (map #(let [rivi (if-let [nimi (:nimi %)]
+                                       (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                                         (assoc %
+                                           :etunimi (str/trim etu)
+                                           :sukunimi (str/trim suku)))
+                                       %)]
+                            ;; Säilytetään yhteyshenkilo_id jos se on olemassa
+                            (if (:yhteyshenkilo_id rivi)
+                              rivi
+                              (dissoc rivi :yhteyshenkilo_id)))))
                   uudet-paivystajat)
             poistettavat
             (into []
@@ -47,12 +54,27 @@
                               (get-in vastaus [:vastaus :virhe]))
                          :warning viesti/viestin-nayttoaika-pitka)
           (do (reset! paivystajat (reverse (sort-by :loppu vastaus)))
+              ;; Nollataan yhteyshenkilot-haettu? jotta seuraavalla kerralla haetaan uudet tiedot
+              (reset! yhteyshenkilot-haettu? false)
               true)))))
 
 (defn- paivystys-voimassa?
   [paivystys]
   (and (pvm/ennen? (:alku paivystys) (pvm/nyt))
        (pvm/ennen? (pvm/nyt) (:loppu paivystys))))
+
+(def yhteyshenkilohaku
+  (reify protokollat/Haku
+    (hae [_ teksti]
+      (go (let [yhteyshenkilot @yhteyshenkilot
+                itemit (if (< (count teksti) 1)
+                         yhteyshenkilot
+                         (filter #(and
+                                    (str (:etunimi %) " " (:sukunimi %))
+                                    (not= (.indexOf (.toLowerCase (str (:etunimi %) " " (:sukunimi %)))
+                                            (.toLowerCase teksti)) -1))
+                           yhteyshenkilot))]
+            (vec (sort-by :sukunimi itemit)))))))
 
 (defn paivystajalista
   [ur paivystajat tallenna!]
@@ -66,28 +88,63 @@
       {:otsikko "Päivystystiedot"
        :tyhja "Ei päivystystietoja."
        :tallenna tallenna!
+       :peruuta (fn []
+                  ;; Nollataan yhteyshenkilot-haettu? kun muokkaus perutaan
+                  (reset! yhteyshenkilot-haettu? false))
+       :uusi-rivi (fn [rivi]
+                    ;; Hae yhteyshenkilöt kun ensimmäinen uusi rivi luodaan
+                    (when-not @yhteyshenkilot-haettu?
+                      (reset! yhteyshenkilot-haettu? true)
+                      (go
+                        (reset! yhteyshenkilot
+                          (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur))))))
+                    rivi)
        :rivin-luokka #(when (paivystys-voimassa? %)
                         " bold")}
-      [{:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
-                                nimi
-                                (str (:etunimi %)
-                                     (when-let [suku (:sukunimi %)]
-                                       (str " " suku))))
-        :aseta (fn [yht arvo]
-                 (assoc yht :nimi arvo))
-        :tyyppi :string :leveys 15
+      [{:otsikko "Nimi"
+        :hae #(if-let [nimi (:nimi %)]
+                nimi
+                (str (:etunimi %)
+                  (when-let [suku (:sukunimi %)]
+                    (str " " suku))))
+        :aseta (fn [rivi valittu]
+                 (if (map? valittu)
+                   ;; Valittiin urakkaan liitetty yhteyshenkilö
+                   (-> rivi
+                     (assoc :nimi (str (:etunimi valittu) " " (:sukunimi valittu)))
+                     (assoc :etunimi (:etunimi valittu))
+                     (assoc :sukunimi (:sukunimi valittu))
+                     (assoc :yhteyshenkilo_id (:id valittu))
+                     (assoc :sahkoposti (:sahkoposti valittu))
+                     (assoc :tyopuhelin (:tyopuhelin valittu))
+                     (assoc :matkapuhelin (:matkapuhelin valittu))
+                     (assoc :organisaatio (:organisaatio valittu)))
+                   ;; Luodaan urakan ulkopuolinen päivystäjä
+                   (assoc rivi :nimi valittu)))
+        :tyyppi :haku
+        :salli-kirjoitus? true
+        :lahde yhteyshenkilohaku
+        :leveys 15
+        :hae-kun-yli-n-merkkia 0
+        :piilota-dropdown? true
+        :piilota-checkbox? true
+        :hakuikoni? false
+        :piilota-haetaan-teksti-ja-spinner? true
+        :nayta #(if (map? %) (str (:etunimi %) " " (:sukunimi %)) %)
+        :muokattava? (fn [rivi _] (nil? (:yhteyshenkilo_id rivi)))
         :validoi [[:ei-tyhja "Anna päivystäjän nimi"]]}
        {:otsikko "Organisaatio" :nimi :organisaatio :fmt :nimi :leveys 10
         :tyyppi :valinta
         :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
-
+        :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]
+        :muokattava? (fn [rivi _] (nil? (:yhteyshenkilo_id rivi)))}
        {:otsikko "Puhelin (virka)" :nimi :tyopuhelin :tyyppi :puhelin :leveys 10
-        :pituus 16}
+        :pituus 16 :muokattava? (fn [rivi _] (nil? (:yhteyshenkilo_id rivi)))}
        {:otsikko "Puhelin (gsm)" :nimi :matkapuhelin :tyyppi :puhelin :leveys 10
-        :pituus 16}
+        :pituus 16 :muokattava? (fn [rivi _] (nil? (:yhteyshenkilo_id rivi)))}
        {:otsikko "Sähköposti" :nimi :sahkoposti :tyyppi :email :leveys 20
-        :validoi [[:email "Kirjoita sähköpostiosoite loppuun ilman ääkkösiä."]]}
+        :validoi [[:email "Kirjoita sähköpostiosoite loppuun ilman ääkkösiä."]]
+        :muokattava? (fn [rivi _] (nil? (:yhteyshenkilo_id rivi)))}
        {:otsikko "Alkupvm" :nimi :alku :tyyppi :pvm-aika :fmt pvm/pvm-aika :leveys 10
         :validoi [[:ei-tyhja "Aseta alkupvm"]
                   (fn [alku rivi]
@@ -163,19 +220,21 @@
        (aikajanariveiksi paivystajat @tiedot/aikajana-vain-urakoitsijat?)]])])
 
 (defn paivystajat [ur]
-  (let [paivystajat (r/atom nil)
-        hae! (fn [urakka-id]
-               (log "HAETAAN PÄIVYSTÄJÄT: " urakka-id)
-               (reset! paivystajat nil)
-               (go (reset! paivystajat
+  (let [hae! (fn [urakka-id]
+               (reset! yhteyshenkilot nil)
+               (reset! yhteyshenkilot-haettu? false)
+               (log "HAETAAN PÄIVYSTÄJÄT JA YHTEYSHENKILÖT: " urakka-id)
+               (go (reset! paivystajaksi-merkityt
                            (reverse (sort-by :loppu
-                                             (<! (tiedot/hae-urakan-paivystajat urakka-id)))))))]
+                                             (<! (tiedot/hae-urakan-paivystajat urakka-id))))))
+               (go (reset! yhteyshenkilot
+                     (<! (tiedot/hae-urakan-yhteyshenkilot urakka-id)))))]
     (hae! (:id ur))
     (komp/luo
       (komp/kun-muuttuu (comp hae! :id))
       (fn [ur]
         [:div.paivystajat
-         [paivystajalista ur @paivystajat
+         [paivystajalista ur @paivystajaksi-merkityt
           (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-            #(tallenna-paivystajat ur paivystajat %))]
-         [aikajana @paivystajat]]))))
+            #(tallenna-paivystajat ur paivystajaksi-merkityt %))]
+         [aikajana @paivystajaksi-merkityt]]))))

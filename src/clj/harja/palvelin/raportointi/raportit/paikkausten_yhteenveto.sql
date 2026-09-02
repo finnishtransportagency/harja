@@ -59,19 +59,18 @@ SELECT x.tehtava                AS tehtava,
 -- Haetaan suunnitellut summat erikseen
 
       SELECT teh.id,
-             teh.nimi      AS tehtava,
-             teh.yksikko   AS yksikko,
-             NULL          AS toteutunut_maara,
-             ut.maara      AS suunniteltu_maara,
-             teh.jarjestys AS jarjestys
-        FROM urakka_tehtavamaara ut
+             teh.nimi           AS tehtava,
+             teh.yksikko        AS yksikko,
+             NULL               AS toteutunut_maara,
+             ut.laskettu_maara  AS suunniteltu_maara,
+             teh.jarjestys      AS jarjestys
+        FROM urakka_tehtavamaara_yhteenveto ut
                  JOIN tehtava teh ON ut.tehtava = teh.id,
              valitut_tehtavat vt
        WHERE ut.urakka = :urakkaid
-         AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-         AND ut.poistettu IS FALSE
+         AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
          AND teh.id IN (vt.id)
-       GROUP BY teh.id, teh.nimi, teh.jarjestys, ut.maara
+       GROUP BY teh.id, teh.nimi, teh.jarjestys, ut.laskettu_maara
        ORDER BY jarjestys) x
  GROUP BY x.tehtava, x.yksikko;
 
@@ -176,6 +175,7 @@ SELECT SUM(pk.summa) AS "toteutunut-hinta",
   FROM paikkauskustannukset pk
  WHERE vuosi BETWEEN :alkuvuosi AND :loppuvuosi
    AND pk.urakka = :urakkaid
+   AND pk.poistettu IS NOT TRUE 
  GROUP BY pk.kustannustyyppi;
 
 -- name: hae-kustannukset-pkluokittain

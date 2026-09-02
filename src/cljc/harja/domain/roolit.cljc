@@ -124,21 +124,15 @@ rooleista."
   [kayttaja]
   (case (name (or (get-in kayttaja [:organisaatio :tyyppi]) "tilaaja"))
     "liikennevirasto" :tilaaja
+    "elinvoimakeskus" :tilaaja
     "hallintayksikko" :tilaaja
     "tilaajan-konsultti" :konsultti
     "urakoitsija" :urakoitsija
-
     :urakoitsija))
 
 (defn tilaajan-kayttaja?
   [kayttaja]
   (= :tilaaja (osapuoli kayttaja)))
-
-(defn liikenneviraston-kayttaja? [kayttaja]
-  (= "liikennevirasto" (get-in kayttaja [:organisaatio :tyyppi])))
-
-(defn ely-kayttaja? [kayttaja]
-  (= "hallintayksikko" (get-in kayttaja [:organisaatio :tyyppi])))
 
 (defn urakoitsija?
   [kayttaja]

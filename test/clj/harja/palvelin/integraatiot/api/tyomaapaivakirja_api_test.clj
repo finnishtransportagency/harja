@@ -616,29 +616,30 @@
     (is (= (:status vastaus) 200) "Kutsu onnistuu, vaikka menee uudempaan versioon.")
     (is (= v2-kyselymaara (dec kasvanut-v2-kyselymaara)) "V2 kyselyiden määrä kasvaa yhdellä.")))
 
-(deftest virheellinen-put-versio-1
-  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
-        paivamaara "2023-05-30"
-        ulkoinenid "12345"
-        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
-        ;; 1. Tallenna ensin typa
-        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
-               slurp
-               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
-               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
-               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
-               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
-               (.replace "__ULKOINENID__" ulkoinenid)
-               (.replace "__PAIVAMAARA__" paivamaara))
-
-        _ (anna-kirjoitusoikeus kayttaja-yit)
-        ;; PUT tyyppinen kutsu ei pitäisi onnistua versioon 1
-        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=1"] kayttaja-yit portti typa)
-        vastaus-body (cheshire/decode (:body vastaus) true)
-        _ (println "vastaus-body" vastaus-body)]
-    (is (= 403 (:status vastaus)))
-    (is (.contains (get-in vastaus-body [:virheet 0 :virhe :koodi]) "virheellinen-api-versio") )
-    (is (.contains (get-in vastaus-body [:virheet 0 :virhe :viesti]) "Työmaapäiväkirjan päivitys http put metodilla") )))
+;; FIXME: Työmaapäiväkirja API v2 tulee automaattisesti käyttöön 1.1.2026 alkaen, joten tämä testi on varmaan nyt hyödytön
+;(deftest virheellinen-put-versio-1
+;  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+;        paivamaara "2023-05-30"
+;        ulkoinenid "12345"
+;        urakoitsija (first (q-map (format "SELECT ytunnus, nimi FROM organisaatio WHERE nimi = '%s';" "YIT Rakennus Oy")))
+;        ;; 1. Tallenna ensin typa
+;        typa (-> "test/resurssit/api/tyomaapaivakirja-kirjaus.json"
+;               slurp
+;               (.replace "__URAKOITSIJA__" (:nimi urakoitsija))
+;               (.replace "__YTUNNUS__" (:ytunnus urakoitsija))
+;               (.replace "__VIESTITUNNISTE__" (str (rand-int 9999999)))
+;               (.replace "__LÄHETYSAIKA__" "2016-01-30T12:00:00+02:00")
+;               (.replace "__ULKOINENID__" ulkoinenid)
+;               (.replace "__PAIVAMAARA__" paivamaara))
+;
+;        _ (anna-kirjoitusoikeus kayttaja-yit)
+;        ;; PUT tyyppinen kutsu ei pitäisi onnistua versioon 1
+;        vastaus (api-tyokalut/put-kutsu ["/api/urakat/" urakka-id "/tyomaapaivakirja?api_version=1"] kayttaja-yit portti typa)
+;        vastaus-body (cheshire/decode (:body vastaus) true)
+;        _ (println "vastaus-body" vastaus-body)]
+;    (is (= 403 (:status vastaus)))
+;    (is (.contains (get-in vastaus-body [:virheet 0 :virhe :koodi]) "virheellinen-api-versio") )
+;    (is (.contains (get-in vastaus-body [:virheet 0 :virhe :viesti]) "Työmaapäiväkirjan päivitys http put metodilla") )))
 
 (deftest validoi-typa-arvot-saa
   (let [saatiedot {:tyomaapaivakirja

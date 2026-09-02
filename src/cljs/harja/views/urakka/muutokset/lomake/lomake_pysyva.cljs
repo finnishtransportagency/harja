@@ -11,7 +11,6 @@
     [harja.ui.kentat :as kentat]
     [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
-    [harja.ui.debug :refer [debug]]
     [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
     [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
@@ -39,11 +38,9 @@
 
 (defn- pysyvan-muutoksen-vetolaatikko
   "Piirtää jatkuvan muutoksen taulukkoon vetolaatikon, jolla hallitaan kustannus- ja tehtävämuutoksia."
-  [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
-   {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos} voi-muokata?]
+  [e! urakan-hoitokaudet rivi muokattava-muutos voi-muokata?]
   (let [g (grid/grid-ohjaus)]
-    (fn [e! urakan-hoitokaudet {:keys [toimenpideinstanssi kustannusvaikutukset tehtavat_ja_maarat toimenpidekoodi] :as rivi}
-         {:keys [hoitovuosi toimenpiteiden-tehtavat] :as muokattava-muutos} voi-muokata?]
+    (fn [e! urakan-hoitokaudet rivi muokattava-muutos voi-muokata?]
       (let [valittu-hoitovuoden-alkuvuosi (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
             tehtavat-ja-maarat-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi
                                                                 (:hoitokauden_alkuvuosi %))
@@ -60,12 +57,12 @@
                                              (= (:hoitokauden-alkuvuosi %) valittu-hoitovuoden-alkuvuosi))
                                     (:toimenpiteiden-tehtavat muokattava-muutos))]
 
-        [:span
-         [:h3 "Vaikutus tehtävämääriin"]
-         [:p (str (:toimenpide rivi) ", "
-               (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
-                 urakan-hoitokaudet
-                 "Hoitovuosi"))]
+        [:div.vaikutus-otsikko
+         [:h3 "Vaikutus tehtävä- ja määräluettelon tehtäviin"]
+         [:p.body-strong (str (:toimenpide rivi) ", "
+                           (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
+                             urakan-hoitokaudet
+                             "Hoitovuosi"))]
 
          ;; Pakota uudelleenrenderöinti, jotta uudet tiedot valuvat :muutos-callbackiin ja :valinnat-fn:iin
          ^{:key (str valittu-hoitovuoden-alkuvuosi "_"
@@ -103,6 +100,7 @@
 
           ;; Taulukon kentät
           [{:otsikko "Tehtävä"
+            :elementin-id #(str (:tehtava-id %) (gensym))
             :nimi :tehtava
             :tyyppi :valinta
             :muokattava? (constantly voi-muokata?)
@@ -178,12 +176,48 @@
                              :disabled (not voi-muokata?)}])}]
           tehtavat-ja-maarat-valittuna-hoitovuonna]
 
-         [:h4 "Vaikutus tavoitehintaan"]
+         ;; Jos halutaan tallentaa tavoitehinnan muutos ilman tehtävämuutoksia, vaaditaan tähän jokin syy
+         (let [kv-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %))
+                                          (:kustannusvaikutukset rivi))
 
-         [:label {:for (str "tavoitehintainput-" (:toimenpideinstanssi rivi)) :class "tavoitehinta-label"}
-          "Tavoitehinnan muutos euroina (+/-)"]
+               kv-valittuna-hoitovuonna (when (some? kv-valittuna-hoitovuonna)
+                                          (first kv-valittuna-hoitovuonna))
+
+               tehtavamaaramuutos-kirjattu? (-> kv-valittuna-hoitovuonna :tehtavamaaramuutos-kirjattu?)
+               ei-tehtavamuutoksia-syy (-> kv-valittuna-hoitovuonna :syy)]
+
+           [:div.tehtava-vaikutus-valinta.padding-top-16
+            [kentat/tee-kentta {:tyyppi :checkbox
+                                :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
+                                :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi valittu-hoitovuoden-alkuvuosi))}
+             (if (some? tehtavamaaramuutos-kirjattu?)
+               (not tehtavamaaramuutos-kirjattu?)
+               false)]
+
+            (when
+              (false? tehtavamaaramuutos-kirjattu?)
+              [:div.padding-top-16
+               [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu, mutta tehtävämäärät eivät muutu"
+                                                :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
+                                                :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
+                                                             #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
+                                                                    (:toimenpideinstanssi rivi)
+                                                                    %
+                                                                    valittu-hoitovuoden-alkuvuosi)))
+                                                :luokka ""}]])])
+
+         [:h3.padding-top-24 "Vaikutus tavoitehintaan"]
+         [:p.body-strong (str (:toimenpide rivi) ", "
+                           (fmt/hoitokauden-jarjestysluku-ja-vuodet (:hoitovuosi muokattava-muutos)
+                             urakan-hoitokaudet
+                             "Hoitovuosi"))]
+
+         [:label {:for (str "tavoitehintainput-" (:toimenpideinstanssi rivi)) :class "tavoitehinta-label padding-top-8"}
+          "Tavoitehinnan muutos (+/-)"]
+
          [kentat/tee-kentta {:elementin-id (str "tavoitehintainput-" (:toimenpideinstanssi rivi))
-                             :tyyppi :numero :fmt fmt/euro-opt
+                             :tyyppi :numero
+                             :fmt fmt/euro-opt
                              :disabled? (not voi-muokata?)
                              :pakollinen? true
                              :input-luokka "tavoitehinnan-muutos-input"
@@ -193,7 +227,9 @@
               (e! (t-kirjatut/->PaivitaToimenpiteenTavoitehinnanMuutos
                     (:toimenpideinstanssi rivi)
                     (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
-                    summa))))]]))))
+                    summa))))]
+
+         [:p.small-caption "Ilmoita muutos ilman indeksikorjausta"]]))))
 
 (defn- grid-pysyvan-muutoksen-vaikutukset*
   [vetolaatikkorivit hoitovuosi toimenpiteiden-tiedot]
@@ -274,7 +310,7 @@
         (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as _app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
@@ -284,6 +320,7 @@
                        (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
                        ;; Voi muokata, jos hoitovuosi ei ole vielä lukittu
                        (not hoitovuosi-lukittu?))
+
         vetolaatikkorivit (into {}
                             (map (juxt :toimenpideinstanssi
                                    (fn [rivi]
@@ -293,11 +330,13 @@
                                                          :toimenpide
                                                          :toimenpidekoodi
                                                          :kustannusvaikutukset
-                                                         :tehtavat_ja_maarat])
-                                      (select-keys muokattava-muutos [:hoitovuosi :toimenpiteiden-tehtavat :tehtavat_ja_maarat])
-                                      voi-muokata?]
-
-                                     #_[pysyvan-muutoksen-vetolaatikko-old e! app rivi]))
+                                                         :tehtavat_ja_maarat
+                                                         :syy
+                                                         :tehtavamaaramuutos-kirjattu?])
+                                      (select-keys muokattava-muutos [:hoitovuosi
+                                                                      :toimenpiteiden-tehtavat
+                                                                      :tehtavat_ja_maarat])
+                                      voi-muokata?]))
                               (:toimenpiteiden-tiedot muokattava-muutos)))]
     [:div.toimenpiteiden-tiedot
      ;; Näytä debug-info kehittäjille
@@ -325,13 +364,15 @@
         :luokka "nappi-toissijainen pysyvan-muutoksen-kopiointinappi"}]]
 
      [grid-pysyvan-muutoksen-vaikutukset*
-      vetolaatikkorivit (:hoitovuosi muokattava-muutos) (:toimenpiteiden-tiedot muokattava-muutos)]]))
+      vetolaatikkorivit
+      (:hoitovuosi muokattava-muutos)
+      (:toimenpiteiden-tiedot muokattava-muutos)]]))
 
 
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa?
-              valittu-hoitokausi] :as app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet
+              haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa? valittu-hoitokausi] :as app}]
 
   (let [muokataan? (:id muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
@@ -415,7 +456,7 @@
           :tyyppi :komponentti
           :komponentti (fn [_]
                          (let [hoitovuosi-str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
-                                                (some-> valittu-hoitokausi (first) (pvm/vuosi))
+                                                (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
                                                 (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
                                                 false)]
                            [yleiset/info-laatikko :vahva-ilmoitus

@@ -67,7 +67,8 @@
     "tiemerkinta",
     "tiestotarkastus",
     "tilaajan laadunvalvonta",
-    "turvalaite"})
+    "turvalaite",
+    "valaistusurakoiden tarkastusajo"})
 
 (deftest tallenna-tyokoneen-seurantakirjaus-uusi
   (let [_ (anna-kirjoitusoikeus kayttaja)
@@ -75,26 +76,26 @@
                 ;; kokonaan uusi tyokone, kantaan pitäisi tulla uusi rivi
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                             slurp
-                                                            (.replace "__TEHTAVA__" "suolaus")))]
-    (let [[sijainti] (first (q "SELECT st_astext(sijainti) FROM tyokonehavainto WHERE tyokoneid=666"))
-          tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
-                     (konv/array->set))]
-      (is (= 200 (:status kutsu)))
-      (is (= (str sijainti) "POINT(429015 7198161)"))
-      (is (= tehtavat #{"suolaus"})))))
+                                                            (.replace "__TEHTAVA__" "suolaus")))
+        [sijainti] (first (q "SELECT st_astext(sijainti) FROM tyokonehavainto WHERE tyokoneid=666"))
+        tehtavat (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666"))
+                   (konv/array->set))]
+    (is (= 200 (:status kutsu)))
+    (is (= (str sijainti) "POINT(429015 7198161)"))
+    (is (= tehtavat #{"suolaus"}))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-olemassaoleva
   (let [_ (anna-kirjoitusoikeus kayttaja)
         kutsu (api-tyokalut/post-kutsu
                 ;; tyokone 31337 on jo kannassa, katsotaan tuleeko uusi rivi
-                ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))]
-    (let [rivit
-          (mapv first
-            (q "SELECT st_astext(sijainti::GEOMETRY) FROM tyokonehavainto WHERE tyokoneid=31337 ORDER BY vastaanotettu ASC"))]
+                ["/api/seuranta/tyokone"] kayttaja portti (slurp "test/resurssit/api/tyokoneseuranta.json"))
+        rivit
+        (mapv first
+          (q "SELECT st_astext(sijainti::GEOMETRY) FROM tyokonehavainto WHERE tyokoneid=31337 ORDER BY vastaanotettu ASC"))]
 
-      (is (= 200 (:status kutsu)))
-      (is (= 2 (count rivit)))
-      (is (= (str (second rivit)) "POINT(429005 7198151)")))))
+    (is (= 200 (:status kutsu)))
+    (is (= 2 (count rivit)))
+    (is (= (str (second rivit)) "POINT(429005 7198151)"))))
 
 (deftest tallenna-tyokoneen-seurantakirjaus-viivageometrialla
   (let [_ (anna-kirjoitusoikeus kayttaja)
@@ -108,6 +109,7 @@
           {"type" "LineString",
            "coordinates" [[498919 7247099] [499271 7248395] [499399 7249019] [499820 7249885] [498519 7247299] [499371 7248595] [499499 7249319] [499520 7249685]]}))
     (is (= tehtavat #{"auraus ja sohjonpoisto" "suolaus"}))))
+
 (deftest tallenna-tyokoneen-seurantakirjaus-suunta-null
   ;; Suunta ei ole pakollinen. Paikallaan oleva työkone saa lähettää seurantakirjauksen jossa suunta on null.
   (let [_ (anna-kirjoitusoikeus kayttaja)
@@ -115,11 +117,12 @@
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                             slurp
                                                             (.replace "\"suunta\": 47" "\"suunta\": null")
-                                                            (.replace "__TEHTAVA__" "ojitus")))]
-    (let [suunta-kannassa (ffirst (q "SELECT suunta FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))]
-      (is (= 200 (:status kutsu)))
-      (is (= suunta-kannassa nil)
-        (str "Suunta '" suunta-kannassa "' raportoitu onnistuneesti")))))
+                                                            (.replace "__TEHTAVA__" "ojitus")))
+        suunta-kannassa (ffirst (q "SELECT suunta FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))]
+    (is (= 200 (:status kutsu)))
+    (is (= suunta-kannassa nil)
+      (str "Suunta '" suunta-kannassa "' raportoitu onnistuneesti"))))
+
 (deftest tallenna-tyokoneen-seurantakirjaus-suunta-puuttuu
   ;; Suunta ei ole pakollinen. Paikallaan oleva työkone saa lähettää seurantakirjauksen ilman suuntaa.
   (let [_ (anna-kirjoitusoikeus kayttaja)
@@ -127,22 +130,24 @@
                 ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                             slurp
                                                             (.replace "\"suunta\": 47," "")
-                                                            (.replace "__TEHTAVA__" "ojitus")))]
-    (let [suunta-kannassa (ffirst (q "SELECT suunta FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))]
-      (is (= 200 (:status kutsu)))
-      (is (= suunta-kannassa nil)
-        (str "Suunta '" suunta-kannassa "' raportoitu onnistuneesti")))))
+                                                            (.replace "__TEHTAVA__" "ojitus")))
+        suunta-kannassa (ffirst (q "SELECT suunta FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))]
+    (is (= 200 (:status kutsu)))
+    (is (= suunta-kannassa nil)
+      (str "Suunta '" suunta-kannassa "' raportoitu onnistuneesti"))))
+
 (deftest kaikkien-tehtavien-kirjaus-toimii
   (doseq [tehtava skeeman-tehtavat]
     (let [_ (anna-kirjoitusoikeus kayttaja)
           kutsu (api-tyokalut/post-kutsu
                   ["/api/seuranta/tyokone"] kayttaja portti (-> "test/resurssit/api/tyokoneseuranta_testi.json"
                                                               slurp
-                                                              (.replace "__TEHTAVA__" tehtava)))]
-      (let [tehtavat-kannassa (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))
-                                (konv/array->set))
-            tehtava-kannassa (first tehtavat-kannassa)]
-        (is (= 200 (:status kutsu)))
-        (is (= tehtava-kannassa tehtava)
-          (str "Tehtävä '" tehtava "' raportoitu onnistuneesti"))))))
+                                                              (.replace "__TEHTAVA__" tehtava)))
+          tehtavat-kannassa (-> (ffirst (q "SELECT tehtavat FROM tyokonehavainto WHERE tyokoneid=666 ORDER BY vastaanotettu DESC LIMIT 1"))
+                              (konv/array->set))
+          tehtava-kannassa (first tehtavat-kannassa)]
+
+      (is (= 200 (:status kutsu)))
+      (is (= tehtava-kannassa tehtava)
+        (str "Tehtävä '" tehtava "' raportoitu onnistuneesti")))))
 

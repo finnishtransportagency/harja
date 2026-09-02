@@ -2,12 +2,7 @@
   (:require [clojure.test :refer :all]
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.pvm :as pvm]
-            [clj-time.coerce :as tc]))
-
-(defn- kk->pvm [vuosi kuukausi]
-  (pvm/suomen-aikavyohykkeessa
-    (tc/from-string (str vuosi "-" kuukausi))))
+            [harja.pvm :as pvm]))
 
 (deftest hoitokuukausi-ennen?
   (is (true? (lupaus-domain/hoitokuukausi-ennen? 10 11)))
@@ -101,19 +96,21 @@
                               :kuukausi 11}]}]
     (is (false? (lupaus-domain/odottaa-kannanottoa? lupaus 1)))))
 
-(deftest bonus-tai-sanktio
+(deftest bonus-tai-sanktio-19-20-urakalle-test
   (is (= {:tavoite-taytetty true}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 100 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:bonus 13.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 90 :toteuma 100 :tavoitehinta 1000})))
   (is (= {:sanktio -33.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 100 :toteuma 90 :tavoitehinta 1000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 100 :toteuma 90 :tavoitehinta 1000}))
+      "Legacy-polku odottaa sanktion negatiivisena, jotta indeksikorjaus laskee 2019/2020-urakoille oikein.")
   (is (= {:bonus 5200.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 76 :toteuma 78 :tavoitehinta 2000000})))
   (is (= {:sanktio -13200.0}
-         (lupaus-domain/bonus-tai-sanktio {:lupaus 76 :toteuma 74 :tavoitehinta 2000000})))
-  (is (nil? (lupaus-domain/bonus-tai-sanktio {})))
-  (is (nil? (lupaus-domain/bonus-tai-sanktio nil))))
+         (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {:lupaus 76 :toteuma 74 :tavoitehinta 2000000}))
+      "Legacy-sanktio säilyy negatiivisena vanhaa kuukausittaisten pisteiden indeksikorjauspolkua varten.")
+  (is (nil? (lupaus-domain/bonus-tai-sanktio-19-20-urakalle {})))
+  (is (nil? (lupaus-domain/bonus-tai-sanktio-19-20-urakalle nil))))
 
 (deftest lupaus-kuukaudet
   (let [lupaus {:kirjaus-kkt nil
@@ -401,88 +398,155 @@
                     lupaus-kuukausi
                     "yksittainen"
                     123))
-          "Ei-vastauskuukauteen ei saa vastata"))))
-(deftest kustannusennuste-maarapaiva-paattely-test
-  "Testaa määräpäivän päättelylogiikkaa eri ajanhetkinä."
-  (let [maarapaiva (pvm/luo-pvm 2025 10 15)
-        tiedot-syotetty true
-        tiedot-ei-syotetty false
-        ulkoinen-disabled false]
-    
-    (testing "Ennen määräpäivää - vastaaminen sallittu, ei read-only"
-      (let [nykyhetki (pvm/luo-pvm 2025 10 14)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä ei ole vielä ohitettu")
-        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
-        (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei käytetä read-only näkymää")
-        (is (false? (:disabled? tulos)) "Vastaaminen on sallittu")))
-    
-    (testing "Määräpäivänä - vastaaminen sallittu, ei read-only"
-      (let [nykyhetki (pvm/luo-pvm 2025 10 15)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivänä ei ole vielä ohitettu")
-        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
-        (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei käytetä read-only näkymää")
-        (is (false? (:disabled? tulos)) "Vastaaminen on sallittu")))
-    
-    (testing "Määräpäivän jälkeen + tiedot syötetty ajoissa = read-only"
-      (let [nykyhetki (pvm/luo-pvm 2025 10 16)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu")
-        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
-        (is (true? (:kayta-readonly-nakymaa? tulos)) "Käytetään read-only näkymää")
-        (is (true? (:disabled? tulos)) "Vastaaminen on estetty")))
-    
-    (testing "Määräpäivän jälkeen + tiedot EI syötetty ajoissa = varoitus"
-      (let [nykyhetki (pvm/luo-pvm 2025 10 16)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-ei-syotetty ulkoinen-disabled)]
-        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu")
-        (is (false? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on oikea")
-        (is (false? (:kayta-readonly-nakymaa? tulos)) "Ei read-only (tiedot puuttuvat)")
-        (is (true? (:disabled? tulos)) "Vastaaminen on estetty (määräpäivä ohitettu)")))
-    
-    (testing "Väärässä kuukaudessa - vastaaminen estetty"
-      (let [nykyhetki (pvm/luo-pvm 2025 11 15)  ; Marraskuu, mutta määräpäivä oli lokakuussa
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "Määräpäivä on ohitettu (lokakuu → marraskuu)")
-        (is (true? (:ei-maarapaivan-kuukausi? tulos)) "Kuukausi on väärä")
-        (is (true? (:kayta-readonly-nakymaa? tulos)) "Read-only koska määräpäivä ohitettu JA tiedot syötetty")
-        (is (true? (:disabled? tulos)) "Vastaaminen on estetty")))
-    
-    (testing "Ulkoisen disabled-tilan yhdistäminen"
-      (let [nykyhetki (pvm/luo-pvm 2025 10 14)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely nykyhetki maarapaiva tiedot-syotetty true)]
-        (is (true? (:disabled? tulos)) "Ulkoisen disabled-tilan perusteella disabled")))))
+          "Ei-vastauskuukauteen ei saa vastata")))
 
-(deftest kustannusennuste-maarapaiva-paattely-eri-paivina-test
-  "Testaa että määräpäivä-päivänä vastaaminen on sallittu
-   eri kellonaikoina. Kuvaa kellonajan merkitystä - esim. ilta
-   15. päivä on edelleen määräpäivä-päivä."
-  (let [;; Määräpäivä on 15. päivä keskipäivällä
-        maarapaiva (pvm/luo-pvm-aika 2025 10 15 12 0 0 0)
-        tiedot-syotetty true
-        ulkoinen-disabled false]
+  (testing "Sekä kirjaus- että päättävä kuukausi - päätösoikeus vaaditaan"
+    (let [lupaus-kuukausi {:kirjauskuukausi? true :paattava-kuukausi? true}
+          tilaajan-kayttaja {:id 3}
+          urakoitsijan-kayttaja {:id 4}]
+
+      ;; Mockaa molemmat oikeusfunktiot
+      (with-redefs [oikeudet/on-muu-oikeus? (fn [oikeus _ urakka-id kayttaja]
+                                               (and (= "päätös" oikeus)
+                                                    (= 3 (:id kayttaja))))
+                    oikeudet/voi-kirjoittaa? (fn [_ urakka-id kayttaja]
+                                                (= 4 (:id kayttaja)))]
+        
+        ;; Tilaajalla on päätösoikeus - saa vastata
+        (is (true? (lupaus-domain/kayttaja-saa-vastata?
+                     tilaajan-kayttaja
+                     lupaus-kuukausi
+                     "yksittainen"
+                     123))
+            "Tilaaja saa vastata kun on päätösoikeus (vaikka on myös kirjauskuukausi)")
+
+        ;; Urakoitsijalla on vain kirjoitusoikeus, mutta EI päätösoikeutta
+        ;; Koska päättävä-kuukausi tarkistetaan ENSIN, urakoitsija ei saa vastata
+        (is (false? (lupaus-domain/kayttaja-saa-vastata?
+                      urakoitsijan-kayttaja
+                      lupaus-kuukausi
+                      "yksittainen"
+                      123))
+            "Urakoitsija ei saa vastata vaikka on kirjoitusoikeus, koska päätösoikeus puuttuu")))))
+
+(deftest laske-lupauspaatos-bonus-tai-sanktio-test
+  (testing "Tavoite täytetty kun pisteet täsmäävät"
+    (is (= {:tavoite-taytetty true}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 100
+              :luvatut-pisteet 100
+              :tavoitehinta 1000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13}))))
+
+  (testing "Bonus lasketaan oikein kun toteutuneet > luvatut"
+    ;; Bonus = (bonusprosentti / 100) × tavoitehinta × (toteutuneet - luvatut)
+    ;; (0.13 / 100) × 1000000 × (105 - 100) = 0.0013 × 1000000 × 5 = 6500
+    (is (= {:lupausbonus 6500.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 105
+              :luvatut-pisteet 100
+              :tavoitehinta 1000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13}))))
+
+  (testing "Sanktio lasketaan oikein kun toteutuneet < luvatut"
+    ;; Sanktio = (sanktioprosentti / 100) × tavoitehinta × (luvatut - toteutuneet)
+    ;; (0.33 / 100) × 1000000 × (100 - 95) = 0.0033 × 1000000 × 5 = 16500
+    (is (= {:lupaussanktio 16500.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 95
+              :luvatut-pisteet 100
+              :tavoitehinta 1000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13}))))
+
+  (testing "Todelliset laskentaesimerkit välikatselmuksesta"
+    ;; Esimerkki 1: Bonus 2 pisteellä, tavoitehinta 2M€
+    ;; (0.13 / 100) × 2000000 × 2 = 5200
+    (is (= {:lupausbonus 5200.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 78
+              :luvatut-pisteet 76
+              :tavoitehinta 2000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13})))
+
+    ;; Esimerkki 2: Sanktio 2 pisteellä, tavoitehinta 2M€
+    ;; (0.33 / 100) × 2000000 × 2 = 13200
+    (is (= {:lupaussanktio 13200.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 74
+              :luvatut-pisteet 76
+              :tavoitehinta 2000000
+              :sanktioprosentti 0.33
+              :bonusprosentti 0.13})))
+
+    ;; Esimerkki 3: 2025 alkaen (alhaisempi sanktio%)
+    ;; (0.18 / 100) × 2000000 × 2 = 7200
+    (is (= {:lupaussanktio 7200.0}
+           (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+             {:toteutuneet-pisteet 74
+              :luvatut-pisteet 76
+              :tavoitehinta 2000000
+              :sanktioprosentti 0.18
+              :bonusprosentti 0.13}))))
+
+  (testing "Palauttaa nil kun pakolliset parametrit puuttuvat"
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio {})))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio nil)))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:toteutuneet-pisteet 100
+                 :luvatut-pisteet 100})))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:tavoitehinta 1000000
+                 :sanktioprosentti 0.33
+                 :bonusprosentti 0.13}))))
+
+  (testing "Palauttaa nil kun tavoitehinta on nolla tai negatiivinen"
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:toteutuneet-pisteet 100
+                 :luvatut-pisteet 100
+                 :tavoitehinta 0
+                 :sanktioprosentti 0.33
+                 :bonusprosentti 0.13})))
+    (is (nil? (lupaus-domain/laske-lupauspaatos-bonus-tai-sanktio
+                {:toteutuneet-pisteet 100
+                 :luvatut-pisteet 100
+                 :tavoitehinta -1000
+                 :sanktioprosentti 0.33
+                 :bonusprosentti 0.13})))))
+
+(deftest paatos->bonus-tai-sanktio-test
+  (testing "Muuntaa tietokannasta haetun päätöksen API-muotoon oikein"
+    (is (= {:bonus 5200M}
+           (lupaus-domain/paatos->bonus-tai-sanktio
+             {:tyyppi "bonus"
+              :lupausbonus 5200M
+              :lupaussanktio nil}))
+        "Bonus palautetaan positiivisena")
     
-    (testing "Ennen määräpäivää aamulla - vastaaminen sallittu"
-      (let [aamu (pvm/luo-pvm-aika 2025 10 14 9 0 0 0)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "14.10. klo 09:00 - määräpäivä ei ole vielä ohitettu")
-        (is (false? (:disabled? tulos)) "14.10. klo 09:00 - vastaaminen on sallittu")))
+    (is (= {:sanktio 13200M}
+           (lupaus-domain/paatos->bonus-tai-sanktio
+             {:tyyppi "sanktio"
+              :lupausbonus nil
+              :lupaussanktio 13200M}))
+        "Sanktio palautetaan positiivisena API-muodossa")
     
-    (testing "Määräpäivä-päivänä aamulla - vastaaminen sallittu"
-      (let [aamu (pvm/luo-pvm-aika 2025 10 15 8 30 0 0)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "15.10. klo 08:30 - määräpäivä ei ole vielä ohitettu")
-        (is (false? (:disabled? tulos)) "15.10. klo 08:30 - vastaaminen on sallittu")))
+    (is (nil? (lupaus-domain/paatos->bonus-tai-sanktio
+                {:tyyppi "tuntematon"
+                 :lupausbonus 100M
+                 :lupaussanktio 200M}))
+        "Palauttaa nil tuntemattomalle tyypille")
+
+    (is (= {:tavoite-taytetty true}
+         (lupaus-domain/paatos->bonus-tai-sanktio
+         {:tyyppi "taytetty"
+          :lupausbonus nil
+          :lupaussanktio nil}))
+      "Tavoite täytetty muunnetaan API-muotoon oikein")
     
-    (testing "Määräpäivä-päivänä illalla - vastaaminen sallittu"
-      (let [ilta (pvm/luo-pvm-aika 2025 10 15 23 59 59 999)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely ilta maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (false? (:maarapaiva-mennyt-ohi? tulos)) "15.10. klo 23:59:59 - määräpäivä ei ole vielä ohitettu")
-        (is (false? (:disabled? tulos)) "15.10. klo 23:59:59 - vastaaminen on sallittu")))
-    
-    (testing "Seuraavana päivänä aamulla - määräpäivä jo ohitettu"
-      (let [seuraava-aamu (pvm/luo-pvm-aika 2025 10 16 0 0 0 1)
-            tulos (lupaus-domain/kustannusennuste-maarapaiva-paattely seuraava-aamu maarapaiva tiedot-syotetty ulkoinen-disabled)]
-        (is (true? (:maarapaiva-mennyt-ohi? tulos)) "16.10. klo 00:00:00 - määräpäivä on ohitettu")
-        (is (true? (:disabled? tulos)) "16.10. klo 00:00:00 - vastaaminen on estetty")))))
+    (is (nil? (lupaus-domain/paatos->bonus-tai-sanktio nil))
+        "Palauttaa nil kun päätös on nil")))
+
+

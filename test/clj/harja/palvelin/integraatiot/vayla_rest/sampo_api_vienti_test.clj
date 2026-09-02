@@ -56,7 +56,7 @@
   (let [maksueran-tiedot-alkuun (hae-maksueran-tiedot +testi-maksueran-numero+)
         ksuun-tiedot-alkuun (hae-kustannussuunnitelman-tiedot +testi-maksueran-numero+)
         integ-tapahtumat-alkuun (hae-integraatiotapahtumat-tietokannasta)
-        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _]
+        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
                                                                      {:status 200
                                                                       :header "jotain"
                                                                       :body (if (str/includes? kutsudata "costPlan")
@@ -90,7 +90,7 @@
         maksueran-tiedot-alkuun (hae-maksueran-tiedot likainen-maksueranumero)
         ksuun-tiedot-alkuun (hae-kustannussuunnitelman-tiedot likainen-maksueranumero)
         integ-tapahtumat-alkuun (hae-integraatiotapahtumat-tietokannasta)
-        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _]
+        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
                                                                      {:status 200
                                                                       :header "jotain"
                                                                       :body (if (str/includes? kutsudata "CostPlan")
@@ -116,3 +116,50 @@
     ;; Varmistetaan, että integraatiologilla tilanne päivittyy oikein
     (is (empty? integ-tapahtumat-alkuun))
     (is (not (empty? integ-tapahtumat-loppuun)))))
+
+(deftest maksuera-lahetys-estetaan-kun-parametri-false
+  "Testaa että maksuerän lähetys estetään kun urakan parametreissa maksuera_lahetys_sampo = false"
+  (let [maksueran-numero 33  ; Maksuerä kuuluu 'teiden-hoito'-tyyppiseen urakkaan
+        urakka-id (ffirst (q (format "SELECT u.id FROM urakka u 
+                                      JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka 
+                                      JOIN maksuera m ON tpi.id = m.toimenpideinstanssi 
+                                      WHERE m.numero = %s" maksueran-numero)))
+        ;; Aseta parametri false
+        _ (u (format "UPDATE urakka_parametrit SET maksuera_lahetys_sampo = false WHERE urakkaid = %s" urakka-id))
+        maksueran-tiedot-alkuun (hae-maksueran-tiedot maksueran-numero)
+        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu
+                              (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
+                                {:status 200
+                                 :body onnistunut-maksuera-kuittaus})]
+                  (sampo-api/laheta-maksuera-sampoon (:api-sampo jarjestelma) maksueran-numero))
+        maksueran-tiedot-lopuksi (hae-maksueran-tiedot maksueran-numero)
+        ;; Palauta parametri takaisin
+        _ (u (format "UPDATE urakka_parametrit SET maksuera_lahetys_sampo = true WHERE urakkaid = %s" urakka-id))]
+
+    (is (nil? (:lahetetty maksueran-tiedot-alkuun)) "Maksuerä ei ollut lähetetty aluksi")
+    (is (nil? (:lahetetty maksueran-tiedot-lopuksi)) "Maksuerä ei lähetetty koska parametri oli false")
+    (is (= false (:maksuera vastaus)) "Maksuerän lähetys palautti false")
+    (is (nil? (:kustannussuunnitelma vastaus)) "Kustannussuunnitelman lähetystä ei yritetty")))
+
+(deftest maksuera-lahetys-onnistuu-kun-parametri-true
+  "Testaa että maksuerän lähetys onnistuu kun urakan parametreissa maksuera_lahetys_sampo = true"
+  (let [maksueran-numero 33  ; Maksuerä kuuluu 'teiden-hoito'-tyyppiseen urakkaan
+        urakka-id (ffirst (q (format "SELECT u.id FROM urakka u 
+                                      JOIN toimenpideinstanssi tpi ON u.id = tpi.urakka 
+                                      JOIN maksuera m ON tpi.id = m.toimenpideinstanssi 
+                                      WHERE m.numero = %s" maksueran-numero)))
+        ;; Varmista että parametri on true
+        _ (u (format "UPDATE urakka_parametrit SET maksuera_lahetys_sampo = true WHERE urakkaid = %s" urakka-id))
+        maksueran-tiedot-alkuun (hae-maksueran-tiedot maksueran-numero)
+        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu
+                              (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
+                                {:status 200
+                                 :body (if (str/includes? kutsudata "costPlan")
+                                         onnistunut-kustannussuunnitelma-kuittaus
+                                         onnistunut-maksuera-kuittaus)})]
+                  (sampo-api/laheta-maksuera-sampoon (:api-sampo jarjestelma) maksueran-numero))
+        maksueran-tiedot-lopuksi (hae-maksueran-tiedot maksueran-numero)]
+
+    (is (nil? (:lahetetty maksueran-tiedot-alkuun)) "Maksuerä ei ollut lähetetty aluksi")
+    (is (not (nil? (:lahetetty maksueran-tiedot-lopuksi))) "Maksuerä merkittiin lähetetyksi")))
+

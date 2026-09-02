@@ -61,7 +61,7 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                      :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                     :tehtava nil
+                     :tehtava (hae-tehtavan-id-nimella "Runkopuiden poisto")
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}
                     {:kohdistus-id nil
@@ -69,7 +69,33 @@
                      :summa (/ summa 2)
                      :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23116")
                      :tehtavaryhma (hae-tehtavaryhman-id "V - Vesakonraivaukset ja puun poisto")
-                     :tehtava nil
+                     :tehtava -1                            ;; Tämä on "Muu tehtävä"
+                     :tyyppi :hankintakulu
+                     :tavoitehintainen :true}]
+     :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))
+
+(defn uusi-kulu-tehtavalla-kustannukset-testiin [urakka-id summa vuosi urakan-alkupvm]
+  (let [erapaiva (pvm/->pvm (str "1.11." vuosi))]
+    {:id nil
+     :urakka urakka-id
+     :viite "12345678"
+     :erapaiva erapaiva
+     :kokonaissumma summa
+     :tyyppi "laskutettava"
+     :kohdistukset [{:kohdistus-id nil
+                     :rivi 1
+                     :summa (/ summa 2)
+                     :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23104")
+                     :tehtavaryhma (hae-tehtavaryhman-id-tunnisteella "3d5962b4-c7ca-4750-81f1-f589b9c7c52b") ;; B1 - Talvisuola
+                     :tehtava (hae-tehtavan-id-nimella "Liukkaudentorjunta suolaamalla (materiaali)")
+                     :tyyppi :hankintakulu
+                     :tavoitehintainen :true}
+                    {:kohdistus-id nil
+                     :rivi 2
+                     :summa (/ summa 2)
+                     :toimenpideinstanssi (hae-toimenpideinstanssi-id urakka-id "23104")
+                     :tehtavaryhma (hae-tehtavaryhman-id-tunnisteella "3d5962b4-c7ca-4750-81f1-f589b9c7c52b") ;; B1 - Talvisuola
+                     :tehtava (hae-tehtavan-id-nimella "Liukkaudentorjunta hiekoituksella (materiaali)")
                      :tyyppi :hankintakulu
                      :tavoitehintainen :true}]
      :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)}))
@@ -121,6 +147,64 @@
     (is (= true (get-in (first (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulukohdistukset])) [:kulukohdistus :tavoitehintainen])) "Tavoitehintaisuus ei palaudu oikein.")
     (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut]))))))
 
+;; Monista yllä oleva testi, mutta tehtävällä varustetulla kululla
+(deftest hae-toteutuneet-kustannukset-kulut-tehtavalla-onnistuu-test
+  (let [;; Pakotetaan urakaksi Oulu MHU
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+
+        ;; Poista urakan kaikki kulut
+        _ (u (str "DELETE FROM kulu_kohdistus WHERE kulu in (select id from kulu where urakka = " urakka-id ");"))
+        _ (u (str "DELETE FROM kulu_liite WHERE kulu in (select id from kulu where urakka = " urakka-id ");"))
+        _ (u (str "DELETE FROM kulu WHERE urakka = " urakka-id ";"))
+
+        ;; Luodaan kulu, joka on pakko löytyä aineistosta
+        kulu-summa 1000M
+        uusi-kulu (uusi-kulu-tehtavalla-kustannukset-testiin urakka-id kulu-summa 2023 urakan-alkupvm)
+        _ (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+            +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :kulu-kohdistuksineen uusi-kulu})
+
+        kulut-kannasta (q-map
+                         (format "SELECT u.id                        AS urakka,
+                                                u.urakkanro                 AS urakkatunnus,
+                                                k.id                        AS \"kulu-id\",
+                                                k.laskun_numero             AS \"laskun-tunniste\",
+                                                k.lisatieto                 AS \"kulun-kuvaus\",
+                                                k.poistettu                 AS \"poistettu\",
+                                                k.koontilaskun_kuukausi     AS \"koontilaskun-kuukausi\",
+                                                k.erapaiva                  AS \"kulun-ajankohta_laskun-paivamaara\",
+                                                k.kokonaissumma             AS \"kulun-kokonaissumma\",
+                                                kk.tehtava                 AS \"kulukohdistus-tehtava\"
+                                           FROM kulu k
+                                                JOIN kulu_kohdistus kk ON k.id = kk.kulu
+                                                JOIN urakka u ON k.urakka = u.id
+                                          WHERE u.id = %s
+                                          GROUP BY k.id, u.id, kk.tehtava
+                                          ORDER BY k.erapaiva ;" urakka-id))
+
+        ;; Varmista, että kannasta löytyy juuri luotu kulu
+        juuri-luotu-kulu-kannasta (first (filter #(= (:kulun-kokonaissumma %) kulu-summa) kulut-kannasta))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-kulu-rajapinnasta (first (filter (fn [k]
+                                                       (= (get-in k [:kulu :kulun-kokonaissumma]) (bigint kulu-summa)))
+                                               (get-in encoodattu-body [:toteutuneet-kustannukset :kulut])))]
+    (is (= 200 (:status vastaus)))
+    (is (= kulu-summa (:kulun-kokonaissumma juuri-luotu-kulu-kannasta)
+          (bigdec (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-kokonaissumma]))) "Tietokannan ja rajapinnan kulu ei täsmää.")
+    (is (= 2023 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-vuosi])))
+    (is (= 11 (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :koontilaskun-kuukausi])))
+    (is (= "2023-10-31T22:00:00Z" (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulun-ajankohta :laskun-paivamaara])))
+    (is (= true (get-in (first (get-in juuri-luotu-kulu-rajapinnasta [:kulu :kulukohdistukset])) [:kulukohdistus :tavoitehintainen]))
+    "Tavoitehintaisuus ei palaudu oikein.")
+    (is (= (count kulut-kannasta) (count (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset]))))
+
+    ;; Varmista, että tehtävät tuli - Tehtävät on kovakoodattu, niin haetaan ne apufunktioilla
+    (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta suolaamalla (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 0 :kulukohdistus :kohdistus :tehtava])))
+    (is (= (hae-tehtavan-id-nimella "Liukkaudentorjunta hiekoituksella (materiaali)") (get-in encoodattu-body [:toteutuneet-kustannukset :kulut 0 :kulu :kulukohdistukset 1 :kulukohdistus :kohdistus :tehtava])))))
 
 (deftest hae-toteutuneet-kustannukset-sanktiot-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
@@ -312,7 +396,7 @@
           (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :tilaaja-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-onnistuu-test
+(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-urakoitsija-maksaa-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
@@ -347,7 +431,7 @@
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
         encoodattu-body (cheshire/decode (:body vastaus) true)
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
-                                                         (= (bigdec (get-in k [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa])) urakoitsija-maksaa))
+                                                         (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))
                                                  (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
 
         ;; Siivoa roskat - Poistetaan päätös
@@ -359,42 +443,93 @@
             (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :urakoitsija-maksaa]))) "Rajapinnan tavoitehinnan muutos ei täsmää.")
     (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
 
-
-(deftest hae-kustannussuunnitelma-onnistuu-test
+(deftest hae-toteutuneet-kustannukset-kattohinnan-ylityspaatos-siirto-onnistuu-test
   (let [;; Pakotetaan urakaksi Oulu MHU
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        urakan-alkupvm (:alkupvm urakan-tiedot)
+        hoitokauden-alkuvuosi 2019
+        kattohinta 275000M
+        ylityksen-maara 10000M
+        toteutuneet-kustannukset (+ kattohinta ylityksen-maara)
+        urakoitsija-maksaa 0M
+        siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
+        maksimi-siirrettava-maara ylityksen-maara
+        siirrettava-maara ylityksen-maara
+        viimeinen_hoitokausi false
 
-        ;; Kiinteät kustannukset kannasta
-        kiinteat-kulut-kannasta (:summa (first (q-map
-                                                 (format "SELECT SUM(kit.summa) as summa
+        ;; Luodaan kulu, jolla ylitetään kattohinta
+        uusi-kulu (uusi-kulu-kustannukset-testiin urakka-id toteutuneet-kustannukset hoitokauden-alkuvuosi urakan-alkupvm)
+
+        kulu-vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen uusi-kulu})
+
+        kulu-id (:id kulu-vastaus)
+        kayttajaid (:id +kayttaja-jvh+)
+
+        kattohinnan-ylitys-paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
+                                    ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
+        db-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
+
+        ;; Hae päätöksen tiedot
+        paatos-tiedot (q-map (format "SELECT * FROM paatos_kattohinta WHERE urakkaid = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitokauden-alkuvuosi))
+
+        ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        encoodattu-body (cheshire/decode (:body vastaus) true)
+        juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
+                                                         (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))
+                                                 (get-in encoodattu-body [:toteutuneet-kustannukset :hoitovuoden-paatokset])))
+
+        ;; Siivoa roskat - Poistetaan päätös
+        _ (paatos-kyselyt/poista-kattohinnan-ylityspaatos (:db jarjestelma) urakka-id kayttajaid (:id db-paatos))]
+
+    (is (= 200 (:status vastaus)))
+    (is (not (nil? (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatos :id]))))
+    (is (= siirrettava-maara
+          (bigdec (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :paatoksen-tulos :siirretaan-seuraavalle-hoitovuodelle]))) "Kattohinnan ylityksen siirto seuraavalle hoitovuodelle ei täsmää.")
+    (is (= false (get-in juuri-luotu-paatos-rajapinnasta [:hoitovuoden-paatos :poistettu])))))
+
+(deftest hae-kustannussuunnitelma-onnistuu-test
+  (let [;; Hae kaikki MHU urakat
+        urakkalistaus (q-map "SELECT id, nimi FROM urakka WHERE tyyppi = 'teiden-hoito'")]
+    (doseq [urakka urakkalistaus]
+      (let [urakka-id (:id urakka)
+
+            ;; Kiinteät kustannukset kannasta
+            kiinteat-kulut-kannasta (:summa (first (q-map
+                                                     (format "SELECT COALESCE(SUM(kit.summa), 0) as summa
                                              FROM kiinteahintainen_tyo kit
                                             WHERE kit.sopimus =  (SELECT id FROM sopimus WHERE urakka =  %s);" urakka-id))))
 
-        ;; Arvioidut kustannukset kannasta
-        arvioidut-kulut-kannasta (:summa (first (q-map
-                                                  (format "SELECT SUM(kt.summa) as summa
+            ;; Arvioidut kustannukset kannasta
+            arvioidut-kulut-kannasta (:summa (first (q-map
+                                                      (format "SELECT COALESCE(SUM(kt.summa), 0) as summa
                                               FROM kustannusarvioitu_tyo kt
                                              WHERE kt.sopimus = (SELECT id FROM sopimus WHERE urakka =  %s);" urakka-id))))
 
-        ;; Johto-ja-hallintokorvaukset kannasta
-        johto-ja-hallintokulut-kannasta (:summa (first (q-map
-                                                         (format "SELECT SUM(jjh.tuntipalkka * jjh.tunnit) as summa
+            ;; Johto-ja-hallintokorvaukset kannasta
+            johto-ja-hallintokulut-kannasta (:summa (first (q-map
+                                                             (format "SELECT COALESCE(SUM(jjh.tuntipalkka * jjh.tunnit), 0) as summa
                                                      FROM johto_ja_hallintokorvaus jjh
                                                     WHERE jjh.\"urakka-id\" = %s;" urakka-id))))
 
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)
-        kiinteat-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
-                                               (get-in encoodattu-body [:suunnitellut-kustannukset :kiinteat-kustannukset])))
-        arvioidut-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
-                                                (get-in encoodattu-body [:suunnitellut-kustannukset :arvioidut-kustannukset])))
-        johto-ja-hallintokorvaukset-rajapinnasta (apply + (map #(get-in % [:toimenkuvan-kustannus :summa])
-                                                            (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset])))]
+            vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+            encoodattu-body (cheshire/decode (:body vastaus) true)
+            kiinteat-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
+                                                   (get-in encoodattu-body [:suunnitellut-kustannukset :kiinteat-kustannukset])))
+            arvioidut-kulut-rajapinnasta (apply + (map #(get-in % [:kustannus :summa])
+                                                    (get-in encoodattu-body [:suunnitellut-kustannukset :arvioidut-kustannukset])))
+            johto-ja-hallintokorvaukset-rajapinnasta (apply + (map #(get-in % [:toimenkuvan-kustannus :summa])
+                                                                (get-in encoodattu-body [:suunnitellut-kustannukset :johto-ja-hallintokorvaukset])))]
 
-    (is (= 200 (:status vastaus)))
-    (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
-    (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)))
-    (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))
+        (is (= 200 (:status vastaus)))
+        (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
+        (is (= (bigint arvioidut-kulut-kannasta) (bigint arvioidut-kulut-rajapinnasta)) (format "Urakalle %s arvioidut kulut täsmää" urakka-id))
+        (is (= (bigint johto-ja-hallintokulut-kannasta) (bigint johto-ja-hallintokorvaukset-rajapinnasta)))))))
 
 (deftest hae-kustannussuunnitelma-puutteellisilla-tunnuksilla
   (let [;; Pakotetaan urakaksi Oulu MHU

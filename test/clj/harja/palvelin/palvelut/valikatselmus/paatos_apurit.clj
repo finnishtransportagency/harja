@@ -78,15 +78,15 @@
    :kattohinta kattohinta
    :luoja luoja})
 
-(defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi tavoitehinta tavoitehinnan-muutokset tavoitehinta-ennen
+(defn indeksikorjauspaatos [urakkaid hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
                             hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
                             pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus
                             hoitokauden-lopun-indeksikorjaus luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
+   :hv_alun_indkorj_tavoitehinta hv_alun_indkorj_tavoitehinta
    :tavoitehinnan_muutokset tavoitehinnan-muutokset
-   :tavoitehinta_ennen tavoitehinta-ennen
+   :hv_lopun_tavoitehinta_ennen_indkorj hv_lopun_tavoitehinta_ennen_indkorj
    :alkuperainen_pisteluku alkuperainen-pisteluku
    :alkuperaisen_pisteluvun_kuukausi alkuperaisen-pisteluvun-kuukausi
    :pistelukujen_muutos pistelukujen-muutos
@@ -114,7 +114,7 @@
                                      muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id luoja]
   {:urakkaid urakkaid
    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
-   :tavoitehinta tavoitehinta
+   :hv_lopun_indkorjaamaton_tavoitehinta tavoitehinta
    :tarjouksen_tavoitehinta tarjouksen_tavoitehinta
    :muutosprosentti muutosprosentti
    :hoidonjohtopalkkio hoidonjohtopalkkio

@@ -11,9 +11,7 @@
     label.kentan-otsikko {
       margin-top: 0;
     }
-
   }
-
 }
 .kulujen-listaus {
   @media screen and (min-width: 954px) {
@@ -24,6 +22,14 @@
 
   .sailyta-rivilla {
     white-space: pre;
+  }
+
+  .yhteensa {
+    padding-left: 0;
+  }
+    
+  .sisalto-leveys {
+    width: max-content;
   }
 }
 
@@ -198,35 +204,6 @@
     }
   }
 
-  #kulun-poisto-modaali {
-    padding: 15px;
-
-    div {
-      font-style: normal;
-      font-weight: normal;
-      font-size: 14px;
-      line-height: 29px;
-      display: flex;
-      align-items: center;
-
-      &:last-of-type {
-        margin-top: 68px;
-        margin-bottom: 53px;
-      }
-    }
-
-    button {
-      &:first-of-type {
-        margin-right: 15px;
-      }
-
-      &:last-of-type {
-        margin-left: 15px;
-      }
-    }
-
-  }
-
   .aikavali {
     width: 250px;
 
@@ -287,5 +264,98 @@
 
   .info-laatikko-teksti-normaali {
     font-weight: normal;
+  }
+}
+
+#kulun-poisto-modaali {
+  
+  div {
+    font-style: normal;
+    font-weight: normal;
+    font-size: @fontin-koko-leipateksti;
+    line-height: 29px;
+    display: flex;
+    align-items: center;
+
+    &:last-of-type {
+      margin-top: @valistys-16;
+    }
+  }
+
+  .kulu-poisto-footer {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+  }
+}
+.laskutusraja {
+  border: solid 1px @harmaa-vaalea;
+  border-radius: 0.25rem;
+  padding: @valistys-6 @valistys-24 @valistys-20 @valistys-24;
+  width: 100%;
+  background-color: @gray250;
+  margin-top: @valistys-12;
+  margin-bottom: @valistys-24;
+  .lukema-label {
+    font-weight: 400;
+    font-size: 0.75rem;
+    color: @gray25;
+    height: 1rem;
+  }
+  .lukema {
+    font-size: 1.25rem;
+    font-weight: 600;
+    color: @gray25;
+  }
+  h2 {
+    margin-bottom: @valistys-24;
+  }
+  h3 {
+    margin-bottom: @valistys-8;
+    margin-top: @valistys-24;
+  }
+  .sarakkeet-yhteensa {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: @valistys-24;
+  }
+  .sarakkeet {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+  }
+  .leveampi-sarake {
+    display: flex;
+    flex-direction: column;
+    width: 45%;
+    .oikeaan-reunaan {
+      text-align: right;
+    }
+  }
+  .kapeampi-sarake {
+    display: flex;
+    flex-direction: column;
+    width: 25%;
+  }
+  .edistymispalkki-tausta {
+    background: @harmaa-vaalea;
+    border-radius: 4px;
+    overflow: hidden;
+    margin-top: @valistys-4;
+  }
+  .edistymispalkki {
+    background: @sininen4;
+    height: @valistys-16;
+  }
+  .info-laatikko.tasan {
+    .infolaatikon-teksti {
+      padding-top: @valistys-12;
+      padding-bottom: @valistys-6;
+      > div {
+        padding-left: @valistys-8;
+        margin-bottom: @valistys-4;
+      }
+    }
   }
 }

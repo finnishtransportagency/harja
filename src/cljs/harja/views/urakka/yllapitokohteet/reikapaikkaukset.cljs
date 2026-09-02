@@ -22,8 +22,8 @@
 
 
 (defn reikapaikkaus-listaus [e! {:keys [rivit valinnat
-                                        muokataan nayta-virhe-modal 
-                                        excel-virheet valittu-rivi 
+                                        muokataan nayta-virhe-modal
+                                        excel-virheet valittu-rivi
                                         tyomenetelmat haku-kaynnissa? rivi-maara kustannukset] :as app}]
   (let [alkuaika (:alkuaika valittu-rivi)
         alasveto-valinnat (mapv :id tyomenetelmat)
@@ -34,22 +34,21 @@
                          (tiedot/voi-tallentaa? valittu-rivi app))]
 
     [:div.reikapaikkaukset
-     ;; Muokkauspaneeli
+     [:h1 "Kohteettomat paikkaukset"]
+
      (when muokataan
        (apurit/reikapaikkaus-muokkauspaneeli e! voi-kirjoittaa? voi-tallentaa? valittu-rivi alasveto-kuvaukset alkuaika alasveto-valinnat))
 
      [:div.reikapaikkaus-listaus
-      ;; Suodattimet
       (apurit/reikapaikkaus-suodattimet e! valinnat valinnat/aikavali)
-      
-      ;; Kartta
+
       [:div.reikapaikkaukset-kartta [kartta/kartan-paikka]]
 
       ;; Näytä Excel virheet jos virheitä tapahtui
       (apurit/excel-virhe-modal e! nayta-virhe-modal excel-virheet)
 
       ;; Taulukon ylhäällä olevat tekstit
-      [:div.taulukko-header.header-yhteiset
+      [:div.taulukko-header
        ;; Formatoi rivimäärä välilyönnillä, esim 1000 = 1 000, fmt/desimaaliluku tekee tämän, eurot myös
        [:h3 (str
               (fmt/formatoi-numero-tuhansittain (or rivi-maara 0))
@@ -70,12 +69,12 @@
                                                  :urakka-id @nav/valittu-urakka-id})}]
           [:button {:type "submit"
                     :class #{"nappi-toissijainen"}}
-           [ikonit/ikoni-ja-teksti (ikonit/livicon-upload) "Vie Exceliin"]]]]
+           [ikonit/ikoni-ja-teksti (ikonit/livicon-download) "Tallenna Excel"]]]]
         ;; Excel tuonti
         [:div.lataus-nappi
          [liitteet/lataa-tiedosto
           {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
-          {:nappi-teksti "Tuo tiedot excelistä"
+          {:nappi-teksti "Tuo tiedot Excelistä"
            :url "lue-reikapaikkauskohteet-excelista"
            :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
            :tiedosto-ladattu (fn []

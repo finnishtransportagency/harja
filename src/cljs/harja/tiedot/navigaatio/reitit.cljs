@@ -28,11 +28,9 @@
   [osio valilehti]
   (swap! url-navigaatio assoc osio valilehti))
 
-(defn valittu-valilehti-atom
-  "Palauttaa wrapatyn atomin annetun osion valitulle välilehdelle"
-  [osio]
+(defn valittu-valilehti-atom [osio]
   (wrap (get @url-navigaatio osio)
-        (partial aseta-valittu-valilehti! osio)))
+    (partial aseta-valittu-valilehti! osio)))
 
 (defn valittu-valilehti
   "Palauttaa annetun osion tällä hetkellä valitun välilehden"

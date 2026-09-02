@@ -102,3 +102,13 @@ SELECT tk.id                                     AS id,
 SELECT tr.id, tr.nimi
   FROM tehtavaryhma tr
  WHERE tr.yksiloiva_tunniste = :yksiloiva_tunniste::UUID;
+
+-- name: hae-tehtavaryhmat-joilla-tehtava-on-pakollinen
+SELECT DISTINCT tehtavaryhma, tr.nimi, tr.id
+  FROM tehtava t
+       JOIN tehtavaryhma tr ON t.tehtavaryhma = tr.id
+ WHERE t."maaramitattava?" = TRUE
+   AND t."mhu-tehtava?" IS TRUE
+   AND t.piilota IS NOT TRUE
+   AND t.poistettu IS NOT TRUE
+ ORDER BY tr.nimi;

@@ -8,6 +8,12 @@
  ;; Näytä varoitukset, jos overrideja tai rangeja löytyy riippuvuuspuusta
  :pedantic-warn {:pedantic? :warn}
 
+
+ ;; CI-profiili: Yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
+ ;; Annetaan korkeahko 4g heap alkuun, jotta sitä ei tarvitse heti kasvattaa ajon aikana.
+ ;; GitHub Actions public repo runner (ubuntu-latest): 4 CPU / 16 GB RAM.
+ ;; Käytä CI:ssä: lein with-profile +ci ...
+ :ci {:jvm-opts ^:replace ["-Xms4g" "-Xmx8g" "-XX:+UseG1GC" "-XX:+TieredCompilation"]}
  :dev {:dependencies [
                       [com.bhauman/rebel-readline-cljs "0.1.5"]
                       [cider/piggieback "0.6.0"]
@@ -31,18 +37,16 @@
                       ;; Gatlingin logback versio ei ole vielä ehtinyt päivittyä, niin haetaan se erikseen
                       [ch.qos.logback/logback-classic "1.5.18" :exclusions [org.slf4j/slf4j-api]]
                       [clj-gatling "0.18.0" :exclusions [clj-time org.slf4j/slf4j-api org.clojure/core.memoize
-                                                         org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]
-                      ]
+                                                         org.clojure/tools.analyzer org.clojure/data.priority-map io.pebbletemplates/pebble]]]
+                      
        :source-paths ["src/clj-dev" "src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script"]
        :resource-paths ["dev-resources/js" "dev-resources/tmp" "resources/public/css" "resources"]
        :plugins [[test2junit "1.4.4" :exclusions [org.clojure/clojure]]
                  [lein-eftest "0.6.0"]
                  ;; Pprint-pluginin avulla voit nähdä miten profiilit vaikuttavat konfiguraatioon
                  ;; Esim. lein with-profile +test pprint
-                 [lein-pprint "1.3.2"]]
-       ;; Sonic MQ:n kirjastot voi tarvittaessa lisätä paikallista testausta varten:
-       ;; :resource-paths ["opt/sonic/7.6.2/*"]
-       }
+                 [lein-pprint "1.3.2"]]}
+       
  :dev-ymparisto {:plugins [[lein-with-env-vars "0.2.0"]]
                  :env-vars {:HARJA_DEV_YMPARISTO "true"
                             :HARJA_TIETOKANTA_HOST "localhost"
@@ -60,9 +64,6 @@
                  :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
                                             "dev-resources/tmp"
                                             "resources"]
-                 :less ^:replace {:source-paths ["dev-resources/less/application"
-                                                 "dev-resources/less/laadunseuranta/application"]
-                                  :target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources/css"))}
                  :jvm-opts ["-Xverify:none"]
                  :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
                  :clean-targets ^{:protect false
@@ -75,7 +76,12 @@
         :plugins [[cider/cider-nrepl "0.57.0"]]
         :repl-options {:init-ns harja.palvelin.main
                        :init (harja.palvelin.main/-main)
-                       :port 4005
+                                                ;; Worktree-ajossa nREPL-portti pitää voida yliajaa,
+                                                ;; jotta rinnakkaiset instanssit eivät törmää porttiin 4005.
+                        :port #=(eval (let [p (System/getenv "HARJA_NREPL_PORTTI")]
+                                                (if (and p (re-matches #"\d+" p))
+                                                    (Integer/parseInt p)
+                                                    4005)))
                        :timeout 120000
                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
  ;; Test-dependencyt, joita ei tarvita dev-profiilissa

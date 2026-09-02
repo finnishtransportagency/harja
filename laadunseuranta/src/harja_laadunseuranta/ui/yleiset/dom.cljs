@@ -21,10 +21,15 @@
                                              (paivita-korkeus!)
                                              (tapahtumat/julkaise! {:aihe :window-resize}))))
 (defn kuuntele-body-klikkauksia []
-  (set! (.-onclick js/document.body)
-        (fn [e]
-          (tapahtumat/julkaise! {:aihe :body-click
-                                 :tapahtuma e}))))
+  (.addEventListener js/document.body "click"
+    (fn [e]
+      (tapahtumat/julkaise! {:aihe :body-click
+                             :tapahtuma e}))
+    ;; Note: React 17 Event Delegation muutosten myötä täytyy body-klikkauksia kuunnella
+    ;; capture vaiheessa, jotta tapahtuma saadaan kiinni kuuntelijassa.
+    ;; React 17 tottelee stopPropagationia, joten tapahtuman kulku estetään ellei capture vaihetta käytetä.
+    ;; https://legacy.reactjs.org/blog/2020/08/10/react-v17-rc.html#fixing-potential-issues
+    (clj->js {:capture true})))
 
 (defn elementin-etaisyys-viewportin-alareunaan [solmu]
   (let [r (.getBoundingClientRect solmu)

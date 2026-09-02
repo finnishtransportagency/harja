@@ -20,9 +20,10 @@
 
 /** INPUT */
 @input-korkeus: 28px;
+@input-korkeus-vayla: 36px;
 @input-korkeus-matalampi: calc(@input-korkeus * 0.85);
 @input-korkeus-korkea: 38px;
-@valintakontrollin-korkeus: @input-korkeus;
+@valintakontrollin-korkeus: @input-korkeus-vayla;
 
 /** TEKSTIT */
 // muuttamalla skaalauskerrointa voidaan yhtä lukua muuttamalla säätää fonttien kokoja
@@ -115,6 +116,7 @@ table.table-striped {
         display: flex;
         align-items: center;
         border-radius: @valistys-4;
+        height: @input-korkeus-vayla;
 
         .valittu {
             display: inline-block;

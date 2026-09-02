@@ -1,58 +1,36 @@
 -- name: hae-hoidon-urakat-kojelautaan
 SELECT u.id,
-       COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
-       u.hallintayksikko as ely_id,
-       EXTRACT (YEAR FROM u.alkupvm) AS urakan_alkuvuosi,
-       :hoitokauden_alkuvuosi as hoitokauden_alkuvuosi,
+       COALESCE(u.lyhyt_nimi, u.nimi)                           AS nimi,
+       u.elinvoimakeskus_id                                     AS evk_id,
+       EXTRACT (YEAR FROM u.alkupvm)                            AS urakan_alkuvuosi,
+       :hoitokauden_alkuvuosi                                   AS hoitokauden_alkuvuosi,
        urakan_kustannussuunnitelman_tila(u.id::INTEGER,
                                          monesko_hoitokausi(u.alkupvm, u.loppupvm,
                                                             :hoitokauden_alkuvuosi::INTEGER))       AS ks_tila,
-       (SELECT 'tavoitehinnan-alitus' as tyyppi
-        FROM paatos_tavoitehinta_alitus p
-        WHERE p.urakkaid = u.id
-          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-          AND p.poistettu IS FALSE
-          LIMIT 1) AS tavoitehintaalituspaatos,
-       (SELECT 'tavoitehinnan-ylitus' as tyyppi
-        FROM paatos_tavoitehinta_ylitys p
-        WHERE p.urakkaid = u.id
-          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-          AND p.poistettu IS FALSE
-        LIMIT 1) AS tavoitehintaylityspaatos,
-       (SELECT 'kattohinnan-ylitys' as tyyppi
-        FROM paatos_kattohinta p
-        WHERE p.urakkaid = u.id
-          AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-          AND p.poistettu IS FALSE
-        LIMIT 1) AS kattohintapaatos,
-       (SELECT tyyppi::TEXT as tyyppi
-         FROM paatos_lupaus p
-         WHERE p.urakkaid = u.id
-           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-           AND p.poistettu IS FALSE
-           AND p.tyyppi IN ('bonus', 'sanktio')) AS lupauspaatos,
        (SELECT p.luvatut_pisteet
         FROM paatos_lupaus p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
-          AND p.tyyppi IN ('bonus', 'sanktio')) AS luvatut_pisteet,
+          AND p.tyyppi IN ('bonus', 'sanktio', 'taytetty'))     AS luvatut_pisteet,
        (SELECT p.toteutuneet_pisteet
         FROM paatos_lupaus p
         WHERE p.urakkaid = u.id
           AND p.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           AND p.poistettu IS FALSE
-          AND p.tyyppi IN ('bonus', 'sanktio')) AS toteutuneet_pisteet,
-
+          AND p.tyyppi IN ('bonus', 'sanktio', 'taytetty'))     AS toteutuneet_pisteet,
        (SELECT count(*) FROM laatupoikkeama lp WHERE lp.urakka = u.id AND lp.paatos IS NULL AND lp.poistettu IS FALSE AND
            lp.aika BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
                make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_laatupoikkeamat,
        (SELECT count(*) FROM turvallisuuspoikkeama tp WHERE tp.urakka = u.id AND
            tp.tila IN ('avoin', 'taydennetty') AND
            tp.tapahtunut BETWEEN make_date(:hoitokauden_alkuvuosi::INTEGER, 10, 1) AND
-               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat
+               make_date(:hoitokauden_alkuvuosi::INTEGER + 1, 9, 30) + interval '23 hours 59 minutes 59 seconds') AS avoimet_turvallisuuspoikkeamat,
+       up.laskutusraja_kaytossa,
+       up.muutosten_hallinta,
+       up.hoitovuoden_alun_tavoitehinta_kaytossa
   FROM urakka u
-           JOIN organisaatio o ON u.hallintayksikko = o.id
+       JOIN urakka_parametrit up ON u.id = up.urakkaid
  WHERE
      u.tyyppi = 'teiden-hoito' AND
      u.urakkanro IS NOT NULL AND -- testiurakat pois
@@ -60,14 +38,15 @@ SELECT u.id,
          EXTRACT (YEAR FROM u.alkupvm) AND
          EXTRACT (YEAR FROM u.loppupvm) - 1) AND
      (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-     (:elyt_annettu IS NOT TRUE OR u.hallintayksikko IN (:ely_idt))
+     (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
  ORDER BY COALESCE(u.lyhyt_nimi, u.nimi);
+
 
 -- name: hae-paallystysurakat-kojelautaan
 SELECT u.id,
        u.nimi,
-       u.hallintayksikko as ely_id,
-       :vuosi as hoitokauden_alkuvuosi, -- Käytetään UIn vuoksi tässä samaa termiä kuin hoidossa vaikka kyseessä on vuosi
+       u.elinvoimakeskus_id AS evk_id,
+       :vuosi AS hoitokauden_alkuvuosi, -- Käytetään UIn vuoksi tässä samaa termiä kuin hoidossa vaikka kyseessä on vuosi
        COUNT(*) FILTER (WHERE y.id IS NOT NULL) AS yllapitokohteiden_lkm,
        COUNT(*) FILTER (WHERE pot2.tila IN ('valmis', 'lukittu')) AS valmis_hyvaksytty,
        COUNT(*) FILTER (WHERE y.lahetetty IS NOT NULL AND pot2.tila IN ('valmis', 'lukittu')
@@ -81,9 +60,13 @@ SELECT u.id,
         WHERE y.lahetetty IS NOT NULL
           AND y.lahetysvirhe IS NOT NULL
           AND y.lahetys_onnistunut IS FALSE
-          AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND y.poistettu IS FALSE AND y.urakka = u.id) AS virheelliset_kohteet
+          AND y.vuodet @> ARRAY[:vuosi]::INTEGER[] AND y.poistettu IS FALSE AND y.urakka = u.id) AS virheelliset_kohteet,
+       up.laskutusraja_kaytossa,
+       up.muutosten_hallinta,
+       up.hoitovuoden_alun_tavoitehinta_kaytossa
 FROM urakka u
-         JOIN organisaatio o ON u.hallintayksikko = o.id
+         LEFT JOIN urakka_parametrit up ON u.id = up.urakkaid
+         JOIN organisaatio o ON u.elinvoimakeskus_id = o.id
          JOIN yllapitokohde y ON y.urakka = u.id
          LEFT JOIN paallystysilmoitus pot2 ON y.id = pot2.paallystyskohde AND pot2.poistettu IS NOT TRUE
 WHERE
@@ -97,8 +80,6 @@ WHERE
         EXTRACT (YEAR FROM u.alkupvm) AND
         EXTRACT (YEAR FROM u.loppupvm)) AND
     (:urakat_annettu IS NOT TRUE OR u.id IN (:urakka_idt)) AND
-    (:elyt_annettu IS NOT TRUE OR u.hallintayksikko IN (:ely_idt))
-GROUP BY u.id, u.nimi, u.hallintayksikko, hoitokauden_alkuvuosi
+    (:evkt_annettu IS NOT TRUE OR u.elinvoimakeskus_id IN (:evk_idt))
+GROUP BY u.id, u.nimi, u.elinvoimakeskus_id, hoitokauden_alkuvuosi, up.laskutusraja_kaytossa, up.muutosten_hallinta, up.hoitovuoden_alun_tavoitehinta_kaytossa
 ORDER BY u.nimi;
-
-

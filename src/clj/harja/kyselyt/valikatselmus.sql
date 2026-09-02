@@ -12,8 +12,8 @@ WHERE ut.urakka = :urakka-id
 
 -- name: hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
 -- single?: true
--- Käytetään esimerkiksi tavoitepalkkion laskemisessa
-SELECT ut.tavoitehinta_indeksikorjattu as tavoitehinta
+-- Käytetään esimerkiksi tavoitepalkkion laskemisessa. Pyöristä hakiessa kahteen desimaaliin. Joskus indexin laskemat voi pyöristää sen kolmeen desimaaliin.
+SELECT ROUND(ut.tavoitehinta_indeksikorjattu::NUMERIC, 2) AS tavoitehinta
   FROM urakka_tavoite ut
          JOIN urakka u ON ut.urakka = u.id
  WHERE ut.urakka = :urakka-id
@@ -120,13 +120,53 @@ SELECT e.rahasumma, e.tyyppi
    AND e.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
 
 -- name: hae-sanktiot
-SELECT s.maara,
+WITH urakan_tiedot AS (
+    SELECT u.id,
+           EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+    FROM urakka u
+    WHERE u.id = :urakka-id
+)
+SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
        s.sakkoryhma,
-       (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka-id::INT, s.sakkoryhma)) AS indeksikorjaus
+       (SELECT korotus * -1 FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, :urakka-id::INT, s.sakkoryhma)) AS indeksikorjaus
   FROM sanktio s
            JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+           CROSS JOIN urakan_tiedot u
  WHERE s.poistettu IS NOT TRUE
-   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
+   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND :hoitokauden-alkuvuosi::INT <= 2025));
+
+-- name: hae-arvonvahennykset
+WITH urakan_tiedot AS (
+    SELECT u.id,
+           EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+    FROM urakka u
+    WHERE u.id = :urakka-id
+)
+SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
+       s.sakkoryhma
+  FROM sanktio s
+           JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+           CROSS JOIN urakan_tiedot u
+ WHERE s.poistettu IS NOT TRUE
+   AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+   AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR :hoitokauden-alkuvuosi::INT >= 2026));
+
+-- name: hae-arvonvahennykset
+WITH urakan_tiedot AS (
+    SELECT u.id,
+           EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+    FROM urakka u
+    WHERE u.id = :urakka-id
+)
+SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
+       s.sakkoryhma
+FROM sanktio s
+         JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+         CROSS JOIN urakan_tiedot u
+WHERE s.poistettu IS NOT TRUE
+  AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
+  AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR :hoitokauden-alkuvuosi::INT >= 2026));
 
 -- name: hae-tavoitehinnan-muutokset-hoitokaudelle
 select id, "urakka-id", otsikko, selite, summa

@@ -26,39 +26,53 @@ on:
       SLACK_WEBHOOK_URL:
         required: true
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 run-name: Deploy to '${{ inputs.environment }}' AWS env by @${{ github.actor }}
 
 # Note: Each job runs in a fresh VM, so the environment is not shared between jobs.
 jobs:
   deploy-image-to-ecs:
+    name: "Deploy Harja image to ECS"
     runs-on: ubuntu-latest
     environment: ${{ inputs.environment }}
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
-      # OIDC token is needed for AWS actions assume the role
-      id-token: write
-      # Contents is needed for the checkout action
-      contents: read
-      # Actions read lupaa tarvitaan actions/download-artifact actionissa
-      actions: read
+      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
+      contents: read # Tarvitaan checkout actionissa
+      actions: read # Tarvitaan actions/download-artifact actionissa
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v5
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
       - name: List used environment variables
+        env:
+          INPUTS_ENVIRONMENT: ${{ inputs.environment }}
+          INPUTS_COMMIT_SHA: ${{ inputs.commit-sha }}
+          INPUTS_ARTIFACT_RUN_ID: ${{ inputs.artifact-run-id }}
+          ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}
+          ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+          ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
         run: |
-          echo "Target environment: ${{ inputs.environment }}"
-          echo "Commit SHA: ${{ inputs.commit-sha }}"
-          echo "Artifact run ID: ${{ inputs.artifact-run-id }}"
+          echo "Target environment: ${INPUTS_ENVIRONMENT}"
+          echo "Commit SHA: ${INPUTS_COMMIT_SHA}"
+          echo "Artifact run ID: ${INPUTS_ARTIFACT_RUN_ID}"
           echo " --- "
           echo "Environment variables:"
-          echo "  ECR_REPOSITORY_NAME: ${{ vars.ECR_REPOSITORY_NAME }}"
-          echo "  ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}"
-          echo "  ECS_CONTAINER_NAME: ${{ vars.ECS_CONTAINER_NAME }}"
-          echo "  ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}"
-          echo "  ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}"
+          echo "  ECR_REPOSITORY_NAME: ${ECR_REPOSITORY_NAME}"
+          echo "  ECS_TASK_DEFINITION_NAME: ${ECS_TASK_DEFINITION_NAME}"
+          echo "  ECS_CONTAINER_NAME: ${ECS_CONTAINER_NAME}"
+          echo "  ECS_CLUSTER_NAME: ${ECS_CLUSTER_NAME}"
+          echo "  ECS_SERVICE_NAME: ${ECS_SERVICE_NAME}"
 
         shell: bash
 
@@ -80,7 +94,7 @@ jobs:
 
       # https://github.com/actions/download-artifact?tab=readme-ov-file#inputs
       - name: Download uberjar artifact
-        uses: actions/download-artifact@v5.0.0
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
           name: harja-uberjar
           github-token: ${{ secrets.GITHUB_TOKEN }}
@@ -91,7 +105,7 @@ jobs:
           run-id: ${{ inputs.artifact-run-id }}
 
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@v5
+        uses: aws-actions/configure-aws-credentials@e6de054238d6b7531b4efff3b6587d9aade6a06c # v6.2.3
         with:
           aws-region: "eu-west-1"
           role-to-assume: "arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin"
@@ -103,12 +117,13 @@ jobs:
       # Huomioi kuitenkin, että docker salasanan jakaminen jobien välillä ei onnistu mikäli se maskataan.
       - name: Authenticate with AWS ECR
         id: login-ecr
-        uses: aws-actions/amazon-ecr-login@v2
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
         with:
           mask-password: "true"
 
       # Buildataan image ja tagataan se annetun commit SHA:n perusteella
       # Mikäli imagen build epäonnistuu, niin ei edetä DB migraatioon tai ECS taskin päivitykseen.
+      # Note: Ajetaan build "provenance false" -asetuksella toistaiseksi, jotta ECR:ään ei tule hämmentäviä objekteja metatiedoista
       - name: Build and tag Harja Docker image
         id: build-image
         env:
@@ -119,7 +134,7 @@ jobs:
           DOCKERFILE_PATH: "aws/fargate/Dockerfile"
         run: |
           echo "Building image with tag $IMAGE_TAG"
-          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
+          docker build --provenance=false -t $ECR_REGISTRY/$ECR_REPOSITORY:latest -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG --file $DOCKERFILE_PATH .
           
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
 
@@ -163,14 +178,14 @@ jobs:
 
       - name: Update ECS task definition (add image id)
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea # v1.9.0
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@v2
+        uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
@@ -218,7 +233,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@91efab103c0de0a537f72a35f6b8cda0ee76bf0a
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}

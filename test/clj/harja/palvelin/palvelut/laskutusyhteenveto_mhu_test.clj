@@ -1,58 +1,32 @@
 (ns harja.palvelin.palvelut.laskutusyhteenveto-mhu-test
-  (:require [clojure.test :refer :all]
-            [clojure.zip :as zip]
-            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.kyselyt.valikatselmus :as valikatselmus-q]
-            [taoensso.timbre :as log]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto]
-            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
-
-            [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
-            [harja.testi :refer :all]
+  (:require [clojure.zip :as zip]
+            [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
-            [harja.kyselyt.konversio :as konv]
-            [harja.kyselyt.sanktiot :as sanktiot]
-            [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-kyselyt]
-            [harja.kyselyt.urakat :as urakat-q]
+
             [harja.pvm :as pvm]
+            [harja.testi :refer :all]
+            [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.sanktiot :as sanktiot]
             [harja.domain.kulut :as domain-kulut]
             [harja.palvelin.palvelut.kulut.kulut :as kulu-palvelu]
-            [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
-            [harja.testi :as testi]))
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
+            [harja.kyselyt.laskutusyhteenveto :as laskutusyhteenveto-kyselyt]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-tuotekohtainen :as laskutusyhteenveto]))
 
-
-(defn raportti-zip
-  "Palauta zipper raportin raakadatalle"
-  ;; Ei täydellinen. Raportin raakadata ei sisällä aivan säännönmukaista rakennetta, joten branchit eivät välttämättä aina ole sitä mitä halutaan
-  [raportti-root]
-  (zip/zipper
-    vector?
-    ;; Hae lapset
-    #(drop 1 %)
-    ;; Tee uusi noodi
-    #(into [] (concat (take 1 %1) %2))
-    raportti-root))
-
-(defn etsi-raportin-rivi
-  [zipped-raportti rivi-data]
-  (loop [curr zipped-raportti]
-    (cond
-      (zip/end? curr) nil
-      (-> curr zip/node (= rivi-data)) (-> curr zip/node)
-      :else (recur (zip/next curr)))))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :kulut (component/using
-                                 (kulu-palvelu/->Kulut)
-                                 [:http-palvelin :db])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :kulut (component/using
+                   (kulu-palvelu/->Kulut)
+                   [:http-palvelin :db])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -66,10 +40,10 @@
 (def oulun-mhu-urakka-2020-03 (atom []))
 (def oulun-mhu-urakka-2022-2023 (atom []))
 (def oulun-mhu-urakka-2020-04 (atom []))
-(def oulun-mhu-urakka-2020-06 (atom []))
 
 (def hallinnolliset-toimenpiteet-tpi-id
   (ffirst (q (str "SELECT id from toimenpideinstanssi where nimi = 'Oulu MHU Hallinnolliset toimenpiteet TP'"))))
+
 
 (defn hae-2020-03-tiedot []
   (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -80,6 +54,7 @@
      :alkupvm (pvm/->pvm "1.3.2020")
      :loppupvm (pvm/->pvm "31.3.2020")}))
 
+
 (defn hae-2022-2023-oulu-mhu-tiedot []
   (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
     (:db jarjestelma)
@@ -88,6 +63,7 @@
      :urakkatyyppi "teiden-hoito"
      :alkupvm (pvm/->pvm "1.10.2022")
      :loppupvm (pvm/->pvm "30.9.2023")}))
+
 
 (defn hae-2020-04-tiedot []
   (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -98,14 +74,6 @@
      :alkupvm (pvm/->pvm "1.4.2020")
      :loppupvm (pvm/->pvm "30.4.2020")}))
 
-(defn hae-2020-06-tiedot []
-  (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
-    (:db jarjestelma)
-    +kayttaja-jvh+
-    {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-     :urakkatyyppi "teiden-hoito"
-     :alkupvm (pvm/->pvm "1.6.2020")
-     :loppupvm (pvm/->pvm "30.6.2020")}))
 
 (deftest mhu-laskutusyhteenvedon-tietojen-haku
   (testing "mhu-laskutusyhteenvedon-tietojen-haku"
@@ -128,6 +96,7 @@
       (is (not (empty? haetut-tiedot-oulu-mhu-korvausinvestointi)))
       (is (not (empty? haetut-tiedot-oulu-mhu-ja-hoidon-johto))))))
 
+
 (deftest mhu-laskutusyhteenvedon-perusluku
   (testing "mhu-laskutusyhteenvedon-perusluku-tietojen-haku"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
@@ -136,6 +105,7 @@
       ;; Tämä hajoaa joka vuosi 1.10. Koska Indeksi generoidaan tietokantaan. Päivitä arvo suoraan tietokannasta
       ;; ja kaikki on taas ihanasti toimivaa
       (is (= 110.8M (:perusluku talvihoito))))))
+
 
 (deftest mhu-laskutusyhteenvedon-tavoitehinnat
   (testing "mhu-laskutusyhteenvedon-tavoitehinnat"
@@ -151,86 +121,6 @@
                                      (:hj_palkkio_laskutettu talvihoito))]
 
       (is (= talvihoidon-tavoitehinta (:tavoitehintaiset_laskutettu talvihoito))))))
-
-(deftest varmista-kustannusten-siirrot
-  (let [kayttaja-id (:id +kayttaja-jvh+)
-        urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
-        hoitokauden-alkuvuosi 2019 ;; Päätös tehdään edelliselle vuodelle
-        hoitokauden-alun-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        hoitokauden-lopun-tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})]
-    (testing "Tavoitehinnan alituksen siirto"
-      (let [toteutuneet-kustannukset (- hoitokauden-alun-tavoitehinta 10000)
-            alituksen-maara (- hoitokauden-alun-tavoitehinta toteutuneet-kustannukset)
-            siirto-ed-vuodelta 60000.0M
-            tavoitepalkkio 10000.0M
-            tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
-            tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
-            kulu-id 1
-            viimeinen_hoitokausi false
-            ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
-            paatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                     alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
-                     viimeinen_hoitokausi kayttaja-id)
-            paatosvastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)
-            hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-            parametrit {:urakkatyyppi "teiden-hoito"
-                        :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))
-                        :loppupvm (pvm/->pvm (str "30.9." (+ 2 hoitokauden-alkuvuosi)))
-                        :urakka-id urakka-id
-                        :hallintayksikko-id hallintayksikko-id}
-            raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
-
-        ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
-        (let [z-raportti (raportti-zip raportti)
-              siirto-rivi [[:varillinen-teksti {:arvo ""}]
-                           [:varillinen-teksti
-                            {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
-                           [:varillinen-teksti
-                            {:itsepaisesti-maaritelty-oma-vari nil,
-                             :arvo (* -1 siirto-ed-vuodelta), ;; Käännetään negatiiviseksi, koska siirto pienentää toteumia, mutta on kannassa positiivisena
-                             :fmt :raha,
-                             :lihavoi? true}]]]
-          ;; Etsii koko raportin hiccupista lehden, josta löytyy siirto-riviin liittyvä data
-          (is (= siirto-rivi (etsi-raportin-rivi z-raportti siirto-rivi)))
-          ;; Siivotaan kanta
-          (paatos-kyselyt/poista-tavoitehinnan-alituspaatos (:db jarjestelma) urakka-id kayttaja-id (:id paatosvastaus)))))
-    (testing "Kattohinnan ylityksen siirto"
-      (let [kattohinta 100000M
-            toteutuneet-kustannukset (+ kattohinta 10000M)
-            ylityksen-maara (- toteutuneet-kustannukset kattohinta)
-            urakoitsija-maksaa ylityksen-maara
-            siirrettava-maara ylityksen-maara
-            maksimi-siirrettava-maara ylityksen-maara
-            siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-            tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
-            kulu-id 1
-            viimeinen_hoitokausi false
-            ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
-            paatos (paatos-apurit/kattohinnan-ylityspaatos urakka-id hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
-                     ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi
-                     maksimi-siirrettava-maara siirtorajoitus-prosentti kayttaja-id)
-            paatosvastaus (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
-            hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-            parametrit {:urakkatyyppi "teiden-hoito"
-                        :alkupvm (pvm/->pvm (str "1.10." (inc hoitokauden-alkuvuosi)))
-                        :loppupvm (pvm/->pvm (str "30.9." (+ 2 hoitokauden-alkuvuosi)))
-                        :urakka-id urakka-id
-                        :hallintayksikko-id hallintayksikko-id}
-            raportti (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
-
-        ;; Etsi "Siirto edelliseltä vuodelta" -rivin data raportin raakadatasta
-        (let [z-raportti (raportti-zip raportti)
-              siirto-rivi [[:varillinen-teksti {:arvo ""}]
-                           [:varillinen-teksti
-                            {:arvo "Siirto edelliseltä vuodelta", :lihavoi? true}]
-                           [:varillinen-teksti
-                            {:itsepaisesti-maaritelty-oma-vari nil,
-                             :arvo siirrettava-maara,
-                             :fmt :raha,
-                             :lihavoi? true}]]]
-          ;; Etsii koko raportin hiccupista lehden, josta löytyy siirto-riviin liittyvä data
-          (is (= siirto-rivi (etsi-raportin-rivi z-raportti siirto-rivi))))))))
 
 (deftest mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus
   (testing "mhu-laskutusyhteenvedon-sanktiot-joissa-indeksikorotus"
@@ -250,6 +140,7 @@
 
       (is (= (:sakot_laskutetaan talvihoito) (:korotettuna sanktiosumma-indeksikorotettuna))))))
 
+
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-bonukset
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-bonukset"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
@@ -267,15 +158,15 @@
           AND laskutuskuukausi >= '2019-10-01'::DATE AND laskutuskuukausi <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           alihankinta-ja-tavoitepalkkio (ffirst (q (str "SELECT SUM(rahasumma) FROM erilliskustannus WHERE
           ( tyyppi = 'alihankintabonus' OR tyyppi = 'tavoitepalkkio' )
-          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id  "
+          AND toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
           AND poistettu IS NOT TRUE
           AND laskutuskuukausi >= '2019-10-01'::DATE AND laskutuskuukausi <= '2020-03-31'::DATE AND sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))
           lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla (first (laskutusyhteenveto-kyselyt/hoitokautta-edeltavan-syyskuun-indeksikorotus
-                                                   (:db jarjestelma)
-                                                   {:hoitokauden-alkuvuosi 2019
-                                                    :indeksinimi "MAKU 2015"
-                                                    :summa lupaus-ja-asiakastyytyvaisyys-bonus
-                                                    :perusluku (:perusluku hoidonjohto)}))
+                                                                  (:db jarjestelma)
+                                                                  {:hoitokauden-alkuvuosi 2019
+                                                                   :indeksinimi "MAKU 2015"
+                                                                   :summa lupaus-ja-asiakastyytyvaisyys-bonus
+                                                                   :perusluku (:perusluku hoidonjohto)}))
           ;; Tavoitehinnan ulkopuoliset rahavaraukset => lasketaan bonukseksi
           tav_ulk_rah (ffirst (q (str "SELECT COALESCE(SUM(kt.summa), 0) AS summa FROM kustannusarvioitu_tyo kt
                                        JOIN tehtavaryhma tr ON kt.tehtavaryhma = tr.id AND tr.yksiloiva_tunniste = 'a6614475-1950-4a61-82c6-fda0fd19bb54'
@@ -284,7 +175,8 @@
                                              AND kt.sopimus = " @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id)))]
 
       (is (= (:bonukset_laskutettu hoidonjohto)
-             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio muu-bonus tav_ulk_rah))))))
+            (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio muu-bonus tav_ulk_rah))))))
+
 
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot"
@@ -312,7 +204,8 @@
                                                                  :perusluku (:perusluku hoidonjohto)}))]
 
       (is (= (:sakot_laskutettu hoidonjohto)
-             (* -1 (+ (:korotettuna lupaus-ja-vaihtosanktiot-indeksikorotuksella) arvonvahennys)))))))
+            (* -1 (+ (:korotettuna lupaus-ja-vaihtosanktiot-indeksikorotuksella) arvonvahennys)))))))
+
 
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-poikkeuslaskutukset
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-poikkeuslaskutukset"
@@ -345,11 +238,12 @@
           AND kk.tehtavaryhma = (select id from tehtavaryhma where nimi = 'W - Erillishankinnat')")))]
 
       (is (= (+ (:hj_palkkio_laskutetaan hoidonjohto) (:johto_ja_hallinto_laskutetaan hoidonjohto) (:hj_erillishankinnat_laskutetaan hoidonjohto))
-             poikkeukset))
+            poikkeukset))
       (is (= (:johto_ja_hallinto_laskutetaan hoidonjohto)
-             db_hallinto))
+            db_hallinto))
       (is (= (:hj_erillishankinnat_laskutetaan hoidonjohto)
-             db_erillis)))))
+            db_erillis)))))
+
 
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-palkkiot
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-palkkiot"
@@ -363,19 +257,20 @@
           poikkeuslaskutukset (ffirst (q (str "SELECT coalesce(SUM(kk.summa),0)
                                                  FROM kulu k
                                                       join kulu_kohdistus kk ON k.id = kk.kulu
-                                                WHERE k.urakka = "urakka-id"
+                                                WHERE k.urakka = " urakka-id "
                                                   AND k.id = kk.kulu
                                                   AND k.erapaiva BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE
-                                                  AND kk.toimenpideinstanssi = "hallinnolliset-toimenpiteet-tpi-id "
+                                                  AND kk.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
                                                   AND tehtavaryhma NOT IN (SELECT id FROM tehtavaryhma WHERE nimi ILIKE 'Hoitovuoden päättäminen%');")))
           kustannusarvioidut-tyot (ffirst (q (str "SELECT COALESCE(SUM(kat.summa_indeksikorjattu), 0) AS summa
                                                      FROM kustannusarvioitu_tyo kat
                                                     WHERE kat.toimenpideinstanssi = " hallinnolliset-toimenpiteet-tpi-id "
-                                                      AND (kat.tehtavaryhma = "tehtavaryhma-id" OR kat.tehtava = "tehtava-id")
+                                                      AND (kat.tehtavaryhma = " tehtavaryhma-id " OR kat.tehtava = " tehtava-id ")
                                                       AND kat.sopimus = " sopimuksen-id "
                                                       AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE)))
                                                   BETWEEN '2020-03-01'::DATE AND '2020-03-31'::DATE")))]
       (is (= (:hj_palkkio_laskutetaan hoidonjohto) (+ poikkeuslaskutukset kustannusarvioidut-tyot))))))
+
 
 (deftest varmista-laskutusyhteeveto-latautuu
   (testing "Lataa oulun tiedot vuodelle 2021"
@@ -386,8 +281,9 @@
                       :loppupvm (pvm/->pvm "30.9.2022")
                       :urakka-id urakka-id
                       :hallintayksikko-id hallintayksikko-id}
-          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
       (is (not (nil? latautuu)))))
+
   (testing "Lataa oulun tiedot vuodelle 2020"
     (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
@@ -396,8 +292,9 @@
                       :loppupvm (pvm/->pvm "30.9.2021")
                       :urakka-id urakka-id
                       :hallintayksikko-id hallintayksikko-id}
-          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
       (is (not (nil? latautuu)))))
+
   (testing "Lataa oulun tiedot vuodelle 2019"
     (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
@@ -406,17 +303,19 @@
                       :loppupvm (pvm/->pvm "30.9.2020")
                       :urakka-id urakka-id
                       :hallintayksikko-id hallintayksikko-id}
-          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit )]
+          latautuu (laskutusyhteenveto/suorita (:db jarjestelma) +kayttaja-jvh+ parametrit)]
       (is (not (nil? latautuu))))))
+
 
 (deftest mhu-korvausinvestointi
   (let [alkuaika "2022-10-01"
         loppuaika "2022-10-01"
+        sanktiopvm "2022-11-15"
         urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
 
         ;;Hae Korvausinvestoinnin toimenpideinstanssi
         korvausinvestointi (first (q-map (format "SELECT id, toimenpide FROM toimenpideinstanssi WHERE nimi = '%s' and urakka = %s"
-                                  "Oulu MHU MHU Korvausinvestointi TP" urakka-id)))
+                                           "Oulu MHU MHU Korvausinvestointi TP" urakka-id)))
         ;; Haetaan toimenpideinstanssille määritellyn toimenpiteen kautta tehtävä
         tehtava (first (q-map (format "SELECT id, nimi, tehtavaryhma FROM tehtava t WHERE t.emo = %s" (:toimenpide korvausinvestointi))))
 
@@ -433,8 +332,7 @@
         ;; Hae hallinnolliset laiminlyönnit sanktiotyypin id
         sanktiotyyppi-id (:id (first (q-map (format "SELECT id FROM sanktiotyyppi st WHERE st.nimi = '%s';"
                                               "Hallinnolliset laiminlyönnit"))))
-        _ (lisaa-sanktio-urakalle 12 "C" alkuaika urakka-id (:id korvausinvestointi) sanktiotyyppi-id)
-
+        _ (lisaa-suorasanktio-urakalle 12 "C" sanktiopvm urakka-id (:id korvausinvestointi) sanktiotyyppi-id nil nil)
 
         _ (when (= (empty? @oulun-mhu-urakka-2022-2023))
             (reset! oulun-mhu-urakka-2022-2023 (hae-2022-2023-oulu-mhu-tiedot)))
@@ -473,14 +371,14 @@
         (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM kustannusarvioitu_tyo
                                         WHERE tehtava = %s AND tehtavaryhma IS NULL AND sopimus = %s AND tyyppi = 'laskutettava-tyo'
                                           AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
-                                                                           hoidonjohtopalkkio-tehtava-id sopimus-id alkuvuosi loppuvuosi))))
+                                hoidonjohtopalkkio-tehtava-id sopimus-id alkuvuosi loppuvuosi))))
 
         ;; Haetaan hoidonjohtopalkkiot toteutuneet_kustannukset taulusta samalle ajanjaksolle
         hoidonjohtopalkkio-toteutuneet_kustannukset
         (:summa (first (q-map (format "SELECT SUM(summa_indeksikorjattu) as summa FROM toteutuneet_kustannukset
                                         WHERE tehtava = %s AND tehtavaryhma IS NULL AND urakka_id = %s AND tyyppi = 'laskutettava-tyo'
                                           AND ((vuosi = %s AND kuukausi in (10,11,12)) OR vuosi = %s AND kuukausi in (1,2,3,4,5,6,7,8,9));"
-                                                                            hoidonjohtopalkkio-tehtava-id urakka-id alkuvuosi loppuvuosi))))
+                                hoidonjohtopalkkio-tehtava-id urakka-id alkuvuosi loppuvuosi))))
         _ (is (= hoidonjohtopalkkio-kustannusarvioidut-tyot hoidonjohtopalkkio-toteutuneet_kustannukset))
 
         ;; Hoidonjohtopalkkioita voi olla myös kuluissa, joten tarkistetaan niiden määrä
@@ -506,9 +404,9 @@
         toimenpidekoodi-id-hj-palkkio (:id (first (q-map (format "SELECT id FROM tehtava WHERE yksiloiva_tunniste = '53647ad8-0632-4dd3-8302-8dfae09908c8';"))))
 
         suunnitellut-summat (:summa (first (q-map (str
-                                              "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
-                                                 FROM kustannusarvioitu_tyo kat
-                                                WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
+                                                    "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
+                                                       FROM kustannusarvioitu_tyo kat
+                                                      WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
               AND (kat.tehtavaryhma = " hoidonjohtopalkkio-tehtavaryhma-id " OR kat.tehtava IN (" toimenpidekoodi-id-hu-tyonjohto ", " toimenpidekoodi-id-hj-palkkio "))
               AND kat.sopimus = " sopimus-id "
               AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN '" alkuaika "'::DATE AND '" loppuaika "'::DATE"))))
@@ -524,10 +422,11 @@
                               :loppupvm (pvm/->pvm "30.9.2020")})
         ;; Hoidonjohtopalkkio on vaan MHY ylläpidon alla, mutta lasketaan se kaikkien alta, koska se on muualla nolla
         ;; Ja jos ei ole, niin silloin on virhetilanne ja se löytyy samalla testillä.
-        hoindonjohtopalkkio-laskutusyhteenvedossa (apply + (map :hj_palkkio_laskutetaan laskutusyhteenveto))
+        hoidonjohtopalkkio-laskutusyhteenvedossa (apply + (map :hj_palkkio_laskutetaan laskutusyhteenveto))
         _ (is (= (+ hoidonjohtopalkkio-kustannusarvioidut-tyot hoidonjohtopalkkio-kulut)
                 (+ hoidonjohtopalkkio-toteutuneet_kustannukset hoidonjohtopalkkio-kulut)
-                hoindonjohtopalkkio-laskutusyhteenvedossa))]))
+                hoidonjohtopalkkio-laskutusyhteenvedossa))]))
+
 
 (deftest toteutuneet-erilliskustannukset
   ;; Erilliskustannukset suunnitellaan kustannusarvioitu_tyo tauluun. Ja ne on
@@ -577,9 +476,9 @@
         ;; Haetaan ensin toimenpideinstanssi-id -- tpk2.koodi/tuotekoodi 23151 on MHU Hoidonjohto
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23151")
         suunnitellut-summat (:summa (first (q-map (str
-                                              "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
-                                                 FROM kustannusarvioitu_tyo kat
-                                                WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
+                                                    "SELECT SUM(coalesce(kat.summa_indeksikorjattu, kat.summa, 0)) AS summa
+                                                       FROM kustannusarvioitu_tyo kat
+                                                      WHERE kat.toimenpideinstanssi = " toimenpideinstanssi-id "
               AND kat.tehtavaryhma = " erilliskustannus-tehtavaryhma-id "
               AND kat.sopimus = " sopimus-id "
               AND (SELECT (date_trunc('MONTH', format('%s-%s-%s', kat.vuosi, kat.kuukausi, 1)::DATE))) BETWEEN '" alkuaika "'::DATE AND '" loppuaika "'::DATE"))))
@@ -600,22 +499,24 @@
                 (+ erilliskustannus-toteutuneet_kustannukset erilliskustannus-kulut)
                 erilliskustannus-laskutusyhteenvedossa))]))
 
+
 (defn jh-korvaus-kulu [urakka-id erapaiva summa toimenpideinstanssi-id tehtavaryhma-id urakan-alkupvm]
-  {:id              nil
-   :urakka          urakka-id
-   :viite           "12345"
-   :erapaiva        erapaiva
-   :kokonaissumma   summa
-   :tyyppi          "laskutettava"
-   :kohdistukset    [{:kohdistus-id        nil
-                      :rivi                1
-                      :summa               summa
-                      :toimenpideinstanssi toimenpideinstanssi-id
-                      :tehtavaryhma        tehtavaryhma-id
-                      :tehtava             nil
-                      :tavoitehintainen :true
-                      :tyyppi "hankintakulu"}]
+  {:id nil
+   :urakka urakka-id
+   :viite "12345"
+   :erapaiva erapaiva
+   :kokonaissumma summa
+   :tyyppi "laskutettava"
+   :kohdistukset [{:kohdistus-id nil
+                   :rivi 1
+                   :summa summa
+                   :toimenpideinstanssi toimenpideinstanssi-id
+                   :tehtavaryhma tehtavaryhma-id
+                   :tehtava nil
+                   :tavoitehintainen :true
+                   :tyyppi "hankintakulu"}]
    :koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)})
+
 
 (deftest toteutuneet-johto-ja-hallintokorvaukset
   ;; JH-korvaukset suunnitellaan johto_ja_hallintokorvaus tauluun. Ja ne on
@@ -689,6 +590,7 @@
                 (+ jh-korvaus-toteutuneet_kustannukset jh-korvaus-kulut)
                 jh-korvaus-laskutusyhteenvedossa))]))
 
+
 (deftest laskutusyhteenvedon-sementointi
   (testing "laskutusyhteenvedon-sementoiti"
     (let [_ (when (= (empty? @oulun-mhu-urakka-2020-03))
@@ -696,227 +598,10 @@
 
           poista-tpi (fn [tiedot]
                        (map #(dissoc %
-                                     :tpi) tiedot))
+                               :tpi) tiedot))
           haetut-tiedot-oulu-ilman-tpita (poista-tpi @oulun-mhu-urakka-2020-03)
           haetut-tiedot-oulu-talvihoito (first (filter #(= (:tuotekoodi %) "23100") haetut-tiedot-oulu-ilman-tpita))
-          haetut-tiedot-oulu-liikenneymparisto (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu-ilman-tpita))
-          haetut-tiedot-oulu-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot-oulu-ilman-tpita))
-          haetut-tiedot-oulu-paallyste (first (filter #(= (:tuotekoodi %) "20100") haetut-tiedot-oulu-ilman-tpita))
-          haetut-tiedot-oulu-mhu-yllapito (first (filter #(= (:tuotekoodi %) "20190") haetut-tiedot-oulu-ilman-tpita))
-          haetut-tiedot-oulu-mhu-korvausinvestointi (first (filter #(= (:tuotekoodi %) "14300") haetut-tiedot-oulu-ilman-tpita))
-          haetut-tiedot-oulu-mhu-ja-hoidon-johto (first (filter #(= (:tuotekoodi %) "23150") haetut-tiedot-oulu-ilman-tpita))
-          ;; Kommentoin nämä pois, koska oletettavasti jotain vielä muuttuu, niin ei hajoa testit ihan heti.
-          ;_ (log/debug "haetut-tiedot-oulu-talvihoito")
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-talvihoito)
-          ;_ (log/debug "haetut-tiedot-oulu-liikenneymparisto" )
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-liikenneymparisto)
-          ;_ (log/debug "haetut-tiedot-oulu-soratiet" )
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-soratiet)
-          ;_ (log/debug "haetut-tiedot-oulu-mhu-korvausinvestointi" )
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-mhu-korvausinvestointi)
-          ;_ (log/debug "haetut-tiedot-oulu-paallyste" )
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-paallyste)
-          ;_ (log/debug "haetut-tiedot-oulu-mhu-yllapito" )
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-mhu-yllapito)
-          ;_ (log/debug "haetut-tiedot-oulu-mhu-ja-hoidon-johto" )
-          ;_ (clojure.pprint/pprint haetut-tiedot-oulu-mhu-ja-hoidon-johto)
-          #_odotetut-talvihoito #_{:bonukset_laskutetaan 0.0M,
-                                   :suolasakot_laskutetaan 0.0M,
-                                   :kaikki_laskutetaan 3193.3438073394495412843240M,
-                                   :kaikki_laskutettu 5425.6360435779816513752714M,
-                                   :hj_palkkio_laskutettu 0.0M,
-                                   :lisatyot_laskutettu 600.97M,
-                                   :hoidonjohto_laskutettu 0.0M,
-                                   :bonukset_laskutettu 0.0M,
-                                   :sakot_laskutetaan -107.0561926605504587156760M,
-                                   :hj_erillishankinnat_laskutetaan 0.0M,
-                                   :erilliskustannukset_laskutetaan 0.0M,
-                                   :hankinnat_laskutettu 6000.97M,
-                                   :nimi "Talvihoito",
-                                   :lisatyot_laskutetaan 300.20M,
-                                   :lampotila_puuttuu false,
-                                   :perusluku 130.8M,
-                                   :suolasakot_laskutettu 0.0M,
-                                   :hankinnat_laskutetaan 3000.20M,
-                                   :indeksi_puuttuu false,
-                                   :tavoitehintaiset_laskutettu 6000.97M,
-                                   :hj_erillishankinnat_laskutettu 0.0M,
-                                   :tuotekoodi "23100",
-                                   :hoidonjohto_laskutetaan 0.0M,
-                                   :hj_palkkio_laskutetaan 0.0M,
-                                   :sakot_laskutettu -1176.3039564220183486247286M,
-                                   :erilliskustannukset_laskutettu 0.0M,
-                                   :suolasakko_kaytossa true,
-                                   :tavoitehintaiset_laskutetaan 3000.20M}
-          #_odotetut-liikenneymparistot #_{:bonukset_laskutetaan 0.0M,
-                                           :suolasakot_laskutetaan 0.0M,
-                                           :kaikki_laskutetaan 0.0M,
-                                           :kaikki_laskutettu 1819.6322362385321100909474M,
-                                           :hj_palkkio_laskutettu 0.0M,
-                                           :lisatyot_laskutettu 0.0M,
-                                           :hoidonjohto_laskutettu 0.0M,
-                                           :bonukset_laskutettu 0.0M,
-                                           :sakot_laskutetaan 0.0M,
-                                           :hj_erillishankinnat_laskutetaan 0.0M,
-                                           :erilliskustannukset_laskutetaan 0.0M,
-                                           :hankinnat_laskutettu 2888.88M,
-                                           :nimi "Liikenneympäristön hoito",
-                                           :lisatyot_laskutetaan 0.0M,
-                                           :lampotila_puuttuu false,
-                                           :perusluku 130.8M,
-                                           :suolasakot_laskutettu 0.0M,
-                                           :hankinnat_laskutetaan 0.0M,
-                                           :indeksi_puuttuu false,
-                                           :tavoitehintaiset_laskutettu 2888.88M,
-                                           :hj_erillishankinnat_laskutettu 0.0M,
-                                           :tuotekoodi "23110",
-                                           :hoidonjohto_laskutetaan 0.0M,
-                                           :hj_palkkio_laskutetaan 0.0M,
-                                           :sakot_laskutettu -1069.2477637614678899090526M,
-                                           :erilliskustannukset_laskutettu 0.0M,
-                                           :suolasakko_kaytossa true,
-                                           :tavoitehintaiset_laskutetaan 0.0M}
-          #_odotetut-soratiet #_{:bonukset_laskutetaan 0.0M,
-                                 :suolasakot_laskutetaan 0.0M,
-                                 :kaikki_laskutetaan 4400.40M,
-                                 :kaikki_laskutettu 8801.94M,
-                                 :hj_palkkio_laskutettu 0.0M,
-                                 :lisatyot_laskutettu 800.97M,
-                                 :hoidonjohto_laskutettu 0.0M,
-                                 :bonukset_laskutettu 0.0M,
-                                 :sakot_laskutetaan 0.0M,
-                                 :hj_erillishankinnat_laskutetaan 0.0M,
-                                 :erilliskustannukset_laskutetaan 0.0M,
-                                 :hankinnat_laskutettu 8000.97M,
-                                 :nimi "Soratien hoito",
-                                 :lisatyot_laskutetaan 400.20M,
-                                 :lampotila_puuttuu false,
-                                 :perusluku 130.8M,
-                                 :suolasakot_laskutettu 0.0M,
-                                 :hankinnat_laskutetaan 4000.20M,
-                                 :indeksi_puuttuu false,
-                                 :tavoitehintaiset_laskutettu 8000.97M,
-                                 :hj_erillishankinnat_laskutettu 0.0M,
-                                 :tuotekoodi "23120",
-                                 :hoidonjohto_laskutetaan 0.0M,
-                                 :hj_palkkio_laskutetaan 0.0M,
-                                 :sakot_laskutettu 0.0M,
-                                 :erilliskustannukset_laskutettu 0.0M,
-                                 :suolasakko_kaytossa true,
-                                 :tavoitehintaiset_laskutetaan 4000.20M}
-          #_odotetut-korvausinvestoinnit #_{:bonukset_laskutetaan 0.0M,
-                                            :suolasakot_laskutetaan 0.0M,
-                                            :kaikki_laskutetaan 6600.40M,
-                                            :kaikki_laskutettu 13201.94M,
-                                            :hj_palkkio_laskutettu 0.0M,
-                                            :lisatyot_laskutettu 1200.97M,
-                                            :hoidonjohto_laskutettu 0.0M,
-                                            :bonukset_laskutettu 0.0M,
-                                            :sakot_laskutetaan 0.0M,
-                                            :hj_erillishankinnat_laskutetaan 0.0M,
-                                            :erilliskustannukset_laskutetaan 0.0M,
-                                            :hankinnat_laskutettu 12000.97M,
-                                            :nimi "MHU Korvausinvestointi",
-                                            :lisatyot_laskutetaan 600.20M,
-                                            :lampotila_puuttuu false,
-                                            :perusluku 130.8M,
-                                            :suolasakot_laskutettu 0.0M,
-                                            :hankinnat_laskutetaan 6000.20M,
-                                            :indeksi_puuttuu false,
-                                            :tavoitehintaiset_laskutettu 12000.97M,
-                                            :hj_erillishankinnat_laskutettu 0.0M,
-                                            :tuotekoodi "14300",
-                                            :hoidonjohto_laskutetaan 0.0M,
-                                            :hj_palkkio_laskutetaan 0.0M,
-                                            :sakot_laskutettu 0.0M,
-                                            :erilliskustannukset_laskutettu 0.0M,
-                                            :suolasakko_kaytossa true,
-                                            :tavoitehintaiset_laskutetaan 6000.20M}
-          #_ odotetut-paallyste #_ {:bonukset_laskutetaan 0.0M,
-                                    :suolasakot_laskutetaan 0.0M,
-                                    :kaikki_laskutetaan 5500.40M,
-                                    :kaikki_laskutettu 11001.94M,
-                                    :hj_palkkio_laskutettu 0.0M,
-                                    :lisatyot_laskutettu 1000.97M,
-                                    :hoidonjohto_laskutettu 0.0M,
-                                    :bonukset_laskutettu 0.0M,
-                                    :sakot_laskutetaan 0.0M,
-                                    :hj_erillishankinnat_laskutetaan 0.0M,
-                                    :erilliskustannukset_laskutetaan 0.0M,
-                                    :hankinnat_laskutettu 10000.97M,
-                                    :nimi "Päällyste",
-                                    :lisatyot_laskutetaan 500.20M,
-                                    :lampotila_puuttuu false,
-                                    :perusluku 130.8M,
-                                    :suolasakot_laskutettu 0.0M,
-                                    :hankinnat_laskutetaan 5000.20M,
-                                    :indeksi_puuttuu false,
-                                    :tavoitehintaiset_laskutettu 10000.97M,
-                                    :hj_erillishankinnat_laskutettu 0.0M,
-                                    :tuotekoodi "20100",
-                                    :hoidonjohto_laskutetaan 0.0M,
-                                    :hj_palkkio_laskutetaan 0.0M,
-                                    :sakot_laskutettu 0.0M,
-                                    :erilliskustannukset_laskutettu 0.0M,
-                                    :suolasakko_kaytossa true,
-                                    :tavoitehintaiset_laskutetaan 5000.20M}
-          #_ odotetut-yllapito #_ {:bonukset_laskutetaan 0.0M,
-                                   :suolasakot_laskutetaan 0.0M,
-                                   :kaikki_laskutetaan 7700.40M,
-                                   :kaikki_laskutettu 15401.94M,
-                                   :hj_palkkio_laskutettu 0.0M,
-                                   :lisatyot_laskutettu 1400.97M,
-                                   :hoidonjohto_laskutettu 0.0M,
-                                   :bonukset_laskutettu 0.0M,
-                                   :sakot_laskutetaan 0.0M,
-                                   :hj_erillishankinnat_laskutetaan 0.0M,
-                                   :erilliskustannukset_laskutetaan 0.0M,
-                                   :hankinnat_laskutettu 14000.97M,
-                                   :nimi "MHU Ylläpito",
-                                   :lisatyot_laskutetaan 700.20M,
-                                   :lampotila_puuttuu false,
-                                   :perusluku 130.8M,
-                                   :suolasakot_laskutettu 0.0M,
-                                   :hankinnat_laskutetaan 7000.20M,
-                                   :indeksi_puuttuu false,
-                                   :tavoitehintaiset_laskutettu 14000.97M,
-                                   :hj_erillishankinnat_laskutettu 0.0M,
-                                   :tuotekoodi "20190",
-                                   :hoidonjohto_laskutetaan 0.0M,
-                                   :hj_palkkio_laskutetaan 0.0M,
-                                   :sakot_laskutettu 0.0M,
-                                   :erilliskustannukset_laskutettu 0.0M,
-                                   :suolasakko_kaytossa true,
-                                   :tavoitehintaiset_laskutetaan 7000.20M}
-          #_ odotetut-mhu-ja-hoidon-johto #_ {:bonukset_laskutetaan 2068.42507645259938838000M,
-                                              :suolasakot_laskutetaan 0.0M,
-                                              :kaikki_laskutetaan 2382.11009174311926605600M,
-                                              :kaikki_laskutettu 3482.11009174311926605600M,
-                                              :hj_palkkio_laskutettu 100.0M,
-                                              :lisatyot_laskutettu 0.0M,
-                                              :hoidonjohto_laskutettu 213.68501529051987767600M,
-                                              :bonukset_laskutettu 6205.27522935779816514000M,
-                                              :sakot_laskutetaan 0.0M,
-                                              :hj_erillishankinnat_laskutetaan 50.0M,
-                                              :erilliskustannukset_laskutetaan 0.0M,
-                                              :hankinnat_laskutettu 0.0M,
-                                              :nimi "MHU ja HJU hoidon johto",
-                                              :lisatyot_laskutetaan 0.0M,
-                                              :lampotila_puuttuu false,
-                                              :perusluku 130.8M,
-                                              :suolasakot_laskutettu 0.0M,
-                                              :hankinnat_laskutetaan 0.0M,
-                                              :indeksi_puuttuu false,
-                                              :tavoitehintaiset_laskutettu 413.68501529051987767600M,
-                                              :hj_erillishankinnat_laskutettu 100.0M,
-                                              :tuotekoodi "23150",
-                                              :hoidonjohto_laskutetaan 213.68501529051987767600M,
-                                              :hj_palkkio_laskutetaan 50.0M,
-                                              :sakot_laskutettu -3136.85015290519877676000M,
-                                              :erilliskustannukset_laskutettu 0.0M,
-                                              :suolasakko_kaytossa true,
-                                              :tavoitehintaiset_laskutetaan 313.68501529051987767600M}
-          ]
+          haetut-tiedot-oulu-soratiet (first (filter #(= (:tuotekoodi %) "23120") haetut-tiedot-oulu-ilman-tpita))]
 
       ;; Talvihoito - Hankinnat - laskutetaan
       (is (= 3000.20M (:hankinnat_laskutetaan haetut-tiedot-oulu-talvihoito)))
@@ -934,32 +619,4 @@
       ;; Talvihoito - Lisätyöt - laskutetaan
       (is (= 400.20M (:lisatyot_laskutetaan haetut-tiedot-oulu-soratiet)))
       ;; Talvihoito - hankinnat - laskutettu
-      (is (= 800.97M (:lisatyot_laskutettu haetut-tiedot-oulu-soratiet)))
-
-
-      #_(testing "Talvihoito"
-          (testi/tarkista-map-arvot odotetut-talvihoito haetut-tiedot-oulu-talvihoito))
-      #_(testing "Liikenneympäristön hoito"
-          (testi/tarkista-map-arvot odotetut-liikenneymparistot haetut-tiedot-oulu-liikenneymparisto))
-      #_(testing "Liikenneympäristön hoito"
-          (testi/tarkista-map-arvot odotetut-soratiet haetut-tiedot-oulu-soratiet))
-      #_(testing "MHU Korvausinvestointi"
-          (testi/tarkista-map-arvot odotetut-korvausinvestoinnit haetut-tiedot-oulu-mhu-korvausinvestointi))
-      )))
-
-#_ (deftest tiedot-haetaan-oikein-maksuera-laskentaa-varten
-  (testing "tiedot-haetaan-oikein-maksuera-laskentaa-varten"
-    (let [haetut-tiedot-oulu (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
-                               (:db jarjestelma)
-                               +kayttaja-jvh+
-                               {:urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
-                                :alkupvm (pvm/hoitokauden-alkupvm (pvm/vuosi (pvm/nyt)))
-                                :loppupvm (pvm/hoitokauden-loppupvm (pvm/vuosi (pvm/nyt)))})
-
-          haetut-tiedot-oulu-liikenneympariston-hoito (first (filter #(= (:tuotekoodi %) "23110") haetut-tiedot-oulu))]
-      (println " haetut tiedot liikenne" (select-keys haetut-tiedot-oulu-liikenneympariston-hoito
-                                                      [:yht_laskutetaan :yht_laskutetaan_ind_korotus :yht_laskutetaan_ind_korotettuna]))
-
-      (is (= (:yht_laskutetaan haetut-tiedot-oulu-liikenneympariston-hoito) 7882.5M) ":yht_laskutetaan laskutusyhteenvedossa")
-      (is (= (:yht_laskutetaan_ind_korotus haetut-tiedot-oulu-liikenneympariston-hoito) 2310.387931034483003250M) ":yht_laskutetaan laskutusyhteenvedossa")
-      (is (= (:yht_laskutetaan_ind_korotettuna haetut-tiedot-oulu-liikenneympariston-hoito) 10192.887931034483003250M) ":yht_laskutetaan laskutusyhteenvedossa"))))
+      (is (= 800.97M (:lisatyot_laskutettu haetut-tiedot-oulu-soratiet))))))

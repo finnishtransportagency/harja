@@ -1,35 +1,3 @@
--- name: hae-urakan-toteumat
--- Listaa kaikki urakan toteumat
-SELECT
-  t.id,
-  t.alkanut,
-  t.paattynyt,
-  t.tyyppi,
-  t.suorittajan_nimi,
-  t.suorittajan_ytunnus,
-  t.lisatieto,
-  t.luoja       AS luoja_id,
-  o.nimi        AS organisaatio,
-  k.kayttajanimi,
-  k.jarjestelma AS jarjestelman_lisaama,
-  (SELECT array_agg(concat(tt.id, '^', tpk.id, '^', tpk.nimi, '^', tt.maara))
-   FROM toteuma_tehtava tt
-     LEFT JOIN tehtava tpk ON tt.toimenpidekoodi = tpk.id
-   WHERE tt.toteuma = t.id
-         AND tt.poistettu IS NOT TRUE)
-                AS tehtavat
-FROM toteuma t
-  LEFT JOIN kayttaja k ON k.id = t.luoja
-  LEFT JOIN organisaatio o ON o.id = k.organisaatio
-WHERE
-  t.urakka = :urakka
-  AND t.sopimus = :sopimus
-  AND t.alkanut >= :alkupvm
-  AND t.alkanut <= :loppupvm
-  AND t.tyyppi = :tyyppi :: toteumatyyppi
-  AND t.poistettu IS NOT TRUE
-GROUP BY t.id, t.alkanut, t.paattynyt, t.tyyppi, o.nimi, k.kayttajanimi, k.jarjestelma;
-
 -- name: hae-urakan-toteuma
 -- Listaa urakan toteuman id:llä
 SELECT
@@ -330,7 +298,8 @@ SET alkanut           = :alkanut,
   poistettu           = FALSE,
   tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
-  tyokoneen_lisatieto = :tyokoneen-lisatieto
+  tyokoneen_lisatieto = :tyokoneen-lisatieto,
+  lahde               = :lahde::lahde
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
@@ -348,7 +317,12 @@ VALUES (:urakka, :sopimus, :alkanut, :paattynyt, :tyyppi :: toteumatyyppi, NOW()
 
 -- name: poista-toteuma!
 UPDATE toteuma
-SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE, json_hash = NULL
+WHERE id IN (:id) AND poistettu IS NOT TRUE;
+
+-- name: paivita-toteuman-muokattu!
+UPDATE toteuma
+SET muokattu = NOW(), muokkaaja = :kayttaja
 WHERE id IN (:id) AND poistettu IS NOT TRUE;
 
 -- name: poista-toteuma-tehtava!
@@ -358,24 +332,31 @@ SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
 
 -- name: poista-toteumat-ulkoisilla-idlla-ja-luojalla!
 UPDATE toteuma
-SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE
+SET muokattu = NOW(), muokkaaja = :kayttaja-id, poistettu = TRUE, json_hash = NULL
 WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
 
--- name: hae-poistettavien-toteumien-alkanut-ulkoisella-idlla
-SELECT alkanut
-  FROM toteuma t
- WHERE ulkoinen_id IN (:ulkoiset-idt) AND urakka = :urakka-id AND poistettu IS NOT TRUE;
+-- name: hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
+SELECT alkanut,
+       MIN(alkanut) OVER () AS min_alkanut,
+       MAX(alkanut) OVER () AS max_alkanut
+  FROM (
+        SELECT DISTINCT alkanut::DATE AS alkanut
+          FROM toteuma t
+         WHERE ulkoinen_id IN (:ulkoiset-idt)
+           AND urakka = :urakka-id
+           AND poistettu IS NOT TRUE
+       ) poistettavien_paivat;
 
 -- name: luo-tehtava<!
 -- Luo uuden tehtävän toteumalle
 INSERT
 INTO toteuma_tehtava
-(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi, urakka_id)
+(toteuma, toimenpidekoodi, maara, luotu, luoja, poistettu, paivan_hinta, indeksi, urakka_id, hoitokauden_alkuvuosi)
 VALUES (:toteuma, :toimenpidekoodi, :maara, NOW(), :kayttaja, FALSE, :paivanhinta,
         (CASE WHEN :paivanhinta :: NUMERIC IS NULL
           THEN TRUE
          ELSE FALSE
-         END), :urakka_id);
+         END), :urakka_id, :hoitokauden_alkuvuosi);
 
 -- name: poista-toteuman-tehtavat!
 UPDATE toteuma_tehtava
@@ -434,6 +415,8 @@ WHERE e.urakka = :urakka
 -- Ryhmittele ja summaa tiedot toimenpidekoodin eli tehtävän perusteella. Suunnitellut toteumat
 -- haetaan erikseen ja ilman suunnittelua olevat toteumat erikseen, käyttäen unionia.
 -- Haetaan tarpeeksi tietoa, jotta tehtävän sisältämät erilliset toteumat voidaan hakea erikseen.
+-- Urakoitsijajärjestelmästä kirjatut tehtävään liittyvät määrät otetaan mukaan vain, jos tehtava-taulussa
+-- on niin sarakkeessa "laske-api-maara-mukaan?" määritelty. Käsin kirjatut määrät lasketaan mukaan aina.
 WITH osa_toteumat AS
          (SELECT tt.toimenpidekoodi  AS toimenpidekoodi,
                  SUM(tt.maara)       AS maara,
@@ -441,38 +424,44 @@ WITH osa_toteumat AS
                  :urakka             AS urakka,     -- Hakuehtojen perusteella tiedetään urakka, joten käytetään sitä
                  MAX(t.id)           AS toteuma_id, -- Kaikilla on sama toimenpidekoodi, joten on sama mitä toteumaa tietojen yhdistämisessä käytetään
                  MAX(tt.id)          AS toteuma_tehtava_id,
-                 MAX(t.tyyppi::TEXT) AS tyyppi      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
+                 MAX(t.tyyppi::TEXT) AS tyyppi,      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
+                 k.jarjestelma       AS urakoitsijajarjestelmasta -- Joidenkin tehtävien urakoitsijajärjestelmästä tulleita kirjauksia ei oteta mukaan yhteissummaan
           FROM toteuma t
-                   JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
+                   JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                   JOIN kayttaja k ON tt.luoja = k.id -- Tallentajan tieto tarvitaan, että tiedetään tuliko määrä järjestelmästä vai kirjattiinko se käsin
                    LEFT JOIN toteuma_materiaali tm
-                             ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
+                             ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           WHERE t.urakka = :urakka
             AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
             AND t.poistettu = FALSE
-          GROUP BY tt.toimenpidekoodi)
+          GROUP BY tt.toimenpidekoodi, k.jarjestelma)
 SELECT tk.id                                     AS toimenpidekoodi_id,
        o.otsikko                                 AS toimenpide,
        tk.nimi                                   AS tehtava,
        SUM(ot.maara)                             AS maara,
        SUM(ot.materiaalimaara)                   AS materiaalimaara,
-       SUM(ut.maara)                             AS suunniteltu_maara,
+       SUM(ut.laskettu_maara)                    AS suunniteltu_maara,
        tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
        tk.suunnitteluyksikko                     AS yk,
        CASE
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END          AS tyyppi
-
 FROM tehtava tk
-     -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
-     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara ut ON ut.urakka = :urakka AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
-                    AND ut.poistettu IS NOT TRUE AND tk.id = ut.tehtava
-     LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
-     JOIN urakka u on u.id = :urakka
+         -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+         JOIN tehtavaryhmaotsikko o
+              ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+         LEFT JOIN urakka_tehtavamaara_yhteenveto ut
+                   ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                       AND tk.id = ut.tehtava
+         LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi AND
+    -- Rajataan pois urakoitsijajärjestelmästä tuodut toteumamäärät, jos tehtävän määrittely niin vaatii
+                                      ((ot.urakoitsijajarjestelmasta IS FALSE OR ot.urakoitsijajarjestelmasta IS NULL) OR
+                                       (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
+         JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-      (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
   AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
@@ -493,6 +482,7 @@ ORDER BY o.otsikko asc, tk.nimi asc;
 -- Summataan järjestelmän kautta lisätyt toteumat yhdelle riville, koska niitä tulee kymmeniätuhansia
 -- yhden hoitokauden aikana ja mikään käyttöliittymä ei pysty niitä näyttämään järkevästi.
 -- Käsin lisätyt toteumat sen sijaan listataan yksitellen.
+-- Jos tehtävätaulussa on niin määritelty, ei järjestelmästä kirjattuja toteumia oteta ollenkaan mukaan.
 SELECT 0 as id,
        now() as alkanut,
        sum(tt.maara) as maara,
@@ -502,7 +492,7 @@ SELECT 0 as id,
 FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
      LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
-     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
+     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id AND tk."laske-api-maara-mukaan?" IS NOT FALSE
      JOIN kayttaja k ON k.id = t.luoja AND k.jarjestelma = true
 WHERE t.urakka = :urakka
   AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE
@@ -610,13 +600,31 @@ RETURNING *;
 -- name: paivita-toteuman-tehtava!
 -- Päivittää toteuman tehtävän id:llä.
 UPDATE toteuma_tehtava
-SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
-  paivan_hinta      = :paivanhinta,
-  indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
-    THEN TRUE
-                       ELSE FALSE
-                       END)
-WHERE id = :id;
+   SET toimenpidekoodi = :toimenpidekoodi, maara = :maara, poistettu = :poistettu,
+       paivan_hinta      = :paivanhinta,
+       indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+                             THEN TRUE
+                             ELSE FALSE
+                             END),
+       hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+ WHERE id = :id;
+
+-- name: paivita-koko-toteuman-tehtava!
+-- Päivittää toteuman tehtävän id:llä.
+UPDATE toteuma_tehtava
+   SET toimenpidekoodi = :toimenpidekoodi,
+       lisatieto = :lisatieto,
+       maara = :maara,
+       poistettu = :poistettu,
+       paivan_hinta      = :paivanhinta,
+       indeksi           = (CASE WHEN :paivanhinta :: NUMERIC IS NULL
+                                  THEN TRUE
+                              ELSE FALSE
+                            END),
+       hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi,
+       muokkaaja = :muokkaaja,
+       muokattu = NOW()
+ WHERE id = :tehtavaid;
 
 -- name: poista-toteuman-tehtava!
 -- Poistaa toteuman tehtävän
@@ -666,7 +674,7 @@ WHERE
 -- single?: true
 SELECT EXISTS(SELECT * FROM materiaalikoodi WHERE nimi = ANY(ARRAY_REMOVE(ARRAY[:materiaalit]::TEXT[], null))
     AND materiaalityyppi IN ('talvisuola', 'formiaatti'))
-OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Suolaus');
+OR EXISTS(SELECT * FROM tehtava WHERE id = ANY(ARRAY_REMOVE(ARRAY[:tehtavat]::INT[], null)) AND nimi = 'Liukkaudentorjunta suolaamalla (materiaali)');
 
 -- name: hae-pisteen-hoitoluokat
 -- Talvihoitoluokilta estetään hoitoluokat 9, 10 ja 11, jotka ovat kevyen liikenteen väyliä, koska
@@ -682,27 +690,28 @@ SELECT hoitoluokka_pisteelle(ST_MakePoint(:x, :y) :: GEOMETRY,
 -- name: luo-toteuma_tehtava<!
 -- Luo uuden toteuman tehtävän
 INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, luoja, paivan_hinta,
-                             lisatieto, indeksi, urakka_id)
+                             lisatieto, indeksi, urakka_id, hoitokauden_alkuvuosi)
 VALUES (:toteuma, NOW(), :toimenpidekoodi, :maara, :luoja, :paivan_hinta, :lisatieto,
         (CASE WHEN :paivan_hinta :: NUMERIC IS NULL
           THEN TRUE
          ELSE FALSE
-         END), :urakka_id);
+         END), :urakka_id, :hoitokauden_alkuvuosi);
 
 -- name: poista-toteuma_tehtava-toteuma-idlla!
 -- Poistaa toteuman kaikki tehtävät
 DELETE FROM toteuma_tehtava
 WHERE toteuma = :id;
 
--- name: luo-toteuma-materiaali<!
--- Luo uuden toteuman materiaalin
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, luoja, urakka_id)
-VALUES (:toteuma, NOW(), :materiaalikoodi, :maara, :luoja, :urakka);
-
 -- name: poista-toteuma-materiaali-toteuma-idlla!
 -- Poistaa toteuman materiaalit
 DELETE FROM toteuma_materiaali
 WHERE toteuma = :id;
+
+-- name: merkitse-toteuman-materiaalit-poistetuiksi!
+-- Merkitsee toteuman materiaalit poistetuiksi
+UPDATE toteuma_materiaali
+SET muokattu = NOW(), muokkaaja = :kayttaja, poistettu = TRUE
+WHERE toteuma = :id AND poistettu IS NOT TRUE;
 
 -- name: paivita-varustetoteuman-tr-osoite!
 -- Kysely piti katkaista kahtia, koska Yesql <0.5 tukee parametreja max 20
@@ -969,18 +978,6 @@ SELECT
   reitti
 FROM toteuma
 WHERE id = :id;
-
--- name: paivita-toteuma-materiaali!
--- Päivittää toteuma materiaalin tiedot
-UPDATE toteuma_materiaali
-SET materiaalikoodi = :materiaali,
-  maara             = :maara,
-  muokkaaja         = :kayttaja,
-  muokattu          = now()
-WHERE id = :tmid
-      AND toteuma IN (SELECT id
-                      FROM toteuma t
-                      WHERE t.urakka = :urakka);
 
 -- name: hae-urakan-varustetoteumat
 SELECT
@@ -1256,6 +1253,13 @@ SELECT alkanut
   FROM toteuma
  WHERE id = :id;
 
+-- name: hae-toteuman-perustiedot-ulkoisella-idlla
+SELECT id, urakka, sopimus, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, lisatieto,
+       tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+       tyyppi, luotu, luoja, muokattu, muokkaaja
+  FROM toteuma
+ WHERE ulkoinen_id = :ulkoinen_id;
+
 -- name: hae-reittitoteumat-analytiikalle
 SELECT t.toteuma_tunniste_id,
        t.toteuma_sopimus_id,
@@ -1296,6 +1300,37 @@ group by toteuma_tunniste_id
 ORDER BY t.toteuma_alkanut ASC
 LIMIT 100000;
 
+-- name: hae-toteumat-ilman-reittipisteita-analytiikalle
+SELECT COUNT(*) OVER() AS rivimaara, -- Ei tee full table scannia, laskee fetchin mukana
+       t.toteuma_tunniste_id,  
+       t.toteuma_sopimus_id,  
+       t.toteuma_alkanut,  
+       t.toteuma_paattynyt,  
+       t.toteuma_alueurakkanumero,  
+       t.toteuma_suorittaja_ytunnus,  
+       t.toteuma_suorittaja_nimi,  
+       t.toteuma_toteumatyyppi,  
+       t.toteuma_lisatieto,  
+       t.toteumatehtavat,  
+       t.toteumamateriaalit,  
+       t.toteuma_tiesijainti_numero,  
+       t.toteuma_tiesijainti_aosa,  
+       t.toteuma_tiesijainti_aet,  
+       t.toteuma_tiesijainti_losa,  
+       t.toteuma_tiesijainti_let,  
+       t.toteuma_muutostiedot_luotu,  
+       t.toteuma_muutostiedot_luoja,  
+       t.toteuma_muutostiedot_muokattu,  
+       t.toteuma_muutostiedot_muokkaaja,  
+       t.tyokone_tyokonetyyppi,  
+       t.tyokone_tunnus,  
+       t.urakkaid,  
+       t.poistettu  
+FROM analytiikka_toteumat t  
+WHERE ((t.toteuma_muutostiedot_muokattu IS NOT NULL AND t.toteuma_muutostiedot_muokattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP)  
+    OR (t.toteuma_muutostiedot_muokattu IS NULL AND t.toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP))  
+ORDER BY t.toteuma_alkanut ASC; 
+
 -- name: paivita-palautettu-analytiikalle-aikaleima!
 UPDATE analytiikka_toteumat
 SET palautettu_analytiikalle = CURRENT_TIMESTAMP
@@ -1303,7 +1338,7 @@ WHERE ((toteuma_muutostiedot_muokattu IS NOT NULL AND toteuma_muutostiedot_muoka
     OR (toteuma_muutostiedot_muokattu IS NULL AND toteuma_muutostiedot_luotu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP));
 
 -- name: siirra-toteumat-analytiikalle
-select siirra_toteumat_analytiikalle(:nyt::TIMESTAMP WITH TIME ZONE);
+select siirra_toteumat_analytiikalle(:alkuaika::TIMESTAMP WITH TIME ZONE, :loppuaika::TIMESTAMP WITH TIME ZONE);
 
 -- name: lisaa-toteumalle-jsonhash!
 UPDATE toteuma SET json_hash = :hash WHERE id = :id;

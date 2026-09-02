@@ -91,7 +91,7 @@
             (when data-cy
               {:data-cy data-cy}))
 
-          (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader] ikoni) (when ikoni (str " ")) teksti]
+          (if (and @kysely-kaynnissa? ikoni) [y/ajax-loader nil {:luokka (:ajax-luokka asetukset)}] ikoni) (when ikoni (str " ")) teksti]
          (when (and @nayta-virheviesti? asetukset-nayta-virheviesti?)
            (case virheen-esitystapa
              :flash (do
@@ -114,13 +114,14 @@
    title                      Nappiin liitettävä title-teksti (tooltip)
    style                      Nappiin liitettävä style
    tallennus-kaynnissa?       Jos true, piirretään ajax-loader.
+   data-cy                   data-cy tunniste helpompaan e2e testaukseen.
 
    Näitä käytetään alemmissa tarkemmin määritellyissä napeissa alla
    vayla-tyyli?               Käyttää tuoreempaa Väylä-tyyliä
    teksti-nappi?              Tekstimuotoinen ei borderia tai taustaa -nappi"
   ([teksti toiminto] (nappi teksti toiminto {}))
   ([teksti toiminto {:keys [disabled luokka ikoni tallennus-kaynnissa? data-attributes
-                            sticky? ikoninappi? title style ikoni-oikealle? aria-label] :as optiot}]
+                            sticky? ikoninappi? title style ikoni-oikealle? aria-label data-cy] :as optiot}]
    (let [naulattu? (atom false)
          disabled? (atom disabled)
          napin-etaisyys-ylareunaan (atom nil)
@@ -159,6 +160,7 @@
              :tab-index tabindex
              :aria-label (or aria-label
                            teksti)
+             :data-cy data-cy
              :disabled  disabled
              :style     style
              :title     title

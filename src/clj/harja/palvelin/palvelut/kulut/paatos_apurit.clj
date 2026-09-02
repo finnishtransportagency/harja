@@ -58,6 +58,9 @@
                    :summa (:lupaussanktio paatos),
                    :toimenpideinstanssi toimenpideinstanssi-id,
                    :perintapvm kohdistuspvm
+                   :maarattypvm kohdistuspvm
+                   :kasittelytapa :valikatselmus
+                   :maaraystapa "valikatselmus"
                    ;; Lupaussanktion tyyppiä ei tarvitse valita
                    :tyyppi lupaussanktiotyyppi
                    :indeksi indeksi}
@@ -156,7 +159,9 @@
                         :lisatyon-lisatieto lisatiedot
                         :rahavarausid nil
                         :tavoitehintainen tavoitehintainen?
-                        :tyyppi "paatos"}
+                        :tyyppi "paatos"
+                        :muu-tehtava-kaytossa true          ;; Välikatselmuksen päätöksissä käytetään aina muuta tehtävää, kohdistukset menevät tehtäväryhmän mukaan
+                        }
          _ (kulut-q/luo-kulun-kohdistus<! db kulukohdistus)]
      uusi-kulu-id)))
 

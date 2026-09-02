@@ -39,7 +39,7 @@
       (let [rajoitusalueet (:rajoitusalueet app)
             valittu-rajoitusalue (some #(when (= rajoitusalue-id (:rajoitusalue_id %)) %) rajoitusalueet)
             valittu-paivarivi (some #(when (= rivi-id (:rivi-id %)) %) (:suolasummat valittu-rajoitusalue))
-            toteumat (:paivatoteumat valittu-paivarivi) #_ (get @tiedot/urakan-rajoitusalueiden-toteumat yhteenveto-id)]
+            toteumat (:paivatoteumat valittu-paivarivi) #_(get @tiedot/urakan-rajoitusalueiden-toteumat yhteenveto-id)]
         [grid/grid {:tunniste :id ; Toteuma id
                     :piilota-muokkaus? true
                     ;; Estetään dynaamisesti muuttuva "tiivis gridin" tyyli, jotta siniset viivat eivät mene vääriin kohtiin,
@@ -151,7 +151,7 @@
                                                         (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi)))))))
     (fn [e! app]
       [:div.pohjavesialueiden-suola
-       [:h2 "Rajoitusalueiden suolatoteumat"]
+       [:h1 "Rajoitusalueiden suolatoteumat"]
 
        ;; Aikavälivalinta ja muut kontrollit
        [:div.taulukon-kontrollit
@@ -174,7 +174,7 @@
 
        ;; TODO: Kartta
        #_[kartta]
-       #_ [debug/debug app]
+       #_[debug/debug app]
        ;; Rajoitusalueiden taulukko
        [taulukko-rajoitusalueet e! app]])))
 

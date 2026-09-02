@@ -63,8 +63,9 @@
                     "properties": {
                       "luotu": {"type": "string", "format": "date-time"},
                       "luoja": {"type": "string"},
-                      "muokattu": {"type": "string", "format": "date-time"},
-                      "muokkaaja": {"type": "string"}
+                      "muokattu": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]},
+                      "muokkaaja": {"type": "string"},
+                      "poistettu": {"type": "boolean"}
                     },
                     "additionalProperties": false
                   }
@@ -155,7 +156,7 @@
         "tehtava-rivi-id": {"type": ["integer", "null"]},
         "tehtava-poistettu": {"type": "boolean"},
         "tehtava-luotu":  {"type": "string","format": "date-time"},
-        "tehtava-muokattu":  {"type": "string","format": "date-time"}
+        "tehtava-muokattu":  {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]}
       },
       "additionalProperties": true
     },
@@ -168,7 +169,7 @@
         "materiaali-rivi-id": {"type": ["integer", "null"]},
         "materiaali-poistettu": {"type": "boolean"},
         "materiaali-luotu":  {"type": "string","format": "date-time"},
-        "materiaali-muokattu":  {"type": "string","format": "date-time"}
+        "materiaali-muokattu": {"anyOf": [{"type": "string", "format": "date-time"}, {"type": "null"}]}
       },
       "additionalProperties": true
     }

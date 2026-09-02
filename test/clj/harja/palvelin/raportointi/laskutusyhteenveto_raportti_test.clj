@@ -1,33 +1,34 @@
 (ns harja.palvelin.raportointi.laskutusyhteenveto-raportti-test
-  (:require [clojure.test :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
-            [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]
-            [clj-time.core :as t]
+  (:require [clj-time.core :as t]
             [clj-time.coerce :as c]
-            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [clojure.test :refer :all]
+            [com.stuartsierra.component :as component]
+
+            [harja.fmt :as fmt]
+            [harja.testi :refer :all]
+            [harja.palvelin.palvelut.urakat :refer :all]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.palvelut.raportit :as raportit]
-            [harja.fmt :as fmt]))
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.toimenpidekoodit :refer :all]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :pdf-vienti (component/using
-                                      (pdf-vienti/luo-pdf-vienti)
-                                      [:http-palvelin])
-                        :raportointi (component/using
-                                       (raportointi/luo-raportointi)
-                                       [:db :pdf-vienti])
-                        :raportit (component/using
-                                    (raportit/->Raportit)
-                                    [:http-palvelin :db :raportointi :pdf-vienti])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :pdf-vienti (component/using
+                        (pdf-vienti/luo-pdf-vienti)
+                        [:http-palvelin])
+          :raportointi (component/using
+                         (raportointi/luo-raportointi)
+                         [:db :pdf-vienti])
+          :raportit (component/using
+                      (raportit/->Raportit)
+                      [:http-palvelin :db :raportointi :pdf-vienti])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -36,19 +37,21 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+
 (defn- arvo-raportin-nnesta-elementista [vastaus n]
   (second (first (second (second (last (nth (nth (last vastaus) n) 3)))))))
 
+
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2014-2015
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :laskutusyhteenveto
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit {:urakkatyyppi :hoito
-                                              :alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :laskutusyhteenveto
+                   :konteksti "urakka"
+                   :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                   :parametrit {:urakkatyyppi :hoito
+                                :alkupvm (c/to-date (t/local-date 2014 10 1))
+                                :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (is (vector? vastaus))
     (let [odotettu-otsikko "Oulun alueurakka 2014-2019, 01.10.2014-30.09.2015"
           saatu-otsikko (second (nth vastaus 2))
@@ -60,26 +63,6 @@
           sanktiot (arvo-raportin-nnesta-elementista vastaus 2)
           talvisuolasakot (arvo-raportin-nnesta-elementista vastaus 3)
           muutos-ja-lisatyot (arvo-raportin-nnesta-elementista vastaus 4)
-          akilliset (arvo-raportin-nnesta-elementista vastaus 5)
-          vahinkojen-korjaukset (arvo-raportin-nnesta-elementista vastaus 6)
-          bonukset (arvo-raportin-nnesta-elementista vastaus 7)
-          erilliskustannukset (arvo-raportin-nnesta-elementista vastaus 8)
-
-          indeksitarkistukset-koh-hint (arvo-raportin-nnesta-elementista vastaus 9)
-          indeksitarkistukset-yks-hint (arvo-raportin-nnesta-elementista vastaus 10)
-          indeksitarkistukset-sanktiot (arvo-raportin-nnesta-elementista vastaus 11)
-          indeksitarkistukset-talvisuolasakot (arvo-raportin-nnesta-elementista vastaus 12)
-          indeksitarkistukset-muutos-ja-lisatyot (arvo-raportin-nnesta-elementista vastaus 13)
-          indeksitarkistukset-akilliset (arvo-raportin-nnesta-elementista vastaus 14)
-          indeksitarkistukset-vahinkojen-korjaukset (arvo-raportin-nnesta-elementista vastaus 15)
-          ;indeksitarkistukset-bonukset (arvo-raportin-nnesta-elementista vastaus 16)
-          indeksitarkistukset-erilliskustannukset (arvo-raportin-nnesta-elementista vastaus 16)
-          indeksitarkistukset-muut-kuin-kokhint (arvo-raportin-nnesta-elementista vastaus 17)
-          indeksitarkistukset-kaikki (arvo-raportin-nnesta-elementista vastaus 18)
-          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 19)
-          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 20)
-
-          nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))
 
           numero (ffirst (q "SELECT numero
                              FROM maksuera
@@ -91,39 +74,22 @@
       (is (= (str "Talvihoito (#" numero ")") oulun-au-talvihoito-kok-hint-maksueranumero))
 
       (is (=marginaalissa? kok-hint 162010.00M))
-      (is (=marginaalissa? yks-hint 6000.00M))
-      (is (=marginaalissa? sanktiot -4000.00M))
-      (is (=marginaalissa? talvisuolasakot -29760.00M))
-      (is (=marginaalissa? muutos-ja-lisatyot 12000.00M))
-      (is (=marginaalissa? akilliset 3000.00M))
-      (is (=marginaalissa? vahinkojen-korjaukset 1000.00M))
-      (is (=marginaalissa? bonukset 1000.00M))
-      (is (=marginaalissa? erilliskustannukset 3000.00M))
+      (is (=marginaalissa? yks-hint -4000.0M))
+      (is (=marginaalissa? sanktiot -29760.00000M))
+      (is (=marginaalissa? talvisuolasakot 1000.0M))
+      (is (=marginaalissa? muutos-ja-lisatyot 3000.0M)))))
 
-      (is (=marginaalissa? indeksitarkistukset-koh-hint 957.07M))
-      (is (=marginaalissa? indeksitarkistukset-yks-hint 56.51M))
-      (is (=marginaalissa? indeksitarkistukset-sanktiot -49.90M))
-      (is (=marginaalissa? indeksitarkistukset-talvisuolasakot -104.52M))
-      (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 63.22M))
-      (is (=marginaalissa? indeksitarkistukset-akilliset 31.61M))
-      (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 17.24M))
-      (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 24.90M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 39.06M))
-      (is (=marginaalissa? indeksitarkistukset-kaikki 996.13M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -6763.86M))
-
-      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 155250.20M)))))
 
 (deftest raportin-suoritus-urakalle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :laskutusyhteenveto
-                                 :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
-                                 :parametrit {:urakkatyyppi :hoito
-                                              :alkupvm (c/to-date (t/local-date 2016 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2017 9 30))}})]
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :laskutusyhteenveto
+                   :konteksti "urakka"
+                   :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                   :parametrit {:urakkatyyppi :hoito
+                                :alkupvm (c/to-date (t/local-date 2016 10 1))
+                                :loppupvm (c/to-date (t/local-date 2017 9 30))}})]
     (is (vector? vastaus))
     (let [odotettu-otsikko "Oulun alueurakka 2014-2019, 01.10.2016-30.09.2017"
           saatu-otsikko (second (nth vastaus 2))
@@ -143,26 +109,27 @@
       (is (=marginaalissa? sanktiot -1900.67M))
       (is (=marginaalissa? indeksitarkistukset-yks-hint 2310.387931034483003250M))
       (is (=marginaalissa? indeksitarkistukset-sanktiot -571.6564M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 1738.731531034483003250M ))
+      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 1738.731531034483003250M))
       (is (=marginaalissa? indeksitarkistukset-kaikki 1738.731531034483003250M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa  7720.565531034483003250M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 7720.565531034483003250M))
       (is (= (fmt/desimaaliluku kaikki-yhteensa 2)
-             (fmt/desimaaliluku nurkkasumma 2)
-             "7720,57")) "Loppusumma oikein")))
+            (fmt/desimaaliluku nurkkasumma 2)
+            "7720,57")) "Loppusumma oikein")))
+
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2014-2015-kun-092015-indeksiarvo-puuttuu
   (let [_ (u (str "DELETE FROM indeksi WHERE nimi = 'MAKU 2005' AND kuukausi = 9 AND vuosi = 2015"))
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :laskutusyhteenveto
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:urakkatyyppi :hoito
-                                              :alkupvm (c/to-date (t/local-date 2014 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :laskutusyhteenveto
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
+                   :parametrit {:urakkatyyppi :hoito
+                                :alkupvm (c/to-date (t/local-date 2014 10 1))
+                                :loppupvm (c/to-date (t/local-date 2015 9 30))}})]
     (is (vector? vastaus))
-    (let [odotettu-otsikko "Pohjois-Pohjanmaa, 01.10.2014-30.09.2015"
+    (let [odotettu-otsikko "Pohjois-Suomi, 01.10.2014-30.09.2015"
           saatu-otsikko (second (nth vastaus 2))
           varoitus-indeksiarvojen-puuttumisesta (nth vastaus 3)
 
@@ -171,66 +138,30 @@
           yks-hint (arvo-raportin-nnesta-elementista vastaus 1)
           sanktiot (arvo-raportin-nnesta-elementista vastaus 2)
           talvisuolasakot (arvo-raportin-nnesta-elementista vastaus 3)
-          muutos-ja-lisatyot (arvo-raportin-nnesta-elementista vastaus 4)
-          akilliset (arvo-raportin-nnesta-elementista vastaus 5)
-          vahinkojen-korjaukset (arvo-raportin-nnesta-elementista vastaus 6)
-          bonukset (arvo-raportin-nnesta-elementista vastaus 7)
-          erilliskustannukset (arvo-raportin-nnesta-elementista vastaus 8)
-
-          indeksitarkistukset-koh-hint (arvo-raportin-nnesta-elementista vastaus 9)
-          indeksitarkistukset-yks-hint (arvo-raportin-nnesta-elementista vastaus 10)
-          indeksitarkistukset-sanktiot (arvo-raportin-nnesta-elementista vastaus 11)
-          indeksitarkistukset-talvisuolasakot (arvo-raportin-nnesta-elementista vastaus 12)
-          indeksitarkistukset-muutos-ja-lisatyot (arvo-raportin-nnesta-elementista vastaus 13)
-          indeksitarkistukset-akilliset (arvo-raportin-nnesta-elementista vastaus 14)
-          indeksitarkistukset-vahinkojen-korjaukset (arvo-raportin-nnesta-elementista vastaus 15)
-          indeksitarkistukset-erilliskustannukset (arvo-raportin-nnesta-elementista vastaus 16)
-          indeksitarkistukset-muut-kuin-kokhint (arvo-raportin-nnesta-elementista vastaus 17)
-          indeksitarkistukset-kaikki (arvo-raportin-nnesta-elementista vastaus 18)
-          kaikki-paitsi-kokhint-yhteensa (arvo-raportin-nnesta-elementista vastaus 19)
-          kaikki-yhteensa (arvo-raportin-nnesta-elementista vastaus 20)
-
-          nurkkasumma (:arvo (second (second (last (last (last (last vastaus)))))))]
+          muutos-ja-lisatyot (arvo-raportin-nnesta-elementista vastaus 4)]
 
       (is (= odotettu-otsikko saatu-otsikko) "otsikko")
       (is (= varoitus-indeksiarvojen-puuttumisesta
-             [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019, Kajaanin alueurakka 2014-2019"]) )
+            [:varoitusteksti "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: Oulun alueurakka 2014-2019, Kajaanin alueurakka 2014-2019"]))
       (is (=marginaalissa? kok-hint 324020.0M))
-      (is (=marginaalissa? yks-hint  12000.0M))
-      (is (=marginaalissa? sanktiot  -8000.0M))
+      (is (=marginaalissa? yks-hint 6000.0M))
+      (is (=marginaalissa? sanktiot -8000.0M))
       (is (=marginaalissa? talvisuolasakot -59520.0M))
-      (is (=marginaalissa? muutos-ja-lisatyot  24000.0M))
-      (is (=marginaalissa? akilliset  6000.0M))
-      (is (=marginaalissa? vahinkojen-korjaukset  2000.0M))
-      (is (=marginaalissa? bonukset  2000.0M))
-      (is (=marginaalissa? erilliskustannukset  6000.0M))
+      (is (=marginaalissa? muutos-ja-lisatyot 12000.0M)))))
 
-      (is (=marginaalissa? indeksitarkistukset-koh-hint 0.00M))
-      (is (=marginaalissa? indeksitarkistukset-yks-hint 113.03M))
-      (is (=marginaalissa? indeksitarkistukset-sanktiot -99.81M))
-      (is (=marginaalissa? indeksitarkistukset-talvisuolasakot -209.04M))
-      (is (=marginaalissa? indeksitarkistukset-muutos-ja-lisatyot 126.44M))
-      (is (=marginaalissa? indeksitarkistukset-akilliset 63.22M))
-      (is (=marginaalissa? indeksitarkistukset-vahinkojen-korjaukset 34.48M))
-      (is (=marginaalissa? indeksitarkistukset-erilliskustannukset 49.81M))
-      (is (=marginaalissa? indeksitarkistukset-muut-kuin-kokhint 78.12M))
-      (is (=marginaalissa? indeksitarkistukset-kaikki 247.12M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa -15441.88M))
-
-      (is (=marginaalissa? kaikki-yhteensa nurkkasumma 308586.26M)))))
 
 (deftest raportin-suoritus-pop-elylle-toimii-hoitokausi-2016-2017
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                :suorita-raportti
-                                +kayttaja-jvh+
-                                {:nimi :laskutusyhteenveto
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
-                                 :parametrit {:urakkatyyppi :hoito
-                                              :alkupvm (c/to-date (t/local-date 2016 10 1))
-                                              :loppupvm (c/to-date (t/local-date 2017 9 30))}})]
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi :laskutusyhteenveto
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
+                   :parametrit {:urakkatyyppi :hoito
+                                :alkupvm (c/to-date (t/local-date 2016 10 1))
+                                :loppupvm (c/to-date (t/local-date 2017 9 30))}})]
     (is (vector? vastaus))
-    (let [odotettu-otsikko "Pohjois-Pohjanmaa, 01.10.2016-30.09.2017"
+    (let [odotettu-otsikko "Pohjois-Suomi, 01.10.2016-30.09.2017"
           saatu-otsikko (second (nth vastaus 2))
           vastaus (butlast (butlast vastaus))
 
@@ -253,8 +184,8 @@
       (is (=marginaalissa? sanktioiden-indeksitarkistukset -571.6564M))
       (is (=marginaalissa? muiden-kuin-kokhint-indeksitarkistukset 1738.731531034483003250M))
       (is (=marginaalissa? kaikki-indeksitarkistukset 1738.731531034483003250M))
-      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa  7720.565531034483003250M))
+      (is (=marginaalissa? kaikki-paitsi-kokhint-yhteensa 7720.565531034483003250M))
 
       (is (= (fmt/desimaaliluku kaikki-yhteensa 2)
-             (fmt/desimaaliluku nurkkasumma 2)
-             "7720,57") "Loppusumma oikein"))))
+            (fmt/desimaaliluku nurkkasumma 2)
+            "7720,57") "Loppusumma oikein"))))

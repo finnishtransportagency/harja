@@ -41,7 +41,6 @@
         paikallinen-aikavali-atom (atom nil)
         urakka-id (-> @tila/yleiset :urakka :id)]
     [:div.laatupoikkeamat
-     [debug/debug app]
      ;; Wrapataan filtterit urakkavalinnat elementin sisään
      [valinnat/urakkavalinnat {:urakka urakka-id}
       ^{:key "urakkavalinnat"}
@@ -85,37 +84,40 @@
            (not oikeus?)
            [yleiset/tooltip {} :%
             (oikeudet/oikeuden-puute-kuvaus :kirjoitus
-                                            oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
+              oikeudet/urakat-laadunseuranta-laatupoikkeamat)]
            ^{:key "uusi-laatupoikkeama"}
-           [napit/uusi "Uusi laatupoikkeama"
-            #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
-            {:disabled (not oikeus?)}]))]]
+           [:div {:style {:padding-top "12px"}}
+            [napit/uusi "Uusi laatupoikkeama"
+             #(reset! laatupoikkeamat/valittu-laatupoikkeama-id :uusi)
+             {:disabled (not oikeus?)}]]))]]
 
-     [grid/grid
-      {:otsikko "Laatu\u00ADpoikkeamat" :rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))
-       :tyhja (if (nil? poikkeamat)
-                [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
-                "Ei laatupoikkeamia")}
-      [{:otsikko "Havaittu" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
-       (when (or (= :paallystys nakyma)
-                 (= :paikkaus nakyma)
-                 (= :tiemerkinta nakyma))
-         {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
-          :hae (fn [rivi]
-                 (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
-                                                               :nimi (get-in rivi [:yllapitokohde :nimi])}))})
-       (when (= :hoito nakyma)
-         {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
-       (when-not (urakka/vesivaylaurakkatyyppi? nakyma)
-         {:otsikko "Tieosoite"
-          :nimi :tr
-          :leveys 2
-          :fmt tierekisteri/tierekisteriosoite-tekstina})
-       {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
-       {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
-       {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}
-       {:otsikko "Poik\u00ADkeama\u00ADraport\u00ADti" :nimi :sisaltaa-poikkeamaraportin? :fmt fmt/totuus :tasaa :keskita :leveys 1}]
-      poikkeamat]]))
+     [:div.margin-top-16
+      [grid/grid
+       {:rivi-klikattu #(reset! laatupoikkeamat/valittu-laatupoikkeama-id (:id %))
+        :tyhja (if (nil? poikkeamat)
+                 [yleiset/ajax-loader "Laatupoikkeamia ladataan"]
+                 "Ei laatupoikkeamia")}
+       [{:otsikko "Havaittu" :nimi :aika :fmt pvm/pvm-aika :leveys 1}
+        (when (or (= :paallystys nakyma)
+                (= :paikkaus nakyma)
+                (= :tiemerkinta nakyma))
+          {:otsikko "Yllä\u00ADpito\u00ADkoh\u00ADde" :nimi :kohde :leveys 2
+           :hae (fn [rivi]
+                  (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in rivi [:yllapitokohde :numero])
+                                                                :nimi (get-in rivi [:yllapitokohde :nimi])}))})
+        (when (= :hoito nakyma)
+          {:otsikko "Koh\u00ADde" :nimi :kohde :leveys 1})
+        (when-not (urakka/vesivaylaurakkatyyppi? nakyma)
+          {:otsikko "Tieosoite"
+           :nimi :tr
+           :leveys 2
+           :fmt tierekisteri/tierekisteriosoite-tekstina})
+        {:otsikko "Kuvaus" :nimi :kuvaus :leveys 3}
+        {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
+        {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}
+        {:otsikko "Poik\u00ADkeama\u00ADraport\u00ADti" :nimi :sisaltaa-poikkeamaraportin? :fmt fmt/totuus :tasaa :keskita :leveys 1}]
+       poikkeamat]]
+     [debug/debug app]]))
 
 (defn paatos?
   "Onko annetussa laatupoikkeamassa päätös?"
@@ -136,18 +138,20 @@
                          (kartta-tiedot/kasittele-infopaneelin-linkit!
                            {:laatupoikkeama {:toiminto (fn [lp]
                                                          (reset! laatupoikkeamat/valittu-laatupoikkeama-id
-                                                                 (:id (vastaava-laatupoikkeama lp))))
+                                                           (:id (vastaava-laatupoikkeama lp))))
                                              :teksti "Valitse laatupoikkeama"}})
+                         (kartta-tiedot/piilota-infopaneeli!)
                          (nav/vaihda-kartan-koko! :M))
-                      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
-                           (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
+      #(do (nav/vaihda-kartan-koko! @nav/kartan-edellinen-koko)
+         (kartta-tiedot/kasittele-infopaneelin-linkit! nil)))
     (fn [e! app optiot]
       [:span.laatupoikkeamat
+       [:h1 "Laatupoikkeamat"]
        [kartta/kartan-paikka]
        (if @laatupoikkeamat/valittu-laatupoikkeama
          [laatupoikkeamalomake e! laatupoikkeamat/valittu-laatupoikkeama
           (merge optiot
-                 {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
-                  :nakyma (:tyyppi @nav/valittu-urakka)
-                  :tallennus-kaynnissa? (:tallennus-kaynnissa? app)})]
+            {:yllapitokohteet @laadunseuranta/urakan-yllapitokohteet-lomakkeelle
+             :nakyma (:tyyppi @nav/valittu-urakka)
+             :tallennus-kaynnissa? (:tallennus-kaynnissa? app)})]
          [laatupoikkeamalistaus e! app optiot])])))

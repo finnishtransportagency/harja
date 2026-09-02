@@ -1,6 +1,7 @@
 (ns harja.views.urakka.pot1-lomake
 
-  (:require [reagent.core :refer [atom] :as r]
+  (:require [harja.tiedot.kartta :as kartta-tiedot]
+            [reagent.core :refer [atom] :as r]
             [tuck.core :as tuck]
             [cljs.core.async :refer [<! chan]]
             [cljs.spec.alpha :as s]
@@ -609,6 +610,7 @@
       (komp/lukko lukon-id)
       (komp/sisaan #(do
                       (nav/vaihda-kartan-koko! :S)
+                      (kartta-tiedot/piilota-infopaneeli!)
                       (e! (paallystys/->MuutaTila [:paallystysilmoitus-lomakedata :historia] '()))
                       (e! (paallystys/->HaeTrOsienPituudet tr-numero tr-alkuosa tr-loppuosa))
                       (e! (paallystys/->HaeTrOsienTiedot tr-numero tr-alkuosa tr-loppuosa))))

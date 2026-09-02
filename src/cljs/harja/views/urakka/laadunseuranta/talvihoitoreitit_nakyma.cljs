@@ -1,6 +1,7 @@
 (ns harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma
   "Talvihoitoreittien näkymä. Kartta ja listaus."
   (:require [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.liitteet :as liitteet]
             [tuck.core :as tuck]
             [harja.asiakas.kommunikaatio :as k]
@@ -11,6 +12,7 @@
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta.talvihoitoreitit-tiedot :as tiedot]
+            [harja.tiedot.kartta :as kartta-tiedot]
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
             [harja.ui.ikonit :as ikonit]
@@ -20,7 +22,7 @@
 (defn- talvihoitoreitti-rivi [{:keys [talvihoitoreittien-tilat] :as app} e!
                               {:keys [laskettu_pituus nimi id varikoodi hoitoluokat ulkoinen_id reitit urakka_id
                                       tr_maara ka_maara kup_maara]}]
-  
+
   (let [valitut-kohteet @tiedot/valitut-kohteet-atom
         reittien-maara (count reitit)
         auki? (contains? talvihoitoreittien-tilat id)
@@ -29,11 +31,11 @@
                             (:hoitoluokka %))
                      (get hoitoluokat :huoltoaukot))
         talvihoito-osin (some #(when (= "Talvihoito osin" (:hoitoluokka %))
-                            (:hoitoluokka %))
-                     (get hoitoluokat :huoltoaukot))
+                                 (:hoitoluokka %))
+                          (get hoitoluokat :huoltoaukot))
         ei-talvihoitoa (some #(when (= "Ei talvihoitoa" (:hoitoluokka %))
-                            (:hoitoluokka %))
-                     (get hoitoluokat :huoltoaukot))]
+                                (:hoitoluokka %))
+                         (get hoitoluokat :huoltoaukot))]
     [:<>
      [:div.flex-row.venyta.otsikkokomponentti {:class (str "" (when reitteja-olemassa? " klikattava"))
                                                ;  :style {:margin-top "0"}
@@ -105,7 +107,7 @@
        [:div (napit/yleinen "Keskitä"
                :toissijainen
                #(e! (tiedot/->KeskitaTalvihoitoreitti id reitit))
-               {:ikoni    (ikonit/zoom-in)
+               {:ikoni (ikonit/zoom-in)
                 :luokka "btn-xs talvihoitoreitti-poisto"})]
        [:div (napit/yleinen "Poista"
                :toissijainen
@@ -114,18 +116,18 @@
                    :sisalto [:div "Oletko varma, että haluat poistaa talvihoitoreitin?"]
                    :hyvaksy "Poista"
                    :toiminto-fn (fn [] (e! (tiedot/->PoistaTalvihoitoreitti ulkoinen_id)))})
-               {:ikoni    (ikonit/livicon-trash)
+               {:ikoni (ikonit/livicon-trash)
                 :luokka "btn-xs talvihoitoreitti-poisto"})]]]
 
      ;; Otsikkokoponentin voi avata ja avaamisen jälkeen näytetään lista (grid) reiteistä
      (when (and
              (get talvihoitoreittien-tilat id)
              reitteja-olemassa?)
-       
+
        ;; Sisältö
        [:div.talvihoitoreitti-sisalto
         [:h2 "Reitti"]
-        
+
         [grid/grid
          {:salli-valiotsikoiden-piilotus? true
           :valiotsikoiden-alkutila :kaikki-kiinni
@@ -151,21 +153,87 @@
            :fmt #(fmt/desimaaliluku-opt % 2) :tasaa :oikea :leveys 2 :luokka "nakyma-valkoinen-solu"}]
          reitit]])]))
 
-(defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit] :as app}]
+(def ^:private kalustoyhteenveto-tooltip-otsikko
+  "Reiteille suunniteltu kalusto")
+
+(def ^:private kalustoyhteenveto-tooltip-teksti
+  (str "Reitille suunniteltu kalusto lasketaan automaattisesti reittisuunnitelman perusteella. "
+    "Jos reitillä on useampaa tarjouksessa esiintyvää hoitoluokkaryhmää, kalusto kirjataan "
+    "sille hoitoluokkaryhmälle, jota on reitillä eniten."))
+
+(def ^:private kalustoyhteenveto-ei-reitteja-teksti
+  "Ei yhtään talvihoitoreittiä. Aloita tuomalla reitit käyttäen Excel-tiedostoa.")
+
+(defn- mhu26-urakka?
+  "Talvihoitoreittien kalustoyhteenveto näytetään vain MHU26-urakoille eli teiden hoidon
+   urakoille, joiden alkupäivämäärän vuosi on vähintään 2026."
+  [{:keys [tyyppi alkupvm]}]
+  (and (= tyyppi :teiden-hoito)
+    (>= (pvm/vuosi alkupvm) 2026)))
+
+(defn- suunniteltu-kalusto-tooltip
+  "Saavutettava info-tooltip reiteille suunnitellun kaluston laskennasta."
+  []
+  [yleiset/tooltip {:suunta :ylos :leveys :levea}
+   [:span.kalustoyhteenveto-info-ikoni
+    {:tab-index 0
+     :role "button"
+     :aria-label (str kalustoyhteenveto-tooltip-otsikko ". " kalustoyhteenveto-tooltip-teksti)}
+    (ikonit/nelio-info 16)]
+   [:div
+    [:h2 kalustoyhteenveto-tooltip-otsikko]
+    [:p kalustoyhteenveto-tooltip-teksti]]])
+
+(defn- kalustoyhteenveto-osio
+  "Sivun yläosan yhteenveto: tarjouksessa luvattu kalusto suhteessa reiteille suunniteltuun
+   kalustoon hoitoluokkaryhmittäin. Näytetään vain MHU26-urakoille."
+  [kalustoyhteenveto]
+  [:div.kalustoyhteenveto
+   [:h2 "Tarjouksessa luvatun kaluston käyttö reittisuunnitelmissa"]
+   (cond
+     (empty? kalustoyhteenveto)
+     [:div.kalustoyhteenveto-ei-reitteja
+      "Urakalle ei ole kirjattu hoitoluokkaryhmiä Suunnittelu / Kalustoresurssit -sivulla."]
+
+     :else
+     [grid/grid
+      {:tunniste :hoitoluokkaryhma
+       :ei-border? true
+       :piilota-otsikot? false
+       :piilota-muokkaus? true
+       :piilota-toiminnot? true
+       :mahdollista-rivin-valinta? false}
+
+      [{:otsikko "Hoitoluokkaryhmä" :nimi :nimi :tyyppi :string :tasaa :vasen :leveys 2}
+       {:otsikko "Tarjouksessa luvattu kalusto (kpl)" :nimi :luvattu :tyyppi :numero
+        :tasaa :oikea :leveys 1
+        :fmt fmt/kokonaisluku-opt}
+       {:otsikko [:div.kalustoyhteenveto-otsikko-tooltip
+                  [:span "Reiteille suunniteltu kalusto (kpl)"]
+                  [suunniteltu-kalusto-tooltip]]
+        :nimi :suunniteltu :tyyppi :numero :tasaa :oikea :leveys 1 :fmt fmt/kokonaisluku-opt}]
+
+      kalustoyhteenveto])])
+
+(defn talvihoitoreitit-sivu [e! {:keys [talvihoitoreitit kalustoyhteenveto] :as app}]
   [:<>
+   [:h1 "Talvihoitoreititys"]
    [kartta/kartan-paikka]
 
    (if (:haku-kaynnissa? app)
      [ajax-loader "Ladataan talvihoitoreittejä..."]
 
      [:div.talvihoitoreititys
-      [:div.flex-row {:style {:justify-content "space-between"}}
-       [:h2 "Talvihoitoreititys"]
-       [:div {:style {:display "flex"}}
+      (when (and (mhu26-urakka? @nav/valittu-urakka)
+                 (or (seq talvihoitoreitit) (seq kalustoyhteenveto)))
+        [kalustoyhteenveto-osio kalustoyhteenveto])
+
+      [:div.talvihoitoreitit-otsikko-ja-painikkeet
+       [:h2 "Suunnitellut talvihoitoreitit"]
+       [:div.talvihoitoreitit-painikkeet
         ;; Jos talvihoitoreittejä on olemassa, niin annetaan käyttäjän ladata ne Exceliin
         (when-not (empty? talvihoitoreitit)
-          [:span [:form {:style {:margin-left "auto"}
-                         :target "_blank" :method "POST"
+          [:span [:form {:target "_blank" :method "POST"
                          :action (k/excel-url :lataa-talvihoitoreitit-exceliin)}
                   [:input {:type "hidden" :name "parametrit"
                            :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)})}]
@@ -178,32 +246,33 @@
           :url "lue-talvihoitoreitit-excelista"
           :lataus-epaonnistui #(e! (tiedot/->TiedostoLadattu %))
           :tiedosto-ladattu #(e! (tiedot/->TiedostoLadattu %))}]
-
-        [yleiset/tiedoston-lataus-linkki
-         "Lataa Excel-pohja"
-         "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]
+        [:div.talvihoitoreitit-pohja-linkki
+         [yleiset/tiedoston-lataus-linkki
+          "Lataa Excel-pohja"
+          "/excel/harja_talvihoitoreitit_pohja.xlsx"]]]]
 
       (if (empty? talvihoitoreitit)
-        [:div "Ei talvihoitoreittejä. Aloita tuomalla reitit käyttäen excel-tiedostoa."]
+        [:div.kalustoyhteenveto-ei-reitteja kalustoyhteenveto-ei-reitteja-teksti]
 
         (doall
-          [grid/grid {:tunniste :id
-                      :sivuta 10
-                      :voi-kumota? false
-                      :piilota-otsikot? true
-                      :piilota-border? true
-                      :piilota-muokkaus? true
-                      :piilota-toiminnot? true
-                      :mahdollista-rivin-valinta? false}
+          [:div.margin-top-16
+           [grid/grid {:tunniste :id
+                       :sivuta 10
+                       :voi-kumota? false
+                       :piilota-otsikot? true
+                       :piilota-border? true
+                       :piilota-muokkaus? true
+                       :piilota-toiminnot? true
+                       :mahdollista-rivin-valinta? false}
 
-           [{:tyyppi :komponentti
-             :solun-luokka #(str "talvihoitoreitti-rivi")
-             :tunniste :id
-             :komponentti (fn [reitti]
-                            ;; Väkänen / rivi
-                            (talvihoitoreitti-rivi app e! reitti))
-             :leveys 1}]
-           talvihoitoreitit]))])])
+            [{:tyyppi :komponentti
+              :solun-luokka #(str "talvihoitoreitti-rivi")
+              :tunniste :id
+              :komponentti (fn [reitti]
+                             ;; Väkänen / rivi
+                             (talvihoitoreitti-rivi app e! reitti))
+              :leveys 1}]
+            talvihoitoreitit]]))])])
 
 (defn talvihoitoreitit* [e! app]
   (komp/luo
@@ -211,9 +280,12 @@
       #(do
          (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
          (nav/vaihda-kartan-koko! :M)
+         (kartta-tiedot/piilota-infopaneeli!)
 
          (reset! tiedot/valitut-kohteet-atom #{})
          (e! (tiedot/->HaeTalvihoitoreitit))
+         (when (mhu26-urakka? @nav/valittu-urakka)
+           (e! (tiedot/->HaeKalustoyhteenveto)))
 
          (kartta-tasot/taso-paalle! :talvihoitoreitit)
          (kartta-tasot/taso-paalle! :organisaatio)

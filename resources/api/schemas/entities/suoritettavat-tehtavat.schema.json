@@ -49,8 +49,10 @@
       "suolaus",
       "tiemerkinta",
       "tiestotarkastus",
+      "tieturvallisuustarkastus",
       "tilaajan laadunvalvonta",
-      "turvalaite"
+      "turvalaite",
+      "valaistusurakoiden tarkastusajo"
     ]
   }
 }

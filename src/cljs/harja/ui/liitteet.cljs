@@ -135,7 +135,7 @@
           (when salli-poisto?
             [liitteen-poisto tiedosto poista-liite-fn])]
          (when-not virustarkastettu?
-           [:div.virustarkistus "Virustarkastus käynnissä. Liitteen voi avata, kun tarkastus on tehty."])]
+           [:div.virustarkistus "Jos liite ei avaudu, virustarkastus on vielä kesken."])]
         [:div.liite-rivi
          [:a.liite-linkki
           {:target "_blank" :href (k/liite-url (:id tiedosto))}
@@ -269,7 +269,8 @@
   lisaa-usea-liite?         Jos true, komponentilla voi lisätä useita liitteitä.
   nayta-lisatyt-liitteet?   Näyttää juuri lisätyt liitteet, oletus true.
   latausta-ennen-fn         Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
-  latausta-jalkeen-fn       Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi."
+  latausta-jalkeen-fn       Jos halutaan latauksen staus ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi.
+  elementin-id              Täytyy olla sama, kuin labelin for arvo."
   [urakka-id opts]
   (let [;; Ladatun tiedoston tiedot, kun lataus valmis
         tiedosto (atom nil) ; Jos komponentilla lisätään vain yksi liite
@@ -278,7 +279,7 @@
         virheviesti (atom nil)]
     (fn [urakka-id {:keys [liite-ladattu nappi-teksti grid? disabled? lisaa-usea-liite?
                            nayta-lisatyt-liitteet? salli-poistaa-lisatty-liite?
-                           poista-lisatty-liite-fn latausta-ennen-fn latausta-jalkeen-fn] :as opts}]
+                           poista-lisatty-liite-fn latausta-ennen-fn latausta-jalkeen-fn elementin-id] :as opts}]
       (let [nayta-lisatyt-liitteet? (if (some? nayta-lisatyt-liitteet?) nayta-lisatyt-liitteet? true)
             poista-liite (fn [liite-id]
                            (reset! tiedostot (filter #(not= (:id %) liite-id) @tiedostot))
@@ -292,7 +293,8 @@
                               :poista-liite-fn poista-liite}]
                             [liitetiedosto liite {:salli-poisto? salli-poistaa-lisatty-liite?
                                                   :poista-liite-fn poista-liite}]))
-            inputin-id (str "tiedoston-lataus-input-" (gensym))]
+            button-id (or elementin-id (str "tiedoston-lataus-input-" (gensym)))
+            inputin-id (str "input-" (gensym))]
         [:span
          ;; Näytä vastikään ladattu liite / liitteet
          (when (and nayta-lisatyt-liitteet? @tiedosto)
@@ -307,7 +309,7 @@
            [:progress {:value edistyminen :max 100}]
            ;; Näytetään uuden liitteen lisäyspainike
            [:span.liitekomponentti
-            [:button {:id "tiedoston-lataus-label"
+            [:button {:id button-id
                       :class (str "file-upload nappi-toissijainen "
                                (when grid? "nappi-grid ")
                                (when disabled? "disabled "))
@@ -391,12 +393,13 @@
                                        näkyä käyttäjälle.
    latausta-ennen-fn                   Jos halutaan latauksen status ulos komponentista niin aseta atomi, joka tässä laitetaan trueksi.
    latausta-jalkeen-fn                 Jos halutaan latauksen status ulos komponentista niin aseta atomi, joka tässä laitetaan falseksi.
-   nayta-koko?                         Jos true, lisää nimen perään koon."
+   nayta-koko?                         Jos true, lisää nimen perään koon.
+   element-id                          Button elementin id, jonka täytyy olla sama kuin labelin."
   [urakka-id tallennetut-liitteet {:keys [uusi-liite-teksti uusi-liite-atom grid? disabled? lisaa-usea-liite?
                                           nayta-lisatyt-liitteet? salli-poistaa-tallennettu-liite?
                                           poista-tallennettu-liite-fn salli-poistaa-lisatty-liite?
                                           poista-lisatty-liite-fn palautetut-liitteet latauksen-seuranta-atom
-                                          latausta-ennen-fn latausta-jalkeen-fn nayta-koko?]}]
+                                          latausta-ennen-fn latausta-jalkeen-fn nayta-koko? elementin-id]}]
   [:span
    ;; Näytä olemassaolevat (kantaan tallennetut) liitteet
    (when (oikeudet/voi-lukea? oikeudet/urakat-liitteet urakka-id)
@@ -426,7 +429,8 @@
                                :salli-poistaa-lisatty-liite? salli-poistaa-lisatty-liite?
                                :poista-lisatty-liite-fn poista-lisatty-liite-fn
                                :disabled? disabled?
-                               :palautetut-liitteet palautetut-liitteet}]))])
+                               :palautetut-liitteet palautetut-liitteet
+                               :elementin-id elementin-id}]))])
 
 (defn lataa-tiedosto
   "Ladataan käyttäjän valitsema tiedosto palvelimelle (file input) komponentti yhden tiedoston lataamiselle.

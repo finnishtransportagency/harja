@@ -117,7 +117,7 @@ WITH urakka AS (INSERT INTO urakka (sampoid, sopimustyyppi, hallintayksikko, nim
                                     tyyppi, urakkanro, urakoitsija)
     VALUES ('5731290-TES2', 'kokonaisurakka' :: sopimustyyppi, (SELECT id
                                                                 FROM organisaatio
-                                                                WHERE lyhenne = 'POP'),
+                                                                WHERE lyhenne = 'POP' and tyyppi = 'hallintayksikko'),
             'POT2 testipäällystysurakka',
             '2024-01-01', '2024-12-31', 'paallystys', 'testitunnus', (SELECT id
                                                                        FROM organisaatio

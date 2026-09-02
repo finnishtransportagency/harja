@@ -14,10 +14,11 @@
   "schedule": [
     "before 8am on Tuesday"
   ],
+  "labels": ["dependencies"],
   "vulnerabilityAlerts": {
     "description": "Tekee PR:n välittömästi, mikäli Renovate havaitsee haavoittuvan kirjaston GitHubin Dependabot alerteista.",
     "enabled": false,
-    "labels": [
+    "addLabels": [
       "security"
     ],
     "automerge": false
@@ -30,6 +31,7 @@
       "matchDatasources": [
         "clojure"
       ],
+      "minimumReleaseAge": "3 days",
       "description": "Lisätään default clojuren pakettilähteet ja project.clj:ssä olevat muut pakettilähteet",
       "registryUrls": [
         "https://repo1.maven.org/maven2/",
@@ -125,6 +127,18 @@
       ],
       "separateMajorMinor": true,
       "separateMultipleMinor": true
+    },
+    {
+      "description": "Ryhmittele cljsjs:react* päivitykset. Erottele major päivitykset omiin PR:iin",
+      "matchDatasources": [
+        "clojure"
+      ],
+      "matchPackageNames": [
+        "cljsjs:react*"
+      ],
+      "groupName": "cljsjs:react",
+      "separateMajorMinor": true,
+      "separateMultipleMajor": true
     }
   ]
 }

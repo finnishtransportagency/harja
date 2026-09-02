@@ -78,7 +78,7 @@
       (is (= "Toimenpiteelle ei ole annettu toimenpidekoodia (vv_operation)" (:virhe (first virheet))))))
 
   (is (= 0 (count (q "select id from toimenpideinstanssi where sampoid = 'TESTITPKTPI';")))
-      "Toimenpidekooditonta toimenpidettä ei perusteta."))
+    "Toimenpidekooditonta toimenpidettä ei perusteta."))
 
 (deftest tarkista-toimenpiteiden-perustaminen-virheellinen-toimenpidekoodi
   (try+
@@ -90,4 +90,4 @@
       (is (= "Annettu toimenpidekoodi (vv_operation) ei ole sallittu." (:virhe (first virheet))))))
 
   (is (= 0 (count (q "select id from toimenpideinstanssi where sampoid = 'TESTITPKTPI2';")))
-      "Toimenpidettä ei perusteta, kun toimenpidekoodi on virheellinen."))
+    "Toimenpidettä ei perusteta, kun toimenpidekoodi on virheellinen."))

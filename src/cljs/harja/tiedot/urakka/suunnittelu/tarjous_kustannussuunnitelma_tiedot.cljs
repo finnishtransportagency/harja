@@ -7,7 +7,8 @@
             [harja.ui.viesti :as viesti]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka :as u]
-            [harja.tiedot.urakka.urakka :as tila]))
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.kulut.mhu-kulut :as mhu-kulut]))
 
 (defonce nakymassa? (atom false))
 
@@ -103,10 +104,6 @@
     {:vuosikohtaiset-summat vuosikohtaiset-summat
      :yhteensa yhteensa}))
 
-(defn scrollaa-muutoksiin [elementin-id]
-  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
-  (siirrin/siirry-elementin-id elementin-id 200))
-
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
   UI Grille on oltava jokainen vuosi omassa avaimeessaa tyyliin :vuosi-2023, :vuosi-2024 jne.
@@ -197,7 +194,8 @@
   Vuosi on hoitovuoden alkuvuosi, jolle kustannussuunnitelma haetaan."
   [urakka-id vuosi]
   (tuck-apurit/post! :hae-kustannussuunnitelman-tiedot
-    {:urakka-id urakka-id :hoitovuoden-alkuvuosi vuosi}
+    {:urakka-id urakka-id
+     :hoitovuoden-alkuvuosi vuosi}
     {:onnistui ->HaeKustannussuunnitelmanTiedotOnnistui
      :epaonnistui ->HaeKustannussuunnitelmanTiedotEpaonnistui}))
 
@@ -317,7 +315,8 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! "Tarjous tallennettiin onnistuneesti.")
     (-> (kasittele-tarjouksen-vastaus vastaus app)
-      (assoc :tallentamattomia-muutoksia? false)))
+      (assoc :tallentamattomia-muutoksia? false)
+      (assoc :uusi-toimenkuva-valittavana false)))
 
   TallennaTarjouksenTiedotEpaonnistui
   (process-event [{:keys [vastaus]} app]
@@ -347,6 +346,7 @@
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   HaeKustannussuunnitelmanTiedotEpaonnistui
@@ -370,14 +370,14 @@
                                   :yhteensa (+ alkukausi loppukausi)
                                   :yhteensa-indeksikorjattu nil})))
                        muuttuneet)
+
           yhteenveto {:nimi "Yhteensä"
-                      :alkukausi (apply + (map :alkukausi muuttuneet))
-                      :alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu muuttuneet))
-                      :loppukausi (apply + (map :loppukausi muuttuneet))
-                      :loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
-                      :yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
-                      :yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
-                      :pysyvat-muutokset "Ei muutoksia"
+                      :kaikki-alkukausi (apply + (map :alkukausi muuttuneet))
+                      :kaikki-alkukausi-indeksikorjattu (apply + (map :alkukausi-indeksikorjattu muuttuneet))
+                      :kaikki-loppukausi (apply + (map :loppukausi muuttuneet))
+                      :kaikki-loppukausi-indeksikorjattu (apply + (map :loppukausi-indeksikorjattu muuttuneet))
+                      :kaikki-yhteensa (+ (apply + (map :alkukausi muuttuneet)) (apply + (map :loppukausi muuttuneet)))
+                      :kaikki-yhteensa-indeksikorjattu (+ (apply + (map :alkukausi-indeksikorjattu muuttuneet)) (apply + (map :loppukausi-indeksikorjattu muuttuneet)))
                       :viimeisin-muokkaus (:viimeisin-muokkaus (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))
                       :viimeisin-muokkaaja (:viimeisin-muokkaaja (last (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])))}
           muuttuneet (conj muuttuneet yhteenveto)]
@@ -407,10 +407,15 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :kilpailutettavat-hankinnat-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-jjh-muutoksia? false)
       (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaKilpailutettavatHankinnatEpaonnistui
@@ -457,7 +462,9 @@
       (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaErillishankinnatEpaonnistui
@@ -474,16 +481,22 @@
 
   JaaErillishankinnatTasan
   (process-event [{:keys [summa elementti]} app]
-    (let [erillishankinnat (get-in app [:kustannussuunnitelma :erillishankinnat])
+    (let [indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])
+          erillishankinnat (get-in app [:kustannussuunnitelma :erillishankinnat])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           erillishankinnat (map-indexed (fn [indeksi rivi]
-                                          (merge rivi
-                                            {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                             :summa_indeksikorjattu nil}))
+                                          (let [summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                summa-indeksikorjattu (when indeksikerroin
+                                                                        (tyokalut/round2 2 (* summa indeksikerroin)))]
+                                            (merge rivi
+                                              {:summa summa
+                                               :summa_indeksikorjattu summa-indeksikorjattu})))
                              erillishankinnat)]
-      (scrollaa-muutoksiin elementti)
-      (assoc-in app [:kustannussuunnitelma :erillishankinnat] erillishankinnat)))
+      (siirrin/siirry-elementin-id elementti 5)
+      (-> app
+        (assoc :onko-erillishankinnat-muutoksia? true :tallentamattomia-muutoksia? true)
+        (assoc-in [:kustannussuunnitelma :erillishankinnat] erillishankinnat))))
 
   PaivitaHoidonjohtopalkkiot
   (process-event
@@ -512,10 +525,15 @@
     (-> app
       (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot-virheet] nil)
       (assoc :tallennus-kesken? false)
+      (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
       (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaHoidonjohtopalkkiotEpaonnistui
@@ -532,16 +550,22 @@
 
   JaaHoidonjohtopalkkiotTasan
   (process-event [{:keys [summa hoidonjohtopalkkio-elementti]} app]
-    (let [hoidonjohtopalkkiot (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot])
+    (let [indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])
+          hoidonjohtopalkkiot (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           hoidonjohtopalkkiot (map-indexed (fn [indeksi rivi]
-                                             (merge rivi
-                                               {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                                :summa_indeksikorjattu nil}))
+                                             (let [summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                   summa-indeksikorjattu (when indeksikerroin
+                                                                           (tyokalut/round2 2 (* summa indeksikerroin)))]
+                                               (merge rivi
+                                                 {:summa summa
+                                                  :summa_indeksikorjattu summa-indeksikorjattu})))
                                 hoidonjohtopalkkiot)]
-      (scrollaa-muutoksiin hoidonjohtopalkkio-elementti)
-      (assoc-in app [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot)))
+      (siirrin/siirry-elementin-id hoidonjohtopalkkio-elementti 5)
+      (-> app
+        (assoc :onko-hoidonjohtopalkkio-muutoksia? true :tallentamattomia-muutoksia? true)
+        (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot))))
 
   PaivitaJohtoJaHallintokorvaukset
   (process-event
@@ -588,9 +612,14 @@
       (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset-virheet] nil)
       (assoc :tallennus-kesken? false)
       (assoc :onko-jjh-muutoksia? false)
+      (assoc :onko-hankinnat-muutoksia? false)
+      (assoc :onko-erillishankinnat-muutoksia? false)
+      (assoc :onko-hoidonjohtopalkkio-muutoksia? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
+      (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
 
   TallennaJohtoJaHallintokorvauksetEpaonnistui
@@ -607,16 +636,22 @@
 
   JaaJohtoJaHallintokorvauksetTasan
   (process-event [{:keys [summa johto-ja-hallintokorvaukset-elementti]} app]
-    (let [johto-ja-hallintokorvaukset (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset])
+    (let [indeksikerroin (get-in app [:kustannussuunnitelma :indeksikerroin])
+          johto-ja-hallintokorvaukset (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset])
           kk-summa (tyokalut/round2 2 (/ summa 12))
           viimeneinen-summa (- summa (tyokalut/round2 2 (* 11 kk-summa)))
           johto-ja-hallintokorvaukset (map-indexed (fn [indeksi rivi]
-                                                     (merge rivi
-                                                       {:summa (if (= indeksi 11) viimeneinen-summa kk-summa)
-                                                        :summa_indeksikorjattu nil}))
+                                                     (let [summa (if (= indeksi 11) viimeneinen-summa kk-summa)
+                                                           summa-indeksikorjattu (when indeksikerroin
+                                                                                   (tyokalut/round2 2 (* summa indeksikerroin)))]
+                                                       (merge rivi
+                                                         {:summa summa
+                                                          :summa_indeksikorjattu summa-indeksikorjattu})))
                                         johto-ja-hallintokorvaukset)]
-      (scrollaa-muutoksiin johto-ja-hallintokorvaukset-elementti)
-      (assoc-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset)))
+      (siirrin/siirry-elementin-id johto-ja-hallintokorvaukset-elementti 5)
+      (-> app
+        (assoc :onko-jjh-muutoksia? true :tallentamattomia-muutoksia? true)
+        (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset))))
 
   ValitseHoitokausiKustannussuunnitelmaan
   (process-event [_ app]
@@ -675,12 +710,13 @@
         :varoitus
         viesti/viestin-nayttoaika-pitka)
       (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
-    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
+    (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
       (assoc :tarjous (:tarjous vastaus))
-      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))))
+      (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
+      (assoc :vanha-urakka? (:vanha-urakka? vastaus))))
 
   VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -689,7 +725,7 @@
                    "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
           kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
       (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-pitka)
-      (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
+      (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
       (-> app
         (assoc :kattohinta-virhe (or kattohinta-virhe? false))
         (assoc :tallennus-kesken? false)

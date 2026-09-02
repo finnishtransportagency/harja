@@ -2,24 +2,27 @@
   "Harjan näkymä, jossa näytetään karttaa sekä kontekstisidonnaiset asiat."
   (:require [reagent.core :refer [atom] :as reagent]
             [cljs.core.async :as async :refer [chan <! >!]]
-            [harja.ui.bootstrap :as bs]
-            [harja.ui.listings :refer [suodatettu-lista]]
-            [harja.ui.yleiset :as yleiset]
 
-            [harja.tiedot.hallintayksikot :as hal]
-            [harja.tiedot.urakat :as ur]
+            [harja.pvm :as pvm]
             [harja.loki :refer [log]]
 
             [harja.asiakas.tapahtumat :as t]
             [harja.asiakas.kommunikaatio :as k]
+
+            [harja.tiedot.urakat :as ur]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.hallintayksikot :as hal]
+            [harja.tiedot.kartta :as kartta-tiedot]
 
             [harja.views.kartta :as kartta]
             [harja.views.urakka :as urakka]
-            [harja.pvm :as pvm]
+            [harja.views.kartta.tasot :as tasot]
+
+            [harja.ui.bootstrap :as bs]
+            [harja.ui.kentat :as kentat]
+            [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
-            [harja.tiedot.kartta :as kartta-tiedot]
-            [harja.ui.kentat :as kentat])
+            [harja.ui.listings :refer [suodatettu-lista]])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (defn valitse-hallintayksikko []
@@ -27,16 +30,16 @@
     [:div.row
      [:div.col-md-4
       (if (nil? hallintayksikot)
-        [yleiset/ajax-loader "Hallintayksiköitä haetaan..."]
-        [:span
-         [:h5.haku-otsikko "Valitse hallintayksikkö"]
+        [yleiset/ajax-loader "Elinvoimakeskuksia haetaan..."]
+        [:div
+         [:h5.haku-otsikko "Valitse elinvoimakeskus"]
          [:div
           ^{:key "hy-lista"}
-          [suodatettu-lista {:format hal/elynumero-ja-nimi :haku :nimi
+          [suodatettu-lista {:format hal/evknumero-ja-nimi :haku :nimi
                              :selection nav/valittu-hallintayksikko
                              :on-select nav/valitse-hallintayksikko!
-                             :aputeksti "Kirjoita hallintayksikön nimi tähän"
-                             :aria-label "Hallintayksikön nimi"}
+                             :aputeksti "Kirjoita elinvoimakeskuksen nimi tähän"
+                             :aria-label "Elinvoimakeskuksen nimi"}
            hallintayksikot]]])]
      [:div.col-md-8
       [kartta/kartan-paikka hallintayksikot]]]))
@@ -93,14 +96,16 @@
   []
   (komp/luo
     (komp/sisaan #(nav/paivita-url))
-    {:component-did-mount (fn [& _] (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
+    {:component-did-mount (fn [& _]
+                            (tasot/taso-paalle! :organisaatio)
+                            (kartta-tiedot/zoomaa-valittuun-hallintayksikkoon-tai-urakkaan))}
     (fn []
       (let [v-hal @nav/valittu-hallintayksikko
-           v-ur @nav/valittu-urakka]
-       (if-not v-hal
-         [valitse-hallintayksikko]
-         (when-not v-ur
-           [valitse-urakka]))))))
+            v-ur @nav/valittu-urakka]
+        (if-not v-hal
+          [valitse-hallintayksikko]
+          (when-not v-ur
+            [valitse-urakka]))))))
 
 (defn urakat
   "Urakan koko sisältö."

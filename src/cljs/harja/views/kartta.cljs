@@ -41,6 +41,7 @@
             [harja.geo :as geo]
             [harja.loki :refer [log tarkkaile!]]
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.navigaatio.reitit :as reitit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.animaatio :as animaatio]
             [harja.ui.komponentti :as komp]
@@ -62,7 +63,7 @@
                    [cljs.core.async.macros :refer [go go-loop]]))
 
 
-(def +kartan-napit-padding+ 26)
+(def +kartan-napit-padding+ 36)
 (def +kartan-korkeus-s+ 0)
 
 (def tasot-joita-zoomataan-aina
@@ -270,7 +271,7 @@
                                       :text-align "center"
                                       :top        (fmt/pikseleina (- kartan-korkeus
                                                                      (if (= :S koko)
-                                                                       0
+                                                                       61
                                                                        +kartan-napit-padding+)))
                                       :width      "100%"
                                       :z-index    100}}
@@ -665,7 +666,7 @@
                  valitse-ilmoitus
                  avaa-paneeli?
                  nayta-nama-paneelissa
-                 keskita-naihin]} (klikkauksesta-seuraavat-tapahtumat items tuplaklik? @nav/valittu-sivu
+                 keskita-naihin]} (klikkauksesta-seuraavat-tapahtumat items tuplaklik? (@reitit/url-navigaatio :sivu)
                                                                         (:id @nav/valittu-urakka) (:id @nav/valittu-hallintayksikko))]
      (when keskeyta-event?
        (.stopPropagation event)
@@ -726,7 +727,7 @@
 
          ;; :extent-key muuttuessa zoomataan aina uudelleen, vaikka itse alue ei olisi muuttunut
 
-         :extent-key (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name @nav/valittu-sivu))
+         :extent-key (str (if (or (= :hidden koko) (= :S koko)) "piilossa" "auki") "_" (name (@reitit/url-navigaatio :sivu)))
          :extent @nav/kartan-extent
 
          :selection nav/valittu-hallintayksikko
@@ -746,11 +747,11 @@
                      ;; eli esim valitun urakan "ulkopuolelle" klikkaamista.
                      (cond
                        ;; Näissä näkymissä ei näytetä paneelia
-                       (#{:ilmoitukset :raportit} @nav/valittu-sivu)
+                       (#{:ilmoitukset :raportit} (@reitit/url-navigaatio :sivu))
                        nil
 
                        ;; Etusivulla urakkaa valittaessa ei haluta avata infopaneelia
-                       (and (#{:urakat} @nav/valittu-sivu)
+                       (and (#{:urakat} (@reitit/url-navigaatio :sivu))
                          (not @nav/valittu-urakka))
                        nil
 

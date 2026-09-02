@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.analytiikka-test
-  (:require [clojure.test :refer [deftest is use-fixtures testing]]
+  (:require [clj-time.coerce :as t-coerce]
+            [clojure.test :refer [deftest is use-fixtures testing]]
             [com.stuartsierra.component :as component]
             [clojure.data.json :as json]
             [cheshire.core :as cheshire]
@@ -70,7 +71,10 @@
     (sisaltaa-perustiedot (:body vastaus-ok))
     ;; Toisen pitäisi epäonnistua ja antaa virhekoodin
     (is (= 400 (:status vastaus-epaonnistuu)))
-    (is (str/includes? (-> vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))))
+    (is (str/includes? (-> vastaus-epaonnistuu :body) "Aikaväli ylittää sallitun rajan"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-yksinkertainen-onnistuu
   (let [; Aseta tiukka hakuväli, josta löytyy vain vähän toteumia
@@ -79,7 +83,10 @@
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
-    (sisaltaa-perustiedot (:body vastaus))))
+    (sisaltaa-perustiedot (:body vastaus))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-reitillinen-onnistuu
   (let [alkuaika "2015-01-19T00:00:00+03"
@@ -100,7 +107,10 @@
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
         vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika)] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
-    (sisaltaa-perustiedot (:body vastaus))))
+    (sisaltaa-perustiedot (:body vastaus))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-reitillinen-onnistuu-2
   (let [alkuaika-paiva-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 1 86400 1000))))
@@ -111,12 +121,18 @@
         ;; Käyttäjällä ei ole analytiikkaoikeuksia 
         _ (is (= 403 (:status vastaus)) "Käyttäjältä ei löydy analytiikka api oikeuksia")
         _ (is (str/includes? (:body vastaus) "Käyttäjätunnuksella puutteelliset oikeudet") "Virheviesti löytyy")
+
         ;; Annetaan oikeudet ja tehdään kutsu uudelleen
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)]
-    (is (= 200 (:status vastaus)))
+        uusi_vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika-paiva-sitten "/" loppuaika)] kayttaja-analytiikka portti)
+        status (:status uusi_vastaus)
+        lyhennetty-vastaus (subs (:body uusi_vastaus) 0 (min 2000 (count (:body uusi_vastaus))))]
+    (is (= 200 status))
     ;; Tämä antaa 7 virhettä, mikäli lokaali kanta on liian vanha. Resetoi tietokanta, niin ongelmat korjautuu
-    (sisaltaa-perustiedot (:body vastaus))))
+     (sisaltaa-perustiedot lyhennetty-vastaus)
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-ei-kayttoikeutta
   (let [kuukausi-sitten (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date. (- (.getTime (Date.)) (* 30 86400 1000))))
@@ -125,7 +141,10 @@
     (is (= 403 (:status vastaus)))
     (is (str/includes? (:body vastaus) "virheet"))
     (is (str/includes? (:body vastaus) "koodi"))
-    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))))
+    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-toteumat-test-vaara-paivamaaraformaatti
   (let [alkuaika "2005-01-01T00:00:00"
@@ -136,13 +155,23 @@
     (is (str/includes? (:body vastaus) "Alkuaika väärässä muodossa"))))
 
 (deftest hae-toteumat-test-poistettu-onnistuu
-  (let [;; Merkitään toteuma poistetuksi
-        _ (u (str "UPDATE toteuma SET poistettu = true, muokattu = NOW() WHERE id = 9;"))
+  (let [random-paiva (pvm/ajan-muokkaus (pvm/luo-pvm 2004 3 12) false 1 :paiva)
+        alkupaiva (t-coerce/to-sql-time (pvm/paivan-alussa random-paiva))
+        alkupaiva-plus3-sql (t-coerce/to-sql-time (pvm/ajan-muokkaus alkupaiva true 3 :tunti))
+        loppupaiva (t-coerce/to-sql-time (pvm/paivan-lopussa random-paiva))
+        ;; Merkitään toteuma poistetuksi - ja muokkaus tapahtumaan eilen
+        _ (u (format "UPDATE toteuma SET poistettu = true, muokattu = '%s' WHERE id = 9;" alkupaiva-plus3-sql))
+        ;; Tyhjennä analytiikka_toteumat taulu
+        _ (u "DELETE FROM analytiikka_toteumat;")
         ;; Päivitetään analytiikka_toteumat taulun tiedot
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        _ (q (format "SELECT siirra_toteumat_analytiikalle('%s'::TIMESTAMP WITH TIME ZONE, '%s'::TIMESTAMP WITH TIME ZONE)"
+               alkupaiva loppupaiva))
+        _ (Thread/sleep 500)
+        toteuma_maara (:maara (first (q-map "SELECT count(*) as maara from analytiikka_toteumat;")))
+
         ;; Haetaan poistetut, jotka on muuttuneet tänään (eli muokkauksen jälkeen)
-        paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
-        paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
+        paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (harja.kyselyt.konversio/java-date alkupaiva))
+        paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (harja.kyselyt.konversio/java-date loppupaiva))
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
 
         poistetut (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paivan-alussa "/" paivan-lopussa)] kayttaja-analytiikka portti)
@@ -152,13 +181,13 @@
                          (json/read-str)
                          (clojure.walk/keywordize-keys))]
     (is (= 200 (:status poistetut)))
-    (sisaltaa-perustiedot (:body poistetut))
+    (is (= 1 toteuma_maara))                                ;; Vain yhtä muokattiin
     (is (= true (:poistettu (first (:reittitoteumat poistetut-body)))))))
 
 (deftest hae-toteumat-test-koordinaattimuunnos-toimii
   (let [alkuaika "2015-12-17T00:00:00+03"
         loppuaika "2015-12-17T23:59:59+03"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50" )] kayttaja-analytiikka portti)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/50")] kayttaja-analytiikka portti)]
     (is (= 200 (:status vastaus)))
     (sisaltaa-perustiedot (:body vastaus))
     ;; Sisältää lisäksi koordinaattimuunnoksen
@@ -167,16 +196,18 @@
 (deftest hae-toteumat-test-koko-liian-pieni
   (let [alkuaika "2015-01-19T00:00:00+03"
         loppuaika "2015-01-19T21:00:00+03"
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001" )] kayttaja-analytiikka portti)]
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" alkuaika "/" loppuaika "/true/0.001")] kayttaja-analytiikka portti)]
     (is (= 400 (:status vastaus)))
-    (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))))
+    (is (true? (str/includes? (:body vastaus) "Virhe: Liian suuri aineisto palautettavaksi.")))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest materiaalin-maara-muuttuu
-  (let [paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
+  (let [paiva-alussa-plus3-sql (t-coerce/to-sql-time (pvm/ajan-muokkaus (pvm/luo-pvm 2004 9 19) true 3 :tunti))
+        paiva-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/luo-pvm 2004 9 19)))
         paiva-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/luo-pvm 2004 9 19)))
 
-        nyt-paivan-alussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-alussa (pvm/nyt)))
-        nyt-paivan-lopussa (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (pvm/paivan-lopussa (pvm/nyt)))
         _ (anna-analytiikkaoikeus kayttaja-analytiikka)
 
         ;; Haetaan alkuperäinen tieto
@@ -192,10 +223,11 @@
 
         ;; Muokkaa materiaalin muokattu aikaa ja määrää
         uusi-maara 114022
-        _ (u (format "UPDATE toteuma_materiaali set muokattu = NOW(), maara=%s where toteuma=9" uusi-maara))
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        _ (u (format "UPDATE toteuma_materiaali set muokattu = '%s', maara= %s where toteuma=9; " paiva-alussa-plus3-sql uusi-maara))
+        _ (q (format "SELECT siirra_toteumat_analytiikalle('%s'::TIMESTAMP WITH TIME ZONE, '%s'::TIMESTAMP WITH TIME ZONE)"
+               paiva-alussa paiva-lopussa))
 
-        muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti)
+        muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
         muokattu-vastaus-body (-> (:body muokattu-vastaus)
                                 (json/read-str)
                                 (clojure.walk/keywordize-keys))
@@ -206,10 +238,11 @@
                                     (:reittitoteumat muokattu-vastaus-body)))
 
         ;; Vaihda määrä takaisin 
-        _ (u (str "UPDATE toteuma_materiaali set muokattu = NOW(), maara=25 where toteuma=9"))
-        _ (q (str "SELECT siirra_toteumat_analytiikalle(NOW()::TIMESTAMP WITH TIME ZONE)"))
+        _ (u (format "UPDATE toteuma_materiaali set muokattu = '%s', maara=25 where toteuma = 9;" paiva-alussa-plus3-sql))
+        _ (q (format "SELECT siirra_toteumat_analytiikalle('%s'::TIMESTAMP WITH TIME ZONE, '%s'::TIMESTAMP WITH TIME ZONE)"
+               paiva-alussa paiva-lopussa))
 
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" nyt-paivan-alussa "/" nyt-paivan-lopussa)] kayttaja-analytiikka portti)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteumat/" paiva-alussa "/" paiva-lopussa)] kayttaja-analytiikka portti)
         vastaus-body (-> (:body vastaus)
                        (json/read-str)
                        (clojure.walk/keywordize-keys))
@@ -225,7 +258,10 @@
         lopullinen-maara (get-in toteuma-9-lopullinen [:toteuma :materiaalit 0 :maara :maara])]
 
     (is (= alkup-maara lopullinen-maara))
-    (is (= uusi-maara muokattu-maara))))
+    (is (= uusi-maara muokattu-maara))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
 
 (deftest hae-turvallisuuspoikkeamat-analytiikalle-ei-kayttajaa
   (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
@@ -298,7 +334,6 @@
                luotu-hetki-sitten
                muokattu-nyt
                paikkakuvaus))
-        _ (println "Löydetään muokattava turpo" (q-map (format "SELECT * from turvallisuuspoikkeama WHERE paikan_kuvaus = '%s'", paikkakuvaus)))
         muokattu-vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                            "analytiikka-testeri" portti)
         muokattu-body (cheshire/decode (:body muokattu-vastaus))
@@ -335,7 +370,7 @@
             loppuaika (nykyhetki-iso8061-formaatissa-tulevaisuuteen 10)
             vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                       "analytiikka-testeri" portti)
-            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Alkuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03\"}}]}"]
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-aikavali\",\"viesti\":\"Alkuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-01T00:00:00+03\"}}]}"]
         (is (= 400 (:status vastaus)))
         (is (= odotettu-vastaus (:body vastaus)))))
     (testing "Loppuaika on väärässä muodossa "
@@ -343,7 +378,7 @@
             loppuaika "234"
             vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/turvallisuuspoikkeamat/" alkuaika "/" loppuaika)]
                       "analytiikka-testeri" portti)
-            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"puutteelliset-parametrit\",\"viesti\":\"Loppuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03\"}}]}"]
+            odotettu-vastaus "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-aikavali\",\"viesti\":\"Loppuaika väärässä muodossa: 234 Anna muodossa: yyyy-MM-dd'T'HH:mm:ss esim: 2005-01-02T00:00:00+03\"}}]}"]
         (is (= 400 (:status vastaus)))
         (is (= odotettu-vastaus (:body vastaus)))))
     (testing "Haussa on paljon asioita väärin "
@@ -446,3 +481,159 @@
     (is (= (get-in lahetetty-turpo [:sijainti :tie :aet]) (get-in turpo [:tapahtumapaikka :tieaet])))
     (is (= (get-in lahetetty-turpo [:sijainti :tie :losa]) (get-in turpo [:tapahtumapaikka :tielosa])))
     (is (= (get-in lahetetty-turpo [:sijainti :tie :let]) (get-in turpo [:tapahtumapaikka :tielet])))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-alkuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/abc/2023")] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-virheellinen-loppuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/xyz")] kayttaja-analytiikka portti)]
+    ;; API palauttaa 500 kun konversio->int epäonnistuu
+    (is (= 500 (:status vastaus)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-alkuvuosi-suurempi-kuin-loppuvuosi-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2023/2020")] kayttaja-analytiikka portti)]
+    (is (= 400 (:status vastaus)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-onnistunut-kutsu-test
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2020/2023")] kayttaja-analytiikka portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (sequential? body))
+    ;; Tarkista että palautetaan urakan tiedot
+    (when (seq body)
+      (let [ensimmainen (first body)]
+        (is (contains? ensimmainen :urakka))
+        (is (contains? ensimmainen :urakka-id))
+        (is (contains? ensimmainen :vuosittaiset-suunnitelmat))
+        (is (sequential? (:vuosittaiset-suunnitelmat ensimmainen)))))))
+
+(deftest api-analytiikka-suunnitellut-tehtavat-tietojen-validointi-test
+  ;; Testaa että tehtävämäärät haetaan oikein
+  (let [vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/suunnitellut-tehtavat/2019/2024")] kayttaja-analytiikka portti)
+        body (cheshire/decode (:body vastaus) true)]
+    (is (= 200 (:status vastaus)))
+    (is (sequential? body))
+    ;; Tarkista että ainakin joiltain urakoilta löytyy suunnitelmia
+    (when (seq body)
+      (let [ensimmainen (first body)]
+        (is (contains? ensimmainen :vuosittaiset-suunnitelmat))
+        (is (sequential? (:vuosittaiset-suunnitelmat ensimmainen)))
+        (when (seq (:vuosittaiset-suunnitelmat ensimmainen))
+          (let [vuosi (first (:vuosittaiset-suunnitelmat ensimmainen))]
+            (is (contains? vuosi :hoitokauden-alkuvuosi))
+            (is (contains? vuosi :suunnitellut-tehtavat))
+            (is (sequential? (:suunnitellut-tehtavat vuosi)))))))))
+
+;; Testit toteumat-ilman-reittipisteita API:lle
+
+(defn validoi-vastaus-ilman-reittipistetta
+  "Varmistaa että vastaus sisältää odotetut kentät ilman reittipisteitä"
+  [vastaus-teksti]
+  (is (str/includes? vastaus-teksti "toteumat"))
+  (is (str/includes? vastaus-teksti "toteuma"))
+  (is (str/includes? vastaus-teksti "materiaalit"))
+  (is (str/includes? vastaus-teksti "tehtavat"))
+  (is (str/includes? vastaus-teksti "poistettu"))
+  (is (str/includes? vastaus-teksti "muutostiedot"))
+  (is (not (str/includes? vastaus-teksti "reitti"))))
+
+(deftest toteuma-haku-ilman-reittipistetta-aikavali-rajoitus
+  (let [alku "2004-10-19T00:00:00+03"
+        loppu "2004-10-20T00:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
+        sallittu-haku (api-tyokalut/get-kutsu
+                        [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku "/" loppu)]
+                        kayttaja-analytiikka portti)
+
+        alku-pitka "2004-10-19T00:00:00+03"
+        loppu-pitka "2004-10-21T02:00:00+03"
+        hylattava-haku (api-tyokalut/get-kutsu
+                         [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-pitka "/" loppu-pitka)]
+                         kayttaja-analytiikka portti)
+
+        alku-ei-validi "2005-10-19T00:00:00+03"
+        loppu-ei-validi "2004-10-21T02:00:00+03"
+        hylattava-aikavali (api-tyokalut/get-kutsu
+                             [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-ei-validi "/" loppu-ei-validi)]
+                             kayttaja-analytiikka portti)]
+
+    (is (= 200 (:status sallittu-haku)))
+    (validoi-vastaus-ilman-reittipistetta (:body sallittu-haku))
+    (is (= 400 (:status hylattava-haku)))
+    (is (str/includes? (:body hylattava-haku) "Aikaväli ylittää sallitun rajan"))
+    (is (= 400 (:status hylattava-aikavali)))
+    (is (str/includes? (:body hylattava-aikavali) "Alkuaika ei voi olla loppuajan jälkeen."))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest toteuma-haku-ilman-reittipistetta-perustoiminnallisuus
+  (let [alku-aika "2004-10-19T00:00:00+03"
+        loppu-aika "2004-10-20T00:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
+        tulos (api-tyokalut/get-kutsu
+                [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-aika "/" loppu-aika)]
+                kayttaja-analytiikka portti)]
+    (is (= 200 (:status tulos)))
+    (validoi-vastaus-ilman-reittipistetta (:body tulos))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest toteuma-haku-ilman-reittipistetta-puutteelliset-oikeudet
+  (let [alku-aika "2004-10-19T00:00:00+03"
+        loppu-aika "2004-10-20T00:00:00+03"
+        hylattava (api-tyokalut/get-kutsu
+                    [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-aika "/" loppu-aika)]
+                    kayttaja-yit portti)]
+    (is (= 403 (:status hylattava)))
+    (is (str/includes? (:body hylattava) "virheet"))
+    (is (str/includes? (:body hylattava) "kayttajalla-puutteelliset-oikeudet"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest toteuma-haku-ilman-reittipistetta-virheellinen-aikaformaatti
+  (let [vaara-alku "2005-01-01T00:00:00"
+        oikea-loppu "2005-12-31T21:00:00+03"
+        _ (anna-analytiikkaoikeus kayttaja-analytiikka)
+        virheellinen (api-tyokalut/get-kutsu
+                       [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" vaara-alku "/" oikea-loppu)]
+                       kayttaja-analytiikka portti)]
+    (is (= 400 (:status virheellinen)))
+    (is (str/includes? (:body virheellinen) "Alkuaika väärässä muodossa"))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))
+
+(deftest toteuma-haku-ilman-reittipistetta-oikeustarkastus
+  (let [alku-hetki "2015-01-19T00:00:00+03"
+        loppu-hetki "2015-01-19T21:00:00+03"
+        _ (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+        _ (anna-kirjoitusoikeus kayttaja-analytiikka)
+        _ (anna-tielupaoikeus kayttaja-analytiikka)
+        kielletty (api-tyokalut/get-kutsu
+                    [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-hetki "/" loppu-hetki)]
+                    kayttaja-analytiikka portti)]
+    (is (= 403 (:status kielletty)))
+    (is (str/includes? (:body kielletty) "Käyttäjätunnuksella puutteelliset oikeudet"))
+    (poista-kayttajan-api-oikeudet kayttaja-analytiikka)
+    (anna-analytiikkaoikeus kayttaja-analytiikka)
+    (let [sallittu (api-tyokalut/get-kutsu
+                     [(str "/api/analytiikka/toteumat-ilman-reittipisteita/" alku-hetki "/" loppu-hetki)]
+                     kayttaja-analytiikka portti)]
+      (is (= 200 (:status sallittu)))
+      (validoi-vastaus-ilman-reittipistetta (:body sallittu)))
+    ;; Annetaan async integraatioloki-säikeelle aikaa valmistua
+    ;; ennen kuin fixture sulkee DB-poolin
+    (Thread/sleep 300)))

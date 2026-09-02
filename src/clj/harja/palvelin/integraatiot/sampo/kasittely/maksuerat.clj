@@ -1,15 +1,12 @@
 (ns harja.palvelin.integraatiot.sampo.kasittely.maksuerat
   (:require [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [hiccup.core :refer [html]]
             [harja.kyselyt.maksuerat :as qm]
             [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.sanomat.maksuera_sanoma :as maksuera-sanoma]
             [harja.kyselyt.toimenpideinstanssit :as toimenpideinstanssit]
-            [harja.kyselyt.maksuerat :as maksuerat]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
-            [harja.palvelin.integraatiot.integraatiopisteet.jms :as jms]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.integraatiot.vayla-rest.sampo-lahetys :as sampo-lahetys]
             [clojure.string :as str])
@@ -65,20 +62,20 @@
 ;; likaisiksi, jotta ne lähetetään uudelleen Sampoon. Tämä sen varalta, että toimenpideinstansissa on merkitsevä muutos (esim. tuotepolku).
 (defn paivita-toimenpiteen-maksuerat-ja-kustannussuunnitelmat-likaisiksi
   [db tpi-id]
-  (maksuerat/merkitse-toimenpiteen-maksuerat-likaisiksi! db tpi-id)
+  (qm/merkitse-toimenpiteen-maksuerat-likaisiksi! db tpi-id)
   (kustannussuunnitelmat/merkitse-toimenpiteen-kustannussunnitelmat-likaisiksi! db tpi-id))
 
 (defn perusta-maksuerat-hoidon-urakoille [db]
   (log/debug "Perustetaan maksuerät hoidon maksuerättömille toimenpideinstansseille")
   (let [maksuerattomat-tpit (toimenpideinstanssit/hae-hoidon-maksuerattomat-toimenpideistanssit db)]
-    (if (empty? maksuerattomat-tpit)
+    (when (empty? maksuerattomat-tpit)
       (log/debug "Kaikki maksuerät on jo perustettu urakoiden toimenpiteille"))
     (doseq [tpi maksuerattomat-tpit]
       (doseq [maksueratyyppi (if (= (:urakkatyyppi tpi) "teiden-hoito")
                                maksueratyypit-maanteidenhoidon-urakoissa
                                maksueratyypit)]
         (let [maksueran-nimi (tee-makseuran-nimi (:toimenpide_nimi tpi) maksueratyyppi (:urakkatyyppi tpi))
-              maksueranumero (:numero (maksuerat/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
+              maksueranumero (:numero (qm/luo-maksuera<! db (:toimenpide_id tpi) maksueratyyppi maksueran-nimi))]
           (kustannussuunnitelmat/luo-kustannussuunnitelma<! db maksueranumero))))))
 
 (defn tarkista-maksueran-tiedot [{:keys [toimenpideinstanssi numero]}]
@@ -115,38 +112,45 @@
       (log/warn "Viesti-id:llä " viesti-id " ei löydy maksuerää."))))
 
 (defn laheta-api-maksuera [db api-sampo-asetukset integraatioloki numero summat]
-  (if (maksuerat/onko-olemassa? db numero)
-    (try
-      (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
-      (if (lukitse-maksuera db numero)
-        (let [viesti-id (str (UUID/randomUUID))
-              maksuera (hae-maksueran-tiedot db numero summat)
-              _ (tarkista-maksueran-tiedot maksuera)
-              sampo-maksuera-xml (maksuera-sanoma/maksuera-xml maksuera)
-              vastaus (sampo-lahetys/laheta-sampoviesti-rajapintaan db integraatioloki api-sampo-asetukset
-                        "maksuera-lahetys" sampo-maksuera-xml)
-              ;; Jos ulkoiseen järjestelmään ei saada yhteyttä, vastaus on false
-              _ (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
-                  ;; Merkitse virhe
-                  (do
-                    (merkitse-maksueralle-lahetysvirhe db numero)
-                    (log/debug (format "Maksuerälle (numero: %s) merkittiin virhe." numero)))
-                  (do
-                    (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
-                    (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
-              ;; Kuittaus pitänee käsitellä samantien
-              _ (when-not (false? vastaus)
-                  (kasittele-maksuera-kuittaus db vastaus viesti-id))]
-          ;; Palautetaan vastaus true/false
-          (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
-            false
-            true))
-        (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
+  (if (qm/onko-olemassa? db numero)
+    (let [urakka-id (qm/hae-maksueran-urakka db numero)
+          urakan-parametrit (first (urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))]
+      (if (and urakan-parametrit
+            (not (:maksuera_lahetys_sampo urakan-parametrit)))
+        (do
+          (log/info (format "Maksuerän (numero: %s) lähetys Sampoon ohitettu. Urakan (id: %s) parametreissa maksuera_lahetys_sampo = false." numero urakka-id))
+          false)
+        (try
+          (log/debug (format "Lähetetään maksuera (numero: %s) Sampoon." numero))
+          (if (lukitse-maksuera db numero)
+            (let [viesti-id (str (UUID/randomUUID))
+                  maksuera (hae-maksueran-tiedot db numero summat)
+                  _ (tarkista-maksueran-tiedot maksuera)
+                  sampo-maksuera-xml (maksuera-sanoma/maksuera-xml maksuera)
+                  vastaus (sampo-lahetys/laheta-sampoviesti-rajapintaan db integraatioloki api-sampo-asetukset
+                            "maksuera-lahetys" sampo-maksuera-xml)
+                 ;; Jos ulkoiseen järjestelmään ei saada yhteyttä, vastaus on false
+                  _ (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
+                      ;; Merkitse virhe
+                      (do
+                        (merkitse-maksueralle-lahetysvirhe db numero)
+                        (log/debug (format "Maksuerälle (numero: %s) merkittiin virhe." numero)))
+                      (do
+                        (merkitse-maksuera-odottamaan-vastausta db numero viesti-id)
+                        (log/debug (format "Maksuerä (numero: %s) merkittiin odottamaan vastausta." numero))))
+                  ;; Kuittaus pitänee käsitellä samantien
+                  _ (when-not (false? vastaus)
+                      (kasittele-maksuera-kuittaus db vastaus viesti-id))]
+              ;; Palautetaan vastaus true/false
+              (if (or (false? vastaus) (= :sampo-raportoi-virheita (:virhe vastaus)))
+                false
+                true))
+            (log/warn (format "Maksuerän (numero: %s) lukitus epäonnistui." numero)))
 
-      (catch Exception e
-        (log/warn e (format "Maksuerän (numero: %s) lähetyksessä API-Sonjaan tapahtui poikkeus: %s." numero e))
-        (merkitse-maksueralle-lahetysvirhe db numero)
-        (throw e)))
+          (catch Exception e
+            (log/warn e (format "Maksuerän (numero: %s) lähetyksessä API-Sonjaan tapahtui poikkeus: %s." numero e))
+            (merkitse-maksueralle-lahetysvirhe db numero)
+            (throw e)))))
 
     (let [virheviesti (format "Tuntematon maksuera (numero: %s)" numero)]
       (log/error virheviesti)

@@ -2,18 +2,9 @@
   (:require [taoensso.timbre :as log]
             [clj-time.format :as df]
             [harja.geo :as geo]
-            [clojure.string :as str])
-  (:import (org.joda.time DateTime)))
+            [clojure.string :as str]))
 
 (def +liikennemerkki-tietolaji+ :tl506)
-
-(defn aika->sql
-  "Luo java.sql.Timestamp objektin org.joda.time.DateTime objektista.
-   Käyttää UTC aikavyöhykettä.
-   Paluttaa nil, jos saa nil."
-  [^DateTime dt]
-  (when dt
-    (clj-time.coerce/to-sql-time dt)))
 
 (defn velho-pvm->pvm
   "Muuttaa Velhon pvm tekstin org.joda.time.DateTime muotoon.  Paluttaa nil, jos saa nil."

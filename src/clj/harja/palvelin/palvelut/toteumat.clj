@@ -16,11 +16,14 @@
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as bonus-konfiguraatio]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -62,10 +65,6 @@
           :lisatieto   (:lisatieto toteuma)
           :ulkoinen_id nil
           :lahde       "harja-ui"}))
-
-(defn toteumatehtavan-parametrit [toteuma kayttaja]
-  [(get-in toteuma [:tehtava :toimenpidekoodi]) (get-in toteuma [:tehtava :maara]) (:id kayttaja)
-   (get-in toteuma [:tehtava :paivanhinta]) (:urakka-id toteuma)])
 
 (defn toteumatyypin-oikeustarkistus
   "Tarkistaa toteumatyypin mukaisen lukuoikeuden.
@@ -145,11 +144,6 @@
           (name tyyppi)
           toimenpidekoodi)))
 
-(defn hae-urakan-tehtavat [db user urakka-id]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (into []
-        (toteumat-q/hae-urakan-tehtavat db urakka-id)))
-
 (defn- kasittele-toteumatehtava [c user toteuma tehtava]
   (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
     (do
@@ -157,18 +151,28 @@
         (do (log/debug "Poistetaan tehtävä: " (pr-str tehtava))
             (toteumat-q/poista-toteuman-tehtava! c (:tehtava-id tehtava)))
         (do (log/debug "Pävitetään tehtävä: " (pr-str tehtava))
-            (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (:maara tehtava) (or (:poistettu tehtava) false)
-                                                  (or (:paivanhinta tehtava) nil)
-                                                  (:tehtava-id tehtava)))))
+            (toteumat-q/paivita-toteuman-tehtava! c
+              {:toimenpidekoodi (:toimenpidekoodi tehtava)
+               :maara (:maara tehtava)
+               :poistettu (or (:poistettu tehtava) false)
+               :paivanhinta (or (:paivanhinta tehtava) nil)
+               :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))
+               :id (:tehtava-id tehtava)}
+
+
+                                                  ))))
     (do
       (when (not (:poistettu tehtava))
         (log/debug "Luodaan uusi tehtävä.")
         ;; Koska tälle funktiolle lähetetään kahdesta paikasta eri mäpin avaimessa toteuman id.
         ;; Hyväksytään toteuman id jommasta kummasta avaimesta.
-        (toteumat-q/luo-tehtava<! c
-          (or (get-in toteuma [:toteuma :id])
-            (:toteuma-id toteuma))
-          (:toimenpidekoodi tehtava) (:maara tehtava) (:id user) nil (:urakka-id toteuma)))))
+        (toteumat-q/luo-tehtava<! c {:toteuma (or (get-in toteuma [:toteuma :id]) (:toteuma-id toteuma)),
+                                     :toimenpidekoodi (:toimenpidekoodi tehtava),
+                                     :maara (:maara tehtava),
+                                     :kayttaja (:id user),
+                                     :paivanhinta nil,
+                                     :urakka_id (:urakka-id toteuma),
+                                     :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))}))))
   (let [toteumatyyppi (name (:tyyppi toteuma))
         maksueratyyppi (case toteumatyyppi
                          "muutostyo" "muu"
@@ -207,7 +211,13 @@
 
       (do
         (doseq [{:keys [toimenpidekoodi maara]} (:tehtavat toteuma)]
-          (toteumat-q/luo-tehtava<! c id toimenpidekoodi maara (:id user) nil (:urakka toteuman-parametrit))
+          (toteumat-q/luo-tehtava<! c {:toteuma id,
+                                       :toimenpidekoodi toimenpidekoodi,
+                                       :maara maara,
+                                       :kayttaja (:id user),
+                                       :paivanhinta nil,
+                                       :urakka_id (:urakka toteuman-parametrit),
+                                       :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))})
           (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c
                                                              toteumatyyppi
                                                              toimenpidekoodi
@@ -268,6 +278,9 @@
 
                                     :default oikeudet/urakat-toteumat-kokonaishintaisettyot)
                                   user (:urakka-id toteuma))
+  ;; Toteuman alkanut päivämäärä on pakollinen. Mikäli sen onnistuu olemaan syöttämättä, annetaan virhe
+  (when-not (:alkanut toteuma)
+    (throw (IllegalArgumentException. "Toteuman alkanut arvo on pakollinen tieto.")))
   (log/debug "Toteuman tallennus aloitettu. Payload: " (pr-str toteuma))
   (jdbc/with-db-transaction
     [db db]
@@ -287,6 +300,9 @@
   "Päivittää yksikköhintaisen töiden toteutuneet tehtävät. Palauttaa päivitetyt tehtävät sekä tehtävien summat"
   [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi tehtavat toimenpide-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-yksikkohintaisettyot user urakka-id)
+  ;; Tehtävän alkupvm päivämäärä on pakollinen. Mikäli sen onnistuu olemaan syöttämättä, annetaan virhe
+  (when-not alkupvm
+    (throw (IllegalArgumentException. "Tehtävän alkupäivämäärä on pakollinen tieto.")))
   (log/debug (str "Yksikköhintaisten töiden päivitys aloitettu. Payload: " (pr-str (into [] tehtavat))))
 
   (let [tehtavatidt (into #{} (map #(:tehtava_id %) tehtavat))]
@@ -296,9 +312,13 @@
                                   (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c toteuma-id urakka-id)
                                   (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c toteuma-id)
                                   (log/debug (str "Päivitetään saapunut tehtävä. id: " (:tehtava_id tehtava)))
-                                  (toteumat-q/paivita-toteuman-tehtava! c (:toimenpidekoodi tehtava) (or (:maara tehtava) 0) (boolean (:poistettu tehtava))
-                                                                        (:paivanhinta tehtava) (:tehtava_id tehtava)))
-
+                                  (toteumat-q/paivita-toteuman-tehtava! c
+                                    {:toimenpidekoodi (:toimenpidekoodi tehtava)
+                                     :maara (or (:maara tehtava) 0)
+                                     :poistettu (boolean (:poistettu tehtava))
+                                     :paivanhinta (:paivanhinta tehtava)
+                                     :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))
+                                     :id (:tehtava_id tehtava)}))
                                 (log/debug "Merkitään tehtavien: " tehtavatidt " maksuerät likaisiksi")
                                 (toteumat-q/merkitse-toteumatehtavien-maksuerat-likaisiksi! c tehtavatidt))))
 
@@ -336,6 +356,12 @@
             (assoc % :indeksikorjattuna (:bonus-indeksikorjattuna %))
             %))))
 
+(defn- bonus-write-path-validoitava?
+  [tyyppi]
+  (let [bonuslaji (keyword tyyppi)]
+    (and (not= :yllapidon_bonus bonuslaji)
+      (boolean (sanktio-domain/bonuslaji->teksti bonuslaji)))))
+
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
@@ -358,6 +384,8 @@
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
+            bonuslaji (keyword tyyppi)
+            mhu-bonus? (bonus-write-path-validoitava? tyyppi)
             ;; Koska laskutuskuukausi voi olla antamatta, niin asetetaan se samaksi kuin pvm
             laskutuskuukausi (if (nil? laskutuskuukausi)
                                pvm
@@ -366,6 +394,15 @@
             sopimus (if (nil? sopimus)
                       (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
                       sopimus)
+            urakan-tiedot (when mhu-bonus?
+                            (first (urakat-q/hae-urakan-tiedot db urakka-id)))
+            _ (when mhu-bonus?
+                (bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+                  db
+                  {:urakka-id urakka-id
+                   :hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) pvm)
+                   :toimenpideinstanssi-id toimenpideinstanssi
+                   :bonuslaji bonuslaji}))
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus
@@ -437,7 +474,7 @@
 
     (throw+ (roolit/->EiOikeutta "Ei oikeutta"))))
 
-(defn hae-tehtavan-toteumat [db user {:keys [urakka-id toimenpidekoodi-id hoitokauden-alkuvuosi] :as tiedot}]
+(defn hae-tehtavan-toteumat [db user {:keys [urakka-id toimenpidekoodi-id hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (let [alkupvm (str hoitokauden-alkuvuosi "-10-01")
         loppupvm (str (inc hoitokauden-alkuvuosi) "-09-30")
@@ -451,7 +488,7 @@
 (defn mhu-toteumatehtavat
   "Haetaan MH-urakan toteumatehtävät, eli ei materiaalitehtäviä. Esim. suolaus on materiaalitehtävä ja sitä ei
   siis tässä haeta."
-  [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi] :as tiedot}]
+  [db user {:keys [urakka-id tehtavaryhma hoitokauden-alkuvuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (let [t (if (or (= "Kaikki" tehtavaryhma) (= 0 tehtavaryhma)) nil tehtavaryhma)
         alkupvm (str hoitokauden-alkuvuosi "-10-01")
@@ -507,6 +544,9 @@
 
 (defn tallenna-toteuma! [db user {:keys [tyyppi urakka-id loppupvm toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  ;; Toteuman loppupäivämäärä on pakollinen. Mikäli sen onnistuu olemaan syöttämättä, annetaan virhe
+  (when-not loppupvm
+    (throw (IllegalArgumentException. "Toteuman loppupäivämäärä arvo on pakollinen tieto.")))
   (let [loppupvm (konv/sql-date loppupvm)
         sopimus (first (fetch db ::sopimus/sopimus #{::sopimus/id} {::sopimus/urakka-id urakka-id}))
         ;; Tyyppivaihtoehtoja on kolme. "kokonaishintainen" on määrien toteumille, "lisatyo" on lisätöille
@@ -578,25 +618,30 @@
                                       :tyokonetyyppi nil
                                       :tyokonetunniste nil
                                       :tyokoneen-lisatieto nil}))
-                      tt (upsert! db ::toteuma/toteuma-tehtava
-                           (merge (if toteuma-tehtava-id
-                                    {::toteuma/id toteuma-tehtava-id
-                                     ::toteuma/muokattu (pvm/nyt)
-                                     ::toteuma/muokkaaja (:id user)}
-                                    {::toteuma/luotu (pvm/nyt)
-                                     ::toteuma/luoja (:id user)})
-                             {::toteuma/toteuma-id toteuma-id
-                              ::toteuma/urakka_id urakka-id
-                              ::toteuma/muokattu (pvm/nyt)
-                              ::toteuma/toimenpidekoodi (:id tehtava)
-                              ::toteuma/maara (case tyyppi
-                                                "kokonaishintainen"
-                                                (when maara (bigdec maara))
+                      hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi loppupvm))
+                      tehtava-maara (case tyyppi
+                                      "kokonaishintainen"
+                                      (when maara (bigdec maara))
 
-                                                ("akillinen-hoitotyo" "lisatyo" "muut-rahavaraukset" "vahinkojen-korjaukset")
-                                                (bigdec 1))
-                              ::toteuma/tehtava-lisatieto lisatieto}))]
-
+                                      ("akillinen-hoitotyo" "lisatyo" "muut-rahavaraukset" "vahinkojen-korjaukset")
+                                      (bigdec 1))
+                      _ (if toteuma-tehtava-id
+                           (toteumat-q/paivita-koko-toteuman-tehtava! db {:tehtavaid toteuma-tehtava-id
+                                                                          :toimenpidekoodi (:id tehtava)
+                                                                          :maara tehtava-maara
+                                                                          :lisatieto lisatieto
+                                                                          :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                                                          :muokkaaja (:id user)
+                                                                          :poistettu false
+                                                                          :paivanhinta nil})
+                           (toteumat-q/luo-toteuma_tehtava<! db {:toteuma toteuma-id,
+                                                                 :toimenpidekoodi (:id tehtava),
+                                                                 :maara tehtava-maara,
+                                                                 :luoja (:id user),
+                                                                 :paivan_hinta nil,
+                                                                 :lisatieto lisatieto,
+                                                                 :urakka_id urakka-id,
+                                                                 :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))]
                   toteuma-id)))))))))
 
 (defn hae-maarien-toteuma [db user {:keys [id urakka-id]}]
@@ -703,11 +748,15 @@
                          "akillinen-hoitotyo" "akillinen-hoitotyo"
                          "lisatyo" "lisatyo"
                          "muu")
-        toteumatehtavan-parametrit
-        (into [] (concat [c id] (toteumatehtavan-parametrit toteuma user)))
-        {:keys [toimenpidekoodi]} (:tehtava toteuma)]
-    (log/debug (str "Luodaan uudelle toteumalle id " id " tehtävä" toteumatehtavan-parametrit))
-    (apply toteumat-q/luo-tehtava<! toteumatehtavan-parametrit)
+        {:keys [toimenpidekoodi maara paivanhinta]} (:tehtava toteuma)]
+    (log/debug (str "Luodaan uudelle toteumalle id " id " tehtävä" (:tehtava toteuma) " ja toimenpidekoodi " toimenpidekoodi " ja määrä " maara " ja päiväkohtainen hinta " paivanhinta))
+    (toteumat-q/luo-tehtava<! c {:toteuma id,
+                                 :toimenpidekoodi toimenpidekoodi,
+                                 :maara maara,
+                                 :kayttaja (:id user),
+                                 :paivanhinta paivanhinta,
+                                 :urakka_id (:urakka-id toteuma),
+                                 :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))})
     (log/debug "Merkitään maksuera likaiseksi maksuerätyypin: " maksueratyyppi " toteumalle jonka toimenpidekoodi on: " toimenpidekoodi)
     (toteumat-q/merkitse-toteuman-maksuera-likaiseksi! c maksueratyyppi
                                                        toimenpidekoodi
@@ -825,33 +874,36 @@
                                       (log/debug "Päivitä materiaalitoteuma "
                                                  (:id tm) " (" (:materiaalikoodi tm) ", " (:maara tm)
                                                  ", " (:poistettu tm) "), toteumassa " (:id toteuma))
-                                      (materiaalit-q/paivita-toteuma-materiaali!
-                                        c (:materiaalikoodi tm) (:maara tm) (:id user) (:id toteuma) (:id tm))))
+                                      (materiaalit-q/paivita-toteuma-materiaali! c
+                                        {:materiaalikoodi (:materiaalikoodi tm)
+                                         :maara (:maara tm)
+                                         :kayttaja (:id user)
+                                         :toteuma (:id toteuma)
+                                         :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut t)))
+                                         :id (:id tm)})))
                                   (do
                                     (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm)
-                                               ", " (:maara tm) ") toteumalle " (:id toteuma))
-                                    (materiaalit-q/luo-toteuma-materiaali<! c (:id toteuma) (:materiaalikoodi tm)
-                                                                            (:maara tm) (:id user) (:urakka toteuma)))))
+                                      ", " (:maara tm) ") toteumalle " (:id toteuma))
+                                    (materiaalit-q/luo-toteuma-materiaali<! c {:toteuma (:id toteuma),
+                                                                               :materiaalikoodi (:materiaalikoodi tm),
+                                                                               :maara (:maara tm),
+                                                                               :kayttaja (:id user),
+                                                                               :urakka (:urakka toteuma),
+                                                                               :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut t)))}))))
 
                               ;; Hanskataan tässä epämieluisa kulmatapaus: toteuman pvm saattaa muuttua, ja tietokantacachet
                               ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle
-                              (when-not (= (:alkanut t) toteuman-alkuperainen-pvm)
+                              (when (and (not (= (:alkanut t) toteuman-alkuperainen-pvm)) (not (nil? toteuman-alkuperainen-pvm)))
                                 (doseq [sopimus-id urakan-sopimus-idt]
                                   (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
                                                                                           :alkupvm toteuman-alkuperainen-pvm
-                                                                                          :urakkaid urakka-id}))
-                                (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                                                    :alkupvm toteuman-alkuperainen-pvm
-                                                                                                    :loppupvm toteuman-alkuperainen-pvm}))
+                                                                                          :urakkaid urakka-id})))
 
                               ;; Tässä cachejen päivitys uuden pvm:n osalta
                               (doseq [sopimus-id urakan-sopimus-idt]
                                 (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
                                                                                         :alkupvm (:alkanut t)
                                                                                         :urakkaid urakka-id}))
-                              (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                                                  :alkupvm (:alkanut t)
-                                                                                                  :loppupvm (:alkanut t)})
 
                               ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
                               ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä

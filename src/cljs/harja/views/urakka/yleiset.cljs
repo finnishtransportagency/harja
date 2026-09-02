@@ -42,26 +42,37 @@
 ;; organisaatio = valinta siitä mitä on tietokannassa
 ;; sampoid
 
+(def analytiikkaportaalin-linkki
+  "https://data.vaylapilvi.fi/#/home")
+
+(def paallystyksen-laatutietolinkki
+  "https://data.vaylapilvi.fi/#/views/Sisllysluettelo_17363400130860/Sisllysluettelo?:iid=1")
+
 (defn tallenna-yhteyshenkilot [ur yhteyshenkilot uudet-yhteyshenkilot]
   (go (let [tallennettavat
             (into []
-                  ;; Kaikki tiedon mankelointi ennen lähetystä tähän
-                  (comp (filter #(not (:poistettu %)))
-                        (map #(if-let [nimi (:nimi %)]
-                                (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
-                                  (assoc %
-                                    :etunimi (str/trim etu)
-                                    :sukunimi (str/trim suku)))
-                                %)))
-                  uudet-yhteyshenkilot)
+              ;; Kaikki tiedon mankelointi ennen lähetystä tähän
+              (comp (filter #(not (:poistettu %)))
+                (map #(select-keys % (filter keyword? (keys %))))
+                (map #(if-let [nimi (:nimi %)]
+                        (let [[_ etu suku] (re-matches #"^ *([^ ]+)( *.*?) *$" nimi)]
+                          (assoc %
+                            :etunimi (str/trim etu)
+                            :sukunimi (str/trim suku)))
+                        %)))
+              uudet-yhteyshenkilot)
             poistettavat
             (into []
-                  (keep #(when (and (:poistettu %)
-                                    (> (:id %) 0))
-                           (:id %)))
-                  uudet-yhteyshenkilot)
+              (keep #(when (and (:poistettu %)
+                             (> (:id %) 0))
+                       (:id %)))
+              uudet-yhteyshenkilot)
             res (<! (tiedot/tallenna-urakan-yhteyshenkilot (:id ur) tallennettavat poistettavat))]
         (reset! yhteyshenkilot res)
+        (reset! paivystajat/yhteyshenkilot-haettu? false)
+        (go (reset! paivystajat/paivystajaksi-merkityt
+              (reverse (sort-by :loppu
+                         (<! (tiedot/hae-urakan-paivystajat (:id ur)))))))
         true)))
 
 
@@ -140,22 +151,22 @@
   (let [tallennus-kaynnissa (atom false)]
     (komp/luo
       (komp/kun-muuttuu #(swap! tallennus-kaynnissa
-                                (fn [k]
-                                  (if (= k (:id %))
-                                    k
-                                    false))))
+                           (fn [k]
+                             (if (= k (:id %))
+                               k
+                               false))))
       (fn [ur]
         [:span.takuuaika.inline
          (if (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
            [:span
             [tee-kentta {:tyyppi :pvm :placeholder "Ei asetettu" :elementin-nimi "takuuaika"}
              (r/wrap (get-in ur [:takuu :loppupvm])
-                     #(do (reset! tallennus-kaynnissa (:id ur))
-                          (nav/paivita-urakan-tiedot! (:id ur) assoc-in [:takuu :loppupvm] %)
-                          (go (reset! tallennus-kaynnissa
-                                      (if (k/virhe? (<! (urakka/aseta-takuu-loppupvm (:id ur) %)))
-                                        :virhe
-                                        false)))))]
+               #(do (reset! tallennus-kaynnissa (:id ur))
+                  (nav/paivita-urakan-tiedot! (:id ur) assoc-in [:takuu :loppupvm] %)
+                  (go (reset! tallennus-kaynnissa
+                        (if (k/virhe? (<! (urakka/aseta-takuu-loppupvm (:id ur) %)))
+                          :virhe
+                          false)))))]
             (cond
               (number? @tallennus-kaynnissa) [yleiset/ajax-loader-pieni]
               (= :virhe @tallennus-kaynnissa) [:span (ikonit/livicon-warning-sign)]
@@ -173,22 +184,22 @@
   "Komponentti joka hanskaa sopimustyypin. Ylläpidon urakoissa sitä voi muuttaa, MHU+:ssa vain näyttää."
   [ur]
   (when (and (not= :hoito (:tyyppi ur))
-             (not (u/vesivaylaurakkatyyppi? (:tyyppi ur))))
+          (not (u/vesivaylaurakkatyyppi? (:tyyppi ur))))
     (if (= :teiden-hoito (:tyyppi ur))
       (when (:sopimustyyppi ur) (fmt/sopimustyyppi-fmt (:sopimustyyppi ur)))
       (let [kirjoitusoikeus? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-           sopimustyyppi (:sopimustyyppi ur)]
-       [yleiset/livi-pudotusvalikko {:class "alasveto-sopimustyyppi"
-                                     :valinta sopimustyyppi
-                                     :format-fn #(case %
-                                                   :palvelusopimus "Palvelusopimus"
-                                                   :kokonaisurakka "Kokonaisurakka"
-                                                   :mpu "Palvelusopimus (MPU)"
-                                                   "Ei sopimustyyppiä")
-                                     :valitse-fn #(tallenna-sopimustyyppi ur %)
-                                     :vayla-tyyli? true
-                                     :disabled (not kirjoitusoikeus?)}
-        sopimus/+sopimustyypit+]))))
+            sopimustyyppi (:sopimustyyppi ur)]
+        [yleiset/livi-pudotusvalikko {:class "alasveto-sopimustyyppi"
+                                      :valinta sopimustyyppi
+                                      :format-fn #(case %
+                                                    :palvelusopimus "Palvelusopimus"
+                                                    :kokonaisurakka "Kokonaisurakka"
+                                                    :mpu "Palvelusopimus (MPU)"
+                                                    "Ei sopimustyyppiä")
+                                      :valitse-fn #(tallenna-sopimustyyppi ur %)
+                                      :vayla-tyyli? true
+                                      :disabled (not kirjoitusoikeus?)}
+         sopimus/+sopimustyypit+]))))
 
 (defn yha-tiedot [ur]
   {:yha-tuontioikeus? (yhatiedot/yha-tuontioikeus? ur)
@@ -224,12 +235,12 @@
       [:span
        (if (:indeksi ur)
          (str (:indeksi ur)
-              (when (:indeksilaskennan_perusluku ur)
-                (str ", perusluku: " (:indeksilaskennan_perusluku ur))))
+           (when (:indeksilaskennan_perusluku ur)
+             (str ", perusluku: " (:indeksilaskennan_perusluku ur))))
          "Ei käytössä")
        (when (and (:indeksi ur)
-                  (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-                  (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
+               (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+               (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
          [:span
           [napit/muokkaa
            nil
@@ -240,23 +251,23 @@
             [napit/yleinen-toissijainen "Poista indeksi käytöstä"
              (fn []
                (modal/nayta! {}
-                             [:div
-                              [:b "Haluatko poistaa indeksin käytön tässä urakassa?"]
-                              [yleiset/tietoja {}
-                               "Urakka: " (:nimi ur)
-                               "Nykyinen indeksi: " (:indeksi ur)]
-                              [:div
-                               [:br]
-                               [napit/palvelinkutsu-nappi "Poista indeksi käytöstä"
-                                #(urakat/poista-indeksi-kaytosta! ur)
-                                {:luokka "nappi-kielteinen"
-                                 :kun-onnistuu #(do (nav/paivita-urakan-tiedot! (:id ur)
-                                                                                assoc :indeksi nil)
-                                                    (modal/piilota!)
-                                                    (reset! auki? false))}]
-                               [napit/yleinen-toissijainen "Peruuta" #(do (modal/piilota!)
-                                                                          (reset! auki? false))
-                                {:luokka "nappi-toissijainen pull-right"}]]]))
+                 [:div
+                  [:b "Haluatko poistaa indeksin käytön tässä urakassa?"]
+                  [yleiset/tietoja {}
+                   "Urakka: " (:nimi ur)
+                   "Nykyinen indeksi: " (:indeksi ur)]
+                  [:div
+                   [:br]
+                   [napit/palvelinkutsu-nappi "Poista indeksi käytöstä"
+                    #(urakat/poista-indeksi-kaytosta! ur)
+                    {:luokka "nappi-kielteinen"
+                     :kun-onnistuu #(do (nav/paivita-urakan-tiedot! (:id ur)
+                                          assoc :indeksi nil)
+                                      (modal/piilota!)
+                                      (reset! auki? false))}]
+                   [napit/yleinen-toissijainen "Peruuta" #(do (modal/piilota!)
+                                                            (reset! auki? false))
+                    {:luokka "nappi-toissijainen pull-right"}]]]))
              {:luokka "nappi-kielteinen btn-xs"}])])])))
 
 
@@ -424,67 +435,67 @@
 (defn- urakan-kesa-aika [ur]
   (let [auki? (atom false)]
     (fn [ur]
-    (if (not @auki?)
-      [:<>
-       [:span (str (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-alkupvm ur))
-                "–" (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-loppupvm ur)))]
-       [:span " (tieliikenneilmoituksien kesävasteaika)"]
-       (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
-               (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
-         [napit/muokkaa
-          nil
-          #(swap! auki? not)
-          {:luokka "nappi-reunaton"
-           :aria-label "Muokkaa urakan kesäaikaa"}])]
+      (if (not @auki?)
+        [:<>
+         [:span (str (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-alkupvm ur))
+                  "–" (pvm/fmt-paiva-ja-kuukausi-lyhyt (:kesakausi-loppupvm ur)))]
+         [:span " (tieliikenneilmoituksien kesävasteaika)"]
+         (when (and (roolit/tilaajan-kayttaja? @istunto/kayttaja)
+                 (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur)))
+           [napit/muokkaa
+            nil
+            #(swap! auki? not)
+            {:luokka "nappi-reunaton"
+             :aria-label "Muokkaa urakan kesäaikaa"}])]
         (let [aikavali-alku (atom nil) ; on auki
               aikavali-loppu (atom nil)]
-        [:<>
-         [:span
-          [tee-otsikollinen-kentta {:otsikko "Aikaväli alkaa"
-                                    :luokka "label-ja-kentta-kesa-aika"
-                                    :tyylit {:width "90px"
-                                             :min-width "90px"}
-                                    :kentta-params {:placeholder "pp.kk"
-                                                    :tyyppi :string
-                                                    :vayla-tyyli? true
-                                                    :pituus-max 6
-                                                    :pituus-min 4}
-                                    :arvo-atom aikavali-alku
-                                    } aikavali-alku]
-         [tee-otsikollinen-kentta {:otsikko "Aikaväli loppuu"
-                                   :luokka "label-ja-kentta-kesa-aika"
-                                   :tyylit {:width "90px"
-                                            :min-width "90px"}
-                                   :kentta-params {:placeholder "pp.kk"
-                                                   :tyyppi :string
-                                                   :vayla-tyyli? true
-                                                   :pituus-max 6
-                                                   :pituus-min 4}
-                                   :arvo-atom aikavali-loppu
-                                   } aikavali-loppu]
-         [napit/palvelinkutsu-nappi "Tallenna"
-          #(urakat/paivita-kesa-aika! ur @aikavali-alku @aikavali-loppu)
-          {:kun-onnistuu (fn [vastaus]
-                           (do
-                             (viesti/nayta! "Urakan kesäaika tallennettu" :success)
-                             (nav/paivita-urakan-tiedot! (:id ur)
-                               (fn [u]
-                                 (-> u
-                                   (assoc :kesakausi-alkupvm (:kesakausi-alkupvm (first vastaus)))
-                                   (assoc :kesakausi-loppupvm (:kesakausi-loppupvm (first vastaus))))))
-                             (reset! auki? false)
-                             (reset! aikavali-alku nil)
-                             (reset! aikavali-loppu nil)))
-           :virheviesti "Kesäajan tallennus epäonnistui."
-           :nayta-virheviesti? true
-           :kun-virhe (fn [vastaus]
-                        (viesti/nayta-toast! (:virhe (:response vastaus))
-                          :varoitus viesti/viestin-nayttoaika-keskipitka))}]
-         [napit/yleinen-toissijainen "Peruuta" #(do
-                                                  (reset! auki? false)
-                                                  (reset! aikavali-alku nil)
-                                                  (reset! aikavali-loppu nil))
-          {:luokka "nappi-toissijainen"}]]])))))
+          [:<>
+           [:span
+            [tee-otsikollinen-kentta {:otsikko "Aikaväli alkaa"
+                                      :luokka "label-ja-kentta-kesa-aika"
+                                      :tyylit {:width "90px"
+                                               :min-width "90px"}
+                                      :kentta-params {:placeholder "pp.kk"
+                                                      :tyyppi :string
+                                                      :vayla-tyyli? true
+                                                      :pituus-max 6
+                                                      :pituus-min 4}
+                                      :arvo-atom aikavali-alku
+                                      } aikavali-alku]
+            [tee-otsikollinen-kentta {:otsikko "Aikaväli loppuu"
+                                      :luokka "label-ja-kentta-kesa-aika"
+                                      :tyylit {:width "90px"
+                                               :min-width "90px"}
+                                      :kentta-params {:placeholder "pp.kk"
+                                                      :tyyppi :string
+                                                      :vayla-tyyli? true
+                                                      :pituus-max 6
+                                                      :pituus-min 4}
+                                      :arvo-atom aikavali-loppu
+                                      } aikavali-loppu]
+            [napit/palvelinkutsu-nappi "Tallenna"
+             #(urakat/paivita-kesa-aika! ur @aikavali-alku @aikavali-loppu)
+             {:kun-onnistuu (fn [vastaus]
+                              (do
+                                (viesti/nayta! "Urakan kesäaika tallennettu" :success)
+                                (nav/paivita-urakan-tiedot! (:id ur)
+                                  (fn [u]
+                                    (-> u
+                                      (assoc :kesakausi-alkupvm (:kesakausi-alkupvm (first vastaus)))
+                                      (assoc :kesakausi-loppupvm (:kesakausi-loppupvm (first vastaus))))))
+                                (reset! auki? false)
+                                (reset! aikavali-alku nil)
+                                (reset! aikavali-loppu nil)))
+              :virheviesti "Kesäajan tallennus epäonnistui."
+              :nayta-virheviesti? true
+              :kun-virhe (fn [vastaus]
+                           (viesti/nayta-toast! (:virhe (:response vastaus))
+                             :varoitus viesti/viestin-nayttoaika-keskipitka))}]
+            [napit/yleinen-toissijainen "Peruuta" #(do
+                                                     (reset! auki? false)
+                                                     (reset! aikavali-alku nil)
+                                                     (reset! aikavali-loppu nil))
+             {:luokka "nappi-toissijainen"}]]])))))
 
 (defn- muokkaa-urakan-yhteystietoja-lomake [{:keys [urakan_yhteystiedot urakoitsija id] :as _urakka} avaa-toggle-fn voi-muokata?]
   (let [;; Urakan yhteystiedot tulevat -> hae-hallintayksikon-urakat 
@@ -509,10 +520,10 @@
                                   (let [uudet-yhteystiedot {:sahkoposti (:sahkoposti yhteystiedot-atom)
                                                             :matkapuhelin (:matkapuhelin yhteystiedot-atom)}]
                                     (if (seq (:urakan_yhteystiedot valitun-urakan-tiedot))
-                                        ;; Päivitä olemassaoleva
+                                      ;; Päivitä olemassaoleva
                                       (update valitun-urakan-tiedot :urakan_yhteystiedot #(mapv (fn [rivi]
-                                                                              (merge rivi uudet-yhteystiedot)) %))
-                                        ;; Luo uusi
+                                                                                                  (merge rivi uudet-yhteystiedot)) %))
+                                      ;; Luo uusi
                                       (assoc valitun-urakan-tiedot :urakan_yhteystiedot [uudet-yhteystiedot])))))
                               ;; Sulje muokkaus samalla jos tallennus onnistui 
                               (avaa-toggle-fn))))))]
@@ -568,8 +579,8 @@
         muokkaa-fn #(swap! muokataan? not)
         urakan_yhteystiedot (first urakan_yhteystiedot)
         yhteystiedot (if urakan_yhteystiedot
-                       (str 
-                         "Sähköposti: " (:sahkoposti urakan_yhteystiedot) ", " 
+                       (str
+                         "Sähköposti: " (:sahkoposti urakan_yhteystiedot) ", "
                          "Puhelinnumero: " (:matkapuhelin urakan_yhteystiedot))
                        "Ei yhteystietoja")
         voi-muokata? (and
@@ -589,50 +600,113 @@
             [napit/muokkaa nil muokkaa-fn {:luokka "nappi-reunaton"
                                            :aria-label "Muokkaa urakan yhteystietoja"}])])])))
 
+(defn- projektikansio-linkki-nakyma [projektikansio-linkki]
+  (if (seq projektikansio-linkki)
+    [yleiset/staattinen-linkki-uuteen-valilehteen projektikansio-linkki projektikansio-linkki]
+    "Ei asetettu"))
+
+(defn- muokkaa-projektikansiolinkkia-lomake [{:keys [id projektikansio-linkki]} avaa-toggle-fn voi-muokata?]
+  (let [projektikansio-linkki-arvo #(not-empty (str/trim (or (:projektikansio-linkki @%) "")))]
+    (r/with-let [lomaketiedot (atom {:projektikansio-linkki projektikansio-linkki})]
+      [lomake/lomake
+       {:ei-borderia? true
+        :tarkkaile-ulkopuolisia-muutoksia? true
+        :muokkaa! (fn [rivi]
+                    (swap! lomaketiedot merge rivi))
+        :header [:div.col-md-12
+                 [:h2.header-yhteiset "Muokkaa projektikansiota"]
+                 [:hr]]
+        :footer [:<>
+                 [:hr]
+                 [:div.muokkaus-modal-napit
+                  [napit/palvelinkutsu-nappi "Tallenna"
+                   #(tiedot/tallenna-urakan-projektikansio-linkki id (projektikansio-linkki-arvo lomaketiedot))
+                   {:disabled (not voi-muokata?)
+                    :virheviesti "Projektikansion tallennus epäonnistui"
+                    :nayta-virheviesti? false
+                    :kun-onnistuu (fn [vastaus]
+                                    (viesti/nayta! "Projektikansio tallennettu" :success)
+                                    (nav/paivita-urakan-tiedot! id assoc :projektikansio-linkki (:projektikansio-linkki vastaus))
+                                    (avaa-toggle-fn))
+                    :kun-virhe (fn [vastaus]
+                                 (viesti/nayta-toast! (or (:virhe (:response vastaus))
+                                                        "Projektikansion tallennus epäonnistui")
+                                   :varoitus
+                                   viesti/viestin-nayttoaika-keskipitka))}]
+                  [napit/yleinen-toissijainen "Peruuta" avaa-toggle-fn]]]}
+
+       [(lomake/rivi
+          {:nimi :projektikansio-linkki
+           :tyyppi :string
+           :otsikko "Projektikansion linkki"
+           :salli-kirjoitus? true
+           ::lomake/col-luokka "col-xs-12"})]
+       @lomaketiedot])))
+
+(defn- urakan-projektikansio [{:keys [id] :as _urakka}]
+  (let [muokataan? (atom false)
+        muokkaa-fn #(swap! muokataan? not)
+        voi-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset id)]
+    (fn [{:keys [projektikansio-linkki] :as urakka}]
+      [:span
+       (if @muokataan?
+         (muokkaa-projektikansiolinkkia-lomake urakka muokkaa-fn voi-muokata?)
+         [:span
+          [projektikansio-linkki-nakyma projektikansio-linkki]
+          (when voi-muokata?
+            [napit/muokkaa nil muokkaa-fn {:luokka "nappi-reunaton"
+                                           :aria-label "Muokkaa projektikansiota"}])])])))
+
 
 (defn yleiset-tiedot [paivita-vastuuhenkilot! ur kayttajat vastuuhenkilot]
   (let [{:keys [paallystysurakka? paallystysurakka-sidottu?]
-         :as yha-tiedot} (yha-tiedot ur)]
-    [bs/panel {}
-     "Yleiset tiedot"
-     [yleiset/tietoja {:piirra-viivat? true
-                       :class "body-text"
-                       :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}
-      "Urakan nimi:" (:nimi ur)
-      "Urakan tunnus:" (:sampoid ur)
-      "Urakkanumero:" (:urakkanro ur)
+         :as yha-tiedot} (yha-tiedot ur)
+tietorivit ["Urakan nimi:" (:nimi ur)
+            "Urakan tunnus:" (:sampoid ur)
+            "Urakkanumero:" (:urakkanro ur)
 
-      "YHA:n urakkatunnus:"
-      (when (and paallystysurakka? paallystysurakka-sidottu?)
-        (get-in ur [:yhatiedot :yhatunnus]))
-      "YHA:n ELY:t"
-      (when (and paallystysurakka? paallystysurakka-sidottu?)
-        (str/join ", " (get-in ur [:yhatiedot :elyt])))
-      "YHA:n vuodet:"
-      (when (and paallystysurakka? paallystysurakka-sidottu?)
-        (str/join ", " (get-in ur [:yhatiedot :vuodet])))
-      "YHA-sidonta:" (yha-sidonta ur yha-tiedot)
+                    "YHA:n urakkatunnus:"
+(when (and paallystysurakka? paallystysurakka-sidottu?)
+  (get-in ur [:yhatiedot :yhatunnus]))
+"YHA:n ELY:t"
+(when (and paallystysurakka? paallystysurakka-sidottu?)
+  (str/join ", " (get-in ur [:yhatiedot :elyt])))
+"YHA:n vuodet:"
+(when (and paallystysurakka? paallystysurakka-sidottu?)
+  (str/join ", " (get-in ur [:yhatiedot :vuodet])))
+"YHA-sidonta:" (yha-sidonta ur yha-tiedot)
 
-      "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
-      "Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
-      "Takuu päättyy:" (when paallystysurakka?
-                         [takuuaika ur])
-      "Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
-      "Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                         (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
-                         #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"}]
+                    "Sopimuksen tunnus: " (some->> ur :sopimukset vals (str/join ", "))
+"Aikaväli:" [:span.aikavali (pvm/pvm (:alkupvm ur)) " \u2014 " (pvm/pvm (:loppupvm ur))]
+"Takuu päättyy:" (when paallystysurakka?
+                   [takuuaika ur])
+"Tilaaja:" (if (u/vesivaylaurakka? ur) "Väylä" (:nimi (:hallintayksikko ur)))
+"Urakanvalvoja: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                   (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot
+                   #{"ELY_Urakanvalvoja" "Tilaajan_Urakanvalvoja"}]
 
-      "Urakoitsija:" (:nimi (:urakoitsija ur))
-      "Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
-                                (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
-      "Urakan yhteystiedot: " [urakan-yleinen-puh-ja-sposti ur]
+                    "Urakoitsija:" (:nimi (:urakoitsija ur))
+"Urakan vastuuhenkilö: " [nayta-vastuuhenkilo paivita-vastuuhenkilot!
+                          (:id ur) @istunto/kayttaja kayttajat vastuuhenkilot "vastuuhenkilo"]
+"Urakan yhteystiedot: " [urakan-yleinen-puh-ja-sposti ur]
 
-      ;; valaistus, tiemerkintä --> palvelusopimus
-      ;; päällystys --> kokonaisurakka
-      "Sopimustyyppi: " (sopimustyyppi ur)
-      "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
-                    [urakan-indeksi ur])
-      "Urakan kesäaika: " [urakan-kesa-aika ur]]]))
+                    ;; valaistus, tiemerkintä --> palvelusopimus
+                    ;; päällystys --> kokonaisurakka
+                    "Sopimustyyppi: " (sopimustyyppi ur)
+                    "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
+                                  [urakan-indeksi ur])
+                    "Urakan kesäaika: " [urakan-kesa-aika ur]
+                    "Projektikansio: " [urakan-projektikansio ur]
+                    "Analytiikkaportaali: " [yleiset/staattinen-linkki-uuteen-valilehteen analytiikkaportaalin-linkki analytiikkaportaalin-linkki]]
+   tietorivit (cond-> tietorivit
+                paallystysurakka?
+                (conj "Laatutiedot: "
+                  [yleiset/staattinen-linkki-uuteen-valilehteen paallystyksen-laatutietolinkki paallystyksen-laatutietolinkki]))]
+  [bs/panel {}
+   (into [yleiset/tietoja {:piirra-viivat? true
+                           :class "body-text"
+                           :tietorivi-luokka "padding-8 css-grid css-grid-columns-12rem-9"}]
+     tietorivit)]))
 
 (defn yhteyshenkilot [ur]
   (let [yhteyshenkilot (atom nil)
@@ -640,18 +714,22 @@
         hae! (fn [ur]
                (reset! yhteyshenkilot nil)
                (go (reset! yhteyshenkilot
-                           (filter
-                             #(not= "urakoitsijan paivystaja" (:rooli %))
-                             (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur)))))))]
+                     (filter
+                       #(not= "urakoitsijan paivystaja" (:rooli %))
+                       (<! (tiedot/hae-urakan-yhteyshenkilot (:id ur)))))))]
     (hae! ur)
     (komp/luo
       (komp/kun-muuttuu hae!)
       (fn [ur]
         [grid/grid
-         {:otsikko "Yhteyshenkilöt"
+         {;; Näkymässä voi olla sama henkilö, erillä roolilla
+          :tunniste #(str (:id %) "_" (:rooli %))
+          :otsikko "Yhteyshenkilöt"
           :tyhja "Ei yhteyshenkilöitä."
           :tallenna (when (oikeudet/voi-kirjoittaa? oikeudet/urakat-yleiset (:id ur))
-                      #(tallenna-yhteyshenkilot ur yhteyshenkilot %))}
+                      #(tallenna-yhteyshenkilot ur yhteyshenkilot %))
+          :voi-muokata-rivia? #(not= "Sampo yhteyshenkilö" (:rooli %))
+          :voi-poistaa? #(not= "Sampo yhteyshenkilö" (:rooli %))}
          [{:otsikko "Rooli" :nimi :rooli :tyyppi :valinta :leveys 17
            :hae #(do (when (:rooli %)
                        (str/capitalize (:rooli %))))
@@ -666,13 +744,13 @@
            :leveys 17
            :tyyppi :valinta
            :valinta-nayta #(if % (:nimi %) "- Valitse organisaatio -")
-           :valinnat [nil (:urakoitsija ur) (:hallintayksikko ur)]}
+           :valinnat [nil (:urakoitsija ur) (:elinvoimakeskus ur)]}
 
           {:otsikko "Nimi" :hae #(if-let [nimi (:nimi %)]
                                    nimi
                                    (str (:etunimi %)
-                                        (when-let [suku (:sukunimi %)]
-                                          (str " " suku))))
+                                     (when-let [suku (:sukunimi %)]
+                                       (str " " suku))))
            :pituus-max 64
            :aseta (fn [yht arvo]
                     (assoc yht :nimi arvo))
@@ -695,9 +773,9 @@
                                    (reset! urakoitsijan-alukset nil)
                                    (go
                                      (reset! urakoitsijan-alukset
-                                               (<! (tiedot/hae-urakoitsijan-alukset
-                                                     (:id ur)
-                                                     (get-in ur [:urakoitsija :id]))))))]
+                                       (<! (tiedot/hae-urakoitsijan-alukset
+                                             (:id ur)
+                                             (get-in ur [:urakoitsija :id]))))))]
     (komp/luo
       (komp/sisaan #(hae-urakoitsijan-alukset ur))
       (fn [ur]
@@ -710,17 +788,17 @@
             (fn [rivi]
               (let [alus-kaytossa-urakoissa (::alus/kaytossa-urakoissa rivi)
                     kaytossa-muissa-urakoissa (set (remove #(= % (:id ur))
-                                                           alus-kaytossa-urakoissa))]
+                                                     alus-kaytossa-urakoissa))]
 
                 (or (::alus/kaytossa-urakassa? rivi)
-                    (> (count kaytossa-muissa-urakoissa) 0))))
+                  (> (count kaytossa-muissa-urakoissa) 0))))
             :esta-poistaminen-tooltip (fn [_] "Alus on käytössä urakoissa.")
             :tunniste :grid-id
             :muutos (fn [g]
                       (let [vaatii-kayton-lisatietojen-tyhjennyksen?
                             (some
                               #(and (not (::alus/kaytossa-urakassa? %))
-                                    (some? (::alus/urakan-aluksen-kayton-lisatiedot %)))
+                                 (some? (::alus/urakan-aluksen-kayton-lisatiedot %)))
                               (vals (grid/hae-muokkaustila g)))]
                         (when vaatii-kayton-lisatietojen-tyhjennyksen?
                           (grid/muokkaa-rivit!
@@ -730,13 +808,13 @@
                                      (if-not (::alus/kaytossa-urakassa? rivi)
                                        (assoc rivi ::alus/urakan-aluksen-kayton-lisatiedot nil)
                                        rivi))
-                                   rivit))))))
+                                rivit))))))
             :tallenna (when muokkausoikeus?
                         (fn [alukset]
                           (tiedot/tallenna-urakan-alukset (:id ur)
-                                                          (get-in ur [:urakoitsija :id])
-                                                          alukset
-                                                          urakoitsijan-alukset)))}
+                            (get-in ur [:urakoitsija :id])
+                            alukset
+                            urakoitsijan-alukset)))}
            [{:otsikko "MMSI"
              :nimi ::alus/mmsi
              :tyyppi :positiivinen-numero :kokonaisluku? true
@@ -784,11 +862,11 @@
         sidonta-lukittu? (get-in urakka [:yhatiedot :sidonta-lukittu?])
         palvelusopimus? (u/paallystyksen-palvelusopimus? urakka)]
     (when (and yha-tuontioikeus?
-               paallystysurakka?
-               (not paikkausurakka?)
-               (not paallystysurakka-sidottu?)
-               (not sidonta-lukittu?)
-               (not palvelusopimus?))
+            paallystysurakka?
+            (not paikkausurakka?)
+            (not paallystysurakka-sidottu?)
+            (not sidonta-lukittu?)
+            (not palvelusopimus?))
       (yha/nayta-tuontidialogi urakka))))
 
 (defn yleiset [ur]
@@ -810,14 +888,18 @@
                      (nayta-yha-tuontidialogi-tarvittaessa ur)))
       (fn [ur]
         [:div
-         [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]
-         (when (= :paallystys (:tyyppi ur))
-           [paallystys-indeksit/paallystysurakan-indeksit ur])
-         [urakkaan-liitetyt-kayttajat @kayttajat]
-         [yhteyshenkilot ur]
-         (when (u/vesivaylaurakka-ei-kanava? ur)
-           [alukset ur])
-         (when (urakka/paivystys-kaytossa? ur)
-           [paivystajat/paivystajat ur])
-         (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
-           [urakan-tyotunnit ur])]))))
+         [:div
+          [:h1 "Yleiset tiedot"]
+          [yleiset-tiedot #(reset! vastuuhenkilot %) ur @kayttajat @vastuuhenkilot]]
+         [:div.row
+          [:div.col-md-12
+           (when (= :paallystys (:tyyppi ur))
+             [paallystys-indeksit/paallystysurakan-indeksit ur])
+           [urakkaan-liitetyt-kayttajat @kayttajat]
+           [yhteyshenkilot ur]
+           (when (u/vesivaylaurakka-ei-kanava? ur)
+             [alukset ur])
+           (when (urakka/paivystys-kaytossa? ur)
+             [paivystajat/paivystajat ur])
+           (when (istunto/ominaisuus-kaytossa? :urakan-tyotunnit)
+             [urakan-tyotunnit ur])]]]))))

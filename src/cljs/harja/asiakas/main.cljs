@@ -30,10 +30,15 @@
   (render)
 
   ;; Jotkut komponentit haluavat body-klikkauksia kuunnella
-  (set! (.-onclick js/document.body)
-        (fn [e]
-          (t/julkaise! {:aihe      :body-klikkaus
-                        :tapahtuma e})))
+  (.addEventListener js/document.body "click"
+    (fn [e]
+      (t/julkaise! {:aihe :body-klikkaus
+                    :tapahtuma e}))
+    ;; Note: React 17 Event Delegation muutosten myötä täytyy body-klikkauksia kuunnella
+    ;; capture vaiheessa, jotta tapahtuma saadaan kiinni kuuntelijassa.
+    ;; React 17 tottelee stopPropagationia, joten tapahtuman kulku estetään ellei capture vaihetta käytetä.
+    ;; https://legacy.reactjs.org/blog/2020/08/10/react-v17-rc.html#fixing-potential-issues
+    (clj->js {:capture true}))
 
   ;; Asennetaan yleisten näppäinten handlerin body tasolle
   (set! (.-onkeydown js/document.body)

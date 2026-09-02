@@ -133,7 +133,7 @@
   (let [{:keys [kohteet urakka-id vuosi valittu-lomake lomakedata
                 nakyvissa? muutos-taulukosta? valmis-fn peru-fn] :as data} @tiedot/tiemerkinta-valmis-modal-data
         paallystysurakoiden-idt (into #{}
-                                      (map :paallystysurakka-id kohteet))]
+                                  (map :paallystysurakka-id kohteet))]
     [modal/modal
      {:otsikko (if (= (count kohteet) 1)
                  (str "Kohteen " (:nimi (first kohteet)) " tiemerkinnän valmistuminen: " (if-let [valmis-pvm (:valmis-pvm (first kohteet))]
@@ -143,7 +143,7 @@
       ;:luokka "merkitse-valmiiksi-tiemerkintaan"
       :nakyvissa? nakyvissa?
       :sulje-fn #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                     (when peru-fn (peru-fn)))
+                   (when peru-fn (peru-fn)))
       :footer [:div
                ;; Gridin kanssa tätä ei voi perua, sillä maili tullaan lähettämään joka tapauksessa
                ;; gridin tallennuksen yhteydessä.
@@ -151,13 +151,13 @@
                (when-not muutos-taulukosta?
                  [napit/peruuta "Peruuta"
                   #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                       (when peru-fn (peru-fn)))])
+                     (when peru-fn (peru-fn)))])
                [napit/yleinen-ensisijainen
                 ;; Olennainen ero: aikajanan kanssa muutos tullaan tallentamaan heti,
                 ;; gridin kanssa vasta kun gridi tallennetaan.
                 (if muutos-taulukosta? "Hyväksy" "Tallenna")
                 #(do (swap! tiedot/tiemerkinta-valmis-modal-data assoc :nakyvissa? false)
-                     (valmis-fn lomakedata))
+                   (valmis-fn lomakedata))
                 {:luokka "nappi-myonteinen"
                  :ikoni (ikonit/check)}]]}
      [:div
@@ -166,10 +166,10 @@
         [:span "Päivämäärän asettamisesta lähetetään sähköpostilla tieto asianosaisille. Tarkista vastaanottajalista. Viesti lähetetään heti, mikäli valmistumispäivämäärä on tänään tai menneisyydessä. Muutoin sähköposti lähetetään merkittynä valmistumispäivänä."]
         (if muutos-taulukosta?
           [:span.bold (str " Tämän kohteen sähköposti lähetetään "
-                           (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
-                             "heti, kun tallennat muutokset taulukosta"
-                             (str "valmistuspäivänä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
-                           ".")])]
+                        (if (pvm/sama-tai-ennen? (:valmis-pvm (first kohteet)) (t/now))
+                          "heti, kun tallennat muutokset taulukosta"
+                          (str "valmistuspäivänä " (fmt/pvm-opt (:valmis-pvm (first kohteet)))))
+                        ".")])]
        "vihje-hento-korostus" 16]
       ;; Tiemerkintä voi teoriassa valmistua yhtaikaa useamman päällystysurakan kohteille.
       [vastaanottajien-tiedot @nav/valittu-urakka-id (conj paallystysurakoiden-idt urakka-id)]
@@ -198,21 +198,21 @@
 
         saa-asettaa-valmis-takarajan?
         (oikeudet/on-muu-oikeus? "TM-takaraja"
-                                 oikeudet/urakat-aikataulu
-                                 urakka-id
-                                 @istunto/kayttaja)
+          oikeudet/urakat-aikataulu
+          urakka-id
+          @istunto/kayttaja)
 
         saa-merkita-valmiiksi?
         (oikeudet/on-muu-oikeus? "TM-valmis"
-                                 oikeudet/urakat-aikataulu
-                                 urakka-id
-                                 @istunto/kayttaja)]
+          oikeudet/urakat-aikataulu
+          urakka-id
+          @istunto/kayttaja)]
     {:saa-muokata? saa-muokata?
      :saa-asettaa-valmis-takarajan? saa-asettaa-valmis-takarajan?
      :saa-merkita-valmiiksi? saa-merkita-valmiiksi?
      :voi-tallentaa? (or saa-muokata?
-                         saa-merkita-valmiiksi?
-                         saa-asettaa-valmis-takarajan?)}))
+                       saa-merkita-valmiiksi?
+                       saa-asettaa-valmis-takarajan?)}))
 
 
 (defn- otsikoi-aikataulurivit
@@ -220,13 +220,13 @@
   [{:keys [valmis kesken aloittamatta] :as _luokitellut-rivit}]
   (concat (when-not (empty? valmis)
             (into [(grid/otsikko "Valmiit kohteet")]
-                  valmis))
-          (when-not (empty? kesken)
-            (into [(grid/otsikko "Keskeneräiset kohteet")]
-                  kesken))
-          (when-not (empty? aloittamatta)
-            (into [(grid/otsikko "Aloittamatta olevat kohteet")]
-                  aloittamatta))))
+              valmis))
+    (when-not (empty? kesken)
+      (into [(grid/otsikko "Keskeneräiset kohteet")]
+        kesken))
+    (when-not (empty? aloittamatta)
+      (into [(grid/otsikko "Aloittamatta olevat kohteet")]
+        aloittamatta))))
 
 (defn valinnat [ur paallystys?]
   (let [{jarjestys :jarjestys} @tiedot/aikataulu-suodattimet
@@ -265,17 +265,17 @@
 
       ;; 3 Kohdenumero
       [valinnat/yllapitokohteen-kohdenumero yllapito-tiedot/kohdenumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                                             :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]
+                                                                             :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko"}}]
       ;; 4 Tienumero
       [valinnat/tienumero yllapito-tiedot/tienumero nil {:kentan-parametrit {:vayla-tyyli? true}
-                                                         :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko-vayla"}}]]
+                                                         :komponentin-optiot {:otsikon-luokka "alasvedon-otsikko"}}]]
 
      ;; Ryhmä #2 
      [:div
       ;; 1 Aikajana 
       [kentat/tee-otsikollinen-kentta
        {:otsikko "Aikajana"
-        :otsikon-luokka "alasvedon-otsikko-vayla"
+        :otsikon-luokka "alasvedon-otsikko"
         :luokka "label-ja-kentta-puolikas"
         :kentta-params {:tyyppi :toggle
                         :vayla-tyyli? true
@@ -288,7 +288,7 @@
       [kentat/tee-otsikko-ja-kentat
        {:otsikko "Aikajanan asetukset"
         :luokka "label-ja-kentta"
-        :otsikon-luokka "alasvedon-otsikko-vayla"
+        :otsikon-luokka "alasvedon-otsikko"
         :kentat [{:kentta-params {:tyyppi :checkbox
                                   :teksti "Näytä tarkka aikataulu"}
                   :arvo-atom tiedot/nayta-tarkka-aikajana?}
@@ -340,21 +340,21 @@
     (if muokataan?
       [:div (pvm/pvm-ilman-samaa-vuotta (:valmis-tiemerkintaan rivi) (:vuosi modalin-params))]
       [:div {:title (cond (not paallystys-valmis?) "Päällystys ei ole valmis."
-                          (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
-                          :default nil)}
+                      (not suorittava-urakka-annettu?) "Tiemerkinnän suorittava urakka puuttuu."
+                      :default nil)}
 
        (grid/arvo-ja-nappi
          {:sisalto (cond (not voi-muokata-paallystys?) :pelkka-arvo
-                         (not (:valmis-tiemerkintaan rivi)) :pelkka-nappi
-                         :default :arvo-ja-nappi)
+                     (not (:valmis-tiemerkintaan rivi)) :pelkka-nappi
+                     :default :arvo-ja-nappi)
           :pelkka-nappi-teksti "Aseta pvm"
           :pelkka-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data (merge modalin-params
-                                                                                           {:nakyvissa? true
-                                                                                            :valittu-lomake :valmis-tiemerkintaan}))
+                                                                                      {:nakyvissa? true
+                                                                                       :valittu-lomake :valmis-tiemerkintaan}))
           :arvo-ja-nappi-napin-teksti "Peru"
           :arvo-ja-nappi-toiminto-fn #(reset! tiedot/valmis-tiemerkintaan-modal-data (merge modalin-params
-                                                                                            {:nakyvissa? true
-                                                                                             :valittu-lomake :peru-valmius-tiemerkintaan}))
+                                                                                       {:nakyvissa? true
+                                                                                        :valittu-lomake :peru-valmius-tiemerkintaan}))
           :nappi-optiot {:disabled (or
                                      (not paallystys-valmis?)
                                      (not suorittava-urakka-annettu?))}
@@ -368,16 +368,16 @@
     saa-asettaa-valmis-takarajan?
     valmis-tiemerkintaan
     (or aikataulu-tiemerkinta-takaraja
-        (and (not jyrsinta)
-             (= :muu merkinta)))))
+      (and (not jyrsinta)
+        (= :muu merkinta)))))
 
 
 (defn aseta-tiemerkinta-valmis
   [rivi arvo]
   (assoc rivi :aikataulu-tiemerkinta-takaraja arvo
-              ;; Jos käyttäjä haluaa automaattisen laskennan uudelleen käyttöön, on asetettava
-              ;; pvm nilliksi, mikä puolestaan asettaa käsin-booleanin falseksi
-              :aikataulu-tiemerkinta-takaraja-kasin (boolean arvo)))
+    ;; Jos käyttäjä haluaa automaattisen laskennan uudelleen käyttöön, on asetettava
+    ;; pvm nilliksi, mikä puolestaan asettaa käsin-booleanin falseksi
+    :aikataulu-tiemerkinta-takaraja-kasin (boolean arvo)))
 
 (defn aseta-tiemerkinta-lisatieto
   [rivi arvo]
@@ -428,7 +428,7 @@
          [:span "?"]
          [yleiset/wrap-if true
           [yleiset/tooltip {} :% (str ohje-syota-ensin-merkinta-ja-jyrsinta
-                                      tarkat-kestot-merkinta-ja-jyrsinat)]
+                                   tarkat-kestot-merkinta-ja-jyrsinat)]
           [napit/nappi ""
            #(println "on click")
            {:luokka "napiton-nappi tm-takaraja-info-btn"
@@ -450,9 +450,9 @@
         kohdenumero (:kohdenumero rivi)
         nimi (:nimi rivi)
         kohteen-otsikko (str "Kohteen "
-                             (when kohdenumero (str kohdenumero " "))
-                             (when nimi (str nimi " "))
-                             "lisätiedot")]
+                          (when kohdenumero (str kohdenumero " "))
+                          (when nimi (str nimi " "))
+                          "lisätiedot")]
     [:div.lisatiedon-muokkaus-leijuke-wrapper
      [leijuke/leijuke {:otsikko kohteen-otsikko
                        :luokka "tm-lisatieto-leijuke"
@@ -524,7 +524,7 @@
            saa-merkita-valmiiksi? voi-muokata-paallystys? voi-muokata-tiemerkinta?]}]
   (let [aikataulurivit (map (fn [rivi]
                               (assoc rivi :aikataulu-tiemerkinta-loppu-alkuperainen (:aikataulu-tiemerkinta-loppu rivi)))
-                            aikataulurivit)
+                         aikataulurivit)
         otsikoidut-aikataulurivit (if (tiedot/aikapohjainen-jarjestys-valittu? (:jarjestys @tiedot/aikataulu-suodattimet))
                                     (otsikoi-aikataulurivit
                                       (tiedot/aikataulurivit-valmiuden-mukaan aikataulurivit urakkatyyppi))
@@ -549,23 +549,23 @@
                           (kumousboksi/ala-ehdota-kumoamista!))
       :tallenna (if voi-tallentaa?
                   #(tiedot/tallenna-aikataulu urakka-id sopimus-id vuosi %
-                                              (fn [vastaus]
-                                                (reset! tiedot/aikataulurivit vastaus)
-                                                (reset! tiedot/kohteiden-sahkopostitiedot nil)))
+                     (fn [vastaus]
+                       (reset! tiedot/aikataulurivit vastaus)
+                       (reset! tiedot/kohteiden-sahkopostitiedot nil)))
                   :ei-mahdollinen)
       :vetolaatikot (yllapitokohteet-view/alikohteiden-vetolaatikot urakka-id
-                                                                    (first @u/valittu-sopimusnumero)
-                                                                    (atom aikataulurivit)
-                                                                    (:kohdetyyppi optiot)
-                                                                    (if (= :tiemerkinta (:nakyma optiot))
-                                                                           false
-                                                                           true)
-                                                                    #{:raekoko :massamaara :toimenpide :tr-muokkaus}
-                                                                    {:fn paallystysurakan-tarkka-aikataulu
-                                                                     :nakyma (:nakyma optiot)
-                                                                     :voi-muokata-paallystys? voi-muokata-paallystys?
-                                                                     :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
-                                                                    true)}
+                      (first @u/valittu-sopimusnumero)
+                      (atom aikataulurivit)
+                      (:kohdetyyppi optiot)
+                      (if (= :tiemerkinta (:nakyma optiot))
+                        false
+                        true)
+                      #{:raekoko :massamaara :toimenpide :tr-muokkaus}
+                      {:fn paallystysurakan-tarkka-aikataulu
+                       :nakyma (:nakyma optiot)
+                       :voi-muokata-paallystys? voi-muokata-paallystys?
+                       :voi-muokata-tiemerkinta? voi-muokata-tiemerkinta?}
+                      true)}
      [{:tyyppi :vetolaatikon-tila :leveys 2}
       {:otsikko "Koh\u00ADde\u00ADnu\u00ADme\u00ADro" :leveys 3 :nimi :kohdenumero :tyyppi :komponentti
        :pituus-max 128 :muokattava? voi-muokata-paallystys? :otsikkorivi-luokka "kohdenumero-th"
@@ -703,8 +703,8 @@
                                                            :optiot optiot}])
        :muokattava? (fn [rivi]
                       (tiemerkinta-takarajan-voi-maarittaa-kasin? rivi
-                                                                  {:saa-asettaa-valmis-takarajan? saa-asettaa-valmis-takarajan?
-                                                                   :optiot optiot}))}
+                        {:saa-asettaa-valmis-takarajan? saa-asettaa-valmis-takarajan?
+                         :optiot optiot}))}
       {:otsikko "Aloi\u00ADtus"
        :leveys 6 :nimi :aikataulu-tiemerkinta-alku :tyyppi :pvm
        :otsikkorivi-luokka "tiemerkinta-tausta"
@@ -719,35 +719,35 @@
        :aseta (fn [rivi arvo]
                 ;; Näytä dialogi, mikäli arvoa muutetaan
                 (when (not (or (pvm/sama-pvm? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi) arvo)
-                               (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
+                             (and (nil? (:aikataulu-tiemerkinta-loppu-alkuperainen rivi)) (nil? arvo))))
                   (reset! tiedot/tiemerkinta-valmis-modal-data
-                          {:nakyvissa? true
-                           :muutos-taulukosta? true
-                           :valmis-fn (fn [lomakedata]
-                                        (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
-                                               {:urakka-vastaanottajat (keep #(when (and (:valittu? %) (:sahkoposti %))
-                                                                         [(:urakka-id %) (:sahkoposti %)])
-                                                                      (vals @tiedot/fimista-haetut-vastaanottajatiedot))
-                                                :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
-                                                                       (:muut-vastaanottajat lomakedata))
-                                                :saate (:saate lomakedata)
-                                                :kopio-itselle? (:kopio-itselle? lomakedata)}))
-                           :kohteet [{:id (:id rivi)
-                                      :nimi (:nimi rivi)
-                                      :valmis-pvm arvo
-                                      :paallystysurakka-id (:paallystysurakka-id rivi)}]
-                           :urakka-id urakka-id
-                           :vuosi vuosi
-                           :lomakedata {:kopio-itselle? true
-                                        :saate ""}}))
+                    {:nakyvissa? true
+                     :muutos-taulukosta? true
+                     :valmis-fn (fn [lomakedata]
+                                  (swap! tiedot/kohteiden-sahkopostitiedot assoc (:id rivi)
+                                    {:urakka-vastaanottajat (keep #(when (and (:valittu? %) (:sahkoposti %))
+                                                                     [(:urakka-id %) (:sahkoposti %)])
+                                                              (vals @tiedot/fimista-haetut-vastaanottajatiedot))
+                                     :muut-vastaanottajat (yleiset/sahkopostiosoitteet-str->set
+                                                            (:muut-vastaanottajat lomakedata))
+                                     :saate (:saate lomakedata)
+                                     :kopio-itselle? (:kopio-itselle? lomakedata)}))
+                     :kohteet [{:id (:id rivi)
+                                :nimi (:nimi rivi)
+                                :valmis-pvm arvo
+                                :paallystysurakka-id (:paallystysurakka-id rivi)}]
+                     :urakka-id urakka-id
+                     :vuosi vuosi
+                     :lomakedata {:kopio-itselle? true
+                                  :saate ""}}))
                 (assoc rivi :aikataulu-tiemerkinta-loppu arvo))
        :muokattava? voi-muokata-tiemerkinta?
        :validoi [[:toinen-arvo-annettu-ensin :aikataulu-tiemerkinta-alku
                   "Tiemerkintää ei ole merkitty aloitetuksi."]
                  [:pvm-kentan-jalkeen :aikataulu-tiemerkinta-alku
                   "Valmistuminen ei voi olla ennen aloitusta."]]
-                 ;; Tiemerkinnän lopetus-pvm pakollisuus poistettu 2024. Merkintä on tehtävä, kun työ on valmis, mutta ei tarvitse ennustaa etukäteen.
-                 ;; Jos pakollisuus halutaan takaisin, käytä: :ei-tyhja-jos-toinen-arvo-annettu
+       ;; Tiemerkinnän lopetus-pvm pakollisuus poistettu 2024. Merkintä on tehtävä, kun työ on valmis, mutta ei tarvitse ennustaa etukäteen.
+       ;; Jos pakollisuus halutaan takaisin, käytä: :ei-tyhja-jos-toinen-arvo-annettu
        }
       (when (= (:nakyma optiot) :paallystys)
         {:otsikko "Koh\u00ADde val\u00ADmis" :leveys 6 :nimi :aikataulu-kohde-valmis :tyyppi :pvm
@@ -790,6 +790,7 @@
             aikajana? (:nayta-aikajana? @tiedot/aikataulu-suodattimet)
             paallystys? (= (:nakyma optiot) :paallystys)]
         [:div.aikataulu
+         [:h1 "Aikataulu"]
          [valinnat ur paallystys?]
          [vis/visuaalinen-aikataulu {:urakka-id urakka-id
                                      :aikajana? aikajana?

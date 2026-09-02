@@ -1,13 +1,13 @@
 (ns harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot
   "Urakan muutosten tiedot - kirjatut muutokset."
   (:require
-    [taoensso.timbre :as log]
     [tuck.core :as tuck]
-    [harja.kokoelmat :as kokoelmat]
+    [taoensso.timbre :as log]
+
     [harja.pvm :as pvm]
+    [harja.tiedot.urakka :as u]
     [harja.ui.viesti :as viesti]
     [harja.tiedot.navigaatio :as nav]
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.domain.muutos-domain :as muutos-domain]))
 
@@ -35,6 +35,8 @@
 (defrecord PeruutaTavoiteJaKattohintaOnnistui [vastaus hk-alkuvuosi])
 (defrecord PeruutaTavoiteJaKattohintaEpaonnistui [virhe])
 
+(defrecord PaivitaTehtavavaikutus [rivi hk-alkuvuosi])
+(defrecord PaivitaTehtavavaikutusSyy [toimenpideinstanssi syy hk-alkuvuosi])
 
 (defn pysyvia-muutoksia-tulevilla-hoitovuosilla?
   "Hakee pysyvän muutoksen tiedoista, onko muutoksia tulevilla hoitovuosilla."
@@ -74,21 +76,49 @@
 
 (defn luo-tai-paivita-kustannusvaikutus
   "Rakentaa / päivittää kustannusvaikutusrivin perusavaimilla."
-  [{:keys [toimenpideinstanssi hoitokauden_alkuvuosi summa]} vanha-kv]
-  (assoc (or vanha-kv {})
-    :toimenpideinstanssi toimenpideinstanssi
-    :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
-    :kustannuslaji "hankintakustannukset"
-    :summa summa))
+  [{:keys [toimenpideinstanssi hoitokauden_alkuvuosi summa] :as uusi} vanha-kv]
+  (cond-> (assoc (or vanha-kv {})
+            :toimenpideinstanssi toimenpideinstanssi
+            :hoitokauden_alkuvuosi hoitokauden_alkuvuosi
+            :kustannuslaji "hankintakustannukset"
+            :summa summa)
+
+    (contains? uusi :tehtavamaaramuutos-kirjattu?)
+    (assoc
+      :tehtavamaaramuutos-kirjattu?
+      (:tehtavamaaramuutos-kirjattu? uusi))))
+
+(defn luo-tai-paivita-rivin-kustannusvaikutus [r toimenpideinstanssi hk-alkuvuosi f]
+  (update r :kustannusvaikutukset
+    (fn [kustannusvaikutukset]
+      (let [loydetty? (some
+                        #(and
+                           (= (:toimenpideinstanssi %) toimenpideinstanssi)
+                           (= (:hoitokauden_alkuvuosi %) hk-alkuvuosi))
+                        kustannusvaikutukset)]
+        (if loydetty?
+          (mapv
+            (fn [kv]
+              (if (and (= (:toimenpideinstanssi kv) toimenpideinstanssi)
+                    (= (:hoitokauden_alkuvuosi kv) hk-alkuvuosi))
+                (f kv)
+                kv))
+            kustannusvaikutukset)
+
+          ;; Ei löytynyt -> luodaan uusi
+          (conj (vec kustannusvaikutukset)
+            (f {:kustannuslaji "hankintakustannukset"
+                :toimenpideinstanssi toimenpideinstanssi
+                :hoitokauden_alkuvuosi hk-alkuvuosi})))))))
 
 (defn koosta-kustannusvaikutukset-pysyvaan-muutokseen
   "Koostetaan kustannusvaikutukset kaikista toimenpide-vetolaatikoista yhteen vektoriksi tallennusta varten."
   [app]
   ;; Yhdistä tehtavat ja määrät kaikista vetolaatikoista tallennusta varten
   (assoc-in app [:muokattava-muutos :kustannusvaikutukset]
-    (->> (map :kustannusvaikutukset (get-in app [:muokattava-muutos :toimenpiteiden-tiedot]))
-      (flatten)
-      (vec))))
+    (->> (get-in app [:muokattava-muutos :toimenpiteiden-tiedot])
+      (mapcat :kustannusvaikutukset)
+      vec)))
 
 ;; -- Apureita tehtävien määrämuutosten ja kustannusvaikutusten kopiointiin hoitovuodelle
 (defn- korvaa-rivi-tai-merkitse-poistetuksi
@@ -197,18 +227,14 @@
     (let [valittu-hoitokausi (:valittu-hoitokausi app)]
       (tuck-apurit/post! :hae-pysyvan-muutoksen-pohjatiedot
         {:urakka-id @nav/valittu-urakka-id
-         ;; TODO: Tällä hetkellä uudelleenkäyttää olemassaolevan pysyvän muutoksen tietojen hakuun tehtyä
-         ;;       SQL-kyselyä, joka palauttaa mukana myös suunniteltuja määriä yms.
-         ;;       Jos tarvetta, voidaan tehdä erillinen kysely pelkkiä pohjatietoja varten.
-         ;;       Nyt annetaan vain mhu_muutos tietojen hakua varten nil-arvot, jotta kysely toimii ja haetaankin
-         ;;       vain pelkät pohjatiedot.
-         :muutos {:id nil
-                  :versio nil
-                  :tyyppi "pysyva"}}
+         :muutos-id nil
+         :muutos-versio nil}
         {:onnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
          :onnistui-parametrit [valittu-hoitokausi]
          :epaonnistui ->HaePysyvanMuutoksenPohjatiedotLomakkeelleEpaonnistui}))
-    (assoc app :muutoksen-tiedot-haku-kaynnissa? true))
+    (-> app
+      (assoc
+        :muutoksen-tiedot-haku-kaynnissa? true)))
 
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
   (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
@@ -312,9 +338,11 @@
                     kv-map (update kv-map hk-alkuvuosi
                              (fn [arvo]
                                (luo-tai-paivita-kustannusvaikutus
-                                 {:summa muutos-summa
-                                  :toimenpideinstanssi toimenpideinstanssi
-                                  :hoitokauden_alkuvuosi hk-alkuvuosi}
+                                 (cond-> {:summa muutos-summa
+                                          :toimenpideinstanssi toimenpideinstanssi
+                                          :hoitokauden_alkuvuosi hk-alkuvuosi}
+                                   (nil? arvo)
+                                   (assoc :tehtavamaaramuutos-kirjattu? true))
                                  arvo)))]
                 (-> kv-map vals vec))))))
 
@@ -393,7 +421,45 @@
       "Tavoite- ja kattohinnan vahvistuksen peruminen epäonnistui!"
       :varoitus
       viesti/viestin-nayttoaika-keskipitka)
-    app))
+    app)
+
+  PaivitaTehtavavaikutus
+  (process-event [{:keys [rivi hk-alkuvuosi]} app]
+    (let [toimenpideinstanssi (:toimenpideinstanssi rivi)]
+      (assert (int? hk-alkuvuosi))
+
+      (-> app
+        (assoc :voi-tallentaa? true)
+        (muokkaa-toimenpiteen-rivit-pysyva-muutos
+          toimenpideinstanssi
+          (fn [r]
+            (luo-tai-paivita-rivin-kustannusvaikutus
+              r
+              toimenpideinstanssi
+              hk-alkuvuosi
+              #(update % :tehtavamaaramuutos-kirjattu?
+                 (fn [v]
+                   (if (some? v)
+                     (not v)
+                     false))))))
+        (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
+
+  PaivitaTehtavavaikutusSyy
+  (process-event [{:keys [toimenpideinstanssi syy hk-alkuvuosi]} app]
+    (assert (int? hk-alkuvuosi))
+
+    (-> app
+      (assoc :voi-tallentaa? true)
+      (muokkaa-toimenpiteen-rivit-pysyva-muutos
+        toimenpideinstanssi
+        (fn [r]
+          (luo-tai-paivita-rivin-kustannusvaikutus
+            r
+            toimenpideinstanssi
+            hk-alkuvuosi
+            #(assoc % :syy syy))))
+      (koosta-kustannusvaikutukset-pysyvaan-muutokseen))))
+
 
 ;; -- Pysyvät muutokset -- LOPPUU
 

@@ -25,7 +25,7 @@ div.kustannusten-seuranta {
       display: flex;
       flex-direction: column;
       justify-content: center;
-      margin-left: @valistys-16;
+      margin-right: @valistys-16;
 
       &.kuukausi {
         width: 25%;
@@ -41,6 +41,7 @@ div.kustannusten-seuranta {
 
   .sivuelementti {
     padding-top: 24px;
+    padding-bottom: @valistys-32;
   }
 
   span.taso2 {
@@ -50,6 +51,10 @@ div.kustannusten-seuranta {
 
   span.taso2:first-letter {
     text-transform: uppercase;
+  }
+
+  .laskutusraja {
+    width: 824px;
   }
 }
 

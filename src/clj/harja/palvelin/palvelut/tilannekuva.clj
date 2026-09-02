@@ -66,29 +66,43 @@
             [harja.ui.kartta.esitettavat-asiat
              :as esitettavat-asiat
              :refer [kartalla-esitettavaan-muotoon-xf]]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [clojure.set :refer [union]]
-            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
-            [harja.domain.oikeudet :as oikeudet]
-            [clojure.core.async :as async]
-            [clojure.java.jdbc :as jdbc]
-            [harja.domain.roolit :as roolit]
             [harja.domain.tielupa :as tielupa]
             [slingshot.slingshot :refer [throw+]]
             [harja.palvelin.palvelut.kayttajatiedot :as kayttajatiedot]
             [taoensso.timbre :as log]
             [harja.domain.yllapitokohde :as yllapitokohteet-domain]
             [harja.kyselyt.yllapitokohteet :as yllapitokohteet-q]
-            [harja.kyselyt.urakat :as urakat-q]
             [harja.domain.tierekisteri :as tr]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.palvelin.asetukset :as asetukset]
-            [harja.palvelin.palvelut.yhteyshenkilot :as yhteyshenkilot]
-            [harja.palvelin.palvelut.toteumat :as toteumat]))
+            [clojure.core.cache :as cache]))
 
 (defn- tulosta-virhe! [asiat e]
   (log/error (str "*** ERROR *** Yritettiin hakea tilannekuvaan " asiat
                   ", mutta virhe tapahtui: " (.getMessage e))))
+
+
+;; Cache urakat-tilannekuvaan-hauille. TTL 60 minuuttia — urakat eivät muutu kovin usein,
+;; ja haku on raskas etäyhteyden yli.
+(def ^:private urakat-cache-ttl-ms (* 60 60 1000))
+(defonce ^:private urakat-cache
+  (atom (cache/ttl-cache-factory {} :ttl urakat-cache-ttl-ms)))
+
+
+;; Cache toimenpidekoodit-hauille. TTL 10 minuuttia — tehtävät eivät muutu.
+;; Vältetään ylimääräinen DB-pyyntö per karttakuvatile.
+(def ^:private toimenpidekoodit-cache-ttl-ms (* 10 60 1000))
+(defonce ^:private toimenpidekoodit-cache
+  (atom (cache/ttl-cache-factory {} :ttl toimenpidekoodit-cache-ttl-ms)))
+
+(defn tyhjenna-tilannekuvan-cachet!
+  "Tyhjentää kaikki tilannekuvan in-memory-cachemit. Tarkoitettu käytettäväksi
+  yksikkötesteissä fixture-funktiona, jotta testien välillä ei jää vanhaa
+  dataa cacheen."
+  []
+  (reset! urakat-cache (cache/ttl-cache-factory {} :ttl urakat-cache-ttl-ms))
+  (reset! toimenpidekoodit-cache (cache/ttl-cache-factory {} :ttl toimenpidekoodit-cache-ttl-ms)))
 
 (defn- tulosta-tulos!
   ([asiaa tulos] (tulosta-tulos! asiaa tulos identity))
@@ -127,10 +141,11 @@
                         oikeudet/tilannekuva-historia)
         ;; Kasataan setti urakoita, joihin käyttäjällä on oikeus
         kayttajan-urakka-idt (cond
-                               ;; Tilaajalla on oikeus kaikkiin urakoihin
-                               (and (roolit/tilaajan-kayttaja? user)
-                                    (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
-                                    (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
+                               ;; Tilaajalla (ja jvh:lla) on oikeus kaikkiin urakoihin
+                               (or (and (roolit/tilaajan-kayttaja? user)
+                                     (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
+                                     (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
+                                 (roolit/jvh? user))
                                (constantly true)
 
                                (roolit/urakoitsija? user)
@@ -142,6 +157,7 @@
                                    ;; Jos käyttäjällä on johonkin urakkaan rooli, jolla on oman-urakan-ely oikeus,
                                    ;; filtteröidään kaikista urakoista ne urakat, otetaan niiden urakoiden
                                    ;; hallintayksiköt, ja haetaan näiden hallintayksiköiden kaikki urakat.
+                                   ;; Ei koske valaistusurakoita, joihin oman-urakan-ely oikeus ei saa antaa oikeutta.
                                    (set
                                      (concat
                                        (set (map :id oman-organisaation-urakat))
@@ -149,14 +165,14 @@
                                        (set
                                          (map
                                            :id
-                                           (q/hallintayksikoiden-urakat
+                                           (q/elinvoimakeskusten-urakat-ilman-valaistus-urakoita
                                              db
-                                             {:hallintayksikot (map
-                                                                 :hallintayksikko
-                                                                 (filter
-                                                                   (fn [urakka]
-                                                                     (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user))
-                                                                   oman-organisaation-urakat))})))))
+                                             {:elinvoimakeskusnumerot (map
+                                                                       :elinvoimakeskus_id
+                                                                       (filter
+                                                                         (fn [urakka]
+                                                                           (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user))
+                                                                         oman-organisaation-urakat))})))))
 
                                    ;; Jos ei ole oman-urakan-ely oikeutta, otetaan vaan urakat, joihin
                                    ;; käyttäjällä on lukuoikeus
@@ -165,17 +181,19 @@
                                      oman-roolin-urakat-set)))
 
                                :else
-                               ;; Rakennuttajakonsultit näkevät oman hallintayksikkönsä urakat, joihin heille
-                               ;; on merkitty lukuoikeus
-                               (let [urakat (q/hallintayksikoiden-urakat db {:hallintayksikot [(get-in user [:organisaatio :id])]})]
+                               ;; Rakennuttajakonsultit näkevät oman elinvoimakeskuksensa urakat, joihin heille
+                               ;; on merkitty lukuoikeus.
+                               (let [_ (when-not (= :konsultti (roolit/osapuoli (get-in user [:organisaatio :tyyppi])))
+                                         (log/error "Odotettiin Rakennuttajakonsulttia, mutta saatiin käyttäjä:" (pr-str user)))
+                                     urakat (q/elinvoimakeskusten-urakat db {:elinvoimakeskukset [(get-in user [:organisaatio :id])]})]
                                  ;; Jos käyttäjällä on rooli, jolla on oman-urakan-ely oikeus..
                                  (if (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
-                                   (let [hy-urakat (group-by :hallintayksikko urakat)]
+                                   (let [hy-urakat (group-by :elinvoimakeskus urakat)]
                                      ;; Käydään jokaisen hallintayksikön urakat läpi..
                                      (set
                                        (mapcat
                                          (fn [[hy urakat]]
-                                           ;; ja jos oman-urakan-ely oikeus kuuluu johonkin hallintayksikön urakoista, palautetaan ne kaikki
+                                           ;; ja jos oman-urakan-ely oikeus kuuluu johonkin hallintayksikön urakoista, palautetaan kaikki paitsi valaistusurakat.
                                            (if (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma % user) urakat)
                                              (map :id urakat)
 
@@ -185,9 +203,9 @@
 
                                    ;; Jos käyttäjällä ei ole oman-urakan-ely oikeutta, otetaan urakat, joihin hänellä on lukuoikeus
                                    (->> urakat
-                                        (filter #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user))
-                                        (map :id)
-                                        set))))
+                                     (filter #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user))
+                                     (map :id)
+                                     set))))
         ;; Rajataan haettavat urakat niihin, joihin käyttäjällä on hakuoikeus
         oikeudelliset-urakat (set (filter kayttajan-urakka-idt (:urakat hakuargumentit)))]
     oikeudelliset-urakat))
@@ -404,28 +422,46 @@
        :viimeisin viimeisin})))
 
 (defn- toteumien-toimenpidekoodit [db {:keys [talvi kesa valaistus]}]
-  (let [koodit (some->> (union talvi kesa valaistus)
-                        haettavat
-                        (q/hae-toimenpidekoodit db)
-                        (map :id))]
-    (if (empty? koodit)
-      nil
-      koodit)))
+  (let [valitut (union talvi kesa valaistus)
+        haettavat-nimet (when (seq valitut) (haettavat valitut))
+        cache-avain haettavat-nimet]
+    (if-let [cached (when cache-avain (cache/lookup @toimenpidekoodit-cache cache-avain))]
+      (do
+        (log/debug "toteumien-toimenpidekoodit: cache-osuma, " (count cached) " koodia")
+        cached)
+      (let [_ (log/debug "toteumien-toimenpidekoodit: talvi=" talvi "kesa=" kesa "valaistus=" valaistus
+                         "haettavat-nimet=" haettavat-nimet)
+            koodit (when (seq haettavat-nimet)
+                     (->> haettavat-nimet
+                          (q/hae-toimenpidekoodit db)
+                          (map :id)
+                          seq))
+            _ (log/debug "toteumien-toimenpidekoodit: haettiin kannasta, koodit=" koodit)]
+        (when (and cache-avain koodit)
+          (swap! toimenpidekoodit-cache cache/miss cache-avain koodit))
+        koodit))))
 
 (defn- hae-toteumien-reitit
   [db ch user {:keys [toleranssi alue alku loppu] :as tiedot} urakat]
-  (when-not (empty? urakat)
-    (when-let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
-      (q/hae-toteumat db ch
-                      {:toleranssi toleranssi
-                       :alku (konv/sql-date alku)
-                       :loppu (konv/sql-date loppu)
-                       :toimenpidekoodit toimenpidekoodit
-                       :urakat urakat
-                       :xmin (:xmin alue)
-                       :ymin (:ymin alue)
-                       :xmax (:xmax alue)
-                       :ymax (:ymax alue)}))))
+  (if (empty? urakat)
+    (log/warn "hae-toteumien-reitit: urakat on tyhjä, ei haeta mitään")
+    (let [toimenpidekoodit (toteumien-toimenpidekoodit db tiedot)]
+      (if (empty? toimenpidekoodit)
+        (log/warn (format "hae-toteumien-reitit: toimenpidekoodit tyhjä! talvi=%s kesa=%s valaistus=%s — onko suodattimia valittuna?"
+                          (:talvi tiedot) (:kesa tiedot) (:valaistus tiedot)))
+        (do
+          (log/info (format "hae-toteumien-reitit: haetaan %d urakalla, %d toimenpidekoodilla, alku=%s loppu=%s alue=%s"
+                            (count urakat) (count toimenpidekoodit) alku loppu (pr-str alue)))
+          (q/hae-toteumat db ch
+                          {:toleranssi toleranssi
+                           :alku (konv/sql-date alku)
+                           :loppu (konv/sql-date loppu)
+                           :toimenpidekoodit toimenpidekoodit
+                           :urakat urakat
+                           :xmin (:xmin alue)
+                           :ymin (:ymin alue)
+                           :xmax (:xmax alue)
+                           :ymax (:ymax alue)}))))))
 
 (defn- hae-tarkastusten-reitit
   [db ch user {:keys [toleranssi alue alku loppu tarkastukset] :as tiedot} urakat]
@@ -547,53 +583,32 @@
       (tulosta-virhe! (name osio) e)
       nil)))
 
-(defn hae-kayttajan-urakat-alueittain [db user tiedot]
+(defn- hae-kayttajan-urakat-alueittain* [db user tiedot]
   (let [oikeus-nakyma (if (:nykytilanne? tiedot)
                         oikeudet/tilannekuva-nykytilanne
                         oikeudet/tilannekuva-historia)
-        ;; Käyttäjällä voi olla omaan urakkaan erikoisoikeus oman-urakan-ely, mikä tarkoittaa,
-        ;; että käyttäjä saa nähdä oman urakan ELY-alueen kaikkien urakoiden asiat.
-        ;; Jos tällaisia erikoisoikeuksia omiin urakoihin löytyy, niin haetaan ko. urakoiden
-        ;; muut ELY-urakat ja liitetään mukaan käyttäjän näkemiin urakoihin.
-
-        ;; HUOM! Jotta ELY:n muista urakoista voisi hakea asioita, täytyy käyttäjän valita sellainen
-        ;; aikaväli, jolle oma urakka osuu, koska ennen ELY:n muiden urakoiden etsintää täytyy olla
-        ;; löydettynä käyttäjän oma urakka. Tämä ajateltiin aluksi bugina, mutta sittemmin sitä pidettiinkin
-        ;; ihan hyvänä rajoitteena. Käytännössä tämä rajaa haettavan aikavälin vain sellaiselle välille, jolla
-        ;; käyttäjän oma urakka on voimassa.
-
-        ;; Tilaajan käyttäjillä on oikeus kaikki urakoihin. Ei tarkastella silloin
-        ;; lisäoikeuksia ollenkaan jotta ollaan nopeampia
-
-        ;; Haetaan aluksi kaikki aikavälin urakat, ilman sen kummmempia oikeustarkastuksia
         urakat (kayttajatiedot/kayttajan-urakat-aikavalilta-alueineen
                  db user
                  (constantly true)
-                 ;; :urakoitsija on murupolussa valittu urakoitsija (voi olla nil),
-                 ;; ei käyttäjän tieto!
                  nil (:urakoitsija tiedot) nil
                  nil (:alku tiedot) (:loppu tiedot))
-
-        ;; Jos käyttällä on rooli, jolla on oikeus oman-urakan-ely,
-        ;; kasataan lista hallintayksiköistä, joihin kuuluu edes yksi urakka, johon käyttäjällä on rooli,
-        ;; jolla on ko. oikeus
-        saman-elyn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
-                            (->> (q/hallintayksikoiden-urakat
-                                   db {:hallintayksikot
+        saman-evkn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
+                            (->> (q/elinvoimakeskusten-urakat
+                                   db {:elinvoimakeskukset
                                        (set
                                          (map
                                            (fn [alue]
-                                             (get-in alue [:hallintayksikko :id]))
+                                             (get-in alue [:elinvoimakeskus :id]))
                                            urakat))})
-                                 (group-by :hallintayksikko)
-                                 (filter
-                                   (fn [[hy urakat]]
-                                     (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely"
-                                                                     oikeus-nakyma
-                                                                     (:id %)
-                                                                     user)
-                                           urakat)))
-                                 (into {})))
+                              (group-by :elinvoimakeskus)
+                              (filter
+                                (fn [[evk urakat]]
+                                  (some #(oikeudet/on-muu-oikeus? "oman-urakan-ely"
+                                           oikeus-nakyma
+                                           (:id %)
+                                           user)
+                                    urakat)))
+                              (into {})))
         kayttajan-urakat-alueittain (->>
                                       urakat
                                       (map
@@ -601,45 +616,56 @@
                                           (update
                                             alue
                                             :urakat
-                                            ;; Suodatetaan pois urakat, joihin käyttäjällä ei ole oikeutta..
                                             (fn [urakat]
                                               (filter
                                                 (fn [urakka]
                                                   (if (and (roolit/tilaajan-kayttaja? user)
-                                                           (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
-                                                           (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
-                                                    ;; Tilaajalla on oikeus kaikkiin urakoihin..
+                                                        (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
+                                                        (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
                                                     true
-
                                                     (or
-                                                      ;; Muilla käyttäjillä pitää olla urakkaan lukuoikeus TAI
                                                       (oikeudet/voi-lukea? oikeus-nakyma
-                                                                           (:id urakka)
-                                                                           user)
-                                                      ;; Urakan pitää kuulua hallintayksikköön, johon kuuluu urakka,
-                                                      ;; johon käyttäjällä on rooli, jolla on oman-urakan-ely oikeus
-                                                      (when-let [ely-urakat (get saman-elyn-urakat (get-in alue [:hallintayksikko :id]))]
-                                                        ((set (map :id ely-urakat)) (:id urakka))))))
+                                                        (:id urakka)
+                                                        user)
+                                                      (when-let [ely-urakat (get saman-evkn-urakat (get-in alue [:elinvoimakeskus :id]))]
+                                                        ;; Poistetaan valaistus-urakat
+                                                        ((set (map :id (remove #(= (:tyyppi %) "valaistus") ely-urakat))) (:id urakka))))))
                                                 urakat)))))
                                       (map
                                         (fn [alue]
                                           (update alue :urakat
-                                                  (fn [urakat]
-                                                    (filter :urakkanro urakat)))))
+                                            (fn [urakat]
+                                              (filter :urakkanro urakat)))))
                                       (remove (comp empty? :urakat)))]
     kayttajan-urakat-alueittain))
+
+(defn hae-kayttajan-urakat-alueittain [db user tiedot]
+  (let [cache-avain [(get-in user [:id])
+                     (:nykytilanne? tiedot)
+                     (:alku tiedot)
+                     (:loppu tiedot)
+                     (:urakoitsija tiedot)]]
+    (if-let [tulos (cache/lookup @urakat-cache cache-avain)]
+      (do
+        (log/info "hae-kayttajan-urakat-alueittain: cache-osuma avaimelle" cache-avain)
+        tulos)
+      (let [tulos (hae-kayttajan-urakat-alueittain* db user tiedot)]
+        (log/info "hae-kayttajan-urakat-alueittain: cache-huti, haetaan kannasta")
+        (swap! urakat-cache cache/miss cache-avain tulos)
+        tulos))))
 
 (defn hae-tilannekuvaan
   ([db user tiedot]
    (hae-tilannekuvaan db user tiedot tilannekuvan-osiot))
   ([db user tiedot osiot]
    (oikeudet/merkitse-oikeustarkistus-tehdyksi!)
-   (let [haettavat-urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
-     (let [tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))
-           _ (log/info "Tilannekuvan parametrit: " (pr-str tiedot))]
-       (into {}
-             (map (juxt identity (partial yrita-hakea-osio db user tiedot haettavat-urakat)))
-             osiot)))))
+   (let [haettavat-urakat (rajaa-urakat-hakuoikeudella db user tiedot)
+         tiedot (assoc tiedot :toleranssi (geo/karkeistustoleranssi (:alue tiedot)))]
+     (log/info "Tilannekuvan parametrit: " (pr-str tiedot))
+     (into {}
+           (map (fn [osio]
+                  [osio (yrita-hakea-osio db user tiedot haettavat-urakat osio)]))
+           osiot))))
 
 (defn- aikavalinta
   "Jos annettu suhteellinen aikavalinta tunteina, pura se :alku ja :loppu avaimiksi."
@@ -668,23 +694,39 @@
                          :xmax x2 :ymax y2}})
           (assoc p :toleranssi (geo/karkeistustoleranssi (:alue p))))))
 
-(defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf]
+(defn- hae-karttakuvan-tiedot [db user parametrit haku-fn xf & [lahde-nimi]]
   (let [tiedot (karttakuvan-suodattimet parametrit)
         kartalle-xf (kartalla-esitettavaan-muotoon-xf)
-        ch (async/chan 32
-                       (comp
-                         (map konv/alaviiva->rakenne)
-                         xf
-                         kartalle-xf))
-        urakat (rajaa-urakat-hakuoikeudella db user tiedot)]
+        urakat (rajaa-urakat-hakuoikeudella db user tiedot)
+        kirjoitettu (atom 0)
+        lapi-paassyt (atom 0)
+        debug-xf (comp
+                   (map (fn [asia]
+                          (swap! kirjoitettu inc)
+                          asia))
+                   (map konv/alaviiva->rakenne)
+                   xf
+                   (map (fn [asia]
+                          (swap! lapi-paassyt inc)
+                          asia))
+                   kartalle-xf)
+        ch (async/chan 32 debug-xf)]
     (async/thread
       (jdbc/with-db-transaction [db db
                                  {:read-only? true}]
-        (try
-          (haku-fn db ch user tiedot urakat)
-          (catch Throwable t
-            (log/error t "Virhe haettaessa tilannekuvan karttatietoja")
-            (async/close! ch)))))
+        (let [alku (System/currentTimeMillis)]
+          (try
+            (haku-fn db ch user tiedot urakat)
+            (catch Throwable t
+              (log/error t "Virhe haettaessa tilannekuvan karttatietoja"))
+            (finally
+              (let [kesto (- (System/currentTimeMillis) alku)]
+                (if (>= kesto 500)
+                  (log/warn (format "HIDAS KARTTAKUVAHAKU [%s]: %d ms, kirjoitettiin kanavalle %d riviä, xf:n läpi pääsi %d"
+                                    (or lahde-nimi "tuntematon") kesto @kirjoitettu @lapi-paassyt))
+                  (log/debug (format "AJOITUS [%s]: %d ms, kirjoitettiin kanavalle %d riviä, xf:n läpi pääsi %d"
+                                     (or lahde-nimi "tuntematon") kesto @kirjoitettu @lapi-paassyt))))
+              (async/close! ch))))))
     ch))
 
 (defn- hae-toteumien-sijainnit-kartalle
@@ -694,26 +736,28 @@
                           (map #(assoc %
                                   :tyyppi :toteuma
                                   :tyyppi-kartalla :toteuma
-                                  :tehtavat [(:tehtava %)]))))
+                                  :tehtavat [(:tehtava %)]))
+                          "hae-toteumat"))
 
 (defn- hae-toteumien-tiedot-kartalle
   "Hakee toteumien tiedot pisteessä infopaneelia varten."
   [db user parametrit]
-  (konv/sarakkeet-vektoriin
-    (into []
-          (comp
-            (map konv/alaviiva->rakenne)
-            (map #(assoc % :tyyppi-kartalla :toteuma))
-            (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
-            (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
-          (q/hae-toteumien-asiat db
-                                 (as-> parametrit p
-                                       (suodattimet-parametreista p)
-                                       (assoc p :urakat (rajaa-urakat-hakuoikeudella db user p))
-                                       (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
-                                       (merge p (select-keys parametrit [:x :y])))))
-    {:tehtava :tehtavat
-     :materiaalitoteuma :materiaalit}))
+  (let [toteumat (q/hae-toteumien-asiat db
+                   (as-> parametrit p
+                     (suodattimet-parametreista p)
+                     (assoc p :urakat (rajaa-urakat-hakuoikeudella db user p))
+                     (assoc p :toimenpidekoodit (toteumien-toimenpidekoodit db p))
+                     (merge p (select-keys parametrit [:x :y]))))]
+    (konv/sarakkeet-vektoriin
+      (into []
+        (comp
+          (map konv/alaviiva->rakenne)
+          (map #(assoc % :tyyppi-kartalla :toteuma))
+          (map #(update % :tierekisteriosoite konv/lue-tr-osoite))
+          (map #(interpolointi/interpoloi-toteuman-aika-pisteelle % parametrit db)))
+        toteumat)
+      {:tehtava :tehtavat
+       :materiaalitoteuma :materiaalit})))
 
 (defn- hae-tarkastuksien-sijainnit-kartalle
   "Hakee tarkastuksien sijainnit karttakuvaan piirrettäväksi."
@@ -752,7 +796,8 @@
                           (comp (geo/muunna-pg-tulokset :reitti)
                                 (map #(konv/array->set % :tehtavat))
                                 (map #(assoc %
-                                        :tyyppi-kartalla :tyokone)))))
+                                        :tyyppi-kartalla :tyokone)))
+                          "hae-tyokonereitit-kartalle"))
 
 (defn- hae-tyokoneiden-tiedot-kartalle
   "Hakee työkoneiden tiedot pisteessä infopaneelia varten."
@@ -779,7 +824,8 @@
                           (comp
                             (map #(assoc % :tyyppi-kartalla :paallystys))
                             (map #(assoc % :tila (yllapitokohteet-domain/yllapitokohteen-tarkka-tila %)))
-                            (map #(update % :sijainti geo/pg->clj)))))
+                            (map #(update % :sijainti geo/pg->clj)))
+                          "hae-paallystysten-reitit"))
 
 (def ^{:private true
        :doc "Päällystyskohdeosan tietojen muunto infopaneelia varten"}

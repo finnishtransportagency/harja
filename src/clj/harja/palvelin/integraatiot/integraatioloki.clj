@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.integraatioloki
-  (:require [taoensso.timbre :as log]
+  (:require [clojure.data.json :as json]
+            [taoensso.timbre :as log]
             [harja.palvelin.tyokalut.ajastettu-tehtava :as ajastettu-tehtava]
             [harja.kyselyt.integraatioloki :as integraatioloki]
             [clj-time.core :refer [weeks months ago]]
@@ -69,6 +70,48 @@
    :otsikko nil
    :parametrit nil})
 
+(defn siivoa-henkilotiedot-viestista
+  "Poistaa henkilötiedot (Name, email) MIAM-järjestelmän 'hae-kayttajan-roolit' -integraation JSON-vastauksesta.
+
+  Funktio parsii JSON-viestin ja käy läpi Table1-taulukon jokaisen rivin, poistaen Name- ja email-kentät
+  GDPR-vaatimusten mukaisesti ennen lokitusta tietokantaan.
+
+  Parametrit:
+  - viesti: JSON-merkkijono, joka sisältää MIAM-järjestelmän vastauksen
+  - jarjestelma: Integraation järjestelmätunnus (esim. 'miam')
+  - integraation-nimi: Integraation nimi (esim. 'hae-kayttajan-roolit')
+
+  Palauttaa:
+  - Siivotun JSON-merkkijonon, jossa Name ja email -kentät on poistettu, jos ehdot täyttyvät
+  - Alkuperäisen viestin muuttumattomana, jos järjestelmä ei ole 'miam' tai integraatio ei ole 'hae-kayttajan-roolit'
+
+  Esimerkki:
+  (siivoa-henkilotiedot-viestista
+    \"{\\\"Table1\\\": [{\\\"Name\\\":\\\"Testi Käyttäjä\\\",\\\"email\\\":\\\"testi@example.com\\\"}]}\"
+    \"miam\"
+    \"hae-kayttajan-roolit\")
+  => \"{\\\"Table1\\\":[{...}]}\" ; Name ja email poistettu"
+  [viesti jarjestelma integraation-nimi]
+  (if (and
+        (not (nil? viesti))
+        (not (nil? jarjestelma))
+        (not (nil? integraation-nimi))
+        (= jarjestelma "miam")
+        (= integraation-nimi "hae-kayttajan-roolit"))
+    (try
+     (let [data (json/read-str viesti :key-fn keyword)
+           table1 (get data :Table1)
+           siivottu-json-data (if (and table1 (sequential? table1))
+                                (let [siivottu-table1 (mapv #(dissoc % :Name :email) table1)
+                                      siivottu-data (assoc data :Table1 siivottu-table1)]
+                                  (json/write-str siivottu-data))
+                                (json/write-str data))]
+       siivottu-json-data)
+      (catch Exception e
+        (log/error e "Virhe siivottaessa henkilötietoja MIAM-vastauksesta, palautetaan alkuperäinen viesti")
+        viesti))
+    viesti))
+
 (defn kirjaa-viesti [db tapahtumaid {:keys [osoite suunta sisaltotyyppi siirtotyyppi
                                             sisalto otsikko parametrit]}]
   (let [kasitteleva-palvelin (fmt/leikkaa-merkkijono 512
@@ -79,7 +122,8 @@
 
 (defn luo-alkanut-integraatio [db jarjestelma nimi ulkoinen-id viesti]
   (try
-    (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))]
+    (let [tapahtumaid (:id (integraatioloki/luo-integraatiotapahtuma<! db jarjestelma nimi ulkoinen-id))
+          viesti (siivoa-henkilotiedot-viestista viesti jarjestelma nimi)]
       (when viesti
         (kirjaa-viesti db tapahtumaid viesti))
       tapahtumaid)

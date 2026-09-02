@@ -33,6 +33,7 @@
 (def +tuntematon-kustannussuunnitelma+ "tuntematon-kustannussuunnitelma")
 (def +tuntematon-maksuera+ "tuntematon-maksuera")
 (def +lukittu-yllapitokohde+ "lukittu-yllapitokohde")
+(def +tuntematon-elinvoimakeskus+ "tuntematon-elinvoimakeskus")
 (def +tuntematon-ely+ "tuntematon-ely")
 (def +puuttuva-geometria-alueurakassa+ "tuntematon-ely")
 (def +tieluvan-data-vaarin+ "tieluvan-data-vaarin")
@@ -59,6 +60,7 @@
 (def +virhe-tietolajin-arvojen-kasittelyssa+ "virhe-tietolajin-arvojen-kasittelyssa")
 (def +virhe-tietolajin-arvojen-versiossa+ "virhe-tietolajin-arvojen-versiossa")
 (def +puutteellinen-paikkatietoaineisto+ "puutteellinen-paikkatietoaineisto")
+(def +liikaa-tuloksia+ "liikaa-tuloksia")
 
 (defn heita-poikkeus
   ([tyyppi virheet] (heita-poikkeus tyyppi virheet nil))
@@ -68,7 +70,7 @@
      (let [virheet (if (map? virheet) [virheet] virheet)]
        (merge {:type tyyppi
                :virheet virheet}
-              parametrit)))))
+         parametrit)))))
 
 ;; TODO tämä ei heitä IllegalArgumentException, vaikka pitäisi
 

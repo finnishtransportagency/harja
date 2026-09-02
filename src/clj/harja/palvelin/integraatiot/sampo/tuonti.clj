@@ -34,18 +34,11 @@
                         (yhteyshenkilot/kasittele-yhteyshenkilot db yhteyshenkilot)))]
     kuittaukset))
 
-(defn- kasittele-sisaanluku [db viestin-sisalto]
-  (jdbc/with-db-transaction [db db]
-    (let [data (sampo-sanoma/lue-viesti viestin-sisalto)
-          kuittaukset (tuo-sampo-viestin-data db data)]
-      kuittaukset)))
-
 (defn- kasittele-api-sisaanluku [db viestin-sisalto]
   (jdbc/with-db-transaction [db db]
     (let [data (sampo-sanoma/lue-api-viesti viestin-sisalto)
           kuittaukset (tuo-sampo-viestin-data db data)]
       kuittaukset)))
-
 
 (defn kasittele-api-viesti [db integraatioloki viesti tapahtuma-id]
   (log/debug "Vastaanotettiin Sampon viesti api:sta:" viesti)
@@ -57,13 +50,12 @@
       (let [kuittaukset (kasittele-api-sisaanluku db viesti)]
         (first kuittaukset))
       (catch [:type virheet/+poikkeus-samposisaanluvussa+] {:keys [virheet kuittaus ei-kriittinen?]}
-        (do
-          (if ei-kriittinen?
-            (log/info "Sampo sisäänluvussa ei-kriittinen poikkeus: " virheet)
-            (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet))
-          ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
-          (kuittaus-sampoon-sanoma/tee-xml-sanoma
-            (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" virheet))))
+        (if ei-kriittinen?
+          (log/info "Sampo sisäänluvussa ei-kriittinen poikkeus: " virheet)
+          (log/error "Sampo sisään luvussa tapahtui poikkeus: " virheet))
+        ;; Muodosta virheviesti välitettäväksi Sampoon vastauksena REST-API kutsuun
+        (kuittaus-sampoon-sanoma/tee-xml-sanoma
+          (kuittaus-sampoon-sanoma/muodosta-viesti viesti-id viestityyppi "CUSTOM" virheet)))
 
       (catch Exception e
         (log/error e "Sampo sisäänluvussa tapahtui poikkeus." e)

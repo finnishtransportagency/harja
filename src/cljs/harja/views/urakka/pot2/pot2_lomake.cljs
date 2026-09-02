@@ -1,6 +1,7 @@
 (ns harja.views.urakka.pot2.pot2-lomake
 "POT2-lomake"
   (:require
+    [harja.tiedot.kartta :as kartta-tiedot]
     [reagent.core :refer [atom] :as r]
     [harja.asiakas.kommunikaatio :as k]
     [harja.domain.oikeudet :as oikeudet]
@@ -300,7 +301,8 @@
                                  (yllapitokohteet-domain/jarjesta-yllapitokohteet)
                                  (yllapitokohteet-domain/indeksoi-kohdeosat)))
                      (reset! pot2-tiedot/lisatiedot-atom (:lisatiedot paallystysilmoitus-lomakedata))
-                     (nav/vaihda-kartan-koko! :S)))
+                     (nav/vaihda-kartan-koko! :S)
+                     (kartta-tiedot/piilota-infopaneeli!)))
       (fn [e! {:keys [paallystysilmoitus-lomakedata massat murskeet materiaalikoodistot
                       pot2-massa-lomake pot2-murske-lomake paikkauskohteet?] :as app}]
         (let [lukittu? (lukko/nakyma-lukittu? lukko)

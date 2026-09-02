@@ -12,12 +12,37 @@
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
     [harja.ui.yleiset :as yleiset]
+    [harja.ui.ikonit :as ikonit]
+    [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
 
     ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
     [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
     [harja.views.urakka.muutokset.lomake.lomake-johto-hallinto :as johto-ja-hallinto]
     [harja.views.urakka.muutokset.lomake.lomake-muutostyo :as muutostyo]))
 
+
+(defn poista-muutos-varmistus
+  [e! muutos]
+  (let [vahvistus-tiedot (cond
+                           ;; JJH-muutos
+                           (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+                           {:sisalto [:div "Muutoksen poistaminen poistaa myös Harjan automaattisesti luomat maksuerät."]}
+
+                           ;; Erillisrahoitettu muutostyö
+                           (and (= (:tyyppi muutos) "muutostyo")
+                             (= (:alityyppi muutos) :erillisrahoitus))
+                           {:sisalto [:div "Muutostyölle ei voi poistamisen jälkeen kohdistaa kuluja"]}
+
+                           ;; Pysyvä muutos, muu muutostyö ja kaikki muut mahdolliset muutostyypit (default)
+                           :else
+                           {:sisalto [:div "Haluatko varmasti poistaa muutoksen?"]})]
+
+    ;; Näytä vahvistusdialogi
+    (varmista-kayttajalta/varmista-kayttajalta
+      (merge {:otsikko "Poistetaanko muutos?"
+              :hyvaksy "Poista"
+              :toiminto-fn (fn [] (e! (t-yhteiset/->PoistaMuutos muutos)))}
+        vahvistus-tiedot))))
 
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
@@ -49,13 +74,25 @@
                       (not voi-tallentaa?)
                       muutoksen-tiedot-haku-kaynnissa?)
                   true
-                  (boolean (and tallenna-painettu? (not lomakkeella-virheita?))))}]
+                  false)}]
 
     [napit/peruuta "Peruuta"
      #(do
         (t-yhteiset/scrollaa-viimeksi-valitulle-riville)
         (e! (t-yhteiset/->MuokkaaMuutosta nil)))
      {:disabled tallennus-kesken?}]
+
+    (when (:id muutos)
+      ;; TODO: Tehdään tästä erillisessä PR:ssä yleinen pattern, joka korvaa vanhentuneen napit/poista komponentin.
+      ;;       Figman Design libraryn mukaisessa tyylissä ei ole lainkaan vanhentunutta punaista napit/poista nappia, vaan
+      ;;       tämä uusi toissijainen nappi, joka on tyyliltään hillitty, kaikille toissijaisille toiminnoille sopiva nappi.
+      [napit/yleinen-toissijainen
+       "Poista muutos"
+       #(poista-muutos-varmistus e! muutos)
+       {:ikoni [ikonit/livicon-trash] :paksu? true
+        :disabled (or
+                    tallennus-kesken?
+                    muutoksen-tiedot-haku-kaynnissa?)}])
 
     (when (or
             tallennus-kesken?
@@ -74,34 +111,58 @@
                "johto-ja-hallintokorvaus" (assoc rivi
                                             :johto-ja-hallintokorvaukset
                                             (t-yhteiset/johto-ja-hallintokorvausmuutoksen-rivit valittu-hoitokausi []))
+               ;; Asetetaan default arvo erillisrahoitetulle muutostyölle
+               ;; TODO: Normaalisti default-arvo tulisi lomake_muutostyo.cljs:ssä oletusarvona alityypin radio-group valinnasta
+               ;;       Mutta, koska alityypin valinta on toistaiseksi poistettu käytöstä, asetetaan se tässä default-arvoksi
+               ;;       Poista tämä, kun alityypin valinta otetaan takaisin käyttöön muutostyo-lomakkeessa.
+               "muutostyo" (assoc rivi
+                             :alityyppi :erillisrahoitus)
                rivi)]
     rivi))
 
 (defn- lomakkeen-tyyppivalinta
-  [e! {:keys [valittu-hoitokausi] :as _app}]
-  (vec
-    (keep identity
-      (concat
-        [{:otsikko "Tyyppi"
-          :nimi :tyyppi
-          :pakollinen? true
-          :aseta (fn [rivi arvo]
-                   (->>
-                     ;; Aseta valittu tyyppi
-                     (assoc rivi :tyyppi arvo)
-                     ;; Haetaan pohjatietoja tietyille lomaketyypeille, kun uutta muutosta luodaan
-                     (alusta-lomakkeen-pohjatiedot e! arvo valittu-hoitokausi)))
-          ;; Sallitaan muokkaus vain uudelle muutokselle
-          :muokattava? #(nil? (:id %))
-          :kaariva-luokka "muutostyyppivalinta"
-          :tyyppi :valinta
-          :vayla-tyyli? true
-          :valinnat muutos-domain/+muutostyypit-lomakkeella+
-          :valinta-arvo identity
-          :valinta-nayta (fn [arvo]
-                           (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
-          :uusi-rivi? true
-          ::lomake/col-luokka "perustiedot col-sm-6"}]))))
+  [e! {:keys [valittu-hoitokausi] :as app}]
+  (let [valittu-tyyppi (get-in app [:muokattava-muutos :tyyppi])]
+    (vec
+      (keep identity
+        (concat
+          [{:otsikko "Tyyppi"
+            :nimi :tyyppi
+            :pakollinen? true
+            :aseta (fn [rivi arvo]
+                     (->>
+                       ;; Aseta valittu tyyppi
+                       (assoc rivi :tyyppi arvo)
+                       ;; Haetaan pohjatietoja tietyille lomaketyypeille, kun uutta muutosta luodaan
+                       (alusta-lomakkeen-pohjatiedot e! arvo valittu-hoitokausi)))
+            ;; Sallitaan muokkaus vain uudelle muutokselle
+            :muokattava? #(nil? (:id %))
+            :kaariva-luokka "muutostyyppivalinta"
+            :tyyppi :valinta
+            :vayla-tyyli? true
+            :valinnat muutos-domain/+muutostyypit-lomakkeella+
+            :valinta-arvo identity
+            :valinta-nayta (fn [arvo]
+                             (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))
+            :uusi-rivi? true
+            ::lomake/col-luokka "perustiedot col-sm-6"}]
+          (when (contains? #{"pysyva" "muutostyo" "johto-ja-hallintokorvaus"} valittu-tyyppi)
+            [{:nimi :teksti
+              :tyyppi :komponentti
+              :kaariva-luokka "laskutusraja-infoteksti"
+              :komponentti (fn []
+                             [:div
+                              (case valittu-tyyppi
+                                "pysyva"
+                                [:p "Tämä muutostyö otetaan huomioon hoitovuoden laskutusrajan laskennassa vain 1. voimassaolovuoden
+                                osalta ja jos voimassaolovuoden tavoitehinnan muutos on positiivinen (plusmerkkinen)."]
+
+                                "muutostyo"
+                                [:p "Tämä muutostyö otetaan huomioon hoitovuoden laskutusrajan laskennassa."]
+
+                                "johto-ja-hallintokorvaus"
+                                [:p "Tämä muutostyö ei vaikuta hoitovuoden laskutusrajan laskentaan."])
+                              [:hr]])}]))))))
 
 
 (defn muutoslomake [e! {:keys [muokattava-muutos muutoksen-tiedot-haku-kaynnissa?] :as _app}]

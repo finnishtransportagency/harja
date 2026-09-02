@@ -4,4 +4,8 @@
 (defqueries "harja/kyselyt/laskutusyhteenveto.sql"
             {:positional? true})
 
-(declare hae-laskutusyhteenvedon-tiedot hae-urakat-joille-laskutusyhteenveto-voidaan-tehda)
+(declare hae-laskutusyhteenvedon-tiedot hae-laskutusyhteenvedon-tiedot-tuotekohtainen
+  hae-urakat-joille-laskutusyhteenveto-voidaan-tehda
+  poista-urakan-kaikki-muistetut-laskutusyhteenvedot!
+  laske-erilliskustannuksen-indeksi hoitokautta-edeltavan-syyskuun-indeksikorotus
+  hae-tyomaakokous-laskutusyhteenveto)

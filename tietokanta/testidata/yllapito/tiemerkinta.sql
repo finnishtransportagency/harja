@@ -165,10 +165,10 @@ VALUES
     NULL,NULL,NULL,NULL,NULL,NULL,NULL,NULL,'harja-ui',NULL,NULL
 );
 
-INSERT INTO sanktio (maara,perintapvm,indeksi,laatupoikkeama,toimenpideinstanssi,tyyppi,suorasanktio,muokattu,muokkaaja,luotu,luoja,ulkoinen_id,vakiofraasi,sakkoryhma,poistettu) 
+INSERT INTO sanktio (maara,perintapvm, maarattypvm, indeksi,laatupoikkeama,toimenpideinstanssi,tyyppi,suorasanktio,muokattu,muokkaaja,luotu,luoja,ulkoinen_id,vakiofraasi,sakkoryhma,poistettu)
 VALUES
 (
-    4500,'2025-06-08',NULL,
+    4500,'2025-06-08', '2025-06-08',NULL,
     (SELECT id FROM laatupoikkeama WHERE perustelu LIKE '%Sakko 2025%')::INT,
     (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Tiemerkinnän TP')::INT,
     (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon sakko')::INT,
@@ -178,7 +178,7 @@ VALUES
     NULL,NULL,'yllapidon_sakko',false
 ),
 (
-    -450,'2025-06-08',NULL,
+    -450,'2025-06-08', '2025-06-08',NULL,
     (SELECT id FROM laatupoikkeama WHERE perustelu LIKE '%Bonus 2025%')::INT,
     (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Tiemerkinnän TP')::INT,
     (SELECT id FROM sanktiotyyppi WHERE nimi = 'Ylläpidon bonus')::INT,

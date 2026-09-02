@@ -21,14 +21,12 @@ SELECT ut.id,
        ut.urakka,
        ut.hoitokausi,
        ut.tavoitehinta,
-       ut.tavoitehinta_siirretty,
        ut.kattohinta,
        ut.luotu,
        ut.luoja,
        ut.muokattu,
        ut.muokkaaja,
        ut.tavoitehinta_indeksikorjattu                                                        AS "tavoitehinta-indeksikorjattu",
-       ut.tavoitehinta_siirretty_indeksikorjattu                                              AS "tavoitehinta-siirretty-indeksikorjattu",
        ut.kattohinta_indeksikorjattu                                                          AS "kattohinta-indeksikorjattu",
        ut.indeksikorjaus_vahvistettu                                                          AS "indeksikorjaus-vahvistettu",
        ut.vahvistaja,
@@ -50,46 +48,122 @@ WITH tavoitehinnan_oikaisut AS
          (SELECT phi.hoitokauden_lopun_indeksikorjaus, phi.hoitokauden_alkuvuosi
           FROM paatos_hoitokauden_indeksikorjaus phi
           WHERE phi.poistettu = FALSE
-            AND phi.urakkaid = :urakka)
+            AND phi.urakkaid = :urakka),
+    mhu_pysyvat_muutokset AS (
+        -- Pysyvät muutokset
+         SELECT SUM(mmk.summa) as summa, mm.urakka, mmk.hoitokauden_alkuvuosi
+           FROM mhu_muutos mm
+                   JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
+                   JOIN urakka_tavoite ut ON ut.urakka = mm.urakka
+                   JOIN urakka u ON ut.urakka = u.id AND u.id = mm.urakka
+          WHERE mm.urakka = :urakka
+            AND mm.voimassa_alkaen BETWEEN
+                (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))
+                AND (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
+            AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
+            AND mm.poistettu IS FALSE
+            AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+          GROUP BY mmk.hoitokauden_alkuvuosi, mm.urakka),
+     mhu_muutostyot_muutokset AS (
+         -- Muutostyot (erillisrahoitetutu)
+         SELECT SUM(mmk.summa) as summa, mm.urakka, mmk.hoitokauden_alkuvuosi
+         FROM mhu_muutos mm
+                  JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
+                  JOIN urakka_tavoite ut ON ut.urakka = mm.urakka
+                  JOIN urakka u ON ut.urakka = u.id AND u.id = mm.urakka
+         WHERE mm.urakka = :urakka
+           AND mm.voimassa_alkaen BETWEEN
+             (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD'))
+             AND (SELECT TO_DATE(EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
+           AND mm.tyyppi = 'muutostyo'::MHU_MUUTOSTYYPPI
+           AND mm.poistettu IS FALSE
+           AND mmk.hoitokauden_alkuvuosi = EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
+         GROUP BY mmk.hoitokauden_alkuvuosi, mm.urakka),
+    mhu_jjh_muutokset AS (
+        -- Johto- ja hallintokorvauksen muutokset
+          SELECT SUM(kokonaissumma) as summa, mm.urakka, EXTRACT (YEAR from u.alkupvm) + ut.hoitokausi - 1 as hoitokauden_alkuvuosi
+            FROM mhu_muutos mm
+                 JOIN mhu_muutos_kulu mmk ON (mm.id = mmk.muutos AND mm.versio = mmk.versio),
+                 kulu k
+                 JOIN kulu_kohdistus kk ON k.id = kk.kulu AND kk.tyyppi = 'jjh-muutos'
+                 JOIN urakka_tavoite ut ON ut.urakka = :urakka
+                 JOIN urakka u ON ut.urakka = u.id
+           WHERE k.id = mmk.kulu
+             AND mm.urakka = :urakka
+             AND k.poistettu IS FALSE
+             AND kk.poistettu IS FALSE
+             AND k.erapaiva BETWEEN
+                 (SELECT TO_DATE(EXTRACT (YEAR from u.alkupvm) + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD')) AND
+                 (SELECT TO_DATE(EXTRACT (YEAR from u.alkupvm) + ut.hoitokausi || '-09-30', 'YYYY-MM-DD'))
+            GROUP BY hoitokauden_alkuvuosi, mm.urakka)
 SELECT ut.id,
        ut.urakka,
        ut.hoitokausi,
        ut.tavoitehinta,
-       ut.tavoitehinta_siirretty,
        ut.kattohinta,
        ut.luotu,
        ut.luoja,
        ut.muokattu,
        ut.muokkaaja,
        ut.tavoitehinta_indeksikorjattu                                                        AS "tavoitehinta-indeksikorjattu",
-       ut.tavoitehinta_siirretty_indeksikorjattu                                              AS "tavoitehinta-siirretty-indeksikorjattu",
        ut.kattohinta_indeksikorjattu                                                          AS "kattohinta-indeksikorjattu",
        ut.indeksikorjaus_vahvistettu                                                          AS "indeksikorjaus-vahvistettu",
        ut.vahvistaja,
        ut.versio,
        (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0))                               AS "tavoitehinta-oikaistu",
-       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) +
-        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))                                    AS "hoitovuoden-lopun-tavoitehinta",
-       COALESCE(ko."uusi-kattohinta",
-                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa,0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+       (ut.tavoitehinta_indeksikorjattu + COALESCE(t.summa, 0) + -- Tavoitehinta + mahdolliset oikaisut
+        COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0))  -- Hoitovuoden lopun indeksikorjaus
+                                                                                              AS "hoitovuoden-lopun-tavoitehinta",
+       COALESCE(ko."uusi-kattohinta", -- Oikaistu kattohinta
+                (ut.kattohinta_indeksikorjattu + -- Indeksikorjattu kattohinta
+                 (COALESCE(t.summa,0) -- Mahdolliset oikaisut
+                      * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                                               AS "kattohinta-oikaistu",
        COALESCE(ko."uusi-kattohinta",
                 (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
                     + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
                                                                                               AS "hoitovuoden-lopun-kattohinta",
-       (EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1)::INTEGER                            AS "hoitokauden-alkuvuosi",
-       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta"
+       x.hk_alkuvuosi                                                                         AS "hoitokauden-alkuvuosi",
+       ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
+       ut.laskutusraja                                                                        AS "laskutusraja",
+       ut.laskutusraja_alkuperainen                                                           AS "laskutusraja-alkuperainen",
+       (COALESCE(SUM(pmuutokset.summa),0) + COALESCE(SUM(mmuutokset.summa),0)
+            + COALESCE(SUM(jmuutokset.summa), 0))                                             AS "kirjallisesti-sovitut-muutokset",
+       SUM(pmuutokset.summa)                                                                  AS "pysyvat-muutokset",
+       SUM(mmuutokset.summa)                                                                  AS "muutostyo-muutokset",
+       SUM(jmuutokset.summa)                                                                  AS "jjh-muutokset",
+       up.laskutusraja_kaytossa                                                               AS "laskutusraja-kaytossa",
+       -- Menneet pysyvät muutokset täytyy indeksikorjata, kun ne haetaan
+       indeksikorjaa(
+           (SELECT SUM(mmk.summa)
+            FROM mhu_muutos_kustannusvaikutus mmk
+                     JOIN mhu_muutos m ON m.id = mmk.muutos
+            WHERE m.urakka = :urakka
+              AND m.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
+              AND m.poistettu IS FALSE
+              -- Astunut voimaan ennen valittua hk
+              -- Muutosvaikutuksen alkuvuosi on valittu hk
+              AND (m.voimassa_alkaen < x.hk_alkupvm AND mmk.hoitokauden_alkuvuosi = x.hk_alkuvuosi)),
+           x.hk_alkuvuosi, 10, u.id
+       ) AS "menneet-muutos-summa"
+
 FROM urakka_tavoite ut
          LEFT JOIN urakka u ON ut.urakka = u.id
-         LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND
-                                              EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
-                                              ko."hoitokauden-alkuvuosi" AND
-                                              NOT ko.poistettu)
-         LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND
-                                               EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1 =
-                                               t."hoitokauden-alkuvuosi"
-         LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  EXTRACT(YEAR from u.alkupvm) + ut.hoitokausi - 1
-WHERE urakka = :urakka
+         CROSS JOIN LATERAL (
+            -- Muodostetaan hoitovuosi, jota voidaan käyttää sisäkkäisissä hauissa
+             SELECT (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1) AS hk_alkuvuosi,
+                    TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi - 1 || '-10-01', 'YYYY-MM-DD') AS hk_alkupvm,
+                    (EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi) AS hk_loppuvuosi,
+                    TO_DATE(EXTRACT(YEAR FROM u.alkupvm)::INT + ut.hoitokausi || '-09-30', 'YYYY-MM-DD') AS hk_loppupvm) x
+         LEFT JOIN kattohinnan_oikaisu ko ON (u.id = ko."urakka-id" AND ko."hoitokauden-alkuvuosi" = x.hk_alkuvuosi AND NOT ko.poistettu)
+         LEFT JOIN tavoitehinnan_oikaisut t ON u.id = t."urakka-id" AND t."hoitokauden-alkuvuosi" = x.hk_alkuvuosi
+         LEFT JOIN hoivuoden_lopun_indeksikorjaus hli ON hli.hoitokauden_alkuvuosi =  x.hk_alkuvuosi
+         LEFT JOIN mhu_pysyvat_muutokset pmuutokset ON pmuutokset.urakka = u.id AND pmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN mhu_muutostyot_muutokset mmuutokset ON mmuutokset.urakka = u.id AND mmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN mhu_jjh_muutokset jmuutokset ON jmuutokset.urakka = u.id AND jmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
+         LEFT JOIN urakka_parametrit up ON up.urakkaid = u.id
+WHERE ut.urakka = :urakka
+GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm, up.laskutusraja_kaytossa
 ORDER BY ut.hoitokausi;
 
 -- name: hae-valikatselmus-siirrot-ed-vuodelta
@@ -180,7 +254,7 @@ UPDATE johto_ja_hallintokorvaus jh
    AND (CONCAT(jh.vuosi, '-', jh.kuukausi, '-01')::DATE BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
    AND jh.versio = 0;
 
---name: vahvista-tai-kumoa-indeksikorjaukset-urakan-tavoitteille!
+--name: merkitse-urakan-tavoitteiden-indeksikorjaukset-vahvistetuksi!
 UPDATE urakka_tavoite ut
    SET indeksikorjaus_vahvistettu = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistus-pvm::TIMESTAMP END,
        vahvistaja                 = CASE WHEN :vahvista?::BOOLEAN = TRUE THEN :vahvistaja END
@@ -319,7 +393,6 @@ where muuttuneet.id = johto_ja_hallintokorvaus.id;
 
 -- name: paivita-urakka-tavoite-indeksille!
 -- urakka_tavoite.tavoitehinta
--- urakka_tavoite.tavoitehinta_siirretty
 -- urakka_tavoite.kattohinta
 with muuttuneet as (
     select *
@@ -332,20 +405,15 @@ with muuttuneet as (
                             EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
                             10,
                             u.id)                             as tavoitehinta_indeksikorjattu_uusi,
-                    -- tavoitehinta_siirretty_indeksikorjattu
-                    ut.tavoitehinta_siirretty_indeksikorjattu as tavoitehinta_siirretty_indeksikorjattu_vanha,
-                    indeksikorjaa(
-                            ut.tavoitehinta_siirretty,
-                            EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
-                            10,
-                            u.id)                             as tavoitehinta_siirretty_indeksikorjattu_uusi,
                     -- kattohinta_indeksikorjattu
                     ut.kattohinta_indeksikorjattu             as kattohinta_indeksikorjattu_vanha,
                     indeksikorjaa(
                             ut.kattohinta,
                             EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1,
                             10,
-                            u.id)                             as kattohinta_indeksikorjattu_uusi
+                            u.id)                             as kattohinta_indeksikorjattu_uusi,
+                    ut.laskutusraja                           as laskutusraja_vanha,
+                    ut.laskutusraja_alkuperainen              as laskutusraja_alkuperainen_vanha
              from urakka_tavoite ut
                       join urakka u on ut.urakka = u.id
              where u.tyyppi = 'teiden-hoito'
@@ -355,13 +423,33 @@ with muuttuneet as (
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where tavoitehinta_indeksikorjattu_vanha is distinct from tavoitehinta_indeksikorjattu_uusi
-       or tavoitehinta_siirretty_indeksikorjattu_vanha is distinct from tavoitehinta_siirretty_indeksikorjattu_uusi
        or kattohinta_indeksikorjattu_vanha is distinct from kattohinta_indeksikorjattu_uusi
 )
 update urakka_tavoite
 set tavoitehinta_indeksikorjattu           = muuttuneet.tavoitehinta_indeksikorjattu_uusi,
-    tavoitehinta_siirretty_indeksikorjattu = muuttuneet.tavoitehinta_siirretty_indeksikorjattu_uusi,
     kattohinta_indeksikorjattu             = muuttuneet.kattohinta_indeksikorjattu_uusi,
+    -- Uusi laskutusraja = tavoitehinta_indeksikorjattu_uusi + muutostöiden osuus
+    laskutusraja = CASE
+                       WHEN muuttuneet.laskutusraja_vanha IS NOT NULL
+                            AND EXISTS (SELECT 1
+                                          FROM urakka_parametrit up
+                                         WHERE up.urakkaid = urakka_tavoite.urakka
+                                           AND up.laskutusraja_kaytossa = TRUE)
+                           THEN muuttuneet.tavoitehinta_indeksikorjattu_uusi
+                                + (muuttuneet.laskutusraja_vanha
+                                   - COALESCE(muuttuneet.laskutusraja_alkuperainen_vanha, muuttuneet.laskutusraja_vanha))
+                       ELSE NULL
+                   END,
+    -- Uusi laskutusraja_alkuperainen = tavoitehinta_indeksikorjattu_uusi
+    laskutusraja_alkuperainen = CASE
+                                    WHEN muuttuneet.laskutusraja_alkuperainen_vanha IS NOT NULL
+                                         AND EXISTS (SELECT 1
+                                                       FROM urakka_parametrit up
+                                                      WHERE up.urakkaid = urakka_tavoite.urakka
+                                                        AND up.laskutusraja_kaytossa = TRUE)
+                                        THEN muuttuneet.tavoitehinta_indeksikorjattu_uusi
+                                    ELSE NULL
+                                END,
     muokkaaja                              = (select id from kayttaja where kayttajanimi = 'Integraatio'),
     muokattu                               = NOW()
 from muuttuneet

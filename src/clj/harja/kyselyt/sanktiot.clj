@@ -3,8 +3,10 @@
             [harja.kyselyt.konversio :as konv]
             [harja.geo :as geo]))
 
-(declare hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
-  hae-urakan-sanktiot-analytiikalle)
+(declare hae-sanktiotyypit hae-sanktiotyypin-tiedot-koodilla hae-sanktio hae-urakan-sanktiot
+  hae-urakan-sanktiot-analytiikalle hae-sanktiotyyppi-koodilla merkitse-maksuera-likaiseksi!
+  hae-laatupoikkeaman-sanktiot hae-urakan-bonukset hae-sanktion-urakka-id luo-sanktio<!
+  paivita-sanktio! hae-suorasanktion-tiedot poista-sanktio!)
 
 ;; Käytössä jeesql:ssä
 (defn muunna-urakan-sanktio
@@ -18,10 +20,12 @@
       ;; Muunnetaan ennen kuin ajetaan konv/alaviiva->rakenne sanktioille ja bonuksille
       ;;   -> tämä tehdään "hae-urakan-sanktiot-ja-bonukset" rajapinnassa lopuksi.
       :laatupoikkeama_paatos_kasittelytapa
+      :kasittelytapa
+      :maaraystapa
       :vakiofraasi)
     (konv/decimal->double :summa :indeksikorjaus)
     ;; Muunna timestampit java-date:ksi
-    (konv/muunna [:kasittelyaika :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
+    (konv/muunna [:kasittelyaika :maarattypvm :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))
 
 ;; Käytössä jeesql:ssä
@@ -31,7 +35,7 @@
   (-> rivi
     (konv/string->keyword :laji :kasittelytapa)
     ;; Muunna timestampit java-date:ksi
-    (konv/muunna [:kasittelyaika] konv/java-date)
+    (konv/muunna [:kasittelyaika :maarattypvm] konv/java-date)
     (konv/decimal->double :summa :indeksiåkorjaus)))
 
 ;; Käytössä jeesql:ssä

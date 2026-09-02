@@ -1,37 +1,163 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
-  (:require [reagent.core :refer [atom]]
-            [reagent.ratom :refer [reaction]]
+  (:require [clojure.string :as str]
             [cljs.core.async :refer [<!]]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.loki :refer [log]]
-            [harja.pvm :as pvm]
+            [reagent.core :refer [atom]]
+            [reagent.ratom :refer [reaction]]
 
+            [harja.pvm :as pvm]
+            [harja.loki :refer [log]]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
-            [harja.tiedot.istunto :as istunto]
-            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.domain.urakka :as u-domain]
-            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
-            [harja.ui.viesti :as viesti])
+            [harja.tiedot.istunto :as istunto]
+            [harja.domain.tierekisteri :as tr]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def nakymassa? (atom false))
 
-(defn uusi-sanktio [urakkatyyppi]
+(defn sanktio-konfiguraation-soveltuvuuskonteksti
+  [ls-sivu vv-ls-sivu]
+  (cond
+    (= :laatupoikkeamat ls-sivu) :laatupoikkeama
+    (or (= :sanktiot ls-sivu)
+      (= :vesivayla-sanktiot vv-ls-sivu)) :urakka
+    :else nil))
+
+(defonce valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? (atom false))
+(defonce valitun-urakan-sanktio-konfiguraation-pyynto-id (atom 0))
+
+(defn hae-urakan-sanktio-konfiguraatio
+  [urakka-id hoitovuosi soveltuvuuskonteksti]
+  (let [pyynto-id (swap! valitun-urakan-sanktio-konfiguraation-pyynto-id inc)
+        vastaus-ch (k/post! :hae-urakan-sanktio-konfiguraatio
+                     {:urakka-id urakka-id
+                      :hoitovuosi hoitovuosi
+                      :soveltuvuuskonteksti soveltuvuuskonteksti})]
+    (reset! valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? true)
+    (go
+      (<! vastaus-ch)
+      (when (= pyynto-id @valitun-urakan-sanktio-konfiguraation-pyynto-id)
+        (reset! valitun-urakan-sanktio-konfiguraation-haku-kaynnissa? false)))
+    vastaus-ch))
+
+(defn sanktio-konfiguraation-tila
+  [sanktio-konfiguraatio haku-kaynnissa?]
+  (cond
+    haku-kaynnissa?
+    :haku-kaynnissa
+
+    (seq (domain-sanktio/sanktio-konfiguraation-lajit sanktio-konfiguraatio))
+    :valmis
+
+    (and (some? sanktio-konfiguraatio)
+      (k/virhe? sanktio-konfiguraatio))
+    :haku-epaonnistui
+
+    :else
+    :ei-konfiguraatiota))
+
+(defn oletus-uuden-sanktion-laji
+  [urakkatyyppi mahdolliset-sanktiolajit]
+  (cond
+    (u-domain/mh-tai-hoitourakka? urakkatyyppi)
+    (first mahdolliset-sanktiolajit)
+
+    (u-domain/vesivaylaurakkatyyppi? urakkatyyppi)
+    :vesivayla_sakko
+
+    :else
+    :yllapidon_sakko))
+
+(def valitun-urakan-sanktio-konfiguraatio
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)
+               urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+               ls-sivu (nav/valittu-valilehti :laadunseuranta)
+               vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+               valittu-hoitokausi @urakka/valittu-hoitokausi]
+    {:nil-kun-haku-kaynnissa? true}
+    (let [soveltuvuuskonteksti (sanktio-konfiguraation-soveltuvuuskonteksti ls-sivu vv-ls-sivu)
+          hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                       (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))]
+      (when (and urakka-id soveltuvuuskonteksti hoitovuosi)
+        (hae-urakan-sanktio-konfiguraatio urakka-id hoitovuosi soveltuvuuskonteksti)))))
+
+(def valitun-urakan-sanktio-konfiguraation-tila
+  (reaction
+    (let [urakka-id (:id @nav/valittu-urakka)
+          urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+          ls-sivu (nav/valittu-valilehti :laadunseuranta)
+          vv-ls-sivu (nav/valittu-valilehti :laadunseuranta-vesivaylat)
+          valittu-hoitokausi @urakka/valittu-hoitokausi
+          soveltuvuuskonteksti (sanktio-konfiguraation-soveltuvuuskonteksti ls-sivu vv-ls-sivu)
+          hoitovuosi (when (and urakan-alkupvm valittu-hoitokausi)
+                       (pvm/hoitokausivuosi->mhu-hoitovuosi-nro urakan-alkupvm (pvm/vuosi (first valittu-hoitokausi))))]
+      (when (and urakka-id soveltuvuuskonteksti hoitovuosi)
+        (sanktio-konfiguraation-tila
+          @valitun-urakan-sanktio-konfiguraatio
+          @valitun-urakan-sanktio-konfiguraation-haku-kaynnissa?)))))
+
+(defn valitun-urakan-sanktiolajin-nimi
+  [laji]
+  (or (domain-sanktio/sanktio-konfiguraation-lajin-nimi @valitun-urakan-sanktio-konfiguraatio laji)
+    (domain-sanktio/sanktiolaji->teksti laji)))
+
+(defn valitun-urakan-sanktiotyypit
+  [laji]
+  (domain-sanktio/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
+
+(def valitun-urakan-sanktiolajit
+  "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."
+  (reaction
+    (domain-sanktio/sanktio-konfiguraation-lajit @valitun-urakan-sanktio-konfiguraatio)))
+
+(def valitun-urakan-tehtavaryhmat
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+    (when urakka-id
+      (k/post! :hae-kaikkien-tehtavaryhmien-nimet {:urakka-id urakka-id}))))
+
+(defn uusi-sanktio [urakkatyyppi valittu-hoitokauden-alkuvuosi]
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
-    {:suorasanktio true
-     :laji (cond
-             (u-domain/mh-tai-hoitourakka? urakkatyyppi) :A
-             (u-domain/vesivaylaurakkatyyppi? urakkatyyppi) :vesivayla_sakko
-             :else :yllapidon_sakko)
-     :perintapvm default-perintapvm
-     :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
-                            (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
-     :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                      :paatos {:paatos "sanktio"
-                               :kasittelyaika nyt}}}))
+        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                 (>= urakan-alkuvuosi 2025))
+        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
+        default-perintapvm (if mhu25?
+                             (let [v (pvm/vuosi nyt)
+                                   kk (pvm/kuukausi nyt)
+                                   kohde-vuosi (if (>= kk 10) (inc v) v)]
+                               (pvm/->pvm (str "15.9." kohde-vuosi)))
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))
+        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %)) @valitun-urakan-tehtavaryhmat)
+        ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
+        tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
+        ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
+        hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)]
+
+    (merge
+      {:harja.ui.lomake/muokatut #{:kasittelyaika}
+            :suorasanktio true
+            :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
+            :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                             :valikatselmus
+                             nil)
+            :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                               (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                           :tyomaakokous
+                           nil)
+            :perintapvm default-perintapvm
+            :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                                   (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
+            :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                             :paatos {:paatos "sanktio"
+                                      :kasittelyaika nyt}}}
+      (when mhu25? {:tehtavaryhma  hoidonjohtopalkkio-tr}))))
 
 (defn pyorayta-laskutuskuukausi-valinnat
   []
@@ -67,8 +193,8 @@
   voi estää :hae-sanktiot? false tai :hae-bonukset? false optiolla."
   [{:keys [urakka-id alku loppu vain-yllapitokohteettomat? hae-sanktiot? hae-bonukset?]}]
   (k/post! :hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka-id
-                                             :alku      alku
-                                             :loppu     loppu
+                                             :alku alku
+                                             :loppu loppu
                                              :vain-yllapitokohteettomat? vain-yllapitokohteettomat?
                                              :hae-sanktiot? hae-sanktiot?
                                              :hae-bonukset? hae-bonukset?}))
@@ -79,11 +205,11 @@
                hoitokausi @urakka/valittu-hoitokausi
                _ @nakymassa?
                _ @paivita-sanktiot-ja-bonukset-atom]
-              {:nil-kun-haku-kaynnissa? true}
-              (when @nakymassa?
-                (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
-                                                  :alku (first hoitokausi)
-                                                  :loppu (second hoitokausi)}))))
+    {:nil-kun-haku-kaynnissa? true}
+    (when @nakymassa?
+      (hae-urakan-sanktiot-ja-bonukset {:urakka-id urakka
+                                        :alku (first hoitokausi)
+                                        :loppu (second hoitokausi)}))))
 
 (defn paivita-sanktiot-ja-bonukset!
   "Vaihtaa paivita-sanktiot-ja-bonukset atomin arvon, joka käynnistää sanktioiden ja bonusten haun."
@@ -94,12 +220,12 @@
   "Hakee sanktion liitteet urakan id:n ja sanktioon tietomallissa liittyvän laatupoikkeaman id:n
   perusteella."
   [urakka-id laatupoikkeama-id sanktio-atom]
-  (log "hae-sanktion-liitteet!  " (pr-str urakka-id ) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
+  (log "hae-sanktion-liitteet!  " (pr-str urakka-id) " laatupoikkeama-id " (pr-str laatupoikkeama-id))
   (go (let [vastaus (<! (k/post! :hae-sanktion-liitteet {:urakka-id urakka-id
                                                          :laatupoikkeama-id laatupoikkeama-id}))]
         (if (k/virhe? vastaus)
           :virhe
-          (swap! sanktio-atom (fn [] (assoc-in @sanktio-atom [:laatupoikkeama :liitteet] vastaus)))))))
+          (swap! sanktio-atom assoc-in [:laatupoikkeama :liitteet] vastaus)))))
 
 (def lajisuodatin-tiedot
   {:muistutukset {:teksti "Muistutukset" :jarjestys 1}
@@ -133,17 +259,25 @@
 
 (defn kasaa-tallennuksen-parametrit
   [s urakka-id]
-  {:sanktio        (dissoc s :laatupoikkeama :yllapitokohde)
-   :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
-                                              :yllapitokohde (:id (:yllapitokohde s)))
-   :hoitokausi     @urakka/valittu-hoitokausi})
+  (let [hoitokausi @urakka/valittu-hoitokausi]
+    {:sanktio        (-> s
+                       (dissoc :laatupoikkeama :yllapitokohde)
+                       (assoc :paivamaara (first hoitokausi)
+                         :soveltuvuuskonteksti :urakka))
+     :laatupoikkeama (assoc (:laatupoikkeama s) :urakka urakka-id
+                       :yllapitokohde (:id (:yllapitokohde s)))
+     :hoitokausi     hoitokausi}))
+
 
 (defn tallenna-sanktio
   [sanktio urakka-id onnistui-fn]
   (go
-    (let [vastaus (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id)))]
+    (let [vastaus (<! (k/post! :tallenna-suorasanktio (kasaa-tallennuksen-parametrit sanktio urakka-id) nil true))]
       (if (k/virhe? vastaus)
-        (viesti/nayta-toast! "Sanktion tallennus epäonnistui!" :varoitus)
+        (viesti/nayta-toast!
+          (or (k/virheviesti vastaus)
+            "Sanktion tallennus epäonnistui!")
+          :varoitus)
         (do
           (viesti/nayta-toast! "Sanktion tallennus onnistui" :onnistui)
           (reset! valittu-sanktio nil)
@@ -179,16 +313,16 @@
             (second @urakka/valittu-hoitokausi)))
     (if (some #(= (:id %) palautettu-id) @haetut-sanktiot-ja-bonukset)
       (reset! haetut-sanktiot-ja-bonukset
-             (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
+        (into [] (map (fn [vanha] (if (= palautettu-id (:id vanha)) (assoc sanktio :id palautettu-id) vanha)) @haetut-sanktiot-ja-bonukset)))
 
       (reset! haetut-sanktiot-ja-bonukset
-             (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
+        (into [] (concat @haetut-sanktiot-ja-bonukset [(assoc sanktio :id palautettu-id)]))))))
 
 
 (defonce sanktiotyypit
   (reaction<! [laadunseurannassa? @laadunseuranta/laadunseurannassa?]
-              (when laadunseurannassa?
-                (k/get! :hae-sanktiotyypit))))
+    (when laadunseurannassa?
+      (k/get! :hae-sanktiotyypit))))
 
 (defn suodata-sanktiot-ja-bonukset [sanktiot-ja-bonukset]
   (let [kaikki @urakan-lajisuodattimet
@@ -199,3 +333,46 @@
       (filter
         #(valitut (domain-sanktio/rivin-tyyppi %))
         sanktiot-ja-bonukset))))
+
+(defn valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
+  (case sanktion-tyyppi
+    "Muut hoitourakan tehtäväkokonaisuudet" (remove
+                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                                              toimenpideinstanssit)
+    "Talvihoito, päätiet" (filter
+                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                            toimenpideinstanssit)
+    "Talvihoito, muut tiet" (filter
+                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                              toimenpideinstanssit)
+    "Sorateiden hoito ja ylläpito" (filter
+                                     #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                        (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
+                                     toimenpideinstanssit)
+    "Liikenneympäristön hoito" (filter
+                                 #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                 toimenpideinstanssit)
+    toimenpideinstanssit))
+
+(defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi sanktio-atom]
+  (cond
+    ;; MHU25+: näytetään vain Hoidonjohtopalkkio sekä suorasanktiolle että laatupoikkeaman sanktiolle
+    (> urakan-alkuvuosi 2024)
+    (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
+
+    ;; MHU24 tai vanhempi: suodatetaan tyypin mukaan
+    :else
+    (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))))
+
+(defn sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
+  ;; Bonuksilla ei tällä hetkellä ole kuvausta.
+  ;; Näytetään sanktion kohde, mikäli kyseessä on suorasanktio, eli sanktio on tehty sanktiolomakkeella.
+  ;; Jos kyse on laatupoikkeaman kautta tehdystä sanktiosta, näytetään kohteen kuvaus ja mahdollinen TR-osoite.
+  (let [kohde (:kohde laatupoikkeama)]
+    (if suorasanktio
+      (or kohde "–")
+      [:span
+       (str "Laatupoikkeama: " kohde)
+       [:br]
+       (str (when (get-in laatupoikkeama [:tr :numero])
+              (str " (" (tr/tierekisteriosoite-tekstina (:tr laatupoikkeama) {:teksti-tie? true}) ")")))])))

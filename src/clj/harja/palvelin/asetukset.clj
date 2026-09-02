@@ -41,6 +41,10 @@
          (s/optional-key :tiedosto) s/Str
          :kayttajatunnus s/Str
          :salasana s/Str}
+   (s/optional-key :kayttajaroolit) {:url s/Str
+                                     :apiavain s/Str
+                                     (s/optional-key :timeout) s/Int
+                                     (s/optional-key :max-yritykset) s/Int}
    :log {(s/optional-key :gelf) {:palvelin s/Str
                                  :taso s/Keyword}
          (s/optional-key :slack) {:webhook-url s/Str :taso s/Keyword
@@ -215,7 +219,7 @@
    })
 
 (defn yhdista-asetukset [oletukset asetukset]
-  (merge-with #(if (map? %1)
+  (merge-with #(if (and (map? %1) (map? %2))
                  (merge %1 %2)
                  %2)
     oletukset asetukset))

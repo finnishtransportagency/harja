@@ -18,6 +18,7 @@
              [materiaalit :as materiaalit]
              [raportit :as raportit-q]]
             [harja.kyselyt.pohjavesialueet :as pohjavesialueet-q]
+            [harja.kyselyt.ajastetut-tehtavat-kyselyt :as ajastetut-tehtavat-kyselyt]
             [harja.palvelin.raportointi.raportit :refer [raportit-nimen-mukaan]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.raportointi :as raportti-domain]
@@ -87,17 +88,17 @@
 
 (defn luo-suoritustieto-raportille
   [db user tiedot]
-  (let [{:keys [urakka-id nimi konteksti kasittelija parametrit hallintayksikko-id]} tiedot
+  (let [{:keys [urakka-id nimi konteksti kasittelija parametrit elinvoimakeskus-id]} tiedot
         {:keys [alkupvm loppupvm]} parametrit
         {{kayttajan-organisaatio :id} :organisaatio
          :keys [roolit urakkaroolit organisaatioroolit]} user
         _ (vaadi-urakka-on-olemassa db urakka-id)
-        _ (vaadi-hallintayksikko-on-olemassa db hallintayksikko-id)
+        _ (vaadi-hallintayksikko-on-olemassa db elinvoimakeskus-id)
         tiedot {:urakka_id urakka-id
                 :suorittajan_organisaatio kayttajan-organisaatio
                 :aikavali_alkupvm alkupvm
                 :aikavali_loppupvm loppupvm
-                :hallintayksikko_id hallintayksikko-id
+                :hallintayksikko_id elinvoimakeskus-id
                 :konteksti konteksti
                 :raportti (name nimi)
                 :rooli (parsi-roolit roolit)
@@ -111,12 +112,12 @@
     id))
 
 (defn liita-suorituskontekstin-kuvaus [db {:keys [konteksti urakka-id urakoiden-nimet
-                                                  hallintayksikko-id parametrit]
+                                                  elinvoimakeskus-id parametrit]
                                            :as kaikki-parametrit} raportti]
   (let [urakka (when urakka-id
                  (first (urakat-q/hae-urakka db urakka-id)))
-        hy-nimi (when hallintayksikko-id
-                  (-> (organisaatiot-q/hae-organisaatio db hallintayksikko-id)
+        evk-nimi (when elinvoimakeskus-id
+                  (-> (organisaatiot-q/hae-organisaatio db elinvoimakeskus-id)
                       first
                       :nimi))]
     (->
@@ -125,11 +126,8 @@
         [1 :raportin-yleiset-tiedot]
         (merge {:urakka (case konteksti
                           "urakka" (:nimi urakka)
-
                           "monta-urakkaa" (str/join ", " urakoiden-nimet)
-
-                          "hallintayksikko" hy-nimi
-
+                          "elinvoimakeskus" evk-nimi
                           "koko maa" "Koko maa")
                 :alkupvm (or
                            (some-> parametrit :alkupvm pvm/pvm)
@@ -147,7 +145,7 @@
                           "monta-urakkaa" (if (> (count urakoiden-nimet) 1)
                                             "Monta urakkaa"
                                             "Urakka")
-                          "hallintayksikko" "Hallintayksikkö"
+                          "elinvoimakeskus" "Elinvoimakeskus"
                           "koko maa" "Koko maa")]] t
               (if (= "urakka" konteksti)
                 (concat t [["Urakka" (:nimi urakka)]
@@ -161,18 +159,18 @@
                             (clojure.string/join ", " urakoiden-nimet)]])
                 t)
 
-              (if (= "hallintayksikko" konteksti)
-                (concat t [["Hallintayksikkö" hy-nimi]
+              (if (= "elinvoimakeskus" konteksti)
+                (concat t [["Elinvoimakeskus" evk-nimi]
                            (if (and (:urakkatyyppi parametrit)
                                     ;; Vesiväylä- ja kanavaurakoiden osalta urakkatyyppien käsittely monimutkaisempaa eikä siksi tehty tässä
                                     (#{:hoito :paallystys :valaistus :tiemerkinta :paikkaus} (:urakkatyyppi parametrit)))
                              [(str "Tyypin " (fmt/urakkatyyppi-fmt (:urakkatyyppi parametrit)) " urakoita käynnissä")
-                              (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakkatyypin-urakat
-                                       db {:hal hallintayksikko-id
+                              (count (urakat-q/hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat
+                                       db {:elinvoimakeskus-id elinvoimakeskus-id
                                            :urakkatyyppi (name (:urakkatyyppi parametrit))}))]
                              ["Urakoita käynnissä"
                               (count (urakat-q/hae-hallintayksikon-kaynnissa-olevat-urakat
-                                       db hallintayksikko-id))])])
+                                       db elinvoimakeskus-id))])])
                 t)
 
               (if (= "koko maa" konteksti)
@@ -219,13 +217,12 @@
     (doseq [sopimus-id urakan-sopimus-idt]
       ;; Päivitetään sopimuksen_kaytetty_materiaali (sisältää saman datan kuin myöhemmin luotu materialized view raportti_toteutuneet_materiaalit, jos aika sallii, voidaan refaktoroida ja hankkiutua toisesta eroon)
       ;; (Ympäristöraporttia varten)
-      (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                             :alkupvm (pvm/eilinen)
+      (materiaalit/paivita-sopimuksen-materiaalikaytto-muutospaivalla db {:sopimus sopimus-id
+                                                             :muutospvm (pvm/eilinen)
                                                              :urakkaid urakka-id}))
     ;; Päivitetään taulu urakan_materiaalin_kaytto_hoitoluokittain (Ympäristöraporttia varten)
-    (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                       :alkupvm (pvm/eilinen)
-                                                                       :loppupvm (pvm/eilinen)})))
+    (materiaalit/paivita-urakan-materiaalinkaytto-hoitoluokittain-muutospaivalla db {:urakka urakka-id
+                                                                                    :muutospvm (pvm/eilinen)})))
 
 (defn- paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta [db]
   (let [urakka-idt (mapv :id
@@ -235,6 +232,31 @@
                                 (paivita-urakan-materiaalin-kayton-cachet-eiliselta db u)))
     :paivitetty))
 
+(defn- aja-lokituksella
+  "Suorittaa tehtava-fn:n try/catch-lohkossa ja kirjaa tuloksen
+   ajastetut_tehtavat-tauluun. alkuaika kattaa eilisen datan,
+   loppuaika on ajon hetki."
+  [db tyyppi tehtava-fn]
+  (let [alkuaika  (java.sql.Timestamp. (.getTime (pvm/eilinen)))
+        loppuaika (java.sql.Timestamp. (.getTime (pvm/nyt)))]
+    (try
+      (tehtava-fn)
+      (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava!
+        db {:tyyppi            tyyppi
+            :alkuaika_valilta  alkuaika
+            :loppuaika_valilta loppuaika
+            :onnistunut        true
+            :virhe             nil})
+      (log/info tyyppi ":: Loppuu" (pvm/nyt))
+      (catch Exception e
+        (log/error e (str tyyppi " :: Epäonnistui:") (.getMessage e))
+        (ajastetut-tehtavat-kyselyt/lisaa_ajastettu_tehtava!
+          db {:tyyppi            tyyppi
+              :alkuaika_valilta  alkuaika
+              :loppuaika_valilta loppuaika
+              :onnistunut        false
+              :virhe             (str e)})))))
+
 (defn paivita_raportti_toteutuneet_materiaalit! [db]
   (ajastettu-tehtava/ajasta-paivittain [5 0 0]
                                        (fn [_]
@@ -242,9 +264,10 @@
                                            db "paivita_raportti_toteutuneet_materiaalit"
                                            #(do
                                               (log/info "ajasta-paivittain :: paivita_raportti_toteutuneet_materiaalit :: Alkaa " (pvm/nyt))
-                                              (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
-                                              (raportit-q/paivita_raportti_toteutuneet_materiaalit db)
-                                              (log/info "paivita_raportti_toteutuneet_materiaalit :: Loppuu " (pvm/nyt)))
+                                              (aja-lokituksella db "paivita_raportti_toteutuneet_materiaalit"
+                                                (fn []
+                                                  (paivita-kaynnissolevien-hoitourakoiden-materiaalicachet-eiliselta db)
+                                                  (raportit-q/paivita_raportti_toteutuneet_materiaalit db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -255,11 +278,12 @@
                                            db "paivita_raportti_pohjavesialueiden_suolatoteumat"
                                            #(do
                                               (log/info "ajasta-paivittain :: paivita_pohjavesialue_kooste  :: Alkaa " (pvm/nyt))
-                                              (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
-                                              (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
-                                              (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
-                                              (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db)
-                                              (log/info "paivita_raportti_pohjavesialueiden_suolatoteumat :: Loppuu " (pvm/nyt)))
+                                              (aja-lokituksella db "paivita_raportti_pohjavesialueiden_suolatoteumat"
+                                                (fn []
+                                                  (pohjavesialueet-q/paivita-pohjavesialue-kooste db)
+                                                  (log/info "paivita_pohjavesialue_kooste :: Loppuu " (pvm/nyt))
+                                                  (log/info "ajasta-paivittain :: paivita_raportti_pohjavesialueiden_suolatoteumat :: Alkaa " (pvm/nyt))
+                                                  (raportit-q/paivita_raportti_pohjavesialueiden_suolatoteumat db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
 
@@ -270,10 +294,11 @@
                                            db "paivita_raportti_toteuma_maarat"
                                            #(do
                                               (log/info "ajasta-paivittain :: paivita_raportti_toteuma_maarat :: Alkaa " (pvm/nyt))
-                                              (raportit-q/paivita_raportti_toteuma_maarat db)
-                                              (log/info "paivita_raportti_toteuma_maarat :: Loppuu " (pvm/nyt)))
+                                              (aja-lokituksella db "paivita_raportti_toteuma_maarat"
+                                                (fn [] (raportit-q/paivita_raportti_toteuma_maarat db))))
                                            ;; otetaan 3h lukko, jotta varmasti voimassa ajon jälkeen
                                            (* 60 180)))))
+
 
 (defrecord Raportointi [raportit ajossa-olevien-raporttien-lkm]
   component/Lifecycle
@@ -354,9 +379,9 @@
                                        :urakka-id (:urakka-id suorituksen-tiedot))
                             "monta-urakkaa" (assoc parametrit
                                               :urakoiden-nimet (:urakoiden-nimet suorituksen-tiedot))
-                            "hallintayksikko" (assoc parametrit
-                                                :hallintayksikko-id
-                                                (:hallintayksikko-id suorituksen-tiedot))
+                            "elinvoimakeskus" (assoc parametrit
+                                                :elinvoimakeskus-id
+                                                (:elinvoimakeskus-id suorituksen-tiedot))
                             "koko maa" parametrit))]
             ;; tallennetaan suorituksen lopetusaika
             (paivita-suorituksen-valmistumisaika db suoritus-id)

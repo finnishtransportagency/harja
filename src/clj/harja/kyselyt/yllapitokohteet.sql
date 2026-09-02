@@ -69,6 +69,16 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-yllapitokohde-urakan-nimella
+-- Hakee ylläpitokohteen id:n urakan ja nimen perusteella
+SELECT ypk.id,
+       ypk.nimi
+  FROM yllapitokohde ypk
+ WHERE ypk.urakka = :urakka
+   AND ypk.nimi = :nimi
+   AND ypk.poistettu IS NOT TRUE
+ LIMIT 1;
+
 -- name: hae-urakkaan-liittyvat-tiemerkintakohteet
 -- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT ypk.id
@@ -570,6 +580,17 @@ WHERE yllapitokohde IN (SELECT id
                         WHERE urakka = :urakka AND
                               id = :yllapitokohdeid);
 
+-- name: paivita-yllapitokohteen-kohdeosien-sijainnit!
+-- Päivittää ylläpitokohteen kohdeosien sijainnit tierekisteriosoitteiden perusteella
+UPDATE yllapitokohdeosa
+SET sijainti = (SELECT tierekisteriosoitteelle_viiva_ajr AS geom
+                FROM tierekisteriosoitteelle_viiva_ajr(tr_numero, tr_alkuosa, tr_alkuetaisyys,
+                                                       tr_loppuosa, tr_loppuetaisyys, tr_ajorata)),
+    muokattu = NOW()
+WHERE yllapitokohde = :yllapitokohde
+  AND poistettu = FALSE
+  AND sijainti IS NULL;
+
 -- name: hae-paallystysurakan-aikataulu
 -- Hakee päällystysurakan kohteiden aikataulutiedot
 SELECT
@@ -767,19 +788,25 @@ WHERE yllapitokohde = :yllapitokohde
            WHERE id = :yllapitokohde) = :urakka;
 
 -- name: tallenna-yllapitokohteen-kustannukset-yhaid!
-UPDATE yllapitokohteen_kustannukset
-   SET
-       sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
-       bitumi_indeksi           = :bitumi_indeksi,
-       kaasuindeksi             = :kaasuindeksi,
-       maaramuutokset           = :maaramuutokset,
-       maku_paallysteet         = :maku_paallysteet,
-       muokattu                 = NOW(),
-       muokkaaja                = :muokkaaja
-  FROM yllapitokohde
- WHERE
-         yllapitokohteen_kustannukset.yllapitokohde = yllapitokohde.id
-   AND yllapitokohde.urakka = :urakka AND yllapitokohde.yhaid = :yhaid;
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet, muokkaaja, muokattu )
+SELECT id,
+       :sopimuksen_mukaiset_tyot,
+       :bitumi_indeksi,
+       :kaasuindeksi,
+       :maaramuutokset,
+       :maku_paallysteet,
+       :muokkaaja,
+       NOW()
+FROM yllapitokohde WHERE urakka = :urakka AND yllapitokohde.yhaid = :yhaid
+ON CONFLICT (yllapitokohde) DO UPDATE
+    SET
+        sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+        bitumi_indeksi           = :bitumi_indeksi,
+        kaasuindeksi             = :kaasuindeksi,
+        maaramuutokset           = :maaramuutokset,
+        maku_paallysteet         = :maku_paallysteet,
+        muokattu                 = NOW(),
+        muokkaaja                = :muokkaaja;
 
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun
@@ -1083,6 +1110,10 @@ VALUES (:yllapitokohde, :toteutunut_hinta, :sopimuksen_mukaiset_tyot, :arvonvahe
 INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, toteutunut_hinta, sopimuksen_mukaiset_tyot, arvonvahennykset, bitumi_indeksi, kaasuindeksi, maaramuutokset)
 VALUES (:yllapitokohde, 0, 0, 0, 0, 0, 0);
 
+-- name: paivita-yllapitokohteen-korjausluokat-ja-yllapitoluokat
+-- Yhdistetty funktio joka päivittää sekä PK-pituudet että ylläpitoluokat samassa transaktiossa
+SELECT paivita_yllapitokohteen_korjausluokat_ja_yllapitoluokat(:id::INTEGER);
+
 -- name: hae-yhden-vuoden-yha-kohteet
 SELECT
   ypk.id,
@@ -1179,3 +1210,16 @@ WHERE id = :id;
 
 -- name: paivita-yllapitokohteen-paallysteen-korjausluokka
 SELECT paivita_yllapitokohteen_korjausluokat(:id::INTEGER);
+
+-- name: hae-ilman-sijaintia-olevat-yllapitokohdeosat
+SELECT id,
+       tr_numero,
+       tr_alkuosa,
+       tr_alkuetaisyys,
+       tr_loppuosa,
+       tr_loppuetaisyys,
+       tr_ajorata
+FROM yllapitokohdeosa
+WHERE yllapitokohde = :yllapitokohde
+  AND sijainti IS NULL
+  AND poistettu = FALSE;

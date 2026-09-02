@@ -21,9 +21,9 @@
                                                                      tienumero
                                                                      (roolit/urakoitsija? user)))
 
-(defn hae-tarkastukset-hallintayksikolle [db user {:keys [hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
+(defn hae-tarkastukset-hallintayksikolle [db user {:keys [elinvoimakeskus-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (tarkastukset-q/hae-hallintayksikon-kelitarkastukset-liitteineen-raportille db
-                                                                              hallintayksikko-id
+                                                                              elinvoimakeskus-id
                                                                               (when urakkatyyppi (name urakkatyyppi))
                                                                               alkupvm
                                                                               loppupvm
@@ -40,7 +40,7 @@
                                                                         tienumero
                                                                         (roolit/urakoitsija? user)))
 
-(defn hae-tarkastukset [db user {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi]}]
+(defn hae-tarkastukset [db user {:keys [konteksti urakka-id elinvoimakeskus-id alkupvm loppupvm tienumero urakkatyyppi]}]
   (case konteksti
     :urakka
     (hae-tarkastukset-urakalle db
@@ -49,10 +49,10 @@
                                 :alkupvm   alkupvm
                                 :loppupvm  loppupvm
                                 :tienumero tienumero})
-    :hallintayksikko
+    :elinvoimakeskus
     (hae-tarkastukset-hallintayksikolle db
                                         user
-                                        {:hallintayksikko-id hallintayksikko-id
+                                        {:elinvoimakeskus-id elinvoimakeskus-id
                                          :alkupvm alkupvm
                                          :loppupvm loppupvm
                                          :tienumero tienumero
@@ -65,15 +65,15 @@
                                    :tienumero tienumero
                                    :urakkatyyppi urakkatyyppi})))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm tienumero urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         naytettavat-rivit (map konv/alaviiva->rakenne
                                (hae-tarkastukset db user
                                                  {:konteksti konteksti
                                                      :urakka-id urakka-id
-                                                     :hallintayksikko-id hallintayksikko-id
+                                                     :elinvoimakeskus-id elinvoimakeskus-id
                                                      :alkupvm alkupvm
                                                      :loppupvm loppupvm
                                                      :tienumero tienumero
@@ -85,7 +85,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape

@@ -23,6 +23,6 @@
       (when (and (not-empty kohteet) @karttataso-nakyvissa?)
         (kartalla-esitettavaan-muotoon
           kohteet
-          #(= (:ulkoinen-oid %) (:ulkoinen-oid (:valittu-varuste @velho-varusteet)))
+          #(= (:rivi-id %) (:rivi-id (:valittu-varuste @velho-varusteet)))
           varuste-kartalle-xf)))))
 

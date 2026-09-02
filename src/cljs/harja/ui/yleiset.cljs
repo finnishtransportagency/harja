@@ -51,7 +51,7 @@
   ([] (ajax-loader nil))
   ([viesti] (ajax-loader viesti nil))
   ([viesti {:keys [luokka sama-rivi?] :as opts}]
-   [:div {:class (str "ajax-loader-valistys ajax-loader " (when (:luokka opts) (:luokka opts)))}
+   [:div {:class (str "ajax-loader-valistys ajax-loader " (when luokka luokka))}
     [:img {:alt "Ladataan sisältöä." :src "images/ajax-loader.gif"}]
     (when viesti
       (if sama-rivi?
@@ -338,7 +338,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! elementin-id]} _]
-  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+  (let [generoitu-id (str (gensym "livi-pudotusvalikko")) ;; fallback, ei sido elementin-id:tä
         auki? (atom false)
         term (atom "")
         valikko-ref (atom false)
@@ -392,7 +392,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                                                                        (.toLowerCase @term)) 0))
                                                           vaihtoehdot))
                                            disabled? (contains? disabled-vaihtoehdot itemi)]
-                                       (when (not disabled?)
+                                       ;; Validoinnin vuoksi alasvetovalikkoon ei päästetä nil itemeitä
+                                       (when (and (not disabled?) (not (nil? itemi)))
                                          (valitse-fn itemi)
                                          (reset! auki? false))))))))))]
     (komp/luo
@@ -403,13 +404,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled disabled-vaihtoehdot itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label elementin-id] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))
-              nappi-id (str "btn-" (or elementin-id "") "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title))
+              nappi-id (or elementin-id generoitu-id (str "btn-hoitokausivalinta" "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title)))
               ryhmitellyt-vaihtoehdot (atom [])
               ryhmittely-fn (fn []
                               (when ryhmittely
@@ -479,7 +480,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 (defn pudotusvalikko [otsikko optiot valinnat]
   [:div {:class (or (:wrap-luokka optiot) "label-ja-alasveto")}
    (if (:vayla-tyyli? optiot)
-     [:label.alasvedon-otsikko-vayla otsikko]
+     [:label.alasvedon-otsikko otsikko]
      [:label.alasvedon-otsikko otsikko])
    [livi-pudotusvalikko optiot valinnat]])
 
@@ -851,6 +852,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (defonce infolaatikko-nakyvissa? (atom {}))
 
+(defn- hiccup?
+  "Tunnistaa Hiccup-muotoisen HTML:n (vektori joka alkaa keywordillä)"
+  [x]
+  (and (vector? x)
+    (keyword? (first x))))
+
+(defn- toissijainen-viesti-on-teksti-tai-html?
+  "Palauttaa true jos string tai Hiccup, false jos tavallinen collection"
+  [viesti]
+  (or (string? viesti)
+    (hiccup? viesti)))
+
 (defn info-laatikko
   ([tyyppi ensisijainen-viesti]
    (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
@@ -863,7 +876,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
              (get @infolaatikko-nakyvissa? sulje-nappi-id))
        [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
-              :style {:width leveys :white-space "pre-line"}}
+              :style {:max-width leveys :white-space "pre-line"}}
         [:div.infolaatikon-ikoni
          (case tyyppi
            :varoitus (ikonit/livicon-warning-sign)
@@ -874,9 +887,15 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
         [:div.infolaatikon-teksti
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
+         ;; Mikäli toissijainen-viesti on setti, vektori tai lista, niin renderöidään jokainen elementti omalle rivilleen.
          (when toissijainen-viesti
-           [:div {:style {:padding-left "8px" :font-weight 400}}
-            toissijainen-viesti])]
+           (if (toissijainen-viesti-on-teksti-tai-html? toissijainen-viesti)
+             ;; Tulostetaan html tai teksti
+             [:div {:style {:font-weight 400}} toissijainen-viesti]
+             ;; Tulostetaan taulukkona
+             [:div {:style {:font-weight 400}}
+              (doall (for* [v toissijainen-viesti]
+                       [:div (str "• " v)]))]))]
         (when sulje-nappi-id
           ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
           [:button {:class "napiton-nappi pelkka-ikoni infolaatikon-sulje-ikoni"
@@ -888,26 +907,28 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
            [ikonit/sulje]])]))))
 
 (defn nayta-virheet
-  [tyyppi virheet]
-  (assert
-    (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
-    "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
-  [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
-         :style {:white-space "pre-line"}}
-   [:div.infolaatikon-ikoni
-    (case tyyppi
-      :varoitus (ikonit/livicon-warning-sign)
-      :onnistunut (ikonit/livicon-check)
-      :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
-      :huolto (ikonit/livicon-wrench))]
+  ([tyyppi virheet]
+   (nayta-virheet tyyppi virheet "Lomakkeella virheitä:"))
+  ([tyyppi virheet otsikko]
+   (assert
+     (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
+     "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
+   [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
+          :style {:white-space "pre-line"}}
+    [:div.infolaatikon-ikoni
+     (case tyyppi
+       :varoitus (ikonit/livicon-warning-sign)
+       :onnistunut (ikonit/livicon-check)
+       :neutraali (ikonit/status-info-inline-svg +vari-black-light+)
+       :huolto (ikonit/livicon-wrench))]
 
-   [:div.infolaatikon-teksti
-    [:div {:style {:display "flex"
-                   :flex-direction "column"
-                   :white-space "pre-line" :color +vari-black-default+}}
-     "Lomakkeella virheitä:"
-     (doall (for* [v (distinct virheet)]
-              [:span (str "- " v)]))]]])
+    [:div.infolaatikon-teksti
+     [:div {:style {:display "flex"
+                    :flex-direction "column"
+                    :white-space "pre-line" :color +vari-black-default+}}
+      [:div.body-text.strong otsikko]
+      (doall (for* [v (distinct virheet)]
+               [:div.body-caption (str "- " v)]))]]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
@@ -1167,7 +1188,7 @@ jatkon."
   (let [osio (fn [komponentti otsikko] komponentti)]
     (fn [{:keys [wrap-luokka]} {:keys [tie aosa aeta losa leta]}]
       [:div {:class (or wrap-luokka "col-md-3 filtteri tr-osoite")}
-       [:label.alasvedon-otsikko-vayla "Tieosoite"]
+       [:label.alasvedon-otsikko "Tieosoite"]
        [:div
         [:div.varusteet.tr-osoite-flex
          [osio tie "Tie"]

@@ -32,7 +32,6 @@
 (deftest varmista-urakka-parametrit
   (let [kittila-urakka-id (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
         kittila-parametrit (first (q-map (format "SELECT * FROM urakka_parametrit WHERE urakkaid = %s" kittila-urakka-id)))
-        _ (println "kittilän parametrit" kittila-parametrit)
 
         ii-urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         ii-parametrit (first (q-map (format "SELECT * FROM urakka_parametrit WHERE urakkaid = %s" ii-urakka-id)))

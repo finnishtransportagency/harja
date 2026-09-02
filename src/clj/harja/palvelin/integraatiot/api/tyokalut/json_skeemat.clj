@@ -158,7 +158,6 @@
 (def +reikapaikkausten-poisto-request+ "api/schemas/reikapaikkausten-poisto-request.schema.json")
 (def reikapaikkausten-poisto-request (tee-validaattori +reikapaikkausten-poisto-request+))
 
-
 (def +paikkauskustannusten-kirjaus-request+ "api/schemas/paikkauskustannusten-kirjaus-request.schema.json")
 (def paikkauskustannusten-kirjaus-request (tee-validaattori +paikkauskustannusten-kirjaus-request+))
 
@@ -189,3 +188,7 @@
 (def talvihoitoreitti-paivitys-request (tee-validaattori +talvihoitoreitti-paivitys-request+))
 (def +talvihoitoreitti-poisto-request+ "api/schemas/talvihoitoreitti-poisto-request.schema.json")
 (def talvihoitoreitti-poisto-request (tee-validaattori +talvihoitoreitti-poisto-request+))
+
+;; Rajoitusalueet
+(def +rajoitusalue-haku-response+ "api/schemas/rajoitusalue-haku-response.schema.json")
+(def rajoitusalue-haku-response (tee-validaattori +rajoitusalue-haku-response+))

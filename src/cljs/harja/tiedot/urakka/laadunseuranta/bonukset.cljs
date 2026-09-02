@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.laadunseuranta.bonukset
   (:require [tuck.core :as tuck]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.ui.lomake :as lomake]
             [harja.ui.viesti :as viesti]
             [harja.ui.liitteet :as liitteet]
@@ -12,13 +13,40 @@
             [taoensso.timbre :as log]
             [harja.pvm :as pvm]))
 
+(defn hae-urakan-bonus-konfiguraatio
+  [urakka-id hoitovuosi toimenpideinstanssi-id]
+  (k/post! :hae-urakan-bonus-konfiguraatio
+    {:urakka-id urakka-id
+     :hoitovuosi hoitovuosi
+     :toimenpideinstanssi-id toimenpideinstanssi-id}))
+
+(defn bonus-konfiguraation-lajit
+  [bonus-konfiguraatio]
+  (or (:bonus-lajit bonus-konfiguraatio) []))
+
+(defn bonus-konfiguraation-lajin-nimi
+  [bonus-konfiguraatio laji]
+  (some->> (bonus-konfiguraation-lajit bonus-konfiguraatio)
+    (some #(when (= laji (:laji %)) (:nimi %)))))
+
 (defn uusi-bonus []
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
+        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                    (>= urakan-alkuvuosi 2025))
+        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
+        default-perintapvm (if mhu25?
+                             (let [v (pvm/vuosi nyt)
+                                   kk (pvm/kuukausi nyt)
+                                   kohde-vuosi (if (>= kk 10) (inc v) v)]
+                               (pvm/->pvm (str "15.9." kohde-vuosi)))
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))
+        kasittelytapa (if mhu25? :valikatselmus nil)]
     {:laji nil
-     :kasittelytapa nil
      :perintapvm default-perintapvm
      :kasittelyaika nyt
+     :kasittelytapa kasittelytapa
      :toimenpideinstanssi (let [tpis (if urakka/mh-urakka?
                                        (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
                                        @urakka/urakan-toimenpideinstanssit)]
@@ -40,6 +68,29 @@
 (defrecord LiitteidenHakuOnnistui [liitteet])
 (defrecord LiitteidenHakuEpaonnistui [vastaus])
 (defrecord HaeLiitteet [])
+
+(defn- bonus-kirjausvirheen-koodi
+  [vastaus]
+  (or (get-in vastaus [:response :bonus-kirjausvirhe :koodi])
+    (get-in vastaus [:bonus-kirjausvirhe :koodi])))
+
+(defn- bonus-kirjausvirheen-viesti
+  [vastaus]
+  (case (bonus-kirjausvirheen-koodi vastaus)
+    :bonus-kirjausvirhe/laji-ei-sallittu
+    "Valittu bonuslaji ei ole sallittu tässä kontekstissa. Tarkista valinta ja yritä uudelleen."
+
+    :bonus-kirjausvirhe/ei-riveja
+    "Valitulle toimenpideinstanssille ei ole bonuskonfiguraatiota. Tarkista valinta tai ota yhteys Harja-tukeen."
+
+    :bonus-kirjausvirhe/ei-profiilia
+    "Bonukselle ei löytynyt aktiivista bonusprofiilia. Ota yhteys Harja-tukeen, jos valinta näyttää oikealta."
+
+    :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
+    "Bonukselle löytyi ristiriitainen bonuskonfiguraatio. Ota yhteys Harja-tukeen."
+
+    (or (get-in vastaus [:response :virheet 0 :viesti])
+      (get-in vastaus [:virheet 0 :viesti]))))
 
 
 
@@ -65,7 +116,8 @@
     (tuck-apurit/post! app :tallenna-erilliskustannus
       payload
       {:onnistui ->TallennusOnnistui
-       :epaonnistui ->TallennusEpaonnistui})))
+       :epaonnistui ->TallennusEpaonnistui
+       :paasta-virhe-lapi? true})))
 
 
 (defn- tallenna-bonus-yllapito
@@ -219,7 +271,7 @@
       (assoc app :lomake lomake)))
 
   TallennusOnnistui
-  (process-event    
+  (process-event
     [{vastaus :vastaus optiot :optiot} app]
     (log/debug "TallennusOnnistui")
 
@@ -236,7 +288,9 @@
     [{vastaus :vastaus} app]
     (log/debug "TallennusEpaonnistui")
 
-    (viesti/nayta-toast! "Tallennus epäonnistui" :varoitus)
+    (viesti/nayta-toast! (or (bonus-kirjausvirheen-viesti vastaus)
+                           "Tallennus epäonnistui")
+      :varoitus)
     (assoc app :tallennus-kaynnissa? false :tallennus-onnistui? false))
 
   PoistaBonus
@@ -248,9 +302,9 @@
           poista-fn (fn [app]
                         ;; Ylläpidon urakoiden bonukset käsitellään eri tavalla kuin MH-urakoiden bonukset,
                         ;; joten bonuksen lajin perusteella valitaan oikea polku tallennuksen loppuun viemiselle.
-                        (if (= :yllapidon_bonus bonuksen-laji)
-                          (poista-bonus-yllapito app)
-                          (poista-bonus-mhu app)))]
+                      (if (= :yllapidon_bonus bonuksen-laji)
+                        (poista-bonus-yllapito app)
+                        (poista-bonus-mhu app)))]
       (-> app
         poista-fn
         (assoc :tallennus-kaynnissa? true))))

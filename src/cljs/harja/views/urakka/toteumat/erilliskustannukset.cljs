@@ -315,8 +315,9 @@
             ^{:key "toiminnot"}
             [ui-valinnat/urakkatoiminnot {:urakka urakka}
              ^{:key "lisaa-kustannus"}
-             [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
-              {:disabled (not oikeus?)}]])]
+             [:div {:style {:padding-top "1rem"}}
+              [napit/uusi "Lisää kustannus" #(reset! valittu-kustannus {:pvm (pvm/nyt)})
+               {:disabled (not oikeus?)}]]])]
 
          [grid/grid
           {:otsikko (str "Erilliskustannukset ")

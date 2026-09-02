@@ -10,13 +10,12 @@
 (defn kasittele-hanke [db {:keys [viesti-id nimi alkupvm loppupvm sampo-id]}]
   (log/debug "Käsitellään hanke Sampo id:llä: " sampo-id)
   (try
-    (let []
-      (if (hankkeet/onko-tuotu-samposta? db sampo-id)
-        (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm sampo-id)
-        (hankkeet/luo-hanke<! db nimi alkupvm loppupvm sampo-id))
+    (if (hankkeet/onko-tuotu-samposta? db sampo-id)
+      (hankkeet/paivita-hanke-samposta! db nimi alkupvm loppupvm sampo-id)
+      (hankkeet/luo-hanke<! db nimi alkupvm loppupvm sampo-id))
 
-      (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
-      (maksuerat/perusta-maksuerat-hoidon-urakoille db))
+    (urakat/paivita-hankkeen-tiedot-urakalle! db sampo-id)
+    (maksuerat/perusta-maksuerat-hoidon-urakoille db)
 
     (log/debug "Hanke käsitelty onnistuneesti")
     (kuittaus-sanoma/muodosta-onnistunut-kuittaus viesti-id "Program")

@@ -380,39 +380,39 @@
 ;; Lasketaan tierekisteriosoitteelle pituus, joka koostu alkuostasta, joka alkaa pari osaa aiemmin, kuin loppuosa.
 ;; Ja jossa keskimmäiselle osalle ei ole olemassa pituutta ajorata taulussa
 (deftest laske-kahdelle-osalle-pituus-onnistuu-test
-    (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
-          tierekisteriosoite {:tie 25 :aosa 9 :aet 2177 :losa 11 :let 2995}
-          ;tie 25 osa: 9 pituus: 3688
-          ;tie 25 osa 11 pituus 5870
-          ;; Osien Laskenta
-          ; osan 9, pituus on 3688 metriä, joten 3688 - 2177 = 1511 - haetaan siis loppuosan pituus
-          ;; Osan 10 pituus on 0
-          ;; osan 11 pituus on 5870, joten kohtaaan 2995 asti otetaan kokonaan kaikki -> 1511 + 2995 = 4506
+  (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+        tierekisteriosoite {:tie 25 :aosa 9 :aet 2177 :losa 11 :let 2995}
+        ;tie 25 osa: 9 pituus: 3688
+        ;tie 25 osa 11 pituus 5870
+        ;; Osien Laskenta
+        ; osan 9, pituus on 3688 metriä, joten 3688 - 2177 = 1511 - haetaan siis loppuosan pituus
+        ;; Osan 10 pituus on 0
+        ;; osan 11 pituus on 5870, joten kohtaaan 2995 asti otetaan kokonaan kaikki -> 1511 + 2995 = 4506
 
-          ;; Ajoratalaskenta
-          ;tie 25 osa 9, ajorata 0 pituus 32681
-          ;tie 25 osa 9 ajorata 1 pituus 420
-          ;tie 25 osa 9 ajorata 2 pituus 420
-          ;tie 25 osa 11 ajorata 0 pituus 5870
-          ;; Osan 9 ajoratojen pituudeksi tulee siis kohdasta 2177 eteenpäin: (3268+420+420) -> 4108 - 2177 = 1931
-          ;; Osan 10 pituus on 0
-          ;; OSan 11 pituus on 5870, joten me otetaan koko mitta 2995 , kokonais ajoratojen pituus on siis 1931 +2995 = 4926
+        ;; Ajoratalaskenta
+        ;tie 25 osa 9, ajorata 0 pituus 32681
+        ;tie 25 osa 9 ajorata 1 pituus 420
+        ;tie 25 osa 9 ajorata 2 pituus 420
+        ;tie 25 osa 11 ajorata 0 pituus 5870
+        ;; Osan 9 ajoratojen pituudeksi tulee siis kohdasta 2177 eteenpäin: (3268+420+420) -> 4108 - 2177 = 1931
+        ;; Osan 10 pituus on 0
+        ;; OSan 11 pituus on 5870, joten me otetaan koko mitta 2995 , kokonais ajoratojen pituus on siis 1931 +2995 = 4926
 
-          suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
-          pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                     :tieosoitteen-ja-ajoratojen-pituudet
-                     t/+kayttaja-jvh+ suolarajoitus)]
-      (is (= 4506 (:pituus pituudet)))
-      ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
-      (is (= 4506 (:ajoratojen_pituus pituudet)))))
+        suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
+        pituudet (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                   :tieosoitteen-ja-ajoratojen-pituudet
+                   t/+kayttaja-jvh+ suolarajoitus)]
+    (is (= 4506 (:pituus pituudet)))
+    ;; 20 tiellä osalla 4 on 3 ajorataa, joten pituuden pitäisi olla kolminkertainen
+    (is (= 4506 (:ajoratojen_pituus pituudet)))))
 
 (deftest laske-tierekisteriosoitteelle-pituus-epaonnistuu-test
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
         tierekisteriosoite {:tie 20 :aosa "makkara" :aet "lenkki" :losa "pihvi" :let "hiiligrilli"}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tieosoitteen-ja-ajoratojen-pituudet
-                   t/+kayttaja-jvh+ suolarajoitus)]
+                  :tieosoitteen-ja-ajoratojen-pituudet
+                  t/+kayttaja-jvh+ suolarajoitus)]
     ;; Virhe
     (is (= 400 (:status vastaus)))
     ;; Virheitä on 2
@@ -446,8 +446,8 @@
         tierekisteriosoite {:tie 20 :aosa 4 :aet 0 :losa 4 :let 6000}
         suolarajoitus (assoc tierekisteriosoite :urakka-id urakka-id)
         vastaus (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
-                   :tieosoitteen-ja-ajoratojen-pituudet
-                   t/+kayttaja-jvh+ suolarajoitus)]
+                  :tieosoitteen-ja-ajoratojen-pituudet
+                  t/+kayttaja-jvh+ suolarajoitus)]
     (is (= 400 (:status vastaus)))
     (is (= (first (:vastaus vastaus)) "Loppuetäisyys on tieosan 4 ulkopuolella. Tieosa päättyy etäisyyteen 5752. ") "Väärillä tiedoilla ei voi laskea pituutta.")))
 
@@ -818,10 +818,10 @@
         (%s, %s, %s, %s)" urakka-id hk-alkuvuosi suolaus-tehtava-id talvisuolaraja))
 
         ;; Tarjouksen määrät pitää merkata vielä tallennetuksi 
-        _ (t/u  (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)" urakka-id))]))
+        _ (t/u (format "insert into sopimuksen_tehtavamaarat_tallennettu (urakka, tallennettu) values (%s,true)" urakka-id))]))
 
 (deftest tallenna-ja-hae-suolarajoituksen-kokonaiskayttoraja-onnistuu-mhu-test
-  (let [;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Suolaus"
+  (let [;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Liukkaudentorjunta suolaamalla (materiaali)"
         ;; Joten lisätään annetulle urakalle urakka_tehtavamaarat tauluun suunniteltuja määriä
         talvisuolaraja 1000M
         sanktio_ylittavalta_tonnilta 100000M
@@ -880,7 +880,7 @@
   (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
         hk-alkuvuosi 2022
 
-        ;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Suolaus"
+        ;; Kokonais talvisuolaraja on tallennettu tehtäviin ja määriin tehtävälle "Liukkaudentorjunta suolaamalla (materiaali)"
         ;; Joten lisätään annetulle urakalle urakka_tehtavamaarat tauluun suunniteltuja määriä
         talvisuolaraja 1000M
         sanktio_ylittavalta_tonnilta 30000M
@@ -1159,20 +1159,20 @@
         ;; Kuun eka päivä
         toteuma-kuun-eka-paiva (t/i (format "INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, poistettu, luoja, ulkoinen_id, tyyppi, lahde, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
   VALUES (87511053, %s, %s, '2025-02-01 05:16:47.452737', '2025-02-01 04:52:01.000000', '2025-02-01 04:59:56.000000', e'3370400-4\n  ;', 'YIT Road Oy', false, %s, 86267045, 'kokonaishintainen', 'harja-api', 'Kuorma-auto', '25037', 'Kuljetus Matti Meikäläinen Oy', '32408336c59637797186ecf0d9736115');"
-                                       urakka-id sopimus-id kayttaja))
+                                      urakka-id sopimus-id kayttaja))
         suolatoteuma-kuun-eka-paiva (t/i (format "INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
         VALUES (87511053, '2025-02-01 04:59:56.000000', '(391820.3489612654,7064728.222190264)', 7, 1.0, %s);" rajoitusalue-id))
 
         ;; kuun keskellä
         toteuma-kuun-kuun-keskella (t/i (format "INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, poistettu, luoja, ulkoinen_id, tyyppi, lahde, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
   VALUES (87511054, %s, %s, '2025-02-11 05:16:47.452737', '2025-02-11 04:52:01.000000', '2025-02-01 04:59:56.000000', e'3370400-4\n  ;', 'YIT Road Oy', false, %s, 86267046, 'kokonaishintainen', 'harja-api', 'Kuorma-auto', '25037', 'Kuljetus Matti Meikäläinen Oy', '32408336c59637797186ecf0d9736115');"
-                                      urakka-id sopimus-id kayttaja))
+                                          urakka-id sopimus-id kayttaja))
         suolatoteuma-kuun-keskella (t/i (format "INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
         VALUES (87511054, '2025-02-11 04:59:56.000000', '(391820.3489612654,7064728.222190264)', 7, 1.0, %s);" rajoitusalue-id))
 
         toteuma-kuun-viim-paiva (t/i (format "INSERT INTO toteuma (id, urakka, sopimus, luotu, alkanut, paattynyt, suorittajan_ytunnus, suorittajan_nimi, poistettu, luoja, ulkoinen_id, tyyppi, lahde, tyokonetyyppi, tyokonetunniste, tyokoneen_lisatieto, json_hash)
   VALUES (87511055, %s, %s, '2025-02-28 05:16:47.452737', '2025-02-28 04:52:01.000000', '2025-02-28 04:59:56.000000', e'3370400-4\n  ;', 'YIT Road Oy', false, %s, 86267047, 'kokonaishintainen', 'harja-api', 'Kuorma-auto', '25037', 'Kuljetus Matti Meikäläinen Oy', '32408336c59637797186ecf0d9736115');"
-                                      urakka-id sopimus-id kayttaja))
+                                       urakka-id sopimus-id kayttaja))
         suolatoteuma-kuun-viim-paiva (t/i (format "INSERT INTO suolatoteuma_reittipiste (toteuma, aika, sijainti, materiaalikoodi, maara, rajoitusalue_id)
         VALUES (87511055, '2025-02-28 04:59:56.000000', '(391820.3489612654,7064728.222190264)', 7, 1.0, %s);" rajoitusalue-id))
         vastaus-eka-paiva (first
@@ -1194,14 +1194,14 @@
                                 :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
                                 :urakka-id urakka-id}))
         summatiedot-viim-paiva (first
-                             (t/kutsu-palvelua
-                               (:http-palvelin t/jarjestelma)
-                               :hae-rajoitusalueen-summatiedot
-                               t/+kayttaja-jvh+
-                               {:rajoitusalue-id rajoitusalue-id
-                                :alkupvm #inst "2025-02-27T22:00:00.000000000-00:00"
-                                :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
-                                :urakka-id urakka-id}))
+                                 (t/kutsu-palvelua
+                                   (:http-palvelin t/jarjestelma)
+                                   :hae-rajoitusalueen-summatiedot
+                                   t/+kayttaja-jvh+
+                                   {:rajoitusalue-id rajoitusalue-id
+                                    :alkupvm #inst "2025-02-27T22:00:00.000000000-00:00"
+                                    :loppupvm #inst "2025-02-28T21:59:59.000000000-00:00"
+                                    :urakka-id urakka-id}))
         odotetut-summatiedot {:materiaali_id 7, :formiaattilukumaara nil,
                               :suolamaara 1.0M, :formiaattimaara nil, :suolalukumaara 1, :koneellinen? false,
                               :lukumaara 1, :maara 1.0M, :materiaali-nimi "Talvisuola, rakeinen NaCl"}
@@ -1221,8 +1221,62 @@
     (is (= odotetut-summatiedot
           (select-keys summatiedot-viim-paiva #{:materiaali_id :formiaattimaara :formiaattilukumaara :suolamaara
                                                 :suolalukumaara :koneellinen? :lukumaara :maara :materiaali-nimi}))
-                                                "Odotetut summatiedot")
+      "Odotetut summatiedot")
     (is (= (pvm/pvm (:pvm summatiedot-viim-paiva)) "28.02.2025"))
     (is (= (:suolatoteumat vastaus-koko-helmikuu) 3.0) "Koko helmikuu 3.0")))
+
+(deftest hae-talvisuolan-kokonaiskayttoraja-sisaltaa-mhu-muutokset-test
+  (testing "Talvisuolan kokonaiskäyttöraja sisältää MHU-muutokset"
+    (let [urakka-id (t/hae-urakan-id-nimella "Iin MHU 2021-2026")
+          hk-alkuvuosi 2025
+          tarjous-maara 1000M
+          muutos-maara 150M
+          odotettu-raja (+ tarjous-maara muutos-maara)
+          
+          ;; Hae suolauksen tehtävän id
+          suolaus-tehtava-id (:id (first (t/q-map "SELECT id FROM tehtava 
+                                                     WHERE suunnitteluyksikko = 'kuivatonnia' 
+                                                       AND suoritettavatehtava = 'suolaus'")))
+          
+          ;; Siivoa mahdollinen vanha tieto ensin
+          _ (t/u (format "DELETE FROM sopimuksen_tehtavamaarat_tallennettu WHERE urakka = %s" urakka-id))
+          _ (t/u (format "DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo 
+                          WHERE muutos IN (SELECT id FROM mhu_muutos WHERE urakka = %s) 
+                            AND hoitokauden_alkuvuosi = %s" urakka-id hk-alkuvuosi))
+          _ (t/u (format "DELETE FROM urakka_tehtavamaara 
+                          WHERE urakka = %s AND \"hoitokauden-alkuvuosi\" = %s AND tehtava = %s" 
+                   urakka-id hk-alkuvuosi suolaus-tehtava-id))
+          
+          ;; Aseta tarjousmäärä
+          _ (aseta-urakalle-talvisuolaraja tarjous-maara urakka-id hk-alkuvuosi)
+          
+          ;; Luo MHU-muutos hoitokauden alkupäivällä (1.10.2025)
+          muutos-id (ffirst (t/q (format "INSERT INTO mhu_muutos (urakka, voimassa_alkaen, luotu, luoja) 
+                                          VALUES (%s, '%d-10-01', NOW(), %s) 
+                                          RETURNING id" urakka-id hk-alkuvuosi (:id t/+kayttaja-jvh+))))
+          
+          ;; Lisää tehtävä ja määrä muutokseen  
+          _ (t/u (format "INSERT INTO mhu_muutos_tehtava_ja_maaraluettelo 
+                          (muutos, tehtava, hoitokauden_alkuvuosi, maaramuutos)
+                          VALUES (%s, %s, %s, %s)"
+                   muutos-id suolaus-tehtava-id hk-alkuvuosi muutos-maara))
+
+          ;; Hae käyttöraja
+          hakutulos (t/kutsu-palvelua (:http-palvelin t/jarjestelma)
+                      :hae-talvisuolan-kayttorajat t/+kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :hoitokauden-alkuvuosi hk-alkuvuosi})
+          
+          ;; Siivoa lopuksi (vain itse luodut rivit)
+          _ (t/u (format "DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo WHERE muutos = %s" muutos-id))
+          _ (t/u (format "DELETE FROM mhu_muutos WHERE id = %s" muutos-id))
+          _ (t/u (format "DELETE FROM urakka_tehtavamaara 
+                          WHERE urakka = %s AND \"hoitokauden-alkuvuosi\" = %s AND maara = %s" urakka-id hk-alkuvuosi tarjous-maara))
+          _ (t/u (format "DELETE FROM sopimuksen_tehtavamaarat_tallennettu WHERE urakka = %s" urakka-id))]
+      
+      (is (= odotettu-raja (get-in hakutulos [:talvisuolan-sanktiot :talvisuolan-kayttoraja]))
+          (str "Käyttörajan tulisi olla tarjous (" tarjous-maara 
+               ") + muutos (" muutos-maara ") = " odotettu-raja)))))
+
 
 

@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/lampotilat.sql"
   {:positional? true})
+
+(declare hae-urakan-lampotilat)

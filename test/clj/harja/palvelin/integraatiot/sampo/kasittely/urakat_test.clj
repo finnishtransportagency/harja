@@ -3,7 +3,9 @@
             [harja.testi :refer :all]
             [harja.palvelin.integraatiot.sampo.tyokalut :refer :all]
             [harja.palvelin.integraatiot.sampo.kasittely.urakat :as urakat]
+            [harja.kyselyt.organisaatiot :as organisaatiot-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.pvm :as pvm]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuvat-kyselyt]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]))
 
@@ -26,6 +28,30 @@
     (is (= 0.08M (:lupauspaatoksen_bonusprosentti urakan-parametrit)))
     (is (= #inst "2030-09-29T21:00:00.000-00:00" (:loppupvm urakan-tiedot)))
     (poista-urakka)))
+
+(deftest maanteiden-hoidon-urakan-laskutusraja-true
+  (let [_ (tuo-urakka)
+        urakat (hae-urakat)
+        urakkaid (ffirst urakat)
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        _ (poista-urakka)
+
+        _ (tuo-maanteiden-hoidon-urakka {:sampo-id nil :ennen-2025? false})
+        maanteiden-urakat (hae-urakat)
+        teidenhoitourakkaid (ffirst maanteiden-urakat)
+        teidenhoitourakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid teidenhoitourakkaid}))
+        teidenhoitourakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) {:id teidenhoitourakkaid}))
+        _ (poista-urakka)
+
+        _ (tuo-maanteiden-hoidon-urakka {:sampo-id nil :ennen-2025? true})
+        maanteiden-urakat-ennen-2025 (hae-urakat)
+        teidenhoitourakkaid-ennen-2025 (ffirst maanteiden-urakat-ennen-2025)
+        teidenhoitourakan-parametrit-ennen-2025 (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid teidenhoitourakkaid-ennen-2025}))
+        _ (poista-urakka)]
+    (is (= "teiden-hoito" (:tyyppi teidenhoitourakan-tiedot)))
+    (is (true? (:laskutusraja_kaytossa teidenhoitourakan-parametrit)))
+    (is (false? (:laskutusraja_kaytossa teidenhoitourakan-parametrit-ennen-2025)))
+    (is (nil? (:laskutusraja_kaytossa urakan-parametrit)))))
 
 (deftest urakan-paivittaminen
   (tuo-urakka)
@@ -57,7 +83,7 @@
 
 (deftest hallintayksikon-asettaminen
   (tuo-urakka)
-  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Pohjanmaa") "Urakan hallintayksiköksi on asetettu Pohjois-Pohjanmaan ELY")
+  (is (.contains (hae-urakan-hallintayksikon-nimi) "Pohjois-Suomi") "Urakan elinvoimakeskukseksi on asetettu Pohjois-Suomi")
   (poista-urakka))
 
 (deftest alueurakkanumeron-purku
@@ -109,10 +135,11 @@
 
 (deftest hallintayksikon-asettaminen
   (let [db (:db jarjestelma)
-        pop-ely (ffirst (q "select id from organisaatio where sampo_ely_hash = 'KP981'"))
+        pop-ely (ffirst (q "select id from organisaatio where elinvoimakeskusnumero = '380048'"))
         merivaylat (ffirst (q "select id from organisaatio where lyhenne = 'MV'"))
         kanavat (ffirst (q "select id from organisaatio where lyhenne = 'KAN'"))]
     (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-hoito" "KAN-001")))
     (is (= kanavat (urakat/hae-hallintayksikko db nil "vesivayla-kanavien-korjaus" "KAN-002")))
     (is (= merivaylat (urakat/hae-hallintayksikko db nil "vesivayla-hoito" "VESI-001")))
-    (is (= pop-ely (urakat/hae-hallintayksikko db "KP981" "hoito" "TIE-001")))))
+    (is (= pop-ely (urakat/hae-hallintayksikko db "3800481310" "hoito" "TIE-001")))))
+

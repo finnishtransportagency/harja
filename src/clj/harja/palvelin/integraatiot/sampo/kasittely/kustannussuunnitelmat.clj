@@ -7,6 +7,7 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.kustannussuunnitelmat :as kustannussuunnitelmat]
             [harja.kyselyt.maksuerat :as maksuerat]
+            [harja.kyselyt.urakat :as urakat]
             [harja.palvelin.integraatiot.sampo.sanomat.kustannussuunnitelma-sanoma :as kustannussuunitelma-sanoma]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.kyselyt.konversio :as konv]
@@ -152,25 +153,33 @@
                               (log/error "Viesti-id:llä " viesti-id " ei löydy kustannussuunnitelmaa."))))
 
 (defn laheta-api-kustannusuunnitelma [db api-sampo-asetukset integraatioloki numero]
-  (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
   (if (kustannussuunnitelmat/onko-olemassa? db numero)
-    (when (voi-lahettaa? db numero)
-      (try+
-        (if (lukitse-kustannussuunnitelma db numero)
-          (let [viesti-id (str (UUID/randomUUID))
-                sampo-kustannussuunnitelma-xml (kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))
-                vastaus (sampo-lahetys/laheta-sampoviesti-rajapintaan db integraatioloki api-sampo-asetukset
-                          "kustannussuunnitelma-lahetys" sampo-kustannussuunnitelma-xml)
-                _ (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
-                _ (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
+    (let [urakka-id (maksuerat/hae-maksueran-urakka db numero)
+          urakan-parametrit (first (urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))]
+      (if (and urakan-parametrit
+                (not (:kustannussuunnitelma_lahetys_sampo urakan-parametrit)))
+        (do
+          (log/info (format "Kustannussuunnitelman (numero: %s) lähetys Sampoon ohitettu. Urakan (id: %s) parametreissa kustannussuunnitelma_lahetys_sampo = false." numero urakka-id))
+          nil)
+        (do
+          (log/debug (format "Lähetetään kustannussuunnitelma (numero: %s) Sampoon." numero))
+          (when (voi-lahettaa? db numero)
+            (try+
+              (if (lukitse-kustannussuunnitelma db numero)
+                (let [viesti-id (str (UUID/randomUUID))
+                      sampo-kustannussuunnitelma-xml (kustannussuunitelma-sanoma/kustannussuunnitelma-xml (hae-maksueran-tiedot db numero))
+                      vastaus (sampo-lahetys/laheta-sampoviesti-rajapintaan db integraatioloki api-sampo-asetukset
+                                "kustannussuunnitelma-lahetys" sampo-kustannussuunnitelma-xml)
+                      _ (merkitse-kustannussuunnitelma-odottamaan-vastausta db numero viesti-id)
+                      _ (log/debug (format "Kustannussuunnitelma (numero: %s) merkittiin odottamaan vastausta." numero))
                 ;; Käsitellään kuittaus heti, koska se saadaan rajapinnasta
-                kuittaus (kasittele-kustannussuunnitelma-kuittaus db vastaus viesti-id)]
+                      kuittaus (kasittele-kustannussuunnitelma-kuittaus db vastaus viesti-id)]
 
-            kuittaus)
-          (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
-        (catch Object e
-          (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Rest-Api tapahtui poikkeus: %s." numero e))
-          (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero))))
+                  kuittaus)
+                (log/warn (format "Kustannusuunnitelman (numero: %s) lukitus epäonnistui." numero)))
+              (catch Object e
+                (log/error e (format "Kustannussuunnitelman (numero: %s) lähetyksessä Rest-Api tapahtui poikkeus: %s." numero e))
+                (merkitse-kustannussuunnitelmalle-lahetysvirhe db numero)))))))
     (let [virheviesti (format "Tuntematon kustannussuunnitelma (numero: %s)" numero)]
       (log/error virheviesti)
       (throw+ {:type virheet/+tuntematon-kustannussuunnitelma+

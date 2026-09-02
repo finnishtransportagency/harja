@@ -47,15 +47,15 @@
   [:div
    (when valittu-kayttaja
      [:div (str "Valittu käyttäjä: " (:etunimi valittu-kayttaja)
-                " "
-                (:sukunimi valittu-kayttaja))])
+             " "
+             (:sukunimi valittu-kayttaja))])
    [lomake/lomake {:otsikko "Käyttäjän tiedot"
                    :muokkaa! (fn [uusi-data]
                                (reset! tiedot/kayttajahakulomake-data uusi-data))
                    :footer [napit/palvelinkutsu-nappi
                             "Hae"
                             #(tiedot/hae-kayttajat (merge {:urakka-id (:id urakka)}
-                                                          @tiedot/kayttajahakulomake-data))
+                                                     @tiedot/kayttajahakulomake-data))
                             {:luokka "nappi-ensisijainen"
                              :virheviesti "Käyttäjien haku epäonnistui."
                              :kun-virhe (fn [_]
@@ -106,9 +106,9 @@
                                                  (fn [e]
                                                    (let [korjaava-toimenpide-id (:id korjaava-toimenpide)]
                                                      (swap! toimenpiteet-atom
-                                                            assoc
-                                                            korjaava-toimenpide-id
-                                                            (assoc korjaava-toimenpide :vastuuhenkilo rivi)))
+                                                       assoc
+                                                       korjaava-toimenpide-id
+                                                       (assoc korjaava-toimenpide :vastuuhenkilo rivi)))
                                                    (modal/piilota!))}
                      "Valitse"])}]
    @tiedot/kayttajahakutulokset-data])
@@ -131,7 +131,7 @@
   [grid/muokkaus-grid
    {:tyhja "Ei korjaavia toimenpiteitä"
     :muutos #(do (reset! toimenpiteet-virheet-atom (grid/hae-virheet %))
-                 (muokkaa-lomaketta-fn @turvallisuuspoikkeama))}
+               (muokkaa-lomaketta-fn @turvallisuuspoikkeama))}
    [{:otsikko "Otsikko"
      :nimi :otsikko
      :leveys 20
@@ -145,8 +145,8 @@
      :valinta-nayta #(or ({:avoin "Avoin"
                            :siirretty "Siirretty"
                            :toteutettu "Toteutettu"}
-                           %)
-                         "- valitse -")
+                          %)
+                       "- valitse -")
      :valinnat [:avoin :siirretty :toteutettu]
      :leveys 15}
     {:otsikko "Laatija"
@@ -159,7 +159,7 @@
               ;; Uusi rivi, laatijaksi tullaan liittämään nykyinen käyttäjä
               (str (:etunimi @istunto/kayttaja) " " (:sukunimi @istunto/kayttaja))
               (str (:laatija-etunimi rivi)
-                   " " (:laatija-sukunimi rivi))))}
+                " " (:laatija-sukunimi rivi))))}
     {:otsikko "Vastuuhenkilö"
      :nimi :vastuuhenkilo
      :leveys 25
@@ -172,7 +172,7 @@
                                             @nav/valittu-urakka)}
                               (if (:vastuuhenkilo rivi)
                                 (str "Vaihda " (get-in rivi [:vastuuhenkilo :etunimi])
-                                     " " (get-in rivi [:vastuuhenkilo :sukunimi]))
+                                  " " (get-in rivi [:vastuuhenkilo :sukunimi]))
                                 "Hae käyttäjä")])}
     {:otsikko "Toteuttaja"
      :nimi :toteuttaja
@@ -185,36 +185,36 @@
 
 (defn- voi-tallentaa? [tp toimenpiteet-virheet]
   (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-turvallisuus (:id @nav/valittu-urakka))
-       (empty? toimenpiteet-virheet)
-       (lomake/voi-tallentaa-ja-muokattu? tp)))
+    (empty? toimenpiteet-virheet)
+    (lomake/voi-tallentaa-ja-muokattu? tp)))
 
 (defn- juurisyy-ryhma [turvallisuuspoikkeama]
   (apply lomake/ryhma
-         {:otsikko "Juurisyyt"}
-         {:nimi :juurisyy-vihje
-          :tyyppi :komponentti
-          :komponentti (fn [_]
-                         [yleiset/vihje
-                          "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman. Juurisyy on pakollinen tieto, kun poikkeama on työtapaturma"])}
-         (remove
-           nil?
-           (mapcat
-             (fn [n]
-               (let [avain (keyword (str "juurisyy" n))
-                     selite-avain (keyword (str "juurisyy" n "-selite"))
-                     pakollinen? (and (= n 1)
-                                      (contains? (:tyyppi turvallisuuspoikkeama) :tyotapaturma))]
-                 [{:tyyppi :valinta
-                   :pakollinen? pakollinen?
-                   :uusi-rivi? true
-                   :otsikko (str n ". juurisyy")
-                   :valinnat (into [nil] turpodomain/juurisyyt)
-                   :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
-                   :nimi avain}
-                  (when (get turvallisuuspoikkeama avain)
-                    {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
-                     :pituus-max 200})]))
-             (range 1 4)))))
+    {:otsikko "Juurisyyt"}
+    {:nimi :juurisyy-vihje
+     :tyyppi :komponentti
+     :komponentti (fn [_]
+                    [yleiset/vihje
+                     "Valitse vähintään yksi ja enintään kolme juurisyytä, jotka aiheuttivat turvallisuuspoikkeaman. Juurisyy on pakollinen tieto, kun poikkeama on työtapaturma"])}
+    (remove
+      nil?
+      (mapcat
+        (fn [n]
+          (let [avain (keyword (str "juurisyy" n))
+                selite-avain (keyword (str "juurisyy" n "-selite"))
+                pakollinen? (and (= n 1)
+                              (contains? (:tyyppi turvallisuuspoikkeama) :tyotapaturma))]
+            [{:tyyppi :valinta
+              :pakollinen? pakollinen?
+              :uusi-rivi? true
+              :otsikko (str n ". juurisyy")
+              :valinnat (into [nil] turpodomain/juurisyyt)
+              :valinta-nayta #(if % (turpodomain/juurisyyn-kuvaus %) "- Valitse -")
+              :nimi avain}
+             (when (get turvallisuuspoikkeama avain)
+               {:tyyppi :string :nimi selite-avain :otsikko "Miksi?"
+                :pituus-max 200})]))
+        (range 1 4)))))
 
 (defn turvallisuuspoikkeaman-tiedot [urakka]
   (let [turvallisuuspoikkeama (reaction-writable @tiedot/valittu-turvallisuuspoikkeama)
@@ -222,7 +222,7 @@
         turvallisuupoikkeama-liite-latautumassa? (atom false)
         kommentti-liite-latautumassa? (atom false)
         vesivaylaurakka? (u-domain/vesivaylaurakka? urakka)]
-    
+
     (fnc [urakka]
       (let [henkilovahinko-valittu? (and (set? (:vahinkoluokittelu @turvallisuuspoikkeama))
                                       ((:vahinkoluokittelu @turvallisuuspoikkeama) :henkilovahinko))
@@ -525,7 +525,6 @@
   []
   (let [urakka @nav/valittu-urakka]
     [:div.turvallisuuspoikkeamat
-
      [:span.turvallisuuspoikkeama-hoitokausi
       [urakka-valinnat/urakan-hoitokausi urakka]]
 
@@ -542,8 +541,7 @@
 
      [:div.turvallisuuspoikkeama-taulukko
       [grid/grid
-       {:otsikko "Turvallisuuspoikkeamat"
-        :tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
+       {:tyhja (if @tiedot/haetut-turvallisuuspoikkeamat "Ei löytyneitä tietoja" [ajax-loader "Haetaan turvallisuuspoikkeamia"])
         :rivi-klikattu #(valitse-turvallisuuspoikkeama (:id urakka) (:id %))}
        [{:otsikko "Ta\u00ADpah\u00ADtu\u00ADnut" :nimi :tapahtunut :fmt pvm/pvm-aika :leveys 15 :tyyppi :pvm}
         {:otsikko "Ty\u00ADön\u00ADte\u00ADki\u00ADjä" :nimi :tyontekijanammatti :leveys 15
@@ -571,10 +569,12 @@
       #(kartta-tiedot/kasittele-infopaneelin-linkit! nil))
     (komp/sisaan #(do
                     (reset! nav/kartan-edellinen-koko @nav/kartan-koko)
-                    (nav/vaihda-kartan-koko! :M)))
+                    (nav/vaihda-kartan-koko! :M)
+                    (kartta-tiedot/piilota-infopaneeli!)))
     (komp/ulos (kartta-tiedot/kuuntele-valittua! tiedot/valittu-turvallisuuspoikkeama))
     (fn [urakka]
       [:span
+       [:h1 "Turvallisuuspoikkeamat"]
        [kartta/kartan-paikka]
        (cond
          ;; Klikattiin poikkeamaa, haku kesken

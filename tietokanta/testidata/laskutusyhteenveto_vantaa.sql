@@ -63,7 +63,7 @@ INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohint
 
 INSERT INTO muutoshintainen_tyo (alkupvm, loppupvm, yksikko, yksikkohinta, tehtava, urakka, sopimus)
 VALUES ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'tiekm', 100.0, (SELECT id FROM tehtava WHERE    nimi='Is 1-ajorat. KVL >15000'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null)),
-       ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'ha', 100.0, (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
+       ((SELECT alkupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (SELECT loppupvm FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 'ha', 100.0, (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus/ha'), (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), (select id from sopimus where urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null));
 
 -- Suolauksen toteuma (materiaalitoteuma)
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -71,12 +71,12 @@ INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, 
              (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
              '2015-02-19 10:23:54+02', '2015-02-18 00:00:00+02', '2015-02-18 02:00:00+02',
              'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'VAN-LYV-toteuma');
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id)
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-LYV-toteuma'), '2015-02-19 10:23:54+02',
-        (SELECT id FROM tehtava WHERE nimi='Suolaus'), 21.3, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+        (SELECT id FROM tehtava WHERE nimi='Liukkaudentorjunta suolaamalla (materiaali)'), 21.3, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 2014);
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, hoitokauden_alkuvuosi)
     VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'VAN-LYV-toteuma'), '2015-02-19 10:23:54+02',
-            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 2000, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'));
+            (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuolaliuos NaCl'), 2000, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'), 2014);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
 VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019'),
@@ -131,33 +131,33 @@ VALUES ('harja-ui'::lahde, (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka
    (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Vantaan alueurakka 2009-2019') AND paasopimus IS null),
    '2015-08-24 10:23:54+02', '2015-08-20 10:23:54+02', '2015-08-20 10:23:54+02', 'vahinkojen-korjaukset'::toteumatyyppi, 'Antti Ahertaja', '1524792-1', 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta');
 
-INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id)
+INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id, hoitokauden_alkuvuosi)
 VALUES
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 2-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot1')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot2')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 2-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_heinakuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu_eka'), '2015-08-02 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu_eka')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu2'), '2015-08-20 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu2')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 1-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 1-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_lisatyo_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_lisatyo_tot_elokuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_akillinen_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_akillinen_tot_heinakuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_akillinen_tot_elokuu')),
-  ((SELECT id from toteuma where lisatieto = 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'));
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot1'), '2015-01-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 2-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot1'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot2'), '2015-01-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot2'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 2-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_heinakuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu_eka'), '2015-08-02 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu_eka'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu2'), '2015-08-20 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Metsän harvennus'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_yht_tot_elokuu2'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 1-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus/ha'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_muutostyo_tot_heinakuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Is 1-ajorat. KVL >15000'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_lisatyo_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus/ha'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_lisatyo_tot_elokuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_akillinen_tot_heinakuu'), '2015-07-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus/ha'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_akillinen_tot_heinakuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_akillinen_tot_elokuu'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus/ha'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_akillinen_tot_elokuu'), 2014),
+  ((SELECT id from toteuma where lisatieto = 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), '2015-08-19 00:00.00', (SELECT id FROM tehtava WHERE    nimi='Vesakonraivaus/ha'), 10, (SELECT urakka from toteuma where lisatieto = 'VANlyv_vahinkojen-korjaukset_tot_elokuu_paivanhinta'), 2014);
 
-INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi, urakka_id)
+INSERT INTO toteuma_tehtava (toteuma, toimenpidekoodi, maara, paivan_hinta, indeksi, urakka_id, hoitokauden_alkuvuosi)
 VALUES
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2')),
-  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_akillinen_tot_elokuu_paivanhinta'));
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus/ha'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_heinakuu_paivanhinta'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus/ha'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_muutostyo_tot_elokuu_eka_paivanhinta'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus/ha'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_1'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM tehtava WHERE nimi = 'Metsän harvennus'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus/ha'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_lisatyo_tot_elokuu_paivanhinta_2'), 2014),
+  ((SELECT id FROM toteuma WHERE lisatieto = 'VANlyv_akillinen_tot_elokuu_paivanhinta'), (SELECT id FROM tehtava WHERE nimi = 'Vesakonraivaus/ha'), 10, 1000, false, (SELECT urakka FROM toteuma WHERE lisatieto = 'VANlyv_akillinen_tot_elokuu_paivanhinta'), 2014);
 
 --Erilliskustannukset
 INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,laskutuskuukausi,rahasumma,indeksin_nimi,lisatieto,luotu,luoja)
@@ -236,51 +236,51 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019') AND tyyppi = 'muu'));
 
 -- Sanktioita
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
+INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
                      luoja)
-VALUES ('A'::SANKTIOLAJI, 100, '2015-01-12 06:06.37', 'MAKU 2010', NULL,
+VALUES ('A'::SANKTIOLAJI, 100, '2015-01-12 06:06.37', '2015-01-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Talvihoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1), TRUE,
         2),
-       ('A'::SANKTIOLAJI, 500, '2015-05-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 500, '2015-05-12 06:06.37', '2015-05-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Liikenneympäristön hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 700, '2015-07-12 06:06.37', NULL, NULL,
+       ('A'::SANKTIOLAJI, 700, '2015-07-12 06:06.37', '2015-07-12 06:06.37', NULL, NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Liikenneympäristön hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 1000, '2015-08-01 00:00.00', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 1000, '2015-08-01 00:00.00', '2015-08-01 00:00.00', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 800, '2015-08-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 800, '2015-08-12 06:06.37', '2015-08-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 900, '2015-09-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 900, '2015-09-12 06:06.37', '2015-09-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi
                 -- 1, Muu tuote
           WHERE koodi = 1),
         TRUE, 2),
-       ('A'::SANKTIOLAJI, 20160, '2016-09-12 06:06.37', 'MAKU 2010', NULL,
+       ('A'::SANKTIOLAJI, 20160, '2016-09-12 06:06.37', '2016-09-12 06:06.37', 'MAKU 2010', NULL,
         (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Vantaa Sorateiden hoito TP 2014-2019'),
         (SELECT id
            FROM sanktiotyyppi

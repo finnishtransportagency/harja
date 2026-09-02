@@ -1,18 +1,11 @@
 (ns harja.palvelin.palvelut.kulut.kustannusten-seuranta-excel
   "Excelin luonti kustannus seuranta -datasta."
-  (:require [com.stuartsierra.component :as component]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
-            [slingshot.slingshot :refer [throw+ try+]]
-            [harja.domain.skeema :refer [Toteuma validoi]]
+  (:require [clojure.string :as str]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.domain.roolit :as roolit]
-            [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
             [harja.palvelin.raportointi.excel :as excel]
-            [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
-            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [clojure.string :as str]))
+            [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
+            [harja.kyselyt.urakat :as urakat-q]))
 
 
 (defn- laske-prosentti [tot bud]
@@ -25,7 +18,7 @@
 (defn- kokoa-toimenpiteen-alle
   "Kustannus seurannan ui ja tämä excel on rakennettu ajatukselle, että alimmaisen kolmannen tason tehtäviä (osa on tehtäväryhmiä)
   ei näytetä samalla tavalla kuin ylempiä tasoja. Eli budjetoituja summia ja sitä kautta erotusta ja prosentteja.
-  Mutta jostain syystä on haluttu tehdä poikkeus, että rahavaraukset näytetäänkin eri tavalla kuin muut tiedot.
+  Paitsi rahavaraukset ovat poikkeus.
 
   Siitä syystä tässä funktiossa tarkistetaan, että mikäli kolmannen tason rivi kuuluu rahavaraus -toimenpiteelle/pääryhmään,
   niin lasketaan erotukset ja prosentit.
@@ -43,7 +36,7 @@
                 prosentti (laske-prosentti toteutunut-summa budjetoitu-summa-indeksikorjattu)]
             [{:paaryhma nil
               :toimenpide nil
-              :tehtava_nimi (:tehtava_nimi tehtava)
+              :tehtava_nimi (or (:muutostyo_syy tehtava) (:tehtava_nimi tehtava))
               :toteutunut_summa toteutunut-summa
               :budjetoitu_summa (when (= "rahavaraus" (:toimenpideryhma tehtava)) budjetoitu-summa)
               :budjetoitu_summa_indeksikorjattu (when (= "rahavaraus" (:toimenpideryhma tehtava)) budjetoitu-summa-indeksikorjattu)
@@ -69,7 +62,11 @@
           :lihavoi? false}]))
     tehtavat))
 
-(defn- rivita-toimenpiteet [toimenpiteet paaryhma]
+(defn- rivita-toimenpiteet
+  "Kun kustannukset pitää saada kolmeen portaaseen (pääryhmä, toimenpide, tehtävä), niin tämä funktio tekee sen.
+  Eli ensin pääryhmät, sitten toimenpiteet ja lopuksi tehtävät. UI:lla ryhmät ovat avattavia. Excelissä joudutaan
+  listaamaan kaikki vain auki."
+  [toimenpiteet paaryhma]
   (let [toimenpide-rivit
         (mapcat (fn [toimenpide]
                   (let [toimenpide-tot (or (:toimenpide-toteutunut-summa toimenpide) 0)
@@ -79,23 +76,28 @@
                         hankinta-tehtavat (filter #(= "hankinta" (:toimenpideryhma %)) (:tehtavat toimenpide))
                         hankinta-toteuma (reduce (fn [summa rivi]
                                                    (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                                 0
-                                                 hankinta-tehtavat)
+                                           0
+                                           hankinta-tehtavat)
                         toimistokulu-tehtavat (filter #(= "toimistokulut" (:toimenpideryhma %)) (:tehtavat toimenpide))
                         toimistokulu-toteuma (reduce (fn [summa rivi]
                                                        (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                                     0
-                                                     toimistokulu-tehtavat)
+                                               0
+                                               toimistokulu-tehtavat)
                         palkka-tehtavat (filter #(= "palkat" (:toimenpideryhma %)) (:tehtavat toimenpide))
                         palkka-toteumat (reduce (fn [summa rivi]
                                                   (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                                0
-                                                palkka-tehtavat)
+                                          0
+                                          palkka-tehtavat)
                         rahavaraus-tehtavat (filter #(= "rahavaraus" (:toimenpideryhma %)) (:tehtavat toimenpide))
                         rahavaraus-toteuma (reduce (fn [summa rivi]
                                                      (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
-                                                   0
-                                                   rahavaraus-tehtavat)]
+                                             0
+                                             rahavaraus-tehtavat)
+                        arvonvahennys-tehtavat (filter #(= "arvonvahennykset" (:toimenpideryhma %)) (:tehtavat toimenpide))
+                        arvonvahennys-toteuma (reduce (fn [summa rivi]
+                                                        (+ (or summa 0) (or (:toteutunut_summa rivi) 0)))
+                                                0
+                                                arvonvahennys-tehtavat)]
                     (concat [{:paaryhma paaryhma
                               :toimenpide (:toimenpide toimenpide)
                               :tehtava_nimi nil
@@ -105,10 +107,11 @@
                               :erotus erotus
                               :prosentti (laske-prosentti toimenpide-tot toimenpide-bud-indeksikorjattu)
                               :lihavoi? true}]
-                            (kokoa-toimenpiteen-alle toimenpide hankinta-tehtavat "Hankinnat" hankinta-toteuma)
-                            (kokoa-toimenpiteen-alle toimenpide rahavaraus-tehtavat "Rahavaraus" rahavaraus-toteuma)
-                            (kokoa-toimenpiteen-alle toimenpide palkka-tehtavat "Palkat" palkka-toteumat)
-                            (kokoa-toimenpiteen-alle toimenpide toimistokulu-tehtavat "Toimistokulu" toimistokulu-toteuma))))
+                      (kokoa-toimenpiteen-alle toimenpide hankinta-tehtavat "Hankinnat" hankinta-toteuma)
+                      (kokoa-toimenpiteen-alle toimenpide rahavaraus-tehtavat "Rahavaraus" rahavaraus-toteuma)
+                      (kokoa-toimenpiteen-alle toimenpide palkka-tehtavat "Palkat" palkka-toteumat)
+                      (kokoa-toimenpiteen-alle toimenpide toimistokulu-tehtavat "Toimistokulu" toimistokulu-toteuma)
+                      (kokoa-toimenpiteen-alle toimenpide arvonvahennys-tehtavat "Arvonvähennykset" arvonvahennys-toteuma))))
                 toimenpiteet)
         toimenpide-toteutumat (reduce (fn [summa rivi]
                                         (if-not (nil? (:toimenpide rivi))
@@ -192,7 +195,7 @@
                    (:toteutunut_summa rivi)
                    (when nayta-erotus? (:erotus rivi))
                    (when nayta-erotus? (:prosentti rivi))]
-            :lihavoi? true}))))
+            :lihavoi? false}))))
 
 (defn- luo-excel-rivit [kustannusdata avain excel-nimi]
   (let [bud (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-budjetoitu"))])
@@ -250,8 +253,8 @@
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm
                                         :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})
-        
-        kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain)
+        urakan-sopimustyyppi (:sopimustyyppi (first (urakat-q/hae-urakan-tiedot db {:id urakka-id})))
+        kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain urakan-sopimustyyppi)
 
         hankintakustannusten-toimenpiteet (rivita-toimenpiteet
                                             (get-in kustannusdata [:taulukon-rivit :hankintakustannukset])
@@ -262,6 +265,14 @@
         muutosten-toimenpiteet (rivita-toimenpiteet
                                      (get-in kustannusdata [:taulukon-rivit :muutokset])
                                      "Muutokset")
+        arvonvahennykset-rivit (get-in kustannusdata [:taulukon-rivit :arvonvahennykset])
+        ;; MHU25+ urakoilla arvonvähennykset tulevat toimenpidetasoisena rakenteena (:tehtavat löytyy riveiltä)
+        arvonvahennykset-kolmiportainen? (and (sequential? arvonvahennykset-rivit)
+                                              (some #(contains? % :tehtavat) arvonvahennykset-rivit))
+        arvonvahennysten-toimenpiteet (when arvonvahennykset-kolmiportainen?
+                                    (rivita-toimenpiteet
+                                      arvonvahennykset-rivit
+                                      "Arvonvähennykset"))
 
         lisatyot (rivita-lisatyot (get-in kustannusdata [:taulukon-rivit :lisatyot]) (get-in kustannusdata [:taulukon-rivit :lisatyot-summa]))
         sarakkeet [{:otsikko "Ryhmä"} {:otsikko "Toimenpide"} {:otsikko "Tehtavä"}
@@ -279,14 +290,19 @@
                      (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first rahavarausten-toimenpiteet))
                                                                true
                                                                false)) rahavarausten-toimenpiteet)
-                     (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first muutosten-toimenpiteet))
-                                                               true
-                                                               false)) muutosten-toimenpiteet)
-
                      (luo-excel-rivit kustannusdata "johto-ja-hallintokorvaus" "Johto- ja Hallintokorvaukset")
                      (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio")
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat")
                      (luo-excel-rivit kustannusdata "muukulu-tavoitehintainen" "Muut kulut")
+                     (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first muutosten-toimenpiteet))
+                                                               true
+                                                               false)) muutosten-toimenpiteet)
+                     ;; Jos data on kolmikerroksinen, käytetään toimenpidetasoista rivitystä
+                     (if arvonvahennykset-kolmiportainen?
+                       (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first arvonvahennysten-toimenpiteet))
+                                                                 true
+                                                                 false)) arvonvahennysten-toimenpiteet)
+                       (luo-excel-rivit kustannusdata "arvonvahennykset" "Arvonvahennykset"))
                      (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan oikaisut")
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta")
                      (luo-excel-rivi-yhteensa kustannusdata)
