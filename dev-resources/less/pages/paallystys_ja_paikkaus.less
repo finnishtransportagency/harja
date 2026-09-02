@@ -1,43 +1,53 @@
 @import "../yleiset.less";
 
 .ilmoitus-hylatty {
-    color: @vaara;
+  color: @vaara;
 }
 
 .ilmoitus-hyvaksytty {
-    color: @onnistuminen;
+  color: @onnistuminen;
 }
 
 .pot-asiatarkastus .boolean > .checkbox {
-    padding-top: 0;
+  padding-top: 0;
+}
+
+.pot2-lomake {
+  .varoitukset > .info-laatikko {
+    bottom: 5px;
+    position: absolute;
+    right: 0;
+    text-align: left;
+    width: max-content;
+  }
 }
 
 .paallystysilmoitukset {
-    hr {
-        margin-top: 3rem;
-        margin-bottom: 3rem;
-    }
+  hr {
+    margin-top: 3rem;
+    margin-bottom: 3rem;
+  }
 }
 
 .paallystysilmoitusluettelo {
-    .harja-icon-status-selected {
-        color: @green-dark;
-    }
+  .harja-icon-status-selected {
+    color: @green-dark;
+  }
 }
 
 .neutraali-tausta {
-    background: @lemon-light;
-    border: 1px solid @lemon-default;
-    padding: 2px;
+  background: @lemon-light;
+  border: 1px solid @lemon-default;
+  padding: 2px;
 }
 
 .aikataulu .livi-grid table,
 .paallystyskohteet .livi-grid table,
 .paallystysilmoitukset .livi-grid table {
+  font-size: @fontin-koko-taulukko-pienempi;
+  button {
     font-size: @fontin-koko-taulukko-pienempi;
-    button {
-        font-size: @fontin-koko-taulukko-pienempi;
-    }
+  }
   // yhteenvetoriville ei haluta tyhjää checkboksia
   tr.yhteenveto > td .boolean {
     display: none;
@@ -45,99 +55,99 @@
 }
 
 .aikataulu-valinnat {
-    display: flex;
-    flex-wrap: wrap;
-    background-color: @gray240;
-    padding: @valistys-16;
-    gap: @valistys-12;
+  display: flex;
+  flex-wrap: wrap;
+  background-color: @gray240;
+  padding: @valistys-16;
+  gap: @valistys-12;
 
-    input:not([type=checkbox]) {
-        height:36px;
-    }
+  input:not([type="checkbox"]) {
+    height: 36px;
+  }
 
-    /* Ensimmäisen ryhmän 2 ensimmäistä lasta */
-    /* Vuosi, järjestä kohteet */
-    > div:first-child > :nth-child(-n+2) {
-      position: relative;
-      bottom: 5px;
-      margin-right: @valistys-6;
-    }
+  /* Ensimmäisen ryhmän 2 ensimmäistä lasta */
+  /* Vuosi, järjestä kohteet */
+  > div:first-child > :nth-child(-n + 2) {
+    position: relative;
+    bottom: 5px;
+    margin-right: @valistys-6;
+  }
 
-    /* Raporttiviennit, float oikealla */
-    > :last-child {
-        margin-left: auto;
-        align-self: flex-end;
-    }
+  /* Raporttiviennit, float oikealla */
+  > :last-child {
+    margin-left: auto;
+    align-self: flex-end;
+  }
 }
 
 .asiatarkastus-checkbox > div {
-    margin-bottom: 24px;
+  margin-bottom: 24px;
 }
 
 .pot-kasittely {
-    display: flex;
-    justify-content: space-between;
-    > div {
-        background-color: @white-dark;
-        > .lomake {
-            border: none;
-            .lomake-otsikko {
-                text-transform: uppercase;
-                font-size: 12px;
-            }
-        }
-        width: 50%;
-        &:first-child {
-            border-right: 8px solid @gray250;
-        }
+  display: flex;
+  justify-content: space-between;
+  > div {
+    background-color: @white-dark;
+    > .lomake {
+      border: none;
+      .lomake-otsikko {
+        text-transform: uppercase;
+        font-size: 12px;
+      }
     }
+    width: 50%;
+    &:first-child {
+      border-right: 8px solid @gray250;
+    }
+  }
 }
 
 .avaa-lukitus-nappi {
-    margin: 12px 0;
+  margin: 12px 0;
 }
 
 .pot-tila {
-    background-color: @harmaa-vaalea;
-    border-radius: 4px;
-    color: @harmaa-tumma;
-    margin-right: 32px;
-    padding: 2px 12px;
-    text-transform: capitalize;
-    &.valmis {
-        background-color: @lemon-light;
-        color: @lemon-dark;
-    }
-    &.lukittu {
-        background-color: @green-light;
-        color: @green-darker;
-    }
+  background-color: @harmaa-vaalea;
+  border-radius: @valistys-4;
+  color: @harmaa-tumma;
+  margin-right: @valistys-32;
+  padding: 2px 12px;
+  text-transform: capitalize;
+  &.valmis {
+    background-color: @lemon-light;
+    color: @lemon-dark;
+  }
+  &.lukittu {
+    background-color: @green-light;
+    color: @green-darker;
+  }
 }
 
 .pot-perustiedot {
-    margin-top: 24px;
-    h2 {
-        margin-top: 0.5rem;
-        margin-bottom: 1rem;
-    }
-    .col-sm-12,
-    .col-md-6 {
+  margin-top: 24px;
+  h2 {
+    margin-top: 0.5rem;
+    margin-bottom: 1rem;
+  }
+  .col-sm-12,
+  .col-md-6 {
+    padding-left: 0;
+  }
+  .lomake {
+    border: none;
+    .lomakerivi {
+      .form-group {
         padding-left: 0;
+      }
+      .pvm-kentta > .form-control {
+        max-width: 243px;
+      }
+      .solujen-valistys-8 td {
+        min-width: 51px; //pot-tietojen tapauksessa basis256 TR-osoitekentän vuoksi tämä
+      }
     }
-    .lomake {
-        border: none;
-        .lomakerivi {
-            .form-group {
-                padding-left: 0;
-            }
-            .pvm-kentta > .form-control {
-                max-width: 243px;
-            }
-            .solujen-valistys-8 td {
-                min-width: 51px; //pot-tietojen tapauksessa basis256 TR-osoitekentän vuoksi tämä
-            }
-        }
-    }
+  }
 }
 
 .pot2-rivin-toiminnot,
@@ -193,11 +203,13 @@
     position: absolute;
     background-color: @white;
     flex-direction: column;
-    box-shadow: 0 2px 6px 0 rgba(0, 0, 0, 0.20), 0 2px 1px 0 rgba(0, 0, 0, 0.20);
+    box-shadow:
+      0 2px 6px 0 rgba(0, 0, 0, 0.2),
+      0 2px 1px 0 rgba(0, 0, 0, 0.2);
     align-items: flex-start;
 
     // Täsmätään laatikko alkamaan napin oikeasta reunasta vasemmalle.
-    transform: translateX(calc(~'-100% + ' 22px));
+    transform: translateX(calc(~"-100% + " 22px));
     padding: 0;
     z-index: 10;
 
@@ -232,64 +244,64 @@
 }
 
 .takuupvm-valinta {
-    .dropdown.livi-alasveto {
-        width: 146px;
-    }
-    .takuupvm-tarkenne {
-        margin-top: 4px;
-        color: @black-light;
-    }
+  .dropdown.livi-alasveto {
+    width: 146px;
+  }
+  .takuupvm-tarkenne {
+    margin-top: 4px;
+    color: @black-light;
+  }
 }
 
 .tietyoilmoitus-toast {
-    margin-top: @valistys-16;
-    .toast-viesti {
-        font-size: 0.75rem;
-        .tietyo-info {
-            margin-top: @valistys-4;
-        }
+  margin-top: @valistys-16;
+  .toast-viesti {
+    font-size: 0.75rem;
+    .tietyo-info {
+      margin-top: @valistys-4;
     }
+  }
 }
 
 .tuoreusindikaattori {
-    .harja-icon-action-set-time {
-        margin-left: 4px;
+  .harja-icon-action-set-time {
+    margin-left: 4px;
+  }
+  .tooltip {
+    min-width: 170px;
+    .tooltip-arrow {
+      margin-left: -13px;
     }
-    .tooltip {
-        min-width: 170px;
-        .tooltip-arrow {
-            margin-left: -13px;
-        }
-    }
+  }
 }
 
 .aikataulu {
-    .aikataulu-spacer {
-        height: 24px;
-    }
+  .aikataulu-spacer {
+    height: 24px;
+  }
+  .muokkaustoiminnot {
+    position: relative;
+    top: 32px;
+  }
+  // erikoiskäsittelyä ei haluta vetolaatikon sisälle
+  .vetolaatikko-sisalto {
     .muokkaustoiminnot {
-        position: relative;
-        top: 32px;
+      position: unset;
+      top: unset;
     }
-    // erikoiskäsittelyä ei haluta vetolaatikon sisälle
-    .vetolaatikko-sisalto {
-        .muokkaustoiminnot {
-            position: unset;
-            top: unset;
-        }
-    }
-    thead {
-      > tr:first-child > th {
-        &.paallystys-tausta,
-        &.paallystys-tausta-tumma,
-        &.tiemerkinta-tausta {
+  }
+  thead {
+    > tr:first-child > th {
+      &.paallystys-tausta,
+      &.paallystys-tausta-tumma,
+      &.tiemerkinta-tausta {
         text-align: center;
       }
-      }
     }
-    .tiemerkinta-tausta {
-        background-color: @lemon-light;
-    }
+  }
+  .tiemerkinta-tausta {
+    background-color: @lemon-light;
+  }
   .modal-body .lomake {
     border: none;
     h3.lomake-otsikko {
@@ -315,7 +327,7 @@
         .fontti-16-vahvempi();
       }
     }
-    > .panel-body  {
+    > .panel-body {
       td.ei-muokattava {
         background-color: @white;
         vertical-align: middle;
@@ -343,33 +355,33 @@ div.yllapitokohteet {
 }
 
 .tuoreusvihje {
-    display: flex;
-    float: right;
-    font-size: 0.75rem;
-    line-height: 1rem;
-    font-weight: normal;
-    margin-right: @valistys-16;
-    margin-bottom: @valistys-32;
-    width: 300px;
-    position: relative;
-    top: 30px;
-    .kelloikoni {
-        > span {
-            top: 4px;
-            position: relative;
-        }
-        margin-right: 8px;
-        font-size: 1.5rem;
+  display: flex;
+  float: right;
+  font-size: 0.75rem;
+  line-height: 1rem;
+  font-weight: normal;
+  margin-right: @valistys-16;
+  margin-bottom: @valistys-32;
+  width: 300px;
+  position: relative;
+  top: 30px;
+  .kelloikoni {
+    > span {
+      top: 4px;
+      position: relative;
     }
+    margin-right: 8px;
+    font-size: 1.5rem;
+  }
 }
 
 // ylläpitokohteet näkymässä headeri on matalampi, siinä tuoreusvihjettä ei ole tarvetta laskea keinotekoisesti alaspäin
 .paallystyskohteet .tuoreusvihje {
-    top: 0;
+  top: 0;
 }
 
-.paallystyskohteet, .paallystysilmoitukset
-{
+.paallystyskohteet,
+.paallystysilmoitukset {
   .paallystys-valinnat {
     display: flex;
   }
@@ -384,7 +396,7 @@ div.yllapitokohteet {
 
     .virhe-rivi {
       span::after {
-        content: ' ';
+        content: " ";
         white-space: pre;
       }
     }
@@ -392,56 +404,56 @@ div.yllapitokohteet {
 }
 
 .tm-takaraja-muokkaa {
-    + .tooltip {
-        width: 450px;
-        white-space: pre-line;
-    }
+  + .tooltip {
+    width: 450px;
+    white-space: pre-line;
+  }
 }
 .tm-takaraja-info-btn {
-    position: relative;
-    top: 3px;
-    font-size: 1rem;
+  position: relative;
+  top: 3px;
+  font-size: 1rem;
+  width: 1rem;
+  height: 1rem;
+  svg {
     width: 1rem;
     height: 1rem;
-    svg {
-        width: 1rem;
-        height: 1rem;
-    }
-    + .tooltip {
-        width: 450px;
-        white-space: pre-line;
-    }
+  }
+  + .tooltip {
+    width: 450px;
+    white-space: pre-line;
+  }
 }
 
 .tm-lisatieto-leijuke {
-    width: 500px;
+  width: 500px;
 }
 
 .yhteystiedot-urakka {
-    margin-bottom: @valistys-24;
-    > div.fontti-16 {
-        margin-bottom: @valistys-8;
-        font-weight: 600;
-    }
+  margin-bottom: @valistys-24;
+  > div.fontti-16 {
+    margin-bottom: @valistys-8;
+    font-weight: 600;
+  }
 }
 
 .hintatiedot-puuttuvat-container {
-    margin: @valistys-48 0;
-    font-weight: normal;
+  margin: @valistys-48 0;
+  font-weight: normal;
 }
 
 .pot2-hintatiedon-toast {
-    color: @black-default;
-    .hintatiedot-info {
-        margin-top: @valistys-4;
-        margin-left: 3.25rem;
-        font-weight: normal;
-    }
+  color: @black-default;
+  .hintatiedot-info {
+    margin-top: @valistys-4;
+    margin-left: 3.25rem;
+    font-weight: normal;
+  }
 }
 
 .yleinen-pikkuvihje > .vihjeen-sisalto .pot2-hintatiedon-toast {
-    position: relative;
-    top: -@valistys-4;
+  position: relative;
+  top: -@valistys-4;
 }
 
 .paallystyskustannusten-toiminnot-container {
@@ -449,7 +461,7 @@ div.yllapitokohteet {
 }
 
 .paallystyskustannusten-toiminnot {
-    float: right;
+  float: right;
 }
 
 .raaka-aineindeksit {

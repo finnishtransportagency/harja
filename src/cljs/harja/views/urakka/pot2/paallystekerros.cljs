@@ -1,24 +1,25 @@
 (ns harja.views.urakka.pot2.paallystekerros
   "POT2-lomakkeen päällystekerros"
   (:require
-    [reagent.core :refer [atom] :as r]
-    [harja.domain.paallystysilmoitus :as pot]
-    [harja.domain.pot2 :as pot2-domain]
-    [harja.domain.tierekisteri :as tr]
-    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-    [harja.ui.grid.protokollat :as grid-protokollat]
-    [harja.domain.paikkaus :as paikaus]
-    [harja.ui.grid :as grid]
-    [harja.ui.ikonit :as ikonit]
-    [harja.ui.yleiset :refer [ajax-loader]]
-    [harja.tiedot.urakka.paallystys :as paallystys]
-    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-    [harja.ui.yleiset :as yleiset]
-    [harja.validointi :as v]
-    [harja.fmt :as fmt]
-    [harja.domain.paikkaus :as paikkaus]))
+   [reagent.core :refer [atom] :as r]
+   [harja.domain.paallystysilmoitus :as pot]
+   [harja.domain.pot2 :as pot2-domain]
+   [harja.domain.tierekisteri :as tr]
+   [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+   [harja.ui.grid.protokollat :as grid-protokollat]
+   [harja.domain.paikkaus :as paikaus]
+   [harja.ui.grid :as grid]
+   [harja.ui.ikonit :as ikonit]
+   [harja.ui.yleiset :refer [ajax-loader]]
+   [harja.tiedot.urakka.paallystys :as paallystys]
+   [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
+   [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+   [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+   [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
+   [harja.ui.yleiset :as yleiset]
+   [harja.validointi :as v]
+   [harja.fmt :as fmt]
+   [harja.domain.paikkaus :as paikkaus]))
 
 (def maksimimaara-validoitaville-riveille 50)
 
@@ -377,9 +378,12 @@
         :tyyppi :positiivinen-numero
         :tasaa :oikea
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]
-        :varoita [(fn [arvo rivi]
-                    (when (> (:massamenekki rivi) 200)
-                      "Massamenekki on yleensä välillä 10-150. Tarkistaisitko vielä massaan ja leveyden."))]
+        :varoita [pot2-validoinnit/varoita-rem-massamenekista]
+        :info-laatikko [yleiset/info-laatikko :vahva-ilmoitus
+                        "Massamenekki saa olla maksimissaan 50 kg/m2"
+                        [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
+                         [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
 
        {:otsikko "Pinta-ala (m²)"
