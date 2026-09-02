@@ -1,4 +1,4 @@
-(ns harja.views.hallinta.urakkatiedot.urakkaparametrit_nakyma
+(ns harja.views.hallinta.urakkatiedot.urakkaparametrit-nakyma
   "Urakoilla on urakka_parametrit-tietokantataulussa erilaisia urakan tyyppiin ja alkuvuoteen perustuvia parametreja
   (indeksit, sanktiot, bonukset jne). Tämä näkymä näyttää valitun urakan parametrit vain lukutilassa,
   parametrien muokkaus ei kuulu tähän näkymään."
