@@ -48,9 +48,12 @@
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken?
           (and voi-muokata? (not (:virheet paatos)))
+          ;; Vahvista
           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanYlitysPaatos paatos))
-          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanYlitysPaatos paatos))
-                                                                     :teksti "Automaattisesti kirjattu tavoitehinnan ylitys -kulu poistetaan."})]]])]))
+          ;; Peru päätös
+          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                 paatos
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))
 
 (defn- tavoitehinnan-laskentamodaali [paatos]
   (let []
@@ -109,9 +112,12 @@
          (when (:virheet paatos)
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (not (:virheet paatos))
+          ;; Vahvista 
           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatos))
-          (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaTavoitehinnanAlitusPaatos paatos))
-                                                                     :teksti "Automaattisesti kirjattu tavoitepalkkio ja siirtosumma poistetaan."})]]])]))
+          ;; Peru päätös 
+          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                 paatos
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :kattohinta-ylitys
@@ -119,9 +125,7 @@
         siirra? (:siirra? paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
-        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)
-        maksimi-siirrettava-maara (fmt/desimaaliluku (or (:maksimi_siirrettava_maara paatos) 0)  2 2 false)
-        muokattu-maksimi-siirrettava-maara (str/replace maksimi-siirrettava-maara "," ".")]
+        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
 
@@ -190,6 +194,9 @@
 
         ;; Päätöksenteko napit
         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         ;; Vahvista
          #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
-         (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaKattohinnanYlitysPaatos paatos))
-                                                                    :teksti "Automaattisesti kirjattu kattohinnan ylitys ja siirtosumma poistetaan."})]])]))
+         ;; Peru päätös 
+         #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                paatos
+                (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]])]))
