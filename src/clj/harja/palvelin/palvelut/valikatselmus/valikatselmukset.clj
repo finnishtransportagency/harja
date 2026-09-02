@@ -757,12 +757,16 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
+          validaatio (if (<= (:siirrettava_maara paatos) 0)
+                       (conj validaatio (str "Siirrettävä määrä on pienempi tai yhtäsuuri kuin 0,00 €."))
+                       validaatio)
+
           validaatio (if (> (:siirrettava_maara paatos) (round2 2 (:ylityksen_maara paatos)))
-                       (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon."))
+                       (conj validaatio (str "Siirrettävä määrä on suurempi kuin ylityksen määrä."))
                        validaatio)
 
           validaatio (if (> (:urakoitsija_maksaa paatos) (:ylityksen_maara paatos))
-                       (conj validaatio (str "Urakoitsijan maksu ylittää maksimiarvon."))
+                       (conj validaatio (str "Urakoitsijan maksu ei voi olla suurempi kuin kattohinnan ylitys."))
                        validaatio)
 
           validaatio (if (> (+ (:urakoitsija_maksaa paatos) (:siirrettava_maara paatos)) (:ylityksen_maara paatos))
@@ -773,9 +777,9 @@
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Hoitovuoden lopun kattohinta:" hoitovuoden-lopun-kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
                        validaatio)
 
-          ;; Validoi siirto
-          validaatio (if (and (:siirtorajoitus_prosentti urakan-parametrit) (> (:siirrettava_maara paatos) (:maksimi_siirrettava_maara paatos)))
-                       (conj validaatio (str "Siirron rajoitus ylitetty. Maksimi siirto voi olla " (:siirtorajoitus_prosentti urakan-parametrit) " kattohinnasta."))
+          ;; Validoi siirto ja 3% rajoitukset, jos ne on annettu
+          validaatio (if (and (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit) (> (:siirrettava_maara paatos) (:maksimi_siirrettava_maara paatos)))
+                       (conj validaatio (str "Siirron rajoitus ylitetty. Maksimi siirto voi olla " (:maksimi_siirrettava_maara paatos) " €."))
                        validaatio)
 
           ;; Validoi siirto viimeisenä hoitovuotena
