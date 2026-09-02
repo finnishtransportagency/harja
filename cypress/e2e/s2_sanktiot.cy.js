@@ -84,7 +84,11 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
-        cy.wait('@tallenna', {timeout: clickTimeout})
+        cy.wait('@tallenna', {timeout: clickTimeout}).then(({response}) => {
+            const vastaus = JSON.stringify(response && response.body);
+            expect(response, `Tallennuspyynnön vastaus puuttuu. Body: ${vastaus}`).to.exist;
+            expect(response.statusCode, `Tallennus epäonnistui. Body: ${vastaus}`).to.be.within(200, 299);
+        })
 
         // Varmistetaan onnistuminen
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
@@ -206,7 +210,11 @@ describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
-        cy.wait('@tallenna', {timeout: clickTimeout})
+        cy.wait('@tallenna', {timeout: clickTimeout}).then(({response}) => {
+            const vastaus = JSON.stringify(response && response.body);
+            expect(response, `Tallennuspyynnön vastaus puuttuu. Body: ${vastaus}`).to.exist;
+            expect(response.statusCode, `Tallennus epäonnistui. Body: ${vastaus}`).to.be.within(200, 299);
+        })
 
         // Varmistetaan onnistuminen
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
@@ -292,7 +300,11 @@ describe('Sanktiot toimii - MHU19 (Oulu)', function () {
 
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
-        cy.wait('@tallenna', {timeout: clickTimeout})
+        cy.wait('@tallenna', {timeout: clickTimeout}).then(({response}) => {
+            const vastaus = JSON.stringify(response && response.body);
+            expect(response, `Tallennuspyynnön vastaus puuttuu. Body: ${vastaus}`).to.exist;
+            expect(response.statusCode, `Tallennus epäonnistui. Body: ${vastaus}`).to.be.within(200, 299);
+        })
 
         // Varmistetaan onnistuminen
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
