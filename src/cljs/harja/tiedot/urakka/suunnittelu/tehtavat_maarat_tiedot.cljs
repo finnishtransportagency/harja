@@ -6,8 +6,6 @@
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.tiedot.urakka.urakka :as tiedot]))
 
-(declare tehtavan-arvo)
-
 (defonce nakymassa? (atom false))
 
 ;; Muutosten seuranta
@@ -34,6 +32,8 @@
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
 (defrecord NollaaTehtavatJaMaaratMuutokset [])
+(defrecord HaeTehtavaprofiilitOnnistui [vastaus])
+(defrecord HaeTehtavaprofiilitEpaonnistui [vastaus])
 (defrecord TestiTallennaKaikkiinTehtaviinArvo [])
 
 (defn hae-tehtavat-ja-maarat [_parametrit]
@@ -208,99 +208,26 @@
   (process-event [_ app]
     (assoc app :tallentamattomia-muutoksia? false))
 
-  TestiTallennaKaikkiinTehtaviinArvo
-  (process-event [_ app]
+  HaeTehtavaprofiilitOnnistui
+  (process-event [{vastaus :vastaus} app]
     (let [arvolliset-tehtavat (map (fn [tehtava]
                                      (if (nil? (:valiotsikko tehtava))
-                                       (assoc tehtava :tarjous_maara (tehtavan-arvo (:nimi tehtava)))
+                                       (assoc tehtava :tarjous_maara (get vastaus (:nimi tehtava) 0))
                                        tehtava))
                                    (:tehtavat-ja-maarat app))]
-      (assoc app :tehtavat-ja-maarat arvolliset-tehtavat))))
+      (assoc app :tehtavat-ja-maarat arvolliset-tehtavat)))
 
-(defn- tehtavan-arvo [tehtava-nimi]
-  (let [arvo (case tehtava-nimi
-               "Ise 1-ajorat." 9.9
-               "Ise ohituskaistat" 8.1
-               "Is 1-ajorat." 45.6
-               "Ise 2-ajorat." 45.6
-               "Is 2-ajorat." 45.6
-               "Ib 2-ajorat." 45.6
-               "Is ohituskaistat" 24.8
-               "Is rampit" 7.6
-               "Ib 1-ajorat." 54.1
-               "Ic 1-ajorat" 25.1
-               "II" 267.8
-               "III" 218.7
-               "Kävely- ja pyöräilyväylien laatukäytävät" 15
-               "K1" 24.4
-               "K2" 26.1
-               "Levähdys- ja pysäköimisalueet" 8
-               "Talvihoidon kohotettu laatu" 55.1
-               "Suolaus" 900
-               "Liukkaudentorjunta hiekoituksella (materiaali)" 4321
-               "Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)" 4321
-               "Pysäkkikatosten puhdistus" 24
-               "Portaiden talvihoito" 3
-               "Lisäkalustovalmius/-käyttö" 3
-               "Nopeusvalvontakameroiden tolppien ja laitekoteloiden puhdistus" 15
-               "Reunapaalujen kp (uusien)" 34.1
-               "Reunapaalujen kunnossapito" 132.7
-               "Porttaalien tarkastus ja huolto" 2
-               "Vakiokokoisten liikennemerkkien uusiminen, pelkkä merkki" 425
-               "Vakiokokoisten liikennemerkkien uusiminen ja lisääminen merkki tukirakenteineen (60 mm varsi)" 52
-               "Vakiokokoisten liikennemerkkien uusiminen ja lisääminen merkki tukirakenteineen (90 mm varsi)" 52
-               "Opastustaulun/-viitan uusiminen" 134
-               "Opastustaulun/-viitan uusiminen tukirakenteineen (sis. liikennemerkkien poistamisia)" 33
-               "Opastustaulujen ja opastusviittojen uusiminen portaaliin" 13
-               "Pysäkkikatosten siisteydestä huolehtiminen (oikaisu, huoltomaalaus jne.) ja jätehuolto sekä pienet vaurioiden korjaukset" 25
-               "Meluesteiden siisteydestä huolehtiminen" 11400
-               "Töherrysten poisto" 410
-               "Töherrysten estokäsittely" 440
-               "Runkopuiden poisto" 1120
-               "Kuivatusjärjestelmän pumppaamoiden hoito ja tarkkailu" 18
-               "Reunapalteen poisto" 4
-               "Reunantäyttö" 200
-               "Siltojen hoito (kevätpuhdistus, puhtaanapito, kasvuston poisto ja pienet kunnostustoimet sekä vuositarkastukset)" 120
-               "Sorateiden pinnan hoito, hoitoluokka II" 123.3
-               "Sorateiden pinnan hoito, hoitoluokka III" 46.1
-               "Sorapintaisten kävely- ja pyöräilyväylienhoito" 2.6
-               "Sorateiden pölynsidonta (materiaali)" 120
-               "Sorastus" 9123
-               "Liikenteen varmistaminen kelirikkokohteessa (materiaali)" 1100
-               "Soratieluokka I" 262000
-               "Soratieluokka II" 812
-               "Maakivien (>1m3) poisto" 51
-               "Päällysteiden paikkaus - kuumapäällyste" 112
-               "KT-valuasfalttipaikkaus K" 112
-               "KT-valuasfalttipaikkaus T" 112
-               "PAB-paikkaus käsin" 751
-               "KT-reikävaluasfalttipaikkaus" 512
-               "Käsin tehtävät paikkaukset pikapaikkausmassalla" 10000
-               "Sirotepuhalluspaikkaus (SIPU)" 312
-               "Sillan päällysteen halkeaman avarrussaumaus" 251
-               "Kannukaatosaumaus" 15000
-               "Kuumapäällyste" 120000
-               "AB-paikkaus levittäjällä" 1000
-               "Sillan kannen päällysteen päätysauman korjaukset" 251
-               "Reunapalkin ja päällysteen väl. sauman tiivistäminen" 251
-               "Reunapalkin liikuntasauman tiivistäminen" 251
-               "Yksityisten rumpujen korjaus ja uusiminen Ø ≤ 400 mm, päällystetyt tiet" 51
-               "Yksityisten rumpujen korjaus ja uusiminen Ø > 400 mm ≤ 600 mm, päällystetyt tiet" 60
-               "Päällystetyn tien rumpujen korjaus ja uusiminen Ø <= 600 mm" 300
-               "Päällystetyn tien rumpujen korjaus ja uusiminen Ø> 600 <= 800 mm" 200
-               "Yksityisten rumpujen korjaus ja uusiminen Ø ≤ 400 mm, soratiet" 200
-               "Yksityisten rumpujen korjaus ja uusiminen Ø > 400 mm ≤ 600 mm, soratiet" 200
-               "Soratien rumpujen korjaus ja uusiminen Ø <= 600 mm" 150
-               "Soratien rumpujen korjaus ja uusiminen Ø> 600 <=800 mm" 75
-               "Avo-ojitus/päällystetyt tiet" 50000
-               "Avo-ojitus/päällystetyt tiet (kaapeli kaivualueella)" 50000
-               "Laskuojat/päällystetyt tiet" 5500
-               "Avo-ojitus/soratiet" 45300
-               "Avo-ojitus/soratiet (kaapeli kaivualueella)" 42000
-               "Laskuojat/soratiet" 5725
-               "Soratien runkokelirikkokorjaukset" 2100
-               "Pysäkkikatoksen uusiminen" 2
-               "Pysäkkikatoksen poistaminen" 3
-               "Nopeusnäyttötaulun hankinta" 1
-               0)]
-    arvo))
+  HaeTehtavaprofiilitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Pikatäytön arvojen hakeminen epäonnistui: " (pr-str vastaus))
+      :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  TestiTallennaKaikkiinTehtaviinArvo
+  (process-event [_ app]
+    (tuck-apurit/get! :hae-tehtavaprofiilit
+      {:onnistui ->HaeTehtavaprofiilitOnnistui
+       :epaonnistui ->HaeTehtavaprofiilitEpaonnistui
+       :paasta-virhe-lapi? true})
+    app))
+
