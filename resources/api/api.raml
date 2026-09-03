@@ -37,7 +37,7 @@ description: |
           </ul>
       </li>
   </ol>
-version: 1.0.68
+version: 1.0.69
 mediaType: application/json
 protocols:
   - HTTPS
@@ -95,22 +95,32 @@ documentation:
 
       <b>Rajapintakutsujen rajoitukset integraatioväylällä:</b>
       <ul>
-        <li>Sanoman maksimikoko: 20 MB</li>
-        <li>Aikakatkaisu: 180 s</li>
+        <li>Sanoman maksimikoko: 10 MB</li>
+        <li>Aikakatkaisu: 60 s</li>
         <li>Harja käsittelee kutsun loppuun omien sääntöjensä mukaan, vaikka integraatioväylä palauttaisi kutsujalle aikakatkaisuun liittyvän virheen.</li>
       </ul>
+
+      <b>Tulossa urakoitsijarajapintaan myöhemmin:</b>
+      <ul>
+        <li>Tulossa myöhemmin: Rajoitusaluerajapinta, jonka kautta urakoitsija voi hakea urakkansa rajoitusalueet ja niihin liittyvät suolan käytön rajoitukset.</li>
+        li>Tulossa myöhemmin: Liiterajapinta, jonka kautta urakoitsija voi lähettää Harjaan eri asioin (esim. siltatarkastuksiin) liittyviä liitteitä yksi kerrallaan.</li>
+        li>Tulossa myöhemmin: Muutoksia reikäpaikkausrajapintaan.</li>
+      </ul>
+
 
   - title: Sijaintitiedot
     content: |
       Kaikki koordinaattisijainnit ilmoitetaan Harjaan EUREF-FIN koordinaatistossa. Koordinaattipisteiden lisäksi vastaanotetaan suunta joka on aseteluku väliltä: 0-360.
   - title: Versiohistoria
     content: |
-      <b>Nykyinen versio: 1.0.68</b>
+      <b>Nykyinen versio: 1.0.69</b>
       <b>Julkaistu: 4.3.2026</b>
 
       <b>Versiohistoria:</b>
-       - Versionumero 1.0.68 Julkaistu 4.3.2026
+       - Versionumero 1.0.69 Julkaistu 4.3.2026
                - Lisätty suoritettava tehtävä: tieturvallisuustarkastus.
+       - Versionumero 1.0.68 Julkaistu 22.1.2026
+               - Urakoitsija voi ilmoittaa toteuman lähteen. Koneellinen = tieto on työkoneelta. Kasin = tieto on kirjattu käsin urakoitsijajärjestelmään. Korjattu = työkoneelta saatua tietoa on päivitetty käsin.
        - Versionumero 1.0.67 Julkaistu 1.10.2025
                - Lisätty toteuma- ja materiaaliraporttirajapintoihin dokumentaatiota
       - Versionumero 1.0.66 Julkaistu 1.9.2025

@@ -18,6 +18,7 @@
     },
     "lahde": {
       "id": "urn:harja/toteumat/0/toteuma/lahde",
+      "description": "Urakoitsija voi ilmoittaa toteuman lähteen. Koneellinen = tieto on työkoneelta. Kasin = tieto on kirjattu käsin urakoitsijajärjestelmään. Korjattu = työkoneelta saatua tietoa on päivitetty käsin.",
       "type": "string",
       "required": false,
       "enum": [
