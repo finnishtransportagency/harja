@@ -1,14 +1,9 @@
-## Testiympäristöjen pystytykseen alustava deployment prosessi
+## Testiympäristöjen deployment prosessi
 ## -> antaa valita branchin 
 ## -> buildaa imagen testi ECR:rään (erillään prodista)
 ## -> deployaa imagen <test-env> ECS konttiin  
-##
-## Ei koske prod pipelineen  
-## 
-
 name: '[Test-envs] Build and deploy'
 
-## TODO: Tähän tulee oikeat valinnat myöhemmin 
 on:
   workflow_dispatch:
     inputs:
@@ -18,22 +13,23 @@ on:
         type: choice
         options:
           - test-qa1
+          - test-qa2
+          - test-qa3
+          - test-demo
+          - test-koulutus
 
 permissions: {}
 
 concurrency:
-  ## TODO: Myöhemmin ei kovakoodata
-  group: test-qa1-deploy
+  group: ${{ inputs.environment }}-deploy
   cancel-in-progress: false
-  
+
 jobs:
 
-  ## TODO: Nimi vaihtuu myöhemmin
-  deploy-qa1:
-    name: "Deploy branch to QA1"
+  deploy:
+    name: "Deploy branch to ${{ inputs.environment }}"
     runs-on: ubuntu-latest
-    ## TODO: Myöhemmin ei kovakoodata
-    environment: 'test-qa1'
+    environment: ${{ inputs.environment }}
 
     permissions:
       id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
@@ -62,16 +58,15 @@ jobs:
 
       ## ref_name == branchi
       ## Tagataan image näillä 
-      ## TODO.. Jos halutaan sallia että esim QA1 & QA2 käyttää samaa branchia
-      ##        -> täytyy tagittaa vielä environment
       - name: '[Test-envs] Resolve sanitized ref tag'
         id: ref-tag
         env:
           RAW_REF: ${{ github.ref_name }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          REF_TAG=$(echo "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          REF_TAG=$(echo "$RAW_REF-$ENVIRONMENT" | sed 's/[^a-zA-Z0-9]/-/g')
           echo "ref_tag=$REF_TAG" >> "$GITHUB_OUTPUT"
-      
+
       - name: '[Test-envs] Build Harja Uberjar'
         uses: ./.github/actions/build-harja-app
         with:
@@ -109,7 +104,7 @@ jobs:
             --file "$DOCKERFILE_PATH" .
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
-          
+
       - name: '[Test-envs] Run migrations'
         uses: ./.github/actions/run-migrations-to-test-env
         with:
@@ -125,7 +120,7 @@ jobs:
         run: |
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
-          
+
       - name: '[Test-envs] Download task definition'
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
@@ -156,9 +151,6 @@ jobs:
         env:
           ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
           ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
-        ## TODO:
-        ## Käytetään desired count muuttujaa jälkikäteen
-        ## Tähän spikeen == 1, hallinnoidaan infran puolella 
         run: |
           aws ecs update-service \
             --region eu-west-1 \
