@@ -166,9 +166,17 @@
       paatokset)))
 
 
-(defn valmistele-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
-                                       taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
-                                       tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit]
+(defn- laske-muutos-prosentteina [piste-keskiarvo alkuperainen-pisteluku]
+  (if (or (zero? piste-keskiarvo) (zero? alkuperainen-pisteluku))
+    0
+    (round2 1
+      (* (/ (- piste-keskiarvo alkuperainen-pisteluku)
+           piste-keskiarvo)
+        100))))
+
+(defn valmistele-hoitovuoden-lopun-indeksikorjauspaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta tavoitehinnan-muutokset
+                                                         taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
+                                                         tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
   ;; - Tavoitehinnan muutokset -päätös on tallennettu
@@ -191,19 +199,23 @@
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
                     (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
 
-                    (and validoinnit-kaytossa? hoitokauden-indeksikuukaudet)
-                    (conj "Hoitokauden indekseissä puutteita."))
+                    (and validoinnit-kaytossa? (not (seq hoitokauden-indeksikuukaudet)))
+                    (conj "Hoitokauden indekseissä puutteita.")
+
+                    (and validoinnit-kaytossa? alkuperainen-pisteluku)
+                    (conj "Hoitokauden indeksiluvuissa puutteita."))
 
           indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
           ;; Laske pistelukujen muutos
           pisteet (apply + (map #(round2 1 (:indeksiluku %)) hoitokauden-indeksikuukaudet))
-          piste-keskiarvo (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet)))
+          piste-keskiarvo (if-not (empty hoitokauden-indeksikuukaudet)
+                            (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet))) 0)
+          alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
           pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
           alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)
-          muutos-prosentteina (round2 1 (* (/ (- piste-keskiarvo alkuperainen-pisteluku) piste-keskiarvo) 100))
-
+          muutos-prosentteina (laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
           ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
-          indeksikorotuksen-prosenttiosuus (if (> muutos-prosentteina 2) (- muutos-prosentteina 2) 0)
+          indeksikorotuksen-prosenttiosuus (if (and muutos-prosentteina (> muutos-prosentteina 2)) (- muutos-prosentteina 2) 0)
           tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-muutokset))
           muutosten-summa (if (>= 2024 urakan-alkuvuosi) tavoitehinnan-oikaisut taman-vuoden-muutokset-summa)
           oikaistu-tavoitehinta (or oikaistu-tavoitehinta 0)
