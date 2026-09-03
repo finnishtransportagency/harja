@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot
-  (:require [tuck.core :as tuck]
+  (:require [clojure.set :as set]
+            [tuck.core :as tuck]
             [clojure.string :as str]
 
             [harja.pvm :as pvm]
@@ -18,6 +19,14 @@
 (def tavoitehinnan-muutostallennus-kpl (atom 0))
 
 (defonce tavoitehinnan-muutokset (atom []))
+
+(defn- paatettyjen-paatosten-avaimet [paatokset]
+  (into #{}
+    (keep (fn [paatos]
+            (let [[avain paatoksen-tiedot] (first paatos)]
+              (when (:id paatoksen-tiedot)
+                avain)))
+          paatokset)))
 
 (defn scrollaa-muutoksiin []
   ;; Kutsutaan kun käyttäjä tallentaa oikaisua 
@@ -106,11 +115,15 @@
 (defn kasittele-valikatselmuksen-vastaus [app vastaus]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi vastaus)
         vastaus-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
-        muutokset (karsitut-tavoitehinnan-muutokset vastaus-muutokset)]
+        muutokset (karsitut-tavoitehinnan-muutokset vastaus-muutokset)
+        avatut-paatokset (if (:haku-kaynnissa? app)
+                           (set/union (or (:avatut-paatokset app) #{}) (paatettyjen-paatosten-avaimet (:paatokset vastaus)))
+                           (:avatut-paatokset app))]
 
     (reset! tavoitehinnan-muutokset muutokset)
     (-> app
       (assoc :paatokset (:paatokset vastaus))
+      (assoc :avatut-paatokset avatut-paatokset)
       (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
       (assoc :yhteenveto (:yhteenveto vastaus))
       (assoc :urakan-parametrit (:urakan-parametrit vastaus))
@@ -284,6 +297,7 @@
   (process-event [{urakkaid :urakkaid vuosi :vuosi} app]
     (let [app (-> app
                 (assoc :valittu-kuukausi nil)
+                (assoc :avatut-paatokset #{}) ; Resetoidaan avaustilanne
                 ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
                 (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
                                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
