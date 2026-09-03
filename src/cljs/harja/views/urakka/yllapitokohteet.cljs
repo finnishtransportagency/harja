@@ -968,7 +968,7 @@
                              (if piilota-arvonmuutos-ja-sanktiot? 15 17))
     :luokka "paallystys-tausta"}
    {:teksti "Hintamuutokset" :sarakkeita 3 :luokka "paallystys-tausta-tumma"}
-   {:teksti "" :sarakkeita 2 :luokka "paallystys-tausta"}])
+   {:teksti "" :sarakkeita 1 :luokka "paallystys-tausta"}])
 
 (defn yllapitokohteet
   "Ottaa urakan, kohteet atomin ja optiot ja luo taulukon, jossa on listattu kohteen tiedot.
@@ -1190,7 +1190,7 @@
               :kohdistamattomat-sanktiot kohdistamattomat-sanktiot-yhteensa}]))]
 
     [grid/grid
-     {:nayta-toimintosarake? true
+     {:nayta-toimintosarake? false
       :otsikko "Yhteensä"
       :rivi-ennen (taulukon-ryhmittely-header :yhteensa (yllapitokohteet-domain/piilota-arvonmuutos-ja-sanktio? (:valittu-vuosi optiot)))
       :tyhja (if (nil? {}) [ajax-loader "Lasketaan..."] "")}

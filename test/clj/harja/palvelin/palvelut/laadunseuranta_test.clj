@@ -32,11 +32,12 @@
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
-
-            [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.konversio :as konv])
-  (:import (java.util UUID))
+  (:import (java.util UUID)
+           (clojure.lang ExceptionInfo)
+           (harja.domain.roolit EiOikeutta))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -215,9 +216,9 @@
                                      :laatupoikkeama lp
                                      :hoitokausi [hk-alkupvm hk-loppupvm]}))
 
-(defn palvelukutsu-poista-suorasanktio [kayttaja sanktio-id urakka-id]
+(defn palvelukutsu-poista-sanktio [kayttaja sanktio-id urakka-id]
   (kutsu-http-palvelua
-    :poista-suorasanktio kayttaja {:id sanktio-id
+    :poista-sanktio kayttaja {:id sanktio-id
                                    :urakka-id urakka-id}))
 
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
@@ -319,8 +320,8 @@
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
         (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
 
-        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-suorasanktio-rajapinnan kautta"
-          (let [poistettu-sanktio-id (palvelukutsu-poista-suorasanktio
+        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-sanktio-rajapinnan kautta"
+          (let [poistettu-sanktio-id (palvelukutsu-poista-sanktio
                                        +kayttaja-jvh+ (:id lisatty-hoidon-sakko) (hae-oulun-alueurakan-2014-2019-id))
                 poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama poistettu-sanktio-id)]
             (is (= true (:poistettu poistettu-suorasanktio-kannassa)))
@@ -329,6 +330,87 @@
 
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest poista-laatupoikkeaman-sanktio-peruu-paatoksen-eika-poista-laatupoikkeamaa
+  ;; Laatupoikkeaman kautta määrätyn (ei-suora)sanktion poisto eroaa suorasanktion poistosta:
+  ;; laatupoikkeamaa EI poisteta, vaan sen päätös perutaan (nollataan), jolloin laatupoikkeaman
+  ;; lukitus poistuu ja sitä voi taas muokata (vrt. HARJA-1954). Päätös perutaan silloinkin,
+  ;; kun laatupoikkeamalle jää muita aktiivisia sanktioita.
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        perustelu "Poistotesti: laatupoikkeaman sanktion poisto"
+        sanktiorunko {:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
+                      :laji :A
+                      :tyyppi 12
+                      :indeksi "MAKU 2010"
+                      :suorasanktio false
+                      :toimenpideinstanssi 4
+                      :vakiofraasi nil}
+        laatupoikkeama {:yllapitokohde nil
+                        :sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Poistotesti kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :tr {:numero 1 :alkuosa 1 :alkuetaisyys 1 :loppuosa 2 :loppuetaisyys 2}
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kohde "Poistotesti kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :puhelin
+                                 :kasittelyaika #inst "2016-09-15T09:00:01.000-00:00"
+                                 :perustelu perustelu}
+                        :sanktiot [(assoc sanktiorunko :summa 100)
+                                   (assoc sanktiorunko :summa 200)]}
+        ;; Rakennuttajakonsultilla on kirjoitusoikeus (W) muttei "poisto"-oikeutta.
+        rakennuttajakonsultti {:sahkoposti "rk@example.org"
+                               :kayttajanimi "rk-testi"
+                               :sukunimi "Konsultti"
+                               :etunimi "Reijo"
+                               :roolit #{}
+                               :id 22
+                               :organisaatio {:id 10 :nimi "Pohjois-Pohjanmaa" :tyyppi "hallintayksikko"}
+                               :organisaation-urakat #{urakka-id}
+                               :organisaatioroolit {}
+                               :urakkaroolit {urakka-id #{"Rakennuttajakonsultti"}}}
+        tallennettu (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+        lp-id (:id tallennettu)
+        sanktiot (:sanktiot tallennettu)
+        poistettava-id (get-in sanktiot [0 :id])
+        jaava-id (get-in sanktiot [1 :id])]
+
+    (is (= 2 (count sanktiot)) "Laatupoikkeamalla on kaksi sanktiota")
+
+    (testing "Ennen poistoa laatupoikkeamalla on päätös"
+      (let [lp (first (q-map "SELECT kasittelyaika, paatos, perustelu FROM laatupoikkeama WHERE id = " lp-id ";"))]
+        (is (some? (:kasittelyaika lp)) "Käsittelyaika on asetettu")
+        (is (some? (:paatos lp)) "Päätös on asetettu")))
+
+    (testing "Ilman poisto-oikeutta laatupoikkeaman sanktiota ei voi poistaa"
+      (let [vastaus (try
+                      (palvelukutsu-poista-sanktio rakennuttajakonsultti jaava-id urakka-id)
+                      (catch ExceptionInfo e e))]
+        (is (= ExceptionInfo (type vastaus)) "Poisto heittää poikkeuksen")
+        (is (= EiOikeutta (type (ex-data vastaus))) "Poikkeus on oikeuksien puutteesta")
+        (is (false? (boolean (:poistettu (q-sanktio-leftjoin-laatupoikkeama jaava-id))))
+          "Sanktio jää aktiiviseksi kun poisto estyy")
+        (let [lp (first (q-map "SELECT kasittelyaika, paatos FROM laatupoikkeama WHERE id = " lp-id ";"))]
+          (is (some? (:kasittelyaika lp)) "Laatupoikkeaman päätös säilyy kun poisto estyy"))))
+
+    (testing "Poisto-oikeudella laatupoikkeaman sanktion poisto peruu päätöksen mutta säilyttää laatupoikkeaman"
+      (let [poistettu-id (palvelukutsu-poista-sanktio +kayttaja-jvh+ poistettava-id urakka-id)
+            poistettu-sanktio (q-sanktio-leftjoin-laatupoikkeama poistettava-id)
+            jaava-sanktio (q-sanktio-leftjoin-laatupoikkeama jaava-id)
+            lp (first (q-map (str "SELECT poistettu, kasittelyaika, paatos, perustelu, "
+                               "kasittelytapa, muu_kasittelytapa "
+                               "FROM laatupoikkeama WHERE id = ") lp-id ";"))]
+        (is (= poistettava-id poistettu-id) "Poisto palauttaa poistetun sanktion id:n")
+        (is (true? (:poistettu poistettu-sanktio)) "Poistettu sanktio on merkitty poistetuksi")
+        (is (false? (boolean (:lp_poistettu poistettu-sanktio))) "Laatupoikkeamaa EI ole poistettu")
+        (is (false? (boolean (:poistettu jaava-sanktio))) "Toinen sanktio jää aktiiviseksi")
+        (is (nil? (:kasittelyaika lp)) "Käsittelyaika on nollattu")
+        (is (nil? (:paatos lp)) "Päätös on nollattu")
+        (is (nil? (:perustelu lp)) "Perustelu on nollattu")
+        (is (nil? (:kasittelytapa lp)) "Käsittelytapa on nollattu")
+        (is (nil? (:muu_kasittelytapa lp)) "Muu käsittelytapa on nollattu")))))
 
 (deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -760,7 +842,7 @@
           poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id)
           poistettu-lp-sanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id-lp)
           poistettu-hoidon-sakko (first (filter #(= -637.27 (:summa %)) sanktiot-suorasanktion-poistamisen-jalkeen))]
-      (testing "poista-suorasanktio-hoitourakassa"
+      (testing "poista-sanktio-hoitourakassa"
         (is (and (number? (:id lisatty-hoidon-sakko)) (number? (:id poistettu-suorasanktio-kannassa))) "Tallennus palauttaa uuden id:n")
         (is (= :A (:laji lisatty-hoidon-sakko) (keyword (:laji poistettu-suorasanktio-kannassa))) "Hoitourakan bonuksen oikea sanktiolaji")
         (is (not= true (:poistettu lisatty-hoidon-sakko)) "Sakkoa ei poistettu")
