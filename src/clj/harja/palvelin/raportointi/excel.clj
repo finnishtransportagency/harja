@@ -81,7 +81,7 @@
         (let [paate (str " (" numero ")")
               pohjan-enimmais-pituus (- excel-sheet-nimen-enimmaispituus (count paate))
               ehdokas (str (subs pohjanimi 0 (min (count pohjanimi) pohjan-enimmais-pituus))
-                         paate)]
+                        paate)]
           (if (varattu? ehdokas)
             (recur (inc numero))
             ehdokas))))))
