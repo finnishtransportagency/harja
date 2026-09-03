@@ -1,12 +1,12 @@
 (ns harja.palvelin.raportointi.excel-test
   (:require
-    [clojure.test :refer :all]
-    [clojure.string :as str]
-    [harja.palvelin.raportointi.excel :as excel])
+   [clojure.test :refer :all]
+   [clojure.string :as str]
+   [harja.palvelin.raportointi.excel :as excel])
   (:import
-    (org.apache.poi.ss.usermodel DataFormatter)
-    (org.apache.poi.xssf.usermodel XSSFFont XSSFWorkbook)
-    (java.util Locale)))
+   (org.apache.poi.ss.usermodel DataFormatter)
+   (org.apache.poi.xssf.usermodel XSSFFont XSSFWorkbook)
+   (java.util Locale)))
 
 (defn- rgb [vari]
   (mapv #(bit-and 0xff %) (.getRGB vari)))
@@ -56,8 +56,8 @@
                                     (when (= org.apache.poi.ss.usermodel.CellType/STRING
                                              (.getCellType solu))
                                       (.getStringCellValue solu)))
-                                  (iterator-seq (.cellIterator rivi))))
-                          (iterator-seq (.rowIterator (.getSheetAt workbook 0))))]
+                              (iterator-seq (.cellIterator rivi))))
+                    (iterator-seq (.rowIterator (.getSheetAt workbook 0))))]
       (is (some #(= "Säilyvä teksti" %) tekstit)))))
 
 (deftest raportin-yhteenveto-ja-rivityylit-noudattavat-speksia
@@ -77,62 +77,62 @@
       workbook)
     (let [sheet (.getSheetAt workbook 0)
           yhteenveto (.getCell (.getRow sheet 3) 0)
-         nollasumma (.getCell (.getRow sheet 4) 0)
-             negatiivinen (.getCell (.getRow sheet 5) 0)]
-              (is (= [154 199 252]
-                (rgb (.getFillForegroundColorColor (.getCellStyle yhteenveto)))))
+          nollasumma (.getCell (.getRow sheet 4) 0)
+          negatiivinen (.getCell (.getRow sheet 5) 0)]
+      (is (= [154 199 252]
+             (rgb (.getFillForegroundColorColor (.getCellStyle yhteenveto)))))
       (is (.getBold (.getFont (.getCellStyle yhteenveto))))
       (is (= org.apache.poi.ss.usermodel.FillPatternType/NO_FILL
              (.getFillPattern (.getCellStyle nollasumma))))
-              (is (= [248 215 209]
-                (rgb (.getFillForegroundColorColor (.getCellStyle negatiivinen)))))
-              (is (= [180 10 20]
-                (rgb (.getXSSFColor
-                  (cast XSSFFont (.getFont (.getCellStyle negatiivinen))))))))))
+      (is (= [248 215 209]
+             (rgb (.getFillForegroundColorColor (.getCellStyle negatiivinen)))))
+      (is (= [180 10 20]
+             (rgb (.getXSSFColor
+                   (cast XSSFFont (.getFont (.getCellStyle negatiivinen))))))))))
 
-    (deftest varillisen-tekstin-yhteenvetovari-on-yhtenainen
-      (let [workbook (XSSFWorkbook.)]
-        (excel/muodosta-excel
-          [:taulukko {:nimi "Tyylit"
-                      :sheet-nimi "Tyylit"}
-           [{:otsikko "Arvo"}]
-           [[[:varillinen-teksti {:arvo "Yhteensä"
-                                  :korosta-hennosti? true}]]]]
-          workbook)
-        (let [solu (.getCell (.getRow (.getSheetAt workbook 0) 3) 0)]
-          (is (= [154 199 252]
-                 (rgb (.getFillForegroundColorColor (.getCellStyle solu))))))))
+(deftest varillisen-tekstin-yhteenvetovari-on-yhtenainen
+  (let [workbook (XSSFWorkbook.)]
+    (excel/muodosta-excel
+      [:taulukko {:nimi "Tyylit"
+                  :sheet-nimi "Tyylit"}
+       [{:otsikko "Arvo"}]
+       [[[:varillinen-teksti {:arvo "Yhteensä"
+                              :korosta-hennosti? true}]]]]
+      workbook)
+    (let [solu (.getCell (.getRow (.getSheetAt workbook 0) 3) 0)]
+      (is (= [154 199 252]
+             (rgb (.getFillForegroundColorColor (.getCellStyle solu))))))))
 
 (deftest taulukot-kayttavat-omaa-valilehtisopimustaan
   (let [workbook (XSSFWorkbook.)]
-        (excel/muodosta-excel
-          [:raportti {:nimi "Testi"}
-           [:taulukko {:otsikko "Yhteenveto"
-                       :sheet-nimi "Yhteenveto"}
-            [{:otsikko "Rivi"}]
-            [["Yhteenveto"]]]
-           [:taulukko {:otsikko "Sanktiot"
-                       :sheet-nimi "Urakka"}
-            [{:otsikko "Rivi"}]
-            [["Sanktiot"]]]
-           [:taulukko {:otsikko "Bonukset"
-                       :sheet-nimi "Urakka"
-                       :samalle-sheetille? true}
-            [{:otsikko "Rivi"}]
-            [["Bonukset"]]]]
-          workbook)
-        (is (= 2 (.getNumberOfSheets workbook)))
-        (is (= "Yhteenveto" (.getSheetName (.getSheetAt workbook 0))))
-        (is (= "Urakka" (.getSheetName (.getSheetAt workbook 1))))
-        (let [tekstit (mapcat (fn [rivi]
-                                (keep (fn [solu]
-                                        (when (= org.apache.poi.ss.usermodel.CellType/STRING
-                                                 (.getCellType solu))
-                                          (.getStringCellValue solu)))
-                                      (iterator-seq (.cellIterator rivi))))
-                              (iterator-seq (.rowIterator (.getSheetAt workbook 1))))]
-          (is (some #(= "Sanktiot" %) tekstit))
-          (is (some #(= "Bonukset" %) tekstit)))))
+    (excel/muodosta-excel
+      [:raportti {:nimi "Testi"}
+       [:taulukko {:otsikko "Yhteenveto"
+                   :sheet-nimi "Yhteenveto"}
+        [{:otsikko "Rivi"}]
+        [["Yhteenveto"]]]
+       [:taulukko {:otsikko "Sanktiot"
+                   :sheet-nimi "Urakka"}
+        [{:otsikko "Rivi"}]
+        [["Sanktiot"]]]
+       [:taulukko {:otsikko "Bonukset"
+                   :sheet-nimi "Urakka"
+                   :samalle-sheetille? true}
+        [{:otsikko "Rivi"}]
+        [["Bonukset"]]]]
+      workbook)
+    (is (= 2 (.getNumberOfSheets workbook)))
+    (is (= "Yhteenveto" (.getSheetName (.getSheetAt workbook 0))))
+    (is (= "Urakka" (.getSheetName (.getSheetAt workbook 1))))
+    (let [tekstit (mapcat (fn [rivi]
+                            (keep (fn [solu]
+                                    (when (= org.apache.poi.ss.usermodel.CellType/STRING
+                                             (.getCellType solu))
+                                      (.getStringCellValue solu)))
+                              (iterator-seq (.cellIterator rivi))))
+                    (iterator-seq (.rowIterator (.getSheetAt workbook 1))))]
+      (is (some #(= "Sanktiot" %) tekstit))
+      (is (some #(= "Bonukset" %) tekstit)))))
 
 (deftest valilehtien-nimet-puhdistetaan-katkaistaan-ja-yksiloidaan
   (let [workbook (XSSFWorkbook.)
@@ -154,7 +154,7 @@
       (is (= 2 (count sheetit)))
       (is (every? #(<= (count %) 31) nimet))
       (is (every? #(not-any? (fn [merkki] (str/includes? % merkki))
-                       kielletyt-merkit)
+                     kielletyt-merkit)
             nimet))
       (is (= 2 (count (set (map str/lower-case nimet)))))
       (is (some #(= "Ensimmäinen" %) (sheet-tekstit (first sheetit))))

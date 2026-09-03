@@ -605,8 +605,7 @@
                :value-font-size "4pt"
                :tick-font-size "3pt"
                :y-axis-font-size "4pt"
-               :legend legend
-               }
+               :legend legend}
       pylvaat)]
    [:fo:block {:space-after "1em"}]])
 

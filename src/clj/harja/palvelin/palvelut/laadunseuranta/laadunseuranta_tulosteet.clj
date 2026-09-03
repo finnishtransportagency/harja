@@ -70,7 +70,7 @@
                                   "–"))
     (not yllapitourakka?) (conj (sanktion-tai-bonuksen-kuvaus r))
     true (conj (sanktion-tai-bonuksen-perustelu r))
-    true (conj (:summa r) )
+    true (conj (:summa r))
     true (conj (:indeksikorjaus r))))
 
 (defn- muodosta-otsikot [yllapitourakka?]
@@ -143,6 +143,6 @@
                                           :viimeinen-rivi-yhteenveto? true}
                 :tietoja [["Urakka" urakan-nimi]
                           ["Aika" (str (pvm/pvm-opt alkupvm) "-" (pvm/pvm-opt loppupvm))]]}
-     [:teksti-paksu "Näytettävät lajit:" ]
+     [:teksti-paksu "Näytettävät lajit:"]
      [:checkbox-lista checkboxit]
      taulukko]))

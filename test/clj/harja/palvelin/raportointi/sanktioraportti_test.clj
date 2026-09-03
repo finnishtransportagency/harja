@@ -124,25 +124,25 @@
                                 (= :taulukko (first %))
                                 (= "Sakot ylläpitoluokittain" (get-in % [1 :otsikko])))
                           %)
-               (tree-seq coll? seq vastaus))
-         bonus-taulukko (some #(when (and (vector? %)
-                                       (= :taulukko (first %))
-                                       (= "Bonukset" (get-in % [1 :otsikko])))
-                                 %)
-                          (tree-seq coll? seq vastaus))
-         luokka-rivi (fn [nimi] (hae-taulukon-rivi taulukko nimi))]
-          (is (vector? vastaus))
-          (is (=marginaalissa? sanktiot -4500M))
-          (is (=marginaalissa? bonukset 2000M))
-          (is (= "2 kpl" muistutukset))
-          (is (= ["Bonus" 2000M]
-            (hae-taulukon-rivi bonus-taulukko "Bonus")))
-          (is (= ["PK-luokka 2" 1 0]
-             (luokka-rivi "PK-luokka 2")))
-          (is (= ["PK-luokka 3" 3 -3000M]
-            (luokka-rivi "PK-luokka 3")))
-          (is (= ["Ei PK-luokkaa" 1 -1500M]
-            (luokka-rivi "Ei PK-luokkaa")))
+                   (tree-seq coll? seq vastaus))
+        bonus-taulukko (some #(when (and (vector? %)
+                                      (= :taulukko (first %))
+                                      (= "Bonukset" (get-in % [1 :otsikko])))
+                                %)
+                         (tree-seq coll? seq vastaus))
+        luokka-rivi (fn [nimi] (hae-taulukon-rivi taulukko nimi))]
+    (is (vector? vastaus))
+    (is (=marginaalissa? sanktiot -4500M))
+    (is (=marginaalissa? bonukset 2000M))
+    (is (= "2 kpl" muistutukset))
+    (is (= ["Bonus" 2000M]
+           (hae-taulukon-rivi bonus-taulukko "Bonus")))
+    (is (= ["PK-luokka 2" 1 0]
+           (luokka-rivi "PK-luokka 2")))
+    (is (= ["PK-luokka 3" 3 -3000M]
+           (luokka-rivi "PK-luokka 3")))
+    (is (= ["Ei PK-luokkaa" 1 -1500M]
+           (luokka-rivi "Ei PK-luokkaa")))
     (is (= ["Yhteensä" 5 -4500M]
            (hae-taulukon-rivi taulukko "Yhteensä")))))
 
@@ -160,15 +160,15 @@
                     parametrit))
         ennen (apurit/hae-yhteenveto-arvo (suorita) "Sakot yhteensä")
         profiilirivi-id (i (str "INSERT INTO sanktio_profiili_rivi "
-                              "(sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, "
-                              "soveltuvuuskonteksti, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) "
-                              "VALUES ("
-                              "(SELECT id FROM sanktio_profiili WHERE nimi = 'paallystys-oletus'), "
-                              "(SELECT id FROM sanktio_laji WHERE koodi = 'yllapidon_muistutus'), "
-                              "(SELECT id FROM sanktiotyyppi WHERE koodi = 3), "
-                              "'laatupoikkeama', 99, TRUE, "
-                              "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP, "
-                              "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP)"))]
+                             "(sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, "
+                             "soveltuvuuskonteksti, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) "
+                             "VALUES ("
+                             "(SELECT id FROM sanktio_profiili WHERE nimi = 'paallystys-oletus'), "
+                             "(SELECT id FROM sanktio_laji WHERE koodi = 'yllapidon_muistutus'), "
+                             "(SELECT id FROM sanktiotyyppi WHERE koodi = 3), "
+                             "'laatupoikkeama', 99, TRUE, "
+                             "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP, "
+                             "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), CURRENT_TIMESTAMP)"))]
     (try
       (let [jalkeen (apurit/hae-yhteenveto-arvo (suorita) "Sakot yhteensä")]
         (is (= ennen jalkeen)
@@ -181,51 +181,12 @@
     (try
       (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))
       (u (str "INSERT INTO sanktio "
-            "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
-            "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 600, '2017-06-15', '"
-            testi-indeksi "', "
-            "(SELECT id FROM toimenpideinstanssi WHERE urakka = 5 LIMIT 1), "
-            "(SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
-            "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
-      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                  :suorita-raportti
-                  +kayttaja-jvh+
-                  {:nimi       :sanktioraportti
-                   :konteksti  "urakka"
-                   :urakka-id  5
-                   :parametrit {:alkupvm      (c/to-date (t/local-date 2017 1 1))
-                                :loppupvm     (c/to-date (t/local-date 2018 1 1))
-                                :urakkatyyppi :paallystys}})
-        sanktiot-taulukko (some #(when (and (vector? %)
-                                         (= :taulukko (first %))
-                                         (= "Sakot ylläpitoluokittain" (get-in % [1 :otsikko])))
-                                   %)
-                              (tree-seq coll? seq vastaus))
-        arvonvahennys-taulukko (some #(when (and (vector? %)
-                                              (= :taulukko (first %))
-                                              (= "Arvonvähennykset" (get-in % [1 :otsikko])))
-                                        %)
-                                   (tree-seq coll? seq vastaus))]
-      (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sakot yhteensä") -4500M))
-      (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Arvovähennykset") -600M))
-      (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -3100M))
-      (is (= ["Yhteensä" 5 -4500M]
-             (hae-taulukon-rivi sanktiot-taulukko "Yhteensä")))
-      (is (nil? arvonvahennys-taulukko)))
-      (finally
-      (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))))))
-
-(deftest raportin-suoritus-yllapidolle-ohjaa-puuttuvan-profiilirivin-tunnistamattomiin
-  (let [testi-indeksi "raportin-suoritus-yllapidolle-ohjaa-puuttuvan-profiilirivin-tunnistamattomiin"]
-    (try
-      (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))
-      (u (str "INSERT INTO sanktio "
-            "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
-            "VALUES ('yllapidon_sakko'::SANKTIOLAJI, 200, '2017-06-16', '"
-            testi-indeksi "', "
-            "(SELECT id FROM toimenpideinstanssi WHERE urakka = 5 LIMIT 1), "
-            "(SELECT id FROM sanktiotyyppi WHERE koodi = 13), TRUE, "
-            "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
+           "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+           "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 600, '2017-06-15', '"
+           testi-indeksi "', "
+           "(SELECT id FROM toimenpideinstanssi WHERE urakka = 5 LIMIT 1), "
+           "(SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
+           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                       :suorita-raportti
                       +kayttaja-jvh+
@@ -239,12 +200,51 @@
                                              (= :taulukko (first %))
                                              (= "Sakot ylläpitoluokittain" (get-in % [1 :otsikko])))
                                        %)
-                                  (tree-seq coll? seq vastaus))
+                                (tree-seq coll? seq vastaus))
+            arvonvahennys-taulukko (some #(when (and (vector? %)
+                                                  (= :taulukko (first %))
+                                                  (= "Arvonvähennykset" (get-in % [1 :otsikko])))
+                                            %)
+                                     (tree-seq coll? seq vastaus))]
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sakot yhteensä") -4500M))
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Arvovähennykset") -600M))
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -3100M))
+        (is (= ["Yhteensä" 5 -4500M]
+               (hae-taulukon-rivi sanktiot-taulukko "Yhteensä")))
+        (is (nil? arvonvahennys-taulukko)))
+      (finally
+        (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))))))
+
+(deftest raportin-suoritus-yllapidolle-ohjaa-puuttuvan-profiilirivin-tunnistamattomiin
+  (let [testi-indeksi "raportin-suoritus-yllapidolle-ohjaa-puuttuvan-profiilirivin-tunnistamattomiin"]
+    (try
+      (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))
+      (u (str "INSERT INTO sanktio "
+           "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+           "VALUES ('yllapidon_sakko'::SANKTIOLAJI, 200, '2017-06-16', '"
+           testi-indeksi "', "
+           "(SELECT id FROM toimenpideinstanssi WHERE urakka = 5 LIMIT 1), "
+           "(SELECT id FROM sanktiotyyppi WHERE koodi = 13), TRUE, "
+           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :suorita-raportti
+                      +kayttaja-jvh+
+                      {:nimi       :sanktioraportti
+                       :konteksti  "urakka"
+                       :urakka-id  5
+                       :parametrit {:alkupvm      (c/to-date (t/local-date 2017 1 1))
+                                    :loppupvm     (c/to-date (t/local-date 2018 1 1))
+                                    :urakkatyyppi :paallystys}})
+            sanktiot-taulukko (some #(when (and (vector? %)
+                                             (= :taulukko (first %))
+                                             (= "Sakot ylläpitoluokittain" (get-in % [1 :otsikko])))
+                                       %)
+                                (tree-seq coll? seq vastaus))
             tunnistamattomat-taulukko (some #(when (and (vector? %)
                                                      (= :taulukko (first %))
                                                      (= "Tunnistamattomat sanktiot" (get-in % [1 :otsikko])))
                                                %)
-                                          (tree-seq coll? seq vastaus))]
+                                        (tree-seq coll? seq vastaus))]
         (is (= ["Yhteensä" 5 -4500M]
                (hae-taulukon-rivi sanktiot-taulukko "Yhteensä")))
         (is (= ["Talvihoito, päätiet" -200M]
@@ -261,22 +261,22 @@
         hae-rivi (fn [urakka]
                    (some #(when (= testi-indeksi (:indeksi %)) %)
                      (#'sanktio/hae-urakkataso-yllapito-sanktiot
-                       (:db jarjestelma)
-                       (assoc parametrit :urakka urakka :elinvoimakeskus nil))))]
+                      (:db jarjestelma)
+                      (assoc parametrit :urakka urakka :elinvoimakeskus nil))))]
     (try
       (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))
       (i (str "INSERT INTO sanktio "
-            "(sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
-            "VALUES ('yllapidon_sakko'::SANKTIOLAJI, 123, '2017-06-20', '"
-            testi-indeksi "', "
-            "(SELECT id FROM laatupoikkeama "
-            " WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Porintien päällystysurakka') "
-            "   AND yllapitokohde IS NULL LIMIT 1), "
-            "(SELECT id FROM toimenpideinstanssi "
-            " WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka') "
-            "   AND nimi = 'Muhos Ajoradan päällyste TP' LIMIT 1), "
-            "(SELECT id FROM sanktiotyyppi WHERE koodi = 3), TRUE, "
-            "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
+           "(sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+           "VALUES ('yllapidon_sakko'::SANKTIOLAJI, 123, '2017-06-20', '"
+           testi-indeksi "', "
+           "(SELECT id FROM laatupoikkeama "
+           " WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Porintien päällystysurakka') "
+           "   AND yllapitokohde IS NULL LIMIT 1), "
+           "(SELECT id FROM toimenpideinstanssi "
+           " WHERE urakka = (SELECT id FROM urakka WHERE nimi = 'Muhoksen päällystysurakka') "
+           "   AND nimi = 'Muhos Ajoradan päällyste TP' LIMIT 1), "
+           "(SELECT id FROM sanktiotyyppi WHERE koodi = 3), TRUE, "
+           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
       (is (nil? (hae-rivi 5))
         "Laatupoikkeamaan liitetty sanktio ei saa päätyä toimenpideinstanssin urakkaan")
       (is (= 11 (:urakka_id (hae-rivi 11))))
@@ -298,13 +298,13 @@
       (u (str "DELETE FROM sanktio WHERE indeksi = '" testi-indeksi "'"))
       (u "UPDATE sanktio_laji SET aktiivinen = FALSE WHERE koodi = 'arvonvahennyssanktio'")
       (i (str "INSERT INTO sanktio "
-            "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
-            "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 321, '2017-06-20', '"
-            testi-indeksi "', "
-            "(SELECT id FROM toimenpideinstanssi "
-            " WHERE urakka = 5 AND nimi = 'Muhos Ajoradan päällyste TP' LIMIT 1), "
-            "(SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
-            "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
+           "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+           "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 321, '2017-06-20', '"
+           testi-indeksi "', "
+           "(SELECT id FROM toimenpideinstanssi "
+           " WHERE urakka = 5 AND nimi = 'Muhos Ajoradan päällyste TP' LIMIT 1), "
+           "(SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
+           "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"))
       (let [rivi (some #(when (= testi-indeksi (:indeksi %)) %)
                    (#'sanktio/hae-urakkataso-yllapito-sanktiot db parametrit))]
         (is (= "arvonvahennyssanktio" (:sanktiolaji_koodi rivi)))
@@ -327,20 +327,20 @@
                                         :loppupvm     (c/to-date (t/local-date 2017 12 31))
                                         :urakkatyyppi :paallystys}})
         kokonais-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                          "Pohjois-Suomi"
-                          "Sakot ylläpitoluokittain")
+                            "Pohjois-Suomi"
+                            "Sakot ylläpitoluokittain")
         kokonais-bonus-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                                 "Pohjois-Suomi"
-                                 "Bonukset")
+                                  "Pohjois-Suomi"
+                                  "Bonukset")
         urakan-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-             "Muhoksen päällystysurakka 2017-2026"
-                         "Sakot ylläpitoluokittain")
+                          "Muhoksen päällystysurakka 2017-2026"
+                          "Sakot ylläpitoluokittain")
         urakan-bonus-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                   "Muhoksen päällystysurakka 2017-2026"
-                               "Bonukset")
+                                "Muhoksen päällystysurakka 2017-2026"
+                                "Bonukset")
         taulukot (filter #(and (vector? %)
-                             (= :taulukko (first %)))
-                    (tree-seq coll? seq vastaus))]
+                            (= :taulukko (first %)))
+                   (tree-seq coll? seq vastaus))]
     (is (vector? vastaus))
     (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -2500M))
     (is (= ["Yhteensä" 5 -4500M]
@@ -364,23 +364,23 @@
                                 :loppupvm     (c/to-date (t/local-date 2017 12 31))
                                 :urakkatyyppi :paallystys}})
         kokonais-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                          "Koko maa"
-                          "Sakot ylläpitoluokittain")
+                            "Koko maa"
+                            "Sakot ylläpitoluokittain")
         kokonais-bonus-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                                 "Koko maa"
-                                 "Bonukset")
+                                  "Koko maa"
+                                  "Bonukset")
         muhoksen-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-              "Muhoksen päällystysurakka 2017-2026"
-                          "Sakot ylläpitoluokittain")
+                            "Muhoksen päällystysurakka 2017-2026"
+                            "Sakot ylläpitoluokittain")
         muhoksen-bonus-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-               "Muhoksen päällystysurakka 2017-2026"
-                                 "Bonukset")
+                                  "Muhoksen päällystysurakka 2017-2026"
+                                  "Bonukset")
         porintien-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                           "Porintien päällystysurakka 2014-2018"
-                           "Sakot ylläpitoluokittain")
+                             "Porintien päällystysurakka 2014-2018"
+                             "Sakot ylläpitoluokittain")
         taulukot (filter #(and (vector? %)
-                             (= :taulukko (first %)))
-                    (tree-seq coll? seq vastaus))]
+                            (= :taulukko (first %)))
+                   (tree-seq coll? seq vastaus))]
     (is (vector? vastaus))
     (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -5500M))
     (is (= ["Yhteensä" 7 -7500M]
@@ -407,13 +407,13 @@
                                         :urakkatyyppi :hoito}})
         taulukon-rivien-maara (fn [urakan-nimi]
                                 (let [taulukko (some #(when (contains?
-                                                               #{"A-ryhmä (tehtäväkohtainen sanktio)"
-                                                                 "A - Tehtäväkohtainen sanktio"}
-                                                               (get-in % [1 :otsikko]))
-                                                       %)
-                                                  (hae-urakan-aggregaatin-taulukot
-                                                    vastaus
-                                                    urakan-nimi))]
+                                                              #{"A-ryhmä (tehtäväkohtainen sanktio)"
+                                                                "A - Tehtäväkohtainen sanktio"}
+                                                              (get-in % [1 :otsikko]))
+                                                        %)
+                                                 (hae-urakan-aggregaatin-taulukot
+                                                   vastaus
+                                                   urakan-nimi))]
                                   (count (butlast (apurit/taulukon-rivit taulukko)))))
         bonus-taulukon-rivien-maara (fn [urakan-nimi]
                                       (let [taulukko (hae-urakan-aggregaatin-taulukko
@@ -437,8 +437,8 @@
                                         :loppupvm     (c/to-date (t/local-date 2016 12 31))
                                         :urakkatyyppi :paallystys}})
         kokonais-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                          "Pohjois-Suomi"
-                          "Sakot ylläpitoluokittain")]
+                            "Pohjois-Suomi"
+                            "Sakot ylläpitoluokittain")]
     (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sakot yhteensä") 0M))
     (is (= ["Yhteensä" 0 0]
            (hae-taulukon-rivi kokonais-taulukko "Yhteensä")))))
