@@ -1,0 +1,257 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Harja-prototyypin kopioitava HTML-pohja">
+  <title>Harja-prototyyppi | Template</title>
+  <style>
+    :root {
+      --harja-musta: #191919;
+      --harja-harmaa: #5c5c5c;
+      --harja-harmaa-vaalea: #d6d6d6;
+      --harja-harmaa-pinta: #f0f0f0;
+      --harja-harmaa-kevyt: #fafafa;
+      --harja-sininen: #0066cc;
+      --harja-sininen-tumma: #004d99;
+      --harja-sininen-vaalea: #e0edf9;
+      --harja-vihrea: #27b427;
+      --harja-vihrea-vaalea: #e0f5df;
+      --harja-punainen: #de3618;
+      --harja-punainen-vaalea: #f8d7d1;
+      --harja-keltainen: #fff0bf;
+      --harja-varoitus: #ff9900;
+      --muste: var(--harja-musta);
+      --muste-vaalea: var(--harja-harmaa);
+      --paperi: var(--harja-harmaa-kevyt);
+      --paperi-tumma: var(--harja-harmaa-pinta);
+      --viiva: var(--harja-harmaa-vaalea);
+      --korostus: var(--harja-sininen);
+      --korostus-tumma: var(--harja-sininen-tumma);
+      --korostus-vaalea: var(--harja-sininen-vaalea);
+      --valkoinen: #ffffff;
+      --kulma: 4px;
+      --varjo: 0 1px 3px rgba(25, 25, 25, .12);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--muste);
+      background: var(--paperi-tumma);
+      font-family: "Open Sans", Arial, sans-serif;
+      font-size: 14px;
+      line-height: 1.45;
+    }
+    body::before { display: block; height: 4px; background: var(--korostus); content: ""; }
+    button, input, select { font: inherit; }
+    button, select { cursor: pointer; }
+    a { color: var(--korostus-tumma); }
+    button:focus-visible, input:focus-visible, select:focus-visible, a:focus-visible { outline: 2px solid var(--korostus); outline-offset: 2px; }
+    h1, h2, h3, p { margin-top: 0; }
+    h1 { margin-bottom: 10px; font-size: 28px; font-weight: 600; line-height: 1.15; }
+    h2 { margin-bottom: 6px; font-size: 20px; font-weight: 600; line-height: 1.2; }
+    h3 { margin-bottom: 6px; font-size: 16px; font-weight: 600; line-height: 1.25; }
+    .visuaalisesti-piilossa { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+    .kehys { width: 100%; margin: 0 auto; padding: 0 32px 56px; }
+
+    .ylapalkki, .murupolku { position: relative; left: 50%; width: 100vw; margin-left: -50vw; }
+    .ylapalkki { border-bottom: 1px solid var(--harja-vihrea); background: var(--harja-vihrea-vaalea); }
+    .ylapalkki-sisalto { display: flex; align-items: center; gap: 16px; min-height: 56px; padding: 0 15px; }
+    .brandi-alue { display: flex; flex: 0 0 auto; align-items: center; gap: 16px; }
+    .brandi { display: inline-flex; align-items: center; gap: 7px; color: var(--muste); text-decoration: none; }
+    .brandi-merkki { position: relative; width: 26px; height: 26px; border-radius: 2px; background: var(--harja-varoitus); }
+    .brandi-merkki::before { position: absolute; top: 5px; left: 6px; width: 2px; height: 16px; background: var(--valkoinen); box-shadow: 6px 0 var(--valkoinen), 12px 0 var(--valkoinen); content: ""; }
+    .brandi-alaotsikko { display: block; margin-bottom: 2px; color: var(--korostus-tumma); font-size: 10px; font-weight: 700; line-height: 1; }
+    .brandi-nimi { display: block; font-size: 20px; font-weight: 700; line-height: 1; }
+    .harja-haku input { width: 152px; min-height: 32px; padding: 0 10px; border: 1px solid var(--muste-vaalea); border-radius: var(--kulma); background: var(--valkoinen); font-size: 12px; }
+    .paavalikko { display: flex; align-items: center; gap: 2px; min-width: 0; margin: 0; padding: 0; }
+    .paavalikko-linkki { display: flex; align-items: center; min-height: 38px; padding: 8px 10px; border-radius: var(--kulma); color: var(--korostus-tumma); font-size: 12px; text-decoration: none; white-space: nowrap; }
+    .paavalikko-linkki:hover { background: var(--korostus-vaalea); text-decoration: underline; }
+    .paavalikko-linkki.aktiivinen { background: var(--korostus); color: var(--valkoinen); font-weight: 700; }
+    .kayttaja { display: flex; flex: 0 0 auto; gap: 12px; margin-left: auto; font-size: 12px; white-space: nowrap; }
+    .ylapalkki-linkki { color: var(--korostus-tumma); text-decoration: none; }
+    .ylapalkki-linkki:hover { text-decoration: underline; }
+
+    .murupolku { margin-bottom: 28px; border-bottom: 1px solid var(--viiva); background: var(--paperi); }
+    .murupolku-sisalto { display: flex; align-items: end; flex-wrap: wrap; gap: 12px 16px; min-height: 72px; width: 100%; margin: 0; padding: 15px 37px; }
+    .murupolku-alku { display: flex; align-items: center; flex-wrap: wrap; gap: 7px; color: var(--muste-vaalea); font-size: 12px; }
+    .murupolku-alku a, .murupolku-valittu a { color: var(--korostus-tumma); text-decoration: none; }
+    .murupolku-alku a:hover, .murupolku-valittu a:hover { text-decoration: underline; }
+    .murupolku-valittu { display: inline-flex; align-items: center; gap: 5px; font-weight: 700; }
+    .murupolku-valittu button { min-height: 30px; padding: 4px 8px; border: 1px solid var(--viiva); border-radius: var(--kulma); background: var(--valkoinen); }
+    .murupolku-suodattimet { display: flex; align-items: end; gap: 10px; margin-left: auto; }
+    .murupolku-kentta, .ohjain { display: grid; gap: 3px; }
+    .murupolku-kentta label, .ohjain label { color: var(--muste-vaalea); font-size: 11px; font-weight: 700; }
+    .murupolku-kentta select, .ohjain select { min-height: 36px; min-width: 160px; padding: 5px 28px 5px 10px; border: 1px solid var(--viiva); border-radius: var(--kulma); background: var(--valkoinen); font-size: 12px; }
+
+    .sivun-otsikko { display: flex; align-items: end; justify-content: space-between; gap: 24px; margin-bottom: 24px; }
+    .ylapalkin-tunniste, .osio-tunniste { margin-bottom: 6px; color: var(--muste-vaalea); font-size: 12px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .johdanto { max-width: 650px; margin-bottom: 0; color: var(--muste-vaalea); font-size: 15px; }
+    .versio { min-width: 190px; padding: 8px 0 8px 12px; border-left: 3px solid var(--korostus); color: var(--muste-vaalea); font-size: 12px; }
+    .versio strong { display: block; margin-top: 3px; color: var(--muste); font-weight: 600; }
+    .ohjaimet { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; margin-bottom: 14px; padding: 12px 14px; border: 1px solid var(--viiva); border-radius: var(--kulma); background: var(--valkoinen); box-shadow: var(--varjo); }
+    .ohjain select { min-width: 260px; }
+    .ohjaimet-tila { margin-left: auto; color: var(--muste-vaalea); font-size: 12px; }
+
+    .mittarit { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin-bottom: 26px; }
+    .mittari { min-height: 106px; padding: 14px 16px; border: 1px solid var(--viiva); background: var(--valkoinen); box-shadow: var(--varjo); }
+    .mittari:nth-child(2) { border-top: 5px solid var(--harja-vihrea); }
+    .mittari:nth-child(3) { border-top: 5px solid var(--harja-punainen); }
+    .mittari:nth-child(4) { border-top: 5px solid var(--muste); }
+    .mittari-otsikko { color: var(--muste-vaalea); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .mittari strong { display: block; margin: 7px 0 3px; font-size: 28px; font-weight: 600; }
+    .mittari-kuvaus { color: var(--muste-vaalea); font-size: 13px; }
+
+    .sisalto { display: grid; grid-template-columns: minmax(0, 1.45fr) minmax(280px, .85fr); gap: 16px; align-items: start; }
+    .paneeli { min-width: 0; border: 1px solid var(--viiva); border-radius: var(--kulma); background: var(--valkoinen); box-shadow: var(--varjo); }
+    .paneeli-otsikko { display: flex; align-items: baseline; justify-content: space-between; gap: 16px; padding: 19px 20px 15px; border-bottom: 1px solid var(--viiva); }
+    .paneeli-otsikko h2 { margin-bottom: 0; }
+    .paneeli-otsikko p { margin-bottom: 0; color: var(--muste-vaalea); font-size: 13px; }
+    .laskuri { display: inline-flex; align-items: center; justify-content: center; min-width: 28px; min-height: 28px; padding: 4px 8px; border-radius: var(--kulma); background: var(--korostus-vaalea); color: var(--korostus-tumma); font-size: 12px; font-weight: 700; }
+    .lista { display: grid; }
+    .lista-rivi { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--viiva); color: var(--muste); text-decoration: none; }
+    .lista-rivi:last-child { border-bottom: 0; }
+    .lista-rivi:hover { background: var(--korostus-vaalea); }
+    .lista-rivi strong { display: block; margin-bottom: 3px; color: var(--korostus-tumma); font-size: 14px; }
+    .lista-rivi span { color: var(--muste-vaalea); font-size: 12px; }
+    .lista-rivi-aika { white-space: nowrap; }
+    .yhteenveto { padding: 20px; }
+    .yhteenveto-luku { display: block; margin: 18px 0 14px; font-size: 42px; font-weight: 600; line-height: 1; }
+    .yhteenveto-luku small { display: block; margin-top: 5px; color: var(--muste-vaalea); font-size: 13px; font-weight: 400; }
+    .yhteenveto-erittely { display: grid; gap: 9px; padding-top: 13px; border-top: 1px solid var(--viiva); }
+    .yhteenveto-rivi { display: flex; justify-content: space-between; color: var(--muste-vaalea); font-size: 13px; }
+    .yhteenveto-rivi strong { color: var(--muste); }
+
+    .kortit-alue { margin-top: 26px; }
+    .kortit-otsikko { margin-bottom: 12px; }
+    .kortit-otsikko p { margin-bottom: 0; color: var(--muste-vaalea); font-size: 13px; }
+    .kortit { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+    .malli-kortti { display: block; min-height: 160px; padding: 16px; border: 1px solid var(--viiva); border-top: 4px solid var(--korostus); border-radius: var(--kulma); background: var(--valkoinen); box-shadow: var(--varjo); color: var(--muste); text-decoration: none; }
+    .malli-kortti:hover { background: var(--korostus-vaalea); }
+    .malli-kortti.tila-ok { border-top-color: var(--harja-vihrea); }
+    .malli-kortti.tila-varoitus { border-top-color: var(--harja-varoitus); }
+    .malli-kortti.tila-puuttuu { border-top-color: var(--harja-punainen); }
+    .malli-kortti-tila { display: inline-block; margin-bottom: 18px; padding: 4px 7px; background: var(--korostus-vaalea); color: var(--korostus-tumma); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+    .tila-ok .malli-kortti-tila { background: var(--harja-vihrea-vaalea); color: var(--harja-vihrea); }
+    .tila-varoitus .malli-kortti-tila { background: var(--harja-keltainen); color: #8a5a00; }
+    .tila-puuttuu .malli-kortti-tila { background: var(--harja-punainen-vaalea); color: var(--harja-punainen); }
+    .malli-kortti p { margin-bottom: 0; color: var(--muste-vaalea); font-size: 13px; }
+
+    .yksityiskohta { margin-top: 26px; }
+    .yksityiskohta .paneeli-otsikko { background: var(--korostus); border-bottom-color: var(--korostus-tumma); }
+    .yksityiskohta .paneeli-otsikko h2, .yksityiskohta .paneeli-otsikko p { color: var(--valkoinen); }
+    .yksityiskohta-sisalto { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; padding: 16px 20px 20px; }
+    .tieto { min-height: 88px; padding: 12px; border: 1px solid var(--viiva); background: var(--paperi); }
+    .tieto-otsikko { display: block; margin-bottom: 7px; color: var(--muste-vaalea); font-size: 11px; letter-spacing: .08em; text-transform: uppercase; }
+    .tieto strong { display: block; margin-bottom: 3px; font-size: 20px; font-weight: 600; }
+    .tieto span:last-child { color: var(--muste-vaalea); font-size: 12px; }
+    .painike { display: inline-flex; align-items: center; justify-content: center; min-height: 36px; padding: 7px 12px; border: 1px solid var(--korostus); border-radius: var(--kulma); background: var(--valkoinen); color: var(--korostus-tumma); font-size: 12px; font-weight: 600; text-decoration: none; }
+    .painike:hover { background: var(--korostus-vaalea); }
+    .yksityiskohta-painike { padding: 0 20px 20px; }
+    .alapalkki { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 28px; padding-top: 14px; border-top: 1px solid var(--viiva); color: var(--muste-vaalea); font-size: 12px; }
+    .paatospohja { display: inline-flex; align-items: center; gap: 5px; color: var(--korostus-tumma); text-decoration: none; }
+    .paatospohja:hover { text-decoration: underline; }
+    .proton-dokumentit { display: inline-flex; align-items: center; flex-wrap: wrap; gap: 12px; }
+
+    @media (max-width: 1120px) {
+      .ylapalkki-sisalto { flex-wrap: wrap; padding-top: 8px; padding-bottom: 8px; }
+      .paavalikko { order: 3; flex: 1 1 100%; overflow-x: auto; }
+      .mittarit { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 780px) {
+      .kehys { padding-right: 16px; padding-left: 16px; }
+      .ylapalkki-sisalto { padding-right: 15px; padding-left: 15px; }
+      .brandi-alue { gap: 10px; }
+      .harja-haku input { width: 136px; }
+      .kayttaja .ylapalkki-linkki { display: none; }
+      .paavalikko { flex-wrap: wrap; overflow: visible; }
+      .murupolku-sisalto { align-items: flex-start; }
+      .murupolku-suodattimet { width: 100%; margin-left: 0; }
+      .murupolku-kentta { flex: 1 1 0; min-width: 0; }
+      .murupolku-kentta select { width: 100%; min-width: 0; }
+      .sivun-otsikko { align-items: start; flex-direction: column; gap: 12px; }
+      .versio { width: 100%; }
+      .sisalto { grid-template-columns: 1fr; }
+      .kortit { grid-template-columns: 1fr; }
+      .yksityiskohta-sisalto { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 520px) {
+      .brandi-alaotsikko { display: none; }
+      .brandi-nimi { font-size: 18px; }
+      .harja-haku input { width: 120px; }
+      .paavalikko-linkki { padding-right: 8px; padding-left: 8px; font-size: 11px; }
+      .murupolku-suodattimet { flex-direction: column; align-items: stretch; }
+      .mittarit { grid-template-columns: 1fr; }
+      .yksityiskohta-sisalto { grid-template-columns: 1fr; }
+      .lista-rivi { grid-template-columns: 1fr; gap: 5px; }
+      .alapalkki { align-items: start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="kehys">
+    <header class="ylapalkki">
+      <div class="ylapalkki-sisalto">
+        <div class="brandi-alue">
+          <a class="brandi" href="#alku" aria-label="Harja, sivun alkuun">
+            <span class="brandi-merkki" aria-hidden="true"></span>
+            <span><span class="brandi-alaotsikko">TESTI</span><span class="brandi-nimi">HARJA</span></span>
+          </a>
+          <label class="harja-haku"><span class="visuaalisesti-piilossa">Hae Harjasta</span><input type="search" placeholder="Hae Harjasta" aria-label="Hae Harjasta"></label>
+        </div>
+        <nav class="paavalikko" aria-label="Päävalikko">
+          <a class="paavalikko-linkki" href="#alku">Urakat</a>
+          <a class="paavalikko-linkki" href="#alku">Raportit</a>
+          <a class="paavalikko-linkki" href="#alku">Tilannekuva</a>
+          <a class="paavalikko-linkki" href="#alku">Ilmoitukset</a>
+          <a class="paavalikko-linkki" href="#alku">Tienpidon luvat</a>
+          <a class="paavalikko-linkki aktiivinen" href="#alku" aria-current="page">Prototyypin näkymä</a>
+          <a class="paavalikko-linkki" href="#alku">Hallinta</a>
+        </nav>
+        <div class="kayttaja" aria-label="Kirjautunut käyttäjä"><a class="ylapalkki-linkki" href="#info">INFO</a><a class="ylapalkki-linkki" href="#palaute">Palaute</a><a class="ylapalkki-linkki" href="#kayttaja">Testi Käyttäjä</a></div>
+      </div>
+    </header>
+
+    <nav class="murupolku" aria-label="Murupolku ja rajaukset">
+      <div class="murupolku-sisalto">
+        <div class="murupolku-alku"><a href="#alku">Koko maa</a><span aria-hidden="true">/</span><span>Elinvoimakeskus</span><span aria-hidden="true">/</span><span class="murupolku-valittu"><a href="#alku">Prototyypin näkymä</a></span></div>
+        <div class="murupolku-suodattimet">
+          <div class="murupolku-kentta"><label for="urakkatyyppi">Urakkatyyppi</label><select id="urakkatyyppi"><option>Hoito</option></select></div>
+          <div class="murupolku-kentta"><label for="urakoitsija">Urakoitsija</label><select id="urakoitsija"><option>Kaikki</option></select></div>
+        </div>
+      </div>
+    </nav>
+
+    <main id="alku">
+      <section class="sivun-otsikko">
+        <div><p class="ylapalkin-tunniste">Prototyyppi / 24.8.2026</p><h1>Prototyypin näkymä</h1><p class="johdanto">Korvaa tämä otsikko, kuvaus ja sisältö seuraavan asiakkaan kanssa testattavan käyttäjätarpeen mukaisilla tiedoilla.</p></div>
+        <div class="versio"><span>Versio</span><strong>v0.1 · pohja</strong></div>
+      </section>
+
+      <section class="ohjaimet" aria-label="Näkymän rajaus"><div class="ohjain"><label for="rajaus">Rajaa näkymää</label><select id="rajaus"><option>Kaikki</option></select></div><span class="ohjaimet-tila">Prototyypin rajaus</span></section>
+
+      <section class="mittarit" aria-label="Yhteenveto">
+        <div class="mittari"><span class="mittari-otsikko">Mittari 1</span><strong>00</strong><span class="mittari-kuvaus">Lyhyt kuvaus</span></div>
+        <div class="mittari"><span class="mittari-otsikko">Mittari 2</span><strong>00</strong><span class="mittari-kuvaus">Lyhyt kuvaus</span></div>
+        <div class="mittari"><span class="mittari-otsikko">Mittari 3</span><strong>00</strong><span class="mittari-kuvaus">Lyhyt kuvaus</span></div>
+        <div class="mittari"><span class="mittari-otsikko">Mittari 4</span><strong>00</strong><span class="mittari-kuvaus">Lyhyt kuvaus</span></div>
+      </section>
+
+      <section class="sisalto" aria-label="Päänäkymä">
+        <article class="paneeli"><div class="paneeli-otsikko"><div><h2>Tärkeimmät asiat</h2><p>Korvaa tällä käyttäjätarpeen kannalta olennaiset asiat.</p></div><span class="laskuri">00</span></div><div class="lista"><a class="lista-rivi" href="#tarkemmat"><span><strong>Esimerkkiasia 1</strong><span>Lyhyt kuvaus ja seuraava tehtävä.</span></span><span class="lista-rivi-aika">Tila</span></a><a class="lista-rivi" href="#tarkemmat"><span><strong>Esimerkkiasia 2</strong><span>Lyhyt kuvaus ja seuraava tehtävä.</span></span><span class="lista-rivi-aika">Tila</span></a><a class="lista-rivi" href="#tarkemmat"><span><strong>Esimerkkiasia 3</strong><span>Lyhyt kuvaus ja seuraava tehtävä.</span></span><span class="lista-rivi-aika">Tila</span></a></div></article>
+        <aside class="paneeli yhteenveto"><p class="osio-tunniste">Pikakatsaus</p><h2>Yhteenveto</h2><strong class="yhteenveto-luku">00<small>asiaa tarkasteltavana</small></strong><div class="yhteenveto-erittely"><div class="yhteenveto-rivi"><span>Valmis</span><strong>00</strong></div><div class="yhteenveto-rivi"><span>Kesken</span><strong>00</strong></div><div class="yhteenveto-rivi"><span>Epäselvä</span><strong>00</strong></div></div></aside>
+      </section>
+
+      <section class="kortit-alue" aria-labelledby="kortit-otsikko"><div class="kortit-otsikko"><p class="osio-tunniste">Seuraava taso</p><h2 id="kortit-otsikko">Vertailtavat kohteet</h2><p>Valitse kortti nähdäksesi tarkemmat tiedot.</p></div><div class="kortit"><a class="malli-kortti tila-ok" href="#tarkemmat"><span class="malli-kortti-tila">Normaali</span><h3>Esimerkkikohde 1</h3><p>Lyhyt, realistinen kuvaus kohteen tilanteesta.</p></a><a class="malli-kortti tila-varoitus" href="#tarkemmat"><span class="malli-kortti-tila">Tarkista</span><h3>Esimerkkikohde 2</h3><p>Lyhyt, realistinen kuvaus kohteen tilanteesta.</p></a><a class="malli-kortti tila-puuttuu" href="#tarkemmat"><span class="malli-kortti-tila">Puuttuu</span><h3>Esimerkkikohde 3</h3><p>Lyhyt, realistinen kuvaus kohteen tilanteesta.</p></a></div></section>
+
+      <section class="paneeli yksityiskohta" id="tarkemmat" aria-labelledby="yksityiskohta-otsikko"><div class="paneeli-otsikko"><div><h2 id="yksityiskohta-otsikko">Valittu kohde</h2><p>Korvaa tämä alue valitun kohteen tarkemmilla tiedoilla.</p></div><span class="laskuri">Luonnos</span></div><div class="yksityiskohta-sisalto"><div class="tieto"><span class="tieto-otsikko">Tila</span><strong>Esimerkki</strong><span>Lyhyt lisätieto</span></div><div class="tieto"><span class="tieto-otsikko">Määrä</span><strong>00</strong><span>Lyhyt lisätieto</span></div><div class="tieto"><span class="tieto-otsikko">Päivitetty</span><strong>24.8.</strong><span>Lyhyt lisätieto</span></div></div><div class="yksityiskohta-painike"><a class="painike" href="#alku">Takaisin näkymän alkuun</a></div></section>
+    </main>
+
+    <footer class="alapalkki"><span><strong>Prototyyppipohja v0.1</strong> · vaihda sisältö asiakastestin mukaan</span><div class="proton-dokumentit" aria-label="Proton dokumentit"><a class="paatospohja" href="./paatokset.md" target="_blank" rel="noreferrer"><strong>Käyttäjätarpeet</strong><span>paatokset.md</span><span aria-hidden="true">↗</span></a><a class="paatospohja" href="./dashboard-proto-havainnot.md" target="_blank" rel="noreferrer"><strong>Havainnot</strong><span>dashboard-proto-havainnot.md</span><span aria-hidden="true">↗</span></a><a class="paatospohja" href="./dashboard-proto-versiointi.md" target="_blank" rel="noreferrer"><strong>Versiointi</strong><span>dashboard-proto-versiointi.md</span><span aria-hidden="true">↗</span></a></div><span>Harja-kuori · ei tuotantointegraatiota</span></footer>
+  </div>
+</body>
+</html>

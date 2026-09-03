@@ -1,0 +1,2633 @@
+<!doctype html>
+<html lang="fi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Ylläpitourakoiden työpöydän staattinen prototyyppi">
+  <title>Ylläpitourakoiden työpöytä | Harja-prototyyppi</title>
+  <style>
+    :root {
+      --metsa: #173a32;
+      --metsa-tumma: #102a25;
+      --metsa-hento: #dbe8df;
+      --paperi: #f4f0e8;
+      --paperi-tumma: #e7e0d4;
+      --muste: #1c2b28;
+      --himmea: #64716c;
+      --oranssi: #e56b48;
+      --oranssi-hento: #f7d9ce;
+      --keltainen: #e7ad3c;
+      --keltainen-hento: #faedc9;
+      --sininen: #397b8a;
+      --sininen-hento: #d8edf0;
+      --vihrea: #4d9467;
+      --vihrea-hento: #dceedd;
+      --valkoinen: #fffdf8;
+      --viiva: rgba(28, 43, 40, 0.15);
+      --varjo: 0 20px 45px rgba(23, 58, 50, 0.10);
+      --pyorea: 5px;
+      --naytto: "Iowan Old Style", "Palatino Linotype", Georgia, serif;
+      --teksti: "Avenir Next", "Helvetica Neue", sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    * { box-sizing: border-box; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      margin: 0;
+      color: var(--muste);
+      background-color: var(--paperi);
+      background-image:
+        linear-gradient(rgba(23, 58, 50, 0.035) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(23, 58, 50, 0.035) 1px, transparent 1px),
+        linear-gradient(120deg, rgba(229, 107, 72, 0.07), transparent 34%);
+      background-size: 30px 30px, 30px 30px, 100% 100%;
+      font-family: var(--teksti);
+      font-size: 1rem;
+      line-height: 1.45;
+    }
+
+    button, select { font: inherit; }
+
+    button { cursor: pointer; }
+
+    button:focus-visible,
+    select:focus-visible,
+    a:focus-visible {
+      outline: 3px solid var(--keltainen);
+      outline-offset: 3px;
+    }
+
+    .visuaalisesti-piilossa {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .kehys {
+      width: min(100% - 3rem, 1440px);
+      margin: 0 auto;
+      padding: 1.25rem 0 4rem;
+    }
+
+    .ylapalkki {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 0.5rem 0 1.5rem;
+      border-bottom: 1px solid var(--viiva);
+    }
+
+    .brandi {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.75rem;
+      color: var(--metsa);
+      text-decoration: none;
+    }
+
+    .brandi-merkki {
+      display: grid;
+      width: 2.5rem;
+      height: 2.5rem;
+      place-items: center;
+      border: 2px solid var(--metsa);
+      border-radius: 50%;
+      background: var(--oranssi);
+      color: var(--valkoinen);
+      font-family: var(--naytto);
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .brandi-nimi {
+      display: block;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+    }
+
+    .brandi-alaotsikko {
+      display: block;
+      margin-top: 0.12rem;
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      letter-spacing: 0.11em;
+      text-transform: uppercase;
+    }
+
+    .kayttaja {
+      display: flex;
+      align-items: center;
+      gap: 0.85rem;
+      color: var(--himmea);
+      font-size: 0.8rem;
+    }
+
+    .kayttaja-tiedot { text-align: right; }
+
+    .kayttaja-nimi {
+      display: block;
+      color: var(--muste);
+      font-weight: 750;
+    }
+
+    .kayttaja-rooli {
+      display: block;
+      font-size: 0.72rem;
+    }
+
+    .kayttaja-merkki {
+      display: grid;
+      width: 2.6rem;
+      height: 2.6rem;
+      place-items: center;
+      border-radius: 50%;
+      background: var(--metsa);
+      color: var(--valkoinen);
+      font-family: var(--naytto);
+      font-size: 1.1rem;
+      font-weight: 700;
+    }
+
+    .esittely {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      align-items: end;
+      gap: 2rem;
+      padding: 4.5rem 0 2.4rem;
+    }
+
+    .esittely-teksti { max-width: 52rem; }
+
+    .ylapalkin-tunniste,
+    .osio-tunniste {
+      margin: 0 0 0.7rem;
+      color: var(--oranssi);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      font-weight: 700;
+      letter-spacing: 0.13em;
+      text-transform: uppercase;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+
+    h1 {
+      max-width: 15ch;
+      margin-bottom: 1.25rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 4.15rem;
+      font-weight: 700;
+      letter-spacing: -0.035em;
+      line-height: 0.98;
+    }
+
+    .esittely-kuvaus {
+      max-width: 42rem;
+      margin-bottom: 0;
+      color: var(--himmea);
+      font-size: 1.05rem;
+    }
+
+    .tilanneleima {
+      min-width: 15rem;
+      padding: 1rem 1.15rem;
+      border-left: 3px solid var(--oranssi);
+      background: rgba(255, 253, 248, 0.72);
+    }
+
+    .tilanneleima-teksti {
+      display: block;
+      margin-bottom: 0.45rem;
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.68rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tilanneleima strong {
+      display: block;
+      margin-bottom: 0.95rem;
+      font-family: var(--naytto);
+      font-size: 1.15rem;
+    }
+
+    .painike {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 2.7rem;
+      gap: 0.6rem;
+      padding: 0.65rem 1rem;
+      border: 1px solid transparent;
+      border-radius: var(--pyorea);
+      font-size: 0.82rem;
+      font-weight: 750;
+      letter-spacing: 0.015em;
+      transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+    }
+
+    .painike:hover { transform: translateY(-2px); }
+
+    .painike-tumma {
+      background: var(--metsa);
+      color: var(--valkoinen);
+      box-shadow: 0 8px 16px rgba(23, 58, 50, 0.18);
+    }
+
+    .painike-tumma:hover { background: var(--metsa-tumma); }
+
+    .painike-haalea {
+      border-color: var(--viiva);
+      background: var(--valkoinen);
+      color: var(--metsa);
+    }
+
+    .painike-haalea:hover { border-color: var(--metsa); }
+
+    .ohjaimet {
+      display: flex;
+      align-items: end;
+      flex-wrap: wrap;
+      gap: 1rem;
+      padding: 1rem 1.2rem;
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background: rgba(255, 253, 248, 0.82);
+    }
+
+    .ohjain {
+      display: grid;
+      gap: 0.35rem;
+      min-width: min(100%, 24rem);
+    }
+
+    .ohjain label {
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+    }
+
+    .valitsin {
+      min-height: 2.7rem;
+      padding: 0.55rem 2.6rem 0.55rem 0.8rem;
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background-color: var(--paperi);
+      color: var(--muste);
+      font-weight: 700;
+    }
+
+    .suodatuksen-tila {
+      margin-left: auto;
+      color: var(--himmea);
+      font-size: 0.8rem;
+    }
+
+    .paakatsaus {
+      display: grid;
+      grid-template-columns: minmax(0, 1.55fr) minmax(18rem, 0.65fr);
+      gap: 1.3rem;
+      margin-top: 1.35rem;
+    }
+
+    .paneeli {
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      box-shadow: var(--varjo);
+    }
+
+    .maaraajat-paneeli { overflow: hidden; }
+
+    .paneelin-otsikko {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 1.5rem;
+      padding: 1.35rem 1.45rem 1.05rem;
+      border-bottom: 1px solid var(--viiva);
+    }
+
+    .paneelin-otsikko h2,
+    .osio-otsikko h2 {
+      margin-bottom: 0.3rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 1.65rem;
+      line-height: 1.05;
+    }
+
+    .paneelin-otsikko p,
+    .osio-otsikko p {
+      margin-bottom: 0;
+      color: var(--himmea);
+      font-size: 0.84rem;
+    }
+
+    .lukumaara-merkki {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 2rem;
+      min-height: 2rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 999px;
+      background: var(--oranssi-hento);
+      color: #9e3d29;
+      font-family: var(--mono);
+      font-size: 0.72rem;
+      font-weight: 700;
+    }
+
+    .maaraajalista {
+      display: grid;
+      gap: 0;
+    }
+
+    .maaraaja {
+      display: grid;
+      grid-template-columns: auto minmax(0, 1fr) auto;
+      align-items: center;
+      gap: 1rem;
+      width: 100%;
+      padding: 1.05rem 1.45rem;
+      border: 0;
+      border-bottom: 1px solid var(--viiva);
+      background: transparent;
+      color: inherit;
+      text-align: left;
+      transition: background 160ms ease, padding 160ms ease;
+    }
+
+    .maaraaja:last-child { border-bottom: 0; }
+
+    .maaraaja:hover {
+      padding-left: 1.65rem;
+      background: #fff8ee;
+    }
+
+    .maaraaja-merkki {
+      display: grid;
+      width: 2.7rem;
+      height: 2.7rem;
+      place-items: center;
+      border: 1px solid currentColor;
+      border-radius: 50%;
+      font-family: var(--mono);
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.03em;
+    }
+
+    .maaraaja.myohassa .maaraaja-merkki { color: var(--oranssi); background: var(--oranssi-hento); }
+    .maaraaja.lahestyy .maaraaja-merkki { color: #a26b0d; background: var(--keltainen-hento); }
+
+    .maaraaja-sisalto { min-width: 0; }
+
+    .maaraaja-otsikko {
+      display: block;
+      margin-bottom: 0.22rem;
+      font-size: 0.95rem;
+      font-weight: 800;
+    }
+
+    .maaraaja-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.7rem;
+      color: var(--himmea);
+      font-size: 0.73rem;
+    }
+
+    .maaraaja-aika {
+      display: block;
+      margin-bottom: 0.2rem;
+      color: var(--muste);
+      font-family: var(--mono);
+      font-size: 0.75rem;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .maaraaja-nuoli {
+      color: var(--oranssi);
+      font-size: 1.4rem;
+      line-height: 1;
+    }
+
+    .tyhja-tila {
+      padding: 2rem 1.45rem;
+      color: var(--vihrea);
+      font-weight: 700;
+    }
+
+    .kooste {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      min-height: 100%;
+      padding: 1.45rem;
+      background: var(--metsa);
+      color: var(--valkoinen);
+    }
+
+    .kooste .osio-tunniste { color: #f5cb76; }
+    .kooste h2 { color: var(--valkoinen); }
+    .kooste p { color: rgba(255, 253, 248, 0.72); }
+
+    .kooste-luku {
+      display: flex;
+      align-items: baseline;
+      gap: 0.7rem;
+      margin: 2.25rem 0 1.2rem;
+    }
+
+    .kooste-luku strong {
+      font-family: var(--naytto);
+      font-size: 5.3rem;
+      font-weight: 700;
+      line-height: 0.85;
+    }
+
+    .kooste-luku span {
+      max-width: 8ch;
+      color: rgba(255, 253, 248, 0.74);
+      font-size: 0.84rem;
+      line-height: 1.15;
+    }
+
+    .kooste-erittely {
+      display: grid;
+      gap: 0.75rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid rgba(255, 253, 248, 0.2);
+    }
+
+    .kooste-rivi {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      color: rgba(255, 253, 248, 0.8);
+      font-size: 0.82rem;
+    }
+
+    .kooste-rivi strong { color: var(--valkoinen); }
+
+    .kooste-alatunniste {
+      display: flex;
+      align-items: center;
+      gap: 0.55rem;
+      margin-top: 2rem;
+      color: rgba(255, 253, 248, 0.66);
+      font-family: var(--mono);
+      font-size: 0.67rem;
+    }
+
+    .tila-piste {
+      display: inline-block;
+      width: 0.52rem;
+      height: 0.52rem;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .sisalto-alue {
+      margin-top: 4.5rem;
+    }
+
+    .osio-otsikko {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+    }
+
+    .osio-otsikko-oikea {
+      color: var(--himmea);
+      font-size: 0.8rem;
+      text-align: right;
+    }
+
+    .puutteet-lista {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.85rem;
+    }
+
+    .puute {
+      display: flex;
+      flex-direction: column;
+      min-height: 14rem;
+      padding: 1.1rem;
+      border: 1px solid var(--viiva);
+      border-top: 4px solid var(--oranssi);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      color: inherit;
+      text-align: left;
+      box-shadow: 0 10px 22px rgba(23, 58, 50, 0.06);
+      transition: transform 160ms ease, box-shadow 160ms ease;
+    }
+
+    .puute:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--varjo);
+    }
+
+    .puute.epaselva { border-top-color: var(--keltainen); }
+    .puute.seurattava { border-top-color: var(--sininen); }
+
+    .puute-ylatunniste {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-bottom: 1.15rem;
+    }
+
+    .tila-lappu {
+      display: inline-flex;
+      align-items: center;
+      min-height: 1.4rem;
+      padding: 0.22rem 0.42rem;
+      border-radius: 2px;
+      background: var(--oranssi-hento);
+      color: #9e3d29;
+      font-family: var(--mono);
+      font-size: 0.6rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+    }
+
+    .puute.epaselva .tila-lappu { background: var(--keltainen-hento); color: #855a0d; }
+    .puute.seurattava .tila-lappu { background: var(--sininen-hento); color: #24606b; }
+
+    .puute-urakka {
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.64rem;
+      font-weight: 700;
+    }
+
+    .puute h3 {
+      max-width: 17ch;
+      margin-bottom: 0.55rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 1.35rem;
+      line-height: 1.02;
+    }
+
+    .puute-kuvaus {
+      margin-bottom: auto;
+      color: var(--himmea);
+      font-size: 0.78rem;
+    }
+
+    .puute-alatunniste {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 1.35rem;
+      padding-top: 0.85rem;
+      border-top: 1px solid var(--viiva);
+    }
+
+    .puute-maara {
+      color: var(--metsa);
+      font-family: var(--naytto);
+      font-size: 1.65rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .puute-suhde {
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.67rem;
+    }
+
+    .puute-nuoli {
+      color: var(--oranssi);
+      font-size: 1.2rem;
+    }
+
+    .vertailu-paneeli {
+      overflow: hidden;
+      margin-top: 4.5rem;
+    }
+
+    .urakkakortit {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 1px;
+      background: var(--viiva);
+    }
+
+    .urakkakortti {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      min-height: 17.2rem;
+      padding: 1.3rem 1.35rem 1.15rem;
+      border: 0;
+      background: var(--valkoinen);
+      color: inherit;
+      text-align: left;
+      transition: background 160ms ease;
+    }
+
+    .urakkakortti:hover,
+    .urakkakortti.valittu { background: #fff8ee; }
+
+    .urakkakortti.valittu::before {
+      position: absolute;
+      top: 0;
+      right: 0;
+      left: 0;
+      height: 5px;
+      background: var(--oranssi);
+      content: "";
+    }
+
+    .urakkakortti-ylatunniste {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1.55rem;
+    }
+
+    .urakkakortti h3 {
+      margin-bottom: 0.25rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    .urakkakortti-alue {
+      color: var(--himmea);
+      font-size: 0.76rem;
+    }
+
+    .riskimerkki {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--oranssi);
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .riskimerkki.seurattava { color: #a26b0d; }
+    .riskimerkki.hyva { color: var(--vihrea); }
+
+    .urakkakortti-luvut {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      align-items: end;
+      gap: 0.85rem;
+      margin-top: auto;
+    }
+
+    .urakkakortti-valmiit {
+      color: var(--metsa);
+      font-family: var(--naytto);
+      font-size: 2.8rem;
+      font-weight: 700;
+      line-height: 0.82;
+    }
+
+    .urakkakortti-valmiit small {
+      display: block;
+      margin-top: 0.45rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.7rem;
+      font-weight: 500;
+      line-height: 1;
+    }
+
+    .edistymisen-alue { padding-bottom: 0.35rem; }
+
+    .edistymisen-otsikko {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.35rem;
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+    }
+
+    .edistymispalkki {
+      height: 0.46rem;
+      overflow: hidden;
+      border-radius: 999px;
+      background: var(--paperi-tumma);
+    }
+
+    .edistymispalkki span {
+      display: block;
+      height: 100%;
+      border-radius: inherit;
+      background: var(--metsa);
+    }
+
+    .urakkakortti-alatunniste {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      margin-top: 1.2rem;
+      padding-top: 0.8rem;
+      border-top: 1px solid var(--viiva);
+      color: var(--himmea);
+      font-size: 0.72rem;
+    }
+
+    .urakkakortti-alatunniste strong { color: var(--muste); }
+
+    .tarkemmat-paneeli {
+      display: grid;
+      grid-template-columns: minmax(0, 1.25fr) minmax(19rem, 0.75fr);
+      gap: 0;
+      overflow: hidden;
+      margin-top: 1.35rem;
+    }
+
+    .tarkemmat-otsikko {
+      grid-column: 1 / -1;
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.4rem 1.45rem 1.15rem;
+      border-bottom: 1px solid var(--viiva);
+    }
+
+    .tarkemmat-otsikko h2 {
+      margin-bottom: 0.35rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 1.85rem;
+      line-height: 1;
+    }
+
+    .tarkemmat-otsikko p {
+      margin-bottom: 0;
+      color: var(--himmea);
+      font-size: 0.82rem;
+    }
+
+    .tarkemmat-tilalappu {
+      padding: 0.36rem 0.55rem;
+      border-radius: 2px;
+      background: var(--oranssi-hento);
+      color: #9e3d29;
+      font-family: var(--mono);
+      font-size: 0.62rem;
+      font-weight: 800;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tarkemmat-sisalto {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 0.85rem;
+      padding: 1.35rem 1.45rem 1.5rem;
+    }
+
+    .tieto {
+      min-height: 7rem;
+      padding: 0.9rem;
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background: #fffaf2;
+    }
+
+    .tieto-otsikko {
+      display: block;
+      margin-bottom: 0.65rem;
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.63rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .tieto-arvo {
+      display: block;
+      color: var(--metsa);
+      font-family: var(--naytto);
+      font-size: 1.75rem;
+      font-weight: 700;
+      line-height: 0.95;
+    }
+
+    .tieto-lisa {
+      display: block;
+      margin-top: 0.45rem;
+      color: var(--himmea);
+      font-size: 0.72rem;
+    }
+
+    .tarkemmat-porautuminen {
+      padding: 1.35rem 1.45rem;
+      border-left: 1px solid var(--viiva);
+      background: var(--paperi);
+    }
+
+    .tarkemmat-porautuminen h3 {
+      margin-bottom: 0.35rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 1.3rem;
+    }
+
+    .tarkemmat-porautuminen p {
+      margin-bottom: 1rem;
+      color: var(--himmea);
+      font-size: 0.77rem;
+    }
+
+    .porautumislinkit {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .porautumislinkki {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.7rem;
+      width: 100%;
+      min-height: 2.5rem;
+      padding: 0.55rem 0.7rem;
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      color: var(--metsa);
+      font-size: 0.76rem;
+      font-weight: 750;
+      text-align: left;
+    }
+
+    .porautumislinkki:hover { border-color: var(--metsa); }
+
+    .porautumislinkki span:last-child {
+      color: var(--oranssi);
+      font-size: 1.1rem;
+    }
+
+    .alapalkki {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      margin-top: 3rem;
+      padding-top: 1.1rem;
+      border-top: 1px solid var(--viiva);
+      color: var(--himmea);
+      font-size: 0.72rem;
+    }
+
+    .alapalkki strong { color: var(--muste); }
+
+    .paatospohja {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      color: var(--metsa);
+      text-decoration: none;
+    }
+
+    .paatospohja:hover { text-decoration: underline; }
+    .paatospohja strong { color: var(--muste); }
+
+    .proton-dokumentit {
+      display: inline-flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 0.8rem;
+    }
+
+    .peite {
+      position: fixed;
+      z-index: 10;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 1.5rem;
+      background: rgba(16, 42, 37, 0.62);
+    }
+
+    .peite[hidden] { display: none; }
+
+    .porautumisikkuna {
+      position: relative;
+      width: min(100%, 39rem);
+      max-height: min(90vh, 45rem);
+      overflow: auto;
+      padding: 2rem;
+      border: 4px solid var(--metsa);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      box-shadow: 0 28px 80px rgba(16, 42, 37, 0.35);
+    }
+
+    .ikkunan-sulje {
+      position: absolute;
+      top: 0.8rem;
+      right: 0.8rem;
+      display: grid;
+      width: 2.2rem;
+      height: 2.2rem;
+      place-items: center;
+      border: 1px solid var(--viiva);
+      border-radius: 50%;
+      background: var(--paperi);
+      color: var(--metsa);
+      font-size: 1.35rem;
+      line-height: 1;
+    }
+
+    .ikkunan-tunniste {
+      margin-bottom: 0.65rem;
+      color: var(--oranssi);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+
+    .porautumisikkuna h2 {
+      max-width: 15ch;
+      margin-bottom: 0.65rem;
+      color: var(--metsa-tumma);
+      font-family: var(--naytto);
+      font-size: 2.25rem;
+      line-height: 0.98;
+    }
+
+    .ikkunan-kuvaus {
+      margin-bottom: 1.25rem;
+      color: var(--himmea);
+      font-size: 0.85rem;
+    }
+
+    .polku {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 1.2rem;
+      color: var(--himmea);
+      font-family: var(--mono);
+      font-size: 0.65rem;
+    }
+
+    .polku strong { color: var(--metsa); }
+
+    .ikkunan-lista {
+      display: grid;
+      gap: 0.65rem;
+      margin-bottom: 1.35rem;
+    }
+
+    .ikkunan-rivi {
+      display: flex;
+      align-items: start;
+      gap: 0.7rem;
+      padding: 0.8rem;
+      border-left: 3px solid var(--metsa);
+      background: var(--paperi);
+      font-size: 0.8rem;
+    }
+
+    .ikkunan-rivi::before {
+      flex: 0 0 auto;
+      color: var(--vihrea);
+      content: "✓";
+      font-weight: 800;
+    }
+
+    .ikkunan-alatunniste {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--viiva);
+    }
+
+    .ikkunan-alatunniste small {
+      color: var(--himmea);
+      font-size: 0.7rem;
+    }
+
+    .sisaan-ilmestyy {
+      animation: ilmestyy 600ms both;
+    }
+
+    .viive-1 { animation-delay: 70ms; }
+    .viive-2 { animation-delay: 140ms; }
+    .viive-3 { animation-delay: 210ms; }
+    .viive-4 { animation-delay: 280ms; }
+
+    @keyframes ilmestyy {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @media (max-width: 1050px) {
+      .puutteet-lista { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .urakkakortit { grid-template-columns: 1fr; }
+      .urakkakortti { min-height: 13rem; }
+    }
+
+    @media (max-width: 780px) {
+      .kehys { width: min(100% - 1.5rem, 40rem); padding-top: 0.6rem; }
+      .ylapalkki { align-items: start; }
+      .kayttaja { display: none; }
+      .esittely { grid-template-columns: 1fr; gap: 1.5rem; padding: 3rem 0 1.8rem; }
+      h1 { max-width: 10ch; font-size: 3.1rem; }
+      .tilanneleima { width: 100%; }
+      .paakatsaus,
+      .tarkemmat-paneeli { grid-template-columns: 1fr; }
+      .tarkemmat-porautuminen { border-top: 1px solid var(--viiva); border-left: 0; }
+      .tarkemmat-sisalto { grid-template-columns: 1fr 1fr; }
+      .suodatuksen-tila { width: 100%; margin-left: 0; }
+      .sisalto-alue,
+      .vertailu-paneeli { margin-top: 3rem; }
+      .osio-otsikko { align-items: start; flex-direction: column; gap: 0.4rem; }
+      .osio-otsikko-oikea { text-align: left; }
+    }
+
+    @media (max-width: 520px) {
+      .puutteet-lista { grid-template-columns: 1fr; }
+      .tarkemmat-sisalto { grid-template-columns: 1fr; }
+      .paneelin-otsikko,
+      .maaraaja,
+      .tarkemmat-otsikko { padding-right: 1rem; padding-left: 1rem; }
+      .maaraaja { grid-template-columns: auto minmax(0, 1fr); }
+      .maaraaja-aika { grid-column: 2; }
+      .maaraaja-nuoli { display: none; }
+      .porautumisikkuna { padding: 1.35rem; }
+      .ikkunan-alatunniste { align-items: stretch; flex-direction: column; }
+      .alapalkki { align-items: start; flex-direction: column; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        scroll-behavior: auto !important;
+        animation-duration: 1ms !important;
+        transition-duration: 1ms !important;
+      }
+    }
+
+    :root {
+      --metsa: #0066cc;
+      --metsa-tumma: #004d99;
+      --metsa-hento: #e0edf9;
+      --paperi: #fafafa;
+      --paperi-tumma: #f0f0f0;
+      --muste: #191919;
+      --himmea: #5c5c5c;
+      --oranssi: #de3618;
+      --oranssi-hento: #f8d7d1;
+      --keltainen: #ff9900;
+      --keltainen-hento: #fff0bf;
+      --sininen: #0066cc;
+      --sininen-hento: #e0edf9;
+      --vihrea: #27b427;
+      --vihrea-hento: #e0f5df;
+      --valkoinen: #ffffff;
+      --viiva: #d6d6d6;
+      --varjo: 0 1px 3px rgba(25, 25, 25, .12);
+      --pyorea: 4px;
+      --naytto: "Open Sans", Arial, sans-serif;
+      --teksti: "Open Sans", Arial, sans-serif;
+      --mono: "SFMono-Regular", Consolas, "Liberation Mono", monospace;
+    }
+
+    body {
+      color: var(--muste);
+      background: var(--paperi-tumma);
+      background-image: none;
+      font-family: var(--teksti);
+      font-size: 14px;
+    }
+
+    body::before {
+      display: block;
+      height: 4px;
+      background: var(--metsa);
+      content: "";
+    }
+
+    button:focus-visible,
+    select:focus-visible,
+    input:focus-visible,
+    a:focus-visible {
+      outline: 2px solid var(--metsa);
+      outline-offset: 2px;
+    }
+
+    .kehys {
+      width: min(100%, 1920px);
+      padding: 0 32px 3.5rem;
+    }
+
+    .ylapalkki {
+      position: relative;
+      left: 50%;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      min-height: 3.5rem;
+      width: 100vw;
+      margin: 0 0 0 -50vw;
+      padding: 0 1.5rem;
+      border: 0;
+      background: var(--vihrea-hento);
+    }
+
+    .brandi-alue {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .brandi {
+      gap: 0.45rem;
+      color: var(--muste);
+    }
+
+    .brandi-merkki {
+      position: relative;
+      display: block;
+      width: 1.65rem;
+      height: 1.65rem;
+      border: 0;
+      border-radius: 2px;
+      background: var(--keltainen);
+    }
+
+    .brandi-merkki::before {
+      position: absolute;
+      top: 0.3rem;
+      left: 0.38rem;
+      width: 0.12rem;
+      height: 1rem;
+      background: var(--valkoinen);
+      box-shadow: 0.35rem 0 var(--valkoinen), 0.7rem 0 var(--valkoinen);
+      content: "";
+    }
+
+    .brandi-merkki::after {
+      position: absolute;
+      right: 0.25rem;
+      bottom: 0.22rem;
+      left: 0.25rem;
+      border-top: 1px solid rgba(25, 25, 25, .25);
+      content: "";
+    }
+
+    .brandi-nimi {
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.25rem;
+      font-weight: 700;
+      letter-spacing: 0;
+      line-height: 1;
+    }
+
+    .brandi-alaotsikko {
+      margin-top: 0;
+      color: var(--metsa);
+      font-family: var(--teksti);
+      font-size: 0.62rem;
+      font-weight: 700;
+      letter-spacing: 0;
+    }
+
+    .harja-haku {
+      display: flex;
+      align-items: center;
+    }
+
+    .harja-haku input {
+      width: 9.5rem;
+      min-height: 2rem;
+      padding: 0 0.65rem;
+      border: 1px solid var(--himmea);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      color: var(--muste);
+      font-size: 0.75rem;
+    }
+
+    .paavalikko {
+      display: flex;
+      align-items: center;
+      gap: 0.15rem;
+      min-width: 0;
+      margin: 0;
+      padding: 0;
+    }
+
+    .paavalikko-linkki {
+      display: flex;
+      align-items: center;
+      min-height: 2.3rem;
+      padding: 0.55rem 0.7rem;
+      border-radius: var(--pyorea);
+      color: var(--metsa);
+      font-size: 0.78rem;
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .paavalikko-linkki:visited { color: var(--metsa); }
+
+    .paavalikko-linkki:hover,
+    .paavalikko-linkki:focus-visible {
+      background: var(--metsa-hento);
+      color: var(--metsa-tumma);
+      text-decoration: underline;
+    }
+
+    .paavalikko-linkki.aktiivinen,
+    .paavalikko-linkki.aktiivinen:visited {
+      background: var(--metsa);
+      color: var(--valkoinen);
+      font-weight: 700;
+      text-decoration: none;
+    }
+
+    .kayttaja {
+      display: flex;
+      flex: 0 0 auto;
+      align-items: center;
+      gap: 0.8rem;
+      margin-left: auto;
+      color: var(--metsa);
+      font-size: 0.75rem;
+    }
+
+    .ylapalkki-linkki {
+      color: var(--metsa);
+      text-decoration: none;
+      white-space: nowrap;
+    }
+
+    .ylapalkki-linkki:visited { color: var(--metsa); }
+    .ylapalkki-linkki:hover { text-decoration: underline; }
+
+    .kayttaja-merkki {
+      display: none;
+    }
+
+    .murupolku {
+      position: relative;
+      left: 50%;
+      display: block;
+      min-height: 4.5rem;
+      width: 100vw;
+      margin: 0 0 1.25rem -50vw;
+      padding: 0.9rem 0 1rem;
+      border-bottom: 1px solid var(--viiva);
+      background: var(--paperi);
+    }
+
+    .murupolku-sisalto {
+      display: flex;
+      align-items: end;
+      flex-wrap: wrap;
+      gap: 0.45rem 0.65rem;
+      width: 100%;
+      margin: 0;
+      padding: 15px 37px;
+    }
+
+    .murupolku-alku {
+      display: flex;
+      align-items: center;
+      gap: 0.45rem;
+      color: var(--himmea);
+      font-size: 0.8rem;
+    }
+
+    .murupolku-alku a {
+      color: var(--metsa);
+      text-decoration: none;
+    }
+
+    .murupolku-alku a:hover { text-decoration: underline; }
+
+    .murupolku-valittu {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      color: var(--himmea);
+      font-size: 0.8rem;
+      font-weight: 700;
+    }
+
+    .murupolku-valittu button {
+      min-height: 2.2rem;
+      padding: 0.35rem 0.55rem;
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      color: var(--muste);
+      font-size: 0.78rem;
+    }
+
+    .murupolku-valittu button:hover { border-color: var(--metsa); }
+
+    .murupolku-suodattimet {
+      display: flex;
+      align-items: end;
+      gap: 0.65rem;
+      margin-left: auto;
+    }
+
+    .murupolku-kentta {
+      display: grid;
+      gap: 0.2rem;
+    }
+
+    .murupolku-kentta label {
+      color: var(--himmea);
+      font-size: 0.7rem;
+      font-weight: 700;
+    }
+
+    .murupolku-kentta select {
+      min-width: 10rem;
+      min-height: 2.25rem;
+      padding: 0.35rem 2rem 0.35rem 0.65rem;
+      border: 1px solid var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      color: var(--muste);
+      font-size: 0.78rem;
+      font-weight: 400;
+    }
+
+    .esittely {
+      align-items: center;
+      gap: 1.5rem;
+      padding: 0.4rem 0 1.2rem;
+    }
+
+    .esittely-teksti { max-width: 52rem; }
+
+    .ylapalkin-tunniste,
+    .osio-tunniste {
+      margin-bottom: 0.35rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      max-width: 760px;
+      margin-bottom: 0.55rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.75rem;
+      font-weight: 600;
+      letter-spacing: 0;
+      line-height: 1.15;
+    }
+
+    .esittely-kuvaus {
+      max-width: 42rem;
+      color: var(--himmea);
+      font-size: 0.92rem;
+    }
+
+    .tilanneleima {
+      min-width: 15rem;
+      padding: 0.5rem 0 0.5rem 0.75rem;
+      border-left: 3px solid var(--metsa);
+      background: transparent;
+    }
+
+    .tilanneleima-teksti {
+      margin-bottom: 0.2rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.72rem;
+      letter-spacing: 0.05em;
+    }
+
+    .tilanneleima strong {
+      margin-bottom: 0.55rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 0.9rem;
+    }
+
+    .painike {
+      min-height: 2.25rem;
+      gap: 0.45rem;
+      padding: 0.45rem 0.75rem;
+      border-radius: var(--pyorea);
+      font-size: 0.78rem;
+      font-weight: 600;
+      letter-spacing: 0;
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    .painike:hover { transform: none; }
+
+    .painike-tumma {
+      background: var(--metsa);
+      color: var(--valkoinen);
+      box-shadow: none;
+    }
+
+    .painike-tumma:hover { background: var(--metsa-tumma); }
+
+    .painike-haalea {
+      border-color: var(--metsa);
+      background: var(--valkoinen);
+      color: var(--metsa-tumma);
+    }
+
+    .painike-haalea:hover {
+      border-color: var(--metsa-tumma);
+      background: var(--metsa-hento);
+    }
+
+    .ohjaimet {
+      gap: 0.75rem;
+      padding: 0.75rem 0.9rem;
+      border-color: var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      box-shadow: var(--varjo);
+    }
+
+    .ohjain { gap: 0.2rem; }
+
+    .ohjain label {
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.72rem;
+      letter-spacing: 0.03em;
+    }
+
+    .valitsin {
+      min-height: 2.25rem;
+      padding: 0.4rem 2.2rem 0.4rem 0.65rem;
+      border-color: var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      font-size: 0.8rem;
+      font-weight: 400;
+    }
+
+    .suodatuksen-tila {
+      color: var(--himmea);
+      font-size: 0.78rem;
+    }
+
+    .paakatsaus {
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .paneeli {
+      border-color: var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--valkoinen);
+      box-shadow: var(--varjo);
+    }
+
+    .paneelin-otsikko {
+      gap: 1rem;
+      padding: 1rem 1.1rem 0.8rem;
+      border-bottom-color: var(--viiva);
+    }
+
+    .paneelin-otsikko h2,
+    .osio-otsikko h2 {
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.25rem;
+      font-weight: 600;
+      line-height: 1.2;
+    }
+
+    .paneelin-otsikko p,
+    .osio-otsikko p {
+      color: var(--himmea);
+      font-size: 0.8rem;
+    }
+
+    .lukumaara-merkki {
+      min-width: 1.8rem;
+      min-height: 1.8rem;
+      border-radius: var(--pyorea);
+      background: var(--metsa-hento);
+      color: var(--metsa-tumma);
+      font-family: var(--teksti);
+      font-size: 0.75rem;
+    }
+
+    .maaraaja {
+      grid-template-columns: 4.8rem minmax(0, 1fr) auto auto;
+      gap: 0.8rem;
+      padding: 0.85rem 1.1rem;
+      border-bottom-color: var(--viiva);
+    }
+
+    .maaraaja:hover {
+      padding-left: 1.1rem;
+      background: var(--metsa-hento);
+    }
+
+    .maaraaja-merkki {
+      width: 4.8rem;
+      height: 1.8rem;
+      border: 0;
+      border-radius: var(--pyorea);
+      font-family: var(--teksti);
+      font-size: 0.62rem;
+    }
+
+    .maaraaja.myohassa .maaraaja-merkki {
+      color: var(--oranssi);
+      background: var(--oranssi-hento);
+    }
+
+    .maaraaja.lahestyy .maaraaja-merkki {
+      color: #8a5a00;
+      background: var(--keltainen-hento);
+    }
+
+    .maaraaja-otsikko { font-size: 0.86rem; }
+    .maaraaja-meta { font-size: 0.7rem; }
+
+    .maaraaja-aika {
+      margin-bottom: 0.1rem;
+      font-family: var(--teksti);
+      font-size: 0.72rem;
+    }
+
+    .maaraaja-nuoli { color: var(--metsa); font-size: 1.15rem; }
+
+    .tyhja-tila {
+      padding: 1.5rem 1.1rem;
+      color: var(--vihrea);
+      font-size: 0.82rem;
+    }
+
+    .kooste {
+      min-height: 100%;
+      padding: 1.1rem;
+      border-top: 4px solid var(--metsa);
+      background: var(--valkoinen);
+      color: var(--muste);
+    }
+
+    .kooste .osio-tunniste { color: var(--himmea); }
+    .kooste h2 { color: var(--muste); }
+    .kooste p { color: var(--himmea); }
+
+    .kooste-luku {
+      gap: 0.55rem;
+      margin: 1.4rem 0 1rem;
+    }
+
+    .kooste-luku strong {
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+
+    .kooste-luku span {
+      max-width: none;
+      color: var(--himmea);
+      font-size: 0.78rem;
+    }
+
+    .kooste-erittely {
+      gap: 0.55rem;
+      padding-top: 0.85rem;
+      border-top-color: var(--viiva);
+    }
+
+    .kooste-rivi {
+      color: var(--himmea);
+      font-size: 0.78rem;
+    }
+
+    .kooste-rivi strong { color: var(--muste); }
+
+    .kooste-alatunniste {
+      margin-top: 1.5rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.68rem;
+    }
+
+    .sisalto-alue,
+    .vertailu-paneeli { margin-top: 1.75rem; }
+
+    .osio-otsikko { margin-bottom: 0.8rem; }
+
+    .osio-otsikko-oikea {
+      color: var(--himmea);
+      font-size: 0.78rem;
+    }
+
+    .puutteet-lista {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 0.75rem;
+    }
+
+    .puute {
+      min-height: 13rem;
+      padding: 0.9rem;
+      border-color: var(--viiva);
+      border-top: 4px solid var(--oranssi);
+      border-radius: var(--pyorea);
+      box-shadow: var(--varjo);
+      transition: background 160ms ease, border-color 160ms ease;
+    }
+
+    .puute:hover {
+      transform: none;
+      background: var(--metsa-hento);
+      box-shadow: var(--varjo);
+    }
+
+    .puute.epaselva { border-top-color: var(--keltainen); }
+    .puute.seurattava { border-top-color: var(--metsa); }
+
+    .puute-ylatunniste { margin-bottom: 0.8rem; }
+
+    .tila-lappu {
+      min-height: 1.35rem;
+      padding: 0.2rem 0.4rem;
+      border-radius: 2px;
+      background: var(--oranssi-hento);
+      color: var(--oranssi);
+      font-family: var(--teksti);
+      font-size: 0.62rem;
+      letter-spacing: 0.03em;
+    }
+
+    .puute.epaselva .tila-lappu { background: var(--keltainen-hento); color: #8a5a00; }
+    .puute.seurattava .tila-lappu { background: var(--metsa-hento); color: var(--metsa-tumma); }
+
+    .puute-urakka {
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.68rem;
+    }
+
+    .puute h3 {
+      max-width: none;
+      margin-bottom: 0.45rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.05rem;
+      line-height: 1.25;
+    }
+
+    .puute-kuvaus { font-size: 0.76rem; }
+
+    .puute-alatunniste {
+      margin-top: 1rem;
+      padding-top: 0.7rem;
+      border-top-color: var(--viiva);
+    }
+
+    .puute-maara {
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.5rem;
+    }
+
+    .puute-suhde { font-family: var(--teksti); font-size: 0.66rem; }
+    .puute-nuoli { color: var(--metsa); font-size: 1.1rem; }
+
+    .vertailu-paneeli { margin-top: 1.75rem; }
+
+    .urakkakortit { background: var(--viiva); }
+
+    .urakkakortti {
+      min-height: 14rem;
+      padding: 1rem 1.1rem 0.9rem;
+      background: var(--valkoinen);
+    }
+
+    .urakkakortti:hover,
+    .urakkakortti.valittu { background: var(--metsa-hento); }
+
+    .urakkakortti.valittu::before {
+      height: 4px;
+      background: var(--metsa);
+    }
+
+    .urakkakortti-ylatunniste { margin-bottom: 1.1rem; }
+
+    .urakkakortti h3 {
+      margin-bottom: 0.2rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.1rem;
+      line-height: 1.2;
+    }
+
+    .urakkakortti-alue { color: var(--himmea); font-size: 0.7rem; }
+
+    .riskimerkki {
+      color: var(--oranssi);
+      font-family: var(--teksti);
+      font-size: 0.68rem;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .riskimerkki.seurattava { color: #8a5a00; }
+    .riskimerkki.hyva { color: var(--vihrea); }
+
+    .urakkakortti-valmiit {
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 2.2rem;
+    }
+
+    .urakkakortti-valmiit small {
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.66rem;
+    }
+
+    .edistymisen-otsikko {
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.66rem;
+    }
+
+    .edistymispalkki { height: 0.45rem; border-radius: 2px; background: var(--viiva); }
+    .edistymispalkki span { border-radius: 0; background: var(--metsa); }
+
+    .urakkakortti-alatunniste {
+      margin-top: 0.9rem;
+      padding-top: 0.65rem;
+      border-top-color: var(--viiva);
+      font-size: 0.7rem;
+    }
+
+    .urakkakortti-alatunniste strong { color: var(--muste); }
+
+    .tarkemmat-paneeli { margin-top: 1.75rem; }
+
+    .tarkemmat-otsikko {
+      gap: 1rem;
+      padding: 1rem 1.1rem 0.8rem;
+      border-bottom-color: var(--viiva);
+    }
+
+    .tarkemmat-otsikko h2 {
+      margin-bottom: 0.2rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.25rem;
+      line-height: 1.2;
+    }
+
+    .tarkemmat-otsikko p { font-size: 0.78rem; }
+
+    .tarkemmat-tilalappu {
+      padding: 0.3rem 0.45rem;
+      border-radius: 2px;
+      background: var(--oranssi-hento);
+      color: var(--oranssi);
+      font-family: var(--teksti);
+      font-size: 0.63rem;
+      letter-spacing: 0;
+      text-transform: none;
+    }
+
+    .tarkemmat-sisalto {
+      gap: 0.75rem;
+      padding: 1rem 1.1rem 1.1rem;
+    }
+
+    .tieto {
+      min-height: 6.5rem;
+      padding: 0.75rem;
+      border-color: var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--paperi);
+    }
+
+    .tieto-otsikko {
+      margin-bottom: 0.45rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.65rem;
+      letter-spacing: 0.05em;
+    }
+
+    .tieto-arvo {
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.55rem;
+    }
+
+    .tieto-lisa { color: var(--himmea); font-size: 0.68rem; }
+
+    .tarkemmat-porautuminen {
+      padding: 1rem 1.1rem;
+      border-left-color: var(--viiva);
+      background: var(--paperi-tumma);
+    }
+
+    .tarkemmat-porautuminen h3 {
+      margin-bottom: 0.25rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.05rem;
+    }
+
+    .tarkemmat-porautuminen p { font-size: 0.74rem; }
+
+    .porautumislinkit { gap: 0.45rem; }
+
+    .porautumislinkki {
+      min-height: 2.25rem;
+      padding: 0.45rem 0.6rem;
+      border-color: var(--viiva);
+      border-radius: var(--pyorea);
+      color: var(--metsa-tumma);
+      font-size: 0.74rem;
+    }
+
+    .porautumislinkki:hover {
+      border-color: var(--metsa);
+      background: var(--metsa-hento);
+    }
+
+    .porautumislinkki span:last-child { color: var(--metsa); font-size: 1rem; }
+
+    .alapalkki {
+      margin-top: 1.75rem;
+      padding-top: 0.8rem;
+      border-top-color: var(--viiva);
+      font-size: 0.68rem;
+    }
+
+    .alapalkki strong { color: var(--muste); }
+
+    .peite { background: rgba(25, 25, 25, .45); }
+
+    .porautumisikkuna {
+      width: min(100%, 39rem);
+      padding: 1.35rem;
+      border: 1px solid var(--viiva);
+      border-top: 4px solid var(--metsa);
+      border-radius: var(--pyorea);
+      box-shadow: 0 12px 30px rgba(25, 25, 25, .2);
+    }
+
+    .ikkunan-sulje {
+      top: 0.65rem;
+      right: 0.65rem;
+      width: 2rem;
+      height: 2rem;
+      border-color: var(--viiva);
+      border-radius: var(--pyorea);
+      background: var(--paperi-tumma);
+      color: var(--metsa-tumma);
+      font-size: 1.2rem;
+    }
+
+    .ikkunan-tunniste {
+      margin-bottom: 0.35rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.68rem;
+      letter-spacing: 0.06em;
+    }
+
+    .porautumisikkuna h2 {
+      max-width: none;
+      margin-bottom: 0.5rem;
+      color: var(--muste);
+      font-family: var(--naytto);
+      font-size: 1.6rem;
+      line-height: 1.15;
+    }
+
+    .ikkunan-kuvaus { margin-bottom: 1rem; font-size: 0.78rem; }
+
+    .polku {
+      margin-bottom: 1rem;
+      color: var(--himmea);
+      font-family: var(--teksti);
+      font-size: 0.68rem;
+    }
+
+    .polku strong { color: var(--metsa-tumma); }
+
+    .ikkunan-lista { gap: 0.5rem; margin-bottom: 1rem; }
+
+    .ikkunan-rivi {
+      gap: 0.6rem;
+      padding: 0.65rem;
+      border-left-color: var(--metsa);
+      background: var(--paperi-tumma);
+      font-size: 0.75rem;
+    }
+
+    .ikkunan-rivi::before { color: var(--vihrea); }
+
+    .ikkunan-alatunniste {
+      gap: 0.75rem;
+      padding-top: 0.8rem;
+      border-top-color: var(--viiva);
+    }
+
+    .ikkunan-alatunniste small { font-size: 0.68rem; }
+
+    @media (max-width: 1050px) {
+      .ylapalkki { flex-wrap: wrap; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+      .paavalikko { order: 3; flex: 1 1 100%; overflow-x: auto; }
+    }
+
+    @media (max-width: 780px) {
+      .kehys { width: 100%; padding: 0 1rem 2.5rem; }
+      .ylapalkki { margin-left: -50vw; padding-right: 1rem; padding-left: 1rem; }
+      .brandi-alue { gap: 0.65rem; }
+      .harja-haku input { width: 8.5rem; }
+      .kayttaja { gap: 0.45rem; }
+      .kayttaja .ylapalkki-linkki { display: none; }
+      .paavalikko { flex-wrap: wrap; overflow: visible; }
+      .murupolku { margin-left: -50vw; }
+      .murupolku-sisalto { align-items: flex-start; }
+      .murupolku-suodattimet { width: 100%; margin-left: 0; }
+      .murupolku-kentta { flex: 1 1 0; min-width: 0; }
+      .murupolku-kentta select { min-width: 0; width: 100%; }
+      .esittely { grid-template-columns: 1fr; gap: 0.75rem; padding-top: 0.25rem; }
+      h1 { font-size: 1.75rem; }
+      .tilanneleima { width: 100%; min-width: 0; }
+      .paakatsaus,
+      .tarkemmat-paneeli { grid-template-columns: 1fr; }
+      .tarkemmat-porautuminen { border-top: 1px solid var(--viiva); border-left: 0; }
+      .osio-otsikko { align-items: start; flex-direction: column; gap: 0.35rem; }
+      .osio-otsikko-oikea { text-align: left; }
+    }
+
+    @media (max-width: 520px) {
+      .brandi-alaotsikko { display: none; }
+      .brandi-nimi { font-size: 1.1rem; }
+      .harja-haku input { width: 7.5rem; }
+      .paavalikko-linkki { padding-right: 0.55rem; padding-left: 0.55rem; font-size: 0.72rem; }
+      .murupolku-suodattimet { flex-direction: column; align-items: stretch; }
+      .murupolku-kentta select { width: 100%; }
+      .puutteet-lista { grid-template-columns: 1fr; }
+      .tarkemmat-sisalto { grid-template-columns: 1fr; }
+      .paneelin-otsikko,
+      .maaraaja,
+      .tarkemmat-otsikko { padding-right: 0.9rem; padding-left: 0.9rem; }
+      .maaraaja { grid-template-columns: auto minmax(0, 1fr); }
+      .maaraaja-aika { grid-column: 2; }
+      .maaraaja-nuoli { display: none; }
+      .porautumisikkuna { padding: 1.1rem; }
+      .ikkunan-alatunniste { align-items: stretch; flex-direction: column; }
+      .alapalkki { align-items: start; flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="kehys">
+    <header class="ylapalkki">
+      <div class="brandi-alue">
+        <a class="brandi" href="#alku" aria-label="Harja, työpöydän alkuun">
+          <span class="brandi-merkki" aria-hidden="true"></span>
+          <span>
+            <span class="brandi-alaotsikko">TESTI</span>
+            <span class="brandi-nimi">HARJA</span>
+          </span>
+        </a>
+        <label class="harja-haku">
+          <span class="visuaalisesti-piilossa">Hae Harjasta</span>
+          <input type="search" placeholder="Hae Harjasta" aria-label="Hae Harjasta">
+        </label>
+      </div>
+      <nav class="paavalikko" aria-label="Päävalikko">
+        <a class="paavalikko-linkki" href="#alku">Urakat</a>
+        <a class="paavalikko-linkki" href="#alku">Raportit</a>
+        <a class="paavalikko-linkki" href="#alku">Tilannekuva</a>
+        <a class="paavalikko-linkki" href="#alku">Ilmoitukset</a>
+        <a class="paavalikko-linkki" href="#alku">Tienpidon luvat</a>
+        <a class="paavalikko-linkki aktiivinen" href="#alku" aria-current="page">Urakoiden tilanne</a>
+        <a class="paavalikko-linkki" href="#alku">Hallinta</a>
+      </nav>
+      <div class="kayttaja" aria-label="Kirjautunut käyttäjä">
+        <a class="ylapalkki-linkki" href="#info">ⓘ INFO</a>
+        <a class="ylapalkki-linkki" href="#palaute">♧ Palautetta!</a>
+        <a class="ylapalkki-linkki" href="#kayttaja">♙ Testi Käyttäjä</a>
+      </div>
+    </header>
+
+    <nav class="murupolku" aria-label="Murupolku ja rajaukset">
+      <div class="murupolku-sisalto">
+        <div class="murupolku-alku">
+          <a href="#alku">Koko maa</a>
+          <span aria-hidden="true">/</span>
+          <span>Elinvoimakeskus</span>
+          <span aria-hidden="true">/</span>
+          <span class="murupolku-valittu"><span>Valvonnan työpöytä</span><button type="button" aria-label="Avaa työpöytävalikko">⌄</button></span>
+        </div>
+        <div class="murupolku-suodattimet">
+          <div class="murupolku-kentta">
+            <label for="urakkatyyppi">Urakkatyyppi</label>
+            <select id="urakkatyyppi" aria-label="Urakkatyyppi">
+              <option>Hoito</option>
+            </select>
+          </div>
+          <div class="murupolku-kentta">
+            <label for="urakoitsija">Urakoitsija</label>
+            <select id="urakoitsija" aria-label="Urakoitsija">
+              <option>Kaikki</option>
+            </select>
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <main id="alku">
+      <section class="esittely sisaan-ilmestyy">
+        <div class="esittely-teksti">
+          <p class="ylapalkin-tunniste">Urakoiden tilanne / 24.8.2026</p>
+          <h1>Urakoiden tilanne</h1>
+          <p class="esittely-kuvaus">Ylläpitourakoiden avoimet asiat, määräajat ja eteneminen yhdessä näkymässä.</p>
+        </div>
+        <div class="tilanneleima">
+          <span class="tilanneleima-teksti">Tiedot päivitetty</span>
+          <strong id="paivitysleima">24.8.2026 · klo 09.42</strong>
+          <button class="painike painike-haalea" id="paivita-nakyma" type="button">Päivitä näkymä <span aria-hidden="true">↻</span></button>
+        </div>
+      </section>
+
+      <section class="ohjaimet sisaan-ilmestyy viive-1" aria-label="Työpöydän rajaus">
+        <div class="ohjain">
+          <label for="urakkasuodatin">Rajaa urakan mukaan</label>
+          <select class="valitsin" id="urakkasuodatin">
+            <option value="kaikki">Kaikki vastuullani olevat urakat</option>
+            <option value="urakka-a">Urakka A · pohjoinen</option>
+            <option value="urakka-b">Urakka B · länsi</option>
+            <option value="urakka-c">Urakka C · etelä</option>
+          </select>
+        </div>
+        <button class="painike painike-haalea" id="tyhjenna-suodatin" type="button">Näytä kaikki</button>
+        <div class="suodatuksen-tila" id="suodatuksen-tila" aria-live="polite">Näytetään 3 urakkaa ja niiden avoimet asiat</div>
+      </section>
+
+      <section class="paakatsaus sisaan-ilmestyy viive-2" aria-labelledby="maaraajat-otsikko">
+        <div class="paneeli maaraajat-paneeli">
+          <div class="paneelin-otsikko">
+            <div>
+              <p class="osio-tunniste">01 / Määräajat</p>
+              <h2 id="maaraajat-otsikko">Tänään tärkeintä</h2>
+              <p>Valmiit asiat on jätetty pois. Näissä tarvitaan seuraava teko.</p>
+            </div>
+            <span class="lukumaara-merkki" id="maaraajat-lukumaara">4</span>
+          </div>
+          <div class="maaraajalista" id="maaraajalista"></div>
+          <div class="tyhja-tila" id="maaraajat-tyhja" hidden>Ei avoimia määräaikoja valitulle urakalle.</div>
+        </div>
+
+        <aside class="paneeli kooste" aria-labelledby="kooste-otsikko">
+          <div>
+            <p class="osio-tunniste">Pikakatsaus</p>
+            <h2 id="kooste-otsikko">Avoimet asiat</h2>
+            <div class="kooste-luku">
+              <strong id="avoimet-lukumaara">8</strong>
+              <span>asiaa vaatii huomiota</span>
+            </div>
+            <div class="kooste-erittely">
+              <div class="kooste-rivi"><span>Myöhässä</span><strong id="myohassa-lukumaara">2</strong></div>
+              <div class="kooste-rivi"><span>Lähestyy</span><strong id="lahestyy-lukumaara">2</strong></div>
+              <div class="kooste-rivi"><span>Epäselvä tieto</span><strong id="epaselva-lukumaara">1</strong></div>
+            </div>
+          </div>
+          <div class="kooste-alatunniste"><span class="tila-piste" aria-hidden="true"></span><span>Tilanne on rajattu käyttäjän omiin urakoihin</span></div>
+        </aside>
+      </section>
+
+      <section class="sisalto-alue sisaan-ilmestyy viive-3" aria-labelledby="puutteet-otsikko">
+        <div class="osio-otsikko">
+          <div>
+            <p class="osio-tunniste">02 / Puutteet</p>
+            <h2 id="puutteet-otsikko">Mikä pysäyttää etenemisen?</h2>
+            <p>Poikkeamat on koottu yhteen. Avaa kortti nähdäksesi oletetun seuraavan paikan.</p>
+          </div>
+          <div class="osio-otsikko-oikea" id="puutteet-yhteenveto">8 avointa puutetta · 3 urakkaa</div>
+        </div>
+        <div class="puutteet-lista" id="puutteet-lista"></div>
+        <div class="tyhja-tila" id="puutteet-tyhja" hidden>Valitulla urakalla ei ole tässä näkymässä avoimia puutteita.</div>
+      </section>
+
+      <section class="paneeli vertailu-paneeli sisaan-ilmestyy viive-4" aria-labelledby="vertailu-otsikko">
+        <div class="paneelin-otsikko">
+          <div>
+            <p class="osio-tunniste">03 / Vertailu</p>
+            <h2 id="vertailu-otsikko">Urakat rinnakkain</h2>
+            <p>Valitse urakka nähdäksesi sen tarkemmat tiedot alempana.</p>
+          </div>
+          <span class="lukumaara-merkki" id="urakat-lukumaara">3</span>
+        </div>
+        <div class="urakkakortit" id="urakkakortit"></div>
+      </section>
+
+      <section class="paneeli tarkemmat-paneeli" aria-labelledby="tarkemmat-otsikko">
+        <div class="tarkemmat-otsikko">
+          <div>
+            <p class="osio-tunniste">04 / Valittu urakka</p>
+            <h2 id="tarkemmat-otsikko">Urakka A</h2>
+            <p id="tarkemmat-alaotsikko">Päällystysurakka · pohjoinen hallintayksikkö</p>
+          </div>
+          <span class="tarkemmat-tilalappu" id="tarkemmat-tilalappu">Toimenpiteitä nyt</span>
+        </div>
+        <div class="tarkemmat-sisalto" id="tarkemmat-sisalto"></div>
+        <div class="tarkemmat-porautuminen">
+          <p class="osio-tunniste">05 / Porautuminen</p>
+          <h3>Seuraava näkymä</h3>
+          <p>Prototyypissä tämä avaa simuloidun jatkonäkymän. Tuotantoreitti päätetään myöhemmin.</p>
+          <div class="porautumislinkit" id="porautumislinkit"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="alapalkki">
+      <span><strong>Dashboard-proto v0.1</strong> · päivitetty 24.8.2026</span>
+      <div class="proton-dokumentit" aria-label="Proton dokumentit">
+        <a class="paatospohja" href="./paatokset.md" target="_blank" rel="noreferrer" aria-label="Avaa proton käyttäjätarpeet Markdown-tiedostona"><strong>Käyttäjätarpeet</strong><span>paatokset.md</span><span aria-hidden="true">↗</span></a>
+        <a class="paatospohja" href="./dashboard-proto-havainnot.md" target="_blank" rel="noreferrer" aria-label="Avaa proton havainnot Markdown-tiedostona"><strong>Havainnot</strong><span>dashboard-proto-havainnot.md</span><span aria-hidden="true">↗</span></a>
+        <a class="paatospohja" href="./dashboard-proto-versiointi.md" target="_blank" rel="noreferrer" aria-label="Avaa proton versiointi Markdown-tiedostona"><strong>Versiointi</strong><span>dashboard-proto-versiointi.md</span><span aria-hidden="true">↗</span></a>
+      </div>
+      <span>Staattinen prototyyppi · esimerkkidata ei ole tuotantodataa</span>
+    </footer>
+  </div>
+
+  <div class="peite" id="porautumispeite" hidden>
+    <section class="porautumisikkuna" role="dialog" aria-modal="true" aria-labelledby="ikkunan-otsikko">
+      <button class="ikkunan-sulje" id="sulje-ikkuna" type="button" aria-label="Sulje jatkonäkymä">×</button>
+      <p class="ikkunan-tunniste">Simuloitu jatkonäkymä</p>
+      <h2 id="ikkunan-otsikko">Paikkauskohteet</h2>
+      <p class="ikkunan-kuvaus" id="ikkunan-kuvaus">Tässä näkymässä käyttäjä pääsisi tarkastelemaan asian tarkempia rivejä.</p>
+      <div class="polku" id="ikkunan-polku"><span>Työpöytä</span><span aria-hidden="true">/</span><strong>Paikkauskohteet</strong></div>
+      <div class="ikkunan-lista" id="ikkunan-lista"></div>
+      <div class="ikkunan-alatunniste">
+        <small id="ikkunan-urakka">Urakka A · rajaus säilyy</small>
+        <button class="painike painike-tumma" id="palaa-tyopoydalle" type="button">Takaisin työpöydälle</button>
+      </div>
+    </section>
+  </div>
+
+  <script>
+    (() => {
+      const urakat = [
+        {
+          tunniste: "urakka-a",
+          nimi: "Urakka A",
+          alue: "pohjoinen",
+          kuvaus: "Päällystysurakka · pohjoinen hallintayksikkö",
+          kohteet: 42,
+          valmiit: 29,
+          puutteet: 7,
+          kattavuus: 69,
+          tila: "Toimenpiteitä nyt",
+          riskiluokka: "kriittinen",
+          pot: "3 odottaa lähettämistä",
+          raportointi: "Kesken",
+          viimeisin: "2 h sitten"
+        },
+        {
+          tunniste: "urakka-b",
+          nimi: "Urakka B",
+          alue: "länsi",
+          kuvaus: "Päällystysurakka · läntinen hallintayksikkö",
+          kohteet: 31,
+          valmiit: 25,
+          puutteet: 3,
+          kattavuus: 81,
+          tila: "Seurattava",
+          riskiluokka: "seurattava",
+          pot: "1 käsittelemättä",
+          raportointi: "Kesken",
+          viimeisin: "eilen"
+        },
+        {
+          tunniste: "urakka-c",
+          nimi: "Urakka C",
+          alue: "etelä",
+          kuvaus: "Päällystysurakka · eteläinen hallintayksikkö",
+          kohteet: 58,
+          valmiit: 54,
+          puutteet: 1,
+          kattavuus: 94,
+          tila: "Hyvässä suunnassa",
+          riskiluokka: "hyva",
+          pot: "Kaikki lähetetty",
+          raportointi: "Valmis",
+          viimeisin: "perjantaina"
+        }
+      ];
+
+      const maaraajat = [
+        {
+          tunniste: "maaraaja-1",
+          urakka: "urakka-a",
+          vakavuus: "myohassa",
+          otsikko: "POT-lomakkeet lähettämättä YHA:an",
+          kohde: "POT-lomakkeet",
+          paiva: "18.8.2026",
+          aika: "6 päivää myöhässä",
+          kuvaus: "3 kohdetta odottaa lähetystä"
+        },
+        {
+          tunniste: "maaraaja-2",
+          urakka: "urakka-b",
+          vakavuus: "lahestyy",
+          otsikko: "Paikkauskohteiden toteumat",
+          kohde: "Paikkauskohteet",
+          paiva: "27.8.2026",
+          aika: "3 päivää",
+          kuvaus: "8 kohdetta on vielä kesken"
+        },
+        {
+          tunniste: "maaraaja-3",
+          urakka: "urakka-a",
+          vakavuus: "myohassa",
+          otsikko: "Toteutuneiden hintojen täydentäminen",
+          kohde: "Kustannustiedot",
+          paiva: "22.8.2026",
+          aika: "2 päivää myöhässä",
+          kuvaus: "4 kohteen hinta puuttuu"
+        },
+        {
+          tunniste: "maaraaja-4",
+          urakka: "urakka-c",
+          vakavuus: "lahestyy",
+          otsikko: "POT-lomakkeiden tarkistus",
+          kohde: "POT-lomakkeet",
+          paiva: "29.8.2026",
+          aika: "5 päivää",
+          kuvaus: "1 lomake on käsittelemättä"
+        }
+      ];
+
+      const puutteet = [
+        {
+          tunniste: "puute-1",
+          urakka: "urakka-a",
+          luokka: "kriittinen",
+          lappu: "Välitön",
+          otsikko: "POT-lomakkeita lähettämättä",
+          kuvaus: "Valmiiksi merkityt lomakkeet eivät ole lähteneet YHA:an.",
+          maara: "3",
+          suhde: "3 / 42 kohdetta",
+          kohde: "POT-lomakkeet",
+          toiminta: ["Tarkista lähetysjonossa olevat lomakkeet", "Rajaus säilyy urakassa A", "Varsinaista lähetystä ei tehdä prototyypissä"]
+        },
+        {
+          tunniste: "puute-2",
+          urakka: "urakka-a",
+          luokka: "kriittinen",
+          lappu: "Puuttuu",
+          otsikko: "Toteumat puuttuvat",
+          kuvaus: "Osa kohteista on merkitty tehdyiksi ilman toteumariviä.",
+          maara: "4",
+          suhde: "4 / 42 kohdetta",
+          kohde: "Paikkauskohteet",
+          toiminta: ["Avaa puuttuvien toteumien suodatus", "Näytä vain urakan A kohteet", "Toteumarivien täydentäminen tehdään jatkonäkymässä"]
+        },
+        {
+          tunniste: "puute-3",
+          urakka: "urakka-b",
+          luokka: "seurattava",
+          lappu: "Kesken",
+          otsikko: "Kohteita ei ole merkitty valmiiksi",
+          kuvaus: "Raportointi on aloitettu, mutta tila puuttuu kolmelta kohteelta.",
+          maara: "3",
+          suhde: "3 / 31 kohdetta",
+          kohde: "Paikkauskohteet",
+          toiminta: ["Avaa keskeneräiset kohteet", "Rajaus säilyy urakassa B", "Valmistumisen merkitseminen tehdään jatkonäkymässä"]
+        },
+        {
+          tunniste: "puute-4",
+          urakka: "urakka-c",
+          luokka: "epaselva",
+          lappu: "Tarkista",
+          otsikko: "Kustannustieto epäselvä",
+          kuvaus: "Yhden kohteen hinta on olemassa, mutta sen lähde vaatii tarkistuksen.",
+          maara: "1",
+          suhde: "1 / 58 kohdetta",
+          kohde: "Kustannustiedot",
+          toiminta: ["Avaa kustannustietojen tarkistus", "Rajaus säilyy urakassa C", "Prototyyppi näyttää tilanteen epäselvänä, ei ratkaise sitä"]
+        }
+      ];
+
+      const tila = {
+        suodatin: "kaikki",
+        valittuUrakka: "urakka-a",
+        viimeisinPorautuminen: null
+      };
+
+      const elementit = {
+        suodatin: document.getElementById("urakkasuodatin"),
+        suodatuksenTila: document.getElementById("suodatuksen-tila"),
+        maaraajaLista: document.getElementById("maaraajalista"),
+        maaraajaTyhja: document.getElementById("maaraajat-tyhja"),
+        maaraajaLukumaara: document.getElementById("maaraajat-lukumaara"),
+        puuteLista: document.getElementById("puutteet-lista"),
+        puuteTyhja: document.getElementById("puutteet-tyhja"),
+        puuteYhteenveto: document.getElementById("puutteet-yhteenveto"),
+        urakkaKortit: document.getElementById("urakkakortit"),
+        urakkaLukumaara: document.getElementById("urakat-lukumaara"),
+        avoimetLukumaara: document.getElementById("avoimet-lukumaara"),
+        myohassaLukumaara: document.getElementById("myohassa-lukumaara"),
+        lahestyyLukumaara: document.getElementById("lahestyy-lukumaara"),
+        epaselvaLukumaara: document.getElementById("epaselva-lukumaara"),
+        tarkemmatOtsikko: document.getElementById("tarkemmat-otsikko"),
+        tarkemmatAlaotsikko: document.getElementById("tarkemmat-alaotsikko"),
+        tarkemmatTilalappu: document.getElementById("tarkemmat-tilalappu"),
+        tarkemmatSisalto: document.getElementById("tarkemmat-sisalto"),
+        porautumisLinkit: document.getElementById("porautumislinkit"),
+        paivitysleima: document.getElementById("paivitysleima"),
+        peite: document.getElementById("porautumispeite"),
+        ikkunanOtsikko: document.getElementById("ikkunan-otsikko"),
+        ikkunanKuvaus: document.getElementById("ikkunan-kuvaus"),
+        ikkunanPolku: document.getElementById("ikkunan-polku"),
+        ikkunanLista: document.getElementById("ikkunan-lista"),
+        ikkunanUrakka: document.getElementById("ikkunan-urakka"),
+        suljeIkkuna: document.getElementById("sulje-ikkuna")
+      };
+
+      const haeUrakka = (tunniste) => urakat.find((urakka) => urakka.tunniste === tunniste);
+      const haePuutteet = (tunniste) => puutteet.filter((puute) => puute.urakka === tunniste);
+      const haeMaarajat = (tunniste) => maaraajat.filter((maaraaja) => maaraaja.urakka === tunniste);
+      const suodatetutUrakat = () => tila.suodatin === "kaikki" ? urakat : urakat.filter((urakka) => urakka.tunniste === tila.suodatin);
+      const suodatetutPuutteet = () => {
+        const tunnisteet = new Set(suodatetutUrakat().map((urakka) => urakka.tunniste));
+        return puutteet.filter((puute) => tunnisteet.has(puute.urakka));
+      };
+      const suodatetutMaarajat = () => {
+        const tunnisteet = new Set(suodatetutUrakat().map((urakka) => urakka.tunniste));
+        return maaraajat.filter((maaraaja) => tunnisteet.has(maaraaja.urakka));
+      };
+
+      const turvallinenTeksti = (teksti) => String(teksti)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+      const piirraMaaraajat = () => {
+        const nakyvat = suodatetutMaarajat();
+        elementit.maaraajaLista.innerHTML = nakyvat.map((maaraaja) => {
+          const urakka = haeUrakka(maaraaja.urakka);
+          const tunniste = maaraaja.vakavuus === "myohassa" ? "MYÖHÄSSÄ" : "LÄHESTYY";
+          return `
+            <button class="maaraaja ${maaraaja.vakavuus}" type="button" data-maaraajatunniste="${maaraaja.tunniste}">
+              <span class="maaraaja-merkki" aria-hidden="true">${tunniste}</span>
+              <span class="maaraaja-sisalto">
+                <span class="maaraaja-otsikko">${turvallinenTeksti(maaraaja.otsikko)}</span>
+                <span class="maaraaja-meta"><span>${turvallinenTeksti(urakka.nimi)}</span><span>·</span><span>${turvallinenTeksti(maaraaja.kohde)}</span></span>
+              </span>
+              <span>
+                <span class="maaraaja-aika">${turvallinenTeksti(maaraaja.aika)}</span>
+                <span class="maaraaja-meta">Määräpäivä ${turvallinenTeksti(maaraaja.paiva)}</span>
+              </span>
+              <span class="maaraaja-nuoli" aria-hidden="true">↗</span>
+            </button>`;
+        }).join("");
+        elementit.maaraajaLukumaara.textContent = nakyvat.length;
+        elementit.maaraajaTyhja.hidden = nakyvat.length > 0;
+      };
+
+      const piirraKooste = () => {
+        const nakyvatPuutteet = suodatetutPuutteet();
+        const nakyvatMaarajat = suodatetutMaarajat();
+        const myohassa = nakyvatMaarajat.filter((maaraaja) => maaraaja.vakavuus === "myohassa").length;
+        const lahestyy = nakyvatMaarajat.filter((maaraaja) => maaraaja.vakavuus === "lahestyy").length;
+        const epaselvat = nakyvatPuutteet.filter((puute) => puute.luokka === "epaselva").length;
+        elementit.avoimetLukumaara.textContent = nakyvatPuutteet.reduce((summa, puute) => summa + Number(puute.maara), 0);
+        elementit.myohassaLukumaara.textContent = myohassa;
+        elementit.lahestyyLukumaara.textContent = lahestyy;
+        elementit.epaselvaLukumaara.textContent = epaselvat;
+        elementit.puuteYhteenveto.textContent = `${nakyvatPuutteet.reduce((summa, puute) => summa + Number(puute.maara), 0)} avointa puutetta · ${suodatetutUrakat().length} urakkaa`;
+      };
+
+      const piirraPuutteet = () => {
+        const nakyvat = suodatetutPuutteet();
+        elementit.puuteLista.innerHTML = nakyvat.map((puute) => {
+          const urakka = haeUrakka(puute.urakka);
+          return `
+            <button class="puute ${puute.luokka}" type="button" data-puutetunniste="${puute.tunniste}">
+              <span class="puute-ylatunniste"><span class="tila-lappu">${turvallinenTeksti(puute.lappu)}</span><span class="puute-urakka">${turvallinenTeksti(urakka.nimi)}</span></span>
+              <h3>${turvallinenTeksti(puute.otsikko)}</h3>
+              <span class="puute-kuvaus">${turvallinenTeksti(puute.kuvaus)}</span>
+              <span class="puute-alatunniste"><span><span class="puute-maara">${turvallinenTeksti(puute.maara)}</span><span class="puute-suhde"> ${turvallinenTeksti(puute.suhde)}</span></span><span class="puute-nuoli" aria-hidden="true">↗</span></span>
+            </button>`;
+        }).join("");
+        elementit.puuteTyhja.hidden = nakyvat.length > 0;
+      };
+
+      const riskimerkki = (urakka) => {
+        const teksti = urakka.riskiluokka === "kriittinen" ? "Toimenpiteitä nyt" : urakka.riskiluokka === "seurattava" ? "Seurattava" : "Hyvässä suunnassa";
+        return `<span class="riskimerkki ${urakka.riskiluokka}"><span class="tila-piste" aria-hidden="true"></span>${teksti}</span>`;
+      };
+
+      const piirraUrakat = () => {
+        const nakyvat = suodatetutUrakat();
+        elementit.urakkaKortit.innerHTML = nakyvat.map((urakka) => {
+          const valittu = tila.valittuUrakka === urakka.tunniste;
+          const prosentti = Math.round((urakka.valmiit / urakka.kohteet) * 100);
+          return `
+            <button class="urakkakortti ${valittu ? "valittu" : ""}" type="button" aria-pressed="${valittu}" data-urakkatunniste="${urakka.tunniste}">
+              <span class="urakkakortti-ylatunniste"><span><span class="visuaalisesti-piilossa">Valitse </span><h3>${turvallinenTeksti(urakka.nimi)}</h3><span class="urakkakortti-alue">${turvallinenTeksti(urakka.alue)} · ${urakka.kohteet} kohdetta</span></span>${riskimerkki(urakka)}</span>
+              <span class="urakkakortti-luvut"><span class="urakkakortti-valmiit">${urakka.valmiit}<small>valmista / ${urakka.kohteet}</small></span><span class="edistymisen-alue"><span class="edistymisen-otsikko"><span>Raportointi</span><strong>${prosentti} %</strong></span><span class="edistymispalkki" role="progressbar" aria-label="${turvallinenTeksti(urakka.nimi)} raportoinnin eteneminen" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${prosentti}"><span style="width: ${prosentti}%"></span></span></span></span>
+              <span class="urakkakortti-alatunniste"><span>${turvallinenTeksti(urakka.raportointi)}</span><strong>${urakka.puutteet} puutetta</strong></span>
+            </button>`;
+        }).join("");
+        elementit.urakkaLukumaara.textContent = nakyvat.length;
+      };
+
+      const piirraTarkemmatTiedot = () => {
+        const urakka = haeUrakka(tila.valittuUrakka) || suodatetutUrakat()[0] || urakat[0];
+        tila.valittuUrakka = urakka.tunniste;
+        elementit.tarkemmatOtsikko.textContent = urakka.nimi;
+        elementit.tarkemmatAlaotsikko.textContent = urakka.kuvaus;
+        elementit.tarkemmatTilalappu.textContent = urakka.tila;
+        elementit.tarkemmatSisalto.innerHTML = `
+          <div class="tieto"><span class="tieto-otsikko">Kohteet yhteensä</span><strong class="tieto-arvo">${urakka.kohteet}</strong><span class="tieto-lisa">${urakka.valmiit} merkitty valmiiksi</span></div>
+          <div class="tieto"><span class="tieto-otsikko">Puutteet</span><strong class="tieto-arvo">${urakka.puutteet}</strong><span class="tieto-lisa">Avaa puutekortit yläpuolelta</span></div>
+          <div class="tieto"><span class="tieto-otsikko">Kustannustieto</span><strong class="tieto-arvo">${urakka.kattavuus} %</strong><span class="tieto-lisa">Toteutunut hinta kirjattu</span></div>
+          <div class="tieto"><span class="tieto-otsikko">POT-tilanne</span><strong class="tieto-arvo" style="font-size: 1.22rem">${turvallinenTeksti(urakka.pot)}</strong><span class="tieto-lisa">Viimeisin muutos ${turvallinenTeksti(urakka.viimeisin)}</span></div>`;
+        elementit.porautumisLinkit.innerHTML = [
+          { otsikko: "Paikkauskohteet", kohde: "Paikkauskohteet", tunniste: "paikkaus" },
+          { otsikko: "POT-lomakkeet", kohde: "POT-lomakkeet", tunniste: "pot" },
+          { otsikko: "Kustannustiedot", kohde: "Kustannustiedot", tunniste: "kustannukset" }
+        ].map((linkki) => `<button class="porautumislinkki" type="button" data-porautumistunniste="${linkki.tunniste}"><span>${linkki.otsikko}</span><span aria-hidden="true">↗</span></button>`).join("");
+      };
+
+      const paivitaSuodatuksenTila = () => {
+        const urakkamaara = suodatetutUrakat().length;
+        const puutemaara = suodatetutPuutteet().reduce((summa, puute) => summa + Number(puute.maara), 0);
+        elementit.suodatuksenTila.textContent = tila.suodatin === "kaikki"
+          ? `Näytetään ${urakkamaara} urakkaa ja niiden avoimet asiat`
+          : `Näytetään ${urakkamaara} urakka ja ${puutemaara} avointa puutetta`;
+      };
+
+      const piirra = () => {
+        const valittavissa = suodatetutUrakat();
+        if (!valittavissa.some((urakka) => urakka.tunniste === tila.valittuUrakka)) {
+          tila.valittuUrakka = valittavissa[0] ? valittavissa[0].tunniste : urakat[0].tunniste;
+        }
+        piirraMaaraajat();
+        piirraKooste();
+        piirraPuutteet();
+        piirraUrakat();
+        piirraTarkemmatTiedot();
+        paivitaSuodatuksenTila();
+      };
+
+      const avaaPorautuminen = (otsikko, kohde, kuvaus, rivit) => {
+        const urakka = haeUrakka(tila.valittuUrakka);
+        tila.viimeisinPorautuminen = kohde;
+        elementit.ikkunanOtsikko.textContent = otsikko;
+        elementit.ikkunanKuvaus.textContent = kuvaus;
+        elementit.ikkunanPolku.innerHTML = `<span>Työpöytä</span><span aria-hidden="true">/</span><span>${turvallinenTeksti(urakka.nimi)}</span><span aria-hidden="true">/</span><strong>${turvallinenTeksti(kohde)}</strong>`;
+        elementit.ikkunanLista.innerHTML = rivit.map((rivi) => `<div class="ikkunan-rivi">${turvallinenTeksti(rivi)}</div>`).join("");
+        elementit.ikkunanUrakka.textContent = `${urakka.nimi} · rajaus säilyy`;
+        elementit.peite.hidden = false;
+        elementit.suljeIkkuna.focus();
+      };
+
+      const suljePorautuminen = () => {
+        elementit.peite.hidden = true;
+        tila.viimeisinPorautuminen = null;
+      };
+
+      elementit.suodatin.addEventListener("change", (tapahtuma) => {
+        tila.suodatin = tapahtuma.target.value;
+        tila.valittuUrakka = tila.suodatin === "kaikki" ? "urakka-a" : tila.suodatin;
+        piirra();
+      });
+
+      document.getElementById("tyhjenna-suodatin").addEventListener("click", () => {
+        tila.suodatin = "kaikki";
+        tila.valittuUrakka = "urakka-a";
+        elementit.suodatin.value = "kaikki";
+        piirra();
+      });
+
+      document.getElementById("paivita-nakyma").addEventListener("click", () => {
+        const nyt = new Date();
+        const minuutit = String(nyt.getMinutes()).padStart(2, "0");
+        elementit.paivitysleima.textContent = `24.8.2026 · klo ${String(nyt.getHours()).padStart(2, "0")}.${minuutit}`;
+      });
+
+      document.addEventListener("click", (tapahtuma) => {
+        const urakkakortti = tapahtuma.target.closest("[data-urakkatunniste]");
+        if (urakkakortti) {
+          tila.valittuUrakka = urakkakortti.dataset.urakkatunniste;
+          piirra();
+          document.getElementById("tarkemmat-otsikko").scrollIntoView({ behavior: "smooth", block: "start" });
+          return;
+        }
+
+        const puutekortti = tapahtuma.target.closest("[data-puutetunniste]");
+        if (puutekortti) {
+          const puute = puutteet.find((ehdokas) => ehdokas.tunniste === puutekortti.dataset.puutetunniste);
+          tila.valittuUrakka = puute.urakka;
+          if (tila.suodatin === "kaikki") piirraTarkemmatTiedot();
+          avaaPorautuminen(puute.otsikko, puute.kohde, puute.kuvaus, puute.toiminta);
+          return;
+        }
+
+        const maaraja = tapahtuma.target.closest("[data-maaraajatunniste]");
+        if (maaraja) {
+          const kohde = maaraajat.find((ehdokas) => ehdokas.tunniste === maaraja.dataset.maaraajatunniste);
+          tila.valittuUrakka = kohde.urakka;
+          const urakka = haeUrakka(kohde.urakka);
+          avaaPorautuminen(kohde.otsikko, kohde.kohde, `${urakka.nimi} · määräpäivä ${kohde.paiva}`, [kohde.kuvaus, `Määräaika: ${kohde.paiva}`, `Seuraava paikka: ${kohde.kohde}`, "Prototyyppi ei muuta tietoja tästä näkymästä"]);
+          return;
+        }
+
+        const porautumislinkki = tapahtuma.target.closest("[data-porautumistunniste]");
+        if (porautumislinkki) {
+          const urakka = haeUrakka(tila.valittuUrakka);
+          const kohteet = {
+            paikkaus: { otsikko: "Paikkauskohteet", kuvaus: "Simuloitu kohdelistaus valitulle urakalle.", rivit: [`${urakka.puutteet} kohdetta vaatii tarkistuksen`, "Suodatin: puutteelliset kohteet", "Toimenpide tehdään varsinaisessa Harjan näkymässä"] },
+            pot: { otsikko: "POT-lomakkeet", kuvaus: "Simuloitu POT-lomakkeiden tilanäkymä.", rivit: [urakka.pot, "Suodatin: avoimet ja lähettämättömät", "YHA-lähetys tehdään varsinaisessa Harjan näkymässä"] },
+            kustannukset: { otsikko: "Kustannustiedot", kuvaus: "Simuloitu kustannustietojen tarkistusnäkymä.", rivit: [`Kattavuus ${urakka.kattavuus} %`, "Suodatin: puuttuva tai epäselvä hinta", "Muokkaus tehdään varsinaisessa Harjan näkymässä"] }
+          }[porautumislinkki.dataset.porautumistunniste];
+          avaaPorautuminen(kohteet.otsikko, porautumislinkki.querySelector("span").textContent, kohteet.kuvaus, kohteet.rivit);
+        }
+      });
+
+      elementit.suljeIkkuna.addEventListener("click", suljePorautuminen);
+      document.getElementById("palaa-tyopoydalle").addEventListener("click", suljePorautuminen);
+      elementit.peite.addEventListener("click", (tapahtuma) => {
+        if (tapahtuma.target === elementit.peite) suljePorautuminen();
+      });
+      document.addEventListener("keydown", (tapahtuma) => {
+        if (tapahtuma.key === "Escape" && !elementit.peite.hidden) suljePorautuminen();
+      });
+
+      piirra();
+    })();
+  </script>
+</body>
+</html>
