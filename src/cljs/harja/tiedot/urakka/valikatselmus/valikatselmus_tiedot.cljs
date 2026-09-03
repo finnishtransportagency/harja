@@ -36,10 +36,7 @@
 
 (defn kasittele-throw-virhe [vastaus]
 
-  (let [;; Harmillisesti virheet tulee kahdesta eri paikasta, joko parse-errorista tai response-avaimesta
-        ;; Tätä pitäisi koko projektin laajuudelta jotenkin yhtenäistää.
-        raaka-virhe (or (get-in vastaus [:parse-error :original-text]) (:response vastaus))
-        ;; Jos kuitenkaan ei saada virhettä, niin keksitään tässä yleinen virheilmoitus
+  (let [raaka-virhe (or (get-in vastaus [:parse-error :original-text]) (:response vastaus))
         raaka-virhe (if (nil? raaka-virhe) "Palvelin palautti virheen!" raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
         raaka-virhe (str/replace raaka-virhe #"\"" "")

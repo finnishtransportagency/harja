@@ -528,8 +528,8 @@
 
         (is (= 200 (:status vastaus)))
         (is (= kiinteat-kulut-kannasta (bigdec kiinteat-kulut-rajapinnasta)))
-        (is (= arvioidut-kulut-kannasta (bigdec arvioidut-kulut-rajapinnasta)) (format "Urakalle %s arvioidut kulut täsmää" urakka-id))
-        (is (= johto-ja-hallintokulut-kannasta (bigdec johto-ja-hallintokorvaukset-rajapinnasta)))))))
+        (is (= (bigint arvioidut-kulut-kannasta) (bigint arvioidut-kulut-rajapinnasta)) (format "Urakalle %s arvioidut kulut täsmää" urakka-id))
+        (is (= (bigint johto-ja-hallintokulut-kannasta) (bigint johto-ja-hallintokorvaukset-rajapinnasta)))))))
 
 (deftest hae-kustannussuunnitelma-puutteellisilla-tunnuksilla
   (let [;; Pakotetaan urakaksi Oulu MHU
