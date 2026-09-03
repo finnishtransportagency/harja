@@ -36,13 +36,11 @@
 
 (defn kasittele-throw-virhe [vastaus]
 
-  (let [raaka-virhe (get-in vastaus [:parse-error :original-text])
+  (let [raaka-virhe (or (get-in vastaus [:parse-error :original-text]) (:response vastaus))
         raaka-virhe (if (nil? raaka-virhe) "Virhe! Palvelin palautti virheen!" raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
         raaka-virhe (str/replace raaka-virhe #"\"" "")
-
-        ;; Emme tarvitse ensimmäistä virhesanaa
-        virheet (str/join " " (rest (str/split raaka-virhe #" ")))]
+        virheet (str/join " " (str/split raaka-virhe #" "))]
     virheet))
 
 ;; Oikaisut
