@@ -73,10 +73,6 @@
                   :rivi (rivi "Yhteensä" yhteensa-summa)}]))]))
 
 
-; ----------------------------------------- ;
-;   Urakkataso-sanktioraportti (MHU25+)      ;
-; ----------------------------------------- ;
-
 (defn- muodosta-sanktio-taulukko
   "Muodostaa yhden sanktiolaji-ryhmän taulukon.
    Lajit ovat jo ryhmiteltyjä ja järjestettyjä tietokannan mukaisesti."
