@@ -307,6 +307,7 @@
         sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
         erilliskustannus-id nil
         sanktio-id nil
+        tallennettava-sanktio (atom nil)
         lupauspaatos (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta luvatut-pisteet toteutuneet-pisteet
                        lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)
 
@@ -329,16 +330,16 @@
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])
                                 ;; Feikataan sanktio tallentaminen, koska testidatassa ei ole lupaussanktio-lajia urakan profiilissa
-                                laadunseuranta/tallenna-suorasanktio (fn [db kayttaja sanktio laatupoikkeama urakka konteksti] 1)]
+                                laadunseuranta/tallenna-suorasanktio (fn [db kayttaja sanktio laatupoikkeama urakka konteksti]
+                                                                       (reset! tallennettava-sanktio sanktio)
+                                                                       1)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos))
                   (catch Exception e (do (log/error "Testissä virhe:" (.getMessage e) "Cause:" (.getCause e)) e)))
 
         _ (when (instance? Throwable vastaus) (throw vastaus))
-        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :lupaukset)
-        ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupaussanktio
-        sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))]
+        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :lupaukset)]
     (is (= lupaussanktio (:lupaussanktio tallennettu-paatos)) "Lupaussanktiopäätöslukemat täsmää validoinnin jälkeen")
-    (is (= lupaussanktio (:maara sanktio)))))
+    (is (= lupaussanktio (:summa @tallennettava-sanktio)))))
 
 ;; Haetaan lupauspaatos
 (deftest kysely-lupausbonus-haku-onnistuu-test

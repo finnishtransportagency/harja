@@ -333,10 +333,10 @@
                                  "Pohjois-Suomi"
                                  "Bonukset")
         urakan-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                         "Muhoksen päällystysurakka 2016-2026"
+             "Muhoksen päällystysurakka 2017-2026"
                          "Sakot ylläpitoluokittain")
         urakan-bonus-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                               "Muhoksen päällystysurakka 2016-2026"
+                   "Muhoksen päällystysurakka 2017-2026"
                                "Bonukset")
         taulukot (filter #(and (vector? %)
                              (= :taulukko (first %)))
@@ -370,10 +370,10 @@
                                  "Koko maa"
                                  "Bonukset")
         muhoksen-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                          "Muhoksen päällystysurakka 2016-2026"
+              "Muhoksen päällystysurakka 2017-2026"
                           "Sakot ylläpitoluokittain")
         muhoksen-bonus-taulukko (hae-urakan-aggregaatin-taulukko vastaus
-                                 "Muhoksen päällystysurakka 2016-2026"
+               "Muhoksen päällystysurakka 2017-2026"
                                  "Bonukset")
         porintien-taulukko (hae-urakan-aggregaatin-taulukko vastaus
                            "Porintien päällystysurakka 2014-2018"
