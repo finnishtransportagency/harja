@@ -17,6 +17,11 @@ on:
           - test-qa3
           - test-demo
           - test-koulutus
+      keep-running:
+        description: "Pidä ympäristö käynnissä yön yli?"
+        required: true
+        type: boolean
+        default: false
 
 permissions: {}
 
@@ -198,3 +203,32 @@ jobs:
             --cluster "$ECS_CLUSTER_NAME" \
             --service "$ECS_SERVICE_NAME" \
             --desired-count 1
+          
+      - name: '[Test-envs] Configure automatic stop'
+        env:
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
+          KEEP_RUNNING: ${{ inputs.keep-running }}
+        run: |
+          SERVICE_ARN=$(aws ecs describe-services \
+            --region eu-west-1 \
+            --cluster "$ECS_CLUSTER_NAME" \
+            --services "$ECS_SERVICE_NAME" \
+            --query 'services[0].serviceArn' \
+            --output text)
+      
+          if [ "$KEEP_RUNNING" = "true" ]; then
+            echo "Disabling automatic stop for $ECS_SERVICE_NAME"
+      
+            aws ecs tag-resource \
+              --region eu-west-1 \
+              --resource-arn "$SERVICE_ARN" \
+              --tags key=HARJA_AUTOSS_IGNORE,value=true
+          else
+            echo "Enabling automatic stop for $ECS_SERVICE_NAME"
+      
+            aws ecs untag-resource \
+              --region eu-west-1 \
+              --resource-arn "$SERVICE_ARN" \
+              --tag-keys HARJA_AUTOSS_IGNORE
+          fi
