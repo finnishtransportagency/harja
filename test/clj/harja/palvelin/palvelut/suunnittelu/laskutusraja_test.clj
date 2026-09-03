@@ -523,6 +523,7 @@
                                 (filter #(= (:nimi %) "Testimuutostyö muutoksen poistamisen testausta varten"))
                                 first
                                 :id)
+
           laskutusraja-tallennuksen-jalkeen (hae-urakan-laskutusraja urakka-id)
           ;; Poistetaan muutos
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
