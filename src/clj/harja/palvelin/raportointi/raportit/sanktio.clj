@@ -102,7 +102,7 @@
                             laji-nimi
                             {:koodi tyyppi-koodi
                              :nimi (:sanktiotyyppi_nimi tyyppi)})
-                       summa)}))
+                      summa)}))
          tyypit)
        [{:lihavoi? true
          :korosta-hennosti? true
@@ -152,8 +152,8 @@
 
 (defn- koosta-sanktio-taulukot
   "Ryhmittelee lajit tietokannan mukaisesti, muodostaa erillisen taulukon kutakin lajia vasten.
-   Arvonalennukset (arvonvahennyssanktio) erotetaan omaksi taulukokseen.
-   
+  Arvonalennukset (arvonvahennyssanktio) erotetaan omaksi taulukokseen.
+
    Lupaussanktio erotetaan omaksi 'Lupaussanktiot'-osiokseen, muut lajit yhteen 'Sanktiot'-osioon."
   [sanktiolajit sanktio-data-map]
   (let [;; Erotellaan lupaussanktio muista lajeista
@@ -352,9 +352,9 @@
     {:otsikko "Arvo"}]
    (mapv (fn [{:keys [avain arvo fmt lihavoi?]}]
            {:rivi [avain arvo]
-             :fmt fmt
-             :lihavoi? lihavoi?})
-      yhteenveto-data)])
+            :fmt fmt
+            :lihavoi? lihavoi?})
+     yhteenveto-data)])
 
 (defn- koosta-urakka-erittely
   "Muodostaa urakkakohtaisen erittelyn litteänä jonona raporttielementtejä.
@@ -376,7 +376,7 @@
                         urakan-bonuslajit (filter #(= urakan-id (urakka-id %)) bonuslajit)
                         sanktiot (filter #(and (or (:sanktio_id %) (:id %))
                                             (not= "arvonvahennyssanktio" (:sanktiolaji_koodi %)))
-                                  urakan-rivit)
+                                   urakan-rivit)
                         bonukset (filter :bonuslaji_koodi urakan-rivit)
                         arvonvahennykset (filter #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %))
                                            urakan-rivit)
@@ -418,19 +418,19 @@
                                               muistutusten-maara (count muistutukset)
                                               suorasakot (filterv :suorasanktio sanktiot)
                                               suorasakkojen-summa (reduce + 0 (map #(or (:summa %) 0) suorasakot))
-                                               bonukset-summa (reduce + 0 (map #(or (:summa %) 0) (or bonukset [])))
-                                               arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0)
-                                                                                    (or arvonvahennykset [])))]
+                                              bonukset-summa (reduce + 0 (map #(or (:summa %) 0) (or bonukset [])))
+                                              arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0)
+                                                                                   (or arvonvahennykset [])))]
                                           [[{:avain "Sakot yhteensä" :arvo sakkosumma :fmt :raha}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-summa :fmt :raha}
                                             {:avain "Muistutukset" :arvo (str muistutusten-maara " kpl")}
                                             {:avain "Suorasakot" :arvo suorasakkojen-summa :fmt :raha}
                                             {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}
                                             {:avain "Yhteensä" :arvo (+ sakkosumma bonukset-summa arvonvahennykset-summa)
-                                              :fmt :raha :lihavoi? true}]
+                                             :fmt :raha :lihavoi? true}]
                                            (merkitse-taulukot
-                                              (koosta-yllapidon-taulukot sanktiot bonukset)
-                                              urakan-nimi)])
+                                             (koosta-yllapidon-taulukot sanktiot bonukset)
+                                             urakan-nimi)])
 
                                         ;; HOITO-URAKKA
                                         (let [kooste (koosta-urakan-taulukot
@@ -456,9 +456,7 @@
                                               muistutusten-maara (count (filterv #(= "muistutus" (:sanktiolaji_koodi %)) (:tunnetut kooste)))
                                               vastuuhenkilon-vaihto-summa (reduce + 0
                                                                             (map #(or (:summa %) 0)
-                                                                              (filterv #(= "vastuuhenkilon-vaihto" (:sanktiotyyppi_koodi %)) sanktiot-tunnistetut-uniikit)))
-
-                                              ]
+                                                                              (filterv #(= "vastuuhenkilon-vaihto" (:sanktiotyyppi_koodi %)) sanktiot-tunnistetut-uniikit)))]
 
                                           [[{:avain "Sanktiot yhteensä" :arvo sanktiot-yhteensa :fmt :raha}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-yhteensa :fmt :raha}
@@ -478,12 +476,12 @@
                       :piilota-otsikko? true
                       :alkupvm alkupvm
                       :loppupvm loppupvm}
-      [:otsikko-title raportin-otsikko]
-      [:teksti (str urakan-nimi " | Aikaväli: " aikajakso)
-       {:luokka "raportin-otsikkorivi"}]
-      [:display-flex
-       [:sininen-laatikko {:otsikko "Yhteenveto"}
-        yhteenveto-data]]]
+           [:otsikko-title raportin-otsikko]
+           [:teksti (str urakan-nimi " | Aikaväli: " aikajakso)
+            {:luokka "raportin-otsikkorivi"}]
+           [:display-flex
+            [:sininen-laatikko {:otsikko "Yhteenveto"}
+             yhteenveto-data]]]
       (concat
         (when (and (= :excel kasittelija)
                 (not urakka-erittely?))
@@ -521,8 +519,8 @@
                                                          (keyword (:tyyppi urakan-tiedot))
                                                          :hoito))
         hoitovuosi (or hoitovuosi
-                      (when-let [urakan-alkupvm (:alkupvm urakan-tiedot)]
-                        (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm alkupvm)))
+                     (when-let [urakan-alkupvm (:alkupvm urakan-tiedot)]
+                       (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm alkupvm)))
         kyselyparametrit (select-keys
                            {:urakka urakka-id
                             :elinvoimakeskus elinvoimakeskus-id
