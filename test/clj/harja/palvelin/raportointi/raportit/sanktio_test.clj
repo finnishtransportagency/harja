@@ -8,25 +8,25 @@
 
 (deftest urakkatasoraportin-otsikko-noudattaa-yhteista-rakennetta
   (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
-   loppupvm #inst "2026-09-30T00:00:00.000-00:00"
-   aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
-   raportti (#'sanktio/koosta-urakkataso-runko
-        "Urakka"
-        alkupvm
-        loppupvm
-        []
-        []
-        []
-        []
-        []
-        false)]
-        (is (= "Urakka" (get-in raportti [1 :nimi])))
-          (is (= true (get-in raportti [1 :piilota-otsikko?])))
-          (is (= [:otsikko-title "Sanktiot, bonukset ja arvonvähennykset"]
-            (nth raportti 2)))
-              (is (= [:teksti (str "Urakka | Aikaväli: " aikajakso)
-              {:luokka "raportin-otsikkorivi"}]
-                (nth raportti 3)))
+        loppupvm #inst "2026-09-30T00:00:00.000-00:00"
+        aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+        raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  alkupvm
+                  loppupvm
+                  []
+                  []
+                  []
+                  []
+                  []
+                  false)]
+    (is (= "Urakka" (get-in raportti [1 :nimi])))
+    (is (= true (get-in raportti [1 :piilota-otsikko?])))
+    (is (= [:otsikko-title "Sanktiot, bonukset ja arvonvähennykset"]
+           (nth raportti 2)))
+    (is (= [:teksti (str "Urakka | Aikaväli: " aikajakso)
+            {:luokka "raportin-otsikkorivi"}]
+           (nth raportti 3)))
     (is (= "Urakka" (get-in raportti [1 :urakan-nimi])))
     (is (= aikajakso (get-in raportti [1 :aikajakso])))
     (is (= :iso (get-in raportti [1 :otsikon-koko])))))
@@ -55,8 +55,8 @@
                                     (when (= org.apache.poi.ss.usermodel.CellType/STRING
                                              (.getCellType solu))
                                       (.getStringCellValue solu)))
-                                  (iterator-seq (.cellIterator rivi))))
-                          (iterator-seq (.rowIterator sheet)))]
+                              (iterator-seq (.cellIterator rivi))))
+                    (iterator-seq (.rowIterator sheet)))]
       (is (= "Yhteenveto" (.getSheetName sheet)))
       (is (some #(= "Sanktiot, bonukset ja arvonvähennykset" %) tekstit))
       (is (some #(= (str "Urakka | Aikaväli: " aikajakso) %) tekstit)))))
@@ -225,10 +225,10 @@
         elementit raportti
         otsikon-esiintymat (fn [otsikko]
                              (count (filter #(or (= [:otsikko otsikko] %)
-                                                   (and (vector? %)
-                                                     (= :taulukko (first %))
-                                                     (= otsikko (get-in % [1 :otsikko]))))
-                                             elementit)))]
+                                               (and (vector? %)
+                                                 (= :taulukko (first %))
+                                                 (= otsikko (get-in % [1 :otsikko]))))
+                                      elementit)))]
     (is (= 1 (otsikon-esiintymat "Bonukset")))
     (is (= 1 (otsikon-esiintymat "Arvonvähennykset")))))
 
@@ -305,16 +305,16 @@
                  :sanktiotyyppi_nimi "Sakko"
                  :summa 100}
         raportti (#'sanktio/koosta-urakkataso-runko
-                   "Koko maa"
-                   (java.util.Date.)
-                   (java.util.Date.)
-                   [sanktio]
-                   []
-                   []
-                   [sanktio]
-                   []
-                   false
-                   true)
+                  "Koko maa"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  [sanktio]
+                  []
+                  []
+                  [sanktio]
+                  []
+                  false
+                  true)
         alkiot (vec (drop 2 raportti))]
     (is (every? #(and (vector? %) (keyword? (first %))) alkiot)
       "Kaikki raportin alkiot ovat raporttielementtejä")
@@ -350,7 +350,7 @@
                             %)
                      (tree-seq coll? seq raportti))
         yhteensa (some #(when (= "Yhteensä" (:avain %)) %)
-                       (nth yhteenveto 2))]
+                   (nth yhteenveto 2))]
     (is (= 100 (:arvo yhteensa)))))
 
 (deftest urakkaerittelyn-arvonvahennys-lasketaan-yhteen-vain-kerran
@@ -377,7 +377,7 @@
                           %)
                    raportti)
         yhteensa (some #(when (= "Yhteensä" (first (:rivi %))) %)
-                       (nth taulukko 3))]
+                   (nth taulukko 3))]
     (is (= 100 (second (:rivi yhteensa))))))
 
 (deftest yllapitoluokat-esitetaan-pk-luokkina
@@ -448,13 +448,13 @@
                                 rivi))
                        (nth taulukko 3)))
         taulukot (#'sanktio/koosta-yllapidon-taulukot
-                   [tunnettu tunnistamaton]
-                   [])
+                  [tunnettu tunnistamaton]
+                  [])
         sakko-taulukko (first (filter #(= "Sakot ylläpitoluokittain"
                                           (get-in % [1 :otsikko]))
-                                  taulukot))
+                                taulukot))
         tunnistamattomat-taulukko (first (filter #(= "Tunnistamattomat sanktiot"
-                                                       (get-in % [1 :otsikko]))
+                                                     (get-in % [1 :otsikko]))
                                            taulukot))]
     (is (= ["Yhteensä" 1 -100]
            (rivin-haku sakko-taulukko "Yhteensä")))
