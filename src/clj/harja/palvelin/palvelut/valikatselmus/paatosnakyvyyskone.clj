@@ -523,15 +523,13 @@
           muutosprosentti-raaka (if (and hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta)
                                   (.divide (bigdec hv-lopun-tavoitehinta-ilman-indeksia) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
                                   0)
-          hoidonjohtopalkkio (if hoidonjohtopalkkio hoidonjohtopalkkio 0)
-          hoidonjohtopalkkio-muutos (if (>= muutosprosentti-raaka 1)
-                                      (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio)
-                                      (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio))
+          hoidonjohtopalkkio (or hoidonjohtopalkkio 0)
+          raaka-hoidonjohtopalkkio-muutos (- (* hoidonjohtopalkkio muutosprosentti-raaka) hoidonjohtopalkkio)
           muutosprosentti (round2 1 (* (- muutosprosentti-raaka 1) 100))
           ;; Hoidonjohtopalkkioon tehdään muutos, jos hoitovuoden lopun tavoitehinta ilman indeksitarkistuksia muuttuu enemmän kuin 5%
           ;; tarjouksen mukaiseen tavoitehintaan verrattuna.
           hoidonjohtopalkkio-muutos (if (or (< muutosprosentti -5) (> muutosprosentti 5))
-                                      hoidonjohtopalkkio-muutos
+                                      raaka-hoidonjohtopalkkio-muutos
                                       0)
 
           ;; Täytetään pakolliset tiedot
