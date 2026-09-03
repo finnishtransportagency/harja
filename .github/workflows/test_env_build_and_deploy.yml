@@ -104,6 +104,47 @@ jobs:
             --file "$DOCKERFILE_PATH" .
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
+      
+      # Käynnistä tietokanta jos ei ole jo käynnissä 
+      - name: '[Test-envs] Start Aurora database'
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          DB_CLUSTER="harja-test-db-${ENVIRONMENT#test-}"
+          echo "Checking RDS cluster: $DB_CLUSTER"
+          
+          STATUS=$(aws rds describe-db-clusters \
+            --region eu-west-1 \
+            --db-cluster-identifier "$DB_CLUSTER" \
+            --query 'DBClusters[0].Status' \
+            --output text)
+          
+          echo "RDS Cluster status: $STATUS"
+          
+          if [ "$STATUS" = "stopped" ]; then
+            echo "Starting $DB_CLUSTER..."
+            aws rds start-db-cluster \
+              --region eu-west-1 \
+              --db-cluster-identifier "$DB_CLUSTER" \
+              --no-cli-pager > /dev/null
+          fi
+          
+          while true; do
+            STATUS=$(aws rds describe-db-clusters \
+              --region eu-west-1 \
+              --db-cluster-identifier "$DB_CLUSTER" \
+              --query 'DBClusters[0].Status' \
+              --output text)
+          
+            echo "Waiting to start.. RDS Cluster status: $STATUS"
+          
+            if [ "$STATUS" = "available" ]; then
+              echo "Done, $DB_CLUSTER is running"
+              break
+            fi
+          
+            sleep 10
+          done
 
       - name: '[Test-envs] Run migrations'
         uses: ./.github/actions/run-migrations-to-test-env
