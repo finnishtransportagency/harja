@@ -34,7 +34,7 @@
             [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
-            [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.urakkaparametrit-nakyma :as urakkaparametrit]
             [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
             [harja.tiedot.istunto :as istunto]))
 
@@ -135,11 +135,11 @@
       ^{:key "urakkahenkilot"}
       [urakkahenkilot/urakkahenkilot])
 
-    "Urakoiden parametrit"
+    "Urakan parametrit"
     :urakkaparametrit
-    ;; TODO: Varmista oikeiat oikeudet
+    ;; Käytetään samaa oikeutta kuin Urakoiden henkilöt -näkymässä, koska omaa oikeutta ei ole tarpeen tehdä.
     (when (oikeudet/hallinta-urakkahenkilot)
-      ^{:key "urakkahenkilot"}
+      ^{:key "urakkaparametrit"}
       [urakkaparametrit/urakkaparametrit])
 
     "Sanktio- ja bonusprofiilit"

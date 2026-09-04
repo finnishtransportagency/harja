@@ -214,14 +214,14 @@
 
         validoinnit-kaytossa? (:valikatselmus_validoinnit_kaytossa jarjestelman-asetukset)
         ;; Valmistellaan päätökset ui:ta varten
-        mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi)
+        mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa arvonvahennykset-yht)
-        mahdolliset-paatokset (paatoskone/valmistele-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset mahdolliset-paatokset tavoitehinta-vahvistettu?)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos db validoinnit-kaytossa? urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu?)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos db validoinnit-kaytossa? urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitovuoden-lopun-indeksikorjattu-tavoitehinta hoitovuoden-lopun-kattohinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
-        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset db validoinnit-kaytossa? urakkaid mahdolliset-paatokset hoitovuoden-lopun-kattohinta toteutuneet-kustannukset valittu-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu?)
+        mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset mahdolliset-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos validoinnit-kaytossa? mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos validoinnit-kaytossa? urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitovuoden-lopun-indeksikorjattu-tavoitehinta hoitovuoden-lopun-kattohinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset validoinnit-kaytossa? urakkaid mahdolliset-paatokset hoitovuoden-lopun-kattohinta toteutuneet-kustannukset valittu-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos validoinnit-kaytossa? valittu-hoitovuosi mahdolliset-paatokset hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos validoinnit-kaytossa? valittu-hoitovuosi mahdolliset-paatokset)
 
@@ -229,13 +229,16 @@
         mahdolliset-paatokset (if (and validoinnit-kaytossa? (or (>= valittu-hoitovuosi nyt-vuosi) hoitovuosi-kesken?))
                                 ;; Poistetaan kaikki muut päätökset, kuin tässä määritellyt päätökset
                                 (filter (fn [paatos]
-                                          (when (contains? #{"Hoidonjohtopalkkion muutos" "Lupaukset" "Tavoitehinnan muutokset" "Tavoitehinnan alitus"
+                                          (when (contains? #{"Hoidonjohtopalkkion muutos" "Lupaukset" "Tavoitehinnan muutokset" "Tavoitehinnan pysyvät muutokset" "Tavoitehinnan alitus"
                                                              "Tavoitehinnan ylitys" "Hoitovuoden lopun tavoite- ja kattohinta"
                                                              "Kattohinnan ylitys" "Välikatselmuspöytäkirjaan liitettävät raportit"} (:nimi paatos))
                                             paatos))
                                   mahdolliset-paatokset)
                                 ;; Palautetaan kaikki päätökset, jos ei ole hoitovuosi menossa tai jos validoinnit on poissa päältä
                                 mahdolliset-paatokset)
+
+        ;; Poista vielä keskenään ristiriitaiset päätökset
+        mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
         paatokset (yleiset/yhdista-mapit :nimi mahdolliset-paatokset tietokanta-paatokset)]
@@ -492,8 +495,8 @@
                 {:id (:erilliskustannus_id paatos-tietokannasta) :urakka-id (:urakkaid paatos-tietokannasta)}))
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
-              (laadunseuranta-palvelu/poista-suorasanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                                                       :urakka-id (:urakkaid paatos-tietokannasta)}))
+              (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
+                                        :urakka-id (:urakkaid paatos-tietokannasta)}))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -806,9 +809,9 @@
       ;; Hae välikatselmuksen tiedot
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
 
-(defn tee-indeksikorjauspaatos [db kayttaja paatos]
+(defn tee-hoitokauden-lopun-indeksikorjauspaatos [db kayttaja paatos]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-valikatselmus kayttaja (:urakkaid paatos))
-  (log/debug "tee-indeksikorjauspaatos :: paatos" (pr-str paatos))
+  (log/debug "tee-hoitokauden-lopun-indeksikorjauspaatos :: paatos" (pr-str paatos))
   (jdbc/with-db-transaction [db db]
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
@@ -1114,7 +1117,7 @@
 
 
 (defn hae-ketjutetusti-kumoutuvat-paatokset
-  "Syötetään päätös, joka halutaan kumota. 
+  "Syötetään päätös, joka halutaan kumota.
   Palauttaa kaikki riippuvaiset päätökset, jotka kumoutuvat sen mukana."
   [db kayttaja {:keys [urakkaid hoitokauden_alkuvuosi] :as paatos}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
@@ -1139,7 +1142,7 @@
 (defn poista-yksittainen-paatos
   [db kayttaja {:keys [avain paatostyyppi urakkaid] :as paatos} valittu-urakka-id]
   (when-not (= urakkaid valittu-urakka-id)
-    ;; Lopettaa funktion ajon, mikäli jostain syystä päätös mappi sisältää toisen urakan päätöksen 
+    ;; Lopettaa funktion ajon, mikäli jostain syystä päätös mappi sisältää toisen urakan päätöksen
     (throw+ {:type "Error"
              :virheet {:koodi "ERROR"
                        :viesti (str "Yritettiin perua urakan " urakkaid " päätös, valittu urakka: " valittu-urakka-id ".")}}))
@@ -1216,7 +1219,7 @@
         (fn [user tiedot]
           (tallenna-tavoitehinnan-oikaisu db user tiedot)))
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu http
         :poista-tavoitehinnan-oikaisu
@@ -1250,7 +1253,7 @@
           (tee-lupauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
 
-      ;; FIXME Poistuu 
+      ;; FIXME Poistuu
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-lupauspaatos
@@ -1264,7 +1267,7 @@
           (tee-tavoitehinnan-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-muutospaatos
@@ -1278,7 +1281,7 @@
           (tee-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-pysyvamuutospaatos
         (fn [user tiedot]
@@ -1291,7 +1294,7 @@
           (tee-tavoitehinnan-alituspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-alituspaatos
@@ -1305,7 +1308,7 @@
           (tee-tavoitehinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-tavoitehinnan-ylityspaatos
@@ -1319,7 +1322,7 @@
           (tee-kattohinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-kattohinnan-ylityspaatos
@@ -1330,10 +1333,10 @@
       (julkaise-palvelu (:http-palvelin this)
         :tee-indeksikorjauspaatos
         (fn [user tiedot]
-          (tee-indeksikorjauspaatos (:db this) user tiedot))
+          (tee-hoitokauden-lopun-indeksikorjauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-indeksikorjauspaatos
@@ -1347,7 +1350,7 @@
           (tee-hv-lopun-tavoite-ja-kattohintapaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoitovuoden-lopun-hintapaatos
@@ -1361,7 +1364,7 @@
           (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-hoidonjohtopalkkion-muutospaatos
@@ -1375,7 +1378,7 @@
           (tee-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää 
+      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
       ;;  Testit hajoaa tästä
       (julkaise-palvelu (:http-palvelin this)
         :poista-poytakirjan-raporttipaatos

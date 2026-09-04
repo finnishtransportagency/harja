@@ -32,6 +32,9 @@
 (defrecord PaivitaTehtavatGrid [tehtavat])
 (defrecord AvaaRivi [valiotsikko])
 (defrecord NollaaTehtavatJaMaaratMuutokset [])
+(defrecord HaeTehtavaprofiilitOnnistui [vastaus])
+(defrecord HaeTehtavaprofiilitEpaonnistui [vastaus])
+(defrecord TestiTallennaKaikkiinTehtaviinArvo [])
 
 (defn hae-tehtavat-ja-maarat [_parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
@@ -203,4 +206,28 @@
 
   NollaaTehtavatJaMaaratMuutokset
   (process-event [_ app]
-    (assoc app :tallentamattomia-muutoksia? false)))
+    (assoc app :tallentamattomia-muutoksia? false))
+
+  HaeTehtavaprofiilitOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [arvolliset-tehtavat (map (fn [tehtava]
+                                     (if (nil? (:valiotsikko tehtava))
+                                       (assoc tehtava :tarjous_maara (get vastaus (:nimi tehtava) 0))
+                                       tehtava))
+                                   (:tehtavat-ja-maarat app))]
+      (assoc app :tehtavat-ja-maarat arvolliset-tehtavat)))
+
+  HaeTehtavaprofiilitEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! (str "Pikatäytön arvojen hakeminen epäonnistui: " (pr-str vastaus))
+      :varoitus viesti/viestin-nayttoaika-keskipitka)
+    app)
+
+  TestiTallennaKaikkiinTehtaviinArvo
+  (process-event [_ app]
+    (tuck-apurit/get! :hae-tehtavaprofiilit
+      {:onnistui ->HaeTehtavaprofiilitOnnistui
+       :epaonnistui ->HaeTehtavaprofiilitEpaonnistui
+       :paasta-virhe-lapi? true})
+    app))
+
