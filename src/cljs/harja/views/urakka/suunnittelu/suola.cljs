@@ -559,9 +559,6 @@
                             urakan-loppuvuosi
                             (:valittu-hoitovuosi app))
             hoitovuodet (into [] (range urakan-alkuvuosi (+ urakan-alkuvuosi urakan-kesto)))
-            _ (println "HOITOVUODET " hoitovuodet)
-            _ (println "alku " urakan-alkuvuosi)
-            _ (println "loppu " urakan-loppuvuosi)
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
          [:h1 "Urakan suolarajoitukset hoitovuosittain"]
