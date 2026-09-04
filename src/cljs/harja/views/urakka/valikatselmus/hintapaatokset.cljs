@@ -14,7 +14,7 @@
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn tavoitehinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :tavoitehinta-ylitys
+  (let [paatos-avain :tavoitehinnan-ylitys
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
@@ -68,7 +68,7 @@
       lopun tavoitehinnan alittavasta osuudesta."]]]))
 
 (defn tavoitehinnan-alitus [e! paatos tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :tavoitehinta-alitus
+  (let [paatos-avain :tavoitehinnan-alitus
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
@@ -122,7 +122,7 @@
                  (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :kattohinta-ylitys
+  (let [paatos-avain :kattohinnan-ylitys
         paatos-tehty? (some? (:id paatos))
         siirra? (:siirra? paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
