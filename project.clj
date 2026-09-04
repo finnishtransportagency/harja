@@ -108,7 +108,7 @@
                  [cljs-ajax "0.8.4"]
 
                  ;; React-wrapper frontille
-                 [reagent "1.1.1"]
+                 [reagent "1.2.0"]
                  [cljsjs/react "17.0.2-0"]
                  [cljsjs/react-dom "17.0.2-0"]
 
