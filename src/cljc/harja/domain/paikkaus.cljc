@@ -110,7 +110,9 @@
     ::reunat
     ::ajourat
     ::ajouravalit
-    ::keskisaumat})
+    ::keskisaumat
+    ::paikkaustyyppi
+    ::kasin-maaritelty})
 
 (def materiaalit-perustiedot
   #{::materiaali-id
@@ -296,7 +298,9 @@
    :f27 :harja.domain.paikkaus/ajourat,
    :f28 :harja.domain.paikkaus/ajouravalit,
    :f29 :harja.domain.paikkaus/keskisaumat,
-   :f30 :harja.domain.paikkaus/kaista})
+   :f30 :harja.domain.paikkaus/kaista
+   :f31 :harja.domain.paikkaus/paikkaustyyppi
+   :f32 :harja.domain.paikkaus/kasin-maaritelty})
 
 (def speqcl-avaimet->paikkaus
   {:harja.domain.paikkaus/id :id
@@ -327,7 +331,6 @@
    :harja.domain.tierekisteri/losa :losa
    :harja.domain.tierekisteri/let :let
    :harja.domain.tierekisteri/ajorata :ajorata})
-
 
 (def specql-avaimet->paikkauskohde
   {:harja.domain.paikkaus/id :id

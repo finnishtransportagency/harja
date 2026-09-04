@@ -3,6 +3,7 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.bonus-konfiguraatio :as q]
+            [taoensso.timbre :as log]
             [slingshot.slingshot :refer [throw+]]))
 
 (declare bonus-lajin-tehokas-nimi)
@@ -78,7 +79,7 @@
   [profiilit konteksti]
   (vaadi-yksiselitteinen-bonus-profiili* profiilit konteksti heita-illegal-argument!))
 
-(defn- vaadi-profiililla-rivit*
+(defn- vaadi-profiililla-rivit
   [profiili toimenpideinstanssi-id rivit virhe-heittaja!]
   (when-not (seq rivit)
     (virhe-heittaja!
@@ -89,10 +90,6 @@
        :toimenpideinstanssi-id toimenpideinstanssi-id}))
 
   rivit)
-
-(defn- vaadi-profiililla-rivit
-  [profiili toimenpideinstanssi-id rivit]
-  (vaadi-profiililla-rivit* profiili toimenpideinstanssi-id rivit heita-illegal-argument!))
 
 (defn- bonus-lajin-nayttonimi
   [rivit]
@@ -144,12 +141,15 @@
                       :hoitovuosi hoitovuosi})
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi})
-        rivit (->> (q/hae-bonus-profiilin-rivit
-                     db
-                     {:bonus_profiili_id (:id profiili)
-                      :urakka_id urakka-id
-                      :toimenpideinstanssi_id toimenpideinstanssi-id})
-                (vaadi-profiililla-rivit profiili toimenpideinstanssi-id))]
+        rivit (q/hae-bonus-profiilin-rivit
+                db
+                {:bonus_profiili_id (:id profiili)
+                 :urakka_id urakka-id
+                 :toimenpideinstanssi_id toimenpideinstanssi-id})]
+    (when (empty? rivit)
+      (log/warn "Bonus-profiililta" (:nimi profiili)
+        "ei löytynyt rivejä toimenpideinstanssille" toimenpideinstanssi-id
+        "- toimenpideinstanssin t2-koodi ei vastaa profiilin rivejä tai toimenpideinstanssia ei löydy"))
     {:profiili profiili
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :rivit rivit}))
@@ -164,7 +164,30 @@
                    {:urakka-id urakka-id
                     :hoitovuosi hoitovuosi}
                    heita-bonus-kirjausvirhe!)
-        rivit (vaadi-profiililla-rivit*
+        rivit (vaadi-profiililla-rivit
+                profiili
+                toimenpideinstanssi-id
+                (q/hae-bonus-profiilin-rivit
+                  db
+                  {:bonus_profiili_id (:id profiili)
+                   :urakka_id urakka-id
+                   :toimenpideinstanssi_id toimenpideinstanssi-id})
+                heita-bonus-kirjausvirhe!)]
+    {:profiili profiili
+     :toimenpideinstanssi-id toimenpideinstanssi-id
+     :rivit rivit}))
+
+(defn- hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
+  (let [profiili (vaadi-yksiselitteinen-bonus-profiili*
+                   (q/hae-urakan-bonus-profiilit
+                     db
+                     {:urakka_id urakka-id
+                      :hoitovuosi hoitovuosi})
+                   {:urakka-id urakka-id
+                    :hoitovuosi hoitovuosi}
+                   heita-bonus-kirjausvirhe!)
+        rivit (vaadi-profiililla-rivit
                 profiili
                 toimenpideinstanssi-id
                 (q/hae-bonus-profiilin-rivit
