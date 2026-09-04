@@ -131,7 +131,7 @@
                  [org.clojure/data.json "2.5.2"]
 
                  ;; Chime -ajastuskirjasto periodisten tehtävien suorittamiseen
-                 [jarohen/chime "0.2.2"]
+                 [jarohen/chime "0.3.3"]
 
                  ;; Pikkukuvien (thumbnail) muodostamiseen
                  [net.coobird/thumbnailator "0.4.21"]
