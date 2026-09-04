@@ -21,7 +21,7 @@
             [harja.ui.komponentti :as komp]
             [harja.domain.urakka :as ur]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm]}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm loppupvm]}]
   (case valilehti
     :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
                    (not (ur/vesivaylaurakkatyyppi? tyyppi)))
@@ -33,9 +33,9 @@
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))) ;; => 2025 alkaen sekä yli 5-vuotisilla
     :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
-    :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
+    :tarjous (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))))) ;; => 2025 alkaen sekä yli 5-vuotisilla
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]

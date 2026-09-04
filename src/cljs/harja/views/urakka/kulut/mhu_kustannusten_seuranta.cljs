@@ -486,9 +486,10 @@
 (defn kustannukset
   "Kustannukset listattuna taulukkoon"
   [e! app]
-  (let [{:keys [alkupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
+  (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
-        hoitokaudet (into [] (range vuosi (+ 5 vuosi)))
+        urakan-kesto (- (count (pvm/vuodet-valissa alkupvm loppupvm)) 1)
+        hoitokaudet (into [] (range vuosi (+ vuosi urakan-kesto)))
         taulukon-rivit (:kustannukset app)
         valittu-hoitokausi (if (nil? (:hoitokauden-alkuvuosi app))
                              2019
