@@ -216,3 +216,87 @@ FROM summamaaritykset sm
                   AND spr.soveltuvuuskonteksti   = sm.soveltuvuuskonteksti
          CROSS JOIN integraatio
 ON CONFLICT (sanktio_profiili_rivi_id, jarjestys) DO NOTHING;
+
+-- Lisätään bonusprofiilirivin euromääritykselle oma taulu.
+CREATE TABLE bonus_profiili_rivi_summamaaritys (
+    id                     SERIAL PRIMARY KEY,
+    bonus_profiili_rivi_id INTEGER NOT NULL REFERENCES bonus_profiili_rivi (id),
+    maaritystapa           TEXT NOT NULL DEFAULT 'automaattinen',
+    summa_euroina          NUMERIC(12,2),
+    ohjeteksti             TEXT,
+    jarjestys              INTEGER NOT NULL DEFAULT 1,
+    luoja                  INTEGER NOT NULL REFERENCES kayttaja (id),
+    luotu                  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    muokkaaja              INTEGER NOT NULL REFERENCES kayttaja (id),
+    muokattu               TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE (bonus_profiili_rivi_id, jarjestys),
+    CHECK (summa_euroina IS NULL OR summa_euroina >= 0),
+    CHECK (maaritystapa IN ('automaattinen', 'manuaalinen')),
+    CHECK (ohjeteksti IS NULL OR btrim(ohjeteksti) <> ''),
+    CHECK (
+        (maaritystapa = 'automaattinen' AND summa_euroina IS NOT NULL)
+            OR
+        (maaritystapa = 'manuaalinen' AND (summa_euroina IS NOT NULL OR ohjeteksti IS NOT NULL))
+    )
+);
+
+CREATE INDEX bonus_profiili_rivi_summamaaritys_haku_idx
+    ON bonus_profiili_rivi_summamaaritys (bonus_profiili_rivi_id, jarjestys);
+
+COMMENT ON TABLE bonus_profiili_rivi_summamaaritys
+    IS 'Bonusprofiiliriville kiinnitettävä euromäärä ja/tai ohjeteksti.';
+
+-- V1_1291 yritti seedata tämän bonuksen sanktioiden määritystauluun.
+-- Poistetaan mahdollinen väärä rivi täsmällisellä kohdistuksella.
+DELETE FROM sanktio_profiili_rivi_summamaaritys sm
+ USING sanktio_profiili_rivi spr,
+       sanktio_profiili sp,
+       sanktio_laji sl,
+       sanktiotyyppi st
+ WHERE sm.sanktio_profiili_rivi_id = spr.id
+   AND spr.sanktio_profiili_id = sp.id
+   AND spr.sanktio_laji_id = sl.id
+   AND spr.sanktiotyyppi_id = st.id
+   AND sp.nimi = 'teiden-hoito-mhu2026'
+   AND sl.koodi = 'alihankkijatyytyvaisyyskyselybonus'
+   AND st.koodi = 0
+   AND spr.soveltuvuuskonteksti = 'urakka'
+   AND sm.maaritystapa = 'automaattinen'
+   AND sm.summa_euroina = 5000.00
+   AND sm.jarjestys = 1;
+
+-- Seedaataan alihankkijatyytyväisyyskyselybonus-bonuksen 5 000 euron määritys.
+WITH integraatio AS (
+    SELECT id
+      FROM kayttaja
+     WHERE kayttajanimi = 'Integraatio'
+)
+INSERT INTO bonus_profiili_rivi_summamaaritys (bonus_profiili_rivi_id,
+                                               maaritystapa,
+                                               summa_euroina,
+                                               ohjeteksti,
+                                               jarjestys,
+                                               luoja,
+                                               luotu,
+                                               muokkaaja,
+                                               muokattu)
+SELECT bpr.id,
+       'automaattinen',
+       5000.00,
+       NULL,
+       1,
+       integraatio.id,
+       CURRENT_TIMESTAMP,
+       integraatio.id,
+       CURRENT_TIMESTAMP
+  FROM bonus_profiili bp
+       JOIN bonus_profiili_rivi bpr
+         ON bpr.bonus_profiili_id = bp.id
+       JOIN bonus_laji bl
+         ON bl.id = bpr.bonus_laji_id
+       CROSS JOIN integraatio
+ WHERE bp.nimi = 'teiden-hoito-bonus-mhu2026'
+   AND bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
+   AND bpr.toimenpide_t2_koodi = '23150'
+   AND bl.koodi = 'alihankkijatyytyvaisyyskyselybonus'
+ON CONFLICT (bonus_profiili_rivi_id, jarjestys) DO NOTHING;
