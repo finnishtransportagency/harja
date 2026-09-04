@@ -173,16 +173,7 @@ WITH integraatio AS (
               'Asiakirjan taulukon mukainen sanktio jokaiselta alkavalta kuukaudelta, '
                   'kun pistekeskiarvo alittuu tarjouksessa annetusta pistekeskiarvosta.', 1),
              ('teiden-hoito-mhu2026', 'vastuuhenkilon_vaihto', 0, 'urakka', 'manuaalinen', NULL,
-              '1 % tarjouksen mukaisesta tavoitehinnasta.', 1),
-
-             -- -----------------------------------------------------------------------
-             -- teiden-hoito-mhu2026 / bonukset / vain urakka-konteksti
-             -- Huom: maaraaikaan_tehtavien_toiden_aiempi_toteutusbonus, asiakastyytyvaisyysbonus ja
-             --       liikennevahinkojen_aiheuttajien_selvitysbonus kirjataan normaalikirjauksina ilman
-             --       summamaaritys-rivia - niilla ei ole vakiosummaa eika ohjetekstia.
-             -- -----------------------------------------------------------------------
-             ('teiden-hoito-mhu2026', 'alihankkijatyytyvaisyyskyselybonus', 0, 'urakka',
-              'automaattinen', 5000.00, NULL, 1)
+              '1 % tarjouksen mukaisesta tavoitehinnasta.', 1)
      )
 INSERT INTO sanktio_profiili_rivi_summamaaritys (sanktio_profiili_rivi_id,
                                                  maaritystapa,
@@ -245,25 +236,6 @@ CREATE INDEX bonus_profiili_rivi_summamaaritys_haku_idx
 
 COMMENT ON TABLE bonus_profiili_rivi_summamaaritys
     IS 'Bonusprofiiliriville kiinnitettävä euromäärä ja/tai ohjeteksti.';
-
--- V1_1291 yritti seedata tämän bonuksen sanktioiden määritystauluun.
--- Poistetaan mahdollinen väärä rivi täsmällisellä kohdistuksella.
-DELETE FROM sanktio_profiili_rivi_summamaaritys sm
- USING sanktio_profiili_rivi spr,
-       sanktio_profiili sp,
-       sanktio_laji sl,
-       sanktiotyyppi st
- WHERE sm.sanktio_profiili_rivi_id = spr.id
-   AND spr.sanktio_profiili_id = sp.id
-   AND spr.sanktio_laji_id = sl.id
-   AND spr.sanktiotyyppi_id = st.id
-   AND sp.nimi = 'teiden-hoito-mhu2026'
-   AND sl.koodi = 'alihankkijatyytyvaisyyskyselybonus'
-   AND st.koodi = 0
-   AND spr.soveltuvuuskonteksti = 'urakka'
-   AND sm.maaritystapa = 'automaattinen'
-   AND sm.summa_euroina = 5000.00
-   AND sm.jarjestys = 1;
 
 -- Seedaataan alihankkijatyytyväisyyskyselybonus-bonuksen 5 000 euron määritys.
 WITH integraatio AS (
