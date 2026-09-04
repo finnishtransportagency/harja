@@ -249,7 +249,8 @@
                :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
                :urakat (->> (get-in rivi [:profiilirivi :urakat])
                          sort
-                         vec)})))))
+                         vec)
+               :summamaaritys (get-in rivi [:profiilirivi :summamaaritys])})))))
 
 (defn- muodosta-bonus-laji-admin
   [rivit]
