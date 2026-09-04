@@ -55,7 +55,8 @@
   "Muodostaa littean profiilirivin SQL:n palauttamista sarakkeista.
   Admin-kysely palauttaa lisaksi urakkarajausten maaran ja urakat, ei-admin ei."
   [{:keys [profiilirivi_id profiilirivi_jarjestys
-           profiilirivi_toimenpiderajauksen_tyyppi profiilirivi_toimenpide_t2_koodi]
+        profiilirivi_toimenpiderajauksen_tyyppi profiilirivi_toimenpide_t2_koodi
+        profiilirivi_sm_summa profiilirivi_sm_tapa profiilirivi_sm_ohje]
     urakkarajausten-maara :profiilirivi_urakkarajausten_maara
     urakat :profiilirivi_urakat
     :as rivi}]
@@ -67,7 +68,14 @@
     (assoc :urakkarajausten-maara urakkarajausten-maara)
 
     (contains? rivi :profiilirivi_urakat)
-    (assoc :urakat (normalisoi-vektoriksi urakat))))
+  (assoc :urakat (normalisoi-vektoriksi urakat))
+
+  (or (some? profiilirivi_sm_summa)
+    (some? profiilirivi_sm_tapa)
+    (some? profiilirivi_sm_ohje))
+  (assoc :summamaaritys {:summa-euroina profiilirivi_sm_summa
+              :maaritystapa profiilirivi_sm_tapa
+              :ohjeteksti profiilirivi_sm_ohje})))
 
 (defn muunna-bonus-konfiguraatiorivi
   [{:as rivi}]
