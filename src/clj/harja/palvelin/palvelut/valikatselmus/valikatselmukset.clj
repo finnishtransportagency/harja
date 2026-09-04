@@ -37,6 +37,8 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-pdf :as valikatselmus-pdf]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]))
 
 (defn hoitokaudet-vektorimuotoon
@@ -1201,7 +1203,8 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
+          db (:db this)
+          pdf (:pdf-vienti this)]
 
       (julkaise-palvelu http
         :hae-ketjutetusti-kumoutuvat-paatokset
@@ -1384,6 +1387,9 @@
         (fn [user tiedot]
           (poista-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
+      (when pdf
+        (pdf-vienti/rekisteroi-pdf-kasittelija! pdf :valikatselmusraportti
+          (partial #'valikatselmus-pdf/valikatselmus-pdf db #'hae-valikatselmuksen-tiedot-hoitovuodelle)))
       this))
 
   (stop [this]
@@ -1416,4 +1422,6 @@
       :poista-hoidonjohtopalkkion-muutospaatos
       :tee-poytakirjan-raporttipaatos
       :poista-poytakirjan-raporttipaatos)
+    (when (:pdf-vienti this)
+      (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :valikatselmusraportti))
     this))

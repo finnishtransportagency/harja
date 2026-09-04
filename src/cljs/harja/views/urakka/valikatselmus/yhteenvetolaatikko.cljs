@@ -1,5 +1,10 @@
 (ns harja.views.urakka.valikatselmus.yhteenvetolaatikko
   (:require [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t]
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
+            [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
 
 (defn arvo-paatoksesta
@@ -9,7 +14,7 @@
   (when (:id paatos)
     (get paatos avain)))
 
-(defn yhteenvetolaatikko [e! {:keys [paatokset urakan-parametrit] :as app}]
+(defn yhteenvetolaatikko [e! {:keys [paatokset urakan-parametrit hoitokauden-alkuvuosi] :as app}]
   (let [yhteenvedon-tiedot (:yhteenveto app)
         ;; Yhteenvedot kokonaissummat ja tavoitehinnan muodostuminen
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu]) 0)
@@ -116,7 +121,20 @@
         hoidonjohtopalkkion-muutos (or (arvo-paatoksesta hoidonjohtopalkkiopaatos :hoidonjohtopalkkio_muutos) 0)]
     [:div.valikatselmus-yhteenveto {:aria-live "polite"}
      ;;Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
-     [:h2.yhteenveto "Yhteenveto"]
+     [:div.row
+      [:div.col-md-6
+       [:h2.yhteenveto "Yhteenveto"]]
+      [:div.col-md-6 {:style {:display "flex" :justify-content "flex-end"}}
+       [:form {:style {:margin-left "auto"
+                       :margin-right "16px"}
+               :target "_blank" :method "POST"
+               :action (k/pdf-url :valikatselmusraportti)}
+        [:input {:type "hidden" :name "parametrit"
+                 :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                                         :hoitovuosi hoitokauden-alkuvuosi})}]
+        [napit/tallenna "Tallenna PDF" (constantly true)
+         {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
+          :esta-prevent-default? true}]]]]
      [:div.flex-row.summa-rivi-ylin
       [:span "Hoitovuoden alun indeksikorjattu tavoitehinta"]
       [:span (fmt/euro-opt false hoitovuoden-alun-indeksikorjattu-tavoitehinta)]]
