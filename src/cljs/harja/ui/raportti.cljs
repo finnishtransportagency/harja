@@ -427,6 +427,47 @@
                (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
           data)))))
 
+(defmethod muodosta-html :yhteenveto-laatikko [[_ {:keys [otsikko nayta-hr?]
+                                                :or {nayta-hr? true}} data]]
+  (let [viimeinen-idx (dec (count data))
+        toiseksi-viimeinen-idx (- (count data) 2)]
+    (into
+      [:div.sininen-laatikko.talvihoitosuolan-yhteenveto
+       [:h2 otsikko]]
+      (map-indexed
+        (fn [i rivi]
+          ^{:key (str "sininen-laatikko-rivi-" i)}
+          [:div
+           ;; Jakaja
+           (when (and nayta-hr? (= i toiseksi-viimeinen-idx))
+             [:hr])
+
+           ;; Kontentti
+           (if (:infolaatikko? rivi)
+             [:div.rivin-infolaatikko
+              {:style {:grid-column "1 / -1"}}
+              (let [ikoni-fn (case (:ikoni rivi)
+                               :harja-icon-status-alert ikonit/harja-icon-status-alert
+                               nil)]
+                [yleiset/info-laatikko
+                 (or (:tyyppi rivi) :neutraali)
+                 (:teksti rivi)
+                 (:toissijainen-viesti rivi)
+                 (:leveys rivi)
+                 {:ikoni-fn ikoni-fn}])]
+             [:div.flex-row
+              (cond-> {}
+                (:lihavoi? rivi)
+                (assoc :style {:font-weight 600 :line-height "24px" :margin-top "12px" :margin-bottom "0px"}))
+              (if (= i viimeinen-idx)
+                [:ul [:li (:avain rivi)]]
+                [:div (:avain rivi)])
+              [:div.tasaa-oikealle
+               (if (= :raha (:fmt rivi))
+                 (fmt/euro-opt (:arvo rivi))
+                 (:arvo rivi))]])])
+        data))))
+
 (defmethod muodosta-html :laskutusyhteenveto-otsikko [[_ teksti]]
   [:h2 {:style {:font-size "16px"}} teksti])
 
