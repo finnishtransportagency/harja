@@ -626,7 +626,7 @@
 
         ;; Ja jos vielä on päätöksiä, joista on useampi samaa tyyppiä, niin otetaan niistä vain yksi
         paatokset (->> paatokset
-                    (group-by :paatostyyppi)
-                    (map (fn [[_ paatokset]] (first paatokset)))
+                    (group-by :avain)
+                    (map (fn [[_ paatokset]] (last paatokset)))
                     (into []))]
     paatokset))
