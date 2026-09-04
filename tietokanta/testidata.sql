@@ -188,6 +188,7 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
 -- Sanktiot
 \i testidata/sanktiot.sql
+\i testidata/sanktioraportti_testidata.sql
 
 -- Tarkastukset
 \i testidata/tarkastukset.sql

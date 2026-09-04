@@ -276,6 +276,7 @@
                   [rivi {}])
                 lihavoi-rivi? (:lihavoi? optiot)
                 korosta-rivi? (:korosta? optiot)
+                himmennetty? (:himmennetty? optiot)
                 valkoinen? (:valkoinen? optiot)
                 korosta-harmaa? (:korosta-harmaa? optiot)
                 korosta-hennosti? (:korosta-hennosti? optiot)
@@ -345,7 +346,8 @@
                                (if (or korosta-hennosti? varoitus? huomio?)
                                  (first (filter #(not (nil? %)) (into #{} [korosta-hennosti? varoitus? huomio?])))
                                  (korosta-kolumni-arvosta arvo-datassa))
-                               lihavoi?)
+                               lihavoi?
+                               (when himmennetty? {:color harmaa-himmennys-vari}))
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
               [:fo:block (if (string? naytettava-arvo)

@@ -10,6 +10,10 @@
   {:virhe "rgb(221,0,0)"
    :varoitus "rgb(255,153,0)"
    :info "rgb(0,136,204)"})
+(def excel-raporttivarit
+  {:yhteenveto "#9AC7FC"
+   :negatiivinen-tausta "#F8D7D1"
+   :negatiivinen-teksti "#B40A14"})
 
 
 ;; rajat-excel, virhetyylit-excel, ja solun-oletustyyli-excel ovat exceliin sidottuja,
@@ -40,33 +44,39 @@
   ;; Tekee viivan: —
   "\u2014")
 
-(defn solun-oletustyyli-excel [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?]
-  (merge-with merge
-    (cond
-      varoitus?
-      {:background :rose
-       :font {:color :black :name "Open Sans" :size 12}}
+(defn solun-oletustyyli-excel
+  [{:keys [lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio? negatiivinen?]}]
+   (merge-with merge
+     (cond
+       negatiivinen?
+       {:background (:negatiivinen-tausta excel-raporttivarit)
+        :font {:color (:negatiivinen-teksti excel-raporttivarit)
+               :name "Open Sans" :size 12}}
 
-      huomio?
-      {:background :yellow
-       :font {:color :black :name "Open Sans" :size 12}}
+       varoitus?
+       {:background :rose
+        :font {:color :black :name "Open Sans" :size 12}}
 
-      korosta?
-      (merge rajat-excel {:background :dark_blue
-                          :font {:color :white :name "Open Sans" :size 12}})
+       huomio?
+       {:background :yellow
+        :font {:color :black :name "Open Sans" :size 12}}
 
-      korosta-hennosti?
-      {:background :light_cornflower_blue
-       :font {:color :black :name "Open Sans" :size 12}}
+       korosta?
+       (merge rajat-excel {:background :dark_blue
+                           :font {:color :white :name "Open Sans" :size 12}})
 
-      korosta-harmaa?
-      {:background :grey_25_percent
-       :font {:color :black :name "Open Sans" :size 12}}
+       korosta-hennosti?
+       {:background (:yhteenveto excel-raporttivarit)
+        :font {:color :black :name "Open Sans" :size 12}}
 
-      :else
-      {:font {:color :black :name "Open Sans" :size 12}})
-    (when lihavoi?
-      {:font {:bold true :name "Open Sans" :size 12}})))
+       korosta-harmaa?
+       {:background :grey_25_percent
+        :font {:color :black :name "Open Sans" :size 12}}
+
+       :else
+       {:font {:color :black :name "Open Sans" :size 12}})
+     (when lihavoi?
+         {:font {:bold true :name "Open Sans" :size 12}})))
 
 (defn varillinen-teksti [tyyli teksti]
   [:varillinen-teksti {:arvo teksti :tyyli tyyli}])

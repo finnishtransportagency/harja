@@ -28,6 +28,7 @@
             [harja.domain.raportointi :as raportti-domain]
             [harja.palvelin.raportointi.raportit.yleinen :as raportit-yleinen])
   (:import (org.apache.poi.ss.util CellReference WorkbookUtil CellRangeAddress CellUtil)
+           (org.apache.poi.xssf.usermodel XSSFCellStyle XSSFColor)
            (org.apache.poi.ss.usermodel HorizontalAlignment)))
 
 (defmulti muodosta-excel
@@ -59,6 +60,32 @@
   (fn [[_ {:keys [kaava]}] _ _]
     kaava))
 
+(def ^:private excel-sheet-nimen-enimmaispituus 31)
+
+(defn- turvallinen-sheet-nimi
+  [nimi]
+  (let [nimi (str (or nimi ""))
+        nimi (if (str/blank? nimi) "Raportti" nimi)
+        nimi (WorkbookUtil/createSafeSheetName nimi)]
+    (if (str/blank? nimi) "Raportti" nimi)))
+
+(defn- yksiloi-sheet-nimi
+  [workbook nimi]
+  (let [pohjanimi (turvallinen-sheet-nimi nimi)
+        varattu? (fn [ehdokas]
+                   (some #(= true (.equalsIgnoreCase ehdokas (.getSheetName %)))
+                     (excel/sheet-seq workbook)))]
+    (if-not (varattu? pohjanimi)
+      pohjanimi
+      (loop [numero 2]
+        (let [paate (str " (" numero ")")
+              pohjan-enimmais-pituus (- excel-sheet-nimen-enimmaispituus (count paate))
+              ehdokas (str (subs pohjanimi 0 (min (count pohjanimi) pohjan-enimmais-pituus))
+                         paate)]
+          (if (varattu? ehdokas)
+            (recur (inc numero))
+            ehdokas))))))
+
 (defn- evaluoi-kaava
   "Luo kaavaevaluaattorin ja evaluoi kaavan. Parametrina sisään workbook ja solu."
   [workbook cell]
@@ -82,8 +109,8 @@
   (let [osoite (-> cell .getAddress)
         sarake (first (.toString osoite))]
     (.setCellFormula
-      cell
-      (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
+     cell
+     (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
     (evaluoi-kaava workbook cell)))
 
 (defmethod aseta-kaava! :summaa-vieressaolevat [[_ {:keys [alkusarake loppusarake]}] workbook cell]
@@ -91,8 +118,8 @@
         rivi (parsi-rivinumero osoite)
         loppusarake (or loppusarake (parsi-sarakekirjain osoite))]
     (.setCellFormula
-      cell
-      (str "SUM(" (or alkusarake "A") rivi ":" loppusarake rivi ")")))
+     cell
+     (str "SUM(" (or alkusarake "A") rivi ":" loppusarake rivi ")")))
   (evaluoi-kaava workbook cell))
 
 (defn- ilman-soft-hyphenia [data]
@@ -107,7 +134,13 @@
 (defmethod muodosta-solu :arvo [[_ {:keys [arvo lihavoi? korosta?
                                            korosta-hennosti? ala-korosta? korosta-harmaa?
                                            varoitus? huomio?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel
+                      {:lihavoi? lihavoi?
+                       :korosta? korosta?
+                       :korosta-hennosti? korosta-hennosti?
+                       :korosta-harmaa? korosta-harmaa?
+                       :varoitus? varoitus?
+                       :huomio? huomio?})
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)]
@@ -140,7 +173,13 @@
                    :else "+ ")
         arvo (Math/abs (float arvo))
         prosentti (Math/abs (float prosentti))
-        oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+        oletustyyli (raportti-domain/solun-oletustyyli-excel
+                      {:lihavoi? lihavoi?
+                       :korosta? korosta?
+                       :korosta-hennosti? korosta-hennosti?
+                       :korosta-harmaa? korosta-harmaa?
+                       :varoitus? varoitus?
+                       :huomio? huomio?})
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -162,7 +201,13 @@
 (defmethod muodosta-solu :arvo-ja-yksikko-korostettu [[_ {:keys [arvo yksikko desimaalien-maara lihavoi? korosta?
                                                                  korosta-hennosti? korosta-harmaa? ala-korosta?
                                                                  varoitus? huomio?]}] solun-tyyli]
-  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+  (let [oletustyyli (raportti-domain/solun-oletustyyli-excel
+                      {:lihavoi? lihavoi?
+                       :korosta? korosta?
+                       :korosta-hennosti? korosta-hennosti?
+                       :korosta-harmaa? korosta-harmaa?
+                       :varoitus? varoitus?
+                       :huomio? huomio?})
         solun-tyyli (if-not (empty? solun-tyyli)
                       solun-tyyli
                       oletustyyli)
@@ -201,7 +246,8 @@
                       :else solun-tyyli)
 
         solun-tyyli (if korosta-hennosti?
-                      (merge solun-tyyli {:background :light_cornflower_blue})
+                      (merge solun-tyyli
+                        {:background (:yhteenveto raportti-domain/excel-raporttivarit)})
                       solun-tyyli)]
     [arvo
      (merge solun-tyyli (when tyyli (tyyli raportti-domain/virhetyylit-excel)))
@@ -442,8 +488,7 @@
                               aiempi-sheet)
                           [aiempi-sheet (+ 2 (.getLastRowNum aiempi-sheet))]
                           [(excel/add-sheet! workbook
-                             (WorkbookUtil/createSafeSheetName
-                               (or sheet-nimi nimi))) 0])
+                             (yksiloi-sheet-nimi workbook (or sheet-nimi nimi))) 0])
           ;; mahdollista haluttujen sheetien sisällä solujen lukitseminen (sheet protection)
           _ (when (:varjele-sheet-muokkauksilta? optiot)
               (.enableLocking sheet))
@@ -466,13 +511,26 @@
           rivi-jalkeen-nro (+ puskuririvien-maara-ennen-rivi-jalkeen (count data))
           rivi-jalkeen-rivi (when rivi-jalkeen (.createRow sheet rivi-jalkeen-nro))
           nolla (if rivi-ennen (inc nolla) nolla)
+          alkutekstien-alkurivi nolla
           nolla (if excel-alkutekstit (+ nolla (count excel-alkutekstit))
                   nolla)
           otsikko-rivi (.createRow sheet nolla)
           luodut-tyylit (atom {})
           luo-uusi-tyyli (fn [solun-tyyli formaatti-fn sarake-fmt]
-                           (let [uusi-tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
+                           (let [taustavari (:background solun-tyyli)
+                                 tekstivari (get-in solun-tyyli [:font :color])
+                                 tyyli (cond-> solun-tyyli
+                                         (string? taustavari) (assoc :background nil)
+                                         (string? tekstivari) (assoc-in [:font :color] nil))
+                                 uusi-tyyli (doto (excel/create-cell-style! workbook tyyli)
                                               formaatti-fn)]
+                             (when (and (string? taustavari)
+                                     (instance? XSSFCellStyle uusi-tyyli))
+                               (.setFillForegroundColor uusi-tyyli (XSSFColor. (java.awt.Color/decode taustavari) nil))
+                               (.setFillPattern uusi-tyyli org.apache.poi.ss.usermodel.FillPatternType/SOLID_FOREGROUND))
+                             (when (and (string? tekstivari)
+                                     (instance? XSSFCellStyle uusi-tyyli))
+                               (.setColor (.getFont uusi-tyyli) (XSSFColor. (java.awt.Color/decode tekstivari) nil)))
                              (swap! luodut-tyylit assoc-in [solun-tyyli sarake-fmt] uusi-tyyli)
                              uusi-tyyli))]
       ;; Luodaan mahdollinen rivi-ennen
@@ -492,7 +550,7 @@
             (fn [rivi-nro rivi]
               (let [[tyyppi teksti] (excel-alkuteksti->elementti rivi)
                     tyyli           (excel-alkuteksti-tyyli workbook tyyppi)]
-                (tee-tekstirivi sheet (+ 2 rivi-nro) teksti tyyli)))
+                (tee-tekstirivi sheet (+ alkutekstien-alkurivi rivi-nro) teksti tyyli)))
             excel-alkutekstit)))
 
       ;; Jos on useampi taulu samalla sheetillä, laitetaan niiden nimet ennen sarakkeiden otsikkoja.
@@ -533,6 +591,7 @@
                           korosta? (:korosta? optiot)
                           korosta-hennosti? (:korosta-hennosti? optiot)
                           varoitus? (:varoitus? optiot)
+                          negatiivinen? (:negatiivinen? optiot)
                           huomio? (:huomio? optiot)
                           korosta-harmaa? (:korosta-harmaa? optiot)
                           arvo-datassa (nth data sarake-nro nil)
@@ -545,7 +604,14 @@
                                      (:fmt (second arvo-datassa)))
                           formatoi-solu? (raportti-domain/formatoi-solu? arvo-datassa)
 
-                          oletustyyli (raportti-domain/solun-oletustyyli-excel lihavoi? korosta? korosta-hennosti? korosta-harmaa? varoitus? huomio?)
+                          oletustyyli (raportti-domain/solun-oletustyyli-excel
+                                        {:lihavoi? lihavoi?
+                                         :korosta? korosta?
+                                         :korosta-hennosti? korosta-hennosti?
+                                         :korosta-harmaa? korosta-harmaa?
+                                         :varoitus? varoitus?
+                                         :huomio? huomio?
+                                         :negatiivinen? negatiivinen?})
                           [naytettava-arvo solun-tyyli formaatti]
                           (if (and (raportti-domain/raporttielementti? arvo-datassa)
                                 (not (raportti-domain/excel-kaava? arvo-datassa)))
@@ -629,7 +695,9 @@
   [elementti tunnistetiedot]
   (let [e (get elementti 0)]
     (if (= :taulukko e) ;; on optiomappi
-      (assoc-in elementti [1 :raportin-tiedot] (:raportin-yleiset-tiedot tunnistetiedot))
+      (assoc-in elementti [1 :raportin-tiedot]
+        (merge (:raportin-yleiset-tiedot tunnistetiedot)
+          (get-in elementti [1 :raportin-tiedot])))
       elementti)))
 
 (defmethod muodosta-excel :jakaja [_ _] nil)
@@ -645,11 +713,11 @@
                         (if (and (zero? viimeinen) (nil? (.getRow sheet 0)))
                           0
                           (+ 2 viimeinen)))
-        tyyli (excel/create-cell-style! workbook {:font (font-otsikko font-koko)})
-        rivi (.createRow sheet rivi-numero)
-        solu (.createCell rivi 0)]
-    (excel/set-cell! solu teksti)
-    (excel/set-cell-style! solu tyyli))))
+          tyyli (excel/create-cell-style! workbook {:font (font-otsikko font-koko)})
+          rivi (.createRow sheet rivi-numero)
+          solu (.createCell rivi 0)]
+      (excel/set-cell! solu teksti)
+      (excel/set-cell-style! solu tyyli))))
 
 (defmethod muodosta-excel :otsikko [[_ _] _] nil)
 
@@ -662,6 +730,36 @@
 (defmethod muodosta-excel :otsikko-heading-small [[_ teksti] workbook]
   (luo-otsikko-rivi-sheetille workbook teksti 12))
 
+(def ^:private excel-elementit
+  #{:taulukko :teksti :tyhja-rivi :jakaja :otsikko :otsikko-title
+    :otsikko-heading :otsikko-heading-small :pohjan-taytto})
+
+(defn- raporttielementit
+  [elementit]
+  (mapcat (fn [elementti]
+            (cond
+              (and (vector? elementti)
+                (contains? excel-elementit (first elementti)))
+              (if (and (= :otsikko (first elementti))
+                    (> (count elementti) 2))
+                (cons (subvec elementti 0 2)
+                  (raporttielementit (drop 2 elementti)))
+                [elementti])
+
+              (seq? elementti)
+              (raporttielementit elementti)
+
+              (and (vector? elementti)
+                (keyword? (first elementti)))
+              (raporttielementit (rest elementti))
+
+              (vector? elementti)
+              (raporttielementit elementti)
+
+              :else
+              []))
+    elementit))
+
 (defn- lisaa-ajettu-teksti-ensimmaiselle-sheetille!
   "Lisää 'Ajettu'-tekstin ensimmäisen sheetin viimeiselle riville.
   Kutsutaan kaikkien elementtien kirjoituksen jälkeen."
@@ -673,7 +771,7 @@
       (excel/set-cell! cell (str "Ajettu " nyt)))))
 
 (defmethod muodosta-excel :raportti [[_ raportin-tunnistetiedot & sisalto] workbook]
-  (let [sisalto (mapcat #(if (seq? %) % [%]) sisalto)
+  (let [sisalto (raporttielementit sisalto)
         tiedoston-nimi (raportit-yleinen/raportti-tiedostonimi raportin-tunnistetiedot)
         ;; Tulostuspäivä
         nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]

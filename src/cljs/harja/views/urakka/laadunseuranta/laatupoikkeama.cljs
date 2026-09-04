@@ -27,6 +27,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.urakka :as u-domain]
             [harja.domain.kommentti :as kommentti]
@@ -201,7 +202,11 @@
              {:otsikko "Määrätty"  :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.2}
              {:otsikko "Käsitelty" :nimi :kasittelyaika :hae #(get-in % [:laatupoikkeama :paatos :kasittelyaika]) :fmt pvm/pvm-opt :leveys 1.2})
            {:otsikko "Laji" :nimi :laji :hae #(sanktiot/valitun-urakan-sanktiolajin-nimi (:laji %)) :leveys 2}
-           {:otsikko "Tyyppi" :nimi :tyyppi-nimi :hae #(get-in % [:tyyppi :nimi]) :leveys 2}
+           {:otsikko "Tyyppi" :nimi :tyyppi-nimi
+            :hae #(sanktiotyyppi-domain/sanktiotyypin-nimi
+                    (sanktiot/valitun-urakan-sanktiolajin-nimi (:laji %))
+                    (:tyyppi %))
+            :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
            {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
           (or sanktiot-lista [])]]

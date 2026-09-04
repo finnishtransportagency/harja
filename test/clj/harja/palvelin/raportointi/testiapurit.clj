@@ -8,8 +8,8 @@
 (defn rivin-solu [rivi indeksi]
   (let [rivi (or (:rivi rivi) rivi)] (nth rivi indeksi)))
 (defn taulukon-solu [taulukko sarake rivi] (-> (taulukon-rivit taulukko)
-                                               (nth rivi)
-                                               (rivin-solu sarake)))
+                                             (nth rivi)
+                                             (rivin-solu sarake)))
 
 (defn sarakkeiden-data [taulukko]
   (let [tayta (fn [pituus coll] (concat coll (take (- pituus (count coll)) (repeat nil))))
@@ -38,74 +38,74 @@
 
 (defn tyhja-raporttisolu? [solu]
   (and (raporttisolu? solu)
-       (empty? (raporttisolun-arvo solu))
-       (string? (raporttisolun-arvo solu))))
+    (empty? (raporttisolun-arvo solu))
+    (string? (raporttisolun-arvo solu))))
 
 (defn tarkista-raportti [vastaus nimi]
   (match vastaus
-         ([:raportti {:nimi nimi}
-           & elementit] :seq)
-         elementit
-         :else (is false (str "Raportti ei ole oikean muotoinen! saatiin: " (pr-str vastaus)))))
+    ([:raportti {:nimi nimi}
+      & elementit] :seq)
+    elementit
+    :else (is false (str "Raportti ei ole oikean muotoinen! saatiin: " (pr-str vastaus)))))
 
 (defn tarkista-taulukko-otsikko [taulukko otsikko]
   (let [taulukon-otsikko (:otsikko (second taulukko))]
     (is (= taulukon-otsikko otsikko)
-        (str "Taulukon otsikko ei täsmää! " taulukon-otsikko " != " otsikko))))
+      (str "Taulukon otsikko ei täsmää! " taulukon-otsikko " != " otsikko))))
 
 (defn tarkista-taulukko-yhteensa [taulukko numero-sarake]
   (let [rivit (taulukon-rivit taulukko)
         laskettu-summa (reduce + 0 (keep #(nth % numero-sarake)
-                                         (filter vector? (butlast rivit))))
+                                     (filter vector? (butlast rivit))))
         raportoitu-summa (nth (last rivit) numero-sarake)]
     (is (== laskettu-summa raportoitu-summa)
-        (str "Laskettu ja raportoitu yhteensä summa ei täsmää: "
-             laskettu-summa " != " raportoitu-summa))))
+      (str "Laskettu ja raportoitu yhteensä summa ei täsmää: "
+        laskettu-summa " != " raportoitu-summa))))
 
 (defn tarkista-taulukko-sarakkeet [taulukko & sarakkeet]
   (let [taulukon-sarakkeet (sarakkeiden-otsikot taulukko)]
     (is (= (count taulukon-sarakkeet) (count sarakkeet))
-        (str "Taulukossa on eri määrä sarakkeita. "
-             (count taulukon-sarakkeet) " != " (count sarakkeet)))
+      (str "Taulukossa on eri määrä sarakkeita. "
+        (count taulukon-sarakkeet) " != " (count sarakkeet)))
     (dorun
-     (map (fn [taulukon-sarake sarake]
-            (let [taulukon-sarake* (select-keys taulukon-sarake (keys sarake))]
-                 (is (= taulukon-sarake* sarake)
-                     (str "Taulukon sarake ei täsmää vaadittuun: "
-                          (pr-str taulukon-sarake) " != "
-                          (pr-str sarake)))))
-          taulukon-sarakkeet sarakkeet))))
+      (map (fn [taulukon-sarake sarake]
+             (let [taulukon-sarake* (select-keys taulukon-sarake (keys sarake))]
+               (is (= taulukon-sarake* sarake)
+                 (str "Taulukon sarake ei täsmää vaadittuun: "
+                   (pr-str taulukon-sarake) " != "
+                   (pr-str sarake)))))
+        taulukon-sarakkeet sarakkeet))))
 
 (defn tarkista-taulukko-rivit [taulukko & rivit]
   (let [taulukon-rivit (taulukon-rivit taulukko)]
     (is (= (count taulukon-rivit) (count rivit))
-        (str "Taulukossa eri määrä rivejä. "
-             (count taulukon-rivit) " != " (count rivit)))
+      (str "Taulukossa eri määrä rivejä. "
+        (count taulukon-rivit) " != " (count rivit)))
     (dorun
-     (map (fn [taulukon-rivi rivi]
-            (if (fn? rivi)
-              (is (rivi taulukon-rivi)
-                  (str taulukko "Taulukon rivi ei tyydytä annettua predikaattia, rivi: "
-                       (pr-str taulukon-rivi) ", predikaatti: " rivi taulukko))
-              (is (= taulukon-rivi rivi)
-                  (str "Taulukon rivi ei täsmää vaadittuun: "
-                       (pr-str taulukon-rivi) " != "
-                       (pr-str rivi)))))
-          taulukon-rivit rivit))))
+      (map (fn [taulukon-rivi rivi]
+             (if (fn? rivi)
+               (is (rivi taulukon-rivi)
+                 (str taulukko "Taulukon rivi ei tyydytä annettua predikaattia, rivi: "
+                   (pr-str taulukon-rivi) ", predikaatti: " rivi taulukko))
+               (is (= taulukon-rivi rivi)
+                 (str "Taulukon rivi ei täsmää vaadittuun: "
+                   (pr-str taulukon-rivi) " != "
+                   (pr-str rivi)))))
+        taulukon-rivit rivit))))
 
 (defn tarkista-taulukko-kaikki-rivit [taulukko rivi-pred-fn]
   (dorun
-   (map-indexed (fn [i taulukon-rivi]
-                  (is (rivi-pred-fn taulukon-rivi)
-                      (str "Taulukon rivi " i " ei täsmää predikaattiin: "
-                           (pr-str taulukon-rivi))))
-                (taulukon-rivit taulukko))))
+    (map-indexed (fn [i taulukon-rivi]
+                   (is (rivi-pred-fn taulukon-rivi)
+                     (str "Taulukon rivi " i " ei täsmää predikaattiin: "
+                       (pr-str taulukon-rivi))))
+      (taulukon-rivit taulukko))))
 
 (defn tarkista-taulukko-kaikki-rivit-ja-yhteenveto
   [taulukko rivi-pred-fn viimeinen-rivi-pred-fn]
   #_(tarkista-taulukko-kaikki-rivit
-    (assoc taulukko 3 (butlast (taulukon-rivit taulukko)))
-    rivi-pred-fn)
+      (assoc taulukko 3 (butlast (taulukon-rivit taulukko)))
+      rivi-pred-fn)
   (tarkista-taulukko-kaikki-rivit
     (assoc taulukko 3 [(last (taulukon-rivit taulukko))])
     viimeinen-rivi-pred-fn))
@@ -135,23 +135,69 @@
   `(let [loytynyt-elementti#
          (some (fn [elementti#]
                  (match elementti#
-                        ~elementin-match elementti#
-                        :else nil))
-               (drop 2 ~raportti))]
+                   ~elementin-match elementti#
+                   :else nil))
+           (drop 2 ~raportti))]
      (is (not (nil? loytynyt-elementti#))
-         (str "Elementtiä matcherilla ei löytynyt: " ~(pr-str elementin-match)))
+       (str "Elementtiä matcherilla ei löytynyt: " ~(pr-str elementin-match)))
      loytynyt-elementti#))
 
 (defmacro taulukko-otsikolla [raportti otsikko]
   `(elementti ~raportti [:taulukko {:otsikko ~otsikko} sarakkeet# rivit#]))
 
+(defn hae-osion-taulukot
+  "Etsii raportista osion taulukot uudella rakenteella.
+   Uusi rakenne: [[:otsikko \"Sanktiot\"] [:taulukko ...] [:taulukko ...] ...]
+  Jos taulukko toimii itse osion otsikkona, palautetaan vastaava taulukko.
+  Palauttaa kaikki :taulukko-elementit annetun osion otsikon jälkeen."
+  [raportti otsikko]
+  (let [raportti-osat (drop 2 raportti)
+        ;; Etsi [:otsikko otsikko] -elementti (osion otsikko, ei koko-otsikko)
+        osio-indeksi (first (keep-indexed (fn [i elementti]
+                                            (when (and (vector? elementti)
+                                                    (= (first elementti) :otsikko)
+                                                    (= (second elementti) otsikko))
+                                              i))
+                              raportti-osat))
+            ;; Jos löytyy, kerää kaikki :taulukko-elementit kunnes tulee uusi :otsikko
+          taulukot (if osio-indeksi
+             (let [seuraavat (drop (inc osio-indeksi) raportti-osat)
+               [taulukot-sarja _] (reduce (fn [[taulukot jatkuu] elementti]
+                        (if (and (vector? elementti)
+                          (= (first elementti) :otsikko))
+                          [taulukot false]
+                            [(conj taulukot elementti) true]))
+                        [[] true]
+                        seuraavat)]
+               taulukot-sarja)
+             (filter #(and (vector? %)
+                (= :taulukko (first %))
+                (= otsikko (get-in % [1 :otsikko])))
+               raportti-osat))]
+    taulukot))
+
+
+
+(defn hae-yhteenveto
+  "Palauttaa raportin sininen-laatikko-yhteenvedon avain/arvo-rivit
+   (esim. sanktioraportin ylin 'Yhteenveto'-osio)."
+  [raportti]
+  (let [display-flex (some #(when (and (vector? %) (= (first %) :display-flex)) %) raportti)
+        sininen-laatikko (second display-flex)]
+    (nth sininen-laatikko 2)))
+
+(defn hae-yhteenveto-arvo
+  "Hakee raportin Yhteenveto-laatikosta annetun avaimen arvon."
+  [raportti avain]
+  (:arvo (first (filter #(= (:avain %) avain) (hae-yhteenveto raportti)))))
+
 (defmacro elementti? [raportti elementin-match]
   `(let [loytynyt-elementti#
          (some (fn [elementti#]
                  (match elementti#
-                        ~elementin-match elementti#
-                        :else nil))
-               (drop 2 ~raportti))]
+                   ~elementin-match elementti#
+                   :else nil))
+           (drop 2 ~raportti))]
      (some? loytynyt-elementti#)))
 
 (defmacro taulukko-otsikolla? [raportti otsikko]
