@@ -240,16 +240,14 @@
 
 /* Välikatselmussivun yhteenvetolaatikko */
 div.valikatselmus-yhteenveto {
-
-  .yhteenveto-container & {
-    position: sticky;
-    top: @valistys-32;
+  
+  &.osio {
+    margin-bottom: @valistys-16;
   }
 
   max-width: 532px;
   border: 1px solid @harmaa-vaalea;
   border-radius: 0.5rem;
-  box-sizing: border-box;
   padding: @valistys-24;
 
   .valikatselmus {
@@ -305,17 +303,44 @@ div.valikatselmus-yhteenveto {
     color: @green-dark;
   }
   h2.yhteenveto {
-    font-size: 1.75rem;
-    margin-top: @valistys-8;
-    margin-bottom: @valistys-32;
+    margin: 0;
+    padding-bottom: @valistys-16;
   }
   h3 {
-    margin-top: 1.375rem;
-    margin-bottom: 0.625rem;
+    margin: 0;
+    padding-bottom: @valistys-16;
   }
   hr {
     margin: @valistys-4 0 @valistys-8 0;
     border-top: 1px solid @white-darker;
+  }
+  
+  .toteutuneet-kustannukset {
+    margin-top: @valistys-16;
+    
+    h3 {
+      // Figma haluaa näille omat weightit
+      font-weight: 600;
+      padding-bottom: @valistys-8;
+    }
+    
+    .summa {
+      font-weight: 700;
+    }
+    
+    // Tavoitehinnan ylitys
+    &.punainen {
+      border: 1px solid @red-dark;
+      border-radius: @valistys-8;
+      padding: @valistys-16;
+    }
+    
+    // Tavoitehinnan alitus
+    &.vihrea {
+      border: 1px solid @green-dark;
+      border-radius: @valistys-8;
+      padding: @valistys-16;
+    }
   }
 }
 

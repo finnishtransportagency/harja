@@ -1,7 +1,17 @@
-<b>Nykyinen versio: 1.0.66</b>
-<b>Julkaistu: 01.09.2025</b>
+<b>Nykyinen versio: 1.0.69</b>
+<b>Julkaistu: 4.3.2026</b>
 
 <b>Versiohistoria:</b>
+- Tulossa
+    - Tulossa myöhemmin: Rajoitusaluerajapinta, jonka kautta urakoitsija voi hakea urakkansa rajoitusalueet ja niihin liittyvät suolan käytön rajoitukset. 
+    - Tulossa myöhemmin: Liiterajapinta, jonka kautta urakoitsija voi lähettää Harjaan eri asioin (esim. siltatarkastuksiin) liittyviä liitteitä yksi kerrallaan.
+    - Tulossa myöhemmin: Muutoksia reikäpaikkausrajapintaan.
+- Versionumero 1.0.69 Julkaistu 4.3.2026
+    - Lisätty suoritettava tehtävä: tieturvallisuustarkastus.
+- Versionumero 1.0.68 Julkaistu 22.1.2026
+    - Urakoitsija voi ilmoittaa toteuman lähteen. Koneellinen = tieto on työkoneelta. Kasin = tieto on kirjattu käsin urakoitsijajärjestelmään. Korjattu = työkoneelta saatua tietoa on päivitetty käsin.
+- Versionumero 1.0.67 Julkaistu 1.10.2025
+    - Lisätty toteuma- ja materiaaliraporttirajapintoihin dokumentaatiota
 - Versionumero 1.0.66 Julkaistu 1.9.2025
     - Poistettu tiestötoimenpiteiden pakollisuus työmaapäiväkirjarajapinnasta.
 - Versionumero 1.0.65 Julkaistu 9.1.2025
