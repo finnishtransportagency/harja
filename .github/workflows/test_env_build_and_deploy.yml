@@ -1,14 +1,9 @@
-## Testiympäristöjen pystytykseen alustava deployment prosessi
+## Testiympäristöjen deployment prosessi
 ## -> antaa valita branchin 
 ## -> buildaa imagen testi ECR:rään (erillään prodista)
 ## -> deployaa imagen <test-env> ECS konttiin  
-##
-## Ei koske prod pipelineen  
-## 
-
 name: '[Test-envs] Build and deploy'
 
-## TODO: Tähän tulee oikeat valinnat myöhemmin 
 on:
   workflow_dispatch:
     inputs:
@@ -18,22 +13,28 @@ on:
         type: choice
         options:
           - test-qa1
+          - test-qa2
+          - test-qa3
+          - test-demo
+          - test-koulutus
+      keep-running:
+        description: "Pidä ympäristö käynnissä yön yli?"
+        required: true
+        type: boolean
+        default: false
 
 permissions: {}
 
 concurrency:
-  ## TODO: Myöhemmin ei kovakoodata
-  group: test-qa1-deploy
+  group: ${{ inputs.environment }}-deploy
   cancel-in-progress: false
-  
+
 jobs:
 
-  ## TODO: Nimi vaihtuu myöhemmin
-  deploy-qa1:
-    name: "Deploy branch to QA1"
+  deploy:
+    name: "Deploy branch to ${{ inputs.environment }}"
     runs-on: ubuntu-latest
-    ## TODO: Myöhemmin ei kovakoodata
-    environment: 'test-qa1'
+    environment: ${{ inputs.environment }}
 
     permissions:
       id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
@@ -62,16 +63,15 @@ jobs:
 
       ## ref_name == branchi
       ## Tagataan image näillä 
-      ## TODO.. Jos halutaan sallia että esim QA1 & QA2 käyttää samaa branchia
-      ##        -> täytyy tagittaa vielä environment
       - name: '[Test-envs] Resolve sanitized ref tag'
         id: ref-tag
         env:
           RAW_REF: ${{ github.ref_name }}
+          ENVIRONMENT: ${{ inputs.environment }}
         run: |
-          REF_TAG=$(echo "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          REF_TAG=$(echo "$RAW_REF-$ENVIRONMENT" | sed 's/[^a-zA-Z0-9]/-/g')
           echo "ref_tag=$REF_TAG" >> "$GITHUB_OUTPUT"
-      
+
       - name: '[Test-envs] Build Harja Uberjar'
         uses: ./.github/actions/build-harja-app
         with:
@@ -109,7 +109,48 @@ jobs:
             --file "$DOCKERFILE_PATH" .
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
+      
+      # Käynnistä tietokanta jos ei ole jo käynnissä 
+      - name: '[Test-envs] Start Aurora database'
+        env:
+          ENVIRONMENT: ${{ inputs.environment }}
+        run: |
+          DB_CLUSTER="harja-test-db-${ENVIRONMENT#test-}"
+          echo "Checking RDS cluster: $DB_CLUSTER"
           
+          STATUS=$(aws rds describe-db-clusters \
+            --region eu-west-1 \
+            --db-cluster-identifier "$DB_CLUSTER" \
+            --query 'DBClusters[0].Status' \
+            --output text)
+          
+          echo "RDS Cluster status: $STATUS"
+          
+          if [ "$STATUS" = "stopped" ]; then
+            echo "Starting $DB_CLUSTER..."
+            aws rds start-db-cluster \
+              --region eu-west-1 \
+              --db-cluster-identifier "$DB_CLUSTER" \
+              --no-cli-pager > /dev/null
+          fi
+          
+          while true; do
+            STATUS=$(aws rds describe-db-clusters \
+              --region eu-west-1 \
+              --db-cluster-identifier "$DB_CLUSTER" \
+              --query 'DBClusters[0].Status' \
+              --output text)
+          
+            echo "Waiting to start.. RDS Cluster status: $STATUS"
+          
+            if [ "$STATUS" = "available" ]; then
+              echo "Done, $DB_CLUSTER is running"
+              break
+            fi
+          
+            sleep 10
+          done
+
       - name: '[Test-envs] Run migrations'
         uses: ./.github/actions/run-migrations-to-test-env
         with:
@@ -125,7 +166,7 @@ jobs:
         run: |
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
-          
+
       - name: '[Test-envs] Download task definition'
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
@@ -156,12 +197,38 @@ jobs:
         env:
           ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
           ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
-        ## TODO:
-        ## Käytetään desired count muuttujaa jälkikäteen
-        ## Tähän spikeen == 1, hallinnoidaan infran puolella 
         run: |
           aws ecs update-service \
             --region eu-west-1 \
             --cluster "$ECS_CLUSTER_NAME" \
             --service "$ECS_SERVICE_NAME" \
             --desired-count 1
+          
+      - name: '[Test-envs] Configure automatic stop'
+        env:
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
+          KEEP_RUNNING: ${{ inputs.keep-running }}
+        run: |
+          SERVICE_ARN=$(aws ecs describe-services \
+            --region eu-west-1 \
+            --cluster "$ECS_CLUSTER_NAME" \
+            --services "$ECS_SERVICE_NAME" \
+            --query 'services[0].serviceArn' \
+            --output text)
+      
+          if [ "$KEEP_RUNNING" = "true" ]; then
+            echo "Disabling automatic stop for $ECS_SERVICE_NAME"
+      
+            aws ecs tag-resource \
+              --region eu-west-1 \
+              --resource-arn "$SERVICE_ARN" \
+              --tags key=HARJA_AUTOSS_IGNORE,value=true
+          else
+            echo "Enabling automatic stop for $ECS_SERVICE_NAME"
+      
+            aws ecs untag-resource \
+              --region eu-west-1 \
+              --resource-arn "$SERVICE_ARN" \
+              --tag-keys HARJA_AUTOSS_IGNORE
+          fi
