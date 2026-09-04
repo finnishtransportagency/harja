@@ -30,11 +30,11 @@
              :desimaalien-maara 1}]
      [:arvo {:arvo "-"}])
    (:lampotilan-vaikutus rivi)
-   (if (:kayttoraja rivi)
+   (if (and (:kayttoraja rivi) (not= 0M (:kayttoraja rivi)))
      [:arvo {:arvo (:kayttoraja rivi)
              :desimaalien-maara 2}]
      [:arvo {:arvo "Tieto puuttuu"}])
-   (if (:kohtuull-kayttoraja rivi)
+   (if (and (:kohtuull-kayttoraja rivi) (not= 0.0 (:kohtuull-kayttoraja rivi)))
      [:arvo {:arvo (:kohtuull-kayttoraja rivi)
              :desimaalien-maara 2}]
      [:arvo {:arvo "-"}])
