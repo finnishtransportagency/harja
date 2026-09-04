@@ -757,8 +757,8 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
-          validaatio (if (<= (:siirrettava_maara paatos) 0)
-                       (conj validaatio (str "Siirrettävä määrä on pienempi tai yhtäsuuri kuin 0,00 €."))
+          validaatio (if (< (:siirrettava_maara paatos) 0)
+                       (conj validaatio (str "Siirrettävä määrä on pienempi 0,00 €."))
                        validaatio)
 
           validaatio (if (> (:siirrettava_maara paatos) (round2 2 (:ylityksen_maara paatos)))
