@@ -23,8 +23,8 @@
             [harja.views.urakka.valikatselmus.hintapaatokset :as hintapaatokset]
             [harja.views.urakka.valikatselmus.indeksikorjaus :as indeksikorjaus]
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]
-            [harja.views.urakka.valikatselmus.yhteenvetolaatikko :as yhteevetolaatikko]
             [harja.views.urakka.valikatselmus.hoidonjohtopalkkio :as hoidonjohtopalkkio]
+            [harja.views.urakka.valikatselmus.yhteenveto.yhteenveto :as yhteevetolaatikko]
             [harja.views.urakka.valikatselmus.tavoitehinnan-muutokset :as tavoitehinnan-muutokset]
             [harja.views.urakka.valikatselmus.hoitovuoden-lopun-hinnat :as hoitovuoden-lopun-hinnat])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))

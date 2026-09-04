@@ -39,7 +39,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-siltatarkastukset user urakka-id)
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
         hoitovuodet (range (pvm/vuosi (:alkupvm urakan-tiedot))
-                      (inc (pvm/vuosi (:loppupvm urakan-tiedot))))
+                      (inc (- (pvm/vuosi (:loppupvm urakan-tiedot)) 1)))
         hoitovuoden-alkuvuosi (when-not (or (= "Kaikki" hoitovuoden-alkuvuosi)
                                            (nil? hoitovuoden-alkuvuosi))
                                  hoitovuoden-alkuvuosi)
