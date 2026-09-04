@@ -5,15 +5,16 @@
   "Laskee rivin tavoitehinnan muutoksen. Sen sijainti vaihtelee tyyppikohtaisesti."
   ;; on hyvä saada tavoitehinnan muutos samaan avaimeen, niin summauslaskennat jne. toimivat myöhemmin suoraan
   [muutokset]
-  (mapv (fn [rivi]
-          (let [total (if (= (:tyyppi rivi)
-                            "johto-ja-hallintokorvaus")
-                        (or (:jjh-muutosten-summa rivi) 0)
-                        (some->>
-                          (:kustannusvaikutukset rivi)
-                          (map :summa)
-                          (reduce + 0)))]
-            (assoc rivi :tavoitehinnan-muutos total)))
+  (mapv
+    (fn [rivi]
+      (let [total (if (= (:tyyppi rivi)
+                        "johto-ja-hallintokorvaus")
+                    (or (:jjh-muutosten-summa rivi) 0)
+                    (->>
+                      (:kustannusvaikutukset rivi)
+                      (map #(or (:summa %) 0))
+                      (reduce + 0)))]
+        (assoc rivi :tavoitehinnan-muutos total)))
     muutokset))
 
 (defn parsi-kirjatut-muutokset-vastaus [vastaus]

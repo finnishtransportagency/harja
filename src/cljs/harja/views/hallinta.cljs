@@ -22,6 +22,7 @@
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.tyokalut.ajastukset-nakyma :as ajastukset-nakyma]
             [harja.views.hallinta.tyokalut.raporttityokalu-nakyma :as raporttityokalu-nakyma]
+            [harja.views.hallinta.tyokalut.laatupoikkeamasanktiotyokalu-nakyma :as laatupoikkeamasanktiotyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -33,7 +34,7 @@
             [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
-            [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.urakkaparametrit-nakyma :as urakkaparametrit]
             [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
             [harja.tiedot.istunto :as istunto]))
 
@@ -134,11 +135,11 @@
       ^{:key "urakkahenkilot"}
       [urakkahenkilot/urakkahenkilot])
 
-    "Urakoiden parametrit"
+    "Urakan parametrit"
     :urakkaparametrit
-    ;; TODO: Varmista oikeiat oikeudet
+    ;; Käytetään samaa oikeutta kuin Urakoiden henkilöt -näkymässä, koska omaa oikeutta ei ole tarpeen tehdä.
     (when (oikeudet/hallinta-urakkahenkilot)
-      ^{:key "urakkahenkilot"}
+      ^{:key "urakkaparametrit"}
       [urakkaparametrit/urakkaparametrit])
 
     "Sanktio- ja bonusprofiilit"
@@ -262,6 +263,13 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "raporttityokalut"}
       [raporttityokalu-nakyma/nayta-raporttityokalut])
+
+    "Sanktiotyökalu"
+    :sanktiotyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "sanktiotyokalu"}
+      [laatupoikkeamasanktiotyokalu-nakyma/laheta-sanktio])
 
     "Viestitestaus"
     :viestitestaus

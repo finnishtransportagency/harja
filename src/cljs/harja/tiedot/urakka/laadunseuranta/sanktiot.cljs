@@ -115,22 +115,49 @@
   (reaction
     (domain-sanktio/sanktio-konfiguraation-lajit @valitun-urakan-sanktio-konfiguraatio)))
 
-(defn uusi-sanktio [urakkatyyppi]
+(def valitun-urakan-tehtavaryhmat
+  (reaction<! [urakka-id (:id @nav/valittu-urakka)]
+    (when urakka-id
+      (k/post! :hae-kaikkien-tehtavaryhmien-nimet {:urakka-id urakka-id}))))
+
+(defn uusi-sanktio [urakkatyyppi valittu-hoitokauden-alkuvuosi]
   (let [nyt (pvm/nyt)
-        default-perintapvm (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15)]
-    {:harja.ui.lomake/muokatut #{:kasittelyaika}
-     :suorasanktio true
-     :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
-     :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                          (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                      :valikatselmus
-                      nil)
-     :perintapvm default-perintapvm
-     :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
-                            (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
-     :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                      :paatos {:paatos "sanktio"
-                               :kasittelyaika nyt}}}))
+        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                 (>= urakan-alkuvuosi 2025))
+        ;; MHU25-urakoille laskutuskuukausi on aina 15.9. hoitokauden päättymisvuodelle
+        ;; Hoitokausi: 1.10.YYYY - 30.9.YYYY+1
+        default-perintapvm (if mhu25?
+                             (let [v (pvm/vuosi nyt)
+                                   kk (pvm/kuukausi nyt)
+                                   kohde-vuosi (if (>= kk 10) (inc v) v)]
+                               (pvm/->pvm (str "15.9." kohde-vuosi)))
+                             (pvm/luo-pvm-dec-kk (pvm/vuosi nyt) (pvm/kuukausi nyt) 15))
+        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %)) @valitun-urakan-tehtavaryhmat)
+        ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
+        tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
+        ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
+        hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)]
+
+    (merge
+      {:harja.ui.lomake/muokatut #{:kasittelyaika}
+            :suorasanktio true
+            :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
+            :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                             :valikatselmus
+                             nil)
+            :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                               (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                           :tyomaakokous
+                           nil)
+            :perintapvm default-perintapvm
+            :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                                   (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
+            :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                             :paatos {:paatos "sanktio"
+                                      :kasittelyaika nyt}}}
+      (when mhu25? {:tehtavaryhma  hoidonjohtopalkkio-tr}))))
 
 (defn pyorayta-laskutuskuukausi-valinnat
   []

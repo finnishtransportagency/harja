@@ -514,7 +514,7 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen? virhe?] :as kentta} data]
+(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen? vaadi-negatiivinen? virhe?] :as kentta} data]
   [tee-kentta (assoc kentta
                 :tyyppi :numero
                 :fmt (or fmt (partial fmt/euro-opt false nayta-plus))
@@ -523,6 +523,7 @@
                 :desimaalien-maara 2
                 :veda-oikealle? true
                 :vaadi-ei-negatiivinen? (or vaadi-ei-negatiivinen? false)
+                :vaadi-negatiivinen? (or vaadi-negatiivinen? false)
                 :virhe? virhe?)
    data])
 
@@ -1218,7 +1219,7 @@
                                           :aria-label "päiväys"
                                           :id elementin-id}]]
            (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
-           [:span.pvm-kentta
+           [:span.pvm-kentta.input-default
             {:on-click #(do (.stopPropagation %)
                           (.preventDefault %)
                           (reset! auki true) nil)}

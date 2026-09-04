@@ -1,36 +1,43 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
             [clojure.java.jdbc :as jdbc]
+            [clojure.java.io :as io]
             [slingshot.slingshot :refer [try+ throw+]]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.laadunseuranta :as ls]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.testi :refer :all]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
+
+            [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
+            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+
+
+
+
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
-            [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
-            [harja.fmt :as fmt]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [clojure.string :as str]
-            [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
-            [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
-  (:import (java.util UUID))
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
+            [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.konversio :as konv])
+  (:import (java.util UUID)
+           (clojure.lang ExceptionInfo)
+           (harja.domain.roolit EiOikeutta))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -209,9 +216,9 @@
                                      :laatupoikkeama lp
                                      :hoitokausi [hk-alkupvm hk-loppupvm]}))
 
-(defn palvelukutsu-poista-suorasanktio [kayttaja sanktio-id urakka-id]
+(defn palvelukutsu-poista-sanktio [kayttaja sanktio-id urakka-id]
   (kutsu-http-palvelua
-    :poista-suorasanktio kayttaja {:id sanktio-id
+    :poista-sanktio kayttaja {:id sanktio-id
                                    :urakka-id urakka-id}))
 
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
@@ -313,8 +320,8 @@
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
         (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
 
-        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-suorasanktio-rajapinnan kautta"
-          (let [poistettu-sanktio-id (palvelukutsu-poista-suorasanktio
+        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-sanktio-rajapinnan kautta"
+          (let [poistettu-sanktio-id (palvelukutsu-poista-sanktio
                                        +kayttaja-jvh+ (:id lisatty-hoidon-sakko) (hae-oulun-alueurakan-2014-2019-id))
                 poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama poistettu-sanktio-id)]
             (is (= true (:poistettu poistettu-suorasanktio-kannassa)))
@@ -324,12 +331,94 @@
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
+(deftest poista-laatupoikkeaman-sanktio-peruu-paatoksen-eika-poista-laatupoikkeamaa
+  ;; Laatupoikkeaman kautta määrätyn (ei-suora)sanktion poisto eroaa suorasanktion poistosta:
+  ;; laatupoikkeamaa EI poisteta, vaan sen päätös perutaan (nollataan), jolloin laatupoikkeaman
+  ;; lukitus poistuu ja sitä voi taas muokata (vrt. HARJA-1954). Päätös perutaan silloinkin,
+  ;; kun laatupoikkeamalle jää muita aktiivisia sanktioita.
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        perustelu "Poistotesti: laatupoikkeaman sanktion poisto"
+        sanktiorunko {:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
+                      :laji :A
+                      :tyyppi 12
+                      :indeksi "MAKU 2010"
+                      :suorasanktio false
+                      :toimenpideinstanssi 4
+                      :vakiofraasi nil}
+        laatupoikkeama {:yllapitokohde nil
+                        :sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Poistotesti kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :tr {:numero 1 :alkuosa 1 :alkuetaisyys 1 :loppuosa 2 :loppuetaisyys 2}
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kohde "Poistotesti kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :puhelin
+                                 :kasittelyaika #inst "2016-09-15T09:00:01.000-00:00"
+                                 :perustelu perustelu}
+                        :sanktiot [(assoc sanktiorunko :summa 100)
+                                   (assoc sanktiorunko :summa 200)]}
+        ;; Rakennuttajakonsultilla on kirjoitusoikeus (W) muttei "poisto"-oikeutta.
+        rakennuttajakonsultti {:sahkoposti "rk@example.org"
+                               :kayttajanimi "rk-testi"
+                               :sukunimi "Konsultti"
+                               :etunimi "Reijo"
+                               :roolit #{}
+                               :id 22
+                               :organisaatio {:id 10 :nimi "Pohjois-Pohjanmaa" :tyyppi "hallintayksikko"}
+                               :organisaation-urakat #{urakka-id}
+                               :organisaatioroolit {}
+                               :urakkaroolit {urakka-id #{"Rakennuttajakonsultti"}}}
+        tallennettu (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+        lp-id (:id tallennettu)
+        sanktiot (:sanktiot tallennettu)
+        poistettava-id (get-in sanktiot [0 :id])
+        jaava-id (get-in sanktiot [1 :id])]
+
+    (is (= 2 (count sanktiot)) "Laatupoikkeamalla on kaksi sanktiota")
+
+    (testing "Ennen poistoa laatupoikkeamalla on päätös"
+      (let [lp (first (q-map "SELECT kasittelyaika, paatos, perustelu FROM laatupoikkeama WHERE id = " lp-id ";"))]
+        (is (some? (:kasittelyaika lp)) "Käsittelyaika on asetettu")
+        (is (some? (:paatos lp)) "Päätös on asetettu")))
+
+    (testing "Ilman poisto-oikeutta laatupoikkeaman sanktiota ei voi poistaa"
+      (let [vastaus (try
+                      (palvelukutsu-poista-sanktio rakennuttajakonsultti jaava-id urakka-id)
+                      (catch ExceptionInfo e e))]
+        (is (= ExceptionInfo (type vastaus)) "Poisto heittää poikkeuksen")
+        (is (= EiOikeutta (type (ex-data vastaus))) "Poikkeus on oikeuksien puutteesta")
+        (is (false? (boolean (:poistettu (q-sanktio-leftjoin-laatupoikkeama jaava-id))))
+          "Sanktio jää aktiiviseksi kun poisto estyy")
+        (let [lp (first (q-map "SELECT kasittelyaika, paatos FROM laatupoikkeama WHERE id = " lp-id ";"))]
+          (is (some? (:kasittelyaika lp)) "Laatupoikkeaman päätös säilyy kun poisto estyy"))))
+
+    (testing "Poisto-oikeudella laatupoikkeaman sanktion poisto peruu päätöksen mutta säilyttää laatupoikkeaman"
+      (let [poistettu-id (palvelukutsu-poista-sanktio +kayttaja-jvh+ poistettava-id urakka-id)
+            poistettu-sanktio (q-sanktio-leftjoin-laatupoikkeama poistettava-id)
+            jaava-sanktio (q-sanktio-leftjoin-laatupoikkeama jaava-id)
+            lp (first (q-map (str "SELECT poistettu, kasittelyaika, paatos, perustelu, "
+                               "kasittelytapa, muu_kasittelytapa "
+                               "FROM laatupoikkeama WHERE id = ") lp-id ";"))]
+        (is (= poistettava-id poistettu-id) "Poisto palauttaa poistetun sanktion id:n")
+        (is (true? (:poistettu poistettu-sanktio)) "Poistettu sanktio on merkitty poistetuksi")
+        (is (false? (boolean (:lp_poistettu poistettu-sanktio))) "Laatupoikkeamaa EI ole poistettu")
+        (is (false? (boolean (:poistettu jaava-sanktio))) "Toinen sanktio jää aktiiviseksi")
+        (is (nil? (:kasittelyaika lp)) "Käsittelyaika on nollattu")
+        (is (nil? (:paatos lp)) "Päätös on nollattu")
+        (is (nil? (:perustelu lp)) "Perustelu on nollattu")
+        (is (nil? (:kasittelytapa lp)) "Käsittelytapa on nollattu")
+        (is (nil? (:muu_kasittelytapa lp)) "Muu käsittelytapa on nollattu")))))
+
 (deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         perustelu "ABC koira kävelee MHU-alueella"
         tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
         ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
         sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :maaraystapa "tyomaakokous"
                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;"))),
                           :nimi "Talvihoito, päätiet", :toimenpidekoodi 618}}
         laatupoikkeama {:tekijanimi "Max Power"
@@ -350,8 +439,15 @@
     (is (= "Talvihoito, päätiet" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
     (is (= -777.0 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
     (is (nil? (:indeksi lisatty-hoidon-sakko)) "Indeksi oltava nil koska MHU jonka alkuvuosi > 2020")
+    (is (= "tyomaakokous" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa tallentuu lisäyksessä")
     (is (= (hae-iin-maanteiden-hoitourakan-2021-2026-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
     (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
+
+    (palvelukutsu-tallenna-suorasanktio
+      +kayttaja-jvh+ (assoc sanktio :id sanktio-id :maaraystapa "valikatselmus") laatupoikkeama hk-alkupvm hk-loppupvm)
+    (is (= "valikatselmus" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa päivittyy updatessa")
 
 
     ;; Siivoa roskat
@@ -746,7 +842,7 @@
           poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id)
           poistettu-lp-sanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id-lp)
           poistettu-hoidon-sakko (first (filter #(= -637.27 (:summa %)) sanktiot-suorasanktion-poistamisen-jalkeen))]
-      (testing "poista-suorasanktio-hoitourakassa"
+      (testing "poista-sanktio-hoitourakassa"
         (is (and (number? (:id lisatty-hoidon-sakko)) (number? (:id poistettu-suorasanktio-kannassa))) "Tallennus palauttaa uuden id:n")
         (is (= :A (:laji lisatty-hoidon-sakko) (keyword (:laji poistettu-suorasanktio-kannassa))) "Hoitourakan bonuksen oikea sanktiolaji")
         (is (not= true (:poistettu lisatty-hoidon-sakko)) "Sakkoa ei poistettu")
@@ -801,14 +897,16 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :laskutusrajan-ylitys nil :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
+    :tehtava {:id nil :nimi nil}
+    :tehtavaryhma {:id nil :nimi nil}
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
-                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
+                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :kasittelytapa nil, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
     :perintapvm #inst "2019-10-11T21:00:00.000-00:00",
     :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
@@ -1042,10 +1140,15 @@
 
 (defn- legacy-sanktio-konfiguraatio-odotus [db urakka soveltuvuuskonteksti]
   (let [kaikki-sanktiotyypit (sanktiot-q/hae-sanktiotyypit db)
+        ;; Legacy-odotus vastaa vanhaa toimintaa, jossa arvonvähennyssanktio on aina mukana hoidon urakoilla:
+        ;; validoinnit käytössä (true) ja kuluvan hoitokauden alkuvuosi ennen vuotta 2026.
+        kuluvan-hoitokauden-alkuvuosi 2025
         lajit (case soveltuvuuskonteksti
                 :laatupoikkeama (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
                                                                               :alkupvm (:alkupvm urakka)})
-                (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))}))]
+                (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
+                                                     :alkupvm (:alkupvm urakka)}
+                  kuluvan-hoitokauden-alkuvuosi))]
     (mapv (fn [jarjestys laji]
             {:laji laji
              :rivin-tyyppi (legacy-rivin-tyyppi laji)
@@ -2105,3 +2208,33 @@
       (is (thrown? SecurityException (palvelukutsu-tallenna-suorasanktio
                                        +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
         "Sanktion tallennus ei onnistu"))))
+
+(deftest suorasanktio-laskutusrajan-ylitys-toimii
+  (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
+        perustelu "ylityksen-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
+        laskutusrajan-ylitys 12345.60M
+        sanktio {:suorasanktio true
+                 :laji :laskutus_yli_laskutusrajan
+                 :laskutusrajan-ylitys laskutusrajan-ylitys
+                 :summa (* 0.2M laskutusrajan-ylitys)
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "2.6.2030 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "2.6.2030 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Laskutusrajan ylitys -sanktio saadaan tallennettua"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                  :alku hk-alkupvm
+                                                                                  :loppu hk-loppupvm})
+            lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
+        (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
+        (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))

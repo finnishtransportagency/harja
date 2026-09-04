@@ -20,6 +20,8 @@
       ;; Muunnetaan ennen kuin ajetaan konv/alaviiva->rakenne sanktioille ja bonuksille
       ;;   -> tämä tehdään "hae-urakan-sanktiot-ja-bonukset" rajapinnassa lopuksi.
       :laatupoikkeama_paatos_kasittelytapa
+      :kasittelytapa
+      :maaraystapa
       :vakiofraasi)
     (konv/decimal->double :summa :indeksikorjaus)
     ;; Muunna timestampit java-date:ksi
@@ -33,7 +35,7 @@
   (-> rivi
     (konv/string->keyword :laji :kasittelytapa)
     ;; Muunna timestampit java-date:ksi
-    (konv/muunna [:kasittelyaika] konv/java-date)
+    (konv/muunna [:kasittelyaika :maarattypvm] konv/java-date)
     (konv/decimal->double :summa :indeksiåkorjaus)))
 
 ;; Käytössä jeesql:ssä

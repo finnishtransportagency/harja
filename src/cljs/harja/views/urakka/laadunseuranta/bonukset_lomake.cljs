@@ -13,6 +13,7 @@
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
+            [harja.tiedot.urakka.urakka :as uu-tiedot]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.bonukset :as tiedot]
@@ -76,7 +77,10 @@
   [sulje-fn lukutila? voi-muokata? bonus-konfiguraatio e! app]
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
-        urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        urakan-loppupvm (:loppupvm @nav/valittu-urakka)
+        urakan-tyyppi (:tyyppi @nav/valittu-urakka)
+        mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         laskutuskuukaudet (tiedot-sanktiot/pyorayta-laskutuskuukausi-valinnat)
 
         ;; Lista ylläpitokohteista ylläpitourakoiden kohteenvalintaa varten
@@ -93,7 +97,27 @@
                                :else
                                @tiedot-urakka/urakan-toimenpideinstanssit)
         hae-tpi-nimi-idlla (fn [tpi-id]
-                          (some #(when (= tpi-id (:tpi_id %)) (:tpi_nimi %)) toimenpideinstanssit))]
+                          (some #(when (= tpi-id (:tpi_id %)) (:tpi_nimi %)) toimenpideinstanssit))
+        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
+        urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
+        urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
+        viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)
+                                          urakan-loppuvuosi
+                                          (dec urakan-loppuvuosi))
+        hoitovuodet (if (<= urakan-alkuvuosi viimeinen-hoitovuoden-alkuvuosi)
+                      (vec (range urakan-alkuvuosi (inc viimeinen-hoitovuoden-alkuvuosi)))
+                      [])
+        hoitovuosi->teksti (fn [hoitovuosi]
+                             (when (int? hoitovuosi)
+                               (let [jarjestysnumero (inc (- hoitovuosi urakan-alkuvuosi))]
+                                 (str jarjestysnumero ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")"))))
+        perintapvm->hoitovuosi (fn [perintapvm]
+                                 (when perintapvm
+                                   (let [vuosi (pvm/vuosi perintapvm)
+                                         kuukausi (pvm/kuukausi perintapvm)
+                                         hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
+                                     (when (some #{hoitovuosi} hoitovuodet)
+                                       hoitovuosi))))]
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [lomake/lomake
@@ -140,7 +164,7 @@
          ;; Aseta toimenpideinstanssi, jos se voidaan tietää ennalta
          :aseta (fn [rivi arvo]
                   ;; Aseta toimenpideinstanssi, mikäli sitä ei ole asetettu ennakkoon oikein
-                  (let [asetettava-tpi (cond (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
+                  (let [asetettava-tpi (cljs.core/cond (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                                          (first (filter #(= "23150" (:t2_koodi %)) @tiedot-urakka/urakan-toimenpideinstanssit))
 
                                          :else
@@ -155,13 +179,13 @@
          :validoi [[:ei-tyhja "Valitse laji"]]})
 
       (when @tiedot-urakka/yllapitourakka?
-        {:otsikko "Kohde" 
-         :tyyppi :valinta 
+        {:otsikko "Kohde"
+         :tyyppi :valinta
          :nimi :yllapitokohde
-         :pakollinen? false 
+         :pakollinen? false
          :muokattava? (constantly voi-muokata?)
          ::lomake/col-luokka "col-xs-12"
-         :valinnat yllapitokohteet 
+         :valinnat yllapitokohteet
          :jos-tyhja "Ei valittavia kohteita"
          :valinta-nayta (fn [arvo voi-muokata?]
                           (if (:id arvo)
@@ -185,7 +209,7 @@
        ::lomake/col-luokka "col-xs-12"
        :validoi [[:ei-tyhja "Anna perustelu"]]}
       ;; näytä lukutilassa vain teksti
-      (if (and voi-muokata? (not lukutila?))
+      (if (and voi-muokata? (not lukutila?) (not (= :teiden-hoito (:tyyppi @nav/valittu-urakka))))
        {:otsikko "Kulun kohdistus"
         :nimi :toimenpideinstanssi
         :pakollinen? true
@@ -205,12 +229,15 @@
                                          (assoc data :toimenpideinstanssi (:tpi_id %)))}
                          toimenpideinstanssit]])}
         {:otsikko "Kulun kohdistus"
-         :nimi :toimenpideinstanssi
-         :pakollinen? true
          :tyyppi :string
-         :hae #(do
-                 (hae-tpi-nimi-idlla (:toimenpideinstanssi %)))
-         ::lomake/col-luokka "col-xs-12"})
+         :nimi :toimenpideinstanssi
+         :muokattava? (constantly false)
+         ::lomake/col-luokka "col-xs-12"
+         :hae (fn [rivi]
+                (let [tpi-id (:toimenpideinstanssi rivi)]
+                  (or (some #(when (= (:tpi_id %) tpi-id) (:tpi_nimi %))
+                        @tiedot-urakka/urakan-toimenpideinstanssit)
+                    "")))})
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Summa"
@@ -220,17 +247,19 @@
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Anna summa"] [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}
-        (let [valinnat (when (and
-                               (<= urakan-alkuvuosi 2020)
-                               (= :asiakastyytyvaisyysbonus (:laji lomakkeen-tiedot)))
-                         [(:indeksi @nav/valittu-urakka) nil])]
-          {:otsikko "Indeksi"
-           :nimi :indeksi
-           :tyyppi :valinta
-           :disabled? (nil? valinnat)
-           ::lomake/col-luokka "col-xs-4"
-           :valinnat (or valinnat [nil])
-           :valinta-nayta #(or % "Ei indeksiä")}))
+        ;; Indeksi näytetään vain 19/20 alkaneille urakoille
+        (when (or (= 2019 urakan-alkuvuosi) (= 2020 urakan-alkuvuosi))
+          (let [valinnat (when (and
+                                 (<= urakan-alkuvuosi 2020)
+                                 (= :asiakastyytyvaisyysbonus (:laji lomakkeen-tiedot)))
+                           [(:indeksi @nav/valittu-urakka) nil])]
+            {:otsikko "Indeksi"
+             :nimi :indeksi
+             :tyyppi :valinta
+             :disabled? (nil? valinnat)
+             ::lomake/col-luokka "col-xs-4"
+             :valinnat (or valinnat [nil])
+             :valinta-nayta #(or % "Ei indeksiä")})))
       (lomake/ryhma
         {:rivi? true}
         {:otsikko "Käsitelty"
@@ -242,44 +271,68 @@
          ::lomake/col-luokka "col-xs-4"
          :validoi [[:ei-tyhja "Valitse päivämäärä"]]
          :aseta (fn [rivi arvo]
-                  (cond-> rivi
-                    ;; Jos laskutuskuukautta  ei ole vielä valittu ja bonusta ei ole tallennettu (id nil), niin asetetaan
-                    ;; esivalintana perintapvm valittu kasittelyn pvm
-                    (and (nil? (:laskutuskuukausi-komp-tiedot rivi)) (nil? (:id rivi)))
-                    (assoc :perintapvm arvo)
+                  (let [;; MHU25-urakoille laskutuskuukausi on aina 15.09. hoitokauden päättymisvuodelle
+                        ;; Hoitokausi: 01.10.YYYY - 30.09.YYYY+1
+                        ;; Jos käsittelyaika on loka-joulukuussa -> 15.09.(vuosi+1), muuten 15.9.(sama vuosi)
+                        mhu25-perintapvm (when (and mhu25? arvo)
+                                           (let [v (pvm/vuosi arvo)
+                                                 kk (pvm/kuukausi arvo)
+                                                 kohde-vuosi (if (>= kk 10) (inc v) v)]
+                                             (pvm/->pvm (str "15.09." kohde-vuosi))))
+                        mhu25-laskutuskuukausi-komp (when mhu25-perintapvm
+                                                      (some #(when (and
+                                                                     (= (pvm/vuosi mhu25-perintapvm) (:vuosi %))
+                                                                     (= 9 (:kuukausi %)))
+                                                               %)
+                                                        laskutuskuukaudet))]
+                    (cond-> rivi
+                      ;; MHU25: asetetaan laskutuskuukausi automaattisesti hoitokauden syyskuulle
+                      mhu25?
+                      (-> (assoc :perintapvm mhu25-perintapvm)
+                        (assoc :laskutuskuukausi-komp-tiedot mhu25-laskutuskuukausi-komp))
 
-                    ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle
-                    true
-                    (assoc :kasittelyaika arvo)))}
-        (if (and voi-muokata? (not lukutila?))
+                      ;; Muille: Jos laskutuskuukautta ei ole vielä valittu ja bonusta ei ole tallennettu (id nil),
+                      ;; niin asetetaan esivalintana perintapvm valittu kasittelyn pvm
+                      (and (not mhu25?) (nil? (:laskutuskuukausi-komp-tiedot rivi)) (nil? (:id rivi)))
+                      (assoc :perintapvm arvo)
+
+                      ;; Tallennetaan aina valittu käsittelyaika :kasittelyaika avaimen alle
+                      true
+                      (assoc :kasittelyaika arvo))))}
+        ;; HOX: Sanktion tapauksessa laskutuskuukausi tallennetaan sanktion 'perintapvm'-sarakkeeseen.
+        ;;      Bonuksissa (erilliskustannus-taulu) ei ole perintapvm-saraketta, vaan laskutuskuukausi-sarake
+        ;;      johon tämä tieto tallennetaan. Lisäksi, yllapidon_bonus tallennetaan poikkeuksellisesti sanktiona.
+        ;;      Yhteneväisyyden vuoksi käytetään bonuslomakkeella laskutuskuukaudesta nimeä 'perintapvm'
+
+        (cond
+          ;; Muokkausitla ::  ennen -25 alkaneilla urakoilla on laskutuskuukausi, jonka voi valita
+          (and (not mhu25?) voi-muokata? (not lukutila?))
           {:otsikko "Laskutuskuukausi"
-           ;; HOX: Sanktion tapauksessa laskutuskuukausi tallennetaan sanktion 'perintapvm'-sarakkeeseen.
-           ;;      Bonuksissa (erilliskustannus-taulu) ei ole perintapvm-saraketta, vaan laskutuskuukausi-sarake
-           ;;      johon tämä tieto tallennetaan. Lisäksi, yllapidon_bonus tallennetaan poikkeuksellisesti sanktiona.
-           ;;      Yhteneväisyyden vuoksi käytetään bonuslomakkeella laskutuskuukaudesta nimeä 'perintapvm'
            :nimi :perintapvm
            :pakollinen? true
            :tyyppi :komponentti
            ::lomake/col-luokka "col-xs-6"
            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                          (let [perintapvm (get-in data [:perintapvm])]
+                          (if-not mhu25?
                             [:<>
                              [yleiset/livi-pudotusvalikko
                               {:data-cy "koontilaskun-kk-dropdown"
                                :vayla-tyyli? true
                                :skrollattava? true
                                :pakollinen? true
+                               ;; MHU25-urakoille laskutuskuukausi määräytyy käsittelyajan perusteella, ei käyttäjän valinnasta
+                               :disabled mhu25?
                                :valinta (or
                                           ;; Näytetään valintana joko valittua laskutuskuukautta, tai
                                           (-> data :laskutuskuukausi-komp-tiedot)
                                           ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
-                                          (when perintapvm
+                                          (when (:perintapvm data)
                                             (some #(when (and
-                                                           (= (pvm/vuosi perintapvm)
-                                                              (:vuosi %))
-                                                           (= (pvm/kuukausi perintapvm)
-                                                              (:kuukausi %))) %)
+                                                           (= (pvm/vuosi (:perintapvm data))
+                                                             (:vuosi %))
+                                                           (= (pvm/kuukausi (:perintapvm data))
+                                                             (:kuukausi %))) %)
                                               laskutuskuukaudet)))
                                :valitse-fn #(muokkaa-lomaketta
                                               (assoc data
@@ -292,7 +345,31 @@
                               laskutuskuukaudet]
                              ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                              (when (not @tiedot-urakka/yllapitourakka?)
-                               [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]))}
+                               [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]
+
+                            ;; Jos mhu25 urakka, niin ei voi muokata. Näytetään tekstinä
+                            [:div (some #(when (and
+                                                 (= (pvm/vuosi (:perintapvm data)) (pvm/vuosi (:pvm %)))
+                                                 (= (pvm/kuukausi (:perintapvm data)) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                                    laskutuskuukaudet)]))}
+
+          ;; Muokkaustila :: MHU25+ urakoilla bonuksen perintäpäivä laitetaan aina syyskuun 15 päiväksi
+          (and mhu25? voi-muokata? (not lukutila?))
+          {:otsikko "Kohdistuu hoitovuodelle"
+           :nimi :perintapvm
+           :pakollinen? true
+           :tyyppi :valinta
+           :valinnat hoitovuodet
+           :hae #(perintapvm->hoitovuosi (:perintapvm %))
+           :aseta (fn [rivi hoitovuosi]
+                    (assoc rivi :perintapvm
+                      (when hoitovuosi
+                        (pvm/hoitokauden-alkupvm hoitovuosi))))
+           :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
+           ::lomake/col-luokka "col-xs-6"}
+
+          ;; Lukutila :: ennen -25 alkaneille
+          (and (not mhu25?) lukutila?)
           {:otsikko "Laskutuskuukausi"
            :nimi :perintapvm
            :fmt (fn [pvm]
@@ -304,13 +381,26 @@
                       laskutuskuukaudet)))
            :pakollinen? true
            :tyyppi :pvm
-           ::lomake/col-luokka "col-xs-6"}))
-      {:otsikko "Käsittelytapa"
-       :nimi :kasittelytapa :tyyppi :valinta
-       :pakollinen? true
-       ::lomake/col-luokka "col-xs-12"
-       :valinnat sanktio-domain/kasittelytavat
-       :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
+           ::lomake/col-luokka "col-xs-6"}
+
+          ;; Lukutila :: 25+ urakoille
+          (and mhu25? lukutila?)
+          {:otsikko "Kohdistuu hoitovuodelle"
+           :nimi :perintapvm
+           :fmt (fn [perintapvm]
+                  (some-> perintapvm perintapvm->hoitovuosi hoitovuosi->teksti))
+           :pakollinen? true
+           :tyyppi :pvm
+           ::lomake/col-luokka "col-xs-6"})
+        ;; Poistetaan hoidon urakoilta käsittelytapa kokonaan
+        (when (not (= :teiden-hoito urakan-tyyppi))
+          {:otsikko "Käsittelytapa"
+           :nimi :kasittelytapa :tyyppi :valinta
+           :pakollinen? true
+           :muokattava? (constantly (and voi-muokata? (not lukutila?)))
+           ::lomake/col-luokka "col-xs-12"
+           :valinnat sanktio-domain/kasittelytavat
+           :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}))
 
       ;; Piilota liitteet lukutilassa kokonaan, koska ne eivät nyt tue pelkästään lukutilaa.
       (if-not lukutila?

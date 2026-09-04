@@ -525,9 +525,9 @@
                                           jarjestelma-kyselyt/hae-jarjestelman-asetukset 
                                           (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-sanktio))
-                            (catch Exception e e))
+                            (catch Exception e e
+                              (println "ERROR: " e)))
           tallennettu-sanktio (valitse-paatos (:paatokset vastaus-sanktio) :lupaukset)
-          
           sanktio (when (:sanktio_id tallennettu-sanktio)
                     (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-sanktio))))]
       
@@ -714,6 +714,31 @@
         vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)]
     (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
       alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)))
+
+(deftest kysely-tavoitehinnan-alitus-lisays-2025-onnistuu-viimeiselle-hoitovuodelle-test
+  (let [hoitokauden-alkuvuosi 2025
+        urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        ;; Hae urakan hoitokauden alun tavoitehinta
+        hoitokauden-alun-tavoitehinta (valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitokauden-lopun-tavoitehinta (valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (:db jarjestelma) {:urakka-id urakkaid :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        ;; Haetaan urakan parametrit
+        urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        kayttajaid (:id +kayttaja-jvh+)
+        alituksen-maara 300M
+        toteutuneet-kustannukset (- hoitokauden-alun-tavoitehinta alituksen-maara)
+        siirron-maara 0M ;; Viimeisenä hoitovuotena ei siirretä tietenkään enää mitään tulevaisuuteen
+        ;; Tavoitepalkkio on on urakan prosentit, alituksen määrästä
+        tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
+        tavoitepalkkio (* (/ tavoitepalkkion-maksuprosentti 100) alituksen-maara)
+        tavoitepalkkion_maksimi_prosentti (:tavoitepalkkion_maksimi urakan-parametrit)
+        kulu-id 1
+        viimeinen-hoitovuosi true
+        paatos (paatos-apurit/tavoitehinnan-alituspaatos urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+                 alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id viimeinen-hoitovuosi kayttajaid)
+        vastaus (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) paatos)]
+    (is (= tavoitepalkkio (:tavoitepalkkio paatos)))
+    (testaa-tavoitehinnan-alitus vastaus urakkaid hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
+      alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id viimeinen-hoitovuosi kayttajaid)))
 
 (deftest kysely-tavoitehinnan-alitus-lisays-2025-onnistuu-test
   (let [hoitokauden-alkuvuosi 2025
@@ -1462,7 +1487,8 @@
 
         kovakoodattu-budjettitavoite [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                        :tavoitehinta-oikaistu (- hv_lopun_tavoitehinta_ennen_indkorj muutokset) ;; 2025 ja sen jälkeen urakoilla tavoitehinna muutokset (ennen oikaisut) eivät tule enää budjettitavoitteen mukana
-                                       :muutos-summa muutokset}]
+                                       :kirjallisesti-sovitut-muutokset muutokset
+                                       :hoitovuoden-lopun-kattohinta (+ hv_lopun_tavoitehinta_ennen_indkorj 100000M)}]
         vastaus (try
                   (with-redefs [;; valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
@@ -1528,7 +1554,7 @@
 
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun indeksikorjaus" (:nimi poistettu-paatos)))
-    (is (not (nil? (:virhe poistettu-paatos))))))
+    (is (not (nil? (:virheet poistettu-paatos))))))
 
 ;; Hoitokauden lopun hinnat - lisäys
 (deftest kysely-hoitovuoden-lopun-hintapaatos-lisays-onnistuu-2024-test
@@ -1657,7 +1683,7 @@
         poistettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi poistettu-paatos)))
-    (is (not (nil? (:virhe poistettu-paatos))))))
+    (is (not (nil? (:virheet poistettu-paatos))))))
 
 (deftest kysely-hoidonjohtopalkkion-muutospaatos-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
@@ -1751,14 +1777,21 @@
                  muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id kayttajaid)
         ;; Lisätään päätös suoralla kyselyllä
         uusi-paatos (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) paatos)
+
+        ;; Hae päätökset ja varmista, että juuri lisätty päätös löytyy
+        valikatselmus-vastaus (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) +kayttaja-jvh+
+                                {:urakkaid urakkaid :hoitovuosi hoitokauden-alkuvuosi})
+        uusi-paatos (valitse-paatos (:paatokset valikatselmus-vastaus) :hoidonjohtopalkkion-muutos)
+        _ (is (not (nil? (:id uusi-paatos))))
+
         ;; Poistetaan päätös rajapinnan kautta
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)]
-    ;; Päätös on poistettu, joten sitä ei enää löydy
+    ;; Päätös on poistettu, joten sellaista päätöstä, jossa on id, ei enää löydy
     (is (= "Hoidonjohtopalkkion muutos" (:nimi poistettu-paatos)))
-    (is (not (nil? (:virhe poistettu-paatos))))))
+    (is (nil? (:id poistettu-paatos)))))
 
 (deftest kysely-poytakirjan-raportin-lisays-onnistuu-test
   (let [;; Hae -24 alkava urakka
