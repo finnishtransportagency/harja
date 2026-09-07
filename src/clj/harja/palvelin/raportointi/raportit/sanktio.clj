@@ -423,11 +423,11 @@
                                                                                    (or arvonvahennykset [])))]
                                           [[{:avain "Sakot yhteensä" :arvo sakkosumma :fmt :raha}
                                             {:avain "Muistutukset" :arvo (str muistutusten-maara " kpl")
-                                            :luettelomerkki? true
-                                            :sisennetty? true}
+                                             :luettelomerkki? true
+                                             :sisennetty? true}
                                             {:avain "Suorasakot" :arvo suorasakkojen-summa :fmt :raha
-                                            :luettelomerkki? true
-                                            :sisennetty? true}
+                                             :luettelomerkki? true
+                                             :sisennetty? true}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-summa :fmt :raha}
                                             {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}]
                                            (merkitse-taulukot
@@ -453,11 +453,11 @@
 
                                           [[{:avain "Sanktiot yhteensä" :arvo sanktiot-yhteensa :fmt :raha}
                                             {:avain "Kirjalliset muistutukset" :arvo (str muistutusten-maara " kpl")
-                                            :luettelomerkki? true
-                                            :sisennetty? true}
+                                             :luettelomerkki? true
+                                             :sisennetty? true}
                                             {:avain "Vastuuhenkilön vaihto" :arvo vastuuhenkilon-vaihto-summa :fmt :raha
-                                            :luettelomerkki? true
-                                            :sisennetty? true}
+                                             :luettelomerkki? true
+                                             :sisennetty? true}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-yhteensa :fmt :raha}
                                             {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}]
 

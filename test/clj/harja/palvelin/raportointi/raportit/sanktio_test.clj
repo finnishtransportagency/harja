@@ -349,12 +349,12 @@
                                   (= :sininen-laatikko (first %)))
                             %)
                      (tree-seq coll? seq raportti))
-         arvonvahennykset (some #(when (= "Arvovähennykset" (:avain %)) %)
-                  (nth yhteenveto 2))]
+        arvonvahennykset (some #(when (= "Arvovähennykset" (:avain %)) %)
+               (nth yhteenveto 2))]
           (is (= 100 (:arvo arvonvahennykset)))
-      (is (= false (get-in yhteenveto [1 :nayta-hr?])))
+          (is (= false (get-in yhteenveto [1 :nayta-hr?])))
           (is (nil? (some #(when (= "Yhteensä" (:avain %)) %)
-           (nth yhteenveto 2))))))
+          (nth yhteenveto 2))))))
 
 
 (deftest urakkaerittelyn-arvonvahennys-lasketaan-yhteen-vain-kerran

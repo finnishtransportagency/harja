@@ -458,7 +458,7 @@
              [:div.flex-row
               (cond-> {} (:lihavoi? rivi) (assoc :style {:font-weight "bold"}))
               [:div {:class (str "sininen-laatikko-rivi-label"
-                                 (when (:sisennetty? rivi) " sininen-laatikko-sisennetty"))}
+                              (when (:sisennetty? rivi) " sininen-laatikko-sisennetty"))}
                (when (:luettelomerkki? rivi)
                  [:span.sininen-laatikko-luettelomerkki "•"])
                (:avain rivi)]
