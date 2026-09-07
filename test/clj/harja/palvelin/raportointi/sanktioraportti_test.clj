@@ -84,6 +84,7 @@
         sanktiosumma (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä")]
     (is (vector? vastaus))
     (is (=marginaalissa? sanktiosumma 24160M))
+      (is (nil? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä")))
     (let [workbook (XSSFWorkbook.)]
       (excel/muodosta-excel vastaus workbook)
       (is (= 2 (.getNumberOfSheets workbook)))
@@ -95,6 +96,7 @@
         (is (some #(= "Sanktiot yhteensä" %) yhteenveto-tekstit))
         (is (some #(= "Bonukset yhteensä" %) yhteenveto-tekstit))
         (is (some #(= "Arvovähennykset" %) yhteenveto-tekstit))
+        (is (not-any? #(= "Yhteensä" %) yhteenveto-tekstit))
         (is (some #(= "Bonukset" %) erittely-tekstit))
         (is (some #(= "Arvonvähennykset" %) erittely-tekstit))
         (is (not-any? #(= "Yhteenveto" %) erittely-tekstit))))
@@ -208,7 +210,7 @@
                                      (tree-seq coll? seq vastaus))]
         (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sakot yhteensä") -4500M))
         (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Arvovähennykset") -600M))
-        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -3100M))
+        (is (nil? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä")))
         (is (= ["Yhteensä" 5 -4500M]
                (hae-taulukon-rivi sanktiot-taulukko "Yhteensä")))
         (is (nil? arvonvahennys-taulukko)))
@@ -342,7 +344,7 @@
                             (= :taulukko (first %)))
                    (tree-seq coll? seq vastaus))]
     (is (vector? vastaus))
-    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -2500M))
+    (is (nil? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä")))
     (is (= ["Yhteensä" 5 -4500M]
            (hae-taulukon-rivi kokonais-taulukko "Yhteensä")))
     (is (= ["Yhteensä" 5 -4500M]
@@ -382,7 +384,7 @@
                             (= :taulukko (first %)))
                    (tree-seq coll? seq vastaus))]
     (is (vector? vastaus))
-    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä") -5500M))
+    (is (nil? (apurit/hae-yhteenveto-arvo vastaus "Yhteensä")))
     (is (= ["Yhteensä" 7 -7500M]
            (hae-taulukon-rivi kokonais-taulukko "Yhteensä")))
     (is (= ["Yhteensä" 5 -4500M]
@@ -597,6 +599,54 @@
     (is (= ["Bonus liikennevahinkojen aiheuttajien selvittämisestä" 0]
            (hae-taulukon-rivi bonus-taulukko
              "Bonus liikennevahinkojen aiheuttajien selvittämisestä")))))
+
+(deftest raportin-mhu2026-suorasanktiot-kohdistuvat-urakkaprofiiliin
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        laskutus-indeksi "raportin-mhu2026-suorasanktio-laskutusraja"
+        vastuuhenkilo-indeksi "raportin-mhu2026-suorasanktio-vastuuhenkilo"
+        lisaa-sanktio (fn [laji maara indeksi]
+                        (u (str "INSERT INTO sanktio "
+                             "(sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, "
+                             "toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+                             "VALUES ('" laji "'::SANKTIOLAJI, " maara ", DATE '2026-10-15', '"
+                             indeksi "', "
+                             "(SELECT id FROM laatupoikkeama WHERE urakka = " urakka-id " LIMIT 1), "
+                             "(SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1), "
+                             "(SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
+                             "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))")))
+        vastaus-parametrit {:nimi       :sanktioraportti
+                             :konteksti  "urakka"
+                             :urakka-id  urakka-id
+                             :parametrit {:alkupvm      (c/to-date (t/local-date 2026 10 1))
+                                          :loppupvm     (c/to-date (t/local-date 2027 9 30))
+                                          :urakkatyyppi :hoito}}]
+    (try
+      (lisaa-sanktio "laskutus_yli_laskutusrajan" 1111 laskutus-indeksi)
+      (lisaa-sanktio "vastuuhenkilon_vaihto" 2222 vastuuhenkilo-indeksi)
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :suorita-raportti
+                      +kayttaja-jvh+
+                      vastaus-parametrit)
+            sanktio-taulukot (apurit/hae-osion-taulukot vastaus "Sanktiot")
+            laskutus-taulukko (some #(when (= "Laskutus yli laskutusrajan"
+                                               (get-in % [1 :otsikko])) %)
+                                sanktio-taulukot)
+            vastuuhenkilo-taulukko (some #(when (= "Vastuuhenkilön vaihto"
+                                                   (get-in % [1 :otsikko])) %)
+                                    sanktio-taulukot)
+            tunnistamattomat-taulukko (first (apurit/hae-osion-taulukot
+                                               vastaus
+                                               "Tunnistamattomat sanktiot"))]
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 5133M))
+        (is (= ["Laskutus yli laskutusrajan" 1111M]
+               (hae-taulukon-rivi laskutus-taulukko "Laskutus yli laskutusrajan")))
+        (is (= ["Vastuuhenkilön vaihto" 2222M]
+               (hae-taulukon-rivi vastuuhenkilo-taulukko "Vastuuhenkilön vaihto")))
+        (is (nil? (hae-taulukon-rivi tunnistamattomat-taulukko
+                                   "Ei tarvita sanktiotyyppiä"))))
+      (finally
+        (u (str "DELETE FROM sanktio WHERE indeksi IN ('"
+             laskutus-indeksi "', '" vastuuhenkilo-indeksi "')"))))))
 
 (deftest raportin-mhu2026-kohdistuksen-sallima-bonus-nakyy
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'"))

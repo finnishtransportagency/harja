@@ -48,7 +48,10 @@ SELECT
   o.nimi AS elinvoimakeskus_nimi,
   o.lyhenne AS elinvoimakeskus_lyhenne,
   ypk.yllapitoluokka AS yllapitoluokka,
-  (CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END) AS soveltuvuuskonteksti,
+  (CASE WHEN s.suorasanktio IS TRUE OR s.laatupoikkeama IS NULL
+        THEN 'urakka'
+        ELSE 'laatupoikkeama'
+   END) AS soveltuvuuskonteksti,
   t2.nimi AS toimenpidekoodi_taso2
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
@@ -68,7 +71,10 @@ FROM sanktio s
     ON spr.sanktio_profiili_id = sp.id
     AND spr.sanktio_laji_id = sl.id
     AND spr.sanktiotyyppi_id = s.tyyppi
-    AND spr.soveltuvuuskonteksti = CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END
+    AND spr.soveltuvuuskonteksti = CASE WHEN s.suorasanktio IS TRUE OR s.laatupoikkeama IS NULL
+                                       THEN 'urakka'
+                                       ELSE 'laatupoikkeama'
+                                  END
     AND spr.aktiivinen IS TRUE
   LEFT JOIN sanktio_profiili_laji_esitystiedot splet
     ON splet.sanktio_profiili_id = sp.id
@@ -212,7 +218,10 @@ SELECT
   u.alkupvm AS urakan_alkupvm,
   u.loppupvm AS urakan_loppupvm,
   o.lyhenne AS elinvoimakeskus_lyhenne,
-  (CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END) AS soveltuvuuskonteksti
+  (CASE WHEN s.suorasanktio IS TRUE OR s.laatupoikkeama IS NULL
+        THEN 'urakka'
+        ELSE 'laatupoikkeama'
+   END) AS soveltuvuuskonteksti
 FROM sanktio s
   LEFT JOIN toimenpideinstanssi tpi ON s.toimenpideinstanssi = tpi.id
   LEFT JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
@@ -229,7 +238,10 @@ FROM sanktio s
     ON spr.sanktio_profiili_id = sp.id
     AND spr.sanktio_laji_id = sl.id
     AND spr.sanktiotyyppi_id = s.tyyppi
-    AND spr.soveltuvuuskonteksti = CASE WHEN s.laatupoikkeama IS NULL THEN 'urakka' ELSE 'laatupoikkeama' END
+    AND spr.soveltuvuuskonteksti = CASE WHEN s.suorasanktio IS TRUE OR s.laatupoikkeama IS NULL
+                                       THEN 'urakka'
+                                       ELSE 'laatupoikkeama'
+                                  END
     AND spr.aktiivinen IS TRUE
     AND s.perintapvm <= u.loppupvm
   LEFT JOIN sanktio_profiili_laji_esitystiedot splet
