@@ -355,7 +355,7 @@
 
           ;; Muokkaustila :: MHU25+ urakoilla bonuksen perintäpäivä laitetaan aina syyskuun 15 päiväksi
           (and mhu25? voi-muokata? (not lukutila?))
-          {:otsikko "Kohdistuu hoitovuodelle mhu25"
+          {:otsikko "Kohdistuu hoitovuodelle"
            :nimi :perintapvm
            :pakollinen? true
            :tyyppi :valinta
