@@ -10,41 +10,92 @@ WITH tiedot AS (
              ON tpi.urakka = u.id
             AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
      WHERE u.nimi = 'POP MHU Kajaani 2025-2030'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Sanktioraportin testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-01-15',
+             DATE '2026-01-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Sanktioraportin Kajaanin tammikuun A-sanktio'
+           FROM tiedot
+            RETURNING id
 )
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
                      toimenpideinstanssi, tyyppi, suorasanktio, luoja)
 SELECT 'A'::SANKTIOLAJI,
        1000,
        DATE '2026-01-15',
        DATE '2026-01-15',
        NULL,
+        uusi_laatupoikkeama.id,
        toimenpideinstanssi,
        (SELECT id FROM sanktiotyyppi WHERE koodi = 13),
        TRUE,
        kayttaja
-  FROM tiedot;
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;
 
 WITH tiedot AS (
     SELECT tpi.id AS toimenpideinstanssi,
+         u.id AS urakka,
            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
       FROM urakka u
            JOIN toimenpideinstanssi tpi
              ON tpi.urakka = u.id
             AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
      WHERE u.nimi = 'POP MHU Kajaani 2025-2030'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Sanktioraportin testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-01-15',
+             DATE '2026-01-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Sanktioraportin Kajaanin tammikuun arvonvahennys'
+           FROM tiedot
+            RETURNING id
 )
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
                      toimenpideinstanssi, tyyppi, suorasanktio, luoja)
 SELECT 'arvonvahennyssanktio'::SANKTIOLAJI,
        2500,
        DATE '2026-01-15',
        DATE '2026-01-15',
        NULL,
+        uusi_laatupoikkeama.id,
        toimenpideinstanssi,
        (SELECT id FROM sanktiotyyppi WHERE koodi = 0),
        TRUE,
        kayttaja
-  FROM tiedot;
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;
 
 INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi,
                               pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
@@ -78,41 +129,92 @@ WITH tiedot AS (
              ON tpi.urakka = u.id
             AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
      WHERE u.nimi = 'POP MHU Suomussalmi 2024-2029'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Sanktioraportin testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-01-15',
+             DATE '2026-01-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Sanktioraportin Suomussalmen tammikuun A-sanktio'
+           FROM tiedot
+            RETURNING id
 )
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
                      toimenpideinstanssi, tyyppi, suorasanktio, luoja)
 SELECT 'A'::SANKTIOLAJI,
        1200,
        DATE '2026-01-15',
        DATE '2026-01-15',
        NULL,
+        uusi_laatupoikkeama.id,
        toimenpideinstanssi,
        (SELECT id FROM sanktiotyyppi WHERE koodi = 13),
        TRUE,
        kayttaja
-  FROM tiedot;
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;
 
 WITH tiedot AS (
     SELECT tpi.id AS toimenpideinstanssi,
+         u.id AS urakka,
            (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
       FROM urakka u
            JOIN toimenpideinstanssi tpi
              ON tpi.urakka = u.id
             AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
      WHERE u.nimi = 'POP MHU Suomussalmi 2024-2029'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Sanktioraportin testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-01-15',
+             DATE '2026-01-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Sanktioraportin Suomussalmen tammikuun arvonvahennys'
+           FROM tiedot
+            RETURNING id
 )
-INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
                      toimenpideinstanssi, tyyppi, suorasanktio, luoja)
 SELECT 'arvonvahennyssanktio'::SANKTIOLAJI,
        2800,
        DATE '2026-01-15',
        DATE '2026-01-15',
        NULL,
+        uusi_laatupoikkeama.id,
        toimenpideinstanssi,
        (SELECT id FROM sanktiotyyppi WHERE koodi = 0),
        TRUE,
        kayttaja
-  FROM tiedot;
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;
 
 INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi,
                               pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
@@ -144,19 +246,44 @@ SELECT 'asiakastyytyvaisyysbonus',
              ON tpi.urakka = u.id
             AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
         WHERE u.nimi = 'Sodankylän MHU 2026-2031'
+      ),
+      uusi_laatupoikkeama AS (
+          INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                                      selvitys_annettu, urakka, kuvaus)
+          SELECT 'harja-ui'::LAHDE,
+                 'Sanktioraportin testikohde',
+                 'tilaaja'::OSAPUOLI,
+                 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+                 '',
+                 'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+                 'Sanktioraportin testidata',
+                 123,
+                 kayttaja,
+                 CURRENT_TIMESTAMP,
+                 DATE '2026-10-15',
+                 DATE '2026-10-15',
+                 FALSE,
+                 FALSE,
+                 urakka,
+                 'Sanktioraportin Sodankylan lokakuun A-sanktio'
+            FROM tiedot
+          RETURNING id
       )
-      INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+      INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
                toimenpideinstanssi, tyyppi, suorasanktio, luoja)
       SELECT 'A'::SANKTIOLAJI,
           1800,
           DATE '2026-10-15',
           DATE '2026-10-15',
           NULL,
+          uusi_laatupoikkeama.id,
           toimenpideinstanssi,
           (SELECT id FROM sanktiotyyppi WHERE koodi = 18),
           TRUE,
           kayttaja
-        FROM tiedot;
+        FROM tiedot
+             CROSS JOIN uusi_laatupoikkeama;
 
       WITH tiedot AS (
           SELECT u.id AS urakka,
@@ -269,6 +396,7 @@ SELECT bpr.id,
     -- Näitä rivejä ei käytetä automaattitesteissä.
     WITH tiedot AS (
         SELECT u.nimi AS urakan_nimi,
+       u.id AS urakka,
          tpi.id AS toimenpideinstanssi,
          (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
        FROM urakka u
@@ -277,14 +405,55 @@ SELECT bpr.id,
           AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
       WHERE u.nimi IN ('POP MHU Kajaani 2025-2030',
               'POP MHU Suomussalmi 2024-2029')
-    )
-    INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi,
+          ),
+          manuaalinen AS (
+            SELECT manuaalinen.*,
+                 'Sanktioraportin manuaalidatan laatupoikkeama ' ||
+                   manuaalinen.urakan_nimi || ' ' || manuaalinen.pvm::text AS kuvaus
+              FROM (VALUES
+                ('POP MHU Kajaani 2025-2030', 'A', 450, DATE '2026-03-15', 13),
+                ('POP MHU Kajaani 2025-2030', 'B', 275, DATE '2026-03-20', 14),
+                   ('POP MHU Kajaani 2025-2030', 'C', 125, DATE '2026-04-15', 8),
+                ('POP MHU Kajaani 2025-2030', 'arvonvahennyssanktio', 900, DATE '2026-04-20', 0),
+                ('POP MHU Suomussalmi 2024-2029', 'A', 550, DATE '2026-03-15', 13),
+                ('POP MHU Suomussalmi 2024-2029', 'B', 325, DATE '2026-03-20', 14),
+                   ('POP MHU Suomussalmi 2024-2029', 'C', 175, DATE '2026-04-15', 8),
+                ('POP MHU Suomussalmi 2024-2029', 'arvonvahennyssanktio', 950, DATE '2026-04-20', 0)
+              ) AS manuaalinen(urakan_nimi, sakkoryhma, maara, pvm, tyyppi_koodi)
+          ),
+          uudet_laatupoikkeamat AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                          tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                          selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+                 'Sanktioraportin testikohde',
+                 'tilaaja'::OSAPUOLI,
+                 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+                 '',
+                 'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+                 'Sanktioraportin testidata',
+                 123,
+                 tiedot.kayttaja,
+                 CURRENT_TIMESTAMP,
+                 manuaalinen.pvm,
+                 manuaalinen.pvm,
+                 FALSE,
+                 FALSE,
+                 tiedot.urakka,
+                 manuaalinen.kuvaus
+              FROM tiedot
+                 JOIN manuaalinen
+                 ON manuaalinen.urakan_nimi = tiedot.urakan_nimi
+            RETURNING id, urakka, kuvaus
+          )
+          INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
              toimenpideinstanssi, tyyppi, suorasanktio, luoja)
     SELECT manuaalinen.sakkoryhma::SANKTIOLAJI,
         manuaalinen.maara,
         manuaalinen.pvm,
         manuaalinen.pvm,
         NULL,
+        uudet_laatupoikkeamat.id,
         tiedot.toimenpideinstanssi,
         (SELECT id
         FROM sanktiotyyppi
@@ -292,17 +461,11 @@ SELECT bpr.id,
         TRUE,
         tiedot.kayttaja
       FROM tiedot
-        JOIN (VALUES
-            ('POP MHU Kajaani 2025-2030', 'A', 450, DATE '2026-03-15', 13),
-            ('POP MHU Kajaani 2025-2030', 'B', 275, DATE '2026-03-20', 14),
-                 ('POP MHU Kajaani 2025-2030', 'C', 125, DATE '2026-04-15', 8),
-            ('POP MHU Kajaani 2025-2030', 'arvonvahennyssanktio', 900, DATE '2026-04-20', 0),
-            ('POP MHU Suomussalmi 2024-2029', 'A', 550, DATE '2026-03-15', 13),
-            ('POP MHU Suomussalmi 2024-2029', 'B', 325, DATE '2026-03-20', 14),
-                 ('POP MHU Suomussalmi 2024-2029', 'C', 175, DATE '2026-04-15', 8),
-            ('POP MHU Suomussalmi 2024-2029', 'arvonvahennyssanktio', 950, DATE '2026-04-20', 0)
-          ) AS manuaalinen(urakan_nimi, sakkoryhma, maara, pvm, tyyppi_koodi)
-          ON manuaalinen.urakan_nimi = tiedot.urakan_nimi;
+        JOIN manuaalinen
+          ON manuaalinen.urakan_nimi = tiedot.urakan_nimi
+        JOIN uudet_laatupoikkeamat
+          ON uudet_laatupoikkeamat.urakka = tiedot.urakka
+         AND uudet_laatupoikkeamat.kuvaus = manuaalinen.kuvaus;
 
     WITH tiedot AS (
         SELECT u.nimi AS urakan_nimi,
