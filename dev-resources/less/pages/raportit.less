@@ -144,6 +144,23 @@
     font-size: @font-size-small;
     line-height: 2rem;
   }
+    .sininen-laatikko-rivi-label {
+        display: flex;
+        flex: 1 1 auto;
+        min-width: 0;
+
+        &.sininen-laatikko-sisennetty {
+            padding-left: @valistys-16;
+        }
+    }
+    .sininen-laatikko-luettelomerkki {
+        display: inline-block;
+        flex: 0 0 @valistys-16;
+        width: @valistys-16;
+    }
+    .sininen-laatikko-rivi-arvo {
+        flex: 0 0 auto;
+    }
   .display-container {
     padding-bottom: @valistys-16;
   }
