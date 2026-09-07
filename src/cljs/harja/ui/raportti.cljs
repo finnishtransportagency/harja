@@ -457,8 +457,12 @@
              ;; Kontentti
              [:div.flex-row
               (cond-> {} (:lihavoi? rivi) (assoc :style {:font-weight "bold"}))
-              [:div (:avain rivi)]
-              [:div.tasaa-oikealle
+              [:div {:class (str "sininen-laatikko-rivi-label"
+                                 (when (:sisennetty? rivi) " sininen-laatikko-sisennetty"))}
+               (when (:luettelomerkki? rivi)
+                 [:span.sininen-laatikko-luettelomerkki "•"])
+               (:avain rivi)]
+              [:div.sininen-laatikko-rivi-arvo.tasaa-oikealle
                (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
           data)))))
 

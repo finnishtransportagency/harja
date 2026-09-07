@@ -207,6 +207,14 @@
                [:fo:table-cell [:fo:block {:text-align "right" :font-weight "bold"} "toinen juttu:"]]
                [:fo:table-cell [:fo:block {:margin-left "5mm"} "4242"]]]))))
 
+(deftest sininen-laatikko-ei-piirra-estettya-divideria
+  (let [fo (muodosta-pdf [:sininen-laatikko {:otsikko "Yhteenveto"
+                                             :nayta-hr? false}
+                          [{:avain "Sanktiot" :arvo 100 :fmt :raha}
+                           {:avain "Arvovähennykset" :arvo 0 :fmt :raha}]])
+        tyylit (filter map? (tree-seq coll? seq fo))]
+    (is (not-any? #(= "solid 0.3mm gray" (:border-bottom %)) tyylit))))
+
 
 ;; Testataan koko raportti, eli täysi XSL-FO dokumentin luonti ja siitä PDF:n generointi
 

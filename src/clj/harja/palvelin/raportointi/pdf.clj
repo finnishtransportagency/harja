@@ -506,7 +506,8 @@
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
   nil)
 
-(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko layout]} data]]
+(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko layout nayta-hr?]
+                                             :or {nayta-hr? true}} data]]
   (let [data (vec (keep identity data))]
     [:fo:block {:background-color "#E0EDF9"
                 :border (str "solid 0.3mm " korostettu-vari)
@@ -555,7 +556,7 @@
                                    (fmt/euro-opt (:arvo rivi))
                                    (str (:arvo rivi)))]
                  (list
-                   (when (= i viimeinen-idx)
+                   (when (and nayta-hr? (= i viimeinen-idx))
                      [:fo:table-row
                       [:fo:table-cell {:number-columns-spanned 2
                                        :padding-top "1mm"
@@ -565,7 +566,15 @@
                    [:fo:table-row
                     (when (:lihavoi? rivi) {:font-weight "bold"})
 
-                    [:fo:table-cell {:padding "0.5mm"} [:fo:block (:avain rivi)]]
+                    [:fo:table-cell (cond-> {:padding "0.5mm"}
+                                      (:sisennetty? rivi) (assoc :padding-left "4mm"))
+                     (into [:fo:block]
+                       (concat
+                         (when (:luettelomerkki? rivi)
+                           [[:fo:inline {:font-weight "bold"
+                                         :padding-right "2mm"}
+                             "\u2022"]])
+                         [(:avain rivi)]))]
                     [:fo:table-cell {:padding "0.5mm"
                                      :text-align "right"}
                      [:fo:block arvo-teksti]]])))

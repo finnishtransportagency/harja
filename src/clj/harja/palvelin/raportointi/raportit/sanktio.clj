@@ -422,12 +422,14 @@
                                               arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0)
                                                                                    (or arvonvahennykset [])))]
                                           [[{:avain "Sakot yhteensä" :arvo sakkosumma :fmt :raha}
+                                            {:avain "Muistutukset" :arvo (str muistutusten-maara " kpl")
+                                            :luettelomerkki? true
+                                            :sisennetty? true}
+                                            {:avain "Suorasakot" :arvo suorasakkojen-summa :fmt :raha
+                                            :luettelomerkki? true
+                                            :sisennetty? true}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-summa :fmt :raha}
-                                            {:avain "Muistutukset" :arvo (str muistutusten-maara " kpl")}
-                                            {:avain "Suorasakot" :arvo suorasakkojen-summa :fmt :raha}
-                                            {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}
-                                            {:avain "Yhteensä" :arvo (+ sakkosumma bonukset-summa arvonvahennykset-summa)
-                                             :fmt :raha :lihavoi? true}]
+                                            {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}]
                                            (merkitse-taulukot
                                              (koosta-yllapidon-taulukot sanktiot bonukset)
                                              urakan-nimi)])
@@ -442,15 +444,6 @@
                                               sanktiot-uniikit (:sanktiot kooste)
                                               arvonvahennykset-summa (reduce + 0 (map #(or (:summa %) 0) (:arvonvahennykset kooste)))
                                               sanktiot-tunnistetut-uniikit (:tunnetut kooste)
-
-                                              ;; HUOM: hae-urakkataso-sanktiot palauttaa yhden rivin per
-                                              ;; sanktiolaji/sanktiotyyppi-yhdistelmä, joten samalla sanktio_id:llä
-                                              ;; voi olla useita rivejä. Yhteenvetolukuja (summa, määrät) varten
-                                              ;; sanktiot pitää ottaa kertaalleen per sanktio_id.
-                                              ;; HUOM: sanktiolla ei välttämättä ole sanktio_profiili_riviä
-                                              ;; (esim. vanhentunut/poistettu sanktiotyyppi). Nämä sanktiot
-                                              ;; erotetaan omaan taulukkoonsa, mutta niiden summa lasketaan
-                                              ;; mukaan "Sanktiot yhteensä" -lukuun - rahaa ei saa kadota.
                                               sanktiot-yhteensa (reduce + 0 (map #(or (:summa %) 0) sanktiot-uniikit))
                                               bonukset-yhteensa (reduce + 0 (map #(or (:summa %) 0) (or bonukset [])))
                                               muistutusten-maara (count (filterv #(= "muistutus" (:sanktiolaji_koodi %)) (:tunnetut kooste)))
@@ -459,11 +452,14 @@
                                                                               (filterv #(= "vastuuhenkilon-vaihto" (:sanktiotyyppi_koodi %)) sanktiot-tunnistetut-uniikit)))]
 
                                           [[{:avain "Sanktiot yhteensä" :arvo sanktiot-yhteensa :fmt :raha}
+                                            {:avain "Kirjalliset muistutukset" :arvo (str muistutusten-maara " kpl")
+                                            :luettelomerkki? true
+                                            :sisennetty? true}
+                                            {:avain "Vastuuhenkilön vaihto" :arvo vastuuhenkilon-vaihto-summa :fmt :raha
+                                            :luettelomerkki? true
+                                            :sisennetty? true}
                                             {:avain "Bonukset yhteensä" :arvo bonukset-yhteensa :fmt :raha}
-                                            {:avain "Kirjalliset muistutukset" :arvo (str muistutusten-maara " kpl")}
-                                            {:avain "Vastuuhenkilön vaihto" :arvo vastuuhenkilon-vaihto-summa :fmt :raha}
-                                            {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}
-                                            {:avain "Yhteensä" :arvo (+ sanktiot-yhteensa bonukset-yhteensa arvonvahennykset-summa) :fmt :raha :lihavoi? true}]
+                                            {:avain "Arvovähennykset" :arvo arvonvahennykset-summa :fmt :raha}]
 
                                            (merkitse-taulukot (:taulukot kooste) urakan-nimi)]))]
 
@@ -480,7 +476,8 @@
            [:teksti (str urakan-nimi " | Aikaväli: " aikajakso)
             {:luokka "raportin-otsikkorivi"}]
            [:display-flex
-            [:sininen-laatikko {:otsikko "Yhteenveto"}
+            [:sininen-laatikko {:otsikko "Yhteenveto"
+                                :nayta-hr? false}
              yhteenveto-data]]]
       (concat
         (when (and (= :excel kasittelija)
