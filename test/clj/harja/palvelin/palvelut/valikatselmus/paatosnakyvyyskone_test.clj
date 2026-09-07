@@ -322,6 +322,7 @@
 (deftest valmistele-lupauspaatokset-test
   (let [urakkaid (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-tiedot (first (urakat-kyselyt/hae-urakan-tiedot (:db jarjestelma) urakkaid))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
         indeksi "MAKU 2015"
@@ -337,7 +338,7 @@
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
         paatokset-ei-kumpikaan (kone/valmistele-lupauspaatokset (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
                                  toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi
-                                 tietokanta-paatokset urakan-alkuvuosi)
+                                 tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
         _ (is (= 1 (count paatokset-ei-kumpikaan)))
         _ (is (= "taytetty" (:tyyppi (first paatokset-ei-kumpikaan))))
 
@@ -347,7 +348,7 @@
         tavoitehinta 99
         paatokset-sanktio (kone/valmistele-lupauspaatokset (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
                             toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi
-                            tietokanta-paatokset urakan-alkuvuosi)
+                            tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
         _ (is (= 1 (count paatokset-sanktio)))
         _ (is (= "sanktio" (:tyyppi (first paatokset-sanktio))))
 
@@ -356,7 +357,7 @@
         tarjous-tavoitehinta 100
         tavoitehinta 99
         paatokset-bonus (kone/valmistele-lupauspaatokset (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset toteutuneet-pisteet
-                          luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi)
+                          luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
         _ (is (= 1 (count paatokset-bonus)))
         _ (is (= "bonus" (:tyyppi (first paatokset-bonus))))]))
 
@@ -395,7 +396,7 @@
           valmistellut-paatokset (kone/valmistele-lupauspaatokset
                                    (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
                                    toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi
-                                   tietokanta-paatokset urakan-alkuvuosi)
+                                   tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
           lupauspaatos (first valmistellut-paatokset)]
 
       (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
@@ -438,7 +439,7 @@
           valmistellut-paatokset (kone/valmistele-lupauspaatokset
                                    (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
                                    toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi
-                                   tietokanta-paatokset urakan-alkuvuosi)
+                                   tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
           lupauspaatos (first valmistellut-paatokset)]
 
       (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
@@ -463,17 +464,17 @@
           tarjous-tavoitehinta 100000M
           tavoitehinta 99000M
           mahdolliset-paatokset (apurit/kaikki-mahdolliset-paatokset "mhu" urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
-          tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)]
-
-      ;; Stubataan urakan parametrit niin että bonus- ja sanktioprosentit puuttuvat (nil)
+          tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
+          ;; Stubataan urakan parametrit niin että bonus- ja sanktioprosentit puuttuvat (nil)
+          urakan-parametrit {:lupauspaatoksen_bonusprosentti nil
+                             :lupauspaatoksen_sanktioprosentti nil}]
       (with-redefs [urakat-kyselyt/hae-urakan-parametrit
                     (fn [_db _params]
-                      [{:lupauspaatoksen_bonusprosentti nil
-                        :lupauspaatoksen_sanktioprosentti nil}])]
+                      [urakan-parametrit])]
         (let [valmistellut-paatokset (kone/valmistele-lupauspaatokset
                                        (:db jarjestelma) false valittu-hoitovuosi urakkaid paatokset
                                        toteutuneet-pisteet luvatut-pisteet tavoitehinta tarjous-tavoitehinta indeksi
-                                       tietokanta-paatokset urakan-alkuvuosi)
+                                       tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
               lupauspaatos (first valmistellut-paatokset)]
 
           (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
