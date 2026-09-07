@@ -34,13 +34,12 @@
   (let [;; Rahavaraukset kuuluu teiden-hoito tyyppisille urakoille
         mhurakat (q-map "SELECT id FROM urakka WHERE tyyppi = 'teiden-hoito';")
         tietokanta-urakoiden-maara (count mhurakat)
-        ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta ja muutamalla on pari enemmän.
-        ;; Tämä on kovakoodattu määrä ja jos se muuttuu, niin tämä testi failaa.
-        tietokantaan-lisatty-maara 57
+        ;; Tällä hetkellä on määritelty, että kaikilla urakoilla on 3 rahavarausta ja  lisäksi kolme poikkeavaa rahavarausta
+        poikkeavien-urakkakohtaisten-rahavarausten-maara 3
+        tietokantaan-lisatty-maara (+ (* tietokanta-urakoiden-maara 3)
+                    poikkeavien-urakkakohtaisten-rahavarausten-maara)
         tulos (kutsu-palvelua (:http-palvelin jarjestelma)
                 :hae-rahavaraukset +kayttaja-jvh+ {})]
-    ;; Jos default rahavarauksia muutetaan, niin tämä tulee failaamaan.
-    ;; 2024 alkavilla urakoilla voi olla eri määrä rahavarauksia ja ne pitää silloin ottaa tässä huomioon
     (is (= tietokantaan-lisatty-maara (count (:urakoiden-rahavaraukset tulos))))))
 
 (deftest lisaa-rahavaukselle-tehtava
