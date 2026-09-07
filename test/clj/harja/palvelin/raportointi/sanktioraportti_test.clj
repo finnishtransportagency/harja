@@ -604,6 +604,9 @@
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         laskutus-indeksi "raportin-mhu2026-suorasanktio-laskutusraja"
         vastuuhenkilo-indeksi "raportin-mhu2026-suorasanktio-vastuuhenkilo"
+        pohjavesisuola-indeksi "raportin-mhu2026-suorasanktio-pohjavesisuola"
+        talvisuola-indeksi "raportin-mhu2026-suorasanktio-talvisuola"
+        tenttikeskiarvo-indeksi "raportin-mhu2026-suorasanktio-tenttikeskiarvo"
         lisaa-sanktio (fn [laji maara indeksi]
                         (u (str "INSERT INTO sanktio "
                              "(sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, "
@@ -623,6 +626,9 @@
     (try
       (lisaa-sanktio "laskutus_yli_laskutusrajan" 1111 laskutus-indeksi)
       (lisaa-sanktio "vastuuhenkilon_vaihto" 2222 vastuuhenkilo-indeksi)
+      (lisaa-sanktio "pohjavesisuolan_ylitys" 333 pohjavesisuola-indeksi)
+      (lisaa-sanktio "talvisuolan_kokonaiskayton_ylitys" 444 talvisuola-indeksi)
+      (lisaa-sanktio "vastuuhenkilon_tenttipistemaara_alentuminen" 555 tenttikeskiarvo-indeksi)
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                       :suorita-raportti
                       +kayttaja-jvh+
@@ -634,19 +640,36 @@
             vastuuhenkilo-taulukko (some #(when (= "Vastuuhenkilön vaihto"
                                                    (get-in % [1 :otsikko])) %)
                                     sanktio-taulukot)
+            pohjavesisuola-taulukko (some #(when (= "Pohjavesialueen suolankäytön ylitys"
+                                                     (get-in % [1 :otsikko])) %)
+                                      sanktio-taulukot)
+            talvisuola-taulukko (some #(when (= "Talvisuolan kokonaiskäytön ylitys"
+                                                (get-in % [1 :otsikko])) %)
+                                  sanktio-taulukot)
+            tenttikeskiarvo-taulukko (some #(when (= "Vastuuhenkilön tenttipistemäärän alentuminen"
+                                                       (get-in % [1 :otsikko])) %)
+                                       sanktio-taulukot)
             tunnistamattomat-taulukko (first (apurit/hae-osion-taulukot
                                                vastaus
                                                "Tunnistamattomat sanktiot"))]
-        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 5133M))
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 6465M))
         (is (= ["Laskutus yli laskutusrajan" 1111M]
                (hae-taulukon-rivi laskutus-taulukko "Laskutus yli laskutusrajan")))
         (is (= ["Vastuuhenkilön vaihto" 2222M]
                (hae-taulukon-rivi vastuuhenkilo-taulukko "Vastuuhenkilön vaihto")))
+        (is (= ["Pohjavesialueen suolankäytön ylitys" 333M]
+               (hae-taulukon-rivi pohjavesisuola-taulukko "Pohjavesialueen suolankäytön ylitys")))
+        (is (= ["Talvisuolan kokonaiskäytön ylitys" 444M]
+               (hae-taulukon-rivi talvisuola-taulukko "Talvisuolan kokonaiskäytön ylitys")))
+        (is (= ["Vastuuhenkilön tenttipistemäärän alentuminen" 555M]
+               (hae-taulukon-rivi tenttikeskiarvo-taulukko "Vastuuhenkilön tenttipistemäärän alentuminen")))
         (is (nil? (hae-taulukon-rivi tunnistamattomat-taulukko
                                    "Ei tarvita sanktiotyyppiä"))))
       (finally
         (u (str "DELETE FROM sanktio WHERE indeksi IN ('"
-             laskutus-indeksi "', '" vastuuhenkilo-indeksi "')"))))))
+             laskutus-indeksi "', '" vastuuhenkilo-indeksi "', '"
+             pohjavesisuola-indeksi "', '" talvisuola-indeksi "', '"
+             tenttikeskiarvo-indeksi "')"))))))
 
 (deftest raportin-mhu2026-kohdistuksen-sallima-bonus-nakyy
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'"))
