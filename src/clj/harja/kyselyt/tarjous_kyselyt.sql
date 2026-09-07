@@ -145,9 +145,9 @@ WHERE id = :id;
 
 -- name: lisaa-rahavaraus-budjettiin<!
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
-                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
+                                   toimenpideinstanssi, tehtava, tehtavaryhma, rahavaraus_id, tyyppi, osio, luoja, luotu)
 VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
-        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
+        :tehtava_id, :tehtavaryhma, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
         :luoja, NOW());
 
 -- name: paivita-urakan-tavoite-ja-kattohinta!
