@@ -172,7 +172,7 @@
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
     (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (= (count (:laatupoikkeamat vastaus)) 52))
+    (is (= (count (:laatupoikkeamat vastaus)) 65))
     (is (= (count (:paallystys vastaus)) 1))
     (is (= (count (:paikkaus vastaus)) 85))
     (is (= (count (:ilmoitukset vastaus)) 53))
