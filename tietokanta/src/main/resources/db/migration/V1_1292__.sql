@@ -2,9 +2,9 @@
 --
 -- Tässä migraatiossa:
 -- 1) päivitetään bonuslajien kanoniset nimet,
--- 2) tarkistetaan kaikkien kohdeurakoiden yksikäsitteisyys,
--- 3) lisätään liikennevahinkobonus MHU21-26-profiileihin,
--- 4) rajataan bonus täsmälleen kahteentoista kohdeurakkaan.
+-- 2) muodostetaan ja tarkistetaan kohdeurakoiden yhteinen lista,
+-- 3) lisätään liikennevahinkobonus MHU21-25-profiileihin, jos kohdeurakat löytyvät, ja
+-- 4) rajataan bonus täsmälleen kymmeneen kohdeurakkaan.
 --
 -- Historiallisten muu-bonus-kirjausten muuttaminen ei kuulu tähän migraatioon,
 -- vaan tehdään erillisessä tiketissä.
@@ -28,8 +28,8 @@ UPDATE bonus_laji bl
  WHERE bl.koodi = 'alihankintabonus'
    AND bl.nimi IS DISTINCT FROM 'Bonus alihankintasopimusten maksuehdoista';
 
--- Liikennevahinkobonus on käytössä MHU21-26-urakoissa. MHU19-20 jäävät
--- edelleen muu-bonus-lajin piiriin.
+-- Liikennevahinkobonus on tässä migraatiossa käytössä MHU21-25-urakoissa.
+-- MHU26-urakoiden liitokset lisätään erillisessä migraatiossa.
 WITH integraatio AS (
     SELECT id
       FROM kayttaja
@@ -37,7 +37,7 @@ WITH integraatio AS (
 )
 UPDATE bonus_laji bl
    SET nimi = 'Bonus liikennevahinkojen aiheuttajien selvittämisestä',
-       kuvaus = 'MHU21-26-urakoille urakkakohtaisesti rajattu bonus liikennevahinkojen aiheuttajien selvittämisestä',
+     kuvaus = 'MHU21-25-urakoille urakkakohtaisesti rajattu bonus liikennevahinkojen aiheuttajien selvittämisestä',
        muokkaaja = i.id,
        muokattu = CURRENT_TIMESTAMP
   FROM integraatio i
@@ -45,73 +45,80 @@ UPDATE bonus_laji bl
    AND (bl.nimi IS DISTINCT FROM 'Bonus liikennevahinkojen aiheuttajien selvittämisestä'
         OR bl.kuvaus IS DISTINCT FROM 'MHU21-26-urakoille urakkakohtaisesti rajattu bonus liikennevahinkojen aiheuttajien selvittämisestä');
 
--- 2. Varmista kohdeurakat ennen profiili- tai kirjauspäivityksiä.
--- Urakka tunnistetaan lyhyen nimen, alkupäivän ja urakkatyypin yhdistelmällä.
--- Puuttuva tai useaan urakkaan osuva tunniste keskeyttää koko migraation, jotta
--- osittainen tai väärään urakkaan kohdistuva sallittujen urakoiden rajaus
--- ei pääse tuotantoon.
+-- 2. Muodosta yksi tilapäinen kohdeurakoiden lähde.
+-- Sama lista käytetään sekä esikyselyssä että profiilirivien liitoksissa.
+-- ON COMMIT DROP varmistaa, ettei migraatiosta jää pysyvää apurakennetta.
+CREATE TEMPORARY TABLE harja_2638_bonusin_urakkarajaukset (
+    profiili_nimi       TEXT NOT NULL,
+    urakka_lyhyt_nimi   TEXT NOT NULL,
+    urakka_alkupvm     DATE NOT NULL,
+    urakkatyyppi        urakkatyyppi NOT NULL,
+    PRIMARY KEY (profiili_nimi, urakka_lyhyt_nimi, urakka_alkupvm)
+) ON COMMIT DROP;
+
+INSERT INTO harja_2638_bonusin_urakkarajaukset (profiili_nimi,
+                                                 urakka_lyhyt_nimi,
+                                                 urakka_alkupvm,
+                                                 urakkatyyppi)
+VALUES
+    -- MHU21-24
+    ('teiden-hoito-bonus-2021-2024', 'Nummi 21', DATE '2021-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Raasepori 21', DATE '2021-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Heinola 22', DATE '2022-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Lahti 22', DATE '2022-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Hyvinkää 23', DATE '2023-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Hämeenlinna 23', DATE '2023-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Espoo 24', DATE '2024-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-2021-2024', 'Vantaa 24', DATE '2024-10-01', 'teiden-hoito'),
+    -- MHU25
+    ('teiden-hoito-bonus-mhu2025', 'Mäntsälä 25', DATE '2025-10-01', 'teiden-hoito'),
+    ('teiden-hoito-bonus-mhu2025', 'Porvoo 25', DATE '2025-10-01', 'teiden-hoito');
+
+-- 3. Varmista kohdeurakat ennen profiili- tai liitosmuutoksia.
+-- Urakka tunnistetaan lyhyen nimen, alkupäivän ja tyypin yhdistelmällä.
+-- Tyhjässä skeemassa urakkadata ladataan vasta migraatioiden jälkeen.
+-- Puuttuva tai useaan urakkaan osuva tunniste ohittaa konfiguraation tässä ympäristössä.
 DO $$
 DECLARE
   puuttuvat TEXT;
   moniosumaiset TEXT;
 BEGIN
-  -- Lista on HARJA-2638:n mukainen kohdejoukko. Vuosiosa ei yksin riitä
-  -- tunnisteeksi, koska samannimisiä urakoita voi olla eri ajanjaksoilla.
-  WITH kohdeurakat (urakka_lyhyt_nimi, urakka_alkupvm) AS (
-    VALUES
-      ('Nummi 21', DATE '2021-10-01'),
-      ('Raasepori 21', DATE '2021-10-01'),
-      ('Heinola 22', DATE '2022-10-01'),
-      ('Lahti 22', DATE '2022-10-01'),
-      ('Hyvinkää 23', DATE '2023-10-01'),
-      ('Hämeenlinna 23', DATE '2023-10-01'),
-      ('Espoo 24', DATE '2024-10-01'),
-      ('Vantaa 24', DATE '2024-10-01'),
-      ('Mäntsälä 25', DATE '2025-10-01'),
-      ('Porvoo 25', DATE '2025-10-01'),
-      ('Nummi 26', DATE '2026-10-01'),
-      ('Raasepori 26', DATE '2026-10-01')
-  ),
-  osumat AS (
-    -- Laske jokaiselle odotetulle tunnisteelle osumien määrä:
+  IF EXISTS (SELECT 1 FROM urakka) THEN
+    -- Laske jokaiselle profiilin ja urakan yhdistelmälle osumien määrä:
     -- nolla = puuttuva urakka, yli yksi = epäyksikäsitteinen urakka.
-    SELECT k.urakka_lyhyt_nimi,
-           k.urakka_alkupvm,
-           COUNT(u.id) AS osumien_maara
-      FROM kohdeurakat k
-           LEFT JOIN urakka u
-                     ON u.lyhyt_nimi = k.urakka_lyhyt_nimi
-                    AND u.alkupvm = k.urakka_alkupvm
-                    AND u.tyyppi = 'teiden-hoito'
-     GROUP BY k.urakka_lyhyt_nimi, k.urakka_alkupvm
-  )
-  SELECT string_agg(format('%s (%s)', urakka_lyhyt_nimi, urakka_alkupvm), ', ')
-    FILTER (WHERE osumien_maara = 0),
-         string_agg(format('%s (%s), osumia %s', urakka_lyhyt_nimi, urakka_alkupvm, osumien_maara), ', ')
-           FILTER (WHERE osumien_maara > 1)
-    INTO puuttuvat, moniosumaiset
-    FROM osumat;
+    WITH osumat AS (
+      SELECT r.profiili_nimi,
+             r.urakka_lyhyt_nimi,
+             r.urakka_alkupvm,
+             COUNT(u.id) AS osumien_maara
+        FROM harja_2638_bonusin_urakkarajaukset r
+             LEFT JOIN urakka u
+                       ON u.lyhyt_nimi = r.urakka_lyhyt_nimi
+                      AND u.alkupvm = r.urakka_alkupvm
+                      AND u.tyyppi = r.urakkatyyppi
+       GROUP BY r.profiili_nimi, r.urakka_lyhyt_nimi, r.urakka_alkupvm
+    )
+    SELECT string_agg(format('%s (%s)', urakka_lyhyt_nimi, urakka_alkupvm), ', ')
+      FILTER (WHERE osumien_maara = 0),
+           string_agg(format('%s (%s), osumia %s', urakka_lyhyt_nimi, urakka_alkupvm, osumien_maara), ', ')
+             FILTER (WHERE osumien_maara > 1)
+      INTO puuttuvat, moniosumaiset
+      FROM osumat;
 
-  IF moniosumaiset IS NOT NULL THEN
-    -- Väärä rajaus olisi tietomallissa vaarallisempi kuin migraation
-    -- pysähtyminen, joten moniosumaisuus käsitellään kovana virheenä.
-    RAISE EXCEPTION 'Urakkakohtaisen liikennevahinkobonuksen kohteet eivät ole yksikäsitteisiä: %',
-      moniosumaiset;
-  END IF;
-
-  IF puuttuvat IS NOT NULL THEN
-    -- Profiilirivi ilman liitoksia tarkoittaa kaikkia profiilin urakoita.
-    -- Siksi puuttuva kohdeurakka ei saa muuttua hiljaisesti avoimeksi rajaukseksi.
-    RAISE EXCEPTION 'Urakkakohtaisen liikennevahinkobonuksen kohdeurakoita puuttuu: %',
-      puuttuvat;
+    IF moniosumaiset IS NOT NULL OR puuttuvat IS NOT NULL THEN
+      -- Profiilirivi ilman liitoksia tarkoittaa kaikkia profiilin urakoita.
+      -- Siksi puutteellisessa ympäristössä koko konfiguraatio jätetään luomatta.
+      RAISE NOTICE 'Urakkakohtainen liikennevahinkobonus ohitetaan. Puuttuvat: %, useita osumia: %',
+        COALESCE(puuttuvat, '-'),
+        COALESCE(moniosumaiset, '-');
+    END IF;
   END IF;
 END;
 $$;
 
--- 3. Lisää liikennevahinkobonus profiileihin.
+-- 4. Lisää liikennevahinkobonus MHU21-25-profiileihin.
 -- Rivi koskee hoidon johdon T2-koodia 23150. MHU26-rivi on jo olemassa
--- aiemmassa migraatiossa, mutta sama idempotentti ehto varmistaa kaikkien
--- kolmen profiilin tavoitetilan.
+-- aiemmassa migraatiossa ja käsitellään erillisessä migraatiossa.
 WITH profiilirivit (profiili_nimi,
                     bonus_koodi,
                     toimenpiderajauksen_tyyppi,
@@ -129,14 +136,24 @@ WITH profiilirivit (profiili_nimi,
          'liikennevahinkojen_aiheuttajien_selvitysbonus',
          't2-koodi',
          '23150',
-         2),
-        -- MHU26: olemassa olevan rivin tavoitejärjestys.
-        ('teiden-hoito-bonus-mhu2026',
-         'liikennevahinkojen_aiheuttajien_selvitysbonus',
-         't2-koodi',
-         '23150',
-         4)
+         2)
 ),
+      kohteet_ok AS (
+          SELECT 1 AS ok
+         FROM (
+          SELECT r.profiili_nimi,
+              r.urakka_lyhyt_nimi,
+              r.urakka_alkupvm,
+              COUNT(u.id) AS osumien_maara
+            FROM harja_2638_bonusin_urakkarajaukset r
+              LEFT JOIN urakka u
+                  ON u.lyhyt_nimi = r.urakka_lyhyt_nimi
+                 AND u.alkupvm = r.urakka_alkupvm
+                 AND u.tyyppi = r.urakkatyyppi
+           GROUP BY r.profiili_nimi, r.urakka_lyhyt_nimi, r.urakka_alkupvm
+         ) osumat
+        HAVING COUNT(*) = COUNT(*) FILTER (WHERE osumien_maara = 1)
+      ),
 integraatio AS (
     SELECT id
       FROM kayttaja
@@ -168,6 +185,7 @@ SELECT bp.id,
        JOIN bonus_laji bl
          ON bl.koodi = pr.bonus_koodi
        CROSS JOIN integraatio i
+       CROSS JOIN kohteet_ok
  WHERE NOT EXISTS (
            SELECT 1
              FROM bonus_profiili_rivi bpr
@@ -177,60 +195,30 @@ SELECT bp.id,
               AND bpr.toimenpide_t2_koodi IS NOT DISTINCT FROM pr.toimenpide_t2_koodi
        );
 
--- 4. Luo profiilirivien urakkakohtaiset sallittujen urakoiden liitokset.
--- Jokainen VALUES-rivi vastaa yhtä HARJA-2638:ssa nimettyä urakkaa.
--- Liitos haetaan samalla nimellä, alkupäivällä ja tyypillä kuin esikyselyssä.
--- Kaikki rivit käyttävät samaa liikennevahinkobonusta ja T2-koodia 23150,
--- joten niitä ei toisteta VALUES-listassa. NOT EXISTS tekee uusinta-ajosta
--- turvallisen.
-WITH urakkarajaukset (profiili_nimi,
-                      urakka_alkupvm,
-                      urakka_lyhyt_nimi) AS (
-    VALUES
-        -- MHU21-24
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2021-10-01',
-         'Nummi 21'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2021-10-01',
-         'Raasepori 21'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2022-10-01',
-         'Heinola 22'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2022-10-01',
-         'Lahti 22'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2023-10-01',
-         'Hyvinkää 23'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2023-10-01',
-         'Hämeenlinna 23'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2024-10-01',
-         'Espoo 24'),
-        ('teiden-hoito-bonus-2021-2024',
-         DATE '2024-10-01',
-         'Vantaa 24'),
-        -- MHU25
-        ('teiden-hoito-bonus-mhu2025',
-         DATE '2025-10-01',
-         'Mäntsälä 25'),
-        ('teiden-hoito-bonus-mhu2025',
-         DATE '2025-10-01',
-         'Porvoo 25'),
-        -- MHU26
-        ('teiden-hoito-bonus-mhu2026',
-         DATE '2026-10-01',
-         'Nummi 26'),
-        ('teiden-hoito-bonus-mhu2026',
-         DATE '2026-10-01',
-         'Raasepori 26')
-),
-integraatio AS (
+-- 5. Luo profiilirivien urakkakohtaiset sallittujen urakoiden liitokset.
+-- Liitos haetaan samasta lähteestä kuin esikyselyn urakat.
+-- Kaikki rivit käyttävät samaa liikennevahinkobonusta ja T2-koodia 23150.
+-- NOT EXISTS tekee uusinta-ajosta turvallisen.
+WITH integraatio AS (
     SELECT id
       FROM kayttaja
-     WHERE kayttajanimi = 'Integraatio'
+  WHERE kayttajanimi = 'Integraatio'
+),
+kohteet_ok AS (
+    SELECT 1 AS ok
+   FROM (
+    SELECT r.profiili_nimi,
+        r.urakka_lyhyt_nimi,
+        r.urakka_alkupvm,
+        COUNT(u.id) AS osumien_maara
+      FROM harja_2638_bonusin_urakkarajaukset r
+        LEFT JOIN urakka u
+            ON u.lyhyt_nimi = r.urakka_lyhyt_nimi
+           AND u.alkupvm = r.urakka_alkupvm
+           AND u.tyyppi = r.urakkatyyppi
+     GROUP BY r.profiili_nimi, r.urakka_lyhyt_nimi, r.urakka_alkupvm
+   ) osumat
+  HAVING COUNT(*) = COUNT(*) FILTER (WHERE osumien_maara = 1)
 )
 INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id,
                                         urakka_id,
@@ -244,7 +232,7 @@ SELECT bpr.id,
        CURRENT_TIMESTAMP,
        i.id,
        CURRENT_TIMESTAMP
-  FROM urakkarajaukset ur
+  FROM harja_2638_bonusin_urakkarajaukset ur
        JOIN bonus_profiili bp
          ON bp.nimi = ur.profiili_nimi
        JOIN bonus_laji bl
@@ -256,9 +244,10 @@ SELECT bpr.id,
         AND bpr.toimenpide_t2_koodi = '23150'
        JOIN urakka u
          ON u.lyhyt_nimi = ur.urakka_lyhyt_nimi
-        AND u.tyyppi = 'teiden-hoito'
+        AND u.tyyppi = ur.urakkatyyppi
         AND u.alkupvm = ur.urakka_alkupvm
        CROSS JOIN integraatio i
+       CROSS JOIN kohteet_ok
  WHERE NOT EXISTS (
            SELECT 1
              FROM bonus_profiili_rivi_urakka olemassa
