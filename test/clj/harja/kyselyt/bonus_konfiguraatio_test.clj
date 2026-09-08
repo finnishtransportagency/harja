@@ -27,7 +27,10 @@
    :profiilirivi_toimenpiderajauksen_tyyppi "t2-koodi"
    :profiilirivi_toimenpide_t2_koodi "23150"
    :profiilirivi_urakkarajausten_maara 2
-   :profiilirivi_urakat ["Iin MHU" "Raahen MHU"]})
+  :profiilirivi_urakat ["Iin MHU" "Raahen MHU"]
+  :profiilirivi_sm_summa 5000.00M
+  :profiilirivi_sm_tapa "automaattinen"
+  :profiilirivi_sm_ohje "Bonus maksetaan vuosittain"})
 
 (defn- ei-admin-raakarivi
   "Edustava ei-admin-kyselyn (hae-bonus-profiilin-rivit) palauttama raakarivi.
@@ -80,7 +83,10 @@
               :toimenpiderajauksen-tyyppi :t2-koodi
               :toimenpide-t2-koodi "23150"
               :urakkarajausten-maara 2
-              :urakat ["Iin MHU" "Raahen MHU"]}
+              :urakat ["Iin MHU" "Raahen MHU"]
+              :summamaaritys {:summa-euroina 5000.00M
+                              :maaritystapa "automaattinen"
+                              :ohjeteksti "Bonus maksetaan vuosittain"}}
             (:profiilirivi tulos))))))
 
 (deftest muunna-bonus-konfiguraatiorivi-ei-admin-rivi

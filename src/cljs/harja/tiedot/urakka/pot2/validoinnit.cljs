@@ -2,6 +2,20 @@
   (:require
     [harja.domain.pot2 :as pot2-domain]))
 
+(def massamenekin-ylarajan-virhe "Massamenekki saa olla maksimissaan 50 kg/m2")
+
+(defn validoi-rem-tas-massamenekki [arvo rivi _]
+  (when (and (number? arvo)
+             (= pot2-domain/+rem-tas-toimenpide+ (:toimenpide rivi))
+             (> arvo pot2-domain/+massamenekin-maksimi+))
+    massamenekin-ylarajan-virhe))
+
+(defn varoita-rem-massamenekista [arvo rivi _]
+  (when (and (number? arvo)
+             (= pot2-domain/+rem-toimenpide+ (:toimenpide rivi))
+             (> arvo pot2-domain/+massamenekin-maksimi+))
+    massamenekin-ylarajan-virhe))
+
 
 (defn- pakolliset-runkoaineen-kentat [tyyppi]
   (case tyyppi

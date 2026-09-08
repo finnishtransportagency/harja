@@ -21,6 +21,7 @@
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+    [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
     [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
     [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
     [harja.views.urakka.pot2.massa-ja-murske-yhteiset :as mm-yhteiset])
@@ -81,10 +82,14 @@
                                                      (get koodistot valinnat-koodisto))
                                         valinnat-ja-nil (if pakollinen?
                                                           valinnat
-                                                          (conj valinnat nil))]
+                      (conj valinnat nil))
+                                        validoi (cond-> (:validoi (merge kentta-metadata kentta))
+                      (= nimi :massamenekki)
+                                                   (conj pot2-validoinnit/validoi-rem-tas-massamenekki))]
                                     (lomake/rivi (dissoc
                                                    (merge kentta-metadata
                                                           kentta
+                        {:validoi validoi}
                                                           {:palstoja 3
                                                            :valinnat valinnat-ja-nil})
                                                    :validoi-kentta-fn))))]

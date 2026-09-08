@@ -18,6 +18,7 @@
 (def +rem-toimenpide+ 31)
 (def +remo-toimenpide+ 33)
 (def +rem-tas-toimenpide+ 4)
+(def +massamenekin-maksimi+ 50)
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
@@ -53,7 +54,7 @@
                                 (= (:toimenpide rivi) 21)
                                 (= (:toimenpide rivi) 22)))
                :fmt #(fmt/desimaaliluku-opt % 1)}
-   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
+  :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmenekki" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
                         :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
                         }

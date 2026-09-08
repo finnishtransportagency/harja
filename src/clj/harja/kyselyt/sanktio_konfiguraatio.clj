@@ -1,5 +1,6 @@
 (ns harja.kyselyt.sanktio-konfiguraatio
-  (:require [harja.kyselyt.konversio :as konv]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konv]
             [jeesql.core :refer [defqueries]]))
 
 (declare hae-urakan-sanktio-profiilit hae-sanktio-profiilit-admin hae-sanktio-profiili-admin
@@ -27,6 +28,43 @@
     (instance? java.sql.Array arvo) (vec (.getArray ^java.sql.Array arvo))
     :else [arvo]))
 
+(defn- normalisoi-euromaara
+  [arvo]
+  (cond
+    (nil? arvo) nil
+    (instance? java.math.BigDecimal arvo) arvo
+    (number? arvo) (bigdec (str arvo))
+    :else arvo))
+
+(defn- normalisoi-maaritystapa
+  [arvo]
+  (when arvo
+    (-> arvo
+      name
+      (str/replace "_" "-")
+      keyword)))
+
+(defn- normalisoi-summamaaritys
+  [summamaaritys]
+  {:maaritystapa (normalisoi-maaritystapa (:maaritystapa summamaaritys))
+   :summa-euroina (normalisoi-euromaara (:summa_euroina summamaaritys))
+   :ohjeteksti (:ohjeteksti summamaaritys)
+   :jarjestys (:jarjestys summamaaritys)})
+
+(defn- normalisoi-summamaaritykset
+  [summamaaritykset]
+  (some->> summamaaritykset
+    konv/jsonb->clojuremap
+    (mapv normalisoi-summamaaritys)))
+
+(defn- lukitut-summat-summamaarityksista
+  [summamaaritykset]
+  (->> summamaaritykset
+    (keep (fn [{:keys [maaritystapa summa-euroina]}]
+            (when (= :automaattinen maaritystapa)
+              summa-euroina)))
+    vec))
+
 ;; Kaytossa jeesql:ssa row-fn-muuntimina.
 (defn muunna-sanktio-profiili
   [{:as rivi}]
@@ -44,11 +82,17 @@
   [rivi]
   (let [voi-puolittaa-omailmoituksella (or (get-in rivi [:profiilirivi :voi-puolittaa-omailmoituksella])
                                          (get-in rivi [:profiilirivi :voi :puolittaa :omailmoituksella]))
+        summamaaritykset (normalisoi-summamaaritykset (get-in rivi [:profiilirivi :summamaaritykset]))
         lukitut-summat (or (get-in rivi [:profiilirivi :lukitut-summat])
-                         (get-in rivi [:profiilirivi :lukitut :summat]))]
+                         (get-in rivi [:profiilirivi :lukitut :summat])
+                         (when (seq summamaaritykset)
+                           (lukitut-summat-summamaarityksista summamaaritykset)))]
     (cond-> rivi
       (some? voi-puolittaa-omailmoituksella)
       (assoc-in [:profiilirivi :voi-puolittaa-omailmoituksella] voi-puolittaa-omailmoituksella)
+
+      (some? summamaaritykset)
+      (assoc-in [:profiilirivi :summamaaritykset] summamaaritykset)
 
       (some? lukitut-summat)
       (assoc-in [:profiilirivi :lukitut-summat] lukitut-summat)
@@ -65,6 +109,10 @@
                konv/alaviiva->rakenne
                normalisoi-profiilirivin-metatiedot)]
     (cond-> rivi
+      (get-in rivi [:profiilirivi :summamaaritykset])
+      (update-in [:profiilirivi :summamaaritykset]
+        (comp vec (partial sort-by :jarjestys)))
+
       (get-in rivi [:profiilirivi :lukitut-summat])
       (update-in [:profiilirivi :lukitut-summat] normalisoi-vektoriksi)
 

@@ -172,9 +172,12 @@ SELECT bp.id                    AS profiili_id,
        bpr.id                   AS profiilirivi_id,
        bpr.jarjestys            AS profiilirivi_jarjestys,
        bpr.toimenpiderajauksen_tyyppi AS profiilirivi_toimenpiderajauksen_tyyppi,
-       bpr.toimenpide_t2_koodi AS profiilirivi_toimenpide_t2_koodi,
-       COUNT(DISTINCT bpru.urakka_id)  AS profiilirivi_urakkarajausten_maara,
-       ARRAY_REMOVE(ARRAY_AGG(DISTINCT COALESCE(u.lyhyt_nimi, u.nimi)), NULL) AS profiilirivi_urakat
+       bpr.toimenpide_t2_koodi  AS profiilirivi_toimenpide_t2_koodi,
+       COUNT(DISTINCT bpru.urakka_id)                                         AS profiilirivi_urakkarajausten_maara,
+       ARRAY_REMOVE(ARRAY_AGG(DISTINCT COALESCE(u.lyhyt_nimi, u.nimi)), NULL) AS profiilirivi_urakat,
+       bprsm.summa_euroina      AS profiilirivi_sm_summa,
+       bprsm.maaritystapa       AS profiilirivi_sm_tapa,
+       bprsm.ohjeteksti         AS profiilirivi_sm_ohje
   FROM bonus_profiili bp
        JOIN bonus_profiili_rivi bpr
          ON bpr.bonus_profiili_id = bp.id
@@ -189,6 +192,8 @@ SELECT bp.id                    AS profiili_id,
          ON bpru.bonus_profiili_rivi_id = bpr.id
        LEFT JOIN urakka u
          ON u.id = bpru.urakka_id
+       LEFT JOIN bonus_profiili_rivi_summamaaritys bprsm
+         ON bprsm.bonus_profiili_rivi_id = bpr.id
  WHERE bp.id = :bonus_profiili_id
  GROUP BY bp.id,
           bp.nimi,
@@ -209,7 +214,10 @@ SELECT bp.id                    AS profiili_id,
           bpr.id,
           bpr.jarjestys,
           bpr.toimenpiderajauksen_tyyppi,
-          bpr.toimenpide_t2_koodi
+          bpr.toimenpide_t2_koodi,
+          bprsm.summa_euroina,
+          bprsm.maaritystapa,
+          bprsm.ohjeteksti
  ORDER BY bl.jarjestys,
           bpr.jarjestys,
           bpr.toimenpiderajauksen_tyyppi,

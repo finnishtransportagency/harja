@@ -37,6 +37,13 @@
    [:div.sanktio-profiilit-vaikutusaika-selite
     (tiedot/vaikutusaika-teksti profiili)]])
 
+(defn- summamaaritys-teksti [{:keys [summa-euroina maaritystapa ohjeteksti]}]
+  (cond
+    summa-euroina (str summa-euroina " € (" maaritystapa ")"
+                    (when ohjeteksti (str " — " ohjeteksti)))
+    ohjeteksti (str maaritystapa ": " ohjeteksti)
+    :else "-"))
+
 (defn- profiilirivit-grid [rivit]
   [grid/grid
    {:piilota-toiminnot? true
@@ -51,7 +58,10 @@
     {:nimi :urakat :otsikko "Rajatut urakat" :leveys 2.2 :muokattava? (constantly false)
      :fmt #(if (seq %)
              (str/join ", " %)
-             "-")}]
+             "-")}
+    {:nimi :summamaaritys :otsikko "Euromäärä" :leveys 2.2 :muokattava? (constantly false)
+     :hae identity
+     :fmt #(summamaaritys-teksti (:summamaaritys %))}]
    rivit])
 
 (defn- lajit-grid [lajit]

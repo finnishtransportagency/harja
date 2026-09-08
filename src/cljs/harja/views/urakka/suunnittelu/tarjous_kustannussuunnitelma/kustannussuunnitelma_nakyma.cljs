@@ -105,10 +105,10 @@
           [{:otsikko "Toimenpide" :nimi :toimenpide-nimi :tyyppi :string :leveys "30%" :muokattava? (constantly false)
             :otsikkorivi-luokka "korkea"}
            {:otsikko (str "Loka-joulukuu " (pvm/vuosi (first valittu-hoitokausi)) " (€)") :nimi :alkukausi :tyyppi :euro
-            :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]] :vaadi-ei-negatiivinen? true
+            :leveys "20%" :validoi [[:ei-tyhja "Anna positiivinen summa."]] :vaadi-ei-negatiivinen? true :fmt #(fmt/euro-opt false %)
             :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
            {:otsikko (str "Tammi-syyskuu " (pvm/vuosi (second valittu-hoitokausi)) " (€)")
-            :nimi :loppukausi :tyyppi :euro :vaadi-ei-negatiivinen? true
+            :nimi :loppukausi :tyyppi :euro :vaadi-ei-negatiivinen? true :fmt #(fmt/euro-opt false %)
             :leveys "20%" :muokattava? (constantly (if vahvistettu? false true)) :tasaa :oikea :otsikkorivi-luokka "korkea"}
            {:otsikko "Yhteensä (€)" :nimi :yhteensa :tyyppi :string :fmt #(fmt/euro-opt false %) :leveys "20%" :muokattava? (constantly false)
             :tasaa :oikea :otsikkorivi-luokka "korkea"}]

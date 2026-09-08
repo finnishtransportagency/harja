@@ -419,7 +419,7 @@
 
 (defn tallenna
   [e! {:keys [perustiedot] :as app} {:keys [tekninen-osa tila versio] :as tallenna-app}
-   {:keys [kayttaja urakka-id valmis-tallennettavaksi? tallennus-kaynnissa?]}]
+  {:keys [kayttaja urakka-id valmis-luonnokseksi? valmis-tarkistettavaksi? tallennus-kaynnissa?]}]
   (let [paatos-tekninen-osa (:paatos tekninen-osa)
         huomautusteksti
         (cond
@@ -451,7 +451,7 @@
         :data-attributes {:data-cy "pot-tallenna"}
         :id "tallenna-paallystysilmoitus"
         :disabled (or tallennus-kaynnissa?
-                    (false? valmis-tallennettavaksi?)
+                    (false? valmis-luonnokseksi?)
                     (not (oikeudet/voi-kirjoittaa?
                            oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                            urakka-id kayttaja)))
@@ -477,7 +477,7 @@
             :id "laheta-paallystysilmoitus-tarkistettavaksi"
             :disabled (or tallennus-kaynnissa?
                         hinta-puuttuu?
-                        (not valmis-tallennettavaksi?)
+                        (not valmis-tarkistettavaksi?)
                         (not (oikeudet/voi-kirjoittaa?
                                oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
                                urakka-id kayttaja)))}]))]
