@@ -167,6 +167,74 @@
     (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
       (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
 
+(deftest tallenna-erilliskustannus-sallii-urakkarajatun-liikennevahinkobonuksen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-2021-2024'"))
+        bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'liikennevahinkojen_aiheuttajien_selvitysbonus'"))
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        olemassa-oleva-profiilirivi-id (ffirst (q "SELECT bpr.id
+                                                           FROM bonus_profiili_rivi bpr
+                                                                  JOIN bonus_profiili bp ON bp.id = bpr.bonus_profiili_id
+                                                                  JOIN bonus_laji bl ON bl.id = bpr.bonus_laji_id
+                                                          WHERE bp.nimi = 'teiden-hoito-bonus-2021-2024'
+                                                            AND bl.koodi = 'liikennevahinkojen_aiheuttajien_selvitysbonus'"))
+        [profiilirivi-id profiilirivi-lisatty?]
+        (if olemassa-oleva-profiilirivi-id
+          [olemassa-oleva-profiilirivi-id false]
+          [(ffirst (q (format "INSERT INTO bonus_profiili_rivi
+                               (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi,
+                                toimenpide_t2_koodi, jarjestys, aktiivinen,
+                                luoja, luotu, muokkaaja, muokattu)
+                               VALUES (%s, %s, 't2-koodi', '23150', 3, TRUE,
+                                       %s, CURRENT_TIMESTAMP, %s, CURRENT_TIMESTAMP)
+                               RETURNING id"
+                              profiili-id bonus-laji-id integraatio-id integraatio-id)))
+           true])
+        linkki-oli-olemassa? (pos? (ffirst (q (format "SELECT count(*) FROM bonus_profiili_rivi_urakka
+                                                       WHERE bonus_profiili_rivi_id = %s AND urakka_id = %s"
+                                                    profiilirivi-id urakka-id))))
+        lisatieto "Urakkarajatun liikennevahinkobonuksen tallennustesti"]
+    (u (format "INSERT INTO bonus_profiili_rivi_urakka
+                 (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (bonus_profiili_rivi_id, urakka_id) DO NOTHING"
+               profiilirivi-id urakka-id integraatio-id integraatio-id))
+    (try
+      (let [tallennettu (tallenna-erilliskustannus
+                          (:db jarjestelma)
+                          +kayttaja-jvh+
+                          (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto
+                            "liikennevahinkojen_aiheuttajien_selvitysbonus" 1234.0))]
+        (is (= "liikennevahinkojen_aiheuttajien_selvitysbonus" (:tyyppi tallennettu))
+          "Urakkarajattu liikennevahinkobonus pitää voida tallentaa sallitulle urakalle"))
+      (finally
+        (u (format "DELETE FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto))
+        (when-not linkki-oli-olemassa?
+          (u (format "DELETE FROM bonus_profiili_rivi_urakka
+                       WHERE bonus_profiili_rivi_id = %s AND urakka_id = %s"
+                     profiilirivi-id urakka-id)))
+        (when profiilirivi-lisatty?
+          (u (format "DELETE FROM bonus_profiili_rivi WHERE id = %s" profiilirivi-id)))))))
+
+(deftest tallenna-erilliskustannus-hylkaa-urakkarajauksen-ulkopuolisen-liikennevahinkobonuksen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Liikennevahinkobonuksen urakkarajaustesti"
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto
+                "liikennevahinkojen_aiheuttajien_selvitysbonus" 1234.0)
+        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+    (try+
+      (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
+      (is false "Urakkarajauksen ulkopuolinen liikennevahinkobonus pitää hylätä")
+      (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi (first virheet))))
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi bonus-kirjausvirhe)))))
+    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+      (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
+
 (deftest tallenna-erilliskustannus-sallii-bonusprofiilin-mukaisen-mhu-bonuksen
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
