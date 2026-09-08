@@ -2,7 +2,7 @@
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
-FROM eclipse-temurin:17.0.19_10-jre-noble
+FROM eclipse-temurin:17.0.20_8-jre-noble
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
@@ -26,14 +26,6 @@ RUN apt-get update \
     && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
     && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
     && echo "Europe/Helsinki" > /etc/timezone
-
-# Päivitä libc ja muut paketit
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive apt-get -y install --only-upgrade \
-        libc6 \
-        libc-bin \
-        locales \
-    && rm -rf /var/lib/apt/lists/*
 
 # Asenna apurit
 RUN apt-get update && apt-get install -y \

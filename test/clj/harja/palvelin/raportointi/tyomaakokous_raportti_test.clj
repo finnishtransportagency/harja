@@ -88,11 +88,11 @@
         sanktio-otsikko (-> (nth raportit 12) second)]
     (is (= raportin-nimi "Oulun alueurakka 2014-2019, Työmaakokousraportti lokakuussa 2014"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= [["Talvihoito (#82)"
+    (is (= [["Talvihoito (#89)"
              [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]]
-            ["Soratien hoito (#98)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
+            ["Soratien hoito (#105)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]]
             ["Toimenpiteet yhteensä" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]

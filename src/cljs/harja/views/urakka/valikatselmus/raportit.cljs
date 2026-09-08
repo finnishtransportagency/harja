@@ -47,5 +47,9 @@
 
         [:div.muokkaustoiminnot
          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and voi-muokata? (not virhe))
+          ;; Vahvista
           #(e! (valikatselmus-tiedot/->TallennaPoytakirjanRaporttiPaatos paatos))
-          #(e! (valikatselmus-tiedot/->PoistaPoytakirjanRaporttiPaatos paatos))]]])]))
+          ;; Peru päätös 
+          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                 paatos
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))

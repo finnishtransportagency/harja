@@ -155,7 +155,11 @@ export function valitseSivupaneelissaPvm(otsikko, pvm) {
 export function tallennaArvonvahennyslomake() {
     cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaSanktio');
     cy.get(SP).contains('button', 'Tallenna').click();
-    cy.wait('@tallennaSanktio', {timeout: clickTimeout});
+    cy.wait('@tallennaSanktio', {timeout: clickTimeout}).then(({response}) => {
+        const vastaus = JSON.stringify(response && response.body);
+        expect(response, `Tallennuspyynnön vastaus puuttuu. Body: ${vastaus}`).to.exist;
+        expect(response.statusCode, `Tallennus epäonnistui. Body: ${vastaus}`).to.be.within(200, 299);
+    });
     cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
         .and('contain.text', 'Sanktion tallennus onnistui')
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
@@ -165,7 +169,11 @@ export function tallennaArvonvahennyslomake() {
 export function tallennaSuorasanktiolomake() {
     cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaSanktio');
     cy.get(SP).contains('button', 'Tallenna').click();
-    cy.wait('@tallennaSanktio', {timeout: clickTimeout});
+    cy.wait('@tallennaSanktio', {timeout: clickTimeout}).then(({response}) => {
+        const vastaus = JSON.stringify(response && response.body);
+        expect(response, `Tallennuspyynnön vastaus puuttuu. Body: ${vastaus}`).to.exist;
+        expect(response.statusCode, `Tallennus epäonnistui. Body: ${vastaus}`).to.be.within(200, 299);
+    });
     cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
         .and('contain.text', 'Sanktion tallennus onnistui')
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');

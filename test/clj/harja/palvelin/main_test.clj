@@ -177,7 +177,8 @@
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
-    :tehtavat-maarat})
+    :tehtavat-maarat
+    :urakkaparametrit-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -270,7 +271,8 @@
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
-    :tehtavat-maarat})
+    :tehtavat-maarat
+    :urakkaparametrit-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

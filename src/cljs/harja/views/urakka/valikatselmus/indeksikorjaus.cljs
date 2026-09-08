@@ -41,7 +41,7 @@
 
      (when (not= 12 (count (:hoitokauden_kuukaudet paatos)))
        [yleiset/info-laatikko :vahva-ilmoitus
-       "Kaikkien kuukausien indeksin pistelukua ei ole vielä saatavilla."
+        "Kaikkien kuukausien indeksin pistelukua ei ole vielä saatavilla."
         nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
      [:hr.hr-tiivis]
@@ -65,12 +65,14 @@
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :indeksikorjaus
         paatos-tehty? (some? (:id paatos))
-
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
+
     ^{:key (str "kattohinnan-ylitys-" (gensym))}
     [:div.paatos-komponentti-reunuksella
+
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Hoitovuoden lopun indeksikorjaus" paatos-tehty? paatos-avain avatut-paatokset
       (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
+
      (when (not (contains? avatut-paatokset paatos-avain))
        [:div
         (if-not (:virhe paatos)
@@ -115,7 +117,12 @@
            [:hr.paatos-hr]
 
            [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+            ;; Vahvista
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
-            #(e! (valikatselmus-tiedot/->PoistaHoitovuodenlopunIndeksikorjauspaatos paatos))]]
+            ;; Peru päätös
+            #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                   paatos
+                   (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]
+
           [:div.muokkaustoiminnot
            [yleiset/info-laatikko :neutraali (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
