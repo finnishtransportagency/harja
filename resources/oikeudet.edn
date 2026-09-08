@@ -1727,29 +1727,59 @@
   :taso1 "urakat-laadunseuranta",
   :kuvaus "Osio 'Urakat' näkymä 'Laadunseuranta / Tarkastukset'",
   :roolien-oikeudet
-  {"ELY_Kayttaja" #{"R*"},
-   "ELY_Laadunvalvoja" #{"R" "W" "aseta-näkyviin-urakoitsijalle"},
-   "ELY_Paakayttaja" #{"R*" "W*" "aseta-näkyviin-urakoitsijalle*"},
-   "ELY_Peruskayttaja" #{"R*"},
-   "ELY_Urakanvalvoja" #{"R*" "W" "aseta-näkyviin-urakoitsijalle"},
-   "ELY_turvallisuusvastaava" #{"R"},
-   "Jarjestelmavastaava" #{"R*" "W*" "aseta-näkyviin-urakoitsijalle*"},
+  {"ELY_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset"},
+   "ELY_Laadunvalvoja"
+   #{"R"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
+   "ELY_Paakayttaja"
+   #{"R*"
+     "W*"
+     "aseta-näkyviin-urakoitsijalle*"
+     "nakee-tilaajan-tarkastukset"},
+   "ELY_Peruskayttaja" #{"R*" "nakee-tilaajan-tarkastukset"},
+   "ELY_Urakanvalvoja"
+   #{"R*"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
+   "ELY_turvallisuusvastaava" #{"R" "nakee-tilaajan-tarkastukset"},
+   "Jarjestelmavastaava"
+   #{"R*"
+     "W*"
+     "aseta-näkyviin-urakoitsijalle*"
+     "nakee-tilaajan-tarkastukset"},
    "Kayttaja" #{"R+"},
    "Kelikeskus" #{"R"},
    "Laadunvalvoja" #{"R" "W"},
    "Laatupaallikko" #{"R+"},
    "Paakayttaja" #{"R+" "W+"},
    "Paivystaja" #{"R"},
-   "Rakennuttajakonsultti" #{"R" "W" "aseta-näkyviin-urakoitsijalle"},
-   "Tilaajan_Asiantuntija" #{"R*"},
-   "Tilaajan_Kayttaja" #{"R*"},
+   "Rakennuttajakonsultti"
+   #{"R"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
+   "Tilaajan_Asiantuntija" #{"R*" "nakee-tilaajan-tarkastukset"},
+   "Tilaajan_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset"},
    "Tilaajan_Rakennuttajakonsultti"
-   #{"R" "W" "aseta-näkyviin-urakoitsijalle"},
+   #{"R"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
    "Tilaajan_Urakanvalvoja"
-   #{"R*" "W" "aseta-näkyviin-urakoitsijalle"},
+   #{"R*"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
    "Tilaajan_laadunvalvoja"
-   #{"R*" "W+" "aseta-näkyviin-urakoitsijalle+"},
-   "Tilaajan_turvallisuusvastaava" #{"R"},
+   #{"R*"
+     "W+"
+     "aseta-näkyviin-urakoitsijalle+"
+     "nakee-tilaajan-tarkastukset"},
+   "Tilaajan_turvallisuusvastaava"
+   #{"R" "nakee-tilaajan-tarkastukset"},
    "vastuuhenkilo" #{"R" "W"}}}
  {:sym urakat-liitteet,
   :osio "Urakat",
