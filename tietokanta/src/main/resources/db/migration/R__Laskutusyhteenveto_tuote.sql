@@ -1046,7 +1046,7 @@ BEGIN
                         END IF;
 
                         -- Muu bonus
-                    ELSEIF erilliskustannus_rivi.tyyppi = 'muu-bonus' THEN
+                    ELSEIF erilliskustannus_rivi.tyyppi IN ('muu-bonus', 'liikennevahinkojen_aiheuttajien_selvitysbonus') THEN
                         SELECT *
                           FROM erilliskustannuksen_indeksilaskenta(erilliskustannus_rivi.laskutuskuukausi,
                                                                     erilliskustannus_rivi.indeksin_nimi,

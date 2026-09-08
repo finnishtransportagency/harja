@@ -264,8 +264,9 @@
     :vesivayla_bonus "Bonus"
 
     :lupausbonus "Lupausbonus"
-    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :alihankintabonus "Bonus alihankintasopimusten maksuehdoista"
     :asiakastyytyvaisyysbonus "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
+    :liikennevahinkojen_aiheuttajien_selvitysbonus "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     nil))
 
@@ -274,8 +275,9 @@
   [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
+    :liikennevahinkojen_aiheuttajien_selvitysbonus "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
-    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :alihankintabonus "Bonus alihankintasopimusten maksuehdoista"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
     ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktio.
