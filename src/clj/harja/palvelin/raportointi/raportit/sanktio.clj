@@ -91,13 +91,12 @@
                      (map #(or (get sanktio-data-map [laji-koodi (:sanktiotyyppi_koodi %)]) 0)
                        tyypit))]
     [:taulukko {:sheet-nimi (or laji-koodi "sanktio")
-                :otsikko laji-nimi
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei tietoja."}
      (if muistutus?
        [{:leveys 12 :otsikko laji-nimi}
         {:leveys 15 :otsikko "Määrä (kpl)" :fmt :numero}]
-       [{:leveys 12 :otsikko "Tyyppi"}
+       [{:leveys 12 :otsikko laji-nimi}
         (muodosta-rahasarake "Sanktio")])
      (concat
        ;; Kaikki profiilin tyyppirivit näytetään, myös yhden tyypin ryhmässä.
@@ -223,7 +222,7 @@
      (into [] (concat bonus-rivit
                 [{:lihavoi? true
                   :korosta-hennosti? true
-                  :rivi (rivi "Bonukset yhteensä" bonukset-yhteensa)}]))]))
+                  :rivi (rivi "Yhteensä" bonukset-yhteensa)}]))]))
 
 (defn- koosta-yllapidon-bonustaulukko
   "Muodostaa ylläpidon legacy-bonuksille oman bonus-taulukon."

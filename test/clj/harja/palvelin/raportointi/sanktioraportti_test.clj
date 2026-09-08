@@ -48,9 +48,14 @@
              (= urakan-nimi (:sheet-nimi (second %))))
     (tree-seq coll? seq raportti)))
 
+(defn taulukon-otsikko
+  [taulukko]
+  (or (get-in taulukko [1 :otsikko])
+  (get-in taulukko [2 0 :otsikko])))
+
 (defn hae-urakan-aggregaatin-taulukko
   [raportti urakan-nimi otsikko]
-  (some #(when (= otsikko (get-in % [1 :otsikko])) %)
+  (some #(when (= otsikko (taulukon-otsikko %)) %)
     (hae-urakan-aggregaatin-taulukot raportti urakan-nimi)))
 
 (defn hae-taulukon-rivi
@@ -411,7 +416,7 @@
                                 (let [taulukko (some #(when (contains?
                                                               #{"A-ryhmä (tehtäväkohtainen sanktio)"
                                                                 "A - Tehtäväkohtainen sanktio"}
-                                                              (get-in % [1 :otsikko]))
+                                                              (taulukon-otsikko %))
                                                         %)
                                                  (hae-urakan-aggregaatin-taulukot
                                                    vastaus
@@ -525,7 +530,7 @@
                                 :loppupvm     (c/to-date (t/local-date 2026 2 1))
                                 :urakkatyyppi :hoito}})
         sanktio-taulukko (some #(when (= "A-ryhmä (tehtäväkohtainen sanktio)"
-                                         (get-in % [1 :otsikko])) %)
+                 (taulukon-otsikko %)) %)
                            (apurit/hae-osion-taulukot vastaus "Sanktiot"))
         bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))
         arvonvahennys-taulukko (first (apurit/hae-osion-taulukot vastaus "Arvonvähennykset"))]
@@ -552,7 +557,7 @@
                                 :loppupvm     (c/to-date (t/local-date 2026 2 1))
                                 :urakkatyyppi :hoito}})
         sanktio-taulukko (some #(when (= "A-ryhmä (tehtäväkohtainen sanktio)"
-                                         (get-in % [1 :otsikko])) %)
+                 (taulukon-otsikko %)) %)
                            (apurit/hae-osion-taulukot vastaus "Sanktiot"))
         bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))
         arvonvahennys-taulukko (first (apurit/hae-osion-taulukot vastaus "Arvonvähennykset"))]
@@ -580,7 +585,7 @@
                                 :urakkatyyppi :hoito}})
         sanktio-taulukot (apurit/hae-osion-taulukot vastaus "Sanktiot")
         sanktio-taulukko (some #(when (= "A - Tehtäväkohtainen sanktio"
-                                         (get-in % [1 :otsikko])) %)
+                 (taulukon-otsikko %)) %)
                            sanktio-taulukot)
         bonus-taulukko (first (apurit/hae-osion-taulukot vastaus "Bonukset"))]
     (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 1800M))
@@ -635,19 +640,19 @@
                       vastaus-parametrit)
             sanktio-taulukot (apurit/hae-osion-taulukot vastaus "Sanktiot")
             laskutus-taulukko (some #(when (= "Laskutus yli laskutusrajan"
-                                               (get-in % [1 :otsikko])) %)
+                                              (taulukon-otsikko %)) %)
                                 sanktio-taulukot)
             vastuuhenkilo-taulukko (some #(when (= "Vastuuhenkilön vaihto"
-                                                   (get-in % [1 :otsikko])) %)
-                                    sanktio-taulukot)
+                                                   (taulukon-otsikko %)) %)
+                                     sanktio-taulukot)
             pohjavesisuola-taulukko (some #(when (= "Pohjavesialueen suolankäytön ylitys"
-                                                     (get-in % [1 :otsikko])) %)
+                                                    (taulukon-otsikko %)) %)
                                       sanktio-taulukot)
             talvisuola-taulukko (some #(when (= "Talvisuolan kokonaiskäytön ylitys"
-                                                (get-in % [1 :otsikko])) %)
+                                                (taulukon-otsikko %)) %)
                                   sanktio-taulukot)
             tenttikeskiarvo-taulukko (some #(when (= "Vastuuhenkilön tenttipistemäärän alentuminen"
-                                                       (get-in % [1 :otsikko])) %)
+                                                     (taulukon-otsikko %)) %)
                                        sanktio-taulukot)
             tunnistamattomat-taulukko (first (apurit/hae-osion-taulukot
                                                vastaus
