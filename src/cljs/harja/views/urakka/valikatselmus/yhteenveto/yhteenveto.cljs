@@ -1,10 +1,18 @@
 (ns harja.views.urakka.valikatselmus.yhteenveto.yhteenveto
   (:require [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t]
             [harja.pvm :as pvm]
+
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
+
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
+
             [harja.views.urakka.valikatselmus.yhteenveto.luvut :as luvut]
-            [harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset :as bonukset]
-            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
+            [harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset :as bonukset]))
 
 
 (defn osio-lopun-tavoite-ja-katto
@@ -25,7 +33,20 @@
     ;; linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
     [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
 
-     [:h2.yhteenveto "Yhteenveto"]
+     [:div.row
+      [:div.col-md-6
+       [:h2.yhteenveto "Yhteenveto"]]
+      [:div.col-md-6 {:style {:display "flex" :justify-content "flex-end"}}
+       [:form {:style {:margin-left "auto"
+                       :margin-right "16px"}
+               :target "_blank" :method "POST"
+               :action (k/pdf-url :valikatselmusraportti)}
+        [:input {:type "hidden" :name "parametrit"
+                 :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
+                                         :hoitovuosi hoitokauden-alkuvuosi})}]
+        [napit/tallenna "Tallenna PDF" (constantly true)
+         {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
+          :esta-prevent-default? true}]]]]
      [:h3.padding-bottom-16 "Hoitovuoden lopun tavoite- ja kattohinta"]
 
      [:div.flex-row.summa-rivi-ylin
@@ -124,6 +145,7 @@
 
         ;; Alitukset ja ylitykset
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
+        _ (js/console.log "tavoitehinnan-ylityspaatos" (pr-str tavoitehinnan-ylityspaatos))
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
 
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
@@ -151,9 +173,8 @@
                                 (:id tavoitehinnan-ylityspaatos)
                                 (and
                                   (not (nil? tavoitehinnan-ylitys))
-                                  (not tavoitehinnan-ylityspaatos)
+                                  (nil? (:id tavoitehinnan-ylityspaatos))
                                   (not= 0 tavoitehinnan-ylitys)))
-
         tavoitehinnan-alitus? (or
                                 tavoitehinnan-alituspaatos
                                 (and
