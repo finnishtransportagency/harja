@@ -183,10 +183,41 @@
           raportti))
     (is (some #(and (vector? %)
                  (= :taulukko (first %))
-                 (= "Tyyppi" (get-in % [2 0 :otsikko]))
+                 (= "Muistutus" (get-in % [2 0 :otsikko]))
+                 (= "Määrä (kpl)" (get-in % [2 1 :otsikko]))
                  (= ["Kirjallinen" 0]
                     (:rivi (first (nth % 3 1)))))
           raportti))))
+
+(deftest kirjalliset-muistutukset-esitetaan-kappalemaara-taulukkona
+  (let [sanktiot [{:sanktio_id 1
+                   :sanktiolaji_koodi "muistutus"
+                   :sanktiolaji_nimi "Kirjalliset muistutukset"
+                   :sanktiolaji_jarjestys 1
+                   :sanktiotyyppi_koodi "paatie"
+                   :sanktiotyyppi_nimi "Talvihoito, päätiet"
+                   :summa nil}]
+        sanktiolajit [{:sanktiolaji_koodi "muistutus"
+                       :sanktiolaji_nimi "Kirjalliset muistutukset"
+                       :sanktiolaji_jarjestys 1
+                       :sanktiotyyppi_koodi "paatie"
+                       :sanktiotyyppi_nimi "Talvihoito, päätiet"}
+                      {:sanktiolaji_koodi "muistutus"
+                       :sanktiolaji_nimi "Kirjalliset muistutukset"
+                       :sanktiolaji_jarjestys 1
+                       :sanktiotyyppi_koodi "muut-tiet"
+                       :sanktiotyyppi_nimi "Talvihoito, muut tiet"}]
+          sanktio-data-map {["muistutus" "paatie"] 0}
+          taulukko (second (#'sanktio/koosta-sanktio-taulukot
+                sanktiolajit
+                            sanktio-data-map
+                            sanktiot))
+        rivit (nth taulukko 3)]
+    (is (= "Kirjalliset muistutukset" (get-in taulukko [2 0 :otsikko])))
+    (is (= "Määrä (kpl)" (get-in taulukko [2 1 :otsikko])))
+    (is (= ["Talvihoito, päätiet" 1] (:rivi (first rivit))))
+    (is (= ["Talvihoito, muut tiet" 0] (:rivi (second rivit))))
+    (is (= ["Yhteensä" 1] (:rivi (last rivit))))))
 
 (deftest bonus-ja-arvonvahennys-ovat-omia-osioitaan
   (let [raportti (#'sanktio/koosta-urakkataso-runko

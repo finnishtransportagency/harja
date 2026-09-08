@@ -106,8 +106,8 @@
       (is (= "Oulun alueurakka 2014-2019" (:nimi (second vastaus))))
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
-        {:otsikko "Tyyppi"}
-        {:otsikko "Sanktio (€)"}))))
+        {:otsikko "Muistutus"}
+        {:otsikko "Määrä (kpl)"}))))
 
 (deftest raportin-suoritus-yllapidon-urakalle-erottelee-sakot-muistutukset-ja-bonukset
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -467,8 +467,8 @@
       (is (= "Pohjois-Suomi" (:nimi (second vastaus))))
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
-        {:otsikko "Tyyppi"}
-        {:otsikko "Sanktio (€)"}))))
+        {:otsikko "Muistutus"}
+        {:otsikko "Määrä (kpl)"}))))
 
 (deftest raportin-suoritus-hallintayksikolle-toimii-vuoden-aikavalilla
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -491,8 +491,8 @@
       (is (= "Pohjois-Suomi" (:nimi (second vastaus))))
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
-        {:otsikko "Tyyppi"}
-        {:otsikko "Sanktio (€)"}))))
+        {:otsikko "Muistutus"}
+        {:otsikko "Määrä (kpl)"}))))
 
 (deftest raportin-excel-elylle-sisaltaa-kaikki-aktiiviset-urakat
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -783,8 +783,8 @@
       (is (= "Koko maa" (:nimi (second vastaus))))
       (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
       (apurit/tarkista-taulukko-sarakkeet taulukko
-        {:otsikko "Tyyppi"}
-        {:otsikko "Sanktio (€)"}))))
+        {:otsikko "Muistutus"}
+        {:otsikko "Määrä (kpl)"}))))
 
 (defn suorita-sanktioraportti
   [konteksti [alkuvuosi alkukk alkupv] [loppuvuosi loppukk loppupv]]
@@ -819,7 +819,7 @@
     (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (is (=marginaalissa? sanktiosumma 777M))
     (is (= ["Määräpäivän ylitys" 777M] tunnistamaton-rivi))
-    (is (= "Sanktio (€)" (-> taulukko (nth 2) second :otsikko)))))
+    (is (= "Määrä (kpl)" (-> taulukko (nth 2) second :otsikko)))))
 
 (deftest raportin-suoritus-urakan-jalkeen-tulleilla-sanktioilla-laskee-sanktiot-vain-jos-viimeinen-kuukausi-on-mukana
   (let [urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella
@@ -832,7 +832,7 @@
     (is (= "Oulun alueurakka 2014-2019" (:nimi (second urakalla-sanktiot-ei-tule-mukaan-jollain-toisella-kaudella))))
     (is (seq taulukot) "Sanktiot-osiota ei löytynyt")
     (is (=marginaalissa? sanktiosumma 0M))
-    (is (= "Sanktio (€)" (-> taulukko (nth 2) second :otsikko)))))
+    (is (= "Määrä (kpl)" (-> taulukko (nth 2) second :otsikko)))))
 
 (defn tarkista-ely-rivit
   [tarkistus-fn]

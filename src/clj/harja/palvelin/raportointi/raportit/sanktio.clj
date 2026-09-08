@@ -76,11 +76,16 @@
 (defn- muodosta-sanktio-taulukko
   "Muodostaa yhden sanktiolaji-ryhmän taulukon.
    Lajit ovat jo ryhmiteltyjä ja järjestettyjä tietokannan mukaisesti."
-  [lajit sanktio-data-map]
+  [lajit sanktio-data-map & [sanktiot]]
   (let [ensimmainen (first lajit)
         laji-koodi (:sanktiolaji_koodi ensimmainen)
         laji-nimi (:sanktiolaji_nimi ensimmainen)
         tyypit lajit
+        muistutus? (= "muistutus" laji-koodi)
+        maara (fn [tyyppi-koodi]
+                (count (filter #(and (= laji-koodi (:sanktiolaji_koodi %))
+                                     (= tyyppi-koodi (:sanktiotyyppi_koodi %)))
+                               sanktiot)))
         ;; Laske lajin kokonaissumma
         laji-summa (reduce + 0
                      (map #(or (get sanktio-data-map [laji-koodi (:sanktiotyyppi_koodi %)]) 0)
@@ -89,14 +94,19 @@
                 :otsikko laji-nimi
                 :viimeinen-rivi-yhteenveto? true
                 :tyhja "Ei tietoja."}
-     [{:leveys 12 :otsikko "Tyyppi"}
-      (muodosta-rahasarake "Sanktio")]
+     (if muistutus?
+       [{:leveys 12 :otsikko laji-nimi}
+        {:leveys 15 :otsikko "Määrä (kpl)" :fmt :numero}]
+       [{:leveys 12 :otsikko "Tyyppi"}
+        (muodosta-rahasarake "Sanktio")])
      (concat
        ;; Kaikki profiilin tyyppirivit näytetään, myös yhden tyypin ryhmässä.
        (mapv
          (fn [tyyppi]
            (let [tyyppi-koodi (:sanktiotyyppi_koodi tyyppi)
-                 summa (or (get sanktio-data-map [laji-koodi tyyppi-koodi]) 0)]
+                 summa (if muistutus?
+                         (maara tyyppi-koodi)
+                         (or (get sanktio-data-map [laji-koodi tyyppi-koodi]) 0))]
              {:himmennetty? (zero? summa)
               :rivi (rivi (sanktiotyyppi/sanktiotyypin-nimi
                             laji-nimi
@@ -106,7 +116,9 @@
          tyypit)
        [{:lihavoi? true
          :korosta-hennosti? true
-         :rivi (rivi "Yhteensä" laji-summa)}])]))
+         :rivi (rivi "Yhteensä" (if muistutus?
+                                  (reduce + 0 (map maara (map :sanktiotyyppi_koodi tyypit)))
+                                  laji-summa))}])]))
 
 (defn- lisaa-excel-osion-otsikko [taulukko otsikko]
   (update-in taulukko [1 :excel-alkutekstit]
@@ -155,7 +167,7 @@
   Arvonalennukset (arvonvahennyssanktio) erotetaan omaksi taulukokseen.
 
    Lupaussanktio erotetaan omaksi 'Lupaussanktiot'-osiokseen, muut lajit yhteen 'Sanktiot'-osioon."
-  [sanktiolajit sanktio-data-map]
+  [sanktiolajit sanktio-data-map & [sanktiot]]
   (let [;; Erotellaan lupaussanktio muista lajeista
         {lupaussanktio-lajit true
          muut-lajit false} (group-by #(= "lupaussanktio" (:sanktiolaji_koodi %))
@@ -171,12 +183,12 @@
                         ryhmitelty))
 
         ;; Muodosta taulukot muille lajeille
-        muut-taulukot (mapv #(muodosta-sanktio-taulukko % sanktio-data-map) jarjestetty)
+        muut-taulukot (mapv #(muodosta-sanktio-taulukko % sanktio-data-map sanktiot) jarjestetty)
         muut-taulukot (if (seq muut-taulukot)
                         (update muut-taulukot 0 lisaa-excel-osion-otsikko "Sanktiot")
                         muut-taulukot)
         lupaussanktio-taulukko (when (seq lupaussanktio-lajit)
-                                 (-> (muodosta-sanktio-taulukko lupaussanktio-lajit sanktio-data-map)
+               (-> (muodosta-sanktio-taulukko lupaussanktio-lajit sanktio-data-map sanktiot)
                                    (lisaa-excel-osion-otsikko "Lupaussanktiot")))]
 
     ;; Yhdistetään: lupaussanktio-osio (jos on) + muut sanktiot
@@ -325,7 +337,7 @@
                          {}
                          bonukset)
         taulukot (concat
-                   (koosta-sanktio-taulukot sanktiolajit sanktio-data-map)
+                   (koosta-sanktio-taulukot sanktiolajit sanktio-data-map tunnetut)
                    [(muodosta-bonus-taulukko (sort-by :bonuslaji_jarjestys bonuslajit)
                       bonus-data-map)
                     (into [:taulukko {:otsikko "Arvonvähennykset"
