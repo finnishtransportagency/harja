@@ -1772,12 +1772,12 @@
    #{"R*"
      "W"
      "aseta-näkyviin-urakoitsijalle"
-     "nakee-tilaajan-tarkastukset"},
+     "nakee-tilaajan-tarkastukset*"},
    "Tilaajan_laadunvalvoja"
    #{"R*"
      "W+"
      "aseta-näkyviin-urakoitsijalle+"
-     "nakee-tilaajan-tarkastukset+"},
+     "nakee-tilaajan-tarkastukset*"},
    "Tilaajan_turvallisuusvastaava"
    #{"R" "nakee-tilaajan-tarkastukset"},
    "vastuuhenkilo" #{"R" "W"}}}
