@@ -9,6 +9,7 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
@@ -217,42 +218,12 @@
 (defn tallanna-rahavaraukset-kustannussuuunnitelmaan
   "Rahavaraukset tallennetaan sekä tarjoukseen että kustannussuunnitelmaan."
   [db vuositarjous urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id]
-  (let [;; Jokaisella kustannusarvioitu_tyo -rivillä pitää olla toimenpideinstanssi. On sovittu, että rahavarauksille 1 ja 2 toimenpiteeksi tulee "LIIKENNEYMPÄRISTÖN HOITO" ja rahavaraukselle 3 "YLLÄPITO".
-        ;; Samoin niiden tehtäväryhmät on sovittu.
-        liikenneympariston-hoito-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id :toimenpiteen_nimi "LIIKENNEYMPÄRISTÖN HOITO"})))
-        yllapito-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id :toimenpiteen_nimi "YLLÄPITO"})))
-        tehtavaryhma-t1 (:id (first (rahavaraus-kyselyt/hae-tehtavaryhman-id db {:tehtavaryhman_nimi "T1 - Äkilliset hoitotyöt, Liikenneympäristön hoito"})))
-        tehtavaryhma-t2 (:id (first (rahavaraus-kyselyt/hae-tehtavaryhman-id db {:tehtavaryhman_nimi "T2 - Vahinkojen korjaukset, Liikenneympäristön hoito"})))
-        tehtavaryhma-t3 (:id (first (rahavaraus-kyselyt/hae-tehtavaryhman-id db {:tehtavaryhman_nimi "T3 - Tilaajan rahavaraus"})))
-
-        ;; Tallenna rahavaraukset myös kustannusarvioitu_tyo tauluun
+  (let [;; Tallenna rahavaraukset myös kustannusarvioitu_tyo tauluun
         _ (mapv (fn [rahavaraus]
                   (let [rahavaraus-id (:rahavaraus-id rahavaraus)
                         vuosittainen-summa (:summa (first (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
-                        toimenpideinstanssi-id (cond
-                                                 (and (or (= rahavaraus-id 1) (= rahavaraus-id 2)) liikenneympariston-hoito-toimenpideinstanssi-id)
-                                                 liikenneympariston-hoito-toimenpideinstanssi-id
-
-                                                 (and (= rahavaraus-id 3) yllapito-toimenpideinstanssi-id)
-                                                 yllapito-toimenpideinstanssi-id
-
-                                                 ;; Jos rahavaraus on jokin muu kuin 1, 2 tai 3, haetaan toimenpideinstanssi tietokannasta. Otetaan järjestykseen laitetusta listasta ensimmäinen.
-                                                 :else
-                                                 (:toimenpideinstanssi (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta db {:urakkaid urakka-id :rahavarausid rahavaraus-id}))))
-
-                        tehtavaryhma-id (cond
-                                          (and (= rahavaraus-id 1) tehtavaryhma-t1)
-                                          tehtavaryhma-t1
-
-                                          (and (= rahavaraus-id 2) tehtavaryhma-t2)
-                                          tehtavaryhma-t2
-                                          
-                                          (and (= rahavaraus-id 3) tehtavaryhma-t3)
-                                          tehtavaryhma-t3
-
-                                          ;; Jos rahavaraus on jokin muu kuin 1, 2 tai 3, haetaan tehtäväryhmä tietokannasta. Otetaan järjestykseen laitetusta listasta ensimmäinen.
-                                          :else
-                                          (:tehtavaryhma_id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta db {:urakkaid urakka-id :rahavarausid rahavaraus-id}))))
+                        toimenpideinstanssi-id (budjettisuunnittelu/hae-rahavarauksen-toimenpideinstanssi db rahavaraus-id urakka-id)
+                        tehtavaryhma-id (budjettisuunnittelu/hae-rahavarauksen-tehtavaryhma db rahavaraus-id urakka-id)
 
                         ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
                         kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
