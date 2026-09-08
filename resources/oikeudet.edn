@@ -1727,7 +1727,7 @@
   :taso1 "urakat-laadunseuranta",
   :kuvaus "Osio 'Urakat' näkymä 'Laadunseuranta / Tarkastukset'",
   :roolien-oikeudet
-  {"ELY_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset"},
+  {"ELY_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset*"},
    "ELY_Laadunvalvoja"
    #{"R"
      "W"
@@ -1737,19 +1737,19 @@
    #{"R*"
      "W*"
      "aseta-näkyviin-urakoitsijalle*"
-     "nakee-tilaajan-tarkastukset"},
-   "ELY_Peruskayttaja" #{"R*" "nakee-tilaajan-tarkastukset"},
+     "nakee-tilaajan-tarkastukset*"},
+   "ELY_Peruskayttaja" #{"R*" "nakee-tilaajan-tarkastukset*"},
    "ELY_Urakanvalvoja"
    #{"R*"
      "W"
      "aseta-näkyviin-urakoitsijalle"
-     "nakee-tilaajan-tarkastukset"},
+     "nakee-tilaajan-tarkastukset*"},
    "ELY_turvallisuusvastaava" #{"R" "nakee-tilaajan-tarkastukset"},
    "Jarjestelmavastaava"
    #{"R*"
      "W*"
      "aseta-näkyviin-urakoitsijalle*"
-     "nakee-tilaajan-tarkastukset"},
+     "nakee-tilaajan-tarkastukset*"},
    "Kayttaja" #{"R+"},
    "Kelikeskus" #{"R"},
    "Laadunvalvoja" #{"R" "W"},
@@ -1761,8 +1761,8 @@
      "W"
      "aseta-näkyviin-urakoitsijalle"
      "nakee-tilaajan-tarkastukset"},
-   "Tilaajan_Asiantuntija" #{"R*" "nakee-tilaajan-tarkastukset"},
-   "Tilaajan_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset"},
+   "Tilaajan_Asiantuntija" #{"R*" "nakee-tilaajan-tarkastukset*"},
+   "Tilaajan_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset*"},
    "Tilaajan_Rakennuttajakonsultti"
    #{"R"
      "W"
@@ -1777,7 +1777,7 @@
    #{"R*"
      "W+"
      "aseta-näkyviin-urakoitsijalle+"
-     "nakee-tilaajan-tarkastukset"},
+     "nakee-tilaajan-tarkastukset+"},
    "Tilaajan_turvallisuusvastaava"
    #{"R" "nakee-tilaajan-tarkastukset"},
    "vastuuhenkilo" #{"R" "W"}}}
