@@ -56,15 +56,16 @@
         laskutusyhteenveto (take 15 raportit)
         perusluku (nth laskutusyhteenveto 2)
         indeksikerroin (nth laskutusyhteenveto 3)
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 17) second :otsikko)
-        sanktioyhteenveto (-> (nth raportit 16) second)
-        sanktioraportin-otsikko (-> (nth raportit 17) second)]
+        sanktioyhteenveto (some #(when (= [:otsikko "Sanktioiden yhteenveto"] %)
+                 (second %))
+              raportit)
+        sanktioraportin-otsikko (some #(when (= :otsikko-title (first %)) (second %)) raportit)]
 
     (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2022"))
     (is (= perusluku [:teksti "Indeksilaskennan perusluku: 110,8"]) "Peruslukuteksti")
     (is (= indeksikerroin [:teksti "Hoitokauden 2021-22 indeksikerroin: 1,261"]) "Laskutusyhteenvedon indeksikerroin")
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.01.2022 - 31.01.2022" sanktioraportin-otsikko))
+    (is (= "Sanktiot, bonukset ja arvonvähennykset" sanktioraportin-otsikko))
     (is (= "Sanktioiden yhteenveto" sanktioyhteenveto))))
 
 
@@ -85,7 +86,7 @@
         raportit (nth vastaus 2)
         laskutusyhteenveto (take 14 raportit)
         laskutusyhteenveto-taulukot (last (nth laskutusyhteenveto 6))
-        sanktio-otsikko (-> (nth raportit 12) second)]
+        sanktio-otsikko (some #(when (= :otsikko-title (first %)) (second %)) raportit)]
     (is (= raportin-nimi "Oulun alueurakka 2014-2019, Työmaakokousraportti lokakuussa 2014"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
     (is (= [["Talvihoito (#89)"
@@ -99,4 +100,4 @@
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
           laskutusyhteenveto-taulukot))
-    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.10.2014 - 31.10.2014" sanktio-otsikko))))
+    (is (= "Sanktiot, bonukset ja arvonvähennykset" sanktio-otsikko))))

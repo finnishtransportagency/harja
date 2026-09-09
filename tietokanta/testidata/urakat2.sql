@@ -64,4 +64,14 @@ INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Sodankylän MHU sopimus 26', '2026-10-01', '2031-09-30', '11333380-LAP2',
         (SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'));
 
+-- Urakkakohtaisen rajauksen positiivinen MHU2026-testikohde ilman aluehaun urakkanumeroa.
+INSERT INTO urakka (sampoid, hallintayksikko, elinvoimakeskus_id, nimi,
+                    alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue, lyhyt_nimi)
+SELECT 'TEST-NUMMI26', hallintayksikko, elinvoimakeskus_id, 'Nummi 26 - liikennevahinkobonuksen kohdistus',
+       DATE '2026-10-01', DATE '2031-09-30', tyyppi, NULL, urakoitsija, alue, 'Nummi 26'
+  FROM urakka
+ WHERE nimi = 'Kittilän MHU 2025-2030';
 
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Nummi 26 liikennevahinkobonuksen kohdistussopimus', '2026-10-01', '2031-09-30', 'TEST-NUMMI26-SOP',
+        (SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'));

@@ -2,6 +2,7 @@
   "Sanktiolomake"
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.pvm :as pvm]
@@ -281,7 +282,11 @@
               :aseta-vaikka-sama? true
               :valinnat tyyppi-valinnat
               :valinta-nayta (fn [arvo]
-                               (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
+                               (if (or (nil? arvo) (nil? (:nimi arvo)))
+                                 "Valitse sanktiotyyppi"
+                                 (sanktiotyyppi-domain/sanktiotyypin-nimi
+                                   (tiedot/valitun-urakan-sanktiolajin-nimi (:laji @muokattu))
+                                   arvo)))
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
@@ -289,7 +294,10 @@
              ;; joten näytetään tyyppi pelkkänä tekstinä.
              {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
               ::lomake/col-luokka "col-xs-12"
-              :hae (comp :nimi :tyyppi)}))
+              :hae (fn [rivi]
+                     (sanktiotyyppi-domain/sanktiotyypin-nimi
+                       (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
+                       (:tyyppi rivi)))}))
 
          (when yllapitokohdeurakka?
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
