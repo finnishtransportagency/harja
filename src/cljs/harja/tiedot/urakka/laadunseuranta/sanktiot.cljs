@@ -291,7 +291,7 @@
   (go
     (let [payload {:id sanktion-id
                    :urakka-id urakka-id}
-          vastaus (<! (k/post! :poista-suorasanktio payload))]
+          vastaus (<! (k/post! :poista-sanktio payload))]
 
       (if (k/virhe? vastaus)
         (viesti/nayta-toast! "Sanktion poisto epäonnistui!" :varoitus)
