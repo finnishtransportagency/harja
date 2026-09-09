@@ -1,5 +1,8 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmus-pdf
   (:require [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.tyokalut.xsl-fo :as xsl-fo]))
 
 (def ^:private reunat {:border-bottom "solid 0.1mm black"
@@ -9,19 +12,25 @@
 
 (defn- rivi
   "Tätä kutsutaan mapissä ja se muodostaa kaikista pdf:lle tulevista riveistä samanlaisen rivin. Ensin on teksti ja sitä seuraava summa."
-  [[otsikko arvo]]
-  [:fo:table-row
-   [:fo:table-cell
-    [:fo:block {:padding-top "1.425mm"
-                :padding-right "1.5mm"
-                :padding-bottom "1.425mm"
-                :padding-left "1.5mm"} otsikko]]
-   [:fo:table-cell
-    [:fo:block {:padding-top "1.425mm"
-                :padding-right "1.5mm"
-                :padding-bottom "1.425mm"
-                :padding-left "1.5mm"
-                :text-align "right"} (str arvo)]]])
+  [[otsikko arvo lihavoitu?]]
+  (if (= :vaakaviiva otsikko)
+    [:fo:table-row
+     [:fo:table-cell {:number-columns-spanned 2}
+      [:fo:block {:border-top "solid 0.1mm black" :padding-top "0.5mm" :padding-bottom "0.5mm"}]]]
+    [:fo:table-row
+     [:fo:table-cell
+      [:fo:block (cond-> {:padding-top "1.425mm"
+                          :padding-right "1.5mm"
+                          :padding-bottom "1.425mm"
+                          :padding-left "1.5mm"}
+                   lihavoitu? (assoc :font-weight "bold")) otsikko]]
+     [:fo:table-cell
+      [:fo:block (cond-> {:padding-top "1.425mm"
+                          :padding-right "1.5mm"
+                          :padding-bottom "1.425mm"
+                          :padding-left "1.5mm"
+                          :text-align "right"}
+                   lihavoitu? (assoc :font-weight "bold")) (str arvo)]]]))
 
 (defn- osio [otsikko rivit & lisasisalto]
   (into
@@ -77,7 +86,7 @@
 (defn- ota-paatos [paatokset avain]
   (some #(get % avain) paatokset))
 
-(defn yhteenveto-rivit [data]
+(defn yhteenveto-rivit [data urakan-tiedot]
   (let [paatokset (:paatokset data)
         urakan-parametrit (:urakan-parametrit data)
         hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi data)
@@ -132,8 +141,7 @@
         kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
         siirto (- (or (arvopaatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
                  seuraavan-vuoden-hankintakustannusten-alennus)
-        nayta-arvonvahennykset? (or (and arvonvahennykset (not muutosten-hallinta?))
-                                  (>= hoitokauden-alkuvuosi 2026))
+        nayta-arvonvahennykset? (sanktio-domain/arvonvahennykset-kaytossa? urakan-tiedot (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))
         tavoitehinnan-ylitys? (or (:id tavoitehinnan-ylityspaatos)
                                 (and (nil? (:id tavoitehinnan-ylityspaatos)) (not= 0 tavoitehinnan-ylitys) (> toteuma-yht hoitovuoden-lopun-tavoitehinta)))
         tavoitehinnan-alitus? (or tavoitehinnan-alituspaatos
@@ -144,16 +152,22 @@
         hoidonjohtopalkkion-paatos (ota-paatos paatokset :hoidonjohtopalkkion-muutos)
         hoidonjohtopalkkion-muutos (or (arvopaatoksesta hoidonjohtopalkkion-paatos :hoidonjohtopalkkio_muutos) 0)]
     {:tavoitehinta (cond-> [["Hoitovuoden alun indeksikorjattu tavoitehinta" (euro hoitovuoden-alun-tavoitehinta)]]
-                     menneet-pysyvat-muutokset (conj ["Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)" (euro menneet-pysyvat-muutokset)])
-                     muutosten-hallinta? (conj ["Tavoitehinnan muutokset" (lisaa-plus pysyvat-muutokset)])
+                     ;; Vanhemilla urakoilla ei ole muutostenhallinta käytössä ja heille näytetään vähän erilaiset tiedot
+                     (not muutosten-hallinta?) (conj ["Tavoitehinnan muutokset" (lisaa-plus tavoitehinnan-muutokset)])
+                     (not muutosten-hallinta?) (conj ["Hoitovuoden lopun indeksikorjaus" (euro hoitokauden-lopun-indeksikorjaus)])
+
+                     ;; Uudemmat urakat
+                     (and muutosten-hallinta? menneet-pysyvat-muutokset) (conj ["Edellisten hoitovuosien pysyvien muutosten osuus (indeksikorjattu)" (euro menneet-pysyvat-muutokset)])
+                     muutosten-hallinta? (conj ["Tavoitehinnan muutokset" (lisaa-plus tavoitehinnan-muutokset)])
                      (and muutosten-hallinta? kirjallisesti-sovitut-muutokset) (conj ["  • Kirjallisesti sovitut muutokset" (lisaa-plus kirjallisesti-sovitut-muutokset)])
                      muutosten-hallinta? (conj ["  • Toteumiin perustuvat muutokset" (lisaa-plus toteumiin-perustuvat-muutokset)])
-                     (and muutosten-hallinta? (>= hoitokauden-alkuvuosi 2026)) (conj ["  • Arvonvähennysten tavoitehintamuutokset" (euro arvonvahennykset)])
-                     (not muutosten-hallinta?) (conj ["Tavoitehinnan muutokset" (lisaa-plus tavoitehinnan-muutokset)])
-                     (and (not muutosten-hallinta?) arvonvahennykset) (conj ["Arvonvähennysten tavoitehintamuutokset" (euro arvonvahennykset)])
-                     true (conj ["Hoitovuoden lopun indeksikorjaus" (euro hoitokauden-lopun-indeksikorjaus)]
-                            ["Hoitovuoden lopun tavoitehinta" (euro hoitovuoden-lopun-tavoitehinta)]
-                            ["Hoitovuoden lopun kattohinta" (euro hoitovuoden-lopun-kattohinta)]))
+                     (and muutosten-hallinta? nayta-arvonvahennykset?) (conj ["  • Arvonvähennysten tavoitehintamuutokset" (euro arvonvahennykset)])
+                     muutosten-hallinta? (conj ["Hoitovuoden lopun indeksikorjaus" (euro hoitokauden-lopun-indeksikorjaus)])
+
+                     ;; Vaakaviiva
+                     true (conj [:vaakaviiva nil])
+                     true (conj ["Hoitovuoden lopun tavoitehinta" (euro hoitovuoden-lopun-tavoitehinta) true])
+                     true (conj ["Hoitovuoden lopun kattohinta" (euro hoitovuoden-lopun-kattohinta) true]))
      :kustannukset (cond-> [["Hankintakustannukset" (euro hankintakustannukset)]
                             ["Erillishankinnat" (euro erillishankinnat)]
                             ["Johto- ja hallintokorvaus" (euro johto-ja-hallintokorvaus)]
@@ -193,12 +207,14 @@
 (defn valikatselmus-pdf
   [db hae-tiedot kayttaja {:keys [urakka-id hoitovuosi]}]
   (let [data (hae-tiedot db kayttaja {:urakkaid urakka-id :hoitovuosi hoitovuosi})
-        rivit (yhteenveto-rivit data)]
+        urakan-tiedot (first (urakka-kyselyt/hae-urakka db {:id urakka-id}))
+        rivit (yhteenveto-rivit data urakan-tiedot)]
     (with-meta
       (xsl-fo/dokumentti
         {:margin {:left "10mm" :right "10mm" :top "0mm" :bottom "10mm" :body "10mm"}}
         [:fo:wrapper {:font-size 8}
-         [:fo:block {:font-size "14pt" :font-weight "bold" :margin-bottom "3mm"} "Välikatselmus"]
+         [:fo:block {:font-size "14pt" :font-weight "bold" :margin-bottom "0.5mm"} "Välikatselmus"]
+         [:fo:block {:font-size "10pt" :margin-bottom "2mm"} (str (:nimi urakan-tiedot) ", Hoitovuosi: " hoitovuosi " - " (inc hoitovuosi))]
          (osio "Hoitovuoden lopun tavoite- ja kattohinta" (:tavoitehinta rivit))
          (osio "Tavoitehintaan kuuluvat toteutuneet kustannukset"
            (:kustannukset rivit)
