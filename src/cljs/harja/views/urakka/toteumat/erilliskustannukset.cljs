@@ -67,7 +67,8 @@
   (case avainsana
     :asiakastyytyvaisyysbonus "As.tyyt.\u00ADbonus"
     :muu "Muu"
-    :alihankintabonus "Alihankintabonus"
+    :alihankintabonus "Bonus alihankintasopimusten maksuehdoista"
+    :liikennevahinkojen_aiheuttajien_selvitysbonus "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
     :muu-bonus "Muu bonus"
