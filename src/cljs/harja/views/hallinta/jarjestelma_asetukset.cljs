@@ -134,21 +134,23 @@
         geometriapaivitykset]])))
 
 (defn asetukset [e! app]
-  (let [validoinnit-poissa (r/atom (get-in app [:asetukset :valikatselmus-validointi]))]
+  (let [valikatselmus-validointi (r/atom (get-in app [:asetukset :valikatselmus-validointi]))]
     [:div
      [:h2 "Järjestelmään vaikuttavia asetuksia"]
-     [:h4 "Ota välikatselmuksen päätösten validointivaatimukset pois käytöstä"]
-     [:p "Välikatselmuksessa ei voi tehdä päätöksiä, mikäli edellisiä päätöksiä ei ole tehty tai hoitovuosi ei ole loppunut.
-   Tämä hankaloittaa testausta. Ottamalla validoinnit pois päältä, pystyt testaamaan välikatselmusta paremmin tai toisaalta,
-   korjaamaan jonkin ongelmatilanteen. Tuotannossa pitää olla tarkkana, että asetus ei jää pois päältä."]
-     [kentat/tee-kentta {:tyyppi :radio-group
-                         :vaihtoehdot [:true :false]
-                         :vayla-tyyli? true
-                         :nayta-rivina? true
-                         :vaihtoehto-nayta {:true "Validoinnit käytössä"
-                                            :false "Validoinnit poissa"}
-                         :valitse-fn #(e! (tiedot/->ToggleValikatselmusValidoinnit %))}
-      validoinnit-poissa]]))
+     [:div.row
+      [:div.col-md-6
+       [:h3 "Ota välikatselmuksen päätösten validointivaatimukset pois käytöstä"]
+       [:p "Välikatselmuksessa ei voi tehdä päätöksiä, mikäli edellisiä päätöksiä ei ole tehty tai hoitovuosi ei ole loppunut.
+     Tämä hankaloittaa testausta. Ottamalla validoinnit pois päältä, pystyt testaamaan välikatselmusta paremmin tai toisaalta,
+     korjaamaan jonkin ongelmatilanteen. Tuotannossa pitää olla tarkkana, että asetus ei jää pois päältä."]
+       [kentat/tee-kentta {:tyyppi :radio-group
+                           :vaihtoehdot [:true :false]
+                           :vayla-tyyli? true
+                           :nayta-rivina? true
+                           :vaihtoehto-nayta {:true "Validoinnit käytössä"
+                                              :false "Validoinnit poissa"}
+                           :valitse-fn #(e! (tiedot/->ToggleValikatselmusValidoinnit %))}
+        valikatselmus-validointi]]]]))
 
 (defn jarjestelma-asetukset* [e! app]
   (komp/luo

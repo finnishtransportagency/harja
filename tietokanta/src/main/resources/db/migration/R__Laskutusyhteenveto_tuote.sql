@@ -431,9 +431,9 @@ BEGIN
               FROM kulu l
                        JOIN kulu_kohdistus lk ON lk.kulu = l.id
              WHERE lk.toimenpideinstanssi = t_instanssi
-               AND lk.poistettu IS NOT TRUE 
-               -- TRUE -> laske jjh muutokset mukaan 
-               -- FALSE -> älä laske jjh muutoksia mukaan 
+               AND lk.poistettu IS NOT TRUE
+               -- TRUE -> laske jjh muutokset mukaan
+               -- FALSE -> älä laske jjh muutoksia mukaan
                AND (kyseessa_muutos IS TRUE OR lk.tyyppi NOT IN ('jjh-muutos'))
                AND l.urakka = urakka_id_
                AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
@@ -540,6 +540,8 @@ CREATE TYPE LASKUTUSYHTEENVETO_RAPORTTI_MHU_RIVI AS
     hankinnat_laskutetaan                                       NUMERIC,
     sakot_laskutettu                                            NUMERIC,
     sakot_laskutetaan                                           NUMERIC,
+    arvonvahennykset_laskutettu                                 NUMERIC,
+    arvonvahennykset_laskutetaan                                NUMERIC,
     alihank_bon_laskutettu                                      NUMERIC,
     alihank_bon_laskutetaan                                     NUMERIC,
     -- MHU ja HJU Hoidon johto
@@ -611,6 +613,11 @@ DECLARE
     sakot_laskutetaan                     NUMERIC;
     sanktiorivi                           RECORD;
 
+    -- Arvonvähennykset
+    arvonvahennykset_laskutettu           NUMERIC;
+    arvonvahennykset_laskutetaan          NUMERIC;
+    arvonvahennysrivi                     RECORD;
+
     -- Hoidon johto
     h_rivi                                RECORD;
     hj_palkkio_rivi                       RECORD;
@@ -675,6 +682,8 @@ DECLARE
     indeksin_arvo                         NUMERIC;
     pyorista_kerroin                      BOOLEAN;
     johto_ja_hallintakorvaus_toimenpideinstanssi_id NUMERIC;
+    urakan_tiedot                         RECORD;
+
 
     -- Rahavaraukset
     rahavaraus                            RECORD;
@@ -738,6 +747,9 @@ BEGIN
     IF indeksin_arvo > 0 THEN indeksi_puuttuu := FALSE; ELSE indeksi_puuttuu := TRUE; END IF;
     -- Aina syyskuu MHU urakoissa. Indeksi otetaan siis aina edellisen vuoden syyskuusta.
 
+    SELECT u.id, u.alkupvm, u.nimi  FROM urakka u WHERE u.id = ur INTO urakan_tiedot;
+    urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
+
     johto_ja_hallintakorvaus_toimenpideinstanssi_id := (
       SELECT tpi.id AS id
         FROM toimenpideinstanssi tpi
@@ -751,12 +763,12 @@ BEGIN
     );
 
     -- Loopataan urakan toimenpideinstanssien läpi
-    FOR t IN 
-        SELECT 
-          tpk2.nimi AS nimi, 
-          tpk2.koodi AS tuotekoodi, 
-          tpi.id AS tpi, 
-          tpk3.id AS tpk3_id, 
+    FOR t IN
+        SELECT
+          tpk2.nimi AS nimi,
+          tpk2.koodi AS tuotekoodi,
+          tpi.id AS tpi,
+          tpk3.id AS tpk3_id,
           m.numero AS maksuera_numero
           FROM toimenpideinstanssi tpi
               JOIN toimenpide tpk3 ON tpk3.id = tpi.toimenpide
@@ -778,9 +790,9 @@ BEGIN
 
         -- Käsitellään muut toimenpiteet, ei Hoidon johtoa, jolla oma käsittely myöhemmin.
         IF (t.tuotekoodi != '23150') THEN
-            FOR hankinnat_i IN 
-                SELECT 
-                  summa AS kht_summa, 
+            FOR hankinnat_i IN
+                SELECT
+                  summa AS kht_summa,
                   l.erapaiva AS erapaiva,
                   lk.rahavaraus_id
                 FROM kulu l
@@ -819,30 +831,35 @@ BEGIN
         RAISE NOTICE 'hankinnat_laskutetaan: %', hankinnat_laskutetaan;
 
         ------------------------------------------------------
-        -------------- Sanktiot, bonukset --------------------
+        ------- Sanktiot, bonukset & Arvonvähennykset --------
         ------------------------------------------------------
         -- Hoitokaudella ennen aikaväliä ja aikavaälillä laskutetut sanktiot
         -- Sanktioihin lasketaan indeksikorotukset matkaan hoitokautta edeltävän kuukauden indeksiarvolla - paitsi hoidonjohdon sanktioissa arvonvähennyksiin ei huomioida indeksiä
         sakot_laskutettu := 0.0;
         sakot_laskutetaan := 0.0;
 
-        FOR sanktiorivi IN SELECT -maara AS maara,
-                                  perintapvm,
-                                  indeksi,
-                                  perintapvm,
-                                  sakkoryhma,
-                                  (SELECT korotettuna
-                                        FROM sanktion_indeksikorotus(perintapvm,
-                                                                    indeksi,
-                                                                    -maara,
-                                                                    ur,
-                                                                    sakkoryhma)) AS indeksikorotettuna
-                                FROM sanktio s
-                                WHERE s.toimenpideinstanssi = t.tpi
-                                  AND s.maara IS NOT NULL
-                                  AND s.perintapvm >= hk_alkupvm
-                                  AND s.perintapvm <= aikavali_loppupvm
-                                  AND s.poistettu IS NOT TRUE
+        FOR sanktiorivi IN SELECT s.maara * -1 AS maara,
+                                   s.perintapvm,
+                                   s.indeksi,
+                                   s.sakkoryhma,
+                                   (SELECT korotettuna
+                                         FROM sanktion_indeksikorotus(s.perintapvm,
+                                                                     s.indeksi,
+                                                                     -s.maara,
+                                                                     ur,
+                                                                     s.sakkoryhma)) AS indeksikorotettuna
+                            FROM sanktio s
+                                     JOIN toimenpideinstanssi tpi ON tpi.urakka = ur AND tpi.id = s.toimenpideinstanssi
+                            WHERE s.toimenpideinstanssi = t.tpi
+                              AND s.maara IS NOT NULL
+                              AND s.perintapvm >= hk_alkupvm
+                              AND s.perintapvm <= aikavali_loppupvm
+                              AND s.poistettu IS NOT TRUE
+                              -- Uudessa mallissa arvonvahennykset erotellaan sanktioista.
+                              -- Vanhassa mallissa (ennen 2025 alkaneet urakat, ennen hk 2026,
+                              -- validoinnit paalla) arvonvahennykset kuuluvat edelleen sanktioihin.
+                              AND (s.sakkoryhma != 'arvonvahennyssanktio'
+                                   OR (urakan_alkuvuosi < 2025 AND hk_alkuvuosi < 2026))
             LOOP
                 IF sanktiorivi.perintapvm <= aikavali_loppupvm THEN
                     -- Hoitokauden alusta
@@ -864,6 +881,52 @@ BEGIN
                             sakot_laskutetaan := sakot_laskutetaan + COALESCE(sanktiorivi.indeksikorotettuna, 0.0);
                         END IF;
                     END IF;
+                END IF;
+            END LOOP;
+
+        arvonvahennykset_laskutettu := 0.0;
+        arvonvahennykset_laskutetaan := 0.0;
+        -- Arvonvähennykset haetaan erikseen (2025+ urakoilla aina, vanhemmilla urakoilla ei huomioida tässä)
+        RAISE NOTICE 'arvonvahennys tpi : %',  t.tpi;
+        RAISE NOTICE 'arvonvahennys hk_alkuvuosi : %',  hk_alkuvuosi;
+        RAISE NOTICE 'arvonvahennykset : %',  (SELECT s.maara * -1 AS maara
+                                               FROM sanktio s
+                                                        JOIN toimenpideinstanssi tpi ON tpi.urakka = ur AND tpi.id = s.toimenpideinstanssi
+                                               WHERE s.toimenpideinstanssi = t.tpi
+                                                 AND s.maara IS NOT NULL
+                                                 AND s.perintapvm >= hk_alkupvm
+                                                 AND s.perintapvm <= aikavali_loppupvm
+                                                 AND s.poistettu IS NOT TRUE
+                                                 AND s.sakkoryhma = 'arvonvahennyssanktio'
+                                                  AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026));
+        RAISE NOTICE 'arvonvahennys urakan alkuvuosi : %',  (SELECT EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+                                                             FROM urakka u
+                                                             WHERE u.id = ur);
+        FOR arvonvahennysrivi IN SELECT s.maara * -1 AS maara,
+                                        s.perintapvm
+                                   FROM sanktio s
+                                            JOIN toimenpideinstanssi tpi ON tpi.urakka = ur AND tpi.id = s.toimenpideinstanssi
+                                  WHERE s.toimenpideinstanssi = t.tpi
+                                    AND s.maara IS NOT NULL
+                                    AND s.perintapvm >= hk_alkupvm
+                                    AND s.perintapvm <= aikavali_loppupvm
+                                    AND s.poistettu IS NOT TRUE
+                                    AND s.sakkoryhma = 'arvonvahennyssanktio'
+                                    AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026)
+            LOOP
+                RAISE NOTICE 'arvonvahennysrivi: %', arvonvahennysrivi;
+                IF arvonvahennysrivi.perintapvm <= aikavali_loppupvm THEN
+                    -- Hoitokauden alusta
+                    RAISE NOTICE 'arvonvahennysrivi :: Määrä: %', arvonvahennysrivi.maara;
+                    arvonvahennykset_laskutettu := arvonvahennykset_laskutettu + COALESCE(arvonvahennysrivi.maara, 0.0);
+
+                    IF arvonvahennysrivi.perintapvm >= aikavali_alkupvm AND
+                        arvonvahennysrivi.perintapvm <= aikavali_loppupvm THEN
+                        -- Laskutetaan nyt
+                        arvonvahennykset_laskutetaan := arvonvahennykset_laskutetaan + COALESCE(arvonvahennysrivi.maara, 0.0);
+                    END IF;
+                ELSE
+                    RAISE NOTICE 'arvonvahennysrivi :: ei mee läpi: %', arvonvahennysrivi;
                 END IF;
             END LOOP;
 
@@ -1117,15 +1180,15 @@ BEGIN
         ----------------------- Lisätyöt --------------------------
         -----------------------------------------------------------
 
-        FOR lisatyot_rivi IN 
-            SELECT 
-                summa AS lisatyot_summa, 
+        FOR lisatyot_rivi IN
+            SELECT
+                summa AS lisatyot_summa,
                 l.erapaiva AS erapaiva
             FROM kulu l
             JOIN kulu_kohdistus lk ON lk.kulu = l.id
             JOIN toimenpideinstanssi tpi ON lk.toimenpideinstanssi = tpi.id AND tpi.id = t.tpi
             -- -- TODO: Placeholder. Tällaista maksuerätyyppiä ei ole. Kiinteähintaiset lähetetään kokonaishintaisessa maksueraässä.
-            WHERE lk.maksueratyyppi = 'lisatyo' 
+            WHERE lk.maksueratyyppi = 'lisatyo'
               AND lk.tyyppi != 'muukulu'
               AND lk.poistettu IS NOT TRUE
               AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
@@ -1147,60 +1210,60 @@ BEGIN
 
         -- lisatyot_rivi
         END LOOP;
-        
+
         -----------------------------------------------------------
         ------------------- Rahavaraukset -------------------------
         -----------------------------------------------------------
 
         -- Tämä on toimenpideinstanssi loopin sisällä
-        -- Eli etsitään kaikki rahavaraukset jokaiselle eri taulukolle 
+        -- Eli etsitään kaikki rahavaraukset jokaiselle eri taulukolle
         rahavaraus_nimet       := '{}';
         hoitokausi_yht_array   := '{}';
         val_aika_yht_array     := '{}';
 
         FOR rahavaraus IN
             SELECT DISTINCT
-              rv.id, 
+              rv.id,
               COALESCE(rvu.urakkakohtainen_nimi, rv.nimi) AS nimi,
               tp.nimi AS tp_nimi,
               rv.jarjestys
-            FROM rahavaraus rv 
-            JOIN rahavaraus_tehtava rt ON rv.id = rt.rahavaraus_id 
-            JOIN tehtava te ON rt.tehtava_id = te.id 
+            FROM rahavaraus rv
+            JOIN rahavaraus_tehtava rt ON rv.id = rt.rahavaraus_id
+            JOIN tehtava te ON rt.tehtava_id = te.id
             JOIN toimenpide tp ON te.emo = tp.id
             -- Näytetään vaan rahavaraukset mitkä urakalle asetettu (hallinta)
-            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id  
-            WHERE rvu.urakka_id = ur 
-            -- Näytä vaan instanssiin liittyvät rahavaraukset 
+            JOIN rahavaraus_urakka rvu ON rv.id = rvu.rahavaraus_id
+            WHERE rvu.urakka_id = ur
+            -- Näytä vaan instanssiin liittyvät rahavaraukset
             AND tp.id = t.tpk3_id
             -- Sorttaa järjestysnumerolla, nämä tulee tässä järjestyksessä käyttöliittymään asti
             ORDER BY rv.jarjestys
         LOOP
-            -- Resetoi hoitokausi / laskutetaan 
+            -- Resetoi hoitokausi / laskutetaan
             rv_val_aika_yht := 0;
             rv_hoitokausi_yht := 0;
 
             FOR rv_rivi IN
                 SELECT
-                    summa AS kht_summa, 
-                    l.erapaiva AS erapaiva, 
+                    summa AS kht_summa,
+                    l.erapaiva AS erapaiva,
                     lk.maksueratyyppi
                 FROM kulu l
                 JOIN kulu_kohdistus lk ON lk.kulu = l.id
-                JOIN toimenpideinstanssi tpi 
-                    ON lk.toimenpideinstanssi = tpi.id 
+                JOIN toimenpideinstanssi tpi
+                    ON lk.toimenpideinstanssi = tpi.id
                 WHERE lk.rahavaraus_id = rahavaraus.id
                     AND tpi.id = t.tpi
                     AND lk.poistettu IS NOT TRUE
                     AND l.erapaiva BETWEEN hk_alkupvm AND aikavali_loppupvm
             LOOP
               IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
-                  -- Rahavaraus X Hoitokausi yhteensä 
+                  -- Rahavaraus X Hoitokausi yhteensä
                   rv_hoitokausi_yht := rv_hoitokausi_yht + COALESCE(rv_rivi.kht_summa, 0.0);
                   RAISE NOTICE 'Rahavaraus % Hoitokausi yhteensä : %', rahavaraus.nimi, rv_hoitokausi_yht;
 
                   IF rv_rivi.erapaiva BETWEEN aikavali_alkupvm AND aikavali_loppupvm THEN
-                      -- Rahavaraus X valittu kk yhteensä 
+                      -- Rahavaraus X valittu kk yhteensä
                       rv_val_aika_yht := rv_val_aika_yht + COALESCE(rv_rivi.kht_summa, 0.0);
                       RAISE NOTICE 'Rahavaraus % valittu kk yhteensä: %', rahavaraus.nimi, rv_val_aika_yht;
                   END IF;
@@ -1208,7 +1271,7 @@ BEGIN
             -- FOR rv_rivi IN
             END LOOP;
 
-          -- Lisää arrayhyn kaikki rahavarausten tulokset, jotka parsitaan gridiin 
+          -- Lisää arrayhyn kaikki rahavarausten tulokset, jotka parsitaan gridiin
           rahavaraus_nimet := array_append(rahavaraus_nimet, rahavaraus.nimi);
           hoitokausi_yht_array := array_append(hoitokausi_yht_array, rv_hoitokausi_yht);
           val_aika_yht_array := array_append(val_aika_yht_array, rv_val_aika_yht);
@@ -1223,7 +1286,7 @@ BEGIN
         -------------------  Muut kulut   -------------------------
         -----------------------------------------------------------
 
-        -- Nollaa jokaisen instanssin arvot 
+        -- Nollaa jokaisen instanssin arvot
         muu_kulu_tavoitehintainen_hoitokausi := 0;
         muu_kulu_tavoitehintainen_val_aika := 0;
         muu_kulu_ei_tavoitehintainen_hoitokausi := 0;
@@ -1231,8 +1294,8 @@ BEGIN
 
         FOR rv_rivi IN
             SELECT
-                lk.summa, 
-                lk.tavoitehintainen, 
+                lk.summa,
+                lk.tavoitehintainen,
                 l.erapaiva
             FROM kulu l
             JOIN kulu_kohdistus lk ON lk.kulu = l.id
@@ -1244,9 +1307,9 @@ BEGIN
                 AND l.urakka = ur
                 AND tpi.id = t.tpi
                 -- J - Johto- ja hallintokorvaus huomioidaan myös muukulu-tyyppiseksi kirjattuna laskutusyhteenvedon Hoidon johto-osion Johto- ja hallintokorvaus-rivillä, joten karsitaan pois tässä.
-                -- W - Erillishankinnat, myös omana rivinään, ei lasketa niitä tähän 
+                -- W - Erillishankinnat, myös omana rivinään, ei lasketa niitä tähän
                 AND tr.yksiloiva_tunniste NOT IN ('a6614475-1950-4a61-82c6-fda0fd19bb54', '37d3752c-9951-47ad-a463-c1704cf22f4c')
-              
+
         LOOP
             IF rv_rivi.erapaiva <= aikavali_loppupvm THEN
                 -- Hoitokausi yhteensä
@@ -1266,12 +1329,12 @@ BEGIN
                 END IF;
             END IF;
         END LOOP;
-        
+
         -- Lisää muut kulut rahavarausten alle
         -- Nämä niputetaan samaan arrayhyn jotka puretaan käyttöliittymään
         rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehintaan vaikuttavat kulut');
         rahavaraus_nimet := array_append(rahavaraus_nimet, 'Muut tavoitehinnan ulkopuoliset kulut');
-        
+
         hoitokausi_yht_array := array_append(hoitokausi_yht_array, muu_kulu_tavoitehintainen_hoitokausi);
         val_aika_yht_array := array_append(val_aika_yht_array, muu_kulu_tavoitehintainen_val_aika);
 
@@ -1292,53 +1355,47 @@ BEGIN
         kaikki_laskutettu := 0.0;
         kaikki_laskutetaan := 0.0;
 
-        kaikki_laskutettu :=  hankinnat_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu + 
+        kaikki_laskutettu :=  hankinnat_laskutettu + arvonvahennykset_laskutettu + lisatyot_laskutettu + johto_ja_hallinto_laskutettu +
                               hj_palkkio_laskutettu + hj_erillishankinnat_laskutettu + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutettu +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutettu + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutettu +
                               hj_paattaminen_hoidonjohtopalkkion_muutos_laskutettu + kaikki_rahavaraukset_hoitokausi_yht;
 
-        kaikki_laskutetaan := hankinnat_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan + 
+        kaikki_laskutetaan := hankinnat_laskutetaan + arvonvahennykset_laskutetaan + lisatyot_laskutetaan + johto_ja_hallinto_laskutetaan +
                               hj_palkkio_laskutetaan + hj_erillishankinnat_laskutetaan + hj_hoitovuoden_paattaminen_tavoitepalkkio_laskutetaan +
                               hj_hoitovuoden_paattaminen_tavoitehinnan_ylitys_laskutetaan + hj_hoitovuoden_paattaminen_kattohinnan_ylitys_laskutetaan +
                               hj_paattaminen_hoidonjohtopalkkion_muutos_laskutetaan + kaikki_rahavaraukset_val_yht;
-        
+
         -- Tavoitehintaan sisältyy: Hankinnat, Johto- ja Hallintokorvaukset, (hoidonjohto tässä), Erillishankinnat, HJ-Palkkio, Äkilliset hoitotyöt.
         -- Tavoitehintaan ei sisälly: Lisätyöt, Sanktiot, Suolasanktiot, Bonukset, Hoitovuoden päättämiseen liittyvät kulut.
         --- Laskutettu == Hoitokauden alusta
         tavoitehintaiset_laskutettu :=
-                    hankinnat_laskutettu + 
-                    johto_ja_hallinto_laskutettu + 
-                    hj_erillishankinnat_laskutettu + 
-                    hj_palkkio_laskutettu + 
+                    hankinnat_laskutettu +
+                    johto_ja_hallinto_laskutettu +
+                    hj_erillishankinnat_laskutettu +
+                    hj_palkkio_laskutettu +
                     -- Rahavaraukset, muut kulut
-                    kaikki_rahavaraukset_hoitokausi_yht 
+                    kaikki_rahavaraukset_hoitokausi_yht
                     - muu_kulu_ei_tavoitehintainen_hoitokausi; -- Miinusta, koska ei kuulu tavoitehintaan
 
         --- Laskutetaan == Valittu kk
         tavoitehintaiset_laskutetaan :=
                     hankinnat_laskutetaan + kaikki_rahavaraukset_val_yht + johto_ja_hallinto_laskutetaan + hj_erillishankinnat_laskutetaan +
-                    hj_palkkio_laskutetaan + 
+                    hj_palkkio_laskutetaan +
                     -- Rahavaraukset, muut kulut
-                    kaikki_rahavaraukset_val_yht 
+                    kaikki_rahavaraukset_val_yht
                     - muu_kulu_ei_tavoitehintainen_val_aika; -- Miinusta, koska ei kuulu tavoitehintaan
-        
+
         ---------------------------------
         --------- Laskutusraja ----------
         ---------------------------------
-        
+
         laskutusraja_yht := 0.0;
         laskutusrajan_ylittynyt_yht := 0.0;
         laskutusraja_laskutettavaa_yht := 0.0;
         laskutusraja_laskutettavaa_val_aika := 0.0;
-    
+
         laskutettavaa_kaikki_yht := 0.0;
         laskutettavaa_kaikki_val_aika := 0.0;
-
-        urakan_alkuvuosi := (
-            SELECT EXTRACT(YEAR FROM u.alkupvm)::INTEGER
-              FROM urakka u
-             WHERE u.id = ur
-        );
 
         -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
         IF urakan_alkuvuosi >= 2025 THEN
@@ -1347,7 +1404,7 @@ BEGIN
         ELSE
             onko_laskutusraja_kaytossa := FALSE;
         END IF;
-        
+
         SELECT ut.laskutusraja,
                ut.laskutusraja_alkuperainen
           FROM urakka_tavoite ut
@@ -1356,12 +1413,12 @@ BEGIN
           INTO laskutusraja_yht, laskutusraja_alkuperainen;
 
         laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
-        
+
         IF onko_laskutusraja_kaytossa THEN
             ------------------------------------------------------
-            -- "josta laskutettavaa" valittu kk 
+            -- "josta laskutettavaa" valittu kk
             IF kaikki_laskutettu >= laskutusraja_yht THEN
-                -- Ylityksen määrät 
+                -- Ylityksen määrät
                 laskutusrajan_ylittynyt_yht := kaikki_laskutettu - laskutusraja_yht;
                 laskutusrajan_ylittynyt_val_aika := kaikki_laskutettu - laskutusraja_yht;
             ELSE
@@ -1371,10 +1428,10 @@ BEGIN
 
             laskutusraja_laskutettavaa_yht := kaikki_laskutettu;
             laskutusraja_laskutettavaa_val_aika := kaikki_laskutetaan;
-    
-            laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - kaikki_laskutettu); 
+
+            laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - kaikki_laskutettu);
             onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
-    
+
             -- + muut kulut jotka kuuluvat tavoitehintaan
             laskutettavaa_kaikki_yht := laskutusraja_laskutettavaa_yht + muu_kulu_tavoitehintainen_hoitokausi;
             laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muu_kulu_tavoitehintainen_val_aika;
@@ -1382,7 +1439,7 @@ BEGIN
 
 
         -- MHU25 urakoille ei lasketa sanktioita & bonuksia
-        -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
+        -- Jos laskutusrajaa ei ole, urakka ei ole MHU25
         IF NOT onko_laskutusraja_kaytossa THEN
             kaikki_laskutettu :=
                 kaikki_laskutettu + sakot_laskutettu + bonukset_laskutettu;
@@ -1436,6 +1493,7 @@ BEGIN
                   lisatyot_laskutettu, lisatyot_laskutetaan,
                   hankinnat_laskutettu, hankinnat_laskutetaan,
                   sakot_laskutettu, sakot_laskutetaan,
+                  arvonvahennykset_laskutettu, arvonvahennykset_laskutetaan,
                   alihank_bon_laskutettu, alihank_bon_laskutetaan,
                   johto_ja_hallinto_laskutettu, johto_ja_hallinto_laskutetaan,
                   jjh_muutokset_laskutettu, jjh_muutokset_laskutetaan,

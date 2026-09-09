@@ -261,7 +261,7 @@ describe('Suunnitellut hankinnat osio', function () {
 
             // Tarkasta Suunnitellut hankinnat osion yhteenveto
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 3, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, 0);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, 60);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 4, 60);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 4, 0);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 5, 60);
@@ -273,13 +273,13 @@ describe('Suunnitellut hankinnat osio', function () {
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 60);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, undefined);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, 60);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 60);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 60);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [111, 222, 60, 60, 60]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [111, 222]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [111, 222, 60]);
 
         });
     });
@@ -415,23 +415,23 @@ describe('Suunnitellut hankinnat osio', function () {
 
             // Tarkasta Suunnitellut hankinnat osion yhteenveto
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 3, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, undefined);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 3, 660);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 4, 660);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('hankintakustannukset-hintalaskuri', 5, 660);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hankintakustannukset-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('hankintakustannukset-hintalaskuri', [231, 822, 660, 660, 660]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hankintakustannukset-indeksilaskuri', [231, 822]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hankintakustannukset-indeksilaskuri', [231, 822, 660]);
 
             // Tarkasta Tavoite- ja kattohinta osion laskennalliset arvot
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 3, 660);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, undefined);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 3, 660);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 4, 660);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('tavoitehinnan-hintalaskuri', 5, 660);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'tavoitehinnan-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('tavoitehinnan-hintalaskuri', [231, 822, 660, 660, 660]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [231, 822]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'tavoitehinnan-indeksilaskuri', [231, 822, 660]);
         });
     });
 });
@@ -621,13 +621,13 @@ describe('Erillishankinnat osio', function () {
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 2, 0);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 2, 0);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 3, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 3, undefined);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 3, 120);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 4, 120);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('erillishankinnat-hintalaskuri', 5, 120);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'erillishankinnat-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('erillishankinnat-hintalaskuri', [120, 0, 120, 120, 120]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'erillishankinnat-indeksilaskuri', [120, 0]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'erillishankinnat-indeksilaskuri', [120, 0, 120]);
 
 
             // -- Palauta UI-valinnat ennalleen --
@@ -834,13 +834,13 @@ describe('Hoidonjohtopalkkio osio', function () {
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 2, 0);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 2, 0);
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 3, 120);
-            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 3, undefined);
+            ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 3, 120);
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 4, 120);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 4, undefined);
             ks.tarkastaHintalaskurinArvo('hoidonjohtopalkkio-hintalaskuri', 5, 120);
             ks.tarkastaIndeksilaskurinArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', 5, undefined);
             ks.tarkastaHintalaskurinYhteensaArvo('hoidonjohtopalkkio-hintalaskuri', [120, 0, 120, 120, 120]);
-            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', [120, 0]);
+            ks.tarkastaIndeksilaskurinYhteensaArvo(indeksit, 'hoidonjohtopalkkio-indeksilaskuri', [120, 0, 120]);
 
 
             // -- Palauta UI-valinnat ennalleen --

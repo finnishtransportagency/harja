@@ -1,9 +1,40 @@
-.talvihoitoreititys 
-{
+.talvihoitoreititys {
   padding-top: @valistys-16;
 
-  .talvihoitoreitti-rivi 
-  {
+  .kalustoyhteenveto {
+    margin-bottom: @valistys-24;
+
+    h2 {
+      margin-bottom: @valistys-8;
+    }
+
+    .kalustoyhteenveto-otsikko-tooltip {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: flex-end;
+      gap: @valistys-4;
+
+      .tooltip-inner {
+        padding: @valistys-8 @valistys-24 @valistys-16 @valistys-24;
+        width: 40rem;
+        max-width: 40rem;
+      }
+    }
+
+    .kalustoyhteenveto-info-ikoni {
+      display: inline-flex;
+      align-items: center;
+      cursor: help;
+
+      &:focus-visible {
+        outline: 0.125rem solid @blue-dark;
+        outline-offset: 0.125rem;
+      }
+    }
+  }
+
+  .talvihoitoreitti-rivi {
     padding: 0px;
     background-color: @gray250;
 
@@ -62,10 +93,53 @@
     }
 
     /* Väkäsen alla */
-    .talvihoitoreitti-sisalto 
-    {
+    .talvihoitoreitti-sisalto {
       max-width: 900px;
       padding: @valistys-16 @valistys-16 @valistys-24 @valistys-16;
+    }
+  }
+
+  .kalustoyhteenveto-ei-reitteja {
+    color: @gray92;
+    font-size: 14px;
+    margin-top: 24px;
+  }
+
+  .talvihoitoreitit-otsikko-ja-painikkeet {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+
+    h2 {
+      margin: 0;
+    }
+  }
+
+  .talvihoitoreitit-painikkeet {
+    display: flex;
+    gap: @valistys-8;
+
+    form,
+    div {
+      display: flex;
+      align-items: center;
+    }
+  }
+
+  .talvihoitoreitit-pohja-linkki {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    a {
+      display: flex;
+      align-items: center;
+    }
+
+    span {
+      line-height: 1;
+      vertical-align: middle;
     }
   }
 }

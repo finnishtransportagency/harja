@@ -5,6 +5,7 @@
             [harja.ui.grid :as grid]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.hallinta.urakkatiedot.sanktio-profiilit-tiedot :as tiedot]
+            [harja.views.hallinta.urakkatiedot.profiilit-yhteiset :as profiilit-yhteiset]
             [harja.views.hallinta.urakkatiedot.bonus-profiilit-nakyma :as bonus-profiilit]))
 
 
@@ -121,36 +122,6 @@
      :fmt #(reduce + 0 (map (comp count :rivit) %))}]
    sisalto])
 
-(defn- suodatin-rivi [e! suodattimet profiilit]
-  (let [{:keys [teksti urakkatyyppi aktiivisuus]} suodattimet
-        urakkatyypit (->> profiilit (map :urakkatyyppi) distinct sort)]
-    [:div.row
-     [:div.col-md-4
-      [:label "Hae nimellä"]
-      [:input.form-control
-       {:type "text"
-        :value teksti
-        :placeholder "Kirjoita profiilin nimi"
-        :on-change #(e! (tiedot/->PaivitaSuodatin :teksti (-> % .-target .-value)))}]]
-     [:div.col-md-4
-      [:label "Urakkatyyppi"]
-      [:select.form-control
-       {:value (name urakkatyyppi)
-        :on-change #(let [arvo (-> % .-target .-value)]
-                      (e! (tiedot/->PaivitaSuodatin :urakkatyyppi
-                                                    (if (= "kaikki" arvo) :kaikki (keyword arvo)))))}
-       [:option {:value "kaikki"} "Kaikki"]
-       (for [nykyinen-urakkatyyppi urakkatyypit]
-         ^{:key (name nykyinen-urakkatyyppi)}
-         [:option {:value (name nykyinen-urakkatyyppi)} (tiedot/urakkatyyppi-teksti nykyinen-urakkatyyppi)])]]
-     [:div.col-md-4
-      [:label "Aktiivisuus"]
-      [:select.form-control
-       {:value (name aktiivisuus)
-        :on-change #(e! (tiedot/->PaivitaSuodatin :aktiivisuus (keyword (-> % .-target .-value))))}
-       [:option {:value "kaikki"} "Kaikki"]
-       [:option {:value "aktiiviset"} "Aktiiviset"]
-       [:option {:value "passiiviset"} "Passiiviset"]]]]))
 
 (defn- profiilin-yhteenveto [{:keys [profiili]}]
   [:div
@@ -205,7 +176,7 @@
         [:div.sanktio-profiilit-hallinta
          [:h3 "Sanktio-profiilit"]
          [:p "Selaa sanktio-profiileja profiilikeskeisesti. Vasemmalta valitaan profiili, oikealta näkyvät yhteenveto ja lajeittain ryhmitelty sisältö."]
-         [suodatin-rivi e! suodattimet profiilit]
+         [profiilit-yhteiset/suodatin-rivi e! tiedot/->PaivitaSuodatin suodattimet profiilit]
          [:div.row {:style {:margin-top "1rem"}}
           [:div.col-md-5
            (if haku-kaynnissa?

@@ -26,11 +26,21 @@ runs:
         # Front-endin buildaamisessa tarvitaan nodejs dependencyjä
         install-node-deps: true
 
+    - name: Verify CI JVM options
+      run: |
+        echo "::group::JVM-optiot CI-profiilista"
+        echo "Leiningen projektin :jvm-opts (+ci profiililla):"
+        lein with-profile +ci pprint :jvm-opts
+        echo "::endgroup::"
+      shell: bash
+
     - name: Build back-end
       if: ${{ inputs.build-back-end == 'true' }}
+      # CI-profiili (profiles.clj :ci) yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
+      # LEIN_JVM_OPTS ei vaikuta projekti-JVM:iin koska project.clj:ssä on :jvm-opts ^:replace.
       run: |
         echo "Building backend"
-        lein do compile
+        lein with-profile +ci do compile
       shell: bash
 
     - name: Build front-end
@@ -43,21 +53,21 @@ runs:
         npx lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css
         echo "Done."
         
-        echo "Building cljs (with lein default profiles + prod-cljs)..."
-        lein with-profile +prod-cljs compile-prod
+        echo "Building cljs (with lein default profiles + ci + prod-cljs)..."
+        lein with-profile +ci,+prod-cljs compile-prod
         echo "Done."
       shell: bash
 
     - name: Build laadunseuranta
       if: ${{ inputs.build-laadunseuranta == 'true' }}
       run: |
-        echo "Building laadunseuranta (with lein default profiles + laadunseuranta-prod)"
-        lein do with-profile +laadunseuranta-prod compile-laadunseuranta-prod
+        echo "Building laadunseuranta (with lein default profiles + ci + laadunseuranta-prod)"
+        lein with-profile +ci,+laadunseuranta-prod compile-laadunseuranta-prod
       shell: bash
 
     - name: Build uberjar
       if: ${{ inputs.build-uberjar == 'true' }}
       run: |
         echo "Building uberjar"
-        lein uberjar
+        lein with-profile +ci uberjar
       shell: bash

@@ -1,6 +1,5 @@
 (ns harja.kyselyt.sanktio-konfiguraatio-test
-  (:require [clojure.string :as str]
-            [clojure.test :refer [deftest is]]
+  (:require [clojure.test :refer [deftest is]]
             [harja.kyselyt.sanktio-konfiguraatio :as sanktio-konfiguraatio]))
 
 

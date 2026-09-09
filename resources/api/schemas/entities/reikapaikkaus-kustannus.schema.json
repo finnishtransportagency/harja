@@ -1,0 +1,35 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kustannus/tunniste",
+      "required": true,
+      "additionalProperties": false,
+      "description": "Paikkauskustannuksen tunniste urakoitsijajärjestelmässä. Tunniste yksilöi paikkauskustannusta koskevan rivin urakkakohtaisesti, ja sitä voi käyttää tiedon päivittämiseen Harjassa.",
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+    },
+    "ajankohta-alku": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/ajankohta-alku",
+      "required": true,
+      "description": "Sanomassa raportoidun toteutuneen paikkauskustannusaikavälin alku. Esim. 2026-07-13T06:00:00Z Voit raportoida paikkauskustannukset esim. päivän, viikon tai kuukauden ajalta.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "ajankohta-loppu": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/ajankohta-loppu",
+      "required": true,
+      "description": "Sanomassa raportoidun toteutuneen paikkauskustannusaikavälin loppu. Esim. 2026-07-19T21:00:00Z Voit raportoida paikkauskustannukset esim. päivän, viikon tai kuukauden ajalta.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "kustannus": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kustannus",
+      "type": "number",
+      "description": "Sanomassa raportoidun aikavälin paikkauskustannukset euroina. Esim. 45534.24."
+    }
+  }
+}

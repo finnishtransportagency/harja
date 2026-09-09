@@ -18,6 +18,8 @@
     [harja.domain.valitavoite :as vt-domain]
     [harja.tiedot.urakka.valitavoitteet :as tiedot]
     [harja.domain.yllapitokohde :as yllapitokohde-domain]
+    [harja.tiedot.raportit :as raportit]
+    [harja.ui.upotettu-raportti :as upotettu-raportti]
     [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
     [harja.tiedot.hallinta.valtakunnalliset-valitavoitteet :as vvt-tiedot]))
 
@@ -309,7 +311,14 @@
             nayta-urakkakohtaiset-grid? (not nayta-yhdistetty-grid?)
             ;; Lisää urakka app-tilaan grid-funktioita varten
             app (assoc app :urakka ur)
-            tulevaisuudessa-arvoja? (onko-tulevia? urakan-valitavoitteet valittu-hoitokausi)]
+            tulevaisuudessa-arvoja? (onko-tulevia? urakan-valitavoitteet valittu-hoitokausi)
+            haun-alkupvm (or (first valittu-hoitokausi) (ffirst urakan-hoitokaudet))
+            haun-loppupvm (or (second valittu-hoitokausi) (last (last urakan-hoitokaudet)))
+            parametrit (raportit/urakkaraportin-parametrit
+                         (:id ur)
+                         :valitavoiteraportti
+                         {:alkupvm haun-alkupvm
+                          :loppupvm haun-loppupvm})]
 
         (if ladataan?
           [:div.valitavoitteet
@@ -317,7 +326,17 @@
            [yleiset/ajax-loader "Ladataan välitavoitteita..."]]
 
           [:div.valitavoitteet
-           [:h1 "Välitavoitteet"]
+           [:div.flex-row
+            [:h1 "Välitavoitteet"]
+            [:div
+             [upotettu-raportti/raportin-vientimuodot
+              (assoc parametrit
+                :otsikko "Tallenna Excel"
+                :kasittelija :excel)
+              (assoc parametrit
+                :otsikko "Tallenna PDF"
+                :kasittelija :pdf)]]]
+
            [:div.valinnat.margin-bottom-16
             [valinnat/urakan-hoitokausi-tuck
              valittu-hoitokausi

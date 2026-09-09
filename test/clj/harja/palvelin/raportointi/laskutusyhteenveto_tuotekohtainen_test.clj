@@ -1,4 +1,4 @@
-(ns harja.palvelin.raportointi.tuotekohtainen-raportti-test
+(ns harja.palvelin.raportointi.laskutusyhteenveto_tuotekohtainen-test
   (:require [clojure.string :as str]
             [clojure.test :refer :all]
             [com.stuartsierra.component :as component]
@@ -304,7 +304,7 @@
         mhu-korvausinvestointi (nth vastaus 6)
 
         ;; Kirjallisesti sovitut muutokset
-        _ (is (= 6230M (:muutos-summa urakka-tavoite)))
+        _ (is (= 6230M (:kirjallisesti-sovitut-muutokset urakka-tavoite)))
 
         ;; Talvihoito
         talvihoito-hankinnat (:hankinnat_laskutettu talvihoito)

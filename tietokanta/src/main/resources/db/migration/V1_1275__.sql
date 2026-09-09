@@ -1,32 +1,23 @@
-ALTER TABLE sanktio_profiili_rivi_lukittu_summa
-    RENAME TO sanktio_profiili_rivi_summamaaritys;
+CREATE TABLE materiaalivalimuisti_paivitystarve (
+  id SERIAL PRIMARY KEY,
+  toteuma_id INTEGER NOT NULL,
+  urakka_id INTEGER NOT NULL,
+  toteuma_alkanut_vanha TIMESTAMP NOT NULL,
+  luotu TIMESTAMP,
+  luoja INTEGER,
+  urakan_valimuisti_paivitetty BOOLEAN NOT NULL DEFAULT FALSE,
+  sopimuksen_valimuisti_paivitetty BOOLEAN NOT NULL DEFAULT FALSE,
+  muokattu TIMESTAMP,
+  muokkaaja INTEGER
+);
 
-ALTER INDEX sanktio_profiili_rivi_lukittu_summa_haku_idx
-    RENAME TO sanktio_profiili_rivi_summamaaritys_haku_idx;
-
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD COLUMN maaritystapa TEXT,
-    ADD COLUMN ohjeteksti  TEXT;
-
--- automaattinen = jarjestelma tayttaa summan profiilista (voidaan laajentaa laskenta-automaatioksi)
--- manuaalinen   = kayttaja kirjaa summan kasin; ohjeteksti vapaaehtoinen
-UPDATE sanktio_profiili_rivi_summamaaritys
-   SET maaritystapa = 'automaattinen'
- WHERE maaritystapa IS NULL;
-
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ALTER COLUMN maaritystapa SET DEFAULT 'automaattinen',
-    ALTER COLUMN maaritystapa SET NOT NULL,
-    ALTER COLUMN summa_euroina DROP NOT NULL;
-
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_maaritystapa_check
-        CHECK (maaritystapa IN ('automaattinen', 'manuaalinen')),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_ohjeteksti_check
-        CHECK (ohjeteksti IS NULL OR btrim(ohjeteksti) <> ''),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_sisalto_check
-        CHECK (
-            (maaritystapa = 'automaattinen' AND summa_euroina IS NOT NULL)
-            OR
-            (maaritystapa = 'manuaalinen' AND (summa_euroina IS NOT NULL OR ohjeteksti IS NOT NULL))
-        );
+CREATE OR REPLACE FUNCTION update_toteuma_check_partition()
+  RETURNS TRIGGER AS $$
+BEGIN
+  INSERT INTO materiaalivalimuisti_paivitystarve (toteuma_id, urakka_id, toteuma_alkanut_vanha, luotu, luoja)
+    VALUES (NEW.id, NEW.urakka, OLD.alkanut::DATE, CURRENT_TIMESTAMP, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+  EXECUTE format('DELETE FROM %I.%I WHERE id = %L::INTEGER;', TG_TABLE_SCHEMA, TG_TABLE_NAME, NEW.id);
+  INSERT INTO toteuma VALUES (NEW.*);
+  RETURN NULL;
+END;
+$$ LANGUAGE plpgsql;

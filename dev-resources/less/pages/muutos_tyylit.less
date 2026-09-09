@@ -7,6 +7,10 @@
     color: @harmaa-tumma;
   }
   
+  .tehtava-vaikutus-valinta textarea {
+    width: revert;
+  }
+  
   .valinnat-ja-listaus {
     .keltainen-vihjelaatikko {
       display: flex;
@@ -184,6 +188,11 @@
         width: 200px;
       }
     }
+    
+    .vaikutus-otsikko h3 {
+      margin: 0;
+      padding-top: @valistys-16;
+    }
   }
 
     .otsikko-ja-hoitokausi {
@@ -203,12 +212,6 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    button.navigation-ympyrassa {
-      font-size: @valistys-16;
-      height: @valistys-28;
-      width: @valistys-28;
-    }
-
     h2 {
       display: inline-block;
       margin: 0 0 0 @valistys-24;

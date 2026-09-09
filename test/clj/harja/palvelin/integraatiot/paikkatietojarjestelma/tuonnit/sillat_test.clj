@@ -240,3 +240,21 @@
         (is (= 1 paivita-silta))
         (is (:poistettu hae-silta))
         (is (= sillat-ennen sillat-jalkeen))))))
+
+(deftest paivita-kunnalle-siirtyneet-sillat
+    (testing "Siltojen päivittyminen kunnalle"
+      (let [silta-tuonti   (list silta-tuonti
+                            {:nimi "Kempeleen testisilta" :oid "9.2.246.578.1.15.40175" :nykyinenku "Siikajoen kunta" :nykyinen_o "Väylävirasto"}
+                            {:nimi "Oulujoen silta" :oid "9.2.246.578.1.15.40173" :nykyinenku "Oulun kaupunki" :nykyinen_o "Väylävirasto"})
+            kunnan-sillat-ennen (ffirst (q "SELECT count(*) FROM silta WHERE kunnan_vastuulla IS TRUE AND vastuu_urakka IS NULL AND silta_oid IN ('9.2.246.578.1.15.40175', '9.2.246.578.1.15.40173');"))
+            _ (sillat/paivita-kunnan-vastuulle-siirtyneet-sillat ds silta-tuonti)
+            kunnan-sillat-jalkeen (ffirst (q "SELECT count(*) FROM silta WHERE kunnan_vastuulla IS TRUE AND vastuu_urakka IS NULL AND silta_oid IN ('9.2.246.578.1.15.40175', '9.2.246.578.1.15.40173');"))]
+        (is (= (+ 2 kunnan-sillat-ennen) kunnan-sillat-jalkeen) "Sillat päivittyivät kunnan vastuulle, vastuu-urakka poistettiin."))))
+
+
+
+
+
+
+
+

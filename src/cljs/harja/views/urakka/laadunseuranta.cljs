@@ -1,19 +1,15 @@
 (ns harja.views.urakka.laadunseuranta
-  (:require [reagent.core :refer [atom]]
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
             [harja.ui.bootstrap :as bs]
 
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.laadunseuranta :as urakka-laadunseuranta]
             [harja.views.urakka.laadunseuranta.tarkastukset :as tarkastukset]
             [harja.views.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeamat]
-            [harja.tiedot.urakka.laadunseuranta.laatupoikkeamat :as laatupoikkeama-tiedot]
             [harja.views.urakka.laadunseuranta.sanktiot-ja-bonukset-nakyma :as sanktiot-ja-bonukset-nakyma]
             [harja.views.kanavat.urakka.laadunseuranta.hairiotilanteet :as hairiotilanteet]
             [harja.views.urakka.laadunseuranta.talvihoitoreitit-nakyma :as talvihoitoreitit]
-            [harja.domain.roolit :as roolit]
             [harja.ui.komponentti :as komp]
-            [harja.loki :refer [log]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.views.urakka.laadunseuranta.siltatarkastukset :as siltatarkastukset]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -21,7 +17,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.domain.urakka :as urakka]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi id] :as urakka}]
   (case valilehti
     :hairiotilanteet (and (istunto/ominaisuus-kaytossa? :vesivayla)
                        (urakka/kanavaurakka? urakka)
@@ -72,7 +68,7 @@
 
        (if @tiedot-urakka/yllapitourakka? "Sakot ja bonukset" "Sanktiot ja bonukset") :sanktiot
        (when (valilehti-mahdollinen? :sanktiot ur)
-         [sanktiot-ja-bonukset-nakyma/sanktiot-ja-bonukset])
+         [tuck/tuck tila/sanktiot-ja-bonukset sanktiot-ja-bonukset-nakyma/sanktiot-ja-bonukset])
 
        "Siltatarkastukset" :siltatarkastukset
        (when (valilehti-mahdollinen? :siltatarkastukset ur)

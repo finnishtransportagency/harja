@@ -91,7 +91,7 @@
                    yllapito-leveydet
                    normaali-leveydet)
         otsikot (cond-> []
-                  true (conj {:otsikko "Käsitelty" :leveys (:kasitelty leveydet)})
+                  true (conj {:otsikko (if yllapitourakka?  "Käsitelty" "Määrätty") :leveys (:kasitelty leveydet)})
                   true (conj {:otsikko "Laji" :leveys (:laji leveydet)})
                   yllapitourakka? (conj {:otsikko "Kohde" :leveys (:kohde leveydet)})
                   yllapitourakka? (conj {:otsikko "Kuvaus" :leveys (:kuvaus leveydet)})

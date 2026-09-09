@@ -5,6 +5,7 @@
             [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
+            [harja.kyselyt.jarjestelman-tila :as jarjestelmatila-q]
             [harja.palvelin.palvelut.budjettisuunnittelu :as bs]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
@@ -15,7 +16,9 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id aikarajaus] :as parametrit}]
   (log/debug "Työmaakokous PARAMETRIT: " (pr-str parametrit))
-  (let [kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        kyseessa-kk-vali? (pvm/kyseessa-kk-vali? alkupvm loppupvm)
         laskutettu-teksti (str "Hoitovuoden alusta")
         laskutetaan-teksti (str (pvm/kuukausi-isolla (pvm/kuukausi alkupvm)) " " (pvm/vuosi alkupvm))
         kyseessa-hoitokausi-vali? (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
@@ -63,13 +66,15 @@
         perusluku (when urakka-id (:perusluku (ffirst laskutusyhteenvedot)))
         indeksikertoimet (when urakka-id (bs/hae-urakan-indeksikertoimet db user {:urakka-id urakka-id}))
 
-        [hk-alkupvm hk-loppupvm] (if (or
-                                       (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-                                       (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
-                                   ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
-                                   ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
-                                   (pvm/paivamaaran-hoitokausi alkupvm)
-                                   [alkupvm loppupvm])
+         [hk-alkupvm hk-loppupvm] (if (or
+                                        (pvm/kyseessa-kk-vali? alkupvm loppupvm)
+                                        (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
+                                    ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
+                                    ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
+                                    (pvm/paivamaaran-hoitokausi alkupvm)
+                                    [alkupvm loppupvm])
+
+         hoitokauden-alkuvuosi (pvm/vuosi hk-alkupvm)
 
         valittu-aikavali? (= aikarajaus :valittu-aikakvali)
         aikavali-str (str (pvm/pvm hk-alkupvm) " - " (pvm/pvm hk-loppupvm))
@@ -108,39 +113,47 @@
      ;; ------------------------------- ;;
      ;;    Hankinnat ja hoidonjohto     ;;
      ;; ------------------------------- ;;
-     (concat (for [otsikko otsikot]
-               (taulukko-tyomaakokous {:data rivitiedot
-                                       :otsikko otsikko
-                                       :sheet-nimi (when (= (.indexOf otsikot otsikko) 0) sheet-nimi)
-                                       :laskutettu-teksti laskutettu-teksti
-                                       :laskutetaan-teksti laskutetaan-teksti
-                                       :kyseessa-kk-vali? kyseessa-kk-vali?})))
+      (concat (for [otsikko otsikot]
+                (taulukko-tyomaakokous {:data rivitiedot
+                                        :otsikko otsikko
+                                        :sheet-nimi (when (= (.indexOf otsikot otsikko) 0) sheet-nimi)
+                                        :laskutettu-teksti laskutettu-teksti
+                                        :laskutetaan-teksti laskutetaan-teksti
+                                        :kyseessa-kk-vali? kyseessa-kk-vali?
+                                        :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                        :urakan-alkuvuosi urakan-alkuvuosi})))
 
-     ;; --------------- ;;
-     ;;    Muutokset    ;;
-     ;; --------------- ;;
-     (when (ominaisuus-kaytossa? :mhu-muutokset)
+       ;; --------------- ;;
+       ;;    Muutokset    ;;
+       ;; --------------- ;;
+       (when (ominaisuus-kaytossa? :mhu-muutokset)
+         (taulukko-tyomaakokous {:data rivitiedot
+                                 :otsikko "Muutokset"
+                                 :laskutettu-teksti laskutettu-teksti
+                                 :laskutetaan-teksti laskutetaan-teksti
+                                 :kyseessa-kk-vali? kyseessa-kk-vali?
+                                 :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                 :urakan-alkuvuosi urakan-alkuvuosi}))
+
+       ;; ------------------------ ;;
+       ;;   Rahavaraukset, muut    ;;
+       ;; ------------------------ ;;
        (taulukko-tyomaakokous {:data rivitiedot
-                               :otsikko "Muutokset"
+                               :otsikko "Rahavaraukset"
                                :laskutettu-teksti laskutettu-teksti
                                :laskutetaan-teksti laskutetaan-teksti
-                               :kyseessa-kk-vali? kyseessa-kk-vali?}))
+                               :kyseessa-kk-vali? kyseessa-kk-vali?
+                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                               :urakan-alkuvuosi urakan-alkuvuosi})
 
-     ;; ------------------------ ;;
-     ;;   Rahavaraukset, muut    ;;
-     ;; ------------------------ ;;
-     (taulukko-tyomaakokous {:data rivitiedot
-                             :otsikko "Rahavaraukset"
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?})
-
-     (taulukko-tyomaakokous {:data rivitiedot
-                             :otsikko "Muut tavoitehintaan vaikuttavat kulut"
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?
-                             :tavoitehintainen? true})
+       (taulukko-tyomaakokous {:data rivitiedot
+                               :otsikko "Muut tavoitehintaan vaikuttavat kulut"
+                               :laskutettu-teksti laskutettu-teksti
+                               :laskutetaan-teksti laskutetaan-teksti
+                               :kyseessa-kk-vali? kyseessa-kk-vali?
+                               :tavoitehintainen? true
+                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                               :urakan-alkuvuosi urakan-alkuvuosi})
 
      (when-not
        (boolean (:kustannussuunnitelma_vahvistettu rivitiedot))
@@ -188,16 +201,19 @@
        [:laskutusyhteenveto-otsikko (str "Tavoitehinnan ulkopuoliset kustannukset aikajaksolta (" (pvm/pvm alkupvm) " - " (pvm/pvm (pvm/nyt)) ")")]
        [:laskutusyhteenveto-otsikko "Tavoitehinnan ulkopuoliset kustannukset"])
 
-     ;; ------------------------ ;;
-     ;;    Lisätyöt & muut       ;;
-     ;; ------------------------ ;;
-     (taulukko-tyomaakokous {:data rivitiedot
-                             ;; Tämä on design mukainen otsikko
-                             :otsikko "Kustannus"
-                             :laskutettu-teksti laskutettu-teksti
-                             :laskutetaan-teksti laskutetaan-teksti
-                             :kyseessa-kk-vali? kyseessa-kk-vali?
-                             :tavoitehintainen? false})
+       ;; --------------------------- ;;
+       ;; Tavoitehinnan ulkopuoliset  ;;
+       ;; Lisätyöt & muut             ;;
+       ;; --------------------------- ;;
+       (taulukko-tyomaakokous {:data rivitiedot
+                               ;; Tämä on design mukainen otsikko
+                               :otsikko "Kustannus"
+                               :laskutettu-teksti laskutettu-teksti
+                               :laskutetaan-teksti laskutetaan-teksti
+                               :kyseessa-kk-vali? kyseessa-kk-vali?
+                               :tavoitehintainen? false
+                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                               :urakan-alkuvuosi urakan-alkuvuosi})
 
      ;; Tavoitehinnan ulkopuoliset kustannukset yhteensä
      (taulukot/lapinakyva-taulukko false

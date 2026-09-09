@@ -28,6 +28,7 @@
   urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
   urakat-laadunseuranta-sanktiot
+  urakat-laadunseuranta-hairiotilanteet
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
@@ -52,6 +53,8 @@
   urakat-toteumat-muutos-ja-lisatyot
   urakat-toteumat-vesivaylaerilliskustannukset
   urakat-toteumat-varusteet
+  urakat-toteutus-muutkustannukset
+  urakat-toteutus-yksikkohintaisettyot
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit

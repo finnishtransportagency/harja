@@ -676,12 +676,12 @@ FROM urakka u
   LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
 WHERE urk.id = :organisaatio;
 
--- name: hallintayksikoiden-urakat-ilman-valaistus-urakoita
-SELECT
-  u.id, u.hallintayksikko
+-- name: elinvoimakeskusten-urakat-ilman-valaistus-urakoita
+SELECT  
+  u.id, u.elinvoimakeskus_id
 FROM urakka u
-  LEFT JOIN organisaatio hal ON u.hallintayksikko = hal.id
-WHERE hal.id IN (:hallintayksikot)
+  LEFT JOIN organisaatio elv ON u.elinvoimakeskus_id = elv.id
+WHERE elv.id IN (:elinvoimakeskusnumerot)
   AND u.tyyppi != 'valaistus';
 
 -- name: elinvoimakeskusten-urakat

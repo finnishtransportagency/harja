@@ -443,6 +443,10 @@
         raportin-otsikko "Muutos- ja lisätyöraportti"
         hoitokauden-alkuvuosi (pvm/vuosi alkupvm) ;; Kun raportti on vain hoitokauden ajalta, niin hoitokauden alkupvm on aina validi
         hoitovuosinro (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) alkupvm)
+        ;;alkupvm ja loppupvm voivat olla yhden kuukauden alku- ja loppupäivät, jos ollaan työmaakokousraportissa,
+        ;;mutta muutos- ja lisätyöraportti näytetään sielläkin vain koko hoitovuoden ajalta
+        alkupvm (first (pvm/paivamaaran-hoitokausi alkupvm))
+        loppupvm (second (pvm/paivamaaran-hoitokausi loppupvm))
         aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         maaramuutokset (when urakka-id
                          (muutos-palvelu/hae-tehtava-maaramuutokset db _user {:urakka-id urakka-id

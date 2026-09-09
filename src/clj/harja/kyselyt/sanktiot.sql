@@ -2,9 +2,10 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, maarattypvm, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara, indeksi, laatupoikkeama, suorasanktio, luoja,
- luotu)
-VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
+(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara,
+ laskutusrajan_ylitys, indeksi, laatupoikkeama, suorasanktio, tehtavaryhma, tehtava, luoja, luotu)
+VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman_kasittelytapa,
+        :ryhma :: sanktiolaji, :tyyppi,
         COALESCE(
             (SELECT t.id -- suoraan annettu tpi
              FROM toimenpideinstanssi t
@@ -15,31 +16,36 @@ VALUES (:perintapvm, :maarattypvm, :ryhma :: sanktiolaji, :tyyppi,
                       JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
              WHERE s.id = :tyyppi
                AND t.urakka = :urakka)),
-        :vakiofraasi,
-        :summa, :indeksi, :laatupoikkeama, :suorasanktio, :luoja, NOW());
+        :vakiofraasi, :summa, :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
+        :tehtavaryhma, :tehtava, :luoja, NOW());
 
 -- name: paivita-sanktio!
 -- Päivittää olemassaolevan sanktion
 UPDATE sanktio
-SET perintapvm          = :perintapvm,
-    maarattypvm         = :maarattypvm,
-    sakkoryhma          = :ryhma :: sanktiolaji,
-    tyyppi              = :tyyppi,
-    toimenpideinstanssi = COALESCE(
+SET perintapvm           = :perintapvm,
+    maarattypvm          = :maarattypvm,
+    maaraystapa          = :maaraystapa,
+    kasittelytapa        = :kasittelytapa::laatupoikkeaman_kasittelytapa,
+    sakkoryhma           = :ryhma :: sanktiolaji,
+    tyyppi               = :tyyppi,
+    toimenpideinstanssi  = COALESCE(
         (SELECT t.id FROM toimenpideinstanssi t WHERE t.id = :tpi_id AND t.urakka = :urakka),
         (SELECT t.id
          FROM toimenpideinstanssi t
                   JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
          WHERE s.id = :tyyppi
            AND t.urakka = :urakka)),
-    vakiofraasi         = :vakiofraasi,
-    maara               = :summa,
-    indeksi             = :indeksi,
-    laatupoikkeama      = :laatupoikkeama,
-    suorasanktio        = :suorasanktio,
-    muokkaaja           = :muokkaaja,
-    poistettu           = :poistettu,
-    muokattu            = NOW()
+    vakiofraasi          = :vakiofraasi,
+    maara                = :summa,
+    laskutusrajan_ylitys = :laskutusrajan-ylitys,
+    indeksi              = :indeksi,
+    laatupoikkeama       = :laatupoikkeama,
+    suorasanktio         = :suorasanktio,
+    tehtavaryhma        = :tehtavaryhma,
+    tehtava             = :tehtava,
+    muokkaaja            = :muokkaaja,
+    poistettu            = :poistettu,
+    muokattu             = NOW()
 WHERE id = :id;
 
 -- name: hae-laatupoikkeaman-sanktiot
@@ -48,6 +54,8 @@ WHERE id = :id;
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.maaraystapa,
+       s.kasittelytapa,
        lp.aika                            AS laatupoikkeama_aika,
        lp.kohde                           AS laatupoikkeama_kohde,
        lp.kasittelyaika                   AS laatupoikkeama_paatos_kasittelyaika,
@@ -57,6 +65,7 @@ SELECT s.id,
        lp.kuvaus                          AS laatupoikkeama_kuvaus,
        lp.perustelu                       AS laatupoikkeama_paatos_perustelu,
        s.maara                            AS summa,
+       s.laskutusrajan_ylitys             AS "laskutusrajan-ylitys",
        s.sakkoryhma                       AS laji,
        s.toimenpideinstanssi,
        s.indeksi,
@@ -78,17 +87,20 @@ WHERE laatupoikkeama = :laatupoikkeama
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
-       s.maara           AS summa,
-       s.sakkoryhma      AS laji,
+       s.maaraystapa,
+       s.kasittelytapa,
+       s.maara                AS summa,
+       s.laskutusrajan_ylitys AS "laskutusrajan-ylitys",
+       s.sakkoryhma           AS laji,
        s.suorasanktio,
        s.toimenpideinstanssi,
        s.indeksi,
        s.vakiofraasi,
-       s.laatupoikkeama  AS laatupoikkeama_id,
-       t.id              AS tyyppi_id,
-       t.nimi            AS tyyppi_nimi,
-       t.toimenpidekoodi AS tyyppi_toimenpidekoodi,
-       t.koodi           AS tyyppi_koodi
+       s.laatupoikkeama       AS laatupoikkeama_id,
+       t.id                   AS tyyppi_id,
+       t.nimi                 AS tyyppi_nimi,
+       t.toimenpidekoodi      AS tyyppi_toimenpidekoodi,
+       t.koodi                AS tyyppi_koodi
 FROM sanktio s
          LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
 WHERE s.id = :id;
@@ -107,11 +119,14 @@ WHERE id = :id;
 SELECT s.id,
        s.perintapvm,
        s.maarattypvm,
+       s.maaraystapa,
+       s.kasittelytapa,
        -- Haetaan kasittelyaika sanktioiden ja bonusten listausta varten.
        -- Huomaa, että sama käsittelyaika haetaan myös erikseen hierarkiana laatupoikkeamaa varten ja sitä käytetään lomakkeella
        -- sanktion laatupoikkeamassa.
        lp.kasittelyaika                             AS kasittelyaika,
        s.maara                                      AS summa,
+       s.laskutusrajan_ylitys                       AS "laskutusrajan-ylitys",
        s.sakkoryhma::text                           AS laji,
        s.indeksi,
        s.suorasanktio,
@@ -155,7 +170,12 @@ SELECT s.id,
        t.nimi                                       AS tyyppi_nimi,
        t.id                                         AS tyyppi_id,
        t.toimenpidekoodi                            AS tyyppi_toimenpidekoodi,
-       t.koodi                                      AS tyyppi_koodi
+       t.koodi                                      AS tyyppi_koodi,
+
+       s.tehtavaryhma                               AS tehtavaryhma_id,
+       tryhma.nimi                                  AS tehtavaryhma_nimi,
+       s.tehtava                                    AS tehtava_id,
+       teh.nimi                                     AS tehtava_nimi
 
 FROM sanktio s
          JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id
@@ -163,6 +183,8 @@ FROM sanktio s
          JOIN kayttaja k ON lp.luoja = k.id
          LEFT JOIN sanktiotyyppi t ON s.tyyppi = t.id
          LEFT JOIN yllapitokohde ypk ON lp.yllapitokohde = ypk.id
+         LEFT JOIN tehtavaryhma tryhma ON s.tehtavaryhma = tryhma.id
+         LEFT JOIN tehtava teh ON s.tehtava = teh.id
 WHERE lp.urakka = :urakka
   -- Ei haeta tässä ylläpidon bonus 'sanktioita', vaan haetaan ne bonuksina eri kyselyssä.
   --   Tämä edistää ylläpidon bonusten käsittelyn refaktorointia myöhemmin siten, että niitäkin käsiteltäisiin samalla
@@ -195,6 +217,7 @@ WHERE lp.urakka = :urakka
 SELECT ek.id,
        ek.laskutuskuukausi                                 as perintapvm,
        ek.pvm                                              AS kasittelyaika,
+       ek.pvm                                              AS maarattypvm,  -- UIlla mhu25 urakoilla puhutaan määrättypäivästä
        ek.rahasumma                                        AS summa,
        ek.tyyppi::TEXT                                     AS laji,
        ek.indeksin_nimi                                    AS indeksi,
@@ -239,13 +262,14 @@ SELECT s.id,
        s.perintapvm          AS perintapvm,
        -- Kasittelyaika haetaan sanktion suhteen laatupoikkeaman puolelta, erilliskustannuksissa se on 'pvm'-sarake.
        lp.kasittelyaika      AS kasittelyaika,
+       lp.kasittelyaika      AS maarattypvm, -- UIlla mhu25 urakoilla puhutaan määrättypäivästä
        -- Muunna ylläpidon bonuksen summa positiiviseksi (se on käytännössä negatiivinen sanktio nykytoteuksella)
        s.maara * -1          AS summa,
        'yllapidon_bonus'     AS laji,
        s.indeksi             AS indeksi,
        TRUE                  AS suorasanktio,
        TRUE                  AS bonus,
-       lp.kasittelytapa      AS kasittelytapa,
+       s.kasittelytapa       AS kasittelytapa,
        s.toimenpideinstanssi AS toimenpideinstanssi,
        0                     AS indeksikorjaus,
        lp.perustelu          AS lisatieto,
@@ -309,11 +333,13 @@ FROM laatupoikkeama lp
 WHERE s.id = :sanktioid;
 
 -- name: hae-sanktio
-SELECT s.id             AS id,
+SELECT s.id                   AS id,
        s.perintapvm,
        s.indeksi,
        s.maara,
-       s.laatupoikkeama as "laatupoikkeama-id",
+       s.laskutusrajan_ylitys AS "laskutusrajan-ylitys",
+       s.kasittelytapa,
+       s.laatupoikkeama       AS "laatupoikkeama-id",
        s.toimenpideinstanssi,
        s.tyyppi,
        s.suorasanktio,

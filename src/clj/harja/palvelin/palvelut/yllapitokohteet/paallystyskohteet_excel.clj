@@ -30,8 +30,16 @@
   (assert (= maku-paallysteet "MAKU-päällysteet") "MAKU-päällysteet otsikko oikein")
   (assert (= kokonaishinta "Kokonaishinta") "Kokonaishinta otsikko oikein"))
 
+(defn- lue-kohde-id [arvo]
+  (cond
+    (number? arvo) (int arvo)
+    (string? arvo) (let [arvo (trim arvo)]
+                      (when (re-matches #"\d+" arvo)
+                        (Integer/parseInt arvo)))
+    :else nil))
+
 (defn parsi-paallystyskohteet [workbook]
-  (let [sivu (first (xls/sheet-seq workbook)) ;; Käsitellään excelin ensimmäinen sivu tai tabi
+  (let [sivu (first (xls/sheet-seq workbook))
         raaka-data (->> sivu
                         xls/row-seq
                         (remove nil?)
@@ -41,24 +49,20 @@
                             (map-indexed (fn [indeksi arvo]
                                            (xls/read-cell arvo))
                                          rivi))))
-        ;; Poistetaan otsikkoriviä ylemmät rivit parsinnan kannalta turhana
         otsikot-ja-rivit (drop-while #(not= (first %) "Kohde-ID") raaka-data)
         otsikot (first otsikot-ja-rivit)
         _ (validoi-excelin-otsikot otsikot)
-        rivit (remove #(let [sarake-a-sisalto (first %)]
-                         ;; Poistetaan rivi kokonaan, mikäli yhaid on nil. Poistaa myös yhteensä-rivin
-                         (nil? sarake-a-sisalto))
-                      (rest otsikot-ja-rivit))
+        rivit (rest otsikot-ja-rivit)
         kohteet (into []
-                      (keep
-                        (fn [rivi]
-                          {:yhaid (int (nth rivi 0))
-                           :sopimuksen-mukaiset-tyot (nth rivi 4)
-                           :maaramuutokset (nth rivi 5)
-                           :bitumi-indeksi (nth rivi 6)
-                           :kaasuindeksi (nth rivi 7)
-                           :maku-paallysteet (nth rivi 8)})
-                        rivit))]
+                      (keep (fn [rivi]
+                              (when-let [yhaid (lue-kohde-id (first rivi))]
+                                {:yhaid yhaid
+                                 :sopimuksen-mukaiset-tyot (nth rivi 4)
+                                 :maaramuutokset (nth rivi 5)
+                                 :bitumi-indeksi (nth rivi 6)
+                                 :kaasuindeksi (nth rivi 7)
+                                 :maku-paallysteet (nth rivi 8)}))
+                            rivit))]
     kohteet))
 
 (defn tallenna-paallystyskohteet-excelista

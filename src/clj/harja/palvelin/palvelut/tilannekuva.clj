@@ -165,14 +165,14 @@
                                        (set
                                          (map
                                            :id
-                                           (q/hallintayksikoiden-urakat-ilman-valaistus-urakoita
+                                           (q/elinvoimakeskusten-urakat-ilman-valaistus-urakoita
                                              db
-                                             {:hallintayksikot (map
-                                                                 :hallintayksikko
-                                                                 (filter
-                                                                   (fn [urakka]
-                                                                     (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user))
-                                                                   oman-organisaation-urakat))})))))
+                                             {:elinvoimakeskusnumerot (map
+                                                                       :elinvoimakeskus_id
+                                                                       (filter
+                                                                         (fn [urakka]
+                                                                           (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma (:id urakka) user))
+                                                                         oman-organisaation-urakat))})))))
 
                                    ;; Jos ei ole oman-urakan-ely oikeutta, otetaan vaan urakat, joihin
                                    ;; käyttäjällä on lukuoikeus

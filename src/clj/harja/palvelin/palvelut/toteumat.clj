@@ -893,23 +893,17 @@
 
                               ;; Hanskataan tässä epämieluisa kulmatapaus: toteuman pvm saattaa muuttua, ja tietokantacachet
                               ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle
-                              (when-not (= (:alkanut t) toteuman-alkuperainen-pvm)
+                              (when (and (not (= (:alkanut t) toteuman-alkuperainen-pvm)) (not (nil? toteuman-alkuperainen-pvm)))
                                 (doseq [sopimus-id urakan-sopimus-idt]
                                   (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
                                                                                           :alkupvm toteuman-alkuperainen-pvm
-                                                                                          :urakkaid urakka-id}))
-                                (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                                                    :alkupvm toteuman-alkuperainen-pvm
-                                                                                                    :loppupvm toteuman-alkuperainen-pvm}))
+                                                                                          :urakkaid urakka-id})))
 
                               ;; Tässä cachejen päivitys uuden pvm:n osalta
                               (doseq [sopimus-id urakan-sopimus-idt]
                                 (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
                                                                                         :alkupvm (:alkanut t)
                                                                                         :urakkaid urakka-id}))
-                              (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                                                  :alkupvm (:alkanut t)
-                                                                                                  :loppupvm (:alkanut t)})
 
                               ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
                               ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä
