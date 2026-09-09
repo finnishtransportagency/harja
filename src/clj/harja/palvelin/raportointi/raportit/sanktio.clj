@@ -489,7 +489,7 @@
                                               muistutusten-maara (count (filterv #(= "muistutus" (:sanktiolaji_koodi %)) (:tunnetut kooste)))
                                               vastuuhenkilon-vaihto-summa (reduce + 0
                                                                             (map #(or (:summa %) 0)
-                                                                              (filterv #(= "vastuuhenkilon-vaihto" (:sanktiotyyppi_koodi %)) sanktiot-tunnistetut-uniikit)))]
+                                                                              (filterv #(= "vastuuhenkilon_vaihto" (:sanktiotyyppi_koodi %)) sanktiot-tunnistetut-uniikit)))]
 
                                           [[{:avain "Sanktiot yhteensä" :arvo sanktiot-yhteensa :fmt :raha}
                                             {:avain "Kirjalliset muistutukset" :arvo (str muistutusten-maara " kpl")

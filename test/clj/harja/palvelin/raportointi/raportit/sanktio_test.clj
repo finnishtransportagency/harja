@@ -31,6 +31,33 @@
     (is (= aikajakso (get-in raportti [1 :aikajakso])))
     (is (= :iso (get-in raportti [1 :otsikon-koko])))))
 
+(deftest yhteenveto-nayttaa-vastuuhenkilon-vaihdon-summan
+  (let [raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  #inst "2025-10-01T00:00:00.000-00:00"
+                  #inst "2026-09-30T00:00:00.000-00:00"
+                  [{:sanktio_id 1
+                    :sanktiolaji_koodi "vaihtosanktio"
+                    :sanktiolaji_nimi "Vastuuhenkilön vaihto"
+                    :sanktiotyyppi_koodi "vastuuhenkilon_vaihto"
+                    :sanktiotyyppi_nimi "Vastuuhenkilön vaihto"
+                    :summa -888M}]
+                  []
+                  []
+                  [{:sanktiolaji_koodi "vaihtosanktio"
+                    :sanktiolaji_nimi "Vastuuhenkilön vaihto"
+                    :sanktiolaji_jarjestys 10
+                    :sanktiotyyppi_koodi "vastuuhenkilon_vaihto"
+                    :sanktiotyyppi_nimi "Vastuuhenkilön vaihto"}]
+                  []
+                  false)
+        yhteenveto (get-in raportti [4 1 2])
+        vastuuhenkilon-vaihto-summa (->> yhteenveto
+                                      (filter #(= "Vastuuhenkilön vaihto" (:avain %)))
+                                      first
+                                      :arvo)]
+    (is (= -888M vastuuhenkilon-vaihto-summa))))
+
 (deftest urakkatasoraportin-excel-yhteenveto-sailyttaa-otsikon
   (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
         loppupvm #inst "2026-09-30T00:00:00.000-00:00"

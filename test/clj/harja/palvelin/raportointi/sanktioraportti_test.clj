@@ -660,6 +660,7 @@
                                                vastaus
                                                "Tunnistamattomat sanktiot"))]
         (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 6465M))
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Vastuuhenkilön vaihto") 2222M))
         (is (= ["Laskutus yli laskutusrajan" 1111M]
                (hae-taulukon-rivi laskutus-taulukko "Laskutus yli laskutusrajan")))
         (is (= ["Vastuuhenkilön vaihto" 2222M]
