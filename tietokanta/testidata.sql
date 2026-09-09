@@ -188,7 +188,9 @@ SELECT paivita_paallystys_ja_paikkausurakoiden_geometriat();
 
 -- Sanktiot
 \i testidata/sanktiot.sql
-\i testidata/sanktioraportti_testidata.sql
+
+-- MHU-urakoiden sanktiot ja bonukset
+\i testidata/sanktiot_bonukset_mhu.sql
 
 -- Tarkastukset
 \i testidata/tarkastukset.sql

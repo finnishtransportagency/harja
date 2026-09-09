@@ -393,7 +393,6 @@ SELECT bpr.id,
       FROM tiedot;
 
     -- Sanktioraportin manuaalidata aktiivisille MHU-urakoille.
-    -- Näitä rivejä ei käytetä automaattitesteissä.
     WITH tiedot AS (
         SELECT u.nimi AS urakan_nimi,
        u.id AS urakka,
