@@ -201,7 +201,7 @@
                                            (seq tavoitehinnan-muutokset)
                                            oikeudet-muokata?
                                            poikkeusvuosi?)]
-    ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset
@@ -255,7 +255,7 @@
                            {:urakkaid (-> @tila/yleiset :urakka :id)})
         positiivinen-arvo-fn (fn [avain]
                                (str (if (> (avain paatos) 0) "+" "") (fmt/euro-opt false (avain paatos))))]
-    ^{:key (str "tavoitehinnan-muutokset-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div#tavhinnan-muutokset.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan muutokset" paatos-tehty? paatos-avain avatut-paatokset

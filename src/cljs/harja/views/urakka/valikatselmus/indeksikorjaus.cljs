@@ -67,7 +67,7 @@
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
 
-    ^{:key (str "kattohinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Hoitovuoden lopun indeksikorjaus" paatos-tehty? paatos-avain avatut-paatokset

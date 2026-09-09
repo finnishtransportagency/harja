@@ -20,7 +20,7 @@
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
-    ^{:key (str "tavoitehinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
@@ -74,7 +74,7 @@
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
-    ^{:key (str "tavoitehinnan-alitus-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan alitus" paatos-tehty? paatos-avain avatut-paatokset
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
@@ -128,7 +128,7 @@
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
         siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
-    ^{:key (str "kattohinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Kattohinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
