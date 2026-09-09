@@ -34,13 +34,11 @@
     [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
 
      [:div.row
-      [:div.col-md-6
+      [:div.col-md-6 {:style {:padding-left "0"}}
        [:h2.yhteenveto "Yhteenveto"]]
-      [:div.col-md-6 {:style {:display "flex" :justify-content "flex-end"}}
-       [:form {:style {:margin-left "auto"
-                       :margin-right "16px"}
-               :target "_blank" :method "POST"
-               :action (k/pdf-url :valikatselmusraportti)}
+      [:div.col-md-6 {:style {:padding-right "0"}}
+       [:form.pull-right {:target "_blank" :method "POST"
+                          :action (k/pdf-url :valikatselmusraportti)}
         [:input {:type "hidden" :name "parametrit"
                  :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
                                          :hoitovuosi hoitokauden-alkuvuosi})}]
