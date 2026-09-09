@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.kulut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
-  (:require [clojure.string :as str]
+  (:require [clj-time.core :as t]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
@@ -18,6 +19,7 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.big :as big]
             [harja.domain.kulut :as kulut]
+            [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.palvelut.urakat :as urakat]
@@ -343,10 +345,28 @@
     ;; Muutetaan negaatioksi, koska kysymyksen asettelu
     (not valikatselmus-pidetty?)))
 
-(defn- validoi-kulu [db {:keys [erapaiva koontilaskun-kuukausi id kohdistukset]} urakka-id]
+(defn- kulun-muokkausoikeus-yli-2kk-vanhaan-kuluun?
+  [kayttaja urakka-id]
+  (let [sallitut-roolit #{"ELY_Urakanvalvoja"
+                          "ELY_Paakayttaja"
+                          "Tilaajan_Urakanvalvoja"}]
+    (or (roolit/roolissa? kayttaja sallitut-roolit)
+        (roolit/rooli-urakassa? kayttaja sallitut-roolit urakka-id))))
+
+(defn- tarkista-myohainen-kulun-muokkaus
+  [user urakka-id vanha-erapaiva]
+  (when (and vanha-erapaiva
+             (pvm/jalkeen? (pvm/joda-timeksi (pvm/nyt))
+               (t/plus (pvm/joda-timeksi vanha-erapaiva) (t/months 2)))
+             (not (kulun-muokkausoikeus-yli-2kk-vanhaan-kuluun? user urakka-id)))
+    (throw (IllegalArgumentException.
+             "Kulun muokkaus yli kaksi kuukautta eräpäivän jälkeen vaatii tilaajan käyttäjäroolin."))))
+
+(defn- validoi-kulu [db user {:keys [erapaiva koontilaskun-kuukausi id kohdistukset]} urakka-id]
   (let [;; Kaikki kutsuttavat validoinnit throwaavat virheen, jos eivät mene läpi
         _ (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
         vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
+        _ (tarkista-myohainen-kulun-muokkaus user urakka-id vanha-erapaiva)
         saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
         _ (when (not saako-tallentaa)
             (throw (IllegalArgumentException.
@@ -380,7 +400,7 @@
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
-  (validoi-kulu db tiedot urakka-id)
+  (validoi-kulu db user tiedot urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kulu {:erapaiva (konv/sql-date erapaiva)
                 :kokonaissumma kokonaissumma
