@@ -350,15 +350,17 @@
   (let [sallitut-roolit #{"ELY_Urakanvalvoja"
                           "ELY_Paakayttaja"
                           "Tilaajan_Urakanvalvoja"}]
-    (or (roolit/roolissa? kayttaja sallitut-roolit)
-        (roolit/rooli-urakassa? kayttaja sallitut-roolit urakka-id))))
+    (or
+      (roolit/jvh? kayttaja)
+      (roolit/roolissa? kayttaja sallitut-roolit)
+      (roolit/rooli-urakassa? kayttaja sallitut-roolit urakka-id))))
 
 (defn- tarkista-myohainen-kulun-muokkaus
   [user urakka-id vanha-erapaiva]
   (when (and vanha-erapaiva
-             (pvm/jalkeen? (pvm/joda-timeksi (pvm/nyt))
-               (t/plus (pvm/joda-timeksi vanha-erapaiva) (t/months 2)))
-             (not (kulun-muokkausoikeus-yli-2kk-vanhaan-kuluun? user urakka-id)))
+          (pvm/jalkeen? (pvm/joda-timeksi (pvm/nyt))
+            (t/plus (pvm/joda-timeksi vanha-erapaiva) (t/months 2)))
+          (not (kulun-muokkausoikeus-yli-2kk-vanhaan-kuluun? user urakka-id)))
     (throw (IllegalArgumentException.
              "Kulun muokkaus yli kaksi kuukautta eräpäivän jälkeen vaatii tilaajan käyttäjäroolin."))))
 
