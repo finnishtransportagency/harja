@@ -211,9 +211,9 @@
                        :sanktiotyyppi_nimi "Talvihoito, muut tiet"}]
         sanktio-data-map {["muistutus" "paatie"] 0}
         taulukko (second (#'sanktio/koosta-sanktio-taulukot
-                sanktiolajit
-                sanktio-data-map
-                sanktiot))
+                          sanktiolajit
+                          sanktio-data-map
+                          sanktiot))
         rivit (nth taulukko 3)]
     (is (= "Kirjalliset muistutukset" (get-in taulukko [2 0 :otsikko])))
     (is (= "Määrä (kpl)" (get-in taulukko [2 1 :otsikko])))
@@ -273,6 +273,102 @@
     (is (= 1 (otsikon-esiintymat "Bonukset")))
     (is (= 1 (otsikon-esiintymat "Arvonvähennykset")))))
 
+(deftest lupausbonus-esitetaan-ilman-toteutunutta-bonusta
+  (let [raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  []
+                  []
+                  []
+                  []
+                  []
+                  false)
+        bonus-taulukko (some #(when (and (vector? %)
+                                      (= :taulukko (first %))
+                                      (= "Bonukset" (get-in % [1 :otsikko])))
+                                %)
+                         raportti)
+        lupausbonus-rivi (some #(when (= "Lupausbonus" (first (:rivi %))) %)
+                           (nth bonus-taulukko 3))]
+    (is (= ["Lupausbonus" 0] (:rivi lupausbonus-rivi)))
+    (is (:himmennetty? lupausbonus-rivi))))
+
+(deftest toteutunut-lupausbonus-esitetaan-summineen
+  (let [raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  []
+                  [{:bonuslaji_koodi "lupausbonus"
+                    :bonuslaji_nimi "Lupausbonus"
+                    :summa 125}]
+                  []
+                  []
+                  []
+                  false)
+        bonus-taulukko (some #(when (and (vector? %)
+                                      (= :taulukko (first %))
+                                      (= "Bonukset" (get-in % [1 :otsikko])))
+                                %)
+                         raportti)
+        lupausbonus-rivi (some #(when (= "Lupausbonus" (first (:rivi %))) %)
+                           (nth bonus-taulukko 3))]
+    (is (= ["Lupausbonus" 125] (:rivi lupausbonus-rivi)))
+    (is (not (:himmennetty? lupausbonus-rivi)))))
+
+(deftest lupaussanktio-esitetaan-ilman-toteutunutta-sanktiota
+  (let [raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  []
+                  []
+                  []
+                  []
+                  []
+                  false)
+        sanktiot-osio (some #(when (= [:otsikko "Sanktiot"] %) %)
+                        raportti)
+        lupaussanktiot-osio (some #(when (= [:otsikko "Lupaussanktiot"] %) %)
+                              raportti)
+        lupaussanktio-taulukko (some #(when (and (vector? %)
+                                              (= :taulukko (first %))
+                                              (= "Muut sanktiot" (get-in % [1 :otsikko])))
+                                        %)
+                                 raportti)
+        lupaussanktio-rivi (some #(when (= "Lupaussanktio" (first (:rivi %))) %)
+                             (when lupaussanktio-taulukko
+                               (nth lupaussanktio-taulukko 3)))]
+    (is sanktiot-osio)
+    (is (nil? lupaussanktiot-osio))
+    (is lupaussanktio-taulukko)
+    (is (= ["Lupaussanktio" 0] (:rivi lupaussanktio-rivi)))
+    (is (:himmennetty? lupaussanktio-rivi))))
+
+(deftest toteutunut-lupaussanktio-esitetaan-muut-sanktiot-taulukossa
+  (let [raportti (#'sanktio/koosta-urakkataso-runko
+                  "Urakka"
+                  (java.util.Date.)
+                  (java.util.Date.)
+                  [{:sanktiolaji_koodi "lupaussanktio"
+                    :sanktiotyyppi_koodi 0
+                    :summa 125}]
+                  []
+                  []
+                  []
+                  []
+                  false)
+        lupaussanktio-taulukko (some #(when (and (vector? %)
+                                              (= :taulukko (first %))
+                                              (= "Muut sanktiot" (get-in % [1 :otsikko])))
+                                        %)
+                                 raportti)
+        lupaussanktio-rivi (some #(when (= "Lupaussanktio" (first (:rivi %))) %)
+                             (nth lupaussanktio-taulukko 3))]
+    (is (= ["Lupaussanktio" 125] (:rivi lupaussanktio-rivi)))
+    (is (not (:himmennetty? lupaussanktio-rivi)))))
+
 (deftest tyhja-arvonvahennystaulukko-sailyttaa-kategorian
   (let [taulukko (#'sanktio/koosta-arvonvahennys-taulukko [])]
     (is (= ["Arvonvähennys" 0]
@@ -322,11 +418,11 @@
                   [sanktio]
                   []
                   false)
-          taulukko (some #(when (and (vector? %)
-                                  (= :taulukko (first %))
-                                  (= "Sakko" (get-in % [2 0 :otsikko])))
-                            %)
-                     raportti)
+        taulukko (some #(when (and (vector? %)
+                                (= :taulukko (first %))
+                                (= "Sakko" (get-in % [2 0 :otsikko])))
+                          %)
+                   raportti)
         rivit (nth taulukko 3)]
     (is (= ["Sakko" 100] (:rivi (first rivit))))
     (is (= ["Yhteensä" 100] (:rivi (last rivit))))))
@@ -391,11 +487,11 @@
                             %)
                      (tree-seq coll? seq raportti))
         arvonvahennykset (some #(when (= "Arvovähennykset" (:avain %)) %)
-                   (nth yhteenveto 2))]
-      (is (= 100 (:arvo arvonvahennykset)))
-      (is (= false (get-in yhteenveto [1 :nayta-hr?])))
-      (is (nil? (some #(when (= "Yhteensä" (:avain %)) %)
-            (nth yhteenveto 2))))))
+                           (nth yhteenveto 2))]
+    (is (= 100 (:arvo arvonvahennykset)))
+    (is (= false (get-in yhteenveto [1 :nayta-hr?])))
+    (is (nil? (some #(when (= "Yhteensä" (:avain %)) %)
+                (nth yhteenveto 2))))))
 
 
 (deftest urakkaerittelyn-arvonvahennys-lasketaan-yhteen-vain-kerran

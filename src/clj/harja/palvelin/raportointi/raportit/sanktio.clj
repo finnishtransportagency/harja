@@ -80,19 +80,22 @@
   (let [ensimmainen (first lajit)
         laji-koodi (:sanktiolaji_koodi ensimmainen)
         laji-nimi (:sanktiolaji_nimi ensimmainen)
+        taulukon-tiedot (cond-> {:sheet-nimi (or laji-koodi "sanktio")
+                                 :viimeinen-rivi-yhteenveto? true
+                                 :tyhja "Ei tietoja."}
+                          (= "lupaussanktio" laji-koodi)
+                          (assoc :otsikko "Muut sanktiot"))
         tyypit lajit
         muistutus? (= "muistutus" laji-koodi)
         maara (fn [tyyppi-koodi]
                 (count (filter #(and (= laji-koodi (:sanktiolaji_koodi %))
-                                     (= tyyppi-koodi (:sanktiotyyppi_koodi %)))
-                               sanktiot)))
+                                  (= tyyppi-koodi (:sanktiotyyppi_koodi %)))
+                         sanktiot)))
         ;; Laske lajin kokonaissumma
         laji-summa (reduce + 0
                      (map #(or (get sanktio-data-map [laji-koodi (:sanktiotyyppi_koodi %)]) 0)
                        tyypit))]
-    [:taulukko {:sheet-nimi (or laji-koodi "sanktio")
-                :viimeinen-rivi-yhteenveto? true
-                :tyhja "Ei tietoja."}
+    [:taulukko taulukon-tiedot
      (if muistutus?
        [{:leveys 12 :otsikko laji-nimi}
         {:leveys 15 :otsikko "Määrä (kpl)" :fmt :numero}]
@@ -165,15 +168,12 @@
   "Ryhmittelee lajit tietokannan mukaisesti, muodostaa erillisen taulukon kutakin lajia vasten.
   Arvonalennukset (arvonvahennyssanktio) erotetaan omaksi taulukokseen.
 
-   Lupaussanktio erotetaan omaksi 'Lupaussanktiot'-osiokseen, muut lajit yhteen 'Sanktiot'-osioon."
+   Lupaussanktio esitetään Sanktiot-osion Muut sanktiot -taulukossa."
   [sanktiolajit sanktio-data-map & [sanktiot]]
-  (let [;; Erotellaan lupaussanktio muista lajeista
-        {lupaussanktio-lajit true
-         muut-lajit false} (group-by #(= "lupaussanktio" (:sanktiolaji_koodi %))
-                             (remove #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiolajit))
+  (let [lajit (remove #(= "arvonvahennyssanktio" (:sanktiolaji_koodi %)) sanktiolajit)
 
         ;; Ryhmitellään muut lajit koodin mukaan
-        ryhmitelty (group-by :sanktiolaji_koodi muut-lajit)
+        ryhmitelty (group-by :sanktiolaji_koodi lajit)
         ;; Järjestetään jokainen ryhmä jarjestys-kentän mukaan
         jarjestetty (mapv (fn [[_ lajit]]
                             (sort-by :sanktiolaji_jarjestys lajit))
@@ -184,19 +184,15 @@
         ;; Muodosta taulukot muille lajeille
         muut-taulukot (mapv #(muodosta-sanktio-taulukko % sanktio-data-map sanktiot) jarjestetty)
         muut-taulukot (if (seq muut-taulukot)
-                        (update muut-taulukot 0 lisaa-excel-osion-otsikko "Sanktiot")
-                        muut-taulukot)
-        lupaussanktio-taulukko (when (seq lupaussanktio-lajit)
-               (-> (muodosta-sanktio-taulukko lupaussanktio-lajit sanktio-data-map sanktiot)
-                                   (lisaa-excel-osion-otsikko "Lupaussanktiot")))]
+                        (update muut-taulukot 0
+                          #(let [taulukko (lisaa-excel-osion-otsikko % "Sanktiot")]
+                             (assoc taulukko 1 (assoc (second taulukko) :nimi "Sanktiot"))))
+                        muut-taulukot)]
 
-    ;; Yhdistetään: lupaussanktio-osio (jos on) + muut sanktiot
+    ;; Yhdistetään kaikki sanktioiden taulukot saman Sanktiot-osion alle.
     ;; Palautetaan suorat alkiot, jotta raportin kaikki esitysmuodot käsittelevät
     ;; osiot samalla tavalla.
     (concat
-      (when (seq lupaussanktio-lajit)
-        ;; Lupaussanktiolle oma osio
-        [[:otsikko "Lupaussanktiot"] lupaussanktio-taulukko])
       ;; Sanktiot-osio näytetään myös silloin, kun toteutuneita arvoja ei ole.
       [[:otsikko "Sanktiot"]]
       muut-taulukot)))
@@ -323,6 +319,20 @@
         arvonvahennykset (yksiloi-sanktiot arvonvahennykset)
         tunnistamattomat (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot)
         tunnetut (filterv #(some? (:sanktiolaji_koodi %)) sanktiot)
+        sanktiolajit (if (some #(= "lupaussanktio" (:sanktiolaji_koodi %)) sanktiolajit)
+                       sanktiolajit
+                       (conj (vec sanktiolajit)
+                         {:sanktiolaji_koodi "lupaussanktio"
+                          :sanktiolaji_nimi "Lupaussanktio"
+                          :sanktiolaji_jarjestys 999
+                          :sanktiotyyppi_koodi 0
+                          :sanktiotyyppi_nimi "Ei sanktiotyyppiä"}))
+        bonuslajit (if (some #(= "lupausbonus" (:bonuslaji_koodi %)) bonuslajit)
+                     bonuslajit
+                     (conj (vec bonuslajit)
+                       {:bonuslaji_koodi "lupausbonus"
+                        :bonuslaji_nimi "Lupausbonus"
+                        :bonuslaji_jarjestys 999}))
         sanktio-data-map (reduce (fn [summa-map sanktio]
                                    (update summa-map
                                      [(:sanktiolaji_koodi sanktio)

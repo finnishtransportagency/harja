@@ -430,8 +430,8 @@
                                         (count (butlast (apurit/taulukon-rivit taulukko)))))]
     (is (= 3 (taulukon-rivien-maara "POP MHU Kajaani 2025-2030")))
     (is (= 5 (taulukon-rivien-maara "Sodankylän MHU 2026-2031")))
-    (is (= 1 (bonus-taulukon-rivien-maara "POP MHU Kajaani 2025-2030")))
-    (is (= 4 (bonus-taulukon-rivien-maara "Sodankylän MHU 2026-2031")))))
+    (is (= 2 (bonus-taulukon-rivien-maara "POP MHU Kajaani 2025-2030")))
+    (is (= 5 (bonus-taulukon-rivien-maara "Sodankylän MHU 2026-2031")))))
 
 (deftest raportin-suoritus-yllapidolle-rajautuu-raporttijaksoon
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -537,10 +537,12 @@
     (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Sanktiot yhteensä") 1000M))
     (is (= ["Talvihoito, päätiet" 1000M]
            (hae-taulukon-rivi sanktio-taulukko "Talvihoito, päätiet")))
-    (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Bonukset yhteensä") 1500M))
+        (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Bonukset yhteensä") 2000M))
     (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" 1500M]
            (hae-taulukon-rivi bonus-taulukko
              "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta")))
+        (is (= ["Lupausbonus" 500M]
+          (hae-taulukon-rivi bonus-taulukko "Lupausbonus")))
     (is (=marginaalissa? (apurit/hae-yhteenveto-arvo vastaus "Arvovähennykset") 2500M))
     (is (= ["Arvonvähennys" 2500M]
            (hae-taulukon-rivi arvonvahennys-taulukko "Arvonvähennys")))))
@@ -692,6 +694,52 @@
     (is (= ["Bonus liikennevahinkojen aiheuttajien selvittämisestä" 1400M]
            (hae-taulukon-rivi bonus-taulukko
              "Bonus liikennevahinkojen aiheuttajien selvittämisestä")))))
+
+(deftest raportin-lupausbonus-haetaan-ilman-bonusprofiilin-rivia
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        sopimus-id (ffirst (q "SELECT id FROM sopimus WHERE urakka = " urakka-id " AND paasopimus IS NULL"))
+        toimenpideinstanssi-id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1"))
+        bonus-id (i (str "INSERT INTO erilliskustannus "
+                      "(tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, luotu, luoja) "
+                      "VALUES ('lupausbonus'::erilliskustannustyyppi, " sopimus-id ", " urakka-id ", "
+                      toimenpideinstanssi-id ", '2026-10-15', '2026-10-15', 125, CURRENT_TIMESTAMP, "
+                      "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')) RETURNING id"))
+        parametrit {:urakka urakka-id
+                    :elinvoimakeskus nil
+                    :urakkatyyppi "hoito"
+                    :hoitovuosi nil
+                    :alku (c/to-date (t/local-date 2026 10 1))
+                    :loppu (c/to-date (t/local-date 2027 9 30))}]
+    (try
+      (is (some #(and (= "lupausbonus" (:bonuslaji_koodi %))
+                   (= 125M (:summa %)))
+            (sanktio/hae-urakkataso-bonukset (:db jarjestelma) parametrit)))
+      (finally
+        (u "DELETE FROM erilliskustannus WHERE id = " bonus-id)))))
+
+(deftest raportin-lupaussanktio-haetaan-ilman-sanktioprofiilin-rivia
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        toimenpideinstanssi-id (ffirst (q "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1"))
+        testi-indeksi "raportin-lupaussanktio-haetaan-ilman-sanktioprofiilin-rivia"
+        sanktio-id (i (str "INSERT INTO sanktio "
+                        "(sakkoryhma, maara, perintapvm, indeksi, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
+                        "VALUES ('lupaussanktio'::SANKTIOLAJI, 125, '2026-10-15', '" testi-indeksi "', "
+                        toimenpideinstanssi-id ", (SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
+                        "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')) RETURNING id"))
+        parametrit {:urakka urakka-id
+                    :elinvoimakeskus nil
+                    :urakkatyyppi "hoito"
+                    :hoitovuosi nil
+                    :alku (c/to-date (t/local-date 2026 10 1))
+                    :loppu (c/to-date (t/local-date 2027 9 30))}]
+    (try
+      (let [rivi (some #(when (= testi-indeksi (:indeksi %)) %)
+                   (sanktio/hae-urakkataso-sanktiot (:db jarjestelma) parametrit))]
+        (is (= "lupaussanktio" (:sanktiolaji_koodi rivi)))
+        (is (= "Lupaussanktio" (:sanktiolaji_nimi rivi)))
+        (is (= 125M (:summa rivi))))
+      (finally
+        (u "DELETE FROM sanktio WHERE id = " sanktio-id)))))
 
 (deftest koko-maan-lajikyselyt-kayttavat-vain-raporttijakson-urakoita
   (let [parametrit {:urakka nil

@@ -200,10 +200,12 @@ SELECT
   s.sakkoryhma,
   CASE
     WHEN s.sakkoryhma = 'arvonvahennyssanktio'::SANKTIOLAJI THEN 'arvonvahennyssanktio'
+    WHEN s.sakkoryhma = 'lupaussanktio'::SANKTIOLAJI THEN 'lupaussanktio'
     WHEN spr.id IS NOT NULL THEN sl.koodi
   END AS sanktiolaji_koodi,
   CASE
     WHEN s.sakkoryhma = 'arvonvahennyssanktio'::SANKTIOLAJI THEN 'Arvonvähennys'
+    WHEN s.sakkoryhma = 'lupaussanktio'::SANKTIOLAJI THEN 'Lupaussanktio'
     WHEN spr.id IS NOT NULL THEN COALESCE(splet.nimi, sl.nimi)
   END AS sanktiolaji_nimi,
   st.id AS sanktiotyyppi_id,
@@ -313,24 +315,25 @@ FROM erilliskustannus ek
     AND bplet.bonus_laji_id = bl.id
 WHERE ek.poistettu IS NOT TRUE
   AND ek.laskutuskuukausi BETWEEN :alku AND :loppu
-  AND EXISTS (
-        SELECT 1
-          FROM bonus_profiili_rivi bpr
-         WHERE bpr.bonus_profiili_id = bp.id
-           AND bpr.bonus_laji_id = bl.id
-           AND bpr.aktiivinen IS TRUE
-           AND (bpr.toimenpiderajauksen_tyyppi = 'kaikki'
-             OR (bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
-               AND bpr.toimenpide_t2_koodi = t2.koodi))
-           AND (NOT EXISTS (
-                  SELECT 1
-                    FROM bonus_profiili_rivi_urakka bpru
-                   WHERE bpru.bonus_profiili_rivi_id = bpr.id)
-             OR EXISTS (
-                  SELECT 1
-                    FROM bonus_profiili_rivi_urakka bpru
-                   WHERE bpru.bonus_profiili_rivi_id = bpr.id
-                     AND bpru.urakka_id = u.id)))
+  AND (bl.koodi = 'lupausbonus'
+    OR EXISTS (
+          SELECT 1
+            FROM bonus_profiili_rivi bpr
+           WHERE bpr.bonus_profiili_id = bp.id
+             AND bpr.bonus_laji_id = bl.id
+             AND bpr.aktiivinen IS TRUE
+             AND (bpr.toimenpiderajauksen_tyyppi = 'kaikki'
+               OR (bpr.toimenpiderajauksen_tyyppi = 't2-koodi'
+                 AND bpr.toimenpide_t2_koodi = t2.koodi))
+             AND (NOT EXISTS (
+                    SELECT 1
+                      FROM bonus_profiili_rivi_urakka bpru
+                     WHERE bpru.bonus_profiili_rivi_id = bpr.id)
+               OR EXISTS (
+                    SELECT 1
+                      FROM bonus_profiili_rivi_urakka bpru
+                     WHERE bpru.bonus_profiili_rivi_id = bpr.id
+                       AND bpru.urakka_id = u.id))))
 ;
 
 -- name: hae-urakkataso-sanktiolajit

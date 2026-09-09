@@ -118,6 +118,76 @@ SELECT 'asiakastyytyvaisyysbonus',
         AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
  WHERE u.nimi = 'POP MHU Kajaani 2025-2030';
 
+INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi,
+                              pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
+                              lisatieto, luotu, luoja)
+SELECT 'lupausbonus',
+       s.id,
+       u.id,
+       tpi.id,
+       DATE '2026-01-15',
+       DATE '2026-01-15',
+       500,
+       NULL,
+       'Sanktioraportin Kajaanin pysyvä Lupausbonus',
+       CURRENT_TIMESTAMP,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')
+  FROM urakka u
+      JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
+       JOIN toimenpideinstanssi tpi
+         ON tpi.urakka = u.id
+        AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+ WHERE u.nimi = 'POP MHU Kajaani 2025-2030';
+
+-- Kittilän MHU 2025-2030 -urakalle positiivinen Lupaussanktio.
+WITH tiedot AS (
+    SELECT u.id AS urakka,
+           tpi.id AS toimenpideinstanssi,
+           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
+      FROM urakka u
+           JOIN toimenpideinstanssi tpi
+             ON tpi.urakka = u.id
+            AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+     WHERE u.nimi = 'Kittilän MHU 2025-2030'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Sanktioraportin testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-01-15',
+             DATE '2026-01-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Sanktioraportin Kittilän tammikuun Lupaussanktio'
+           FROM tiedot
+            RETURNING id
+)
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
+                     toimenpideinstanssi, tyyppi, suorasanktio, luoja)
+SELECT 'lupaussanktio'::SANKTIOLAJI,
+       750,
+       DATE '2026-01-15',
+       DATE '2026-01-15',
+       NULL,
+       uusi_laatupoikkeama.id,
+       toimenpideinstanssi,
+       (SELECT id FROM sanktiotyyppi WHERE koodi = 0),
+       TRUE,
+       kayttaja
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;
+
 WITH tiedot AS (
     SELECT u.id AS urakka,
            s.id AS sopimus,
