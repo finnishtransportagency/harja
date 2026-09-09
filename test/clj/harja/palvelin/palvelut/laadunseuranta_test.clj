@@ -30,10 +30,10 @@
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+            [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
-            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
-            [harja.kyselyt.sanktiot :as sanktiot-q]
             [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID)
            (clojure.lang ExceptionInfo)
@@ -219,7 +219,7 @@
 (defn palvelukutsu-poista-sanktio [kayttaja sanktio-id urakka-id]
   (kutsu-http-palvelua
     :poista-sanktio kayttaja {:id sanktio-id
-                                   :urakka-id urakka-id}))
+                              :urakka-id urakka-id}))
 
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
@@ -1143,6 +1143,17 @@
         ;; Legacy-odotus vastaa vanhaa toimintaa, jossa arvonvähennyssanktio on aina mukana hoidon urakoilla:
         ;; validoinnit käytössä (true) ja kuluvan hoitokauden alkuvuosi ennen vuotta 2026.
         kuluvan-hoitokauden-alkuvuosi 2025
+        lajien-jarjestykset (into {}
+                              (map (fn [{:keys [koodi jarjestys]}]
+                                     [(keyword koodi) jarjestys]))
+                              (jdbc/query db ["SELECT koodi, jarjestys FROM sanktio_laji"]))
+        sanktiotyypit (fn [laji]
+                        (if (and (= :C laji)
+                              (= "teiden-hoito" (:tyyppi urakka))
+                              (<= 2019 (pvm/vuosi (:alkupvm urakka)) 2025))
+                          [8 9 10 12 11]
+                          (mapv :koodi
+                            (sanktio-domain/sanktiolaji->sanktiotyypit laji kaikki-sanktiotyypit (:alkupvm urakka)))))
         lajit (case soveltuvuuskonteksti
                 :laatupoikkeama (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
                                                                               :alkupvm (:alkupvm urakka)})
@@ -1153,10 +1164,9 @@
             {:laji laji
              :rivin-tyyppi (legacy-rivin-tyyppi laji)
              :jarjestys jarjestys
-             :sanktiotyypit (mapv (fn [{:keys [koodi]}]
-                                    {:koodi koodi})
-                              (sanktio-domain/sanktiolaji->sanktiotyypit laji kaikki-sanktiotyypit (:alkupvm urakka)))})
-      (iterate inc 1)
+             :sanktiotyypit (mapv (fn [koodi] {:koodi koodi})
+                              (sanktiotyypit laji))})
+      (map lajien-jarjestykset lajit)
       lajit)))
 
 (defn- supista-sanktio-konfiguraatio [vastaus]
@@ -1513,13 +1523,13 @@
    toimenpideen t2-koodi on '23150'."
   [urakka-id]
   (ffirst (q (str "SELECT tpi.id\n"
-                  "  FROM toimenpideinstanssi tpi\n"
-                  "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
-                  "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
-                  " WHERE tpi.urakka = " urakka-id "\n"
-                  "   AND t2.koodi = '23150'\n"
-                  " ORDER BY tpi.id\n"
-                  " LIMIT 1"))))
+               "  FROM toimenpideinstanssi tpi\n"
+               "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+               "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+               " WHERE tpi.urakka = " urakka-id "\n"
+               "   AND t2.koodi = '23150'\n"
+               " ORDER BY tpi.id\n"
+               " LIMIT 1"))))
 
 (deftest hae-urakan-bonus-konfiguraatio-rajapinta-palauttaa-seedatun-mhu-profiilin
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -1855,10 +1865,10 @@
                  :ohjeteksti nil
                  :jarjestys 2}
                 {:maaritystapa :manuaalinen
-                  :summa-euroina nil
+                 :summa-euroina nil
                  :ohjeteksti "tai sopimuksen mukaan"
                  :jarjestys 3}]
-              (:summamaaritykset rivi))
+               (:summamaaritykset rivi))
           "Admin-palautuksen pitää näyttää profiilirivin summamääritykset myös ohjetekstin kanssa")
         (is (= [6000M 12000M] (:lukitut-summat rivi))
           "Admin-palautuksen pitää näyttää profiiliriviin kytketyt lukitut summat"))
@@ -1937,10 +1947,10 @@
                  :ohjeteksti nil
                  :jarjestys 2}
                 {:maaritystapa :manuaalinen
-                  :summa-euroina nil
+                 :summa-euroina nil
                  :ohjeteksti "tai sopimuksen mukaan"
                  :jarjestys 3}]
-              (:summamaaritykset sanktiotyyppi))
+               (:summamaaritykset sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa summamääritykset myös sanktiotyypin yhteydessä")
         (is (= [6000M 12000M] (:lukitut-summat sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiiliriviin sidotut lukitut summat sanktiotyypin yhteydessä"))
@@ -2122,11 +2132,19 @@
               (fn [lajit]
                 (let [lajit-ilman-testikeskiarvoa
                       (->> lajit
-                           (remove #(= :testikeskiarvo-sanktio (:laji %)))
-                           vec)]
-                  (conj lajit-ilman-testikeskiarvoa
-                    {:laji :laskutus_yli_laskutusrajan
-                     :sanktiotyyppi-koodit [0]})))))]
+                        (remove #(= :testikeskiarvo-sanktio (:laji %)))
+                        vec)
+                      [ennen-suolia suolat] (split-with #(not (contains? #{:pohjavesisuolan_ylitys
+                                                                           :talvisuolan_ylitys}
+                                                                (:laji %)))
+                                              (remove #(= :arvonvahennyssanktio (:laji %))
+                                                lajit-ilman-testikeskiarvoa))
+                      arvonvahennys (filter #(= :arvonvahennyssanktio (:laji %)) lajit-ilman-testikeskiarvoa)]
+                  (vec (concat ennen-suolia
+                         [{:laji :laskutus_yli_laskutusrajan
+                           :sanktiotyyppi-koodit [0]}]
+                         suolat
+                         arvonvahennys))))))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
@@ -2144,6 +2162,7 @@
           odotettu-mhu25-yhteenveto (muodosta-odotettu-mhu25-yhteenveto mhu21-24-yhteenveto)
           mhu25-urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
           mhu25-laatupoikkeama-konteksti (first (filter #(= :laatupoikkeama (:soveltuvuuskonteksti %)) (:sisalto mhu25-vastaus)))
+          mhu25-c-rivit (first (filter #(= :C (:laji %)) (:lajit mhu25-urakka-konteksti)))
           laskutus-laji (first (filter #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-urakka-konteksti)))]
       (is mhu21-24-profiili-id "Vertailun pohjana käytettävän MHU21-24-profiilin pitää olla olemassa")
       (is mhu25-profiili-id "Seedatyn MHU2025-profiilin pitää olla olemassa admin-testausta varten")
@@ -2151,10 +2170,35 @@
         "MHU25-profiilin koko admin-palautuksen pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
         "MHU25-profiilin laskutusrajalajin pitää käyttää koodi-0-sanktiotyyppiä")
+      (is (= [8 9 10 12 11]
+             (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit mhu25-c-rivit)))
+        "MHU19-25 C-ryhmän sanktiot pitää näyttää määrätyssä järjestyksessä")
       (is (not-any? #(= :testikeskiarvo-sanktio (:laji %)) (:lajit mhu25-urakka-konteksti))
         "MHU25-profiilin urakka-kontekstissa ei pidä olla testikeskiarvo-sanktiota")
       (is (not-any? #(= :laskutus_yli_laskutusrajan (:laji %)) (:lajit mhu25-laatupoikkeama-konteksti))
         "MHU25-profiilin laatupoikkeama-kontekstissa ei pidä olla laskutusrajalajia"))))
+
+(deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-mhu2026-lajit-speksin-mukaisessa-jarjestyksessa
+  (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
+        vastaus (when profiili-id
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
+                    (:db jarjestelma)
+                    +kayttaja-jvh+
+                    {:sanktio-profiili-id profiili-id}))
+        urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto vastaus)))]
+    (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa järjestystestausta varten")
+    (is (= [:muistutus :A :B :C
+            :tyon_tekematta_jattaminen
+            :asiakirjamerkintojen_paikkansa_pitamattomyys
+            :muu_sopimuksen_vastainen_toiminta
+            :vastuuhenkilon_vaihto
+            :vastuuhenkilon_tenttipistemaara_alentuminen
+            :laskutus_yli_laskutusrajan
+            :laskutus_ilman_laskutuskelpoisuutta
+            :pohjavesisuolan_ylitys
+            :talvisuolan_kokonaiskayton_ylitys]
+           (mapv :laji (:lajit urakka-konteksti)))
+      "MHU2026-lajien pitää ryhmitellä C-, vastuuhenkilö-, laskutus- ja suolalajit oikein")))
 
 (deftest vaadi-talvisuolan-ylitys-ehto
   (let [urakan-tiedot {:loppupvm (pvm/->pvm "30.09.2026")}]
@@ -2232,9 +2276,9 @@
       (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
                          +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)
             sanktiot-ja-bonukset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
-                                                                                  :alku hk-alkupvm
-                                                                                  :loppu hk-loppupvm})
+                                   :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                    :alku hk-alkupvm
+                                                                                    :loppu hk-loppupvm})
             lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
         (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
         (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))
