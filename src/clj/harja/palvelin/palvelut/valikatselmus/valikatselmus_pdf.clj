@@ -32,7 +32,7 @@
                           :text-align "right"}
                    lihavoitu? (assoc :font-weight "bold")) (str arvo)]]]))
 
-(defn- osio [otsikko rivit & lisasisalto]
+(defn osio [otsikko rivit & lisasisalto]
   (into
     [:fo:block (merge reunat {:margin-top "2.75mm"
                               :padding-top "2.85mm"
@@ -46,7 +46,7 @@
       [:fo:table-body (map rivi rivit)]]]
     (remove nil? lisasisalto)))
 
-(defn- varillinen-osio
+(defn varillinen-osio
   "Tavoitehinnan ylitykset/alitukset ja kattohinnan ylitys näytetään värillisessä laatikossa."
   [vari rivit]
   (let [borderin-vari (case vari

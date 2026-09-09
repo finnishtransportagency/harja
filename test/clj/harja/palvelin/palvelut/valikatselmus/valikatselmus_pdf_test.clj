@@ -1,6 +1,32 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmus-pdf-test
   (:require [clojure.test :refer :all]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
+            [harja.testi :refer :all]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
+
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.palvelut.valikatselmus.valikatselmus-pdf :as valikatselmus-pdf]))
+
+
+(defn http-fixture [testit]
+  (alter-var-root #'jarjestelma
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :pdf-vienti (component/using
+                        (pdf-vienti/luo-pdf-vienti)
+                        [:http-palvelin])
+          :valikatselmukset (component/using
+                              (valikatselmus-palvelu/->Valikatselmukset)
+                              [:http-palvelin :db :pdf-vienti])))))
+  (testit)
+  (alter-var-root #'jarjestelma component/stop))
+
+(use-fixtures :once http-fixture)
 
 (def perusdata
   {:hoitokauden-alkuvuosi 2026
@@ -29,7 +55,9 @@
                            {:sakkoryhma "A" :maara -8M :indeksikorjaus -2M}]}})
 
 (deftest yhteenveto-vastaa-ui-osioita
-  (let [rivit (valikatselmus-pdf/yhteenveto-rivit perusdata)
+  (let [urakka-id (hae-urakan-id-nimella "Raahen MHU 2023-2028")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        rivit (valikatselmus-pdf/yhteenveto-rivit perusdata urakan-tiedot)
         alitusrivit (:tavoitehinnan-alitus rivit)
         sanktiot (:sanktiot rivit)]
     (is (contains? rivit :bonukset))
@@ -48,13 +76,16 @@
     (is (= "25,00" (second (first (:hoidonjohtopalkkio rivit)))))))
 
 (deftest varillinen-osio-on-kustannusosion-sisalla
-  (let [rivit (valikatselmus-pdf/yhteenveto-rivit perusdata)
-        osio ((ns-resolve 'harja.palvelin.palvelut.valikatselmus.valikatselmus-pdf 'osio)
-              "Tavoitehintaan kuuluvat toteutuneet kustannukset"
-              (:kustannukset rivit)
-              ((ns-resolve 'harja.palvelin.palvelut.valikatselmus.valikatselmus-pdf 'varillinen-osio)
-               :vihrea
-               (:tavoitehinnan-alitus rivit)))]
-    (is (= :fo:block (first (nth osio 4))))))
+  (let [urakka-id (hae-urakan-id-nimella "Raahen MHU 2023-2028")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
+        rivit (valikatselmus-pdf/yhteenveto-rivit perusdata urakan-tiedot)
+        varillinen-osio (valikatselmus-pdf/varillinen-osio :vihrea (:tavoitehinnan-alitus rivit))
+        osio (valikatselmus-pdf/osio "Tavoitehintaan kuuluvat toteutuneet kustannukset" (:kustannukset rivit)
+              varillinen-osio)
+        varillisen-osion-taulukot (filter #(= :fo:table (first %)) (drop 2 varillinen-osio))]
+    (is (some #(= varillinen-osio %) (drop 2 osio)))
+    (is (= "solid 0.5mm #1C891C" (get-in varillinen-osio [1 :border-top])))
+    (is (= 2 (count varillisen-osion-taulukot)))
+    (is (= [:fo:table :fo:table] (map first varillisen-osion-taulukot)))))
 
 
