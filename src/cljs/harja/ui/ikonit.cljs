@@ -1040,9 +1040,16 @@
 (defn navigation-ympyrassa
   ([suunta] (navigation-ympyrassa suunta nil))
   ([suunta opts]
-   [:button.navigation-ympyrassa (when opts
-                                   (merge {}
-                                     {:aria-label (:aria-label opts)}))
+   [:button.navigation-ympyrassa
+    (merge
+      {:type "button"}
+      (select-keys opts
+        [:id
+         :aria-label
+         :aria-expanded
+         :on-click
+         :on-key-down
+         :disabled]))
     (case suunta
       :up (navigation-up opts)
       :right (navigation-right opts)

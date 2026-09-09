@@ -13,7 +13,7 @@
         hallintayksikko-id (-> @tila/yleiset :urakka :hallintayksikko :id)
         voi-muokata? (not (:virhe paatos))]
 
-    ^{:key (str "kattohinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Raportit" paatos-tehty? paatos-avain avatut-paatokset
       (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
