@@ -1816,16 +1816,27 @@
                           first
                           :id)]
     (try
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 6000M
+         :ohjeteksti "alkavalta viikolta"
          :jarjestys 1
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 12000M
          :jarjestys 2
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "manuaalinen"
+         :summa_euroina nil
+         :ohjeteksti "tai sopimuksen mukaan"
+         :jarjestys 3
          :luoja integraatio-id
          :muokkaaja integraatio-id})
       (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
@@ -1835,10 +1846,24 @@
             rivi (-> vastaus :sisalto first :lajit first :rivit first)]
         (is (= true (:voi-puolittaa-omailmoituksella rivi))
           "Admin-palautuksen pitää näyttää profiilirivin 50 % -sääntö")
+        (is (= [{:maaritystapa :automaattinen
+                 :summa-euroina 6000M
+                 :ohjeteksti "alkavalta viikolta"
+                 :jarjestys 1}
+                {:maaritystapa :automaattinen
+                 :summa-euroina 12000M
+                 :ohjeteksti nil
+                 :jarjestys 2}
+                {:maaritystapa :manuaalinen
+                  :summa-euroina nil
+                 :ohjeteksti "tai sopimuksen mukaan"
+                 :jarjestys 3}]
+              (:summamaaritykset rivi))
+          "Admin-palautuksen pitää näyttää profiilirivin summamääritykset myös ohjetekstin kanssa")
         (is (= [6000M 12000M] (:lukitut-summat rivi))
           "Admin-palautuksen pitää näyttää profiiliriviin kytketyt lukitut summat"))
       (finally
-        (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili_rivi_summamaaritys WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
@@ -1872,16 +1897,26 @@
                           first
                           :id)]
     (try
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 6000M
          :jarjestys 1
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 12000M
          :jarjestys 2
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "manuaalinen"
+         :summa_euroina nil
+         :ohjeteksti "tai sopimuksen mukaan"
+         :jarjestys 3
          :luoja integraatio-id
          :muokkaaja integraatio-id})
       (let [vastaus (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
@@ -1893,10 +1928,24 @@
             sanktiotyyppi (-> vastaus :sanktio-lajit first :sanktiotyypit first)]
         (is (= true (:voi-puolittaa-omailmoituksella sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiilirivin 50 % -metadata sanktiotyypin yhteydessä")
+        (is (= [{:maaritystapa :automaattinen
+                 :summa-euroina 6000M
+                 :ohjeteksti nil
+                 :jarjestys 1}
+                {:maaritystapa :automaattinen
+                 :summa-euroina 12000M
+                 :ohjeteksti nil
+                 :jarjestys 2}
+                {:maaritystapa :manuaalinen
+                  :summa-euroina nil
+                 :ohjeteksti "tai sopimuksen mukaan"
+                 :jarjestys 3}]
+              (:summamaaritykset sanktiotyyppi))
+          "Konfiguraatiohaun pitää palauttaa summamääritykset myös sanktiotyypin yhteydessä")
         (is (= [6000M 12000M] (:lukitut-summat sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiiliriviin sidotut lukitut summat sanktiotyypin yhteydessä"))
       (finally
-        (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili_rivi_summamaaritys WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
