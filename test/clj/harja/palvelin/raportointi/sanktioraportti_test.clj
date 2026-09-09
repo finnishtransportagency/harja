@@ -839,6 +839,25 @@
         {:otsikko "Muistutus"}
         {:otsikko "Määrä (kpl)"}))))
 
+(deftest koko-maan-bonusaggregaatin-rivit-eivat-monistu
+  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :suorita-raportti
+                  +kayttaja-jvh+
+                  {:nimi       :sanktioraportti
+                   :konteksti  "koko maa"
+                   :kasittelija :pdf
+                   :parametrit {:alkupvm      (c/to-date (t/local-date 2026 1 1))
+                                :loppupvm     (c/to-date (t/local-date 2027 9 30))
+                                :urakkatyyppi :hoito}})
+        taulukko (hae-urakan-aggregaatin-taulukko vastaus "Koko maa" "Bonukset")
+        rivit (mapv #(or (:rivi %) %)
+                (butlast (apurit/taulukon-rivit taulukko)))
+        otsikot (mapv first rivit)]
+    (is (= (count otsikot) (count (distinct otsikot)))
+      "Koko maan bonusaggregaatissa jokainen bonuslaji pitää esittää kerran")
+    (is (= ["Yhteensä" 9500M]
+           (hae-taulukon-rivi taulukko "Yhteensä")))))
+
 (defn suorita-sanktioraportti
   [konteksti [alkuvuosi alkukk alkupv] [loppuvuosi loppukk loppupv]]
   (kutsu-palvelua (:http-palvelin jarjestelma)

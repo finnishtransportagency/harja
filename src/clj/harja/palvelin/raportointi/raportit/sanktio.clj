@@ -35,6 +35,19 @@
             (conj yksilolliset rivi))))
       yksilolliset)))
 
+(defn- yksiloi-lajit [lajit avain]
+  (loop [jaljella (seq lajit)
+         tunnisteet #{}
+         yksilolliset []]
+    (if-let [laji (first jaljella)]
+      (let [tunniste (avain laji)]
+        (if (contains? tunnisteet tunniste)
+          (recur (next jaljella) tunnisteet yksilolliset)
+          (recur (next jaljella)
+            (conj tunnisteet tunniste)
+            (conj yksilolliset laji))))
+      yksilolliset)))
+
 (defn- koosta-arvonvahennys-taulukko [arvonvahennykset]
   (let [arvonvahennykset (yksiloi-sanktiot arvonvahennykset)
         rivit (if (seq arvonvahennykset)
@@ -319,20 +332,26 @@
         arvonvahennykset (yksiloi-sanktiot arvonvahennykset)
         tunnistamattomat (filterv #(nil? (:sanktiolaji_koodi %)) sanktiot)
         tunnetut (filterv #(some? (:sanktiolaji_koodi %)) sanktiot)
-        sanktiolajit (if (some #(= "lupaussanktio" (:sanktiolaji_koodi %)) sanktiolajit)
-                       sanktiolajit
-                       (conj (vec sanktiolajit)
-                         {:sanktiolaji_koodi "lupaussanktio"
-                          :sanktiolaji_nimi "Lupaussanktio"
-                          :sanktiolaji_jarjestys 999
-                          :sanktiotyyppi_koodi 0
-                          :sanktiotyyppi_nimi "Ei sanktiotyyppiä"}))
-        bonuslajit (if (some #(= "lupausbonus" (:bonuslaji_koodi %)) bonuslajit)
-                     bonuslajit
-                     (conj (vec bonuslajit)
-                       {:bonuslaji_koodi "lupausbonus"
-                        :bonuslaji_nimi "Lupausbonus"
-                        :bonuslaji_jarjestys 999}))
+        alkuperaiset-sanktiolajit sanktiolajit
+        alkuperaiset-bonuslajit bonuslajit
+        sanktiolajit (let [yksilolliset (yksiloi-lajit alkuperaiset-sanktiolajit
+                                          #(vector (:sanktiolaji_koodi %)
+                                             (:sanktiotyyppi_koodi %)))]
+                       (if (some #(= "lupaussanktio" (:sanktiolaji_koodi %)) yksilolliset)
+                         yksilolliset
+                         (conj (vec yksilolliset)
+                           {:sanktiolaji_koodi "lupaussanktio"
+                            :sanktiolaji_nimi "Lupaussanktio"
+                            :sanktiolaji_jarjestys 999
+                            :sanktiotyyppi_koodi 0
+                            :sanktiotyyppi_nimi "Ei sanktiotyyppiä"})))
+        bonuslajit (let [yksilolliset (yksiloi-lajit alkuperaiset-bonuslajit :bonuslaji_koodi)]
+                     (if (some #(= "lupausbonus" (:bonuslaji_koodi %)) yksilolliset)
+                       yksilolliset
+                       (conj (vec yksilolliset)
+                         {:bonuslaji_koodi "lupausbonus"
+                          :bonuslaji_nimi "Lupausbonus"
+                          :bonuslaji_jarjestys 999})))
         sanktio-data-map (reduce (fn [summa-map sanktio]
                                    (update summa-map
                                      [(:sanktiolaji_koodi sanktio)
