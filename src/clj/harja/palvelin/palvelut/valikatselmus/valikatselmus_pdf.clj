@@ -211,4 +211,4 @@
          (osio "Bonukset" (:bonukset rivit))
          (osio "Sanktiot" (:sanktiot rivit))
          (osio "Hoidonjohtopalkkion muutos" (:hoidonjohtopalkkio rivit))])
-      {:tiedostonimi (str "Valikatselmus_" urakka-id "_" hoitovuosi ".pdf")})))
+      {:tiedostonimi (str (:nimi urakan-tiedot) " Valikatselmus " hoitovuosi " - " (inc hoitovuosi) ".pdf")})))
