@@ -191,8 +191,10 @@
                 (cond
                   (not (empty? kentan-virheet)) [virheen-ohje kentan-virheet :virhe {:virheet-ulos? true
                                                                                      :max-width @virhelaatikon-max-koko}]
-                  (not (empty? kentan-varoitukset)) [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
-                                                                                                :max-width @virhelaatikon-max-koko}]
+                  (not (empty? kentan-varoitukset)) (if-let [info-laatikko (:info-laatikko sarake)]
+                                                       [:div.varoitukset info-laatikko]
+                                                       [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
+                                                                                                   :max-width @virhelaatikon-max-koko}])
                   (not (empty? kentan-huomautukset)) [virheen-ohje kentan-huomautukset :huomautus {:virheet-ulos? true
                                                                                                    :max-width @virhelaatikon-max-koko}]))
 

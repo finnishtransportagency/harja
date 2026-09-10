@@ -569,6 +569,65 @@
                      [:fo:block arvo-teksti]]])))
              data)]]))]))
 
+(defmethod muodosta-pdf :yhteenveto-laatikko [[_ {:keys [otsikko]} data]]
+  (let [data (vec (keep identity data))]
+    [:fo:block-container {:width "60%"}
+     [:fo:block {:background-color "#E0EDF9"
+                 :border (str "solid 0.3mm " korostettu-vari)
+                 :padding "2mm"
+                 :margin-bottom "1mm"}
+
+      [:fo:block {:font-weight "bold"
+                  :font-size taulukon-otsikon-fonttikoko
+                  :margin-bottom "1mm"}
+       otsikko]
+
+      (let [viimeinen-idx (dec (count data))
+            toiseksi-viimeinen-idx (- (count data) 2)]
+        [:fo:table {:font-size tekstin-fonttikoko
+                    :table-layout "fixed"
+                    :width "100%"}
+         [:fo:table-column {:column-width "65%"}]
+         [:fo:table-column {:column-width "35%"}]
+         [:fo:table-body
+          (map-indexed
+            (fn [i rivi]
+              (list
+                (when (= i toiseksi-viimeinen-idx)
+                  [:fo:table-row
+                   [:fo:table-cell {:number-columns-spanned 2
+                                    :padding-top "1mm"
+                                    :padding-bottom "1mm"}
+                    [:fo:block {:border-bottom "solid 0.3mm gray"}]]])
+
+                (if (:infolaatikko? rivi)
+                  [:fo:table-row
+                   [:fo:table-cell {:number-columns-spanned 2
+                                    :padding "0.5mm"}
+                    [:fo:table {:table-layout "fixed"
+                                :width "100%"}
+                     [:fo:table-column {:column-width "65%"}]
+                     [:fo:table-column {:column-width "35%"}]
+                     [:fo:table-body
+                      [:fo:table-row
+                       [:fo:table-cell {:padding "0mm"}
+                        [:fo:block (:teksti rivi)]]
+                       [:fo:table-cell {:padding "0mm"
+                                        :text-align "right"}
+                        [:fo:block (:toissijainen-viesti rivi)]]]]]]]
+
+                  [:fo:table-row
+                   (when (:lihavoi? rivi) {:font-weight "bold"})
+                   [:fo:table-cell {:padding "0.5mm"}
+                    [:fo:block
+                     (if (= i viimeinen-idx)
+                       (str "• " (:avain rivi))
+                       (:avain rivi))]]
+                   [:fo:table-cell {:padding "0.5mm"
+                                    :text-align "right"}
+                    [:fo:block (:arvo rivi)]]])))
+            data)]])]]))
+
 (defmethod muodosta-pdf :display-flex [[_ & data]]
   (let [data (vec (keep identity data))
         sarake-leveys (str (float (/ 100 (count data))) "%")]
