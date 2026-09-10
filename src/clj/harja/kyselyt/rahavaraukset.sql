@@ -197,18 +197,17 @@ WHERE tpi.urakka = :urakka_id
   AND tp.nimi = :toimenpiteen_nimi;
 
 -- name: hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta
-SELECT * FROM (
-                                    SELECT DISTINCT ON (tr.id) tr.id AS tehtavaryhma_id,
-                                        tp.jarjestys AS toimenpide_jarjestys,
-                                        tpi.id  AS "toimenpideinstanssi"
-                                    FROM rahavaraus_tehtava rt
-                                        JOIN tehtava t ON t.id = rt.tehtava_id
-                                        JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
-                                        JOIN toimenpide tp ON t.emo = tp.id
-                                        JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
-                                    WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT
-                                    ORDER BY tr.id, tp.jarjestys
-                                ) sisainen
+SELECT *
+    FROM (SELECT DISTINCT ON (tr.id) tr.id AS tehtavaryhma_id,
+                                     tp.jarjestys AS toimenpide_jarjestys,
+                                     tpi.id  AS "toimenpideinstanssi"
+            FROM rahavaraus_tehtava rt
+                JOIN tehtava t ON t.id = rt.tehtava_id
+                JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+                JOIN toimenpide tp ON t.emo = tp.id
+                JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
+        WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT
+        ORDER BY tr.id, tp.jarjestys) sisainen
 ORDER BY toimenpide_jarjestys
 LIMIT 1;
 
