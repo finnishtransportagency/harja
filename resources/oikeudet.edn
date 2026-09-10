@@ -1111,6 +1111,23 @@
    "Tilaajan_Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Urakanvalvoja" #{"R*"},
    "vastuuhenkilo" #{"R"}}}
+ {:sym raportit-valikatselmus,
+  :osio "Raportit",
+  :nakyma "Välikatselmus",
+  :taso1 "raportit-valikatselmus",
+  :kuvaus "Osio 'Raportit' näkymä 'Välikatselmus'",
+  :roolien-oikeudet
+  {"ELY_Kayttaja" #{"R*"},
+   "ELY_Paakayttaja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*"},
+   "Jarjestelmavastaava" #{"R*"},
+   "Kayttaja" #{"R+"},
+   "Paakayttaja" #{"R+"},
+   "Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Asiantuntija" #{"R*"},
+   "Tilaajan_Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "vastuuhenkilo" #{"R"}}}
  {:sym raportit-valitavoiteraportti,
   :osio "Raportit",
   :nakyma "Välitavoiteraportti",
