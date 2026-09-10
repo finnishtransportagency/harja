@@ -1920,9 +1920,11 @@
   :taso1 "urakat-suunnittelu",
   :kuvaus "Osio 'Urakat' näkymä 'Suunnittelu / Kalustoresurssit'",
   :roolien-oikeudet
-  {"ELY_Urakanvalvoja" #{"R*" "W"},
+  {"ELY_Laadunvalvoja" #{"R"},
+   "ELY_Urakanvalvoja" #{"R*" "W"},
    "Jarjestelmavastaava" #{"R*" "W*"},
-   "Tilaajan_Urakanvalvoja" #{"R*" "W"}}}
+   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
+   "Tilaajan_laadunvalvoja" #{"R"}}}
  {:sym urakat-suunnittelu-kokonaishintaisettyot,
   :osio "Urakat",
   :nakyma "Suunnittelu / Kokonaishintaiset työt",

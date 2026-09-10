@@ -237,8 +237,8 @@
           [:h3 {:class (when (> tavoitehinnan-ylitys 0)
                          "negatiivinen-numero")} "Tavoitehinnan ylitys"]
 
-          [:h3 {:class (when (> tavoitehinnan-ylitys 0)
-                         "negatiivinen-numero")} (fmt/euro-opt false tavoitehinnan-ylitys)]]
+          [:h3.pilleri {:class (when (> tavoitehinnan-ylitys 0)
+                                 "negatiivinen-numero")} (fmt/euro-opt false tavoitehinnan-ylitys)]]
 
          [:div.flex-row.summa-rivi
           [:span.sisennys (str "• Urakoitsija maksaa (" (:urakoitsijan_prosentti tavoitehinnan-ylityspaatos) "%)")]
@@ -279,8 +279,8 @@
          [:h3 {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
                         "negatiivinen-numero")} "Kattohinnan ylitys"]
 
-         [:h3 {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
-                        "negatiivinen-numero summa")} (fmt/euro-opt false kattohinnan-ylitys)]]
+         [:h3.pilleri {:class (when (and kattohinnan-ylitys (> kattohinnan-ylitys 0))
+                                "negatiivinen-numero summa")} (fmt/euro-opt false kattohinnan-ylitys)]]
 
         [:div.flex-row.summa-rivi
          [:span.sisennys "• Urakoitsija maksaa"]
