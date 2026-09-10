@@ -53,9 +53,11 @@
         rivit (if (seq arvonvahennykset)
                 (mapv (fn [[laji-nimi lajit]]
                         (let [summa (reduce + 0 (map #(or (:summa %) 0) lajit))]
-                          (rivi (or laji-nimi "Arvonvähennys") summa)))
+                          {:himmennetty? (zero? summa)
+                           :rivi (rivi (or laji-nimi "Arvonvähennys") summa)}))
                   (group-by :sanktiolaji_nimi arvonvahennykset))
-                [(rivi "Arvonvähennys" 0)])
+                [{:himmennetty? true
+                  :rivi (rivi "Arvonvähennys" 0)}])
         yhteenveto [{:lihavoi? true
                      :korosta-hennosti? true
                      :rivi (rivi "Yhteensä" (reduce + 0 (map #(or (:summa %) 0) arvonvahennykset)))}]]

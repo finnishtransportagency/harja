@@ -398,7 +398,8 @@
 
 (deftest tyhja-arvonvahennystaulukko-sailyttaa-kategorian
   (let [taulukko (#'sanktio/koosta-arvonvahennys-taulukko [])]
-    (is (= ["Arvonvähennys" 0]
+    (is (= {:himmennetty? true
+            :rivi ["Arvonvähennys" 0]}
            (first (second taulukko))))))
 
 (deftest yllapidon-muistutus-tunnistetaan-lajikoodilla
