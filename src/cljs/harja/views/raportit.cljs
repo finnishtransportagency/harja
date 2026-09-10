@@ -181,7 +181,7 @@
 (defonce vapaa-aikavali (atom [nil nil]))
 
 (defn vain-hoitokausivalinta? [raportti]
-  (#{:suolasakko :muutos-ja-lisatyot :valitavoiteraportti} raportti))
+  (#{:suolasakko :muutos-ja-lisatyot :valitavoiteraportti :valikatselmusraportti} raportti))
 
 ;; Erityisesti korjausurakoissa halutaan tarkastella joko koko vuotta tai vapaata aikaväliä
 (defn ei-kuukausivalintaa? [raportti]
@@ -567,7 +567,7 @@
 
 (def parametri-omalle-riville? #{"aikavali" "urakoittain" "tienumero"})
 
-(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi vain-excelraportti? voi-suorittaa? arvot-nyt]
+(defn- vie-raportti [v-hal v-ur konteksti raporttityyppi vain-excelraportti? vain-pdfraportti? voi-suorittaa? arvot-nyt]
   (let [aseta-parametrit! (fn [id]
                             (let [input (-> js/document
                                             (.getElementById id)
@@ -585,8 +585,12 @@
                               (set! (.-value input)
                                     (tr/clj->transit parametrit))
                               true))
-        vientimuodot (if vain-excelraportti?
+        vientimuodot (cond
+                       vain-excelraportti?
                        [(yleiset/tallenna-excel-nappi (k/excel-url :raportointi))]
+                       vain-pdfraportti?
+                       (filter #(= "raporttipdf" (nth % 2)) yleiset/+raportin-vientimuodot+)
+                       :else
                        yleiset/+raportin-vientimuodot+)]
     [:div
      (for [[ikoni teksti id url] vientimuodot]
@@ -678,7 +682,8 @@
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)
-        toimenpideraportti? (#{:toimenpidekilometrit :toimenpidepaivat :toimenpideajat} (:nimi raporttityyppi))]
+         toimenpideraportti? (#{:toimenpidekilometrit :toimenpidepaivat :toimenpideajat} (:nimi raporttityyppi))
+         vain-pdfraportti? (:vain-pdfraportti? raporttityyppi)]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
     (log "RAPORTIN-PARAMETRIT NYT: " (pr-str arvot-nyt))
@@ -730,7 +735,7 @@
           [:div.flex-row
            [napit/takaisin "Palaa raporttivalintoihin"
             #(reset! raportit/suoritettu-raportti nil)]
-           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]]
+            [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? vain-pdfraportti? voi-suorittaa? arvot-nyt]]
           [:div.raportin-toiminnot.flex-row.loppuun
            (when-not toimenpideraportti?
              [napit/palvelinkutsu-nappi " Tee raportti"
@@ -745,7 +750,7 @@
                    (<! (suorita-raportti! suorituksen-parametrit))))
               {:ikoni [ikonit/list]
                :disabled (not voi-suorittaa?)}])
-           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? voi-suorittaa? arvot-nyt]])]]]))
+           [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? vain-pdfraportti? voi-suorittaa? arvot-nyt]])]]]))
 
 (defn hallintayksikko-ja-urakkatyyppi [v-hal v-ur-tyyppi]
   (let [vesivaylien-urakkatyypissa? (= :vesivayla (:arvo v-ur-tyyppi))]

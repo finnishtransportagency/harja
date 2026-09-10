@@ -38,10 +38,15 @@
        [:h2.yhteenveto "Yhteenveto"]]
       [:div.col-md-6 {:style {:padding-right "0"}}
        [:form.pull-right {:target "_blank" :method "POST"
-                          :action (k/pdf-url :valikatselmusraportti)}
+                          :action (k/pdf-url :raportointi)}
         [:input {:type "hidden" :name "parametrit"
-                 :value (t/clj->transit {:urakka-id (-> @tila/yleiset :urakka :id)
-                                         :hoitovuosi hoitokauden-alkuvuosi})}]
+                 :value (t/clj->transit {:nimi :valikatselmusraportti
+                                         :konteksti "urakka"
+                                         :urakka-id (-> @tila/yleiset :urakka :id)
+                                         :parametrit {:alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                                      :loppupvm (pvm/paivan-lopussa
+                                                                  (pvm/hoitokauden-loppupvm
+                                                                    (inc hoitokauden-alkuvuosi)))}})}]
         [napit/tallenna "Tallenna PDF" (constantly true)
          {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
           :esta-prevent-default? true}]]]]
