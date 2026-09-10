@@ -440,7 +440,7 @@ SELECT tk.id                                     AS toimenpidekoodi_id,
        tk.nimi                                   AS tehtava,
        SUM(ot.maara)                             AS maara,
        SUM(ot.materiaalimaara)                   AS materiaalimaara,
-       SUM(ut.laskettu_maara)                    AS suunniteltu_maara,
+       ut.laskettu_maara                         AS suunniteltu_maara,
        tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
        tk.suunnitteluyksikko                     AS yk,
        CASE
@@ -474,7 +474,8 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                  'e32341fc-775a-490a-8eab-c98b8849f968',
                                  '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                  'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+-- Groupattu myös laskettu_maara-sarakkeella, koska suunnittelutietoa ei saa summata eri riveiltä yhteen. Sama suunniteltu määrä koskee kaikkia toteumarivejä hoitovuoden aikana.
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ut.laskettu_maara, ot.tyyppi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat
