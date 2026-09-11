@@ -23,8 +23,8 @@
                                     (get-in yhteenvedon-tiedot [:budjettitavoite :menneet-muutos-summa]))
         toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
                                              (:toteumiin-perustuvat-muutokset-yht yhteenvedon-tiedot))
-        pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
         arvonvahennykset-yht (apply + (map #(:maara %) (:arvonvahennykset yhteenvedon-tiedot)))
+        pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0) (or arvonvahennykset-yht 0))
 
         ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
         hv-lopun-indkorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)

@@ -1,10 +1,18 @@
 (ns harja.views.urakka.valikatselmus.yhteenveto.yhteenveto
   (:require [harja.fmt :as fmt]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.transit :as t]
             [harja.pvm :as pvm]
+
+            [harja.ui.ikonit :as ikonit]
+            [harja.ui.napit :as napit]
+
             [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
+
             [harja.views.urakka.valikatselmus.yhteenveto.luvut :as luvut]
-            [harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset :as bonukset]
-            [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
+            [harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset :as bonukset]))
 
 
 (defn osio-lopun-tavoite-ja-katto
@@ -25,7 +33,23 @@
     ;; linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
     [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
 
-     [:h2.yhteenveto "Yhteenveto"]
+     [:div.row
+      [:div.col-md-6 {:style {:padding-left "0"}}
+       [:h2.yhteenveto "Yhteenveto"]]
+      [:div.col-md-6 {:style {:padding-right "0"}}
+       [:form.pull-right {:target "_blank" :method "POST"
+                          :action (k/pdf-url :raportointi)}
+        [:input {:type "hidden" :name "parametrit"
+                 :value (t/clj->transit {:nimi :valikatselmusraportti
+                                         :konteksti "urakka"
+                                         :urakka-id (-> @tila/yleiset :urakka :id)
+                                         :parametrit {:alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                                      :loppupvm (pvm/paivan-lopussa
+                                                                  (pvm/hoitokauden-loppupvm
+                                                                    (inc hoitokauden-alkuvuosi)))}})}]
+        [napit/tallenna "Tallenna PDF" (constantly true)
+         {:ikoni (ikonit/harja-icon-action-download) :luokka "nappi-toissijainen" :type "submit"
+          :esta-prevent-default? true}]]]]
      [:h3.padding-bottom-16 "Hoitovuoden lopun tavoite- ja kattohinta"]
 
      [:div.flex-row.summa-rivi-ylin
@@ -136,24 +160,21 @@
                                (- hoitovuoden-lopun-tavoitehinta toteuma-yht)
                                (or (:alituksen_maara tavoitehinnan-alituspaatos) 0))
 
-        tavoitepalkkio (or (luvut/arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
-        seuraavan-vuoden-hankintakustannusten-alennus (or (luvut/arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
+        tavoitepalkkio (or (:tavoitepalkkio tavoitehinnan-alituspaatos) 0)
+        tavoitehinnan-alennus-siirto (or (:siirron_maara tavoitehinnan-alituspaatos) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
 
         kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
                              (- toteuma-yht hoitovuoden-lopun-kattohinta)
                              (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara))
-        ;; Niputetaan siirrot yhdelle riville
-        siirto-seuraavan-vuoden-hankintakustannuksiin (- (or (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
-                                                        seuraavan-vuoden-hankintakustannusten-alennus)
+        kattohinnan-ylitys-siirto (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara)
 
         tavoitehinnan-ylitys? (or
                                 (:id tavoitehinnan-ylityspaatos)
                                 (and
                                   (not (nil? tavoitehinnan-ylitys))
-                                  (not tavoitehinnan-ylityspaatos)
+                                  (nil? (:id tavoitehinnan-ylityspaatos))
                                   (not= 0 tavoitehinnan-ylitys)))
-
         tavoitehinnan-alitus? (or
                                 tavoitehinnan-alituspaatos
                                 (and
@@ -242,7 +263,7 @@
 
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
-          [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]]])]
+          [:span (fmt/euro-opt false tavoitehinnan-alennus-siirto)]]])]
 
 
      ;; ----------------------------------------------------
@@ -266,7 +287,7 @@
         (when-not viimeinen-hoitovuosi?
           [:div.flex-row.summa-rivi
            [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
-           [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]])])]))
+           [:span (fmt/euro-opt false kattohinnan-ylitys-siirto)]])])]))
 
 
 (defn yhteenvetolaatikko [_e! app]

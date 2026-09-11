@@ -346,7 +346,7 @@
 (defn arvonvahennykset-kaytossa?
   "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
   [valittu-urakka kuluva-hoitokausi]
-  (let [mhu25? (and (= :teiden-hoito (:tyyppi valittu-urakka))
+  (let [mhu25? (and (or (= :teiden-hoito (:tyyppi valittu-urakka)) (= "teiden-hoito" (:tyyppi valittu-urakka)))
                  (>= (pvm/vuosi (:alkupvm valittu-urakka)) 2025))
         kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
     (if (or mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) true false)))

@@ -38,6 +38,7 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]))
 
 (defn hoitokaudet-vektorimuotoon
@@ -1240,7 +1241,8 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
+          db (:db this)
+          pdf (:pdf-vienti this)]
 
       (julkaise-palvelu http
         :hae-ketjutetusti-kumoutuvat-paatokset
