@@ -4,6 +4,7 @@
   Lisätöistä, Kirjallisista muistutuksista, sanktioista, arvonvähennyksistä ja poikkeamaraporteista, Tehtävämääristä,
   ja Laskutusyhteenvedosta."
   (:require [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.domain.lupaus-domain :as lupaus-domain]
@@ -18,14 +19,14 @@
 (defn- hae-bonus-sanktiot [db urakka-id hoitokausi hoitovuosi]
   (let [[alkupvm loppupvm] hoitokausi
         bonukset (valikatselmus-q/hae-bonukset db {:urakka-id urakka-id
-                                                    :alkupvm alkupvm
-                                                    :loppupvm loppupvm})
+                                                   :alkupvm alkupvm
+                                                   :loppupvm loppupvm})
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
                                                    :alkupvm alkupvm
                                                    :loppupvm loppupvm
                                                    :hoitokauden-alkuvuosi hoitovuosi})]
     (+ (summa bonukset :rahasumma)
-       (summa sanktiot :maara))))
+      (summa sanktiot :maara))))
 
 (defn- lupausrivi [db urakka-id vanha-urakka? {:keys [alkupvm loppupvm]}]
   (let [hoitovuosi (pvm/vuosi alkupvm)
@@ -60,14 +61,14 @@
                                             :alkupvm urakan-alkupvm
                                             :loppupvm urakan-loppupvm}))
         talvisuolan-raportin-osiot (yleinen/osat (talvisuola/suorita db nil {:urakka-id urakka-id
-                                                                              :kasittelija :excel}))
+                                                                             :kasittelija :excel}))
         yhteenveto (some #(when (= "Koko urakka-ajan yhteenveto (kuivatonneina)"
-                                     (get-in % [1 :otsikko])) %)
-                         talvisuolan-raportin-osiot)
+                                  (get-in % [1 :otsikko])) %)
+                     talvisuolan-raportin-osiot)
         kohtuullistettu-kayttoraja-plus-viisi-prosenttia
         (some #(when (= "Suurin urakassa sallittu käyttömäärä + 5 %" (first %))
                  (get-in % [1 1 :arvo]))
-              (nth yhteenveto 3))
+          (nth yhteenveto 3))
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
                                                    :alkupvm urakan-alkupvm
                                                    :loppupvm urakan-loppupvm
@@ -96,8 +97,51 @@
                                        :fmt :raha
                                        :desimaalien-maara 2}]]]]
         erittely (some #(when (= "Erittely hoitovuosittain" (get-in % [1 :otsikko])) %)
-                       talvisuolan-raportin-osiot)]
+                   talvisuolan-raportin-osiot)]
     [yhteenveto-taulukko erittely]))
+
+(defn rahavarausten-tavoitehinnan-muutokset-taulukko [db urakka-id hoitokaudet]
+  (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        rivit (mapv (fn [{:keys [alkupvm loppupvm]}]
+                      (let [hoitokauden-alkuvuosi (pvm/vuosi alkupvm)
+                            rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset
+                                            db urakka-id hoitokauden-alkuvuosi)
+                            rahavaraukset-idlla (into {}
+                                                  (map (juxt :id identity)
+                                                    (remove #(= :yhteenveto (:id %)) rahavaraukset)))
+
+                            rivit (into [(str hoitokauden-alkuvuosi "-" (pvm/vuosi loppupvm))]
+                                    (let [tavoitehinnan-muutos (:tavoitehinnan-muutos (last rahavaraukset))]
+                                      (concat
+                                        (mapcat (fn [{:keys [id]}]
+                                                  (let [rahavaraus (get rahavaraukset-idlla id)]
+                                                    [(or (:summa-indeksikorjattu rahavaraus) 0)
+                                                     (or (:toteumat rahavaraus) 0)]))
+                                          urakan-rahavaraukset)
+                                        [tavoitehinnan-muutos])))]
+                        rivit))
+                hoitokaudet)
+        otsikot (into [{:otsikko "Hoitokausi" :leveys 5}]
+                  (concat (mapcat (fn [_]
+                                  [{:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
+                                   {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}])
+                          urakan-rahavaraukset)
+                    [{:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]))
+        _ (println "otsikot:" (pr-str otsikot))]
+    [:taulukko {:otsikko "Rahavarausten tavoitehintamuutokset"
+                :tyhja (when (empty? hoitokaudet) "Ei hoitovuosia.")
+                :sheet-nimi "Rahavarausten tavoitehintamuutokset"
+                :rivi-ennen (into [{:sarakkeita 1}]
+                              (concat
+                                (map (fn [{:keys [nimi]}]
+                                       {:teksti nimi
+                                        :sarakkeita 2
+                                        :luokka "paallystys-tausta-tumma"
+                                        :tasaa :oikea})
+                                  urakan-rahavaraukset)
+                                [{:sarakkeita 1}]))}
+     otsikot
+     rivit]))
 
 (defn suorita [db _ {:keys [urakka-id]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
@@ -110,8 +154,11 @@
                       :otsikon-koko :iso
                       :raportin-yleiset-tiedot raportin-nimi}
            (lupaukset-taulukko db urakka-id urakan-tiedot hoitokaudet)]
-          (when talvisuolan-erittely
-            (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
-                  talvisuolan-erittely)))))
+      (concat
+        (when talvisuolan-erittely
+          (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
+            talvisuolan-erittely))
+        [[:otsikko "Tavoitehinnan muutokset"]
+         (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]))))
 
 

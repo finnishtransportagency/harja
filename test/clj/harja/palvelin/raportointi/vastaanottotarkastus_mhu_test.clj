@@ -6,6 +6,7 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
 
             [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
+            [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -49,46 +50,69 @@
       (is (not= (:nimi paallystys) (:nimi mhu)))
       (is (not= (:suorita paallystys) (:suorita mhu))))))
 
-(deftest raportti-sisaltaa-lupaukset-hoitovuosittain
-  (let [urakka-id-raasepori (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
-        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
-        lupaustiedot (fn [_ {:keys [valittu-hoitokausi]}]
+(def ^:private testi-hoitokaudet
+  [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
+    :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
+   {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
+    :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}])
+
+(def ^:private testi-talvisuolan-erittely
+  [:taulukko {:otsikko "Erittely hoitovuosittain"} [] []])
+
+(defn- muodosta-testiraportti []
+  (let [lupaustiedot (fn [_ {:keys [valittu-hoitokausi]}]
                        (if (= (first valittu-hoitokausi) #inst "2021-10-01T00:00:00.000-00:00")
                          {:lupaus-sitoutuminen {:pisteet 70}
                           :yhteenveto {:pisteet {:toteuma 65}}}
                          {:lupaus-sitoutuminen {:pisteet 80}
                           :yhteenveto {:pisteet {:toteuma 75}}}))
-        talvisuolan-erittely [:taulukko {:otsikko "Erittely hoitovuosittain"} [] []]
-        raportti (with-redefs [urakat-q/hae-urakka (fn [_ _] [{:nimi "Testiurakka"
-                                                               :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
-                                                               :loppupvm #inst "2023-12-31T23:59:59.000-00:00"}])
-                               urakat-q/hae-urakan-hoitokaudet (fn [_ _] hoitokaudet)
-                               talvisuola/suorita (fn [_ _ _]
-                                                   [:raportti {}
-                                                    [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
-                                                     []
-                                                     [["Suurin urakassa sallittu käyttömäärä + 5 %"
-                                                       [:arvo {:arvo 1050M}]]]]
-                                                    talvisuolan-erittely])
-                               materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
-                               (fn [_ _] [{:kokonaismaara 1000M}])
-                               lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle lupaustiedot
-                               valikatselmus-q/hae-bonukset (fn [_ {:keys [alkupvm]}]
-                                                              (if (= alkupvm (-> hoitokaudet first :alkupvm))
-                                                                [{:rahasumma 100M}]
-                                                                [{:rahasumma 200M}]))
-                               valikatselmus-q/hae-sanktiot (fn [_ {:keys [alkupvm]}]
-                                                              (cond
-                                                                (= alkupvm (-> hoitokaudet first :alkupvm))
-                                                                [{:maara -25M}]
-                                                                (= alkupvm #inst "2021-01-01T00:00:00.000-00:00")
-                                                                [{:sakkoryhma :talvisuolan_ylitys :maara 100M}]
-                                                                :else
-                                                                [{:maara -50M}]))]
-                   (vastaanottotarkastus-mhu/suorita nil nil {:urakka-id urakka-id-raasepori}))]
+        talvisuolan-erittely testi-talvisuolan-erittely]
+    (with-redefs [urakat-q/hae-urakka (fn [_ _] [{:nimi "Testiurakka"
+                                                  :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
+                                                  :loppupvm #inst "2023-12-31T23:59:59.000-00:00"}])
+                  urakat-q/hae-urakan-hoitokaudet (fn [_ _] testi-hoitokaudet)
+                  talvisuola/suorita (fn [_ _ _]
+                                       [:raportti {}
+                                        [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
+                                         []
+                                         [["Suurin urakassa sallittu käyttömäärä + 5 %"
+                                           [:arvo {:arvo 1050M}]]]]
+                                        talvisuolan-erittely])
+                  materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
+                  (fn [_ _] [{:kokonaismaara 1000M}])
+                  lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle lupaustiedot
+                  valikatselmus-q/hae-bonukset (fn [_ {:keys [alkupvm]}]
+                                                 (if (= alkupvm (-> testi-hoitokaudet first :alkupvm))
+                                                   [{:rahasumma 100M}]
+                                                   [{:rahasumma 200M}]))
+                  valikatselmus-q/hae-sanktiot (fn [_ {:keys [alkupvm]}]
+                                                 (cond
+                                                   (= alkupvm (-> testi-hoitokaudet first :alkupvm))
+                                                   [{:maara -25M}]
+                                                   (= alkupvm #inst "2021-01-01T00:00:00.000-00:00")
+                                                   [{:sakkoryhma :talvisuolan_ylitys :maara 100M}]
+                                                   :else
+                                                   [{:maara -50M}]))
+                  rahavaraus-kyselyt/hae-urakan-rahavaraukset
+                  (fn [_ _]
+                    [{:id 1 :nimi "Äkilliset hoitotyöt"}
+                     {:id 2 :nimi "Vahinkojen korjaukset"}
+                     {:id 3 :nimi "Tilaajan rahavaraus kannustinjärjestelmään"}])
+                  rahavaraus-kyselyt/muutosten-rahavaraukset
+                  (fn [_ _ hoitokauden-alkuvuosi]
+                    (if (= hoitokauden-alkuvuosi 2021)
+                      [{:id 1 :summa-indeksikorjattu 100M :toteumat 80M :tavoitehinnan-muutos -20M}
+                       {:id 2 :summa-indeksikorjattu 50M :toteumat 40M :tavoitehinnan-muutos -10M}
+                       {:id 3 :summa-indeksikorjattu 25M :toteumat 20M :tavoitehinnan-muutos -5M}
+                       {:id :yhteenveto :summa-indeksikorjattu 175M :toteumat 140M :tavoitehinnan-muutos -35M}]
+                      [{:id 1 :summa-indeksikorjattu 200M :toteumat 150M :tavoitehinnan-muutos -50M}
+                       {:id 2 :summa-indeksikorjattu 100M :toteumat 90M :tavoitehinnan-muutos -10M}
+                       {:id 3 :summa-indeksikorjattu 50M :toteumat 45M :tavoitehinnan-muutos -5M}
+                       {:id :yhteenveto :summa-indeksikorjattu 350M :toteumat 285M :tavoitehinnan-muutos -65M}]))]
+      (vastaanottotarkastus-mhu/suorita nil nil {:urakka-id 1}))))
+
+(deftest raportti-sisaltaa-lupaukset-hoitovuosittain
+  (let [raportti (muodosta-testiraportti)]
     (is (= [:taulukko
             {:otsikko "Lupaukset" :sheet-nimi "Lupaukset" :tyhja nil}
             [{:otsikko "Hoitovuosi" :leveys 5}
@@ -97,7 +121,10 @@
              {:otsikko "Bonus/Sanktiot (€)" :leveys 5 :fmt :raha}]
             [["2021-2022" 70 65 75M]
              ["2022-2023" 80 75 150M]]]
-          (nth raportti 2)))
+          (nth raportti 2)))))
+
+(deftest raportti-sisaltaa-talvisuolan-kokonaiskayttomaaran
+  (let [raportti (muodosta-testiraportti)]
     (is (= [:otsikko "Talvisuolan kokonaiskäyttömäärä"]
           (nth raportti 3)))
     (is (= ["Kohtuullistettu käyttöraja + 5% (tonnia)" 1050M]
@@ -116,11 +143,46 @@
           (get-in raportti [4 1 :leveysprosentti])))
     (is (= false
           (get-in raportti [4 1 :viimeinen-rivi-yhteenveto?])))
-    (is (= talvisuolan-erittely
+    (is (= testi-talvisuolan-erittely
           (nth raportti 5)))
     (is (not-any? #(and (vector? %)
-                         (= "Ympäristöraportti" (get-in % [1 :otsikko])))
-                   raportti))))
+                     (= "Ympäristöraportti" (get-in % [1 :otsikko])))
+          raportti))))
+
+(deftest raportti-sisaltaa-rahavarausten-tavoitehinnan-muutokset
+  (let [raportti (muodosta-testiraportti)]
+    (is (= [:taulukko
+            {:otsikko "Rahavarausten tavoitehintamuutokset"
+             :sheet-nimi "Rahavarausten tavoitehintamuutokset"
+             :tyhja nil
+             :rivi-ennen [{:sarakkeita 1}
+                          {:teksti "Äkilliset hoitotyöt"
+                           :sarakkeita 2
+                           :luokka "paallystys-tausta-tumma"
+                           :tasaa :oikea}
+                          {:teksti "Vahinkojen korjaukset"
+                           :sarakkeita 2
+                           :luokka "paallystys-tausta-tumma"
+                           :tasaa :oikea}
+                          {:teksti "Tilaajan rahavaraus kannustinjärjestelmään"
+                           :sarakkeita 2
+                           :luokka "paallystys-tausta-tumma"
+                           :tasaa :oikea}
+                          {:sarakkeita 1}]}
+            [{:otsikko "Hoitokausi" :leveys 5}
+             {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]
+            [["2021-2022" 100M 80M 50M 40M 25M 20M -35M]
+             ["2022-2023" 200M 150M 100M 90M 50M 45M -65M]]]
+          (nth raportti 7)))
+    (is (not-any? #(and (vector? %)
+                     (= "Ympäristöraportti" (get-in % [1 :otsikko])))
+          raportti))))
 
 (deftest lupaukset-kayttaa-kuukausittaisia-pisteita-toimii
   (let [urakka-id-raasepori (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")
