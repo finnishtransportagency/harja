@@ -257,8 +257,7 @@
   (let [fo (muodosta-pdf [:taulukko {:otsikko "Taulukko"
                                      :piilota-otsikot? true}
                            [{:otsikko "Otsikko"}]
-                           [["Rivin data"]]])
-        _ (println "fo: " fo)]
+                           [["Rivin data"]]])]
     (is (not-any? #(and (vector? %)
                         (= :fo:table-header (first %)))
                    (tree-seq coll? seq fo)))
