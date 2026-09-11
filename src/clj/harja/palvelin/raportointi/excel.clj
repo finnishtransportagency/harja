@@ -431,7 +431,7 @@
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko sheet-otsikko excel-alkutekstit raportin-tiedot
                                                 viimeinen-rivi-yhteenveto? lista-tyyli?
                                                 sheet-nimi samalle-sheetille?
-                                                rivi-ennen rivi-jalkeen] :as optiot}
+                                                rivi-ennen rivi-jalkeen piilota-otsikot?] :as optiot}
                                       sarakkeet data] workbook]
   (try
     (let [viimeinen-rivi (last data)
@@ -468,7 +468,8 @@
           nolla (if rivi-ennen (inc nolla) nolla)
           nolla (if excel-alkutekstit (+ nolla (count excel-alkutekstit))
                   nolla)
-          otsikko-rivi (.createRow sheet nolla)
+          otsikko-rivi (when-not piilota-otsikot?
+                         (.createRow sheet nolla))
           luodut-tyylit (atom {})
           luo-uusi-tyyli (fn [solun-tyyli formaatti-fn sarake-fmt]
                            (let [uusi-tyyli (doto (excel/create-cell-style! workbook solun-tyyli)
@@ -509,7 +510,8 @@
       (when sheet-otsikko
         (tee-sheet-otsikkoteksti sheet 1 sheet-otsikko raportin-tiedot-tyyli))
 
-      (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?)
+      (when-not piilota-otsikot?
+        (taulukko-otsikkorivi otsikko-rivi sarakkeet workbook lista-tyyli?))
 
       (dorun
         (map-indexed
@@ -517,7 +519,7 @@
             ;; Lisää väliotsikot mikäli nämä puuttuvat
             (let [lisatty-otsikko (when (:otsikko rivi)
                                     (taulukon-valiotsikko (:otsikko rivi) workbook))
-                  rivi-nro (+ nolla 1 rivi-nro)
+                  rivi-nro (+ nolla (if piilota-otsikot? 0 1) rivi-nro)
                   rivi-nro (if (= rivi-nro lisatty-otsikko) (inc rivi-nro) rivi-nro)
                   [data optiot] (if (map? rivi)
                                   [(:rivi rivi) rivi]

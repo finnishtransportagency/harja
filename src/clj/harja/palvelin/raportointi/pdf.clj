@@ -415,18 +415,24 @@
   (let [sarakkeet-lkm (count sarakkeet)]
     (str (float (- 1 (min 0.5 (* sarakkeet-lkm 0.025)))) "em")))
 
-(defn taulukko [otsikko sarakkeet data {{:keys [skaalaa-teksti?]} :pdf-optiot :as optiot}]
+(defn taulukko [otsikko sarakkeet data {{:keys [skaalaa-teksti?]} :pdf-optiot
+                                        :keys [leveysprosentti]
+                                        :as optiot}]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em" :font-size taulukon-otsikon-fonttikoko :font-weight "bold"} otsikko
+    (let [taulukko [:fo:block {:space-before "1em" :font-size taulukon-otsikon-fonttikoko :font-weight "bold"} otsikko
      ;; Taulukon fonttikoko skaalataan parent block-elementin font-size arvon mukaan
      ;; Mitä enemmän sarakkeita, sitä pienempi fonttikoko. Lähtöarvona on parent block-elementin font-size.
      [:fo:table (when skaalaa-teksti?
                   {:font-size (skaalattu-fontin-koko sarakkeet)})
       (for [{:keys [leveys leveys-pdf]} sarakkeet]
         [:fo:table-column {:column-width (or leveys-pdf leveys)}])
-      (taulukko-header optiot sarakkeet)
+      (when-not (:piilota-otsikot? optiot)
+        (taulukko-header optiot sarakkeet))
       (taulukko-body sarakkeet data optiot)]
-     [:fo:block {:space-after "1em"}]]))
+                    [:fo:block {:space-after "1em"}]]]
+      (if leveysprosentti
+        [:fo:block-container {:width (str leveysprosentti "%")} taulukko]
+        taulukko))))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
   (taulukko otsikko sarakkeet data optiot))

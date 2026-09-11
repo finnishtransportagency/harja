@@ -252,3 +252,14 @@
     (io/copy (luo-raportti-pdf-bytes)
              (java.io.File. "raportti.pdf"))
     (sh/sh "open" "raportti.pdf"))
+
+(deftest taulukon-otsikot-voi-piilottaa
+  (let [fo (muodosta-pdf [:taulukko {:otsikko "Taulukko"
+                                     :piilota-otsikot? true}
+                           [{:otsikko "Otsikko"}]
+                           [["Rivin data"]]])
+        _ (println "fo: " fo)]
+    (is (not-any? #(and (vector? %)
+                        (= :fo:table-header (first %)))
+                   (tree-seq coll? seq fo)))
+    (is (= "Taulukko" (nth fo 2)))))
