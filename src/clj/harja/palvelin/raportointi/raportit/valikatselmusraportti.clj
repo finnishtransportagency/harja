@@ -20,11 +20,6 @@
 (defn- ota-paatos [paatokset avain]
   (some #(get % avain) paatokset))
 
-(defn- laske-siirto [siirrettava-maara seuraavan-vuoden-hankintakustannusten-alennus]
-  (when (or siirrettava-maara seuraavan-vuoden-hankintakustannusten-alennus)
-    (- (or siirrettava-maara 0)
-      (or seuraavan-vuoden-hankintakustannusten-alennus 0))))
-
 (defn yhteenveto-rivit [data urakan-tiedot]
   (let [paatokset (:paatokset data)
         urakan-parametrit (:urakan-parametrit data)
@@ -74,12 +69,11 @@
         tavoitehinnan-alituspaatos (ota-paatos paatokset :tavoitehinnan-alitus)
         tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
         tavoitehinnan-alitus (or (:alituksen_maara tavoitehinnan-alituspaatos) 0)
-        tavoitepalkkio (or (arvopaatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
-        seuraavan-vuoden-hankintakustannusten-alennus  (:siirron_maara tavoitehinnan-alituspaatos)
+        tavoitepalkkio (or (:tavoitepalkkio tavoitehinnan-alituspaatos) 0)
+        tavoitehinnan-alitus-siirto (or (:siirron_maara tavoitehinnan-alituspaatos) 0)
         kattohinnan-ylityspaatos (ota-paatos paatokset :kattohinnan-ylitys)
         kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
-        siirto (laske-siirto (:siirrettava_maara kattohinnan-ylityspaatos)
-                 seuraavan-vuoden-hankintakustannusten-alennus)
+        kattohinnan-ylitys-siirto (or (:siirrettava_maara kattohinnan-ylityspaatos) 0)
         nayta-arvonvahennykset? (sanktio-domain/arvonvahennykset-kaytossa? urakan-tiedot (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))
         tavoitehinnan-ylitys? (or (:id tavoitehinnan-ylityspaatos)
                                 (and (nil? (:id tavoitehinnan-ylityspaatos)) (not= 0 tavoitehinnan-ylitys) (> toteuma-yht hoitovuoden-lopun-tavoitehinta)))
@@ -121,13 +115,13 @@
      :tavoitehinnan-alitus (when tavoitehinnan-alitus?
                              [["Tavoitehinnan alitus" (euro tavoitehinnan-alitus)]
                               ["Tavoitepalkkio" (euro tavoitepalkkio)]
-                              ["Siirto seuraavan vuoden hankintakustannuksiin" (euro siirto)]])
+                              ["Siirto seuraavan vuoden hankintakustannuksiin" (euro tavoitehinnan-alitus-siirto)]])
      :tavoitehinnan-alitus-maara tavoitehinnan-alitus
      :kattohinnan-ylitys (when (pos? kattohinnan-ylitys)
                            (cond-> [["Kattohinnan ylitys" (euro kattohinnan-ylitys)]
                                     ["Urakoitsija maksaa" (euro (:urakoitsija_maksaa kattohinnan-ylityspaatos))]]
                              (not= hoitokauden-alkuvuosi (dec urakan-loppuvuosi))
-                             (conj ["Siirto seuraavan vuoden hankintakustannuksiin" (euro siirto)])))
+                             (conj ["Siirto seuraavan vuoden hankintakustannuksiin" (euro kattohinnan-ylitys-siirto)])))
      :kattohinnan-ylitys-maara kattohinnan-ylitys
      :bonukset [["Lupausbonus" (euro lupausbonus)]
                 ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (euro asiakastyytyvaisyysbonus)]
@@ -144,7 +138,6 @@
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as _parametrit}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-        _ (println "alkupvm" alkupvm)
         hoitovuosi (pvm/vuosi alkupvm)
         hoitovuoden-tiedot (valikatselmus-palvelu/hae-valikatselmuksen-tiedot-hoitovuodelle
                              db user {:urakkaid urakka-id :hoitovuosi hoitovuosi})

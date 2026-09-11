@@ -589,7 +589,7 @@
                        vain-excelraportti?
                        [(yleiset/tallenna-excel-nappi (k/excel-url :raportointi))]
                        vain-pdfraportti?
-                       (filter #(= "raporttipdf" (nth % 2)) yleiset/+raportin-vientimuodot+)
+                       [(yleiset/tallenna-pdf-nappi (k/pdf-url :raportointi))]
                        :else
                        yleiset/+raportin-vientimuodot+)]
     [:div
@@ -682,8 +682,8 @@
         voi-suorittaa? (and (not (contains? arvot-nyt :virhe))
                             (raportin-voi-suorittaa? raporttityyppi arvot-nyt))
         raportissa? (some? @raportit/suoritettu-raportti)
-         toimenpideraportti? (#{:toimenpidekilometrit :toimenpidepaivat :toimenpideajat} (:nimi raporttityyppi))
-         vain-pdfraportti? (:vain-pdfraportti? raporttityyppi)]
+        toimenpideraportti? (#{:toimenpidekilometrit :toimenpidepaivat :toimenpideajat} (:nimi raporttityyppi))
+        vain-pdfraportti? (:vain-pdfraportti? raporttityyppi)]
 
     ;; Jos parametreja muutetaan tai ne vaihtuu lomakkeen vaihtuessa, tyhjennä suoritettu raportti
     (log "RAPORTIN-PARAMETRIT NYT: " (pr-str arvot-nyt))
@@ -737,8 +737,8 @@
             #(reset! raportit/suoritettu-raportti nil)]
             [vie-raportti v-hal v-ur konteksti raporttityyppi toimenpideraportti? vain-pdfraportti? voi-suorittaa? arvot-nyt]]
           [:div.raportin-toiminnot.flex-row.loppuun
-           (when-not toimenpideraportti?
-             [napit/palvelinkutsu-nappi " Tee raportti"
+           (when-not (or toimenpideraportti? vain-pdfraportti?)
+             [napit/palvelinkutsu-nappi "Tee raportti"
               #(go
                  (reset! raportit/suoritettu-raportti :ladataan)
                  (let [suorituksen-parametrit [konteksti

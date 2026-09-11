@@ -148,7 +148,6 @@
 
         ;; Alitukset ja ylitykset
         tavoitehinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-ylitys)
-        _ (js/console.log "tavoitehinnan-ylityspaatos" (pr-str tavoitehinnan-ylityspaatos))
         tavoitehinnan-alituspaatos (valikatselmus-tiedot/ota-paatos paatokset :tavoitehinnan-alitus)
 
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
@@ -161,16 +160,14 @@
                                (- hoitovuoden-lopun-tavoitehinta toteuma-yht)
                                (or (:alituksen_maara tavoitehinnan-alituspaatos) 0))
 
-        tavoitepalkkio (or (luvut/arvo-paatoksesta tavoitehinnan-alituspaatos :tavoitepalkkio) 0)
-        seuraavan-vuoden-hankintakustannusten-alennus (or (luvut/arvo-paatoksesta tavoitehinnan-alituspaatos :siirron_maara) 0)
+        tavoitepalkkio (or (:tavoitepalkkio tavoitehinnan-alituspaatos) 0)
+        tavoitehinnan-alennus-siirto (or (:siirron_maara tavoitehinnan-alituspaatos) 0)
         kattohinnan-ylityspaatos (valikatselmus-tiedot/ota-paatos paatokset :kattohinnan-ylitys)
 
         kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
                              (- toteuma-yht hoitovuoden-lopun-kattohinta)
                              (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara))
-        ;; Niputetaan siirrot yhdelle riville
-        siirto-seuraavan-vuoden-hankintakustannuksiin (- (or (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara) 0)
-                                                        seuraavan-vuoden-hankintakustannusten-alennus)
+        kattohinnan-ylitys-siirto (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara)
 
         tavoitehinnan-ylitys? (or
                                 (:id tavoitehinnan-ylityspaatos)
@@ -266,7 +263,7 @@
 
          [:div.flex-row.summa-rivi
           [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
-          [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]]])]
+          [:span (fmt/euro-opt false tavoitehinnan-alennus-siirto)]]])]
 
 
      ;; ----------------------------------------------------
@@ -290,7 +287,7 @@
         (when-not viimeinen-hoitovuosi?
           [:div.flex-row.summa-rivi
            [:span.sisennys "• Siirto seuraavan vuoden hankintakustannuksiin"]
-           [:span (fmt/euro-opt false siirto-seuraavan-vuoden-hankintakustannuksiin)]])])]))
+           [:span (fmt/euro-opt false kattohinnan-ylitys-siirto)]])])]))
 
 
 (defn yhteenvetolaatikko [_e! app]
