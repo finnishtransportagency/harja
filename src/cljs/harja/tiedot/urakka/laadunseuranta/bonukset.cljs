@@ -165,7 +165,7 @@
   (let [payload {:id (:id lomake)
                  :urakka-id (:id @nav/valittu-urakka)}]
     (-> app
-      (tuck-apurit/post! :poista-suorasanktio
+      (tuck-apurit/post! :poista-sanktio
         payload
         {:onnistui ->TallennusOnnistui
          :epaonnistui ->TallennusEpaonnistui})

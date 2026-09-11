@@ -1,6 +1,7 @@
 (ns harja.views.urakka.valikatselmus.yhteiset
   (:require [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
+            [harja.ui.dom :as dom]
             [harja.tiedot.istunto :as istunto]
             [harja.domain.oikeudet :as oikeudet]))
 
@@ -32,17 +33,31 @@
 
 
 (defn paatosotsikko-ja-avaus [e! otsikko paatos-tehty? paatos-avain avatut-paatokset avaa-tai-sulje-haitari-fn avaa-paatos-fn]
-  [:div.paatos-komponentti-otsikko-row.klikattava {:on-click #(e! avaa-paatos-fn)}
-   [:div.navigation-ikoni {:on-click #(avaa-tai-sulje-haitari-fn % paatos-avain)}
-    ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
-    (if (not (contains? avatut-paatokset paatos-avain))
-      [ikonit/navigation-ympyrassa :up {:aria-label "Sulje päätöskomponentti" :alt "Sulje päätöskomponentti"}]
-      [ikonit/navigation-ympyrassa :down {:aria-label "Avaa päätöskomponentti" :alt "Avaa päätöskomponentti"}])]
-   [:h2.paatos-komponentti-otsikko otsikko]
-   [:div
-    (if paatos-tehty?
-      [:div.badge.paatetty.paatos-badge "Päätetty"]
-      [:div.badge.avoin.paatos-badge "Avoin"])]])
+  (let [avaa-paatos! (fn [event]
+                       (.preventDefault event)
+                       (e! avaa-paatos-fn))
+        avaa-paatos-nappaimella! (fn [event]
+                                   (when (dom/enter-nappain? event)
+                                     (avaa-paatos! event)))]
+    [:div.paatos-komponentti-otsikko-row.klikattava
+     {:tabIndex 0
+      :role "button"
+      :on-click avaa-paatos!
+      :on-key-down avaa-paatos-nappaimella!}
+     [:div.navigation-ikoni
+      {:on-click (fn [event]
+                   (.preventDefault event)
+                   (.stopPropagation event)
+                   (avaa-tai-sulje-haitari-fn event paatos-avain))}
+      ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
+      (if (not (contains? avatut-paatokset paatos-avain))
+        [ikonit/navigation-ympyrassa :up {:aria-label "Sulje päätöskomponentti" :alt "Sulje päätöskomponentti"}]
+        [ikonit/navigation-ympyrassa :down {:aria-label "Avaa päätöskomponentti" :alt "Avaa päätöskomponentti"}])]
+     [:h2.paatos-komponentti-otsikko otsikko]
+     [:div
+      (if paatos-tehty?
+        [:div.badge.paatetty.paatos-badge "Päätetty"]
+        [:div.badge.avoin.paatos-badge "Avoin"])]]))
 
 
 (defn paatosotsikko [otsikko paatos-tehty?]
