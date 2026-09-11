@@ -14,13 +14,13 @@
             [harja.views.urakka.valikatselmus.yhteiset :as valikatselmus-yhteiset]))
 
 (defn tavoitehinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :tavoitehinta-ylitys
+  (let [paatos-avain :tavoitehinnan-ylitys
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
-    ^{:key (str "tavoitehinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
@@ -35,10 +35,10 @@
          [:div.big-text "Tavoitehinnan ylitys"]
          [:div.big-text.lihavoitu (fmt/euro-opt false (:ylityksen_maara paatos))]]
         [:div.flex-row.summa-rivi-valja
-         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) "%)")]
+         [:div (str "Tilaaja maksaa (" (:tilaajan_prosentti paatos) " %)")]
          [:div.rivi-lukema (fmt/euro-opt false (:tilaaja_maksaa paatos))]]
         [:div.flex-row.summa-rivi-matala
-         [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) "%)")]
+         [:div (str "Urakoitsija maksaa (" (:urakoitsijan_prosentti paatos) " %)")]
          [:div.rivi-lukema (fmt/euro-opt false (:urakoitsija_maksaa paatos))]]
 
         [:hr.paatos-hr]
@@ -68,13 +68,13 @@
       lopun tavoitehinnan alittavasta osuudesta."]]]))
 
 (defn tavoitehinnan-alitus [e! paatos tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :tavoitehinta-alitus
+  (let [paatos-avain :tavoitehinnan-alitus
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         avaa-tai-sulje-haitari (fn [event]
                                  (when (dom/enter-nappain? event)
                                    (e! (valikatselmus-tiedot/->AvaaPaatos paatos-avain))))]
-    ^{:key (str "tavoitehinnan-alitus-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Tavoitehinnan alitus" paatos-tehty? paatos-avain avatut-paatokset
       avaa-tai-sulje-haitari (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
@@ -84,10 +84,11 @@
          [:div.big-text "Tavoitehinnan alitus"]
          [:div.big-text.lihavoitu (fmt/euro-opt false (:alituksen_maara paatos))]]
         [:div.flex-row.lista-rivi-ylin
-         [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) "%)")]
+         [:div (str "Tavoitepalkkio (" (:tavoitepalkkion_maksuprosentti paatos) " %)")]
          [:div.rivi-lukema (fmt/euro-opt false (:tavoitepalkkio paatos))]]
-        [:div.flex-row
-         [:div.small-text.lisays.harmaa (str "max. " (:tavoitepalkkion_maksimi_prosentti paatos) "% hoitovuoden alun indeksikorjatusta tavoitehinnasta.")]]
+        (when-not (:viimeinen_hoitokausi paatos)
+          [:div.flex-row
+           [:div.small-text.lisays.harmaa (str "max. " (:tavoitepalkkion_maksimi_prosentti paatos) "% hoitovuoden alun indeksikorjatusta tavoitehinnasta.")]])
         ;; Näytetään siirron määrä vain, jos sitä on. Esim viimeisenä vuotena ei siirretä mitään.
         (when (and (:siirron_maara paatos) (not= 0 (:siirron_maara paatos)))
           [:div.flex-row.lista-rivi-korkea
@@ -111,6 +112,7 @@
         [:div.muokkaustoiminnot
          (when (:virheet paatos)
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
+
          [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (not (:virheet paatos))
           ;; Vahvista 
           #(e! (valikatselmus-tiedot/->TallennaTavoitehinnanAlitusPaatos paatos))
@@ -120,13 +122,13 @@
                  (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))
 
 (defn kattohinnan-ylitys [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
-  (let [paatos-avain :kattohinta-ylitys
+  (let [paatos-avain :kattohinnan-ylitys
         paatos-tehty? (some? (:id paatos))
         siirra? (:siirra? paatos)
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
         siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
-    ^{:key (str "kattohinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
 
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Kattohinnan ylitys" paatos-tehty? paatos-avain avatut-paatokset
@@ -188,15 +190,15 @@
            [:div.rivi-lukema (fmt/euro-opt false (:siirrettava_maara paatos))]])
         [:hr.paatos-hr]
 
-        (when (:virhe paatos)
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :varoitus (:virhe paatos) nil nil {:sulje-nappi-id (gensym)}]])
+        [:div.muokkaustoiminnot
+         (when (:virheet paatos)
+           [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
-        ;; Päätöksenteko napit
-        [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
-         ;; Vahvista
-         #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
-         ;; Peru päätös 
-         #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
-                paatos
-                (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]])]))
+         ;; Päätöksenteko napit
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+          ;; Vahvista
+          #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
+          ;; Peru päätös
+          #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                 paatos
+                 (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]])]))

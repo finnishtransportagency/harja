@@ -1,5 +1,6 @@
 (ns harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot
-  (:require [tuck.core :as tuck]
+  (:require [clojure.set :as set]
+            [tuck.core :as tuck]
             [clojure.string :as str]
 
             [harja.pvm :as pvm]
@@ -19,6 +20,14 @@
 
 (defonce tavoitehinnan-muutokset (atom []))
 
+(defn- paatettyjen-paatosten-avaimet [paatokset]
+  (into #{}
+    (keep (fn [paatos]
+            (let [[avain paatoksen-tiedot] (first paatos)]
+              (when (:id paatoksen-tiedot)
+                avain)))
+          paatokset)))
+
 (defn scrollaa-muutoksiin []
   ;; Kutsutaan kun käyttäjä tallentaa oikaisua 
   ;; Gridin elementit menee disabled muotoon, joka muuttaa sivun kokoa
@@ -36,13 +45,11 @@
 
 (defn kasittele-throw-virhe [vastaus]
 
-  (let [raaka-virhe (get-in vastaus [:parse-error :original-text])
-        raaka-virhe (if (nil? raaka-virhe) "Virhe! Palvelin palautti virheen!" raaka-virhe)
+  (let [raaka-virhe (or (get-in vastaus [:parse-error :original-text]) (:response vastaus))
+        raaka-virhe (if (nil? raaka-virhe) "Palvelin palautti virheen!" raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
         raaka-virhe (str/replace raaka-virhe #"\"" "")
-
-        ;; Emme tarvitse ensimmäistä virhesanaa
-        virheet (str/join " " (rest (str/split raaka-virhe #" ")))]
+        virheet (str/join " " (str/split raaka-virhe #" "))]
     virheet))
 
 ;; Oikaisut
@@ -106,11 +113,15 @@
 (defn kasittele-valikatselmuksen-vastaus [app vastaus]
   (let [hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi vastaus)
         vastaus-muutokset (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
-        muutokset (karsitut-tavoitehinnan-muutokset vastaus-muutokset)]
+        muutokset (karsitut-tavoitehinnan-muutokset vastaus-muutokset)
+        avatut-paatokset (if (:haku-kaynnissa? app)
+                           (set/union (or (:avatut-paatokset app) #{}) (paatettyjen-paatosten-avaimet (:paatokset vastaus)))
+                           (:avatut-paatokset app))]
 
     (reset! tavoitehinnan-muutokset muutokset)
     (-> app
       (assoc :paatokset (:paatokset vastaus))
+      (assoc :avatut-paatokset avatut-paatokset)
       (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
       (assoc :yhteenveto (:yhteenveto vastaus))
       (assoc :urakan-parametrit (:urakan-parametrit vastaus))
@@ -284,6 +295,7 @@
   (process-event [{urakkaid :urakkaid vuosi :vuosi} app]
     (let [app (-> app
                 (assoc :valittu-kuukausi nil)
+                (assoc :avatut-paatokset #{}) ; Resetoidaan avaustilanne
                 ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
                 (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
                                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])

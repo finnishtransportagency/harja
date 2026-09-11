@@ -56,10 +56,11 @@
     (str/capitalize kohdeluokka)))
 
 (defn- oletus-hoitovuosi [urakka]
-  (let [hoitokausien-alkuvuodet (into []
+  (let [urakan-kesto (- (count (pvm/vuodet-valissa (:alkupvm urakka) (:loppupvm urakka))) 1)
+        hoitokausien-alkuvuodet (into []
                                   (range
                                     (pvm/vuosi (:alkupvm urakka))
-                                    (pvm/vuosi (:loppupvm urakka))))
+                                    urakan-kesto))
         kuluva-hoitovuosi urakka-tila/kuluva-alkuvuosi]
     (or (some #(when (= % kuluva-hoitovuosi) %) hoitokausien-alkuvuodet)
       (first hoitokausien-alkuvuodet)
