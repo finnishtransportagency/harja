@@ -31,7 +31,7 @@
         <dependency>
             <groupId>org.flywaydb</groupId>
             <artifactId>flyway-database-postgresql</artifactId>
-            <version>13.3.0</version>
+            <version>13.4.0</version>
         </dependency>
     </dependencies>
 
@@ -41,7 +41,7 @@
                 <!-- https://mvnrepository.com/artifact/org.flywaydb/flyway-core -->
                 <groupId>org.flywaydb</groupId>
                 <artifactId>flyway-maven-plugin</artifactId>
-                <version>13.3.0</version>
+                <version>13.4.0</version>
                 <configuration>
                     <!--
                     Asetetaan Flywayn historiataulu saman nimiseksi kuin tuotannossa, jotta voidaan
