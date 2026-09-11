@@ -9,6 +9,7 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
@@ -221,12 +222,8 @@
         _ (mapv (fn [rahavaraus]
                   (let [rahavaraus-id (:rahavaraus-id rahavaraus)
                         vuosittainen-summa (:summa (first (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
-
-                        ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
-                        ;; Rahavaraukset eivät kuulu millekään tällä hetkellä tiedetylle toimenpideinstanssille.
-                        ;; Mutta yksinkertaisuuden vuoksi toimenpideinstanssin pakollisuutta ei lähdetty muuttamaan, vaan laitetaan
-                        ;; Rahavaraukselle vain jokin toimenpideinstanssi. Sen olemassaolo filtteröidään muualla pois.
-                        ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+                        toimenpideinstanssi-id (budjettisuunnittelu/hae-rahavarauksen-toimenpideinstanssi db rahavaraus-id urakka-id)
+                        tehtavaryhma-id (budjettisuunnittelu/hae-rahavarauksen-tehtavaryhma db rahavaraus-id urakka-id)
 
                         ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
                         kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
@@ -256,8 +253,9 @@
                                                      (lisaa-rahavaraus-budjettiin<! db {:vuosi vuosi
                                                                                         :kuukausi kk
                                                                                         :sopimus_id sopimus-id
-                                                                                        :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
+                                                                                        :toimenpideinstanssi_id toimenpideinstanssi-id
                                                                                         :tehtava_id nil
+                                                                                        :tehtavaryhma tehtavaryhma-id
                                                                                         :rahavaraus_id rahavaraus-id
                                                                                         :summa summa
                                                                                         :summa_indeksikorjattu (when summa

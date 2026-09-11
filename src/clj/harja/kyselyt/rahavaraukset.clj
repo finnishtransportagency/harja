@@ -6,7 +6,8 @@
 (defqueries "harja/kyselyt/rahavaraukset.sql"
   {:positional? true})
 
-(declare hae-urakan-rahavaraukset-ja-tehtavaryhmat hae-rahavarauksen-tehtavaryhmat hae-urakan-rahavaraukset
+(declare hae-urakan-rahavaraukset-ja-tehtavaryhmat hae-rahavarauksen-tehtavaryhmat
+  hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta hae-urakan-rahavaraukset hae-tehtavaryhman-id
   hae-rahavarauksen-toimenpideinstanssi hae-rahavaraukset hae-urakoiden-rahavaraukset hae-rahavaraukset-tehtavineen
   kuuluuko-tehtava-rahavaraukselle? onko-tehtava-olemassa? onko-rahavaraus-olemassa?
   hae-rahavaraukselle-mahdolliset-tehtavat hae-urakan-rahavaraus paivita-urakan-rahavaraus<!
