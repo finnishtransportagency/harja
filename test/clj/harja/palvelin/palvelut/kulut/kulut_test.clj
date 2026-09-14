@@ -298,11 +298,12 @@
 
 
 (deftest tallenna-kulu-testi
-  (let [tallennettu-kulu
+  (with-redefs [pvm/nyt (constantly #inst "2021-12-16T00:00:00.000-00:00")]
+    (let [tallennettu-kulu
         (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-           :kulu-kohdistuksineen uusi-kulu})
-        tallennettu-id (:id tallennettu-kulu)
+            :kulu-kohdistuksineen uusi-kulu})
+          tallennettu-id (:id tallennettu-kulu)
         paivitetty-kulu (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                           {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                            :kulu-kohdistuksineen (assoc tallennettu-kulu :lisatieto "lisätieto" :id tallennettu-id)})
@@ -317,7 +318,7 @@
                              :kulu-kohdistuksineen (assoc paivitetty-kohdistus
                                                      :id tallennettu-id
                                                      :kohdistukset (merge (:kohdistukset paivitetty-kohdistus)
-                                                                     uusi-kohdistus))})
+                                                                      uusi-kohdistus))})
         poistettu-kohdistus (kutsu-http-palvelua :poista-kohdistus (oulun-2019-urakan-urakoitsijan-urakkavastaava)
                               {:urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                                :id tallennettu-id
@@ -357,7 +358,7 @@
     (is (map? tehtava) "Tehtava tallentui kohdistukseen.")
     (is (contains? tehtava :id) "Tehtavalla on ID.")
     (is (contains? tehtava :nimi) "Tehtavalla on nimi.")
-    (is (contains? tehtava-map-muodossa :nimi) "Map muotoisena annetulla tehtavalla on nimi.")))
+    (is (contains? tehtava-map-muodossa :nimi) "Map muotoisena annetulla tehtavalla on nimi."))))
 
 (defn- feilaa-tallenna-kulu-validointi [vaara-kulu odotettu-poikkeus]
   (try
@@ -415,6 +416,37 @@
                                             (kulut/tarkista-saako-kulua-tallentaa (:db jarjestelma) urakka-id erapaiva vanha-erapaiva))]
     (is (= false ei-saa-koska-valikatselmus-pidetty))
     (is (= true saa-koska-valikatselmus-pitamatta))))
+
+(deftest kulun-myohainen-muokkaus-roolirajoitus
+  (let [urakka-id 1
+        vanha-erapaiva #inst "2021-12-15T21:00:00.000-00:00"
+        urakoitsijan-kayttaja {:roolit #{}
+                               :organisaatioroolit {}
+                               :urakkaroolit {urakka-id #{"vastuuhenkilo"}}}
+        kutsu #(#'kulut/tarkista-myohainen-kulun-muokkaus urakoitsijan-kayttaja urakka-id vanha-erapaiva)]
+    (testing "Muokkaus estetään yli kahden kuukauden jälkeen"
+      (with-redefs [pvm/nyt (constantly #inst "2022-02-16T00:00:00.000-00:00")]
+        (is (thrown? IllegalArgumentException (kutsu)))))
+    (testing "Tasan kaksi kuukautta ei vielä estä muokkausta"
+      (with-redefs [pvm/nyt (constantly #inst "2022-02-15T21:00:00.000-00:00")]
+        (is (nil? (kutsu)))))
+    (testing "Uuden kulun tallennus ei kuulu rajoitukseen"
+      (with-redefs [pvm/nyt (constantly #inst "2022-02-16T00:00:00.000-00:00")]
+        (is (nil? (#'kulut/tarkista-myohainen-kulun-muokkaus urakoitsijan-kayttaja urakka-id nil)))))))
+
+(deftest kulun-myohainen-muokkaus-sallitut-roolit
+  (let [urakka-id 1
+        vanha-erapaiva #inst "2021-12-15T21:00:00.000-00:00"
+        sallitut-roolit ["ELY_Urakanvalvoja" "ELY_Paakayttaja" "Tilaajan_Urakanvalvoja"]]
+    (with-redefs [pvm/nyt (constantly #inst "2022-02-16T00:00:00.000-00:00")]
+      (doseq [rooli sallitut-roolit]
+        (is (nil? (#'kulut/tarkista-myohainen-kulun-muokkaus
+                    {:roolit #{rooli}
+                     :organisaatioroolit {}
+                     :urakkaroolit {}}
+                    urakka-id
+                    vanha-erapaiva))
+            (str "Roolin " rooli " pitää sallia myöhäinen muokkaus"))))))
 
 (deftest paivita-kulua-eri-erapaivalla-valikatselmuksen-jalkeen
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)

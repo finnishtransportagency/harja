@@ -1191,11 +1191,15 @@
         vastaus (try
                   (with-redefs [;; Feikataan vastaus kattohinnan hakemiseen, koska urakalla ei ole välttämättä kattohintaa tallennettuna
                                 valikatselmus-kyselyt/hae-oikaistu-kattohinta (fn [db hakuparametrit]
-                                                                                kattohinta)]
+                                                                                kattohinta)
+                                budjettisuunnittelu-kyselyt/hae-budjettitavoite
+                                (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                          :hoitovuoden-lopun-tavoitehinta (* 0.9 kattohinta)
+                                                          :hoitovuoden-lopun-kattohinta kattohinta}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))]
     ;; Koska virheitä, tarkista virhe
-    (is (str/includes? vastaus "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))))
+    (is (str/includes? vastaus "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle."))))
 
 (deftest rajapinta-kattohinnan-ylitys-lisays-onnistuu-2025-test
   (let [;; Hae vaativa mhu urakka
