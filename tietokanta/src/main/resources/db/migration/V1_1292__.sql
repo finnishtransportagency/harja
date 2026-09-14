@@ -1,5 +1,3 @@
--- HARJA-2638: Tuomo 3.8.2026 tarkentamat MHU-bonukset.
---
 -- Tässä migraatiossa:
 -- 1) päivitetään bonuslajien kanoniset nimet,
 -- 2) muodostetaan ja tarkistetaan kohdeurakoiden yhteinen lista,
