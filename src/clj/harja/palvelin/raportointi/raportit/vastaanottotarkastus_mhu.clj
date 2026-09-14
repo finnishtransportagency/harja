@@ -224,6 +224,31 @@
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) oikaisut-yhteensarivi)))]]))
 
+(defn muodosta-lisatyo-taulukko [db urakka-id hoitokaudet kasittelija]
+  (let [rivit (mapv (fn [hoitokausi]
+                      (let [{:keys [alkupvm loppupvm]} hoitokausi
+                            vuosi (pvm/vuosi alkupvm)
+                            lisatyot (muutos-ja-lisatyoraportti/hae-lisatoiden-kulukohdistukset db {:urakka-id urakka-id
+                                                                                                    :alkupvm alkupvm
+                                                                                                    :loppupvm loppupvm})
+                            yhteensa (reduce + 0 (map #(or (:summa %) 0) lisatyot))]
+                        [(str vuosi "-" (pvm/vuosi loppupvm))
+                         yhteensa]))
+                hoitokaudet)
+        lisatyot-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
+        lisatyot-yhteensarivi [{:lihavoi? true
+                                :korosta-hennosti? true
+                                :rivi ["Yhteensä" lisatyot-yhteensa]}]
+        otsikko-title [:otsikko-title "Lisätyöt"]]
+    [[:taulukko {:otsikko "Lisätyöt"
+                 :leveysprosentti 50
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi "Lisätyöt"
+                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
+      [{:leveys 5 :otsikko "Hoitovuosi"}
+       {:leveys 5 :otsikko "Lisätyöt (€)" :fmt :raha}]
+      (into [] (concat rivit (when-not (empty? rivit) lisatyot-yhteensarivi)))]]))
+
 (defn suorita [db user {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
@@ -242,10 +267,13 @@
             talvisuolan-erittely))
         [[:otsikko "Tavoitehinnan muutokset"]
          (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]
+
         (if (:muutosten_hallinta urakan-parametrit)
           ;; Käytännössä -25 ja sitä vanhemmilla urakoilla
           (muodosta-tavoitehinnan-muutokset db user urakka-id hoitokaudet kasittelija)
           ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
-          (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))))))
+          (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
+
+        (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)))))
 
 
