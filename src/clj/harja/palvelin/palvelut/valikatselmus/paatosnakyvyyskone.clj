@@ -622,9 +622,9 @@
                     (remove (fn [rivi] (= (:nimi rivi) "Tavoitehinnan alitus")) paatokset)
                     paatokset)
 
-        ;; Ja jos vielä on päätöksiä, joista on useampi samaa tyyppiä, niin otetaan niistä vain yksi
+        ;; Ja jos vielä on päätöksiä, joista on useampi samaa tyyppiä, niin otetaan niistä viimenen :urakan_alkuvuosi parametrin perusteella.
         paatokset (->> paatokset
                     (group-by :avain)
-                    (map (fn [[_ paatokset]] (last paatokset)))
+                    (map (fn [[_ paatokset]] (last (sort-by :urakan_alkuvuosi paatokset))))
                     (into []))]
     paatokset))
