@@ -558,12 +558,12 @@
 
 (defn hae-ilmoitustoimenpiteet-ilmoitusidlla [ilmoitus-id]
   (let [vastaus (q-map (str "select id, ilmoitus, ilmoitusid, kuitattu, tila, lahetetty, lahetysid,
-                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id ";"))]
+                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id " order by kuitattu asc;"))]
     vastaus))
 
 (defn hae-ilmoitustoimenpide-ilmoitusidlla [ilmoitus-id]
   (let [vastaus (first (q-map (str "select id, ilmoitus, ilmoitusid, kuitattu, tila, lahetetty, lahetysid,
-                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id ";")))]
+                  suunta, kanava, kuittaustyyppi from ilmoitustoimenpide where ilmoitusid = " ilmoitus-id " order by kuitattu asc;")))]
     vastaus))
 
 (defn hae-valaistusilmoitus []
