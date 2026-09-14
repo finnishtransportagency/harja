@@ -11,6 +11,8 @@
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.pvm :as pvm]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+            [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit :as raportit]
             [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu :as vastaanottotarkastus-mhu]))
@@ -72,6 +74,8 @@
                                                   :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
                                                   :loppupvm #inst "2023-12-31T23:59:59.000-00:00"}])
                   urakat-q/hae-urakan-hoitokaudet (fn [_ _] testi-hoitokaudet)
+                  urakat-q/hae-urakan-parametrit (fn [_ _] [{:muutosten_hallinta false}])
+                  muutos-ja-lisatyoraportti/hae-tavoitehinnan-oikaisut (fn [_ _] [])
                   talvisuola/suorita (fn [_ _ _]
                                        [:raportti {}
                                         [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
@@ -184,6 +188,84 @@
     (is (not-any? #(and (vector? %)
                      (= "Ympäristöraportti" (get-in % [1 :otsikko])))
           raportti))))
+
+(deftest MHU25-urakan-tavoitehinnan-muutokset-muodostuvat-kaikille-hoitovuosille
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        db (:db jarjestelma)
+        hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+        hoitovuodet (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet)
+        odotetut-rivit [["2025-2026" 110M]
+                        ["2026-2027" -157.5M]
+                        ["2027-2028" 0]
+                        ["2028-2029" 8.25M]
+                        ["2029-2030" -7.5M]]
+        kirjalliset {2025 [{:tyyppi "pysyva" :kustannusvaikutusten-summa 100M}
+                           {:tyyppi "johto-ja-hallintokorvaus" :jjh-muutosten-summa -25M}]
+                     2026 [{:tyyppi "muutostyo" :kustannusvaikutusten-summa -200M}
+                           {:tyyppi "pysyva" :kustannusvaikutusten-summa 50M}]
+                     2027 []
+                     2028 [{:tyyppi "pysyva" :kustannusvaikutusten-summa 1.25M}
+                           {:tyyppi "muutostyo" :kustannusvaikutusten-summa 2.75M}]
+                     2029 [{:tyyppi "johto-ja-hallintokorvaus" :jjh-muutosten-summa -1M}]}
+        maaramuutokset {2025 [{:tavoitehinnan_muutos 30M}
+                              {:tavoitehinnan_muutos -10M}]
+                        2026 [{:tavoitehinnan_muutos 12.5M}
+                              {:tavoitehinnan_muutos nil}]
+                        2027 [{:tavoitehinnan_muutos nil}]
+                        2028 [{:tavoitehinnan_muutos -3.5M}
+                              {:tavoitehinnan_muutos 0.5M}]
+                        2029 [{:tavoitehinnan_muutos -10M}]}
+        rahavarausten-muutokset {2025 15M
+                                 2026 -20M
+                                 2027 0
+                                 2028 7.25M
+                                 2029 3.5M}
+        kirjalliset-kutsut (atom [])
+        maaramuutos-kutsut (atom [])
+        rahavaraus-kutsut (atom [])]
+    (testing "Kajaanin urakalla muutosten hallinta on käytössä"
+      (is (true? (:muutosten_hallinta (first (urakat-q/hae-urakan-parametrit db urakka-id))))))
+    (testing "Kajaanin kaikki hoitovuodet ovat mukana"
+      (is (= [2025 2026 2027 2028 2029] hoitovuodet)))
+    (with-redefs [muutos-ja-lisatyoraportti/hae-kirjallisesti-sovitut-muutokset-raportille
+                  (fn [_ {:keys [hoitokauden-alkuvuosi] :as parametrit}]
+                    (swap! kirjalliset-kutsut conj parametrit)
+                    (get kirjalliset hoitokauden-alkuvuosi))
+                  muutos-palvelu/hae-tehtava-maaramuutokset
+                  (fn [_ _ {:keys [valittu-hoitokausi _hoitokaudet _laskenta-automatiikka?] :as parametrit}]
+                    (swap! maaramuutos-kutsut conj parametrit)
+                    (get maaramuutokset (pvm/vuosi (first valittu-hoitokausi))))
+                  rahavaraus-kyselyt/muutosten-rahavaraukset
+                  (fn [_ _ hoitokauden-alkuvuosi]
+                    (swap! rahavaraus-kutsut conj hoitokauden-alkuvuosi)
+                    [{:id 1 :tavoitehinnan-muutos 999999M}
+                     {:id :yhteenveto
+                      :tavoitehinnan-muutos (get rahavarausten-muutokset hoitokauden-alkuvuosi)}])]
+      (let [raportin-osat (vastaanottotarkastus-mhu/muodosta-tavoitehinnan-muutokset
+                            db +kayttaja-jvh+ urakka-id hoitokaudet nil)
+            taulukko (first raportin-osat)
+            rivit (nth taulukko 3)]
+        (testing "jokainen hoitovuosi käyttää oman vuoden kaikkia lähdearvoja"
+          (is (= odotetut-rivit (vec (butlast rivit)))))
+        (testing "yhteensä-rivi summaa hoitovuosien tulokset"
+          (is (= ["Yhteensä" -46.75M]
+                (get-in (last rivit) [:rivi]))))
+        (testing "taulukon metatiedot säilyvät"
+          (is (= "Harjaan kirjatut tavoitehinnan muutokset"
+                (get-in taulukko [1 :otsikko])))
+          (is (= "Harjaan kirjatut tavoitehinnan muutokset"
+                (get-in taulukko [1 :sheet-nimi])))
+          (is (= true (get-in taulukko [1 :viimeinen-rivi-yhteenveto?]))))
+        (testing "haut kutsutaan kerran jokaista hoitovuotta kohden"
+          (is (= hoitovuodet (mapv :hoitokauden-alkuvuosi @kirjalliset-kutsut)))
+          (is (= hoitovuodet
+                (mapv #(pvm/vuosi (first (:valittu-hoitokausi %))) @maaramuutos-kutsut)))
+          (is (every? :laskenta-automatiikka? @maaramuutos-kutsut))
+          (is (= hoitovuodet @rahavaraus-kutsut)))
+        (testing "tehtävämäärämuutoksille välitetään kaikki hoitokaudet"
+          (is (every? #(= (mapv (juxt :alkupvm :loppupvm) hoitokaudet)
+                        (:hoitokaudet %))
+                @maaramuutos-kutsut)))))))
 
 (deftest MHU21-urakan-tavoitehinnan-oikaisut-muodostuvat-hoitovuosittain
   (let [tv-otsikko-1 "Testioikaisu 2091"
