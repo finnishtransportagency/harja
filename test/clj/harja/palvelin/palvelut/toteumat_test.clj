@@ -157,14 +157,16 @@
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
         lisatieto "Bonusprofiilin vastainen write-path testi"
         bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto "muu-bonus" 1234.0)
-        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                 lisatieto urakka-id)))]
     (try+
       (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
       (is false "Tallennuksen pitäisi hylätä bonusprofiilin vastainen bonus domain-virheellä")
       (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
         (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi (first virheet))))
         (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi bonus-kirjausvirhe)))))
-    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                     lisatieto urakka-id)))]
       (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
 
 (deftest tallenna-erilliskustannus-sallii-urakkarajatun-liikennevahinkobonuksen
@@ -210,7 +212,8 @@
         (is (= "liikennevahinkojen_aiheuttajien_selvitysbonus" (:tyyppi tallennettu))
           "Urakkarajattu liikennevahinkobonus pitää voida tallentaa sallitulle urakalle"))
       (finally
-        (u (format "DELETE FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto))
+        (u (format "DELETE FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+             lisatieto urakka-id))
         (when-not linkki-oli-olemassa?
           (u (format "DELETE FROM bonus_profiili_rivi_urakka
                        WHERE bonus_profiili_rivi_id = %s AND urakka_id = %s"
@@ -225,14 +228,16 @@
         lisatieto "Liikennevahinkobonuksen urakkarajaustesti"
         bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto
                 "liikennevahinkojen_aiheuttajien_selvitysbonus" 1234.0)
-        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                 lisatieto urakka-id)))]
     (try+
       (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
       (is false "Urakkarajauksen ulkopuolinen liikennevahinkobonus pitää hylätä")
       (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
         (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi (first virheet))))
         (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi bonus-kirjausvirhe)))))
-    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s'" lisatieto)))]
+    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                     lisatieto urakka-id)))]
       (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
 
 (deftest tallenna-erilliskustannus-sallii-bonusprofiilin-mukaisen-mhu-bonuksen
