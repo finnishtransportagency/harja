@@ -9,6 +9,7 @@
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
+            [harja.pvm :as pvm]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit :as raportit]
@@ -183,6 +184,49 @@
     (is (not-any? #(and (vector? %)
                      (= "Ympäristöraportti" (get-in % [1 :otsikko])))
           raportti))))
+
+(deftest MHU21-urakan-tavoitehinnan-oikaisut-muodostuvat-hoitovuosittain
+  (let [tv-otsikko-1 "Testioikaisu 2091"
+        tv-otsikko-2 "Testioikaisu 2092"
+        tv-selite-1 "Ensimmäisen hoitovuoden oikaisu"
+        tv-selite-2 "Toisen hoitovuoden oikaisu"
+        tv-summa-1 1000
+        tv-summa-2 -250
+        hoitokausi-1 2091
+        hoitokausi-2 2092
+        urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        hoitokaudet [{:alkupvm (pvm/luo-pvm-aika hoitokausi-1 9 1 0)
+                      :loppupvm (pvm/luo-pvm-aika (inc hoitokausi-1) 8 30 23 59 59)}
+                     {:alkupvm (pvm/luo-pvm-aika hoitokausi-2 9 1 0)
+                      :loppupvm (pvm/luo-pvm-aika (inc hoitokausi-2) 8 30 23 59 59)}]
+        siivoa-testioikaisut! #(u (str "DELETE FROM tavoitehinnan_oikaisu
+                                        WHERE \"urakka-id\" = " urakka-id "
+                                          AND otsikko IN ('" tv-otsikko-1 "', '" tv-otsikko-2 "')"))]
+    (try
+      (siivoa-testioikaisut!)
+      (u (str "INSERT INTO tavoitehinnan_oikaisu
+               (\"urakka-id\", \"muokkaaja-id\", muokattu, otsikko, selite, summa,
+                \"hoitokauden-alkuvuosi\", poistettu)
+               VALUES (" urakka-id ", " (:id +kayttaja-jvh+) ", NOW(),
+                       '" tv-otsikko-1 "', '" tv-selite-1 "', " tv-summa-1 ",
+                       " hoitokausi-1 ", false),
+                      (" urakka-id ", " (:id +kayttaja-jvh+) ", NOW(),
+                       '" tv-otsikko-2 "', '" tv-selite-2 "', " tv-summa-2 ",
+                       " hoitokausi-2 ", false)"))
+      (let [raportin-osat (vastaanottotarkastus-mhu/muodosta-tavoitehinnan-oikaisut
+                            (:db jarjestelma) urakka-id hoitokaudet nil)
+            taulukko (first raportin-osat)
+            rivit (nth taulukko 3)]
+        (is (= [(str hoitokausi-1 "-" hoitokausi-2) (bigdec tv-summa-1)]
+              (first rivit)))
+        (is (= [(str hoitokausi-2 "-" (inc hoitokausi-2)) (bigdec tv-summa-2)]
+              (second rivit)))
+        (is (= ["Yhteensä" (bigdec (+ tv-summa-1 tv-summa-2))]
+              (get-in (last rivit) [:rivi])))
+        (is (= "Harjaan kirjatut tavoitehinnan muutokset"
+              (get-in taulukko [1 :sheet-nimi]))))
+      (finally
+        (siivoa-testioikaisut!)))))
 
 (deftest lupaukset-kayttaa-kuukausittaisia-pisteita-toimii
   (let [urakka-id-raasepori (hae-urakan-id-nimella "UUD Raasepori  MHU 2021- 2026, P")

@@ -11,6 +11,7 @@
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
+            [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.pvm :as pvm]))
 
 (defn- summa [rivit avain]
@@ -126,8 +127,7 @@
                                   [{:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
                                    {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}])
                           urakan-rahavaraukset)
-                    [{:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]))
-        _ (println "otsikot:" (pr-str otsikot))]
+                    [{:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]))]
     [:taulukko {:otsikko "Rahavarausten tavoitehintamuutokset"
                 :tyhja (when (empty? hoitokaudet) "Ei hoitovuosia.")
                 :sheet-nimi "Rahavarausten tavoitehintamuutokset"
@@ -143,8 +143,37 @@
      otsikot
      rivit]))
 
-(defn suorita [db _ {:keys [urakka-id]}]
+(defn muodosta-tavoitehinnan-oikaisut [db urakka-id hoitokaudet kasittelija]
+  (let [rivit (mapv (fn [hoitokausi]
+                     (let [{:keys [alkupvm loppupvm]} hoitokausi
+
+                           vuosi (pvm/vuosi alkupvm)
+                           oikaisut (muutos-ja-lisatyoraportti/hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
+                                                                                                     :hoitovuosi vuosi})
+                           tavoitehinnan-muutos (reduce + 0 (map #(or (:tavoitehinnan_muutos %) 0) oikaisut))]
+                       [(str vuosi "-" (pvm/vuosi loppupvm))
+                        tavoitehinnan-muutos]))
+               hoitokaudet)
+
+        oikaisut-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
+        oikaisut-yhteensarivi [{:lihavoi? true
+                                :korosta-hennosti? true
+                                :rivi ["Yhteensä" oikaisut-yhteensa]}]
+        otsikko-title [:otsikko-title "Tavoitehinnan oikaisut"]]
+
+
+    [[:taulukko {:viimeinen-rivi-yhteenveto? true
+                 :leveysprosentti 50
+                 :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
+                 :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
+      [{:leveys 5 :otsikko "Hoitovuosi"}
+       {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
+      (into [] (concat rivit (when-not (empty? rivit) oikaisut-yhteensarivi)))]]))
+
+(defn suorita [db _ {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-parametrit (urakat-q/hae-urakan-parametrit db urakka-id)
         raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
         hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
         talvisuolan-erittely (talvisuolan-erittely db urakka-id (:alkupvm urakan-tiedot) (:loppupvm urakan-tiedot))]
@@ -159,6 +188,8 @@
           (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
             talvisuolan-erittely))
         [[:otsikko "Tavoitehinnan muutokset"]
-         (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]))))
+         (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]
+        (when-not (:muutosten_hallinta urakan-parametrit)
+          (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))))))
 
 

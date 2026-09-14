@@ -370,7 +370,7 @@
 
 (defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
-                                                 :alkupvm alkupvm})
+                                                 :hoitovuosi (pvm/vuosi alkupvm)})
         oikaisurivit (mapv (fn [r]
                              (rivi
                                (or (:otsikko r) "")
