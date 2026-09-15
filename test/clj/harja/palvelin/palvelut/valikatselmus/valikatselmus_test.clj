@@ -19,15 +19,15 @@
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
-                  (fn [_]
-                    (component/start
-                      (component/system-map
-                        :db (tietokanta/luo-tietokanta testitietokanta)
-                        :db-replica (tietokanta/luo-tietokanta testitietokanta)
-                        :http-palvelin (testi-http-palvelin)
-                        :valikatselmus (component/using
-                                         (valikatselmukset/->Valikatselmukset)
-                                         [:http-palvelin :db :db-replica])))))
+    (fn [_]
+      (component/start
+        (component/system-map
+          :db (tietokanta/luo-tietokanta testitietokanta)
+          :db-replica (tietokanta/luo-tietokanta testitietokanta)
+          :http-palvelin (testi-http-palvelin)
+          :valikatselmus (component/using
+                           (valikatselmukset/->Valikatselmukset)
+                           [:http-palvelin :db :db-replica])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -38,7 +38,7 @@
 ;; Helpperit
 (defn filtteroi-oikaisut-selitteella [oikaisut selite]
   (filter #(= selite (::valikatselmus/selite %))
-          oikaisut))
+    oikaisut))
 
 (defn kayttaja [urakka-id]
   (assoc +kayttaja-tero+
@@ -54,13 +54,13 @@
         hoitokauden-alkuvuosi 2021
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-tavoitehinnan-oikaisu
-                                  (kayttaja urakka-id)
-                                  {::urakka/id urakka-id
-                                   ::valikatselmus/otsikko "Oikaisu"
-                                   ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                   ::valikatselmus/summa 9001
-                                   ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
+                    :tallenna-tavoitehinnan-oikaisu
+                    (kayttaja urakka-id)
+                    {::urakka/id urakka-id
+                     ::valikatselmus/otsikko "Oikaisu"
+                     ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                     ::valikatselmus/summa 9001
+                     ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
         vuoden-2021-oikaisut (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
         viimeisin-oikaisu (last vuoden-2021-oikaisut)]
     (is (some? vastaus))
@@ -70,9 +70,9 @@
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         oikaisun-summa 9001M
         oikaistu-tavoitehinta-ennen (q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
-                                                                              :urakka-id urakka-id})
-        oikaistu-kattohinta-ennen (q/hae-oikaistu-kattohinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
                                                                                     :urakka-id urakka-id})
+        oikaistu-kattohinta-ennen (q/hae-oikaistu-kattohinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
+                                                                                :urakka-id urakka-id})
         ;; With-redefsillä laitetaan (pvm/nyt) palauttamaan tietty ajankohta. Tämä sen takia, että
         ;; rajapinta antaa virheen, mikäli kutsuhetkellä ei saa tehdä tavoitehinnan oikaisuja.
         ;; Tätä tulee käyttää varoen, koska tämä ylirjoittaa kaikki (pvm/nyt) kutsut blokin sisällä, joita saattaa
@@ -90,10 +90,10 @@
         vuoden-2021-oikaisut (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
         viimeisin-oikaisu (last vuoden-2021-oikaisut)
         oikaistu-tavoitehinta-jalkeen (q/hae-oikaistu-tavoitehinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
-                                                                                    :urakka-id urakka-id})
+                                                                                      :urakka-id urakka-id})
         oikea-tavoitehinta (+ oikaistu-tavoitehinta-ennen oikaisun-summa)
         oikaistu-kattohinta-jalkeen (q/hae-oikaistu-kattohinta (:db jarjestelma) {:hoitokauden-alkuvuosi 2021
-                                                                                :urakka-id urakka-id})
+                                                                                  :urakka-id urakka-id})
         ;; Kattohinta kasvaa 10% myös tavoitehinnan oikaisusta
         oikea-kattohinta (+ (* oikaisun-summa 1.1M) oikaistu-kattohinta-ennen)]
     (is (some? vastaus))
@@ -105,49 +105,49 @@
     (is (= oikaistu-kattohinta-jalkeen oikea-kattohinta))))
 
 ;; Tämä ominaisuus on otettu toistaiseksi pois käytöstä
-#_ (deftest oikaisun-teko-epaonnistuu-alkuvuodesta
-  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-        hoitokauden-alkuvuosi 2021
-        virheellinen-vuosi (+ hoitokauden-alkuvuosi 2)
-        virheellinen-vastaus (try
-                               (with-redefs [pvm/nyt #(pvm/luo-pvm virheellinen-vuosi 5 20)]
-                                 (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                 :tallenna-tavoitehinnan-oikaisu
-                                                 (kayttaja urakka-id)
-                                                 {::urakka/id urakka-id
-                                                  ::valikatselmus/otsikko "Oikaisu"
-                                                  ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                  ::valikatselmus/summa 1000
-                                                  ::valikatselmus/selite "Juhannusmenot hidasti"}))
-                               (catch Exception e e))]
-    (is (= ExceptionInfo (type virheellinen-vastaus)))
-    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
+#_(deftest oikaisun-teko-epaonnistuu-alkuvuodesta
+    (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+          hoitokauden-alkuvuosi 2021
+          virheellinen-vuosi (+ hoitokauden-alkuvuosi 2)
+          virheellinen-vastaus (try
+                                 (with-redefs [pvm/nyt #(pvm/luo-pvm virheellinen-vuosi 5 20)]
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :tallenna-tavoitehinnan-oikaisu
+                                     (kayttaja urakka-id)
+                                     {::urakka/id urakka-id
+                                      ::valikatselmus/otsikko "Oikaisu"
+                                      ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                      ::valikatselmus/summa 1000
+                                      ::valikatselmus/selite "Juhannusmenot hidasti"}))
+                                 (catch Exception e e))]
+      (is (= ExceptionInfo (type virheellinen-vastaus)))
+      (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> virheellinen-vastaus ex-data :virheet :viesti)))))
 
 (deftest virheellisen-oikaisun-teko-epaonnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021]
     (is (thrown? Exception (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                              (kutsu-palvelua (:http-palvelin jarjestelma)
-                                             :tallenna-tavoitehinnan-oikaisu
-                                             (kayttaja urakka-id)
-                                             {::urakka/id urakka-id
-                                              ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                              ::valikatselmus/otsikko "Oikaisu"
-                                              ::valikatselmus/summa "Kolmesataa"
-                                              ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))))))
+                               :tallenna-tavoitehinnan-oikaisu
+                               (kayttaja urakka-id)
+                               {::urakka/id urakka-id
+                                ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                ::valikatselmus/otsikko "Oikaisu"
+                                ::valikatselmus/summa "Kolmesataa"
+                                ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))))))
 
 (deftest muokkaa-tavoitehinnan-oikaisua
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         vastaus (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) (kayttaja urakka-id)
-          {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})
+                  {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})
         oikaisut (vals (get (:tavoitehinnan-muutokset vastaus) hoitokauden-alkuvuosi))
         muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
         vastaus (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                   (kutsu-palvelua (:http-palvelin jarjestelma)
-                                  :tallenna-tavoitehinnan-oikaisu
-                                  +kayttaja-jvh+
-                                  (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))
+                    :tallenna-tavoitehinnan-oikaisu
+                    +kayttaja-jvh+
+                    (assoc muokattava-oikaisu ::valikatselmus/summa 50000)))
         vuoden-2021-oikaisut (vals (get-in (:tavoitehinnan-muutokset vastaus) [hoitokauden-alkuvuosi]))
         vastauksen-oikaisu (first (filter #(= "Muokattava testioikaisu" (:harja.domain.kulut.valikatselmus/selite %)) vuoden-2021-oikaisut))
         ;; Ajankohtien millisekunnit hieman heittävät tallennuksen yhteydessä, niin trimmataan niitä hieman
@@ -162,35 +162,39 @@
     (is (= muokattava-oikaisu odotettu-vastaus) "Summan muokkaus ei onnistunut")
 
     (let [oikaisut-jalkeen (get (:tavoitehinnan-muutokset (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) (kayttaja urakka-id)
-                                   {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})) hoitokauden-alkuvuosi)
+                                                            {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})) hoitokauden-alkuvuosi)
           vuoden-2021-oikaisut (vals oikaisut-jalkeen)
           muokattu-oikaisu (first (filtteroi-oikaisut-selitteella vuoden-2021-oikaisut "Muokattava testioikaisu"))]
       (is (= 50000M (::valikatselmus/summa muokattu-oikaisu))))))
 
 ;; Tarkistus otettu toistaiseksi pois käytöstä
-#_ (deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
-  (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
-        hoitokauden-alkuvuosi 2021
-        virheellinen-vuosi (+ 2 hoitokauden-alkuvuosi)
-        oikaisut (get (kutsu-palvelua (:http-palvelin jarjestelma)
-                                      :hae-tavoitehintojen-oikaisut
-                                      (kayttaja urakka-id)
-                                      {::urakka/id urakka-id}) hoitokauden-alkuvuosi)
-        muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
-        vastaus (try (with-redefs [pvm/nyt #(pvm/luo-pvm virheellinen-vuosi 0 15)]
-                       (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :tallenna-tavoitehinnan-oikaisu
-                                       (kayttaja urakka-id)
-                                       (assoc muokattava-oikaisu ::valikatselmus/summa 1)))
-                     (catch Exception e e))]
-    (is (= ExceptionInfo (type vastaus)))
-    (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
+#_(deftest tavoitehinnan-oikaisun-muokkaus-ei-onnistu-tammikuussa
+    (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+          hoitokauden-alkuvuosi 2021
+          virheellinen-vuosi (+ 2 hoitokauden-alkuvuosi)
+          oikaisut (get (kutsu-palvelua (:http-palvelin jarjestelma)
+                          :hae-tavoitehintojen-oikaisut
+                          (kayttaja urakka-id)
+                          {::urakka/id urakka-id}) hoitokauden-alkuvuosi)
+          muokattava-oikaisu (first (filtteroi-oikaisut-selitteella oikaisut "Muokattava testioikaisu"))
+          vastaus (try (with-redefs [pvm/nyt #(pvm/luo-pvm virheellinen-vuosi 0 15)]
+                         (kutsu-palvelua (:http-palvelin jarjestelma)
+                           :tallenna-tavoitehinnan-oikaisu
+                           (kayttaja urakka-id)
+                           (assoc muokattava-oikaisu ::valikatselmus/summa 1)))
+                    (catch Exception e e))]
+      (is (= ExceptionInfo (type vastaus)))
+      (is (= "Tavoitehinnan oikaisuja saa käsitellä ainoastaan sallitulla aikavälillä." (-> vastaus ex-data :virheet :viesti)))))
 
 (deftest tavoitehinnan-oikaisun-poisto-onnistuu
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
-        tavoitehintojen-oikaisut (vals (get (:tavoitehinnan-muutokset (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) (kayttaja urakka-id)
-                                                                        {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})) hoitokauden-alkuvuosi))
+        tavoitehintojen-oikaisut (vals (get
+                                         (:tavoitehinnan-muutokset
+                                           (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle
+                                             (:db jarjestelma)
+                                             (kayttaja urakka-id)
+                                             {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi})) hoitokauden-alkuvuosi))
         poistettava (first (filter #(= "Poistettava testioikaisu" (::valikatselmus/selite %)) tavoitehintojen-oikaisut))
         uudet-oikaisut (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                          (vals (get (:tavoitehinnan-muutokset (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -205,14 +209,14 @@
         hoitokauden-alkuvuosi 2019
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :tallenna-tavoitehinnan-oikaisu
-                                       (kayttaja urakka-id)
-                                       {::urakka/id urakka-id
-                                        ::valikatselmus/otsikko "Oikaisu"
-                                        ::valikatselmus/summa 9001
-                                        ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                        ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
-                     (catch Exception e e))]
+                         :tallenna-tavoitehinnan-oikaisu
+                         (kayttaja urakka-id)
+                         {::urakka/id urakka-id
+                          ::valikatselmus/otsikko "Oikaisu"
+                          ::valikatselmus/summa 9001
+                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                          ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
+                  (catch Exception e e))]
     (is (= ExceptionInfo (type vastaus)))
     (is (= "Tavoitehinnan oikaisuja saa tehdä ainoastaan teiden hoitourakoille" (-> vastaus ex-data :virheet :viesti)))))
 
@@ -220,14 +224,14 @@
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2022
         tavoitehinnan-muutokset (vals (get (:tavoitehinnan-muutokset (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
-                                                       (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                         :tallenna-tavoitehinnan-oikaisu
-                                                         (kayttaja urakka-id)
-                                                         {::urakka/id urakka-id
-                                                          ::valikatselmus/otsikko "Oikaisu"
-                                                          ::valikatselmus/summa 12345
-                                                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                          ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))) hoitokauden-alkuvuosi))
+                                                                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                         :tallenna-tavoitehinnan-oikaisu
+                                                                         (kayttaja urakka-id)
+                                                                         {::urakka/id urakka-id
+                                                                          ::valikatselmus/otsikko "Oikaisu"
+                                                                          ::valikatselmus/summa 12345
+                                                                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                          ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))) hoitokauden-alkuvuosi))
         viimeisin (last tavoitehinnan-muutokset)]
     (is (= 12345M (::valikatselmus/summa viimeisin)))))
 
@@ -236,14 +240,14 @@
         hoitokauden-alkuvuosi 2021
         vastaus (try (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
                        (kutsu-palvelua (:http-palvelin jarjestelma)
-                                       :tallenna-tavoitehinnan-oikaisu
-                                       +kayttaja-seppo+
-                                       {::urakka/id urakka-id
-                                        ::valikatselmus/otsikko "Oikaisu"
-                                        ::valikatselmus/summa 12345
-                                        ::valikatselmus/hoitokauden-alkuvuosi 2021
-                                        ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
-                     (catch ExceptionInfo e e))]
+                         :tallenna-tavoitehinnan-oikaisu
+                         +kayttaja-seppo+
+                         {::urakka/id urakka-id
+                          ::valikatselmus/otsikko "Oikaisu"
+                          ::valikatselmus/summa 12345
+                          ::valikatselmus/hoitokauden-alkuvuosi 2021
+                          ::valikatselmus/selite "Maailmanloppu tuli, kesti vähän oletettua kauempaa"}))
+                  (catch ExceptionInfo e e))]
     (is (= ExceptionInfo (type vastaus)))
     (is (= EiOikeutta (type (ex-data vastaus))))))
 
@@ -251,14 +255,14 @@
   (let [urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
         hoitokauden-alkuvuosi 2021
         tavoitehinnan-muutokset (vals (get (:tavoitehinnan-muutokset (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))]
-                                                       (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                         :tallenna-tavoitehinnan-oikaisu
-                                                         (kayttaja urakka-id)
-                                                         {::urakka/id urakka-id
-                                                          ::valikatselmus/otsikko "Oikaisu"
-                                                          ::valikatselmus/summa -2000
-                                                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-                                                          ::valikatselmus/selite "Seppo kävi töissä, päällystykset valmistui odotettua nopeampaa"}))) hoitokauden-alkuvuosi))
+                                                                       (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                                         :tallenna-tavoitehinnan-oikaisu
+                                                                         (kayttaja urakka-id)
+                                                                         {::urakka/id urakka-id
+                                                                          ::valikatselmus/otsikko "Oikaisu"
+                                                                          ::valikatselmus/summa -2000
+                                                                          ::valikatselmus/hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                                          ::valikatselmus/selite "Seppo kävi töissä, päällystykset valmistui odotettua nopeampaa"}))) hoitokauden-alkuvuosi))
         viimeisin (last tavoitehinnan-muutokset)]
     (is (= -2000M (::valikatselmus/summa viimeisin)))))
 
@@ -324,26 +328,26 @@
     (try
       (let [tavallinen-laatupoikkeama-id
             (i (format (str "INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, "
-                            "tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, "
-                            "tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) "
-                            "VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '', "
-                            "'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Testin vuoksi lisätty sanktio', 123, %s, NOW(), "
-                            "'2025-10-11 06:06.37', '2025-10-11 06:06.37', FALSE, FALSE, %s, '%s', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5)")
-                       luoja-id urakka-id tavallinen-sanktio-kuvaus))
+                         "tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, "
+                         "tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) "
+                         "VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '', "
+                         "'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Testin vuoksi lisätty sanktio', 123, %s, NOW(), "
+                         "'2025-10-11 06:06.37', '2025-10-11 06:06.37', FALSE, FALSE, %s, '%s', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5)")
+                 luoja-id urakka-id tavallinen-sanktio-kuvaus))
             _ (i (format (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
-                              "VALUES ('A'::SANKTIOLAJI, %s, '2025-10-12 06:06.37', '2025-10-11 06:06.37', 'MAKU 2015', %s, %s, %s, FALSE, %s)")
-                         tavallinen-sanktio-maara tavallinen-laatupoikkeama-id toimenpideinstanssi-id sanktiotyyppi-id luoja-id))
+                           "VALUES ('A'::SANKTIOLAJI, %s, '2025-10-12 06:06.37', '2025-10-11 06:06.37', 'MAKU 2015', %s, %s, %s, FALSE, %s)")
+                   tavallinen-sanktio-maara tavallinen-laatupoikkeama-id toimenpideinstanssi-id sanktiotyyppi-id luoja-id))
             arvonvahennys-laatupoikkeama-id
             (i (format (str "INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu, "
-                            "tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, "
-                            "tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) "
-                            "VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '', "
-                            "'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Testin vuoksi lisätty arvonvähennys', 123, %s, NOW(), "
-                            "'2025-11-11 06:06.37', '2025-11-11 06:06.37', FALSE, FALSE, %s, '%s', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5)")
-                       luoja-id urakka-id arvonvahennys-kuvaus))
+                         "tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty, selvitys_annettu, urakka, kuvaus, "
+                         "tr_numero, tr_alkuosa, tr_loppuosa, tr_loppuetaisyys, sijainti, tr_alkuetaisyys) "
+                         "VALUES ('harja-ui'::LAHDE, 'Testikohde', 'tilaaja'::OSAPUOLI, 'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA, '', "
+                         "'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Testin vuoksi lisätty arvonvähennys', 123, %s, NOW(), "
+                         "'2025-11-11 06:06.37', '2025-11-11 06:06.37', FALSE, FALSE, %s, '%s', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5)")
+                 luoja-id urakka-id arvonvahennys-kuvaus))
             _ (i (format (str "INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
-                              "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, %s, '2025-11-12 06:06.37', '2025-11-11 06:06.37', 'MAKU 2015', %s, %s, %s, FALSE, %s)")
-                         arvonvahennys-maara arvonvahennys-laatupoikkeama-id toimenpideinstanssi-id sanktiotyyppi-id luoja-id))
+                           "VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, %s, '2025-11-12 06:06.37', '2025-11-11 06:06.37', 'MAKU 2015', %s, %s, %s, FALSE, %s)")
+                   arvonvahennys-maara arvonvahennys-laatupoikkeama-id toimenpideinstanssi-id sanktiotyyppi-id luoja-id))
             vastaus (with-redefs [;; Validoinnin takia päätöksiä ei saada kuluvalle hoitovuodelle haettua, joten feikataan nykyhetki tulevaisuuteen
                                   pvm/nyt (constantly (pvm/luo-pvm-dec-kk 2026 10 15))]
                       (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) testikayttaja
@@ -402,8 +406,8 @@
             viimeinen_hoitokausi false
             ;; Lisää siirretyt kulut Välikatselmuksesta "edelliseltä vuodelta" tekemällä tavoitehinnan alituspäätös
             alituspaatos (paatos-apurit/tavoitehinnan-alituspaatos urakka-id hoitokauden-alkuvuosi hoitokauden-alun-tavoitehinta hoitokauden-lopun-tavoitehinta toteutuneet-kustannukset
-                     alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
-                     viimeinen_hoitokausi (:id kayttaja))
+                           alituksen-maara siirto-ed-vuodelta tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id
+                           viimeinen_hoitokausi (:id kayttaja))
             _ (paatos-kyselyt/tee-tavoitehinnan-alituspaatos (:db jarjestelma) alituspaatos)
 
             ;; Tavoitehinnan muutos
@@ -497,8 +501,8 @@
               pistelukujen-muutos-prosentteina (with-precision 4 (round2 1 (* (/ (- kuukausien-keskiarvo alkuperainen-pisteluku) kuukausien-keskiarvo) 100)))
               indeksikorotuksen-prosenttiosuus 3.9
               indeksikorjauspaatos (paatos-apurit/indeksikorjauspaatos urakka-id hoitokauden-alkuvuosi hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset hv_lopun_tavoitehinta_ennen_indkorj
-                       hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
-                       pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus (:id kayttaja))
+                                     hoitokauden-kuukaudet kuukausien-keskiarvo alkuperainen-pisteluku alkuperaisen-pisteluvun-kuukausi
+                                     pistelukujen-muutos pistelukujen-muutos-prosentteina indeksikorotuksen-prosenttiosuus hoitokauden-lopun-indeksikorjaus (:id kayttaja))
               _ (paatos-kyselyt/tee-indeksikorjauspaatos (:db jarjestelma) indeksikorjauspaatos)
 
               ;; Hoitovuoden lopun tavoite ja kattohintapäätös
@@ -510,12 +514,12 @@
               kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
               kattohinta (* kattohintakerroin tavoitehinta_jalkeen)
               lopun-hintapaatos (paatos-apurit/lopun-hintapaatos urakka-id hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
-                       tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus (:id kayttaja))
+                                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus (:id kayttaja))
 
               _ (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) lopun-hintapaatos)
 
               ;; Hoidonjohtopalkkion muutos
-              tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
+              tavoitehinta 2100000M ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
               tarjouksen_tavoitehinta 2000000M
               muutosprosentti (* (- (/ tavoitehinta tarjouksen_tavoitehinta) 1) 100)
               hoidonjohtopalkkio 40000M
@@ -523,7 +527,7 @@
               kulu_id 1
 
               hoidojohtopalkkiomuutospaatos (paatos-apurit/hoidojohtopalkkiomuutospaatos urakka-id hoitokauden-alkuvuosi tavoitehinta tarjouksen_tavoitehinta
-                       muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id (:id kayttaja))
+                                              muutosprosentti hoidonjohtopalkkio hoidonjohtopalkkio_muutos kulu_id (:id kayttaja))
               _ (paatos-kyselyt/tee-hoidonjohtopalkkiomuutospaatos (:db jarjestelma) hoidojohtopalkkiomuutospaatos)
 
               vastaus (try
@@ -569,17 +573,17 @@
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
         kustannukset-jarjestettyna (valikatselmukset/hae-kustannukset-jarjestettyna (:db jarjestelma) urakka-id hoitokauden-alkuvuosi hoitokauden-alkupvm hoitokauden-loppupvm)
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])]
-        (is (= odotetut-paatokset-tavoitehinta-alittuu (get-in vastaus-tavoitehinnan-alitus [:paatokset])))
-        (is (= odotetut-paatokset-tavoitehinta-ylittyy (get-in vastaus-tavoitehinnan-ylitys [:paatokset])))
-        (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
-            "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
-        (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
-            "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
-        (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
-            "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
-        (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
-              alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
-          (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
-              "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
-          (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
-              "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
+    (is (= odotetut-paatokset-tavoitehinta-alittuu (get-in vastaus-tavoitehinnan-alitus [:paatokset])))
+    (is (= odotetut-paatokset-tavoitehinta-ylittyy (get-in vastaus-tavoitehinnan-ylitys [:paatokset])))
+    (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
+      "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
+    (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
+      "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
+    (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
+      "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
+    (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
+          alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
+      (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
+        "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
+      (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
+        "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
