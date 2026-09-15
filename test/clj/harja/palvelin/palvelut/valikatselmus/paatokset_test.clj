@@ -364,7 +364,7 @@
         paatokset [{:nimi "Lupaukset" :tyyppi "bonus" :jarjestys 1}]
         vastaus (paatos-kyselyt/hae-paatokset (:db jarjestelma) paatokset urakkaid hoitokauden-alkuvuosi)]
     (testaa-lupauspaatostiedot (first vastaus) urakkaid hoitokauden-alkuvuosi tyyppi tavoitehinta tarjous-tavoitehinta
-      luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti  indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)))
+      luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio bonusprosentti sanktioprosentti indeksi indeksikorotus erilliskustannus-id sanktio-id kayttajaid)))
 
 ;; Poistetaan lupauspaatos
 (deftest kysely-lupausbonus-poisto-onnistuu-test
@@ -447,15 +447,15 @@
         ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupaussanktio
         lupauspaatoksen-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
-                                                     tallennettu-paatos)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
         ;; Poistetaan päätös
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
-                                         {:urakka-id urakkaid
-                                          :paatos (assoc tallennettu-paatos :luoja kayttajaid)
-                                          :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
+                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                           {:urakka-id urakkaid
+                            :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                            :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :lupaukset)
         ;; Päätöksen poistamisen jälkeen enää ei pitäisi löytyä sanktiota
         lupauspaatoksen-poistettu-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))]
@@ -482,14 +482,14 @@
           bonusprosentti (:lupauspaatoksen_bonusprosentti urakan-parametrit)
           sanktioprosentti (:lupauspaatoksen_sanktioprosentti urakan-parametrit)
           indeksikorotus (paatos-apurit/laske-indeksikorotus-lupaukselle (:db jarjestelma) urakkaid paatos-pvm indeksi lupausbonus false)
-          
+
           ;; Testi 1: Bonus-päätös (tyyppi="bonus") - datassa on sekä bonus että sanktio, mutta vain bonus saa tallentua
           lupauspaatos-bonus (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi "bonus" tavoitehinta tarjous-tavoitehinta
-                               luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio 
+                               luvatut-pisteet toteutuneet-pisteet lupausbonus lupaussanktio
                                bonusprosentti sanktioprosentti indeksi indeksikorotus nil nil kayttajaid)
           vastaus-bonus (try
                           (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
-                                        lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle 
+                                        lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle
                                         (fn [db hakuparametrit]
                                           {:lupaus-sitoutuminen {:pisteet 50}
                                            :yhteenveto {:ennusteen-tila :alustava-toteuma
@@ -498,26 +498,26 @@
                                                         :tavoitehinta tavoitehinta
                                                         :odottaa-kannanottoa 0
                                                         :merkitsevat-odottaa-kannanottoa 0}})
-                                        valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta 
+                                        valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
                                         (fn [db hakuparametrit] tavoitehinta)
-                                        jarjestelma-kyselyt/hae-jarjestelman-asetukset 
+                                        jarjestelma-kyselyt/hae-jarjestelman-asetukset
                                         (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                             (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-bonus))
                           (catch Exception e e))
           tallennettu-bonus (valitse-paatos (:paatokset vastaus-bonus) :lupaukset)
-          
+
           erilliskustannus-bonus (when (:erilliskustannus_id tallennettu-bonus)
-                                   (first (erilliskustannus-kyselyt/hae-erilliskustannus 
-                                            (:db jarjestelma) 
+                                   (first (erilliskustannus-kyselyt/hae-erilliskustannus
+                                            (:db jarjestelma)
                                             {:urakka-id urakkaid :id (:erilliskustannus_id tallennettu-bonus)})))
-          
+
           ;; Testi 2: Sanktio-päätös (tyyppi="sanktio") - datassa on sekä bonus että sanktio, mutta vain sanktio saa tallentua
           lupauspaatos-sanktio (paatos-apurit/lupauspaatos urakkaid hoitokauden-alkuvuosi "sanktio" tavoitehinta tarjous-tavoitehinta
-                                 luvatut-pisteet 5 lupausbonus lupaussanktio 
+                                 luvatut-pisteet 5 lupausbonus lupaussanktio
                                  bonusprosentti sanktioprosentti indeksi indeksikorotus nil nil kayttajaid)
           vastaus-sanktio (try
                             (with-redefs [pvm/nyt #(pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
-                                          lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle 
+                                          lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle
                                           (fn [db hakuparametrit]
                                             {:lupaus-sitoutuminen {:pisteet 50}
                                              :yhteenveto {:ennusteen-tila :alustava-toteuma
@@ -526,9 +526,9 @@
                                                           :tavoitehinta tavoitehinta
                                                           :odottaa-kannanottoa 0
                                                           :merkitsevat-odottaa-kannanottoa 0}})
-                                          valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta 
+                                          valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta
                                           (fn [db hakuparametrit] tavoitehinta)
-                                          jarjestelma-kyselyt/hae-jarjestelman-asetukset 
+                                          jarjestelma-kyselyt/hae-jarjestelman-asetukset
                                           (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                               (kutsu-palvelua (:http-palvelin jarjestelma) :tee-lupauspaatos +kayttaja-jvh+ lupauspaatos-sanktio))
                             (catch Exception e e
@@ -536,22 +536,22 @@
           tallennettu-sanktio (valitse-paatos (:paatokset vastaus-sanktio) :lupaukset)
           sanktio (when (:sanktio_id tallennettu-sanktio)
                     (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-sanktio))))]
-      
+
       ;; Assertiot bonukselle: Bonus tallennetaan, sanktio EI tallennu
-      (is (not (nil? erilliskustannus-bonus)) 
-          "Bonus tallennettiin kun tyyppi oli 'bonus'")
-      (is (= lupausbonus (:rahasumma erilliskustannus-bonus)) 
-          "Lupausbonus on oikea")
-      (is (nil? (:sanktio_id tallennettu-bonus)) 
-          "REGRESSIOTESTI: Sanktiota ei tallennettu vaikka datassa oli :lupaussanktio, koska tyyppi oli 'bonus'")
-      
+      (is (not (nil? erilliskustannus-bonus))
+        "Bonus tallennettiin kun tyyppi oli 'bonus'")
+      (is (= lupausbonus (:rahasumma erilliskustannus-bonus))
+        "Lupausbonus on oikea")
+      (is (nil? (:sanktio_id tallennettu-bonus))
+        "REGRESSIOTESTI: Sanktiota ei tallennettu vaikka datassa oli :lupaussanktio, koska tyyppi oli 'bonus'")
+
       ;; Assertiot sanktiolle: Sanktio tallennetaan, bonus EI tallennu
-      (is (not (nil? sanktio)) 
-          "Sanktio tallennettiin kun tyyppi oli 'sanktio'")
-      (is (= lupaussanktio (:maara sanktio)) 
-          "Lupaussanktio on oikea")
-      (is (nil? (:erilliskustannus_id tallennettu-sanktio)) 
-          "REGRESSIOTESTI: Bonusta ei tallennettu vaikka datassa oli :lupausbonus, koska tyyppi oli 'sanktio'"))))
+      (is (not (nil? sanktio))
+        "Sanktio tallennettiin kun tyyppi oli 'sanktio'")
+      (is (= lupaussanktio (:maara sanktio))
+        "Lupaussanktio on oikea")
+      (is (nil? (:erilliskustannus_id tallennettu-sanktio))
+        "REGRESSIOTESTI: Bonusta ei tallennettu vaikka datassa oli :lupausbonus, koska tyyppi oli 'sanktio'"))))
 
 
 ;; Testaa tavoitehinnan muutospäätöksen lisäys
@@ -609,7 +609,7 @@
 
         ;; Kun kattohinta on käsin asetettu uusiksi, niin sen täytyy vaikuttaa urakka_tavoite taulun kattohintaan
         ;; Varmistetaan, että näin on tapahtunut
-        hoitokaudennro 2                                    ;; Oulun urakka alkaa 2019, joten joten 2020 on hoitokauden 2
+        hoitokaudennro 2 ;; Oulun urakka alkaa 2019, joten joten 2020 on hoitokauden 2
         urakkatavoite (first (q-map (format "SELECT * FROM urakka_tavoite
                                        WHERE urakka = %s
                                          AND hoitokausi = %s" urakkaid hoitokaudennro)))
@@ -691,13 +691,13 @@
         _ (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")
 
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
-                                                     tallennettu-paatos)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
         ;; Poistetaan juuri lisätty päätös.
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
-                                      {:urakka-id urakkaid
-                                       :paatos (assoc tallennettu-paatos :luoja kayttajaid)
-                                       :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
+                        {:urakka-id urakkaid
+                         :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                         :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         ;; Annetuilla arvoilla poistettua päätöstä ei löydy, vaan default päätös
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinnan-muutokset)]
     (is (nil? (:luotu poistettu-paatos)))
@@ -922,13 +922,13 @@
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
-                                                     tallennettu-paatos)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
         ;; Poistetaan juuri lisätty päätös.
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
-                                      {:urakka-id urakkaid
-                                       :paatos (assoc tallennettu-paatos :luoja kayttajaid)
-                                       :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
+                        {:urakka-id urakkaid
+                         :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                         :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinnan-alitus)]
     (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta tallennettu-paatos)) "Hoitokauden alun tavoitehinta on sama päätöksen tekemisen jälkeen")
     (is (= hoitokauden-lopun-tavoitehinta (:hoitokauden_lopun_tavoitehinta tallennettu-paatos)) "Hoitokauden lopun tavoitehinta on sama päätöksen tekemisen jälkeen")
@@ -1054,13 +1054,13 @@
         tallennettu-paatos (assoc (first tietokantapaatokset) :avain :tavoitehinnan-ylitys)
 
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
-                                                     tallennettu-paatos)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
         ;; Poistetaan juuri lisätty päätös.
         poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
-                                      {:urakka-id urakkaid
-                                       :paatos (assoc tallennettu-paatos :luoja kayttajaid)
-                                       :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
+                        {:urakka-id urakkaid
+                         :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                         :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinta-ylitys)]
     (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
     (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")
@@ -1080,7 +1080,7 @@
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         viimeinen_hoitokausi false
         kulu-id 1
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
@@ -1102,7 +1102,7 @@
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         viimeinen_hoitokausi false
         kulu-id 1
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
@@ -1127,7 +1127,7 @@
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id nil
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
@@ -1157,7 +1157,7 @@
         urakoitsija-maksaa ylityksen-maara
         siirrettava-maara 0M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
 
         ;; Luodaan kulu, jolla ylitetään kattohinta
         uusi-kulu (kuluapurit/uusi-kulu urakkaid toteutuneet-kustannukset hoitokauden-alkuvuosi urakan-alkupvm)
@@ -1207,7 +1207,7 @@
         urakoitsija-maksaa 0M
         siirrettava-maara 1M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id nil
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id true maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
@@ -1237,7 +1237,7 @@
         urakoitsija-maksaa (/ 50M 2)
         siirrettava-maara (/ 50M 2)
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id nil
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
@@ -1275,7 +1275,7 @@
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id nil
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
@@ -1286,7 +1286,7 @@
                                                                                 kattohinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-kattohinnan-ylityspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))]
-    (is (str/includes? vastaus  "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle."))))
+    (is (str/includes? vastaus "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle."))))
 
 ;; Kattohinnan ylitys - Poisto
 (deftest kysely-kattohinnan-ylityspaatoksen-poisto-onnistuu-test
@@ -1301,7 +1301,7 @@
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id 1
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara
@@ -1330,13 +1330,19 @@
         urakoitsija-maksaa 50M
         siirrettava-maara 50M
         siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
-        maksimi-siirrettava-maara ylityksen-maara           ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
+        maksimi-siirrettava-maara ylityksen-maara ;; koska rajoitus ei ole käytössä, niin voidaan siirtää koko ylitys
         kulu-id 1
         paatos (paatos-apurit/kattohinnan-ylityspaatos urakkaid hoitokauden-alkuvuosi kattohinta toteutuneet-kustannukset
                  ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id false maksimi-siirrettava-maara
                  siirtorajoitus-prosentti kayttajaid)
-        tallennettu-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos)
-        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-kattohinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)
+        tallennettu-paatos (assoc (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) paatos) :avain :kattohinnan-ylitys)
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                        {:urakka-id urakkaid
+                         :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                         :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :kattohinnan-ylitys)]
 
     (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")
@@ -1707,7 +1713,7 @@
         ;; Poistetaan juuri lisätty päätös rajapinnan kautta
         vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                               jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                 (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ uusi-paatos))
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ uusi-paatos))
         poistettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi poistettu-paatos)))
@@ -1718,7 +1724,7 @@
         urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         kayttajaid (:id +kayttaja-jvh+)
         hoitokauden-alkuvuosi 2024
-        hv_lopun_indkorjaamaton_tavoitehinta 2100000M    ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
+        hv_lopun_indkorjaamaton_tavoitehinta 2100000M ;; Hoitovuoden lopun tavoihinta ilman indeksikorjausta
         tarjouksen_tavoitehinta 2000000M
         muutosprosentti (* (- (/ hv_lopun_indkorjaamaton_tavoitehinta tarjouksen_tavoitehinta) 1) 100)
         hoidonjohtopalkkio 40000M
@@ -1815,7 +1821,7 @@
         ;; Poistetaan päätös rajapinnan kautta
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos))
+                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)]
     ;; Päätös on poistettu, joten sellaista päätöstä, jossa on id, ei enää löydy
     (is (= "Hoidonjohtopalkkion muutos" (:nimi poistettu-paatos)))
@@ -1868,13 +1874,13 @@
         paatos (poytakirjan-raporttipaatos urakkaid hoitokauden-alkuvuosi tarkistettu kayttajaid)
         vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                               jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                 (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos))
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)
 
         ;; Poistetaan tallennettu päätös
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-poytakirjan-raporttipaatos +kayttaja-jvh+ tallennettu-paatos))
+                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-poytakirjan-raporttipaatos +kayttaja-jvh+ tallennettu-paatos))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)]
     ;; Poiston jälkeen löytyy vain default tiedot päätöksestä
     (is (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi poistettu-paatos)))))

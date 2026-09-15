@@ -1313,14 +1313,6 @@
           (tee-kattohinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-kattohinnan-ylityspaatos
-        (fn [user tiedot]
-          (poista-kattohinnan-ylityspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-indeksikorjauspaatos
         (fn [user tiedot]
@@ -1393,7 +1385,6 @@
       :tee-tavoitehinnan-alituspaatos
       :tee-tavoitehinnan-ylityspaatos
       :tee-kattohinnan-ylityspaatos
-      :poista-kattohinnan-ylityspaatos
       :tee-indeksikorjauspaatos
       :poista-indeksikorjauspaatos
       :tee-hv-lopun-tavoite-ja-kattohintapaatos
