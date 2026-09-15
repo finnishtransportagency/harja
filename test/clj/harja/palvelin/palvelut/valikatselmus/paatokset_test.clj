@@ -1051,10 +1051,16 @@
         ;; Haetaan sen sijaan tehty päätös suoraan tietokannasta
         haettavat-paatokset [{:nimi "Tavoitehinnan ylitys" :tyyppi "A" :jarjestys 10}]
         tietokantapaatokset (paatos-kyselyt/hae-paatokset (:db jarjestelma) haettavat-paatokset urakkaid hoitokauden-alkuvuosi)
-        tallennettu-paatos (first tietokantapaatokset)
+        tallennettu-paatos (assoc (first tietokantapaatokset) :avain :tavoitehinnan-ylitys)
 
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                                     tallennettu-paatos)
         ;; Poistetaan juuri lisätty päätös.
-        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-ylityspaatos +kayttaja-jvh+ tallennettu-paatos)
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                                      {:urakka-id urakkaid
+                                       :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                                       :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinta-ylitys)]
     (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
     (is (< 0 (:kulu_id tallennettu-paatos)) "Kulu_id lisätty tallennuksen yhteydessä")
