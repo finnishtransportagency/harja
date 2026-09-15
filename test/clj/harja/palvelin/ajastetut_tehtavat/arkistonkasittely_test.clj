@@ -39,6 +39,21 @@
 (deftest testaa-pura-gzip
   (testaa-tiedoston-purku "test_gzip.tgz"))
 
+(deftest testaa-pura-pelkka-gzip-tiedosto
+  ;; Gzip voi sisältää myös yksittäisen tiedoston ilman tar-arkistoa
+  (let [kansio (io/file +arkistot-target-polku+)
+        gz (io/file kansio "teksti.txt.gz")
+        purettu (io/file kansio "teksti.txt")]
+    (try
+      (with-open [ulos (GzipCompressorOutputStream. (io/output-stream gz))]
+        (.write ulos (.getBytes "Terve, terve, tässä on Heikki!")))
+      (arkisto/pura-paketti (.getPath gz))
+      (is (true? (.exists purettu)))
+      (is (= "Terve, terve, tässä on Heikki!" (slurp purettu)))
+      (finally
+        (io/delete-file gz true)
+        (io/delete-file purettu true)))))
+
 ;; Tietoturva: Path traversal -suojaus
 ;; Info: https://cwe.mitre.org/data/definitions/22.html
 
