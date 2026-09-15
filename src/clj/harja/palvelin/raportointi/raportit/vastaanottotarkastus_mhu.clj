@@ -297,7 +297,8 @@
                                       :rivi ["Yhteensä" osallistuminen-yhteensa]}]]
     (vec
       (concat
-        (when (> viranomaistehtavat-yhteensa 0)
+        ;; Näytetään jos viranomaistehtäviä on kirjattu tai jos kumpaakaan ei ole kirjattu
+        (when (or (> viranomaistehtavat-yhteensa 0) (and (= viranomaistehtavat-yhteensa 0) (= osallistuminen-yhteensa 0)) )
           [[:taulukko {:otsikko "Viranomaistehtävät"
                        :leveysprosentti 50
                        :viimeinen-rivi-yhteenveto? true
