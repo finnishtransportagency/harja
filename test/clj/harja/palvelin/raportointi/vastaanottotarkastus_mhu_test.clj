@@ -115,7 +115,7 @@
                        {:id 2 :summa-indeksikorjattu 100M :toteumat 90M :tavoitehinnan-muutos -10M}
                        {:id 3 :summa-indeksikorjattu 50M :toteumat 45M :tavoitehinnan-muutos -5M}
                        {:id :yhteenveto :summa-indeksikorjattu 350M :toteumat 285M :tavoitehinnan-muutos -65M}]))]
-      (vastaanottotarkastus-mhu/suorita nil nil {:urakka-id 1}))))
+      (vastaanottotarkastus-mhu/suorita (:db jarjestelma) nil {:urakka-id 1}))))
 
 (deftest raportti-sisaltaa-lupaukset-hoitovuosittain
   (let [raportti (muodosta-testiraportti)]
@@ -154,6 +154,32 @@
     (is (not-any? #(and (vector? %)
                      (= "Ympäristöraportti" (get-in % [1 :otsikko])))
           raportti))))
+
+(deftest talvisuolan-erittely-kasittee-puuttuvan-yhteenvedon
+  (with-redefs [talvisuola/suorita (fn [_ _ _] [:raportti {}])
+                materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
+                (fn [_ _] [{:kokonaismaara 1000M}])
+                valikatselmus-q/hae-sanktiot (fn [_ _] [])]
+    (is (nil? (#'vastaanottotarkastus-mhu/talvisuolan-erittely
+                nil 1 #inst "2021-01-01T00:00:00.000-00:00"
+                #inst "2021-12-31T23:59:59.000-00:00")))))
+
+(deftest talvisuolan-erittely-ei-palauta-puuttuvaa-erittelya
+  (with-redefs [talvisuola/suorita
+                (fn [_ _ _]
+                  [:raportti {}
+                   [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
+                    []
+                    [["Suurin urakassa sallittu käyttömäärä + 5 %"
+                      [:arvo {:arvo 1050M}]]]]])
+                materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
+                (fn [_ _] [{:kokonaismaara 1000M}])
+                valikatselmus-q/hae-sanktiot (fn [_ _] [])]
+    (let [raportin-osat (#'vastaanottotarkastus-mhu/talvisuolan-erittely
+                          nil 1 #inst "2021-01-01T00:00:00.000-00:00"
+                          #inst "2021-12-31T23:59:59.000-00:00")]
+      (is (= 1 (count raportin-osat)))
+      (is (= "Yhteenveto" (get-in (first raportin-osat) [1 :otsikko]))))))
 
 (deftest raportti-sisaltaa-rahavarausten-tavoitehinnan-muutokset
   (let [raportti (muodosta-testiraportti)]
@@ -313,6 +339,93 @@
           (testing "Excel-raportin otsikko muodostuu"
             (is (= [[:otsikko-title "Lisätyöt"]]
                   (get-in excel-taulukko [1 :excel-alkutekstit])))))))))
+
+(deftest MHU25-urakan-viranomaistehtavat-muodostuvat-hoitovuosittain
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        sopimus-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-sopimus-id)
+        db (:db jarjestelma)
+        ;; Tehtävän nimi on vaihtunut kesken kaiken, niin käytetään niitä molempia
+        hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+        vanha-tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Viranomaistehtävissä avustaminen'"))
+        uusi-tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon'"))
+        tunniste "vastaanottotarkastus-mhu-viranomaistehtavat-test"
+        toteumat [[vanha-tehtava-id 2025 "2025-10-15 12:00:00" 1M]
+                  [vanha-tehtava-id 2026 "2026-10-15 12:00:00" 2M]
+                  [uusi-tehtava-id 2027 "2027-10-15 12:00:00" 30M]
+                  [uusi-tehtava-id 2028 "2028-10-15 12:00:00" 40M]
+                  [uusi-tehtava-id 2029 "2029-10-15 12:00:00" 50M]]
+        odotetut-vanhan-tehtavan-rivit [["2025-2026" 1M]
+                                        ["2026-2027" 2M]
+                                        ["2027-2028" 0]
+                                        ["2028-2029" 0]
+                                        ["2029-2030" 0]]
+        odotetut-uuden-tehtavan-rivit [["2025-2026" 0]
+                                       ["2026-2027" 0]
+                                       ["2027-2028" 30M]
+                                       ["2028-2029" 40M]
+                                       ["2029-2030" 50M]]]
+    (try
+      (u (format "DELETE FROM toteuma_tehtava
+                   WHERE toteuma IN (SELECT id FROM toteuma WHERE lisatieto LIKE '%s%%')"
+                 tunniste))
+      (u (format "DELETE FROM toteuma WHERE lisatieto LIKE '%s%%'" tunniste))
+      (doseq [[tehtava-id hoitovuosi alkanut maara] toteumat]
+        (let [lisatieto (str tunniste "-" tehtava-id "-" alkanut)]
+          (i (format "INSERT INTO toteuma
+                       (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, lisatieto)
+                       VALUES (%s, 'harja-ui'::lahde, %s, %s, NOW(), '%s', '%s',
+                               'kokonaishintainen'::toteumatyyppi, '%s')"
+                    (:id +kayttaja-jvh+) urakka-id sopimus-id alkanut alkanut lisatieto))
+          (i (format "INSERT INTO toteuma_tehtava
+                       (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
+                       VALUES (%s, (SELECT id FROM toteuma WHERE lisatieto = '%s'), NOW(), %s, %s, %s, '%s', %s)"
+                    (:id +kayttaja-jvh+) lisatieto tehtava-id maara urakka-id lisatieto hoitovuosi))))
+      (let [raportin-osat (vastaanottotarkastus-mhu/muodosta-virhanomaistehtavat-taulukko
+                            db urakka-id hoitokaudet nil)
+            vanhan-tehtavan-taulukko (first raportin-osat)
+            uuden-tehtavan-taulukko (second raportin-osat)
+            vanhan-tehtavan-rivit (nth vanhan-tehtavan-taulukko 3)
+            uuden-tehtavan-rivit (nth uuden-tehtavan-taulukko 3)]
+        (testing "Vanha ja uusi tehtävä muodostavat omat taulukkonsa"
+          (is (= 2 (count raportin-osat))))
+        (testing "Vanhan tehtävän hoitovuodet summataan erikseen"
+          (is (= odotetut-vanhan-tehtavan-rivit (vec (butlast vanhan-tehtavan-rivit)))))
+        (testing "Vanhan tehtävän yhteensä-rivi summataan oikein"
+          (is (= ["Yhteensä" 3M]
+                (get-in (last vanhan-tehtavan-rivit) [:rivi]))))
+        (testing "Uuden tehtävän hoitovuodet summataan erikseen"
+          (is (= odotetut-uuden-tehtavan-rivit (vec (butlast uuden-tehtavan-rivit)))))
+        (testing "Uuden tehtävän yhteensä-rivi summataan oikein"
+          (is (= ["Yhteensä" 120M] (get-in (last uuden-tehtavan-rivit) [:rivi]))))
+        (testing "vanhan tehtävän taulukon otsikko on oikein"
+          (is (= [{:leveys 5 :otsikko "Hoitovuosi"}
+                  {:leveys 5 :otsikko "Viranomaistehtävissä avustaminen (h)" :fmt :kokonaisluku}]
+                (nth vanhan-tehtavan-taulukko 2))))
+        (testing "Uuden tehtävän taulukon otsikot on oikein"
+          (is (= [{:leveys 5 :otsikko "Hoitovuosi"}
+                  {:leveys 5 :otsikko "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon (h)"
+                   :fmt :kokonaisluku}]
+                (nth uuden-tehtavan-taulukko 2))))
+        (testing "Taulukoiden metatiedot ovat oikein"
+          (is (every? #(= "Viranomaistehtävät" (get-in % [1 :otsikko])) raportin-osat))
+          (is (every? #(= "Viranomaistehtävät" (get-in % [1 :sheet-nimi])) raportin-osat))
+          (is (every? #(true? (get-in % [1 :viimeinen-rivi-yhteenveto?])) raportin-osat)))
+        (let [excel-taulukko (first (vastaanottotarkastus-mhu/muodosta-virhanomaistehtavat-taulukko
+                                      db urakka-id hoitokaudet :excel))]
+          (testing "Vanhan tehtävän Excel-otsikko muodostuu"
+            (is (= [[:otsikko-title "Viranomaistehtävissä avustaminen"]]
+                  (get-in excel-taulukko [1 :excel-alkutekstit])))))
+        (let [excel-taulukot (vastaanottotarkastus-mhu/muodosta-virhanomaistehtavat-taulukko
+                               db urakka-id hoitokaudet :excel)]
+          (testing "Uuden tehtävän Excel-otsikko muodostuu"
+            (is (= [[:otsikko-title "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon"]]
+                  (get-in (second excel-taulukot) [1 :excel-alkutekstit]))))))
+      ;; Siivotaan lisätyt toteumat
+      (finally
+        (u (format "DELETE FROM toteuma_tehtava
+                     WHERE toteuma IN (SELECT id FROM toteuma WHERE lisatieto LIKE '%s%%')"
+                   tunniste))
+        (u (format "DELETE FROM toteuma WHERE lisatieto LIKE '%s%%'" tunniste))))))
 
 (defn- lisaa-testin-lisatyo-kohdistus!
   [{:keys [urakka-id toimenpideinstanssi-id tunniste erapaiva summa lisatyon-lisatieto

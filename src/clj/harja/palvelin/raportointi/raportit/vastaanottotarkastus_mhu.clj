@@ -3,7 +3,8 @@
   Koostuu Lupauksista, Ympäristöraportista, Talvisuolan kokonaiskäyttömäärästä, Tavoitehinnan muutoksista,
   Lisätöistä, Kirjallisista muistutuksista, sanktioista, arvonvähennyksistä ja poikkeamaraporteista, Tehtävämääristä,
   ja Laskutusyhteenvedosta."
-  (:require [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
+  (:require [jeesql.core :refer [defqueries]]
+            [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
@@ -14,6 +15,12 @@
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.pvm :as pvm]))
+
+(defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus_mhu.sql"
+  {:positional? true})
+
+(declare hae-viranomaistehtavamaarat)
+
 
 (defn- summa [rivit avain]
   (reduce + 0 (keep avain rivit)))
@@ -62,6 +69,7 @@
                                            {:urakka-id urakka-id
                                             :alkupvm urakan-alkupvm
                                             :loppupvm urakan-loppupvm}))
+        ;; Yritetään hyödyntää olemassa oleva raportti täysimääräisesti
         talvisuolan-raportin-osiot (yleinen/osat (talvisuola/suorita db nil {:urakka-id urakka-id
                                                                              :kasittelija :excel}))
         yhteenveto (some #(when (= "Koko urakka-ajan yhteenveto (kuivatonneina)"
@@ -70,7 +78,7 @@
         kohtuullistettu-kayttoraja-plus-viisi-prosenttia
         (some #(when (= "Suurin urakassa sallittu käyttömäärä + 5 %" (first %))
                  (get-in % [1 1 :arvo]))
-          (nth yhteenveto 3))
+          (get yhteenveto 3 []))
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
                                                    :alkupvm urakan-alkupvm
                                                    :loppupvm urakan-loppupvm
@@ -100,7 +108,9 @@
                                        :desimaalien-maara 2}]]]]
         erittely (some #(when (= "Erittely hoitovuosittain" (get-in % [1 :otsikko])) %)
                    talvisuolan-raportin-osiot)]
-    [yhteenveto-taulukko erittely]))
+    (when yhteenveto
+      (cond-> [yhteenveto-taulukko]
+        erittely (conj erittely)))))
 
 (defn rahavarausten-tavoitehinnan-muutokset-taulukko [db urakka-id hoitokaudet]
   (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
@@ -249,6 +259,63 @@
        {:leveys 5 :otsikko "Lisätyöt (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) lisatyot-yhteensarivi)))]]))
 
+(defn muodosta-virhanomaistehtavat-taulukko
+  "Tehtävän nimi on muuttunut aikojen saatosa. -22 vuoteen asti kerättiin dataa toiseen ja lennosta vaihdettiin toiseen.
+  Piirretään siis tarvittaessa kaksi taulukkoa."
+  [db urakka-id hoitokaudet kasittelija]
+  (let [viranomais-rivit (mapv (fn [hoitokausi]
+                                 (let [{:keys [alkupvm loppupvm]} hoitokausi
+                                       vuosi (pvm/vuosi alkupvm)
+                                       viranomaistehtavat (hae-viranomaistehtavamaarat db {:urakka-id urakka-id
+                                                                                           :hoitovuosi vuosi
+                                                                                           :alkupvm alkupvm
+                                                                                           :loppupvm loppupvm
+                                                                                           :nimi "Viranomaistehtävissä avustaminen"})
+                                       yhteensa (reduce + 0 (map #(or (:tuntia %) 0) viranomaistehtavat))]
+                                   [(str vuosi "-" (pvm/vuosi loppupvm))
+                                    yhteensa]))
+                           hoitokaudet)
+        osallistuminen-rivit (mapv (fn [hoitokausi]
+                                     (let [{:keys [alkupvm loppupvm]} hoitokausi
+                                           vuosi (pvm/vuosi alkupvm)
+                                           osallistuminen (hae-viranomaistehtavamaarat db {:urakka-id urakka-id
+                                                                                           :hoitovuosi vuosi
+                                                                                           :alkupvm alkupvm
+                                                                                           :loppupvm loppupvm
+                                                                                           :nimi "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon"})
+                                           yhteensa (reduce + 0 (map #(or (:tuntia %) 0) osallistuminen))]
+                                       [(str vuosi "-" (pvm/vuosi loppupvm))
+                                        yhteensa]))
+                               hoitokaudet)
+        viranomaistehtavat-yhteensa (reduce + 0 (map #(or (second %) 0) viranomais-rivit))
+        viranomaistehtavat-yhteensarivi [{:lihavoi? true
+                                          :korosta-hennosti? true
+                                          :rivi ["Yhteensä" viranomaistehtavat-yhteensa]}]
+        osallistuminen-yhteensa (reduce + 0 (map #(or (second %) 0) osallistuminen-rivit))
+        osallistuminen-yhteensarivi [{:lihavoi? true
+                                      :korosta-hennosti? true
+                                      :rivi ["Yhteensä" osallistuminen-yhteensa]}]]
+    (vec
+      (concat
+        (when (> viranomaistehtavat-yhteensa 0)
+          [[:taulukko {:otsikko "Viranomaistehtävät"
+                       :leveysprosentti 50
+                       :viimeinen-rivi-yhteenveto? true
+                       :sheet-nimi "Viranomaistehtävät"
+                       :excel-alkutekstit (when (= kasittelija :excel) [[:otsikko-title "Viranomaistehtävissä avustaminen"]])}
+            [{:leveys 5 :otsikko "Hoitovuosi"}
+             {:leveys 5 :otsikko "Viranomaistehtävissä avustaminen (h)" :fmt :kokonaisluku}]
+            (into [] (concat viranomais-rivit (when-not (empty? viranomais-rivit) viranomaistehtavat-yhteensarivi)))]])
+        (when (> osallistuminen-yhteensa 0)
+          [[:taulukko {:otsikko "Viranomaistehtävät"
+                       :leveysprosentti 50
+                       :viimeinen-rivi-yhteenveto? true
+                       :sheet-nimi "Viranomaistehtävät"
+                       :excel-alkutekstit (when (= kasittelija :excel) [[:otsikko-title "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon"]])}
+            [{:leveys 5 :otsikko "Hoitovuosi"}
+             {:leveys 5 :otsikko "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon (h)" :fmt :kokonaisluku}]
+            (into [] (concat osallistuminen-rivit (when-not (empty? osallistuminen-rivit) osallistuminen-yhteensarivi)))]])))))
+
 (defn suorita [db user {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
@@ -274,6 +341,8 @@
           ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
           (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
 
-        (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)))))
+        (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
+
+        (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)))))
 
 
