@@ -446,10 +446,16 @@
 
         ;; Kun tehdään lupaus päätös, siitä muodostetaan joko lupaussanktio tai lupausbonus, nyt on tehty lupaussanktio
         lupauspaatoksen-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                                     tallennettu-paatos)
         ;; Poistetaan päätös
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-lupauspaatos +kayttaja-jvh+ tallennettu-paatos))
+                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                                         {:urakka-id urakkaid
+                                          :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                                          :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :lupaukset)
         ;; Päätöksen poistamisen jälkeen enää ei pitäisi löytyä sanktiota
         lupauspaatoksen-poistettu-sanktio (first (sanktio-kyselyt/hae-sanktio (:db jarjestelma) (:sanktio_id tallennettu-paatos)))]

@@ -499,7 +499,7 @@
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
               (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                        :urakka-id (:urakkaid paatos-tietokannasta)}))
+                                                                  :urakka-id (:urakkaid paatos-tietokannasta)}))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -1257,8 +1257,6 @@
         (fn [user tiedot]
           (tallenna-tavoitehinnan-oikaisu db user tiedot)))
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
       (julkaise-palvelu http
         :poista-tavoitehinnan-oikaisu
         (fn [user tiedot]
@@ -1268,12 +1266,6 @@
         :tallenna-kattohinnan-oikaisu
         (fn [user tiedot]
           (tallenna-kattohinnan-oikaisu db user tiedot)))
-
-      ;; FIXME Poistuu?
-      (julkaise-palvelu http
-        :poista-kattohinnan-oikaisu
-        (fn [user tiedot]
-          (poista-kattohinnan-oikaisu db user tiedot)))
 
       (julkaise-palvelu (:http-palvelin this)
         :hae-valikatselmuksen-tiedot-hoitovuodelle
@@ -1432,7 +1424,6 @@
       :tallenna-tavoitehinnan-oikaisu
       :poista-tavoitehinnan-oikaisu
       :tallenna-kattohinnan-oikaisu
-      :poista-kattohinnan-oikaisu
       :hae-valikatselmuksen-tiedot-hoitovuodelle
       :onko-paatoksia-tekematta
       :tee-lupauspaatos
