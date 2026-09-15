@@ -7,12 +7,22 @@
            (org.apache.commons.io FilenameUtils))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
+(defn- turvallinen-kohdetiedosto
+  "Muodostaa arkiston kohdetiedoston kohdekansion sisään turvallisesti.
+   Heittää poikkeuksen, jos purku yrittäisi kirjoittaa kohdekansion ulkopuolelle (ns. Zip Slip)."
+  [kohdekansio kohdetiedosto-nimi]
+  (let [kansio (.getCanonicalFile (io/file kohdekansio))
+        kohdetiedosto (.getCanonicalFile (io/file kansio kohdetiedosto-nimi))]
+    (when-not (.startsWith (.toPath kohdetiedosto) (.toPath kansio))
+      (throw+ {:type :arkiston-purku-epaonnistui
+               :error (str "Arkiston purku yrittää kirjoittaa kohdekansion ulkopuolelle: " kohdetiedosto-nimi)}))
+    kohdetiedosto))
+
 (defn pura-zip-paketti [kohdetiedoston-polku]
   (let [kohdepolku (.getParent (io/file kohdetiedoston-polku))]
     (with-open [zip-virta (ZipInputStream. (io/input-stream kohdetiedoston-polku))]
       (doseq [tiedosto (repeatedly #(.getNextEntry zip-virta)) :while tiedosto]
-        (let [tiedostopolku (str kohdepolku "/" tiedosto)]
-          (io/copy zip-virta (io/file tiedostopolku)))))))
+        (io/copy zip-virta (turvallinen-kohdetiedosto kohdepolku (.getName tiedosto)))))))
 
 (defn pura-gzip-paketti [kohdetiedoston-polku]
   (let [kohdepolku (.getParent (io/file kohdetiedoston-polku))]
@@ -24,9 +34,7 @@
                                 (.setDecompressConcatenated true)
                                 (.get)))]
       (doseq [tiedosto (repeatedly #(.getNextEntry zip-virta)) :while tiedosto]
-        (log/debug (.replace (str (.getName tiedosto)) "./._" ""))
-        (let [tiedostopolku (str kohdepolku "/" (.replace (str (.getName tiedosto)) "./._" ""))]
-          (io/copy zip-virta (io/file tiedostopolku)))))))
+        (io/copy zip-virta (turvallinen-kohdetiedosto kohdepolku (.getName tiedosto)))))))
 
 (defn pura-paketti [kohdetiedoston-polku]
   (let [tiedostotyyppi (FilenameUtils/getExtension kohdetiedoston-polku)]
