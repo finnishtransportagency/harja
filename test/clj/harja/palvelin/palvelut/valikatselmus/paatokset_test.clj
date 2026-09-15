@@ -1581,9 +1581,15 @@
                   (catch Exception e
                     (println "ERROR: " e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                                     tallennettu-paatos)
         poistovastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-indeksikorjauspaatos +kayttaja-jvh+ tallennettu-paatos))
+                        (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                                         {:urakka-id urakkaid
+                                          :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                                          :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     ;; Päätös on poistettu, joten sitä ei enää löydy

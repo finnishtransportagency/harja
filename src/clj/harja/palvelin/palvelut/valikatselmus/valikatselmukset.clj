@@ -1319,14 +1319,6 @@
           (tee-hoitokauden-lopun-indeksikorjauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-indeksikorjauspaatos
-        (fn [user tiedot]
-          (poista-indeksikorjauspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-hv-lopun-tavoite-ja-kattohintapaatos
         (fn [user tiedot]
@@ -1386,7 +1378,6 @@
       :tee-tavoitehinnan-ylityspaatos
       :tee-kattohinnan-ylityspaatos
       :tee-indeksikorjauspaatos
-      :poista-indeksikorjauspaatos
       :tee-hv-lopun-tavoite-ja-kattohintapaatos
       :poista-hoitovuoden-lopun-hintapaatos
       :tee-hoidonjohtopalkkion-muutospaatos
