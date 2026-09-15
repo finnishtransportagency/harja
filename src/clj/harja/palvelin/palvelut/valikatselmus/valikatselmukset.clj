@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.valikatselmus.valikatselmukset
-  (:require [taoensso.timbre :as log]
+  (:require [harja.fmt :as fmt]
+            [taoensso.timbre :as log]
             [clojure.string :as string]
             [clojure.java.jdbc :as jdbc]
             [specql.core :refer [columns]]
@@ -37,6 +38,7 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]))
 
 (defn hoitokaudet-vektorimuotoon
@@ -120,11 +122,12 @@
 
         ;; Urakan alkuvuodesta 2025 eteenpäin myös arvonvähennykset vaikuttavat tavoiteintaan. Ja -26 hoitovuodesta eteenpäin myös vanhemmilla urakoilla
         ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
-                                                                   :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)
-                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        tavoitehintaan-vaikuttavat-arvonvahennykset
+        (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                             :alkupvm (first valittu-hoitokausi)
+                                                                             :loppupvm (second valittu-hoitokausi)
+                                                                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
         hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
                                                             muutosvaikutus
                                                             arvonvahennykset-yht)]
@@ -190,10 +193,10 @@
                                        0)
         mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
         hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
-                                                                   :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)
-                                                                   :hoitokauden-alkuvuosi valittu-hoitovuosi})
+        arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
+                                                                                              :alkupvm (first valittu-hoitokausi)
+                                                                                              :loppupvm (second valittu-hoitokausi)
+                                                                                              :hoitokauden-alkuvuosi valittu-hoitovuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
         ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
         ;; ;; Vaiha alku vuosi, eli vantaa 2024 . pitää tulla elokuu 2024
@@ -295,16 +298,18 @@
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm})
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna sanktioita. Joten haetaan ne erikseen
+        ;; Arvonvähennyssanktiot filtteröidään pois, jos ne vaikuttaa tavoitehintaan, eli -25 urakoilla ja muillakin -26 hoitovuodesta alkaen
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm
                                                    :hoitokauden-alkuvuosi hoitovuosi})
 
         ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
-                                                                   :alkupvm hoitokauden-alkupvm
-                                                                   :loppupvm hoitokauden-loppupvm
-                                                                   :hoitokauden-alkuvuosi hoitovuosi})
+        tavoitehintaan-vaikuttavat-arvonvahennykset
+        (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
+                                                                             :alkupvm hoitokauden-alkupvm
+                                                                             :loppupvm hoitokauden-loppupvm
+                                                                             :hoitokauden-alkuvuosi hoitovuosi})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
@@ -344,7 +349,7 @@
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
                               :sanktiot sanktiot
-                              :arvonvahennykset arvonvahennykset
+                              :tavoitehintaan-vaikuttavat-arvonvahennykset tavoitehintaan-vaikuttavat-arvonvahennykset
                               :budjettitavoite budjettitavoite-vuodelle
                               :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
                  :paatokset paatokset
@@ -465,7 +470,9 @@
           tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakka-id
                                                                                               :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           validaatio (if-not (= (konversio/konvertoi->int tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
-                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa.
+                       Suunniteltu tavoitehinta:" (fmt/euro-opt false false tavoitehinta) "€.
+                       Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta paatos)) " €"))
                        validaatio)
           ;; Jos ollaan tekemässä lupauspäätöstä, josta tulee bonusta
           erilliskustannus_id (when (and (= "bonus" (:tyyppi paatos)) (:lupausbonus paatos))
@@ -496,7 +503,7 @@
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
               (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                        :urakka-id (:urakkaid paatos-tietokannasta)}))
+                                                                  :urakka-id (:urakkaid paatos-tietokannasta)}))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -519,12 +526,16 @@
           tavoitehinta (valikatselmus-q/hae-oikaistu-tavoitehinta db {:urakka-id urakka-id
                                                                       :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           validaatio (if-not (= (konversio/konvertoi->int tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
-                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" tavoitehinta "€. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa.
+                       Suunniteltu tavoitehinta:" (fmt/euro-opt false false tavoitehinta) "€.
+                       Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta paatos)) " €"))
                        validaatio)
           kattohinta (valikatselmus-q/hae-oikaistu-kattohinta db {:urakka-id urakka-id
                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           validaatio (if-not (= (konversio/konvertoi->int kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
-                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Suunniteltu kattohinta:" kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
+                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa.
+                       Suunniteltu kattohinta:" (fmt/euro-opt false false kattohinta) " €.
+                       Päätöksen mukainen kattohinta: " (fmt/euro-opt false false (:kattohinta paatos)) " €"))
                        validaatio)
           _ (if (seq validaatio)
               (heita-virhe (str "Virheellinen päätös: " (string/join ", " validaatio)))
@@ -579,35 +590,45 @@
           rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
 
           ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
-          arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
-                                                                     :alkupvm (first valittu-hoitokausi)
-                                                                     :loppupvm (second valittu-hoitokausi)
-                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+          tavoitehintaan-vaikuttavat-arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                                           :alkupvm (first valittu-hoitokausi)
+                                                                                                                           :loppupvm (second valittu-hoitokausi)
+                                                                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          thv-arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
 
           ;; Verrataan kirjallisesti sovittuja muutoksia saatuihin päätöksen arvoihin
           validaatio (if-not (= (konversio/konvertoi->int (or kirjallisesti-sovitut-muutokset 0)) (konversio/konvertoi->int (:kirjallisesti_sovitut_muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut kirjallisesti sovittu muutos ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät kirjallisesti sovitut muutokset:" kirjallisesti-sovitut-muutokset "€. Päätöksen mukaiset kirjallisesti sovitut muutokset: " (:kirjallisesti_sovitut_muutokset paatos) " €"))
+                       (conj validaatio (str "Päätökseltä tullut kirjallisesti sovittu muutos ei täsmää tallennettujen tietojen kanssa.
+                       Järjestelmästä löytyvät kirjallisesti sovitut muutokset:" (fmt/euro-opt false false kirjallisesti-sovitut-muutokset) "€.
+                       Päätöksen mukaiset kirjallisesti sovitut muutokset: " (fmt/euro-opt false false (:kirjallisesti_sovitut_muutokset paatos)) " €"))
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int (or pysyvat-muutokset 0)) (konversio/konvertoi->int (:pysyvat_muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut pysyvä muutos summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät pysyvät muutokset:" pysyvat-muutokset "€. Päätöksen mukaiset pysyvät muutokset: " (:pysyvat_muutokset paatos) " €"))
+                       (conj validaatio (str "Päätökseltä tullut pysyvä muutos summa ei täsmää tallennettujen tietojen kanssa.
+                       Järjestelmästä löytyvät pysyvät muutokset:" (fmt/euro-opt false false pysyvat-muutokset) "€.
+                       Päätöksen mukaiset pysyvät muutokset: " (fmt/euro-opt false false (:pysyvat_muutokset paatos)) " €"))
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int (or jjh-muutokset 0)) (konversio/konvertoi->int (:johto_ja_hallintakorvaus_muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät johto- ja hallintakorvaus muutokset:" jjh-muutokset "€. Päätöksen mukaiset Johto ja hallintakorvausmuutokset: " (:johto_ja_hallintakorvaus_muutokset paatos) " €"))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät johto- ja hallintakorvaus muutokset:" (fmt/euro-opt false false jjh-muutokset) "€. Päätöksen mukaiset Johto ja hallintakorvausmuutokset: " (fmt/euro-opt false false (:johto_ja_hallintakorvaus_muutokset paatos)) " €"))
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int (or muutostyo-muutokset 0)) (konversio/konvertoi->int (:muutostyo_muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät muutostyon muutokset:" muutostyo-muutokset "€. Päätöksen mukaiset muutöstyön muutokset: " (:muutostyo_muutokset paatos) " €"))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa.
+                       Järjestelmästä löytyvät muutostyon muutokset:" (fmt/euro-opt false false muutostyo-muutokset) "€.
+                       Päätöksen mukaiset muutöstyön muutokset: " (fmt/euro-opt false false (:muutostyo_muutokset paatos)) " €"))
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int (or rahavarausmuutos-summa 0)) (konversio/konvertoi->int (:rahavarausten_muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät rahavarausten muutokset:" rahavarausmuutos-summa "€. Päätöksen mukaiset rahavarausten muutokset: " (:rahavarausten_muutokset paatos) " €"))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa.
+                       Järjestelmästä löytyvät rahavarausten muutokset:" (fmt/euro-opt false false rahavarausmuutos-summa) "€.
+                       Päätöksen mukaiset rahavarausten muutokset: " (fmt/euro-opt false false (:rahavarausten_muutokset paatos)) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
-                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa. Järjestelmästä löytyvät arvonvähennysten muutokset:" arvonvahennykset-yht "€. Päätöksen mukaiset rahavarausten muutokset: " (:arvonvahennysten_muutokset paatos) " €"))
+          validaatio (if-not (= (konversio/konvertoi->int (or thv-arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
+                       (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa.
+                       Järjestelmästä löytyvät arvonvähennysten muutokset:" (fmt/euro-opt false false thv-arvonvahennykset-yht) "€.
+                       Päätöksen mukaiset rahavarausten muutokset: " (fmt/euro-opt false false (:arvonvahennysten_muutokset paatos)) " €"))
                        validaatio)
 
           _ (if (seq validaatio)
@@ -644,15 +665,17 @@
           ;; Verrataan tietokannan hoitokauden_lopun_tavoitehinta saatuun hoitokauden_lopun_tavoitehintaan
           hoitokauden_lopun_tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
           validaatio (if-not (= (konversio/konvertoi->int hoitokauden_lopun_tavoitehinta) (konversio/konvertoi->int (:hoitokauden_lopun_tavoitehinta paatos)))
-                       (conj validaatio (str "Päätöksen hoitokauden lopun tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu hoitokauden lopun tavoitehinta: " hoitokauden_lopun_tavoitehinta "€.
+                       (conj validaatio (str "Päätöksen hoitokauden lopun tavoitehinta ei täsmää suunnitelman kanssa.
+                       Suunniteltu hoitokauden lopun tavoitehinta: " hoitokauden_lopun_tavoitehinta "€.
                        Päätöksessä annettu hoitokauden lopun tavoitehinta: " (:hoitokauden_lopun_tavoitehinta paatos) " €"))
                        validaatio)
 
           ;; Verrataan tietokannan hoitokauden alun tavoitehintaa saatuun hoitokauden alun tavoitehintaan
           hoitokauden-alun-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakka-id :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
           validaatio (if-not (= (konversio/konvertoi->int hoitokauden-alun-tavoitehinta) (konversio/konvertoi->int (:hoitokauden_alun_tavoitehinta paatos)))
-                       (conj validaatio (str "Päätöksen tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu hoitokauden alun tavoitehinta:" hoitokauden-alun-tavoitehinta "€.
-                       Päätöksen annettu hoitokauden alun tavoitehinta: " (:hoitokauden_alun_tavoitehinta paatos) " €"))
+                       (conj validaatio (str "Päätöksen tavoitehinta ei täsmää suunnitelman kanssa.
+                       Suunniteltu hoitokauden alun tavoitehinta:" (fmt/euro-opt false false hoitokauden-alun-tavoitehinta) "€.
+                       Päätöksen annettu hoitokauden alun tavoitehinta: " (fmt/euro-opt false false (:hoitokauden_alun_tavoitehinta paatos)) " €"))
                        validaatio)
           ;; Jos validointi on kunnossa, niin luodaan tavoitepalkkiokulu
           kulu_id (when-not (seq validaatio)
@@ -708,7 +731,9 @@
 
           hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
-                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Hoitovuoden lopun tavoitehinta: " hoitovuoden-lopun-tavoitehinta " €. Päätöksen mukainen tavoitehinta: " (:tavoitehinta paatos) " €"))
+                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa.
+                       Hoitovuoden lopun tavoitehinta: " (fmt/euro-opt false false hoitovuoden-lopun-tavoitehinta) " €.
+                       Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta paatos)) " €"))
                        validaatio)
 
           ;; Jos validointi on kunnossa, niin luodaan tavoitehinnan ylityskulu - jonka maksaa urakoitsija
@@ -758,12 +783,16 @@
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
 
+          validaatio (if (< (:siirrettava_maara paatos) 0)
+                       (conj validaatio (str "Siirrettävä määrä on pienempi 0,00 €."))
+                       validaatio)
+
           validaatio (if (> (:siirrettava_maara paatos) (round2 2 (:ylityksen_maara paatos)))
-                       (conj validaatio (str "Siirrettävä määrä ylittää maksimiarvon."))
+                       (conj validaatio (str "Siirrettävä määrä on suurempi kuin ylityksen määrä."))
                        validaatio)
 
           validaatio (if (> (:urakoitsija_maksaa paatos) (:ylityksen_maara paatos))
-                       (conj validaatio (str "Urakoitsijan maksu ylittää maksimiarvon."))
+                       (conj validaatio (str "Urakoitsijan maksu ei voi olla suurempi kuin kattohinnan ylitys."))
                        validaatio)
 
           validaatio (if (> (+ (:urakoitsija_maksaa paatos) (:siirrettava_maara paatos)) (:ylityksen_maara paatos))
@@ -771,17 +800,21 @@
                        validaatio)
 
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
-                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Hoitovuoden lopun kattohinta:" hoitovuoden-lopun-kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
+                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa.
+                       Hoitovuoden lopun kattohinta:" (fmt/euro-opt false false hoitovuoden-lopun-kattohinta) " €.
+                       Päätöksen mukainen kattohinta: " (fmt/euro-opt false false (:kattohinta paatos)) " €"))
                        validaatio)
 
-          ;; Validoi siirto
-          validaatio (if (and (:siirtorajoitus_prosentti urakan-parametrit) (> (:siirrettava_maara paatos) (:maksimi_siirrettava_maara paatos)))
-                       (conj validaatio (str "Siirron rajoitus ylitetty. Maksimi siirto voi olla " (:siirtorajoitus_prosentti urakan-parametrit) " kattohinnasta."))
+          ;; Validoi siirto ja 3% rajoitukset, jos ne on annettu
+          validaatio (if (and (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit) (> (:siirrettava_maara paatos) (:maksimi_siirrettava_maara paatos)))
+                       (conj validaatio (str "Siirron rajoitus ylitetty.
+                       Maksimi siirto voi olla " (fmt/euro-opt false false (:maksimi_siirrettava_maara paatos)) " €."))
                        validaatio)
 
           ;; Validoi siirto viimeisenä hoitovuotena
           validaatio (if (and (= hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi) (> (:siirrettava_maara paatos) 0))
-                       (conj validaatio (str "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle. Poista siirron osuus."))
+                       (conj validaatio (str "Viimeisenä hoitovuodena ei voida siirtää kuluja seuraavalle vuodelle.
+                       Poista siirron osuus."))
                        validaatio)
 
           ;; Jos validointi on kunnossa, niin luodaan kattohinnan ylityskulu - jonka maksaa urakoitsija
@@ -835,8 +868,9 @@
 
           validaatio (if-not (= (konversio/konvertoi->int hk-alun-indkorj-tavoitehinta) (konversio/konvertoi->int (:hv_alun_indkorj_tavoitehinta paatos)))
                        (conj validaatio
-                         (str "Hoitovuoden alun indeksikorjattu tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu hoitokauden alun indeksikorjattu tavoitehinta: " hk-alun-indkorj-tavoitehinta "€.
-                       Päätöksen mukainen tavoitehinta: " (:hv_alun_indkorj_tavoitehinta paatos) " €"))
+                         (str "Hoitovuoden alun indeksikorjattu tavoitehinta ei täsmää suunnitelman kanssa.
+                         Suunniteltu hoitokauden alun indeksikorjattu tavoitehinta: " (fmt/euro-opt false false hk-alun-indkorj-tavoitehinta) "€.
+                         Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:hv_alun_indkorj_tavoitehinta paatos)) " €"))
                        validaatio)
 
           ;; Lasketaan hoitovuoden lopun tavoitehinta ennen indeksikorjausta
@@ -848,8 +882,8 @@
 
           validaatio (if-not (= (konversio/konvertoi->int hv-lopun-indeksikorjaamaton-tavoitehinta) (konversio/konvertoi->int (:hv_lopun_tavoitehinta_ennen_indkorj paatos)))
                        (conj validaatio (str "Hoitovuoden lopun tavoitehinta ennen indeksikorjausta ei täsmää suunnitelman kanssa.
-                       Suunniteltu hoitovuoden lopun indeksikorjaamaton tavoitehinta: " hv-lopun-indeksikorjaamaton-tavoitehinta "€.
-                       Päätöksen mukainen hoitovuoden lopun tavoitehinta ennen indeksikorjausta: " (:hv_lopun_tavoitehinta_ennen_indkorj paatos) " €"))
+                       Suunniteltu hoitovuoden lopun indeksikorjaamaton tavoitehinta: " (fmt/euro-opt false false hv-lopun-indeksikorjaamaton-tavoitehinta) "€.
+                       Päätöksen mukainen hoitovuoden lopun tavoitehinta ennen indeksikorjausta: " (fmt/euro-opt false false (:hv_lopun_tavoitehinta_ennen_indkorj paatos)) " €"))
                        validaatio)
 
           _ (if (seq validaatio)
@@ -894,11 +928,15 @@
 
           hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta_jalkeen paatos)))
-                       (conj validaatio (str "Hoitovuoden lopun tavoitehinta ei täsmää suunnitelman kanssa. Hoitovuoden lopun tavoitehinta: " hoitovuoden-lopun-tavoitehinta " €. Päätöksen mukainen tavoitehinta: " (:tavoitehinta_jalkeen paatos) " €"))
+                       (conj validaatio (str "Hoitovuoden lopun tavoitehinta ei täsmää suunnitelman kanssa.
+                       Hoitovuoden lopun tavoitehinta: " (fmt/euro-opt false false hoitovuoden-lopun-tavoitehinta) " €.
+                       Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta_jalkeen paatos)) " €"))
                        validaatio)
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
-                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa. Hoitovuoden lopun kattohinta: " hoitovuoden-lopun-kattohinta " €. Päätöksen mukainen kattohinta: " (:kattohinta paatos) " €"))
+                       (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa.
+                       Hoitovuoden lopun kattohinta: " (fmt/euro-opt false false hoitovuoden-lopun-kattohinta) " €.
+                       Päätöksen mukainen kattohinta: " (fmt/euro-opt false false (:kattohinta paatos)) " €"))
                        validaatio)
 
           _ (if (seq validaatio)
@@ -957,21 +995,25 @@
           hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta
                                                               db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
           validaatio (if-not (= (konversio/konvertoi->int hoitokauden-lopun-indeksikorjaamaton-tavoitehinta) (konversio/konvertoi->int (:hv_lopun_indkorjaamaton_tavoitehinta paatos)))
-                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa. Suunniteltu tavoitehinta:" hoitokauden-lopun-indeksikorjaamaton-tavoitehinta "€.
-                       Päätöksen mukainen tavoitehinta: " (:hv_lopun_indkorjaamaton_tavoitehinta paatos) " €"))
+                       (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa.
+                       Suunniteltu tavoitehinta:" (fmt/euro-opt false false hoitokauden-lopun-indeksikorjaamaton-tavoitehinta) "€.
+                       Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:hv_lopun_indkorjaamaton_tavoitehinta paatos)) " €"))
                        validaatio)
           tarjouksen-tavoitehinta (lupaus-palvelu/maarita-urakan-tavoitehinta db urakkaid (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi))
           validaatio (if-not (= (konversio/konvertoi->int tarjouksen-tavoitehinta) (konversio/konvertoi->int (:tarjouksen_tavoitehinta paatos)))
                        (conj validaatio (str "Tarjouksen tavoitehinta ei täsmää suunnitelman kanssa.
-                       Tarjouksen tavoitehinta:" tarjouksen-tavoitehinta "€. Päätöksen mukainen tarjouksen tavoitehinta: " (:tarjouksen-tavoitehinta paatos) " €"))
+                       Tarjouksen tavoitehinta:" (fmt/euro-opt false false tarjouksen-tavoitehinta) "€.
+                       Päätöksen mukainen tarjouksen tavoitehinta: " (fmt/euro-opt false false (:tarjouksen-tavoitehinta paatos)) " €"))
                        validaatio)
 
-          hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
-                                                                                                                                           :alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                                                                                                                                           :loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))})))
+          hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu
+                               (first (paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle db {:urakkaid urakkaid
+                                                                                                          :alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                                                                                                          :loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))})))
           validaatio (if-not (= (konversio/konvertoi->int hoidonjohtopalkkio) (konversio/konvertoi->int (:hoidonjohtopalkkio paatos)))
                        (conj validaatio (str "Hoidonjohtopalkkio ei täsmää suunnitelman kanssa.
-                       Suunniteltu hoidonjohtopalkkio:" hoidonjohtopalkkio "€. Päätöksen mukainen hoidonjohtopalkkio: " (:hoidonjohtopalkkio paatos) " €"))
+                       Suunniteltu hoidonjohtopalkkio:" (fmt/euro-opt false false hoidonjohtopalkkio) "€.
+                       Päätöksen mukainen hoidonjohtopalkkio: " (fmt/euro-opt false false (:hoidonjohtopalkkio paatos)) " €"))
                        validaatio)
           ;; Luodaan päätöksen mukainen kulu, jos hoitovuoden lopun tavoitehinta poikkeaa yli 5% tarjouksen tavoitehinnasta.
           kulu_id (when (and (not (seq validaatio)) (or (< (:muutosprosentti paatos) -5) (> (:muutosprosentti paatos) 5)))
@@ -1202,7 +1244,8 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
+          db (:db this)
+          pdf (:pdf-vienti this)]
 
       (julkaise-palvelu http
         :hae-ketjutetusti-kumoutuvat-paatokset
@@ -1219,8 +1262,6 @@
         (fn [user tiedot]
           (tallenna-tavoitehinnan-oikaisu db user tiedot)))
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
       (julkaise-palvelu http
         :poista-tavoitehinnan-oikaisu
         (fn [user tiedot]
@@ -1230,12 +1271,6 @@
         :tallenna-kattohinnan-oikaisu
         (fn [user tiedot]
           (tallenna-kattohinnan-oikaisu db user tiedot)))
-
-      ;; FIXME Poistuu?
-      (julkaise-palvelu http
-        :poista-kattohinnan-oikaisu
-        (fn [user tiedot]
-          (poista-kattohinnan-oikaisu db user tiedot)))
 
       (julkaise-palvelu (:http-palvelin this)
         :hae-valikatselmuksen-tiedot-hoitovuodelle
@@ -1253,26 +1288,10 @@
           (tee-lupauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
 
-      ;; FIXME Poistuu
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-lupauspaatos
-        (fn [user tiedot]
-          (poista-lupauspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/lupauspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-muutospaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-muutospaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1281,25 +1300,10 @@
           (tee-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-pysyvamuutospaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-alituspaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-alituspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-alituspaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-alituspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1308,26 +1312,10 @@
           (tee-tavoitehinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-ylityspaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-ylityspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-kattohinnan-ylityspaatos
         (fn [user tiedot]
           (tee-kattohinnan-ylityspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-kattohinnan-ylityspaatos
-        (fn [user tiedot]
-          (poista-kattohinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1336,26 +1324,10 @@
           (tee-hoitokauden-lopun-indeksikorjauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-indeksikorjauspaatos
-        (fn [user tiedot]
-          (poista-indeksikorjauspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-hv-lopun-tavoite-ja-kattohintapaatos
         (fn [user tiedot]
           (tee-hv-lopun-tavoite-ja-kattohintapaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-hoitovuoden-lopun-hintapaatos
-        (fn [user tiedot]
-          (poista-hoitovuoden-lopun-hintapaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1364,26 +1336,10 @@
           (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-hoidonjohtopalkkion-muutospaatos
-        (fn [user tiedot]
-          (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-poytakirjan-raporttipaatos
         (fn [user tiedot]
           (tee-poytakirjan-raporttipaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/raporttipaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-poytakirjan-raporttipaatos
-        (fn [user tiedot]
-          (poista-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
       this))
 
@@ -1394,27 +1350,16 @@
       :tallenna-tavoitehinnan-oikaisu
       :poista-tavoitehinnan-oikaisu
       :tallenna-kattohinnan-oikaisu
-      :poista-kattohinnan-oikaisu
       :hae-valikatselmuksen-tiedot-hoitovuodelle
       :onko-paatoksia-tekematta
       :tee-lupauspaatos
-      :poista-lupauspaatos
       :tee-tavoitehinnan-muutospaatos
-      :poista-tavoitehinnan-muutospaatos
       :tee-tavoitehinnan-pysyvamuutospaatos
-      :poista-tavoitehinnan-pysyvamuutospaatos
       :tee-tavoitehinnan-alituspaatos
-      :poista-tavoitehinnan-alituspaatos
       :tee-tavoitehinnan-ylityspaatos
-      :poista-tavoitehinnan-ylityspaatos
       :tee-kattohinnan-ylityspaatos
-      :poista-kattohinnan-ylityspaatos
       :tee-indeksikorjauspaatos
-      :poista-indeksikorjauspaatos
       :tee-hv-lopun-tavoite-ja-kattohintapaatos
-      :poista-hoitovuoden-lopun-hintapaatos
       :tee-hoidonjohtopalkkion-muutospaatos
-      :poista-hoidonjohtopalkkion-muutospaatos
-      :tee-poytakirjan-raporttipaatos
-      :poista-poytakirjan-raporttipaatos)
+      :tee-poytakirjan-raporttipaatos)
     this))

@@ -239,13 +239,15 @@
 }
 
 /* Välikatselmussivun yhteenvetolaatikko */
+div.valikatselmus-yhteenveto-wrapper {
+  max-width: 532px;
+}
 div.valikatselmus-yhteenveto {
   
   &.osio {
     margin-bottom: @valistys-16;
   }
 
-  max-width: 532px;
   border: 1px solid @harmaa-vaalea;
   border-radius: 0.5rem;
   padding: @valistys-24;
@@ -321,7 +323,7 @@ div.valikatselmus-yhteenveto {
     h3 {
       // Figma haluaa näille omat weightit
       font-weight: 600;
-      padding-bottom: @valistys-8;
+      padding-bottom: @valistys-4;
     }
     
     .summa {
