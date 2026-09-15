@@ -120,6 +120,7 @@ SELECT e.rahasumma, e.tyyppi
    AND e.laskutuskuukausi BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
 
 -- name: hae-sanktiot
+-- Filtteröidään arvonvähennykset pois, jos ne vaikuttavat tavoitehintaan.
 WITH urakan_tiedot AS (
     SELECT u.id,
            EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
@@ -136,7 +137,8 @@ SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
    AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE
    AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND :hoitokauden-alkuvuosi::INT <= 2025));
 
--- name: hae-arvonvahennykset
+-- name: hae-tavoitehintaan-vaikuttavat-arvonvahennykset
+-- Haetaan pelkästään tavoitehintaan vaikuttavat arvonvahennykset.
 WITH urakan_tiedot AS (
     SELECT u.id,
            EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi

@@ -74,7 +74,7 @@
         kattohinnan-ylityspaatos (ota-paatos paatokset :kattohinnan-ylitys)
         kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
         kattohinnan-ylitys-siirto (or (:siirrettava_maara kattohinnan-ylityspaatos) 0)
-        nayta-arvonvahennykset? (sanktio-domain/arvonvahennykset-kaytossa? urakan-tiedot (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))
+        nayta-arvonvahennykset? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? urakan-tiedot (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))
         tavoitehinnan-ylitys? (or (:id tavoitehinnan-ylityspaatos)
                                 (and (nil? (:id tavoitehinnan-ylityspaatos)) (not= 0 tavoitehinnan-ylitys) (> toteuma-yht hoitovuoden-lopun-tavoitehinta)))
         tavoitehinnan-alitus? (or tavoitehinnan-alituspaatos

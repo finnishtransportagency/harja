@@ -1,6 +1,8 @@
 (ns harja.views.urakka.valikatselmus.yhteenveto.yhteenveto
-  (:require [harja.fmt :as fmt]
+  (:require [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
+            [harja.fmt :as fmt]
             [harja.asiakas.kommunikaatio :as k]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.transit :as t]
             [harja.pvm :as pvm]
 
@@ -20,14 +22,10 @@
    {:keys [hoitovuoden-alun-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset
            kirjallisesti-sovitut-muutokset menneet-pysyvat-muutokset
            toteumiin-perustuvat-muutokset-yht pysyvat-muutokset-toteuma-muutokset-yht
-           arvonvahennykset-yht hoitokauden_lopun_indeksikorjaus
+           thv-arvonvahennykset-yht hoitokauden_lopun_indeksikorjaus
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
-  (let [;; Joko uusi urakka, tai >= 26 vuosi
-        nayta-arvonvahennykset? (or
-                                  (and
-                                    arvonvahennykset-yht
-                                    (:muutosten_hallinta urakan-parametrit))
-                                  (>= hoitokauden-alkuvuosi 2026))]
+  (let [;; Täällä näytetään arvonvähennykset, jos ne kuuluvat tavoitehintaan
+        nayta-arvonvahennykset? (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
 
     ;; Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa 
     ;; linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
@@ -126,7 +124,7 @@
 
 (defn osio-toteutuneet-kustannukset
   [{:keys [paatokset hoitokauden-alkuvuosi]}
-   {:keys [yhteenvedon-tiedot arvonvahennykset-yht
+   {:keys [yhteenvedon-tiedot thv-arvonvahennykset-yht
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
   (let [urakan-loppuvuosi (some-> @nav/valittu-urakka :loppupvm pvm/vuosi)
         viimeinen-hoitovuosi? (= hoitokauden-alkuvuosi (dec urakan-loppuvuosi))
@@ -190,7 +188,10 @@
                                   (not= 0 tavoitehinnan-alitus)))
 
         kattohinnan-ylitys? (> kattohinnan-ylitys 0)
-        ympyra-class (if (or tavoitehinnan-ylitys? kattohinnan-ylitys?) "punainen" "vihrea")]
+        ympyra-class (if (or tavoitehinnan-ylitys? kattohinnan-ylitys?) "punainen" "vihrea")
+        ;; Täällä näytetään arvonvähennykset, jos ne kuuluvat tavoitehintaan
+        nayta-arvonvahennykset? (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
+
 
     [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
      [:h3 "Tavoitehintaan kuuluvat toteutuneet kustannukset"]
@@ -211,10 +212,10 @@
       [:span "Hoidonjohtopalkkio"]
       [:span (fmt/euro-opt false hoidonjohtopalkkio)]]
 
-     (when arvonvahennykset-yht
+     (when nayta-arvonvahennykset?
        [:div.flex-row.summa-rivi
         [:span "Arvonvähennykset"]
-        [:span (fmt/euro-opt false arvonvahennykset-yht)]])
+        [:span (fmt/euro-opt false thv-arvonvahennykset-yht)]])
 
      (when (> muut-kulut 0)
        [:div.flex-row.summa-rivi
@@ -296,7 +297,7 @@
 
 (defn yhteenvetolaatikko [_e! app]
   (let [luvut (luvut/yhteenveto-luvut app)]
-    [:<>
+    [:div.valikatselmus-yhteenveto-wrapper
      (osio-lopun-tavoite-ja-katto app luvut)
      (osio-toteutuneet-kustannukset app luvut)
      (bonukset/osio-bonukset app luvut)

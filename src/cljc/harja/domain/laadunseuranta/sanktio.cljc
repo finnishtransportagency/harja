@@ -343,7 +343,7 @@
     (arvonvahennys? rivi) :arvonvahennykset
     (sanktio? rivi) :sanktiot))
 
-(defn arvonvahennykset-kaytossa?
+(defn arvonvahennykset-vaikuttaa-tavoitehintaan?
   "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
   [valittu-urakka kuluva-hoitokausi]
   (let [mhu25? (and (or (= :teiden-hoito (:tyyppi valittu-urakka)) (= "teiden-hoito" (:tyyppi valittu-urakka)))
