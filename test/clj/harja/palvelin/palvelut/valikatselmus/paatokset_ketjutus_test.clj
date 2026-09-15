@@ -160,12 +160,12 @@
                  kattohinta
                  kayttajaid)
 
-        vastaus-tavoitahinnan-muutos (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)
+        vastaus-tavoitehinnan-muutos (paatos-kyselyt/tee-tavoitehinnan-muutospaatos (:db jarjestelma) paatos kayttajaid)
         ;; Katso että päätös tallentui
         ;; Kaikkia arvoja ei tässä testissä tarvitse tarkistella
-        _ (is (= urakkaid (:urakkaid vastaus-tavoitahinnan-muutos)))
-        _ (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi vastaus-tavoitahinnan-muutos)))
-        _ (is (= muokkaa-kattohinta (:muokkaa_kattohinta vastaus-tavoitahinnan-muutos)))
+        _ (is (= urakkaid (:urakkaid vastaus-tavoitehinnan-muutos)))
+        _ (is (= hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi vastaus-tavoitehinnan-muutos)))
+        _ (is (= muokkaa-kattohinta (:muokkaa_kattohinta vastaus-tavoitehinnan-muutos)))
 
 
         ;; -----------------------------
