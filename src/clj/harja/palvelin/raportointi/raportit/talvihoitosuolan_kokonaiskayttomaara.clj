@@ -232,7 +232,7 @@
                                suolarajoitukset (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
                                                          {:urakka-id urakka-id
                                                           :hoitokauden-alkuvuosi vuosi}))
-                               suolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-hoitovuoden-kokonaismaara db
+                               suolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-kokonaismaara db
                                                              {:urakka-id urakka-id
                                                               :alkupvm (pvm/hoitokauden-alkupvm vuosi)
                                                               :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))}))
@@ -325,4 +325,4 @@
                  :sheet-nimi "Talvihoitosuolat"
                  :samalle-sheetille? true}
       otsikkorivit
-      datarivit]]))
+       datarivit]]))

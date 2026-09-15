@@ -168,6 +168,7 @@
             sivuttain-rullattava? ensimmainen-sarake-sticky?
             esta-tiivis-grid? avattavat-rivit
             ei-footer-muokkauspaneelia?
+            piilota-otsikot?
             sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
@@ -183,6 +184,7 @@
                 :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
                 :esta-tiivis-grid? esta-tiivis-grid?
                 :piilota-border? piilota-border?
+                :piilota-otsikot? piilota-otsikot?
                 :raportin-tunniste raportin-tunniste
                 :ei-footer-muokkauspaneelia? ei-footer-muokkauspaneelia?
                 :gridin-luokka gridin-luokka}
@@ -292,6 +294,7 @@
            data)))]))
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko
+                                               leveysprosentti
                                                gridin-luokka
                                                viimeinen-rivi-yhteenveto?
                                                rivi-ennen
@@ -301,18 +304,23 @@
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
                                                avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
-                                               ei-footer-muokkauspaneelia?]}
+                                               ei-footer-muokkauspaneelia? piilota-otsikot?]}
                                      sarakkeet data]]
-  [grid otsikko gridin-luokka
-   viimeinen-rivi-yhteenveto?
-   rivi-ennen piilota-border?
-   raportin-tunniste tyhja
-   korosta-rivit korostustyyli
-   oikealle-tasattavat-kentat vetolaatikot
-   esta-tiivis-grid? avattavat-rivit
-   sivuttain-rullattava? ensimmainen-sarake-sticky?
-   ei-footer-muokkauspaneelia?
-   sarakkeet data])
+  (let [taulukko [grid otsikko gridin-luokka
+                  viimeinen-rivi-yhteenveto?
+                  rivi-ennen piilota-border?
+                  raportin-tunniste tyhja
+                  korosta-rivit korostustyyli
+                  oikealle-tasattavat-kentat vetolaatikot
+                  esta-tiivis-grid? avattavat-rivit
+                  sivuttain-rullattava? ensimmainen-sarake-sticky?
+                  ei-footer-muokkauspaneelia?
+                  piilota-otsikot?
+                  sarakkeet data]]
+    (if leveysprosentti
+      [:div {:style {:width (str leveysprosentti "%")}}
+       taulukko]
+      taulukko)))
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
   [:h1.raportti-otsikko teksti])
