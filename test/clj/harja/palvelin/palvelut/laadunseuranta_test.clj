@@ -1323,8 +1323,9 @@
     (is (= :asiakastyytyvaisyysbonus (:laji laji)) "Seedatun bonuslajin pitää löytyä palautuksesta")
     (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:nimi laji))
       "MHU21-24 profiilissa asiakastyytyväisyysbonus pitää näyttää uudella nimellä")
-    (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus} (into #{} (map :laji lajit)))
-      "MHU21-24 profiilissa pitää olla vain specin mukaiset bonuslajit")
+    (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus}
+           (into #{} (map :laji lajit)))
+      "Puutteellisessa testidatassa MHU21-24-liikennevahinkobonus ohitetaan")
     (is (= :t2-koodi (:toimenpiderajauksen-tyyppi ensimmainen-rivi))
       "Teiden-hoidon seedatun bonusrivin pitää näkyä eksplisiittisesti t2-koodiin rajattuna")
     (is (contains? ensimmainen-rivi :toimenpide-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
@@ -1353,7 +1354,7 @@
         lajit (:lajit vastaus)
         laji (first lajit)]
     (is (= profiili-id (get-in vastaus [:profiili :id])))
-    (is (= 1 (count lajit)) "MHU25 profiilissa pitää olla vain yksi manuaalinen bonuslaji")
+    (is (= 1 (count lajit)) "Puutteellisessa testidatassa MHU25-liikennevahinkobonus ohitetaan")
     (is (= :asiakastyytyvaisyysbonus (:laji laji)))
     (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:nimi laji))
       "MHU25 profiilissa sama looginen bonus pitää näyttää uudella nimellä")
@@ -1534,7 +1535,7 @@
     (is (= [:asiakastyytyvaisyysbonus :alihankintabonus]
            (mapv :laji (:bonus-lajit vastaus))))
     (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
-            "Alihankintasopimusten maksuehtobonus"]
+            "Bonus alihankintasopimusten maksuehdoista"]
            (mapv :nimi (:bonus-lajit vastaus))))))
 
 (deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita

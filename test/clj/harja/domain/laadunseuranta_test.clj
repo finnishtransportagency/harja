@@ -142,3 +142,17 @@
     (testing "Tuntematon laji ei palauta tyyppeja"
       (is (= []
              (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :tuntematon))))))
+
+(deftest liikennevahinkobonus-ja-alihankintabonus-palauttavat-kanoniset-nimet
+  (is (= "Bonus alihankintasopimusten maksuehdoista"
+         (sanktio-domain/sanktiolaji->teksti :alihankintabonus)))
+  (is (= "Bonus alihankintasopimusten maksuehdoista"
+         (sanktio-domain/bonuslaji->teksti :alihankintabonus)))
+  (is (= "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
+         (sanktio-domain/sanktiolaji->teksti :liikennevahinkojen_aiheuttajien_selvitysbonus)))
+  (is (= "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
+         (sanktio-domain/bonuslaji->teksti :liikennevahinkojen_aiheuttajien_selvitysbonus)))
+  (is (= :bonukset
+         (sanktio-domain/rivin-tyyppi
+           {:laji :liikennevahinkojen_aiheuttajien_selvitysbonus
+            :bonus? true}))))
