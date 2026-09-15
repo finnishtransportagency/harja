@@ -2,8 +2,8 @@
   (:require [clojure.java.io :as io]
             [taoensso.timbre :as log])
   (:import (java.util.zip ZipInputStream)
-           (java.util.zip GZIPInputStream)
-           (org.apache.tools.tar TarInputStream)
+           (org.apache.commons.compress.archivers.tar TarArchiveInputStream)
+           (org.apache.commons.compress.compressors.gzip GzipCompressorInputStream)
            (org.apache.commons.io FilenameUtils))
   (:use [slingshot.slingshot :only [try+ throw+]]))
 
@@ -16,7 +16,13 @@
 
 (defn pura-gzip-paketti [kohdetiedoston-polku]
   (let [kohdepolku (.getParent (io/file kohdetiedoston-polku))]
-    (with-open [zip-virta (TarInputStream. (GZIPInputStream. (io/input-stream kohdetiedoston-polku)))]
+    ;; Asetettu decompressConcatenated = true, jotta peräkkäiset GZIP-jäsenet puretaan varmasti
+    ;; (vastaa java.util.zip/GZIPInputStream-käytöstä)
+    (with-open [zip-virta (TarArchiveInputStream.
+                            (-> (GzipCompressorInputStream/builder)
+                                (.setInputStream (io/input-stream kohdetiedoston-polku))
+                                (.setDecompressConcatenated true)
+                                (.get)))]
       (doseq [tiedosto (repeatedly #(.getNextEntry zip-virta)) :while tiedosto]
         (log/debug (.replace (str (.getName tiedosto)) "./._" ""))
         (let [tiedostopolku (str kohdepolku "/" (.replace (str (.getName tiedosto)) "./._" ""))]
