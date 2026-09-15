@@ -21,11 +21,23 @@
                :error (str "Arkiston purku yrittää kirjoittaa kohdekansion ulkopuolelle: " kohdetiedosto-nimi)}))
     kohdetiedosto))
 
+(defn- pura-arkiston-sisalto
+  "Purkaa arkistovirrasta yhden tiedoston kohdekansioon. Jos tiedosto on hakemisto, luodaan tyhjä hakemisto tiedostopolkuun.
+  Tarvittaessa tiedostoille luodaan puuttuvat parent-hakemistot."
+  [^InputStream virta kohdepolku nimi hakemisto?]
+  (let [^File kohdetiedosto (turvallinen-kohdetiedosto kohdepolku nimi)]
+    (if hakemisto?
+      (.mkdirs kohdetiedosto)
+      (do
+        (io/make-parents kohdetiedosto)
+        (io/copy virta kohdetiedosto)))))
+
 (defn pura-zip-paketti [kohdetiedoston-polku]
   (let [kohdepolku (.getParent (io/file kohdetiedoston-polku))]
     (with-open [zip-virta (ZipInputStream. (io/input-stream kohdetiedoston-polku))]
-      (doseq [^ZipEntry tiedosto (repeatedly #(.getNextEntry zip-virta)) :while tiedosto]
-        (io/copy zip-virta (turvallinen-kohdetiedosto kohdepolku (.getName tiedosto)))))))
+      (doseq [^ZipEntry tiedosto (repeatedly #(.getNextEntry zip-virta))
+              :while tiedosto]
+        (pura-arkiston-sisalto zip-virta kohdepolku (.getName tiedosto) (.isDirectory tiedosto))))))
 
 (defn- tar-arkisto?
   "Tutkii tiedostovirran alusta, onko kyseessä tar-arkisto. Virta on oltava puskuroitu, sillä
@@ -40,7 +52,7 @@
   (with-open [tar-virta (TarArchiveInputStream. virta)]
     (doseq [^TarArchiveEntry tiedosto (repeatedly #(.getNextEntry tar-virta))
             :while tiedosto]
-      (io/copy tar-virta (turvallinen-kohdetiedosto kohdepolku (.getName tiedosto))))))
+      (pura-arkiston-sisalto tar-virta kohdepolku (.getName tiedosto) (.isDirectory tiedosto)))))
 
 (defn- pura-gzip-tiedosto
   "Purkaa gzip-pakatun yksittäisen tiedoston kohdekansioon."
