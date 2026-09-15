@@ -1160,14 +1160,16 @@
                 (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
                                                      :alkupvm (:alkupvm urakka)}
                   kuluvan-hoitokauden-alkuvuosi))]
-    (mapv (fn [jarjestys laji]
-            {:laji laji
-             :rivin-tyyppi (legacy-rivin-tyyppi laji)
-             :jarjestys jarjestys
-             :sanktiotyypit (mapv (fn [koodi] {:koodi koodi})
-                              (sanktiotyypit laji))})
-      (map lajien-jarjestykset lajit)
-      lajit)))
+    (->> (map (fn [jarjestys laji]
+          {:laji laji
+           :rivin-tyyppi (legacy-rivin-tyyppi laji)
+           :jarjestys jarjestys
+           :sanktiotyypit (mapv (fn [koodi] {:koodi koodi})
+                    (sanktiotyypit laji))})
+        (map lajien-jarjestykset lajit)
+        lajit)
+       (sort-by :jarjestys)
+       vec)))
 
 (defn- supista-sanktio-konfiguraatio [vastaus]
   (mapv (fn [{:keys [laji rivin-tyyppi jarjestys sanktiotyypit]}]
