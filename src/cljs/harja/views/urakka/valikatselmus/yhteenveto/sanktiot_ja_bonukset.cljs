@@ -1,5 +1,8 @@
 (ns harja.views.urakka.valikatselmus.yhteenveto.sanktiot-ja-bonukset
   (:require [harja.fmt :as fmt]
+            [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tiedot.urakka :as tiedot-urakka]
             [harja.views.urakka.valikatselmus.yhteenveto.luvut :as luvut]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]))
 
@@ -38,7 +41,7 @@
 
 
 (defn osio-sanktiot [{:keys [paatokset urakan-parametrit hoitokauden-alkuvuosi]}
-                     {:keys [yhteenvedon-tiedot arvonvahennykset-yht]}]
+                     {:keys [yhteenvedon-tiedot]}]
   (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
         lupaussanktio (or (luvut/arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
 
@@ -58,12 +61,15 @@
                                         (+ (:maara sanktio) (:indeksikorjaus sanktio))
                                         0))
                                  (:sanktiot yhteenvedon-tiedot)))
+        ;; Nämä arvonvähennykset eivät vaikuta tavoitehintaan.
+        arvonvahennykset-yht (apply + (map (fn [sanktio]
+                                             (if (= "arvonvahennyssanktio" (:sakkoryhma sanktio))
+                                               (+ (:maara sanktio) (:indeksikorjaus sanktio))
+                                               0))
+                                        (:sanktiot yhteenvedon-tiedot)))
 
-        nayta-arvonvahennykset? (or
-                                  (and
-                                    arvonvahennykset-yht
-                                    (not (:muutosten_hallinta urakan-parametrit)))
-                                  (< hoitokauden-alkuvuosi 2026))]
+        ;; Jos arvonvähennykset vaikuttaa tavoitehintaan, niin niitä ei näytetä enää tässä.
+        nayta-arvonvahennykset? (not (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi))]
 
     [:div.valikatselmus-yhteenveto.osio {:aria-live "polite"}
      [:h3 "Sanktiot"]
