@@ -921,8 +921,14 @@
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                                     tallennettu-paatos)
         ;; Poistetaan juuri lisätty päätös.
-        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-alituspaatos +kayttaja-jvh+ tallennettu-paatos)
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                                      {:urakka-id urakkaid
+                                       :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                                       :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinnan-alitus)]
     (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta tallennettu-paatos)) "Hoitokauden alun tavoitehinta on sama päätöksen tekemisen jälkeen")
     (is (= hoitokauden-lopun-tavoitehinta (:hoitokauden_lopun_tavoitehinta tallennettu-paatos)) "Hoitokauden lopun tavoitehinta on sama päätöksen tekemisen jälkeen")

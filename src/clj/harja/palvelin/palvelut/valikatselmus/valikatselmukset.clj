@@ -1295,25 +1295,10 @@
           (tee-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-pysyvamuutospaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-alituspaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-alituspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-alituspaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-alituspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1413,9 +1398,7 @@
       :tee-lupauspaatos
       :tee-tavoitehinnan-muutospaatos
       :tee-tavoitehinnan-pysyvamuutospaatos
-      :poista-tavoitehinnan-pysyvamuutospaatos
       :tee-tavoitehinnan-alituspaatos
-      :poista-tavoitehinnan-alituspaatos
       :tee-tavoitehinnan-ylityspaatos
       :poista-tavoitehinnan-ylityspaatos
       :tee-kattohinnan-ylityspaatos
