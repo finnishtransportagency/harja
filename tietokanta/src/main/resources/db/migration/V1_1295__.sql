@@ -28,12 +28,12 @@ integraatio AS (
          WHERE kayttajanimi = 'Integraatio'
 )
 UPDATE sanktio_laji sl
-   SET jarjestys = ja.uusi_jarjestys,
+SET jarjestys = ja.uusi_jarjestys,
            muokkaaja = i.id,
            muokattu = CURRENT_TIMESTAMP
-  FROM jarjestysarvot ja
+FROM jarjestysarvot ja
            CROSS JOIN integraatio i
- WHERE sl.koodi = ja.koodi
+WHERE sl.koodi = ja.koodi
    AND sl.jarjestys IS DISTINCT FROM ja.uusi_jarjestys;
 
 -- Puuttuva koodi tarkoittaisi, että järjestys jäisi osittain korjaamatta.
@@ -68,8 +68,8 @@ $$;
 -- MHU19-25 C-ryhmän järjestys on profiilirivikohtainen.
 WITH profiilit (nimi) AS (
                 VALUES ('teiden-hoito-legacy'),
-                                         ('teiden-hoito-2021-ja-uudemmat'),
-                                         ('teiden-hoito-mhu2025')
+                       ('teiden-hoito-2021-ja-uudemmat'),
+                       ('teiden-hoito-mhu2025')
 ),
 kontekstit (soveltuvuuskonteksti) AS (
                 VALUES ('urakka'), ('laatupoikkeama')
@@ -84,7 +84,7 @@ integraatio AS (
 ),
 kohderivit AS (
                 SELECT spr.id,
-                                         ja.uusi_jarjestys
+                       ja.uusi_jarjestys
                         FROM sanktio_profiili_rivi spr
                                          JOIN sanktio_profiili sp
                                                  ON sp.id = spr.sanktio_profiili_id
@@ -101,10 +101,10 @@ kohderivit AS (
                                                  ON ja.sanktiotyyppi_koodi = st.koodi
 )
 UPDATE sanktio_profiili_rivi spr
-         SET jarjestys = kohderivit.uusi_jarjestys,
+SET jarjestys = kohderivit.uusi_jarjestys,
                          muokkaaja = i.id,
                          muokattu = CURRENT_TIMESTAMP
-        FROM kohderivit
+FROM kohderivit
                          CROSS JOIN integraatio i
- WHERE spr.id = kohderivit.id
+WHERE spr.id = kohderivit.id
          AND spr.jarjestys IS DISTINCT FROM kohderivit.uusi_jarjestys;
