@@ -1582,14 +1582,14 @@
                     (println "ERROR: " e)))
         tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
-                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
-                                                     tallennettu-paatos)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
         poistovastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
-                                         {:urakka-id urakkaid
-                                          :paatos (assoc tallennettu-paatos :luoja kayttajaid)
-                                          :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
+                          {:urakka-id urakkaid
+                           :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                           :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :hoitovuoden-lopun-indeksikorjaus)]
 
     ;; Päätös on poistettu, joten sitä ei enää löydy
@@ -1712,14 +1712,20 @@
         paatos (paatos-apurit/lopun-hintapaatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
                  tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
-        uusi-paatos (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos)
+        uusi-paatos (assoc (paatos-kyselyt/tee-hoitokauden-lopun-hintapaatos (:db jarjestelma) paatos) :avain :hoitovuoden-lopun-hinta)
         _ (testaa-lopun-hintapaatos uusi-paatos urakkaid hoitokauden-alkuvuosi tavoitehinta_ennen hoitokauden-lopun-indeksikorjaus
             tavoitehinnan_muutokset tavoitehinta_jalkeen kattohinta kattohintakerroin lisaa-tavoitehintaan-lopunindeksikorjaus kayttajaid)
 
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      uusi-paatos)
         ;; Poistetaan juuri lisätty päätös rajapinnan kautta
         vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                               jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                  (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoitovuoden-lopun-hintapaatos +kayttaja-jvh+ uusi-paatos))
+                  (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                    {:urakka-id urakkaid
+                     :paatos (assoc uusi-paatos :luoja kayttajaid)
+                     :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-tavoite-ja-kattohinta)]
     ;; Päätös on poistettu, joten sitä ei enää löydy
     (is (= "Hoitovuoden lopun tavoite- ja kattohinta" (:nimi poistettu-paatos)))
@@ -1821,13 +1827,19 @@
         ;; Hae päätökset ja varmista, että juuri lisätty päätös löytyy
         valikatselmus-vastaus (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) +kayttaja-jvh+
                                 {:urakkaid urakkaid :hoitovuosi hoitokauden-alkuvuosi})
-        uusi-paatos (valitse-paatos (:paatokset valikatselmus-vastaus) :hoidonjohtopalkkion-muutos)
+        uusi-paatos (assoc (valitse-paatos (:paatokset valikatselmus-vastaus) :hoidonjohtopalkkion-muutos) :avain :hoidonjohtopalkkio)
         _ (is (not (nil? (:id uusi-paatos))))
 
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      uusi-paatos)
         ;; Poistetaan päätös rajapinnan kautta
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-hoidonjohtopalkkion-muutospaatos +kayttaja-jvh+ uusi-paatos))
+                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                           {:urakka-id urakkaid
+                            :paatos (assoc uusi-paatos :luoja kayttajaid)
+                            :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :hoidonjohtopalkkion-muutos)]
     ;; Päätös on poistettu, joten sellaista päätöstä, jossa on id, ei enää löydy
     (is (= "Hoidonjohtopalkkion muutos" (:nimi poistettu-paatos)))
@@ -1881,12 +1893,20 @@
         vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                               jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tee-poytakirjan-raporttipaatos +kayttaja-jvh+ paatos))
-        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)
+        tallennettu-paatos (assoc
+                             (valitse-paatos (:paatokset vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)
+                             :avain :raportti)
 
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                      :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                      tallennettu-paatos)
         ;; Poistetaan tallennettu päätös
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                      jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
-                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-poytakirjan-raporttipaatos +kayttaja-jvh+ tallennettu-paatos))
+                         (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                           {:urakka-id urakkaid
+                            :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                            :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset}))
         poistettu-paatos (valitse-paatos (:paatokset poisto-vastaus) :valikatselmuspoytakirjaan-liitettavat-raportit)]
     ;; Poiston jälkeen löytyy vain default tiedot päätöksestä
     (is (= "Välikatselmuspöytäkirjaan liitettävät raportit" (:nimi poistettu-paatos)))))

@@ -1325,40 +1325,16 @@
           (tee-hv-lopun-tavoite-ja-kattohintapaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-hoitovuoden-lopun-hintapaatos
-        (fn [user tiedot]
-          (poista-hoitovuoden-lopun-hintapaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-hoidonjohtopalkkion-muutospaatos
         (fn [user tiedot]
           (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-hoidonjohtopalkkion-muutospaatos
-        (fn [user tiedot]
-          (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-poytakirjan-raporttipaatos
         (fn [user tiedot]
           (tee-poytakirjan-raporttipaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/raporttipaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-poytakirjan-raporttipaatos
-        (fn [user tiedot]
-          (poista-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
       this))
 
@@ -1379,9 +1355,6 @@
       :tee-kattohinnan-ylityspaatos
       :tee-indeksikorjauspaatos
       :tee-hv-lopun-tavoite-ja-kattohintapaatos
-      :poista-hoitovuoden-lopun-hintapaatos
       :tee-hoidonjohtopalkkion-muutospaatos
-      :poista-hoidonjohtopalkkion-muutospaatos
-      :tee-poytakirjan-raporttipaatos
-      :poista-poytakirjan-raporttipaatos)
+      :tee-poytakirjan-raporttipaatos)
     this))
