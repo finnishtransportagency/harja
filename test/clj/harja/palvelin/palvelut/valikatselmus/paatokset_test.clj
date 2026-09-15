@@ -690,8 +690,14 @@
         _ (is (= tavoitehinta (:tavoitehinta tallennettu-paatos)) "Tavoitehinnan muutospäätöslukemat täsmää validoinnin jälkeen")
         _ (is (= kattohinta (:kattohinta tallennettu-paatos)) "Kattohinnan muutospäätöslukemat täsmää validoinnin jälkeen")
 
+        tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
+                                                     tallennettu-paatos)
         ;; Poistetaan juuri lisätty päätös.
-        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-tavoitehinnan-muutospaatos +kayttaja-jvh+ tallennettu-paatos)
+        poistovastaus (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
+                                      {:urakka-id urakkaid
+                                       :paatos (assoc tallennettu-paatos :luoja kayttajaid)
+                                       :tehdyt-kumoutuvat-paatokset tehdyt-kumoutuvat-paatokset})
         ;; Annetuilla arvoilla poistettua päätöstä ei löydy, vaan default päätös
         poistettu-paatos (valitse-paatos (:paatokset poistovastaus) :tavoitehinnan-muutokset)]
     (is (nil? (:luotu poistettu-paatos)))

@@ -1283,26 +1283,10 @@
           (tee-lupauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
 
-      ;; FIXME Poistuu
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-lupauspaatos
-        (fn [user tiedot]
-          (poista-lupauspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/lupauspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-muutospaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-muutospaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1427,9 +1411,7 @@
       :hae-valikatselmuksen-tiedot-hoitovuodelle
       :onko-paatoksia-tekematta
       :tee-lupauspaatos
-      :poista-lupauspaatos
       :tee-tavoitehinnan-muutospaatos
-      :poista-tavoitehinnan-muutospaatos
       :tee-tavoitehinnan-pysyvamuutospaatos
       :poista-tavoitehinnan-pysyvamuutospaatos
       :tee-tavoitehinnan-alituspaatos
