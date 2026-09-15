@@ -1,11 +1,12 @@
 (ns harja.palvelin.raportointi.raportit.valikatselmusraportti
   "Valikatselmuksen PDF-raportti"
-  (:require [harja.fmt :as fmt]
+  (:require [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
-            [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
-            [harja.kyselyt.urakat :as urakat-q]
-            [harja.pvm :as pvm]))
+
+            [harja.kyselyt.urakat :as urakat-q]))
 
 (defn- euro [arvo]
   (fmt/euro-opt false arvo))
@@ -38,15 +39,15 @@
         menneet-pysyvat-muutokset (when muutosten-hallinta? (:menneet-muutos-summa budjettitavoite))
         toteumiin-perustuvat-muutokset (when muutosten-hallinta? (:toteumiin-perustuvat-muutokset-yht yhteenveto))
         pysyvat-muutokset (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset 0))
-        arvonvahennykset (reduce + 0 (map :maara (:arvonvahennykset yhteenveto)))
+        tavoitehintaan-vaikuttavat-arvonvahennykset (reduce + 0 (map :maara (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto)))
         hoitovuoden-lopun-tavoitehinta (+ (or (:hoitovuoden-lopun-tavoitehinta budjettitavoite) 0)
                                          (if (:id indeksikorjaus-paatos) 0 hoitokauden-lopun-indeksikorjaus)
-                                         pysyvat-muutokset arvonvahennykset)
+                                         pysyvat-muutokset tavoitehintaan-vaikuttavat-arvonvahennykset)
         kattohinta-kerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
         hoitovuoden-lopun-kattohinta (+ (or (:hoitovuoden-lopun-kattohinta budjettitavoite) 0)
                                        (* (if (:id indeksikorjaus-paatos) 0 hoitokauden-lopun-indeksikorjaus) kattohinta-kerroin)
                                        (* pysyvat-muutokset kattohinta-kerroin)
-                                       (* arvonvahennykset kattohinta-kerroin))
+                                       (* tavoitehintaan-vaikuttavat-arvonvahennykset kattohinta-kerroin))
         hankintakustannukset (+ (or (:hankintakustannukset-toteutunut kustannukset) 0)
                                (or (:rahavaraukset-toteutunut kustannukset) 0))
         erillishankinnat (or (:erillishankinnat-toteutunut kustannukset) 0)
@@ -65,6 +66,9 @@
                                                            (+ (:maara %) (:indeksikorjaus %))) (:sanktiot yhteenveto)))
         muut-sanktiot (reduce + 0 (map #(if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio" "laskutus_yli_laskutusrajan"} (:sakkoryhma %)))
                                           (+ (:maara %) (:indeksikorjaus %)) 0) (:sanktiot yhteenveto)))
+        ;; Erotellaan sanktioiden arvonvähennykset, jotka näytetään, kun arvovähennykset eivät vaikuta tavoitehintaan
+        sanktio-arvonvahennykset (reduce + 0 (map #(if (contains? #{"arvonvahennyssanktio"} (:sakkoryhma %))
+                                                    (+ (:maara %) (:indeksikorjaus %)) 0) (:sanktiot yhteenveto)))
         tavoitehinnan-ylityspaatos (ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (ota-paatos paatokset :tavoitehinnan-alitus)
         tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
@@ -74,7 +78,7 @@
         kattohinnan-ylityspaatos (ota-paatos paatokset :kattohinnan-ylitys)
         kattohinnan-ylitys (or (:ylityksen_maara kattohinnan-ylityspaatos) 0)
         kattohinnan-ylitys-siirto (or (:siirrettava_maara kattohinnan-ylityspaatos) 0)
-        nayta-arvonvahennykset? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? urakan-tiedot (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))
+        arvonvah-vaikk-tavoitehintaan? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? urakan-tiedot (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))
         tavoitehinnan-ylitys? (or (:id tavoitehinnan-ylityspaatos)
                                 (and (nil? (:id tavoitehinnan-ylityspaatos)) (not= 0 tavoitehinnan-ylitys) (> toteuma-yht hoitovuoden-lopun-tavoitehinta)))
         tavoitehinnan-alitus? (or tavoitehinnan-alituspaatos
@@ -95,7 +99,7 @@
                      muutosten-hallinta? (conj ["Tavoitehinnan muutokset" (lisaa-plus tavoitehinnan-muutokset)])
                      (and muutosten-hallinta? kirjallisesti-sovitut-muutokset) (conj ["  • Kirjallisesti sovitut muutokset" (lisaa-plus kirjallisesti-sovitut-muutokset)])
                      muutosten-hallinta? (conj ["  • Toteumiin perustuvat muutokset" (lisaa-plus toteumiin-perustuvat-muutokset)])
-                     (and muutosten-hallinta? nayta-arvonvahennykset?) (conj ["  • Arvonvähennysten tavoitehintamuutokset" (euro arvonvahennykset)])
+                     (and muutosten-hallinta? arvonvah-vaikk-tavoitehintaan?) (conj ["  • Arvonvähennysten tavoitehintamuutokset" (euro tavoitehintaan-vaikuttavat-arvonvahennykset)])
                      muutosten-hallinta? (conj ["Hoitovuoden lopun indeksikorjaus" (euro hoitokauden-lopun-indeksikorjaus)])
 
                      true (conj ["Hoitovuoden lopun tavoitehinta" (euro hoitovuoden-lopun-tavoitehinta) true])
@@ -104,7 +108,7 @@
                             ["Erillishankinnat" (euro erillishankinnat)]
                             ["Johto- ja hallintokorvaus" (euro johto-ja-hallintokorvaus)]
                             ["Hoidonjohtopalkkio" (euro hoidonjohtopalkkio)]]
-                     arvonvahennykset (conj ["Arvonvähennykset" (euro arvonvahennykset)])
+                     arvonvah-vaikk-tavoitehintaan? (conj ["Arvonvähennykset" (euro tavoitehintaan-vaikuttavat-arvonvahennykset)])
                      (pos? muut-kulut) (conj ["Muut kulut" (euro muut-kulut)])
                      true (conj ["Toteutuma yhteensä" (euro toteuma-yht) true]))
      :tavoitehinnan-ylitys (when tavoitehinnan-ylitys?
@@ -129,7 +133,8 @@
      :sanktiot (cond-> [["Lupaussanktio" (euro lupaussanktio)]]
                  (true? (:laskutusraja_kaytossa urakan-parametrit)) (conj ["Laskutus yli laskutusrajan -sanktiot" (euro laskutusrajan-ylitys-sanktiot)])
                  true (conj ["Muut sanktiot" (euro muut-sanktiot)])
-                 nayta-arvonvahennykset? (conj ["Arvonvähennykset" (euro arvonvahennykset)]))
+                 ;; Kun
+                 (not arvonvah-vaikk-tavoitehintaan?) (conj ["Arvonvähennykset" (euro sanktio-arvonvahennykset)]))
      :hoidonjohtopalkkio [["Hoidonjohtopalkkion muutos"
                            (euro (if (and (:id hoidonjohtopalkkion-paatos)
                                        (neg? hoidonjohtopalkkion-muutos))
