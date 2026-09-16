@@ -264,8 +264,9 @@
     :vesivayla_bonus "Bonus"
 
     :lupausbonus "Lupausbonus"
-    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :alihankintabonus "Bonus alihankintasopimusten maksuehdoista"
     :asiakastyytyvaisyysbonus "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
+    :liikennevahinkojen_aiheuttajien_selvitysbonus "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
     nil))
 
@@ -274,8 +275,9 @@
   [avainsana]
   (case avainsana
     :asiakastyytyvaisyysbonus "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
+    :liikennevahinkojen_aiheuttajien_selvitysbonus "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
     :muu-bonus "Muu bonus (vahingonkorvaus, liikennevahingot jne.)"
-    :alihankintabonus "Alihankintasopimusten maksuehtobonus"
+    :alihankintabonus "Bonus alihankintasopimusten maksuehdoista"
     :tavoitepalkkio "Tavoitepalkkio"
     :lupausbonus "Lupausbonus"
     ;; Hox: Ylläpitourakoilla on aina vain yksi "bonustyyppi" vaihtoehtona, joka on poikkeuksellisesti sanktio.
@@ -343,10 +345,10 @@
     (arvonvahennys? rivi) :arvonvahennykset
     (sanktio? rivi) :sanktiot))
 
-(defn arvonvahennykset-kaytossa?
+(defn arvonvahennykset-vaikuttaa-tavoitehintaan?
   "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
   [valittu-urakka kuluva-hoitokausi]
-  (let [mhu25? (and (= :teiden-hoito (:tyyppi valittu-urakka))
+  (let [mhu25? (and (or (= :teiden-hoito (:tyyppi valittu-urakka)) (= "teiden-hoito" (:tyyppi valittu-urakka)))
                  (>= (pvm/vuosi (:alkupvm valittu-urakka)) 2025))
         kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
     (if (or mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) true false)))
