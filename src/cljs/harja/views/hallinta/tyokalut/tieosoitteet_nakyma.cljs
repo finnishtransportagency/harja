@@ -26,7 +26,7 @@
           [:div.col-xs-4
            [kentat/tee-kentta
             {:vayla-tyyli? true
-             :elementin-id (gensym)
+             :elementin-id "tie-filter"
              :placeholder "Tie"
              :tyyppi :positiivinen-numero}
             (r/wrap (:tie app)
@@ -38,7 +38,7 @@
             [ajax-loader-pieni "Haetaan tietoja..."]
 
             [grid/grid
-             {:tyhja "Ei tieosoitteita."
+             {:tyhja (str "Ei tieosoitteita tienumerolla " (:tie app) ".")
               :tunniste :tunniste
               :piilota-toiminnot? true}
              [{:otsikko "Tie" :nimi :tie :tyyppi :string :leveys 1}

@@ -272,7 +272,7 @@
                                    [:input {:type "hidden" :name "parametrit"
                                             :value (transit/clj->transit {:urakka-id (-> @tila/tila :yleiset :urakka :id)
                                                                           :tila (:valittu-tila app)
-                                                                          :elyt (:valitut-elyt app)
+                                                                          :evkt (:valitut-evkt app)
                                                                           :alkupvm (pvm/->pvm (str "1.1." (:valittu-vuosi app)))
                                                                           :loppupvm (pvm/->pvm (str "31.12." (:valittu-vuosi app)))
                                                                           :tyomenetelmat #{(:valittu-tyomenetelma app)}})}]
@@ -407,16 +407,16 @@
         tyomenetelmat (get-in app [:valinnat :tyomenetelmat])
         valitut-tilat (:valitut-tilat app)
         valittu-vuosi (:valittu-vuosi app)
-        valitut-elyt (:valitut-elyt app)
+        valitut-evkt (:valitut-evkt app)
         valitut-tyomenetelmat (:valitut-tyomenetelmat app)
-        valittavat-elyt (conj
+        valittavat-evkt (conj
                           (map (fn [h]
                                  (-> h
                                    (dissoc h :alue :type :liikennemuoto)
-                                   (assoc :valittu? (or (some #(= (:id h) %) valitut-elyt) ;; Onko kyseinen ely valittu
+                                   (assoc :valittu? (or (some #(= (:id h) %) valitut-evkt) ;; Onko kyseinen evk valittu
                                                       false))))
                             @hal/vaylamuodon-hallintayksikot)
-                          {:id 0 :nimi "Kaikki" :elynumero 0 :valittu? (some #(= 0 %) valitut-elyt)})
+                          {:id 0 :nimi "Kaikki" :evknumero 0 :valittu? (some #(= 0 %) valitut-evkt)})
         valittavat-tyomenetelmat (map (fn [t]
                                         {:nimi (or (::paikkaus/tyomenetelma-nimi t) t)
                                          :id (::paikkaus/tyomenetelma-id t)
@@ -430,15 +430,15 @@
                            paikkauskohteiden-tilat)]
     [:div.flex-row.alkuun.filtterit {:style {:padding "16px"}} ;; Osa tyyleistä jätetty inline, koska muuten kartta rendataan päälle.
 
-     ;; Tiemerkintäurakalle ja hoito ei haluta näyttää elyrajauksia.
+     ;; Tiemerkintäurakalle ja hoito ei haluta näyttää evkrajauksia.
      (when (and
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :tiemerkinta)
              (not= (-> @tila/tila :yleiset :urakka :tyyppi) :hoito))
        [:div.col-xs-2
-        [:label {:class "alasvedon-otsikko" :for "filtteri-ely"} "ELY"]
-        [valinnat/checkbox-pudotusvalikko valittavat-elyt (fn [ely valittu?]
-                                                            (e! (t-paikkauskohteet/->FiltteriValitseEly ely valittu?)))
-         [" ELY valittu" " ELYä valittu"]
+        [:label {:class "alasvedon-otsikko" :for "filtteri-evk"} "Elinvoimakeskus"]
+        [valinnat/checkbox-pudotusvalikko valittavat-evkt (fn [evk valittu?]
+                                                            (e! (t-paikkauskohteet/->FiltteriValitseElinvoimakeskus evk valittu?)))
+         [" Elinvoimakeskus valittu" " Elinvoimakeskusta valittu"]
          {:vayla-tyyli? true}]])
 
      ;; Kohteen tila 

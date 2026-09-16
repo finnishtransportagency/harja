@@ -29,41 +29,66 @@
                           viimeksi-klikattu-id (-> app :viimeksi-valittu :id)]
                       (when (= viimeksi-klikattu-id rivin-id) "viimeksi-valittu-tausta")))
     :rivi-jalkeen-fn (fn [rivit]
-                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))]
+                       (let [tavoitehinnan-muutokset-yhteensa (reduce + (map :tavoitehinnan-muutos rivit))
+                             kustannusvaikutukset-yhteensa
+                             (reduce + 0
+                               (for [rivi rivit
+                                     :let [summa (reduce + 0 (map :summa (:kustannusvaikutukset rivi)))]
+                                     :when (or (= (:tyyppi rivi) "muutostyo")
+                                             (and (= (:tyyppi rivi) "pysyva") (pos? summa)))]
+                                 summa))]
                          [{:teksti "Yhteensä" :luokka "yhteensa" :sarakkeita 2}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}
+                          {:teksti (fmt/euro-opt false false kustannusvaikutukset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti (fmt/euro-opt false true tavoitehinnan-muutokset-yhteensa) :luokka "yhteensa" :leveys 8 :tasaa :oikea}
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
    ;; Taulukon kentät
-   [{:otsikko "Tyyppi"
+   [{:otsikko "Voimassa alkaen"
+     :nimi :voimassa_alkaen
+     :tyyppi :pvm
+     :leveys 12}
+
+    {:otsikko "Tyyppi"
      :nimi :tyyppi
      :tyyppi :string
-     :leveys 15
+     :leveys 20
      :fmt (fn [arvo]
             (muutos-domain/tyyppi-fmt arvo (:sopimustyyppi @nav/valittu-urakka)))}
 
     {:otsikko "Muutoksen syy"
      :nimi :syy
      :tyyppi :string
-     :leveys 35}
+     :leveys 30}
 
-    {:otsikko "Voimassa alkaen"
-     :nimi :voimassa_alkaen
-     :tyyppi :pvm
-     :leveys 15}
+    {:otsikko "Muutostyötilaus (€)"
+     :nimi :kustannusvaikutukset
+     :tyyppi :komponentti
+     :fmt #(fmt/euro-opt false false (reduce + 0 (map :summa %)))
+     :tasaa :oikea
+     :leveys 13
+     :komponentti (fn [{:keys [tyyppi kustannusvaikutukset] :as _rivi}]
+                    (let [summa (reduce + 0 (map :summa kustannusvaikutukset))
+                          ;; Summa näytetään jos tyyppi on muutostyo, tai ei-negatiivinen pysyvä muutos
+                          nayta-summa? (or
+                                         (= tyyppi "muutostyo")
+                                         (and (= tyyppi "pysyva") (pos? summa)))]
+                      [:span
+                       (if nayta-summa?
+                         (fmt/euro-opt false false summa)
+                         "-")]))}
 
     {:otsikko "Tavoitehinnan muutos (€)"
      :nimi :tavoitehinnan-muutos
      :tyyppi :numero
      :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
-     :leveys 15}
+     :leveys 13}
 
     {:otsikko ""
      :nimi :toiminnot
      :tyyppi :komponentti
-     :leveys 10
+     :leveys 12
      :tasaa :oikea
      :komponentti (fn [rivi]
                     (let [poikkeama? (= (:alityyppi rivi) :poikkeama)
@@ -100,34 +125,34 @@
                           {:teksti "" :luokka "yhteensa" :leveys 8 :tasaa :oikea}]))}
 
    ;; Taulukon kentät
-   [{:otsikko "Muutoksen syy"
-     :nimi :syy
-     :tyyppi :string
-     :leveys 40}
-
-    {:otsikko "Voimassa alkaen"
+   [{:otsikko "Voimassa alkaen"
      :nimi :voimassa_alkaen
      :tyyppi :pvm
-     :leveys 15}
+     :leveys 12}
+
+    {:otsikko "Muutoksen syy"
+     :nimi :syy
+     :tyyppi :string
+     :leveys 50}
 
     {:otsikko "Tavoitehinnan muutos (€)"
      :nimi :tavoitehinnan-muutos
      :tyyppi :numero
      :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
-     :leveys 15}
+     :leveys 13}
 
     {:otsikko "Indeksikorjattu"
      :nimi :tavoitehinnan-muutos-indeksikorjattu
      :tyyppi :numero
      :fmt (partial fmt/euro-opt false true)
      :tasaa :oikea
-     :leveys 15}
+     :leveys 13}
 
     {:otsikko ""
      :nimi :toiminnot
      :tyyppi :komponentti
-     :leveys 10
+     :leveys 12
      :tasaa :oikea
      :komponentti (fn [rivi]
                     [napit/muokkaa "Muokkaa"

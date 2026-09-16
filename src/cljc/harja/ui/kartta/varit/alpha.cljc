@@ -23,6 +23,7 @@
 (def harmaa (rgba 140 140 140 0.7))
 (def tummanharmaa (rgba 77 77 77 0.7))
 
+(def tarkastus-default (rgba 148 167 194 0.7))
 (def fig-default   (rgba 0 176 204 0.7))
 (def lemon-default (rgba 255 195 0 0.7))
 (def eggplant-default (rgba 160 80 160 0.7))
@@ -35,8 +36,7 @@
   ^{:doc   "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
-  [punainen oranssi keltainen magenta vihrea tummanvihrea turkoosi syaani sininen
-    tummansininen violetti lime pinkki
-   fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
+  [punainen oranssi keltainen magenta vihrea tummanvihrea turkoosi syaani sininen tummansininen violetti lime pinkki
+   tarkastus-default fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
 
 #?(:clj (core/varmenna-sisalto 'harja.ui.kartta.varit.alpha))

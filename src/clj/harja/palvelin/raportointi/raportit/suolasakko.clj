@@ -14,6 +14,8 @@
 (defqueries "harja/kyselyt/suolasakkoraportti.sql"
   {:positional? true})
 
+(declare hae-suolasakot)
+
 (defn- suolasakko-ei-osu-aikavalille?
   ; Suolasakko hoitokaudelle 2016-2017 laskutetaan yhtenä kk:na touko-syyskuun aikana vuonna 2017.
   ; Samposta tulee usein hoitourakat niin että urakan loppupvm on 31.12., vaikka oikeasti
@@ -27,13 +29,13 @@
         (pvm/joda-timeksi (pvm/->pvm (str "1.5." valitun-hoitokauden-loppuvuosi)))]
     (pvm/jalkeen? ensimmainen-mahdollinen-suolasakon-laskutuskuukausi urakan-loppupvm)))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id urakkatyyppi]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm elinvoimakeskus-id urakkatyyppi]
                         :as parametrit}]
   (let [urakat (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
-                                                      :hallintayksikko hallintayksikko-id
-                                                      :alku alkupvm
-                                                      :loppu loppupvm
-                                                      :urakkatyyppi #{"hoito" "teiden-hoito"}})
+                                                  :elinvoimakeskus elinvoimakeskus-id
+                                                  :alku alkupvm
+                                                  :loppu loppupvm
+                                                  :urakkatyyppi #{"hoito" "teiden-hoito"}})
         urakat-aikavalin-sisalla (filter
                                    #(not (suolasakko-ei-osu-aikavalille? loppupvm %))
                                    urakat)
@@ -47,8 +49,8 @@
                     (and urakka-id alkupvm loppupvm)
                     :urakka
 
-                    (and hallintayksikko-id alkupvm loppupvm)
-                    :hallintayksikko
+                    (and elinvoimakeskus-id alkupvm loppupvm)
+                    :elinvoimakeskus
 
                     (and alkupvm loppupvm)
                     :koko-maa
@@ -56,14 +58,12 @@
                     :default
                     nil)
 
-        suolasakot-hallintayksikoittain (sort (group-by :hallintayksikko_elynumero
-                                                        raportin-data))
+        suolasakot-hallintayksikoittain (sort (group-by :elinvoimakeskus_evknumero raportin-data))
         raportin-nimi "Suolasakkoraportti"
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio
-                                                    db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape
@@ -92,7 +92,7 @@
               (into []
                     (apply concat
                            (for [[elynum hyn-suolasakot] suolasakot-hallintayksikoittain
-                                 :let [elynimi (:hallintayksikko_nimi (first hyn-suolasakot))]]
+                                 :let [elynimi (:elinvoimakeskus_nimi (first hyn-suolasakot))]]
                              (concat
                                (for [rivi hyn-suolasakot]
                                  [(:urakka_nimi rivi)

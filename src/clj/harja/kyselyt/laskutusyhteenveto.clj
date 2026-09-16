@@ -7,4 +7,5 @@
 (declare hae-laskutusyhteenvedon-tiedot hae-laskutusyhteenvedon-tiedot-tuotekohtainen
   hae-urakat-joille-laskutusyhteenveto-voidaan-tehda
   poista-urakan-kaikki-muistetut-laskutusyhteenvedot!
-  laske-erilliskustannuksen-indeksi)
+  laske-erilliskustannuksen-indeksi hoitokautta-edeltavan-syyskuun-indeksikorotus
+  hae-tyomaakokous-laskutusyhteenveto)

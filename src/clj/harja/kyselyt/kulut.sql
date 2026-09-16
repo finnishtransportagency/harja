@@ -163,6 +163,7 @@ SELECT m.numero                  AS "maksuera-numero",
        kk.maksueratyyppi         AS "maksueratyyppi",
        kk.rahavaraus_id          AS rahavaraus,
        kk.tyyppi                 AS tyyppi,
+       kk.tavoitehintainen       AS tavoitehintainen,
        kk.tehtava                AS "tehtava_id",
        t.nimi                    AS "tehtava_nimi",
        kk."muu-tehtava-kaytossa" AS "muu-tehtava-kaytossa",
@@ -372,8 +373,24 @@ SELECT ut.laskutusraja,
        up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
   FROM urakka_tavoite ut
        LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
- WHERE ut.urakka = :urakka-id
+ WHERE ut.urakka     = :urakka-id
    AND ut.hoitokausi = :hoitokausinro;
+
+-- name: hae-urakan-alkuperainen-laskutusraja
+SELECT ut.laskutusraja_alkuperainen,
+       up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+FROM urakka_tavoite ut
+         LEFT JOIN urakka_parametrit up ON up.urakkaid = ut.urakka
+WHERE ut.urakka     = :urakka-id
+  AND ut.hoitokausi = :hoitokausinro;
+
+-- name: paivita-urakan-laskutusraja!
+UPDATE urakka_tavoite
+SET laskutusraja = :laskutusraja,
+    muokattu     = CURRENT_TIMESTAMP,
+    muokkaaja    = :kayttaja
+WHERE urakka     = :urakka-id
+  AND hoitokausi = :hoitokausinro;
 
 -- name: hae-urakan-toteutuneet-kustannukset
 -- Hakee urakan toteutuneet kustannukset annetulta aikaväliltä
@@ -413,5 +430,6 @@ SELECT NULL                       AS "maksuera-numero",
 -- Tarvitaan Kulujen kohdistus -näkymän generoitujen kulujen tehtäväryhmien nimien näyttämistä varten,
 -- jotta saadaan myös Johto- ja hallintokorvaus -tehtäväryhmän nimi näkyviin
 SELECT tr.id                      AS "tehtavaryhma",
-       tr.nimi                    AS "tehtavaryhma_nimi"
+       tr.nimi                    AS "tehtavaryhma_nimi",
+       tr.toimenpide_id           AS "tehtavaryhma_toimenpide_id"
 FROM tehtavaryhma tr;

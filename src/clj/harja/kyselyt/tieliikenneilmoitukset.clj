@@ -1,8 +1,10 @@
 (ns harja.kyselyt.tieliikenneilmoitukset
   (:require [jeesql.core :refer [defqueries]]))
 
-(declare onko-ilmoitukselle-vastaanottokuittausta ilmoitus-loytyy-idlla ilmoitus-on-lahetetty-urakalle
-  paivita-ilmoituksen-urakka!)
+(declare hae-ilmoitukset onko-ilmoitukselle-vastaanottokuittausta ilmoitus-loytyy-idlla ilmoitus-on-lahetetty-urakalle
+  paivita-ilmoituksen-urakka! hae-ilmoitukset-asiakaspalauteluokittain hae-ilmoitukset-raportille
+  hae-ilmoituskuittausten-urakat hae-ilmoitus luo-ilmoitustoimenpide<! ilmoitus-aiheutti-toimenpiteita!
+  hae-ilmoitukset-idlla peruuta-ilmoitusten-toimenpiteiden-aloitukset! tallenna-ilmoitusten-toimenpiteiden-aloitukset!)
 
 (defqueries "harja/kyselyt/tieliikenneilmoitukset.sql"
   {:positional? true})

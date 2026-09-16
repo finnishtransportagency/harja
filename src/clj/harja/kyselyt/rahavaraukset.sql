@@ -190,9 +190,27 @@ SELECT rv.id,
  ORDER BY hoitokauden_alkuvuosi, rv.jarjestys, nimi;
 
 -- name: hae-rahavarauksen-toimenpideinstanssi
--- Kustannusarvoitu_tyo vaatii jonkun toimenpideinstanssin. Se ei ole vielä tiedossa. Niin haetaan urakkakohtaisesti vain ensimmäinen
-SELECT id
-  FROM toimenpideinstanssi
- WHERE urakka = :urakka_id
- ORDER BY id ASC
- LIMIT 1;
+SELECT tpi.id
+FROM toimenpideinstanssi tpi
+         JOIN toimenpide tp ON tp.id = tpi.toimenpide
+WHERE tpi.urakka = :urakka_id
+  AND tp.nimi = :toimenpiteen_nimi;
+
+-- name: hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta
+SELECT *
+    FROM (SELECT DISTINCT ON (tr.id) tr.id AS tehtavaryhma_id,
+                                     tp.jarjestys AS toimenpide_jarjestys,
+                                     tpi.id  AS "toimenpideinstanssi"
+            FROM rahavaraus_tehtava rt
+                JOIN tehtava t ON t.id = rt.tehtava_id
+                JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+                JOIN toimenpide tp ON t.emo = tp.id
+                JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
+        WHERE rt.rahavaraus_id = :rahavarausid :: BIGINT
+        ORDER BY tr.id, tp.jarjestys) sisainen
+ORDER BY toimenpide_jarjestys
+LIMIT 1;
+
+-- name: hae-tehtavaryhman-id
+SELECT tr.id
+FROM tehtavaryhma tr WHERE tr.nimi = :tehtavaryhman_nimi

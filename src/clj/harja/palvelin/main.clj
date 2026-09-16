@@ -69,6 +69,7 @@
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu :as tehtavat-maarat-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.kalustoresurssit-palvelu :as kalustoresurssit-palvelu]
     [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
@@ -85,6 +86,7 @@
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.toimenkuvat-palvelu :as toimenkuvat-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
+    [harja.palvelin.palvelut.hallinta.urakkaparametrit :as urakkaparametrit-hallinta]
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -493,6 +495,9 @@
       :tehtavat-maarat (component/using
                          (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
                          [:http-palvelin :db])
+      :kalustoresurssit (component/using
+                          (kalustoresurssit-palvelu/->Kalustoresurssit)
+                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -571,7 +576,7 @@
 
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :pdf-vienti])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
@@ -886,6 +891,11 @@
       (component/using
         (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
         [:http-palvelin :db :excel-vienti])
+
+      :urakkaparametrit-hallinta
+      (component/using
+        (urakkaparametrit-hallinta/->UrakkaParametritHallinta)
+        [:http-palvelin :db])
 
       :urakkatilanne
       (component/using

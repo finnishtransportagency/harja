@@ -69,9 +69,9 @@
                     summat
                     [(reduce + summat)]))])))]))
 
-(defn suorita [db user {:keys [alkupvm loppupvm urakka-id hallintayksikko-id] :as parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id] :as parametrit}]
   (let [urakat (yleinen/hae-kontekstin-urakat db {:urakka urakka-id
-                                                  :hallintayksikko hallintayksikko-id
+                                                  :elinvoimakeskus elinvoimakeskus-id
                                                   :urakkatyyppi #{"hoito" "teiden-hoito"}
                                                   :alku alkupvm :loppu loppupvm})
         haettu-urakka (when urakka-id (first (urakat-q/hae-urakka db urakka-id)))
@@ -93,8 +93,8 @@
                        (vals laskutusyhteenvedot-kk))
         alueen-nimi (if urakka-id
                        (:nimi haettu-urakka)
-                       (if hallintayksikko-id
-                         (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                       (if elinvoimakeskus-id
+                         (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                          "KOKO MAA"))
         indekseja-puuttuu? (some
                              (fn [kuukauden-tiedot]
@@ -125,7 +125,8 @@
                           (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id (pvm/vuosi alkupvm) (pvm/kuukausi alkupvm)))]
 
     (into []
-          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))}
+          (concat [:raportti {:nimi (str "Indeksitarkistusraportti " alueen-nimi " " (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
+                              :orientaatio :landscape}
                    varoitus-puuttuvista-indekseista
                    (if (and urakka-id (not indeksi-kaytossa?))
                      [:varoitusteksti "Urakassa ei käytetä indeksitarkistuksia."]

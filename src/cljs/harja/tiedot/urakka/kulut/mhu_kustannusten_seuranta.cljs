@@ -72,7 +72,8 @@
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [data (kustannusten-seuranta/jarjesta-tehtavat vastaus)]
+    (let [sopimustyyppi (-> @tila/yleiset :urakka :sopimustyyppi)
+          data (kustannusten-seuranta/jarjesta-tehtavat vastaus sopimustyyppi)]
       (-> app
         (assoc-in [:kustannukset-yhteensa] (:yhteensa data))
         (assoc-in [:kustannukset] (:taulukon-rivit data))

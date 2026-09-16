@@ -580,7 +580,7 @@ WITH urakka AS (SELECT id
                 WHERE nimi = 'Raahen MHU 2023-2028')
 INSERT
 INTO toteuma (urakka, sopimus, luotu, alkanut, paattynyt, muokattu, ulkoinen_id, tyyppi,
-              tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde)
+              tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys, lahde, lisatieto)
 SELECT 42,
        (SELECT id FROM sopimus WHERE nimi = 'Raahen MHU 23 pääsopimus'),
        '2023-11-01T13:00:00.000'::TIMESTAMP,
@@ -594,19 +594,19 @@ SELECT 42,
        200,
        20,
        300,
-       'harja-ui'
+       'harja-ui', 'rahen-paasopimus-tunniste'
 FROM urakka;
 
 WITH urakka AS (SELECT id
                 FROM urakka
                 WHERE nimi = 'Raahen MHU 2023-2028')
 INSERT
-INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, muokattu, indeksi, urakka_id)
-SELECT (SELECT id FROM toteuma WHERE urakka = 42 AND luotu = '2023-11-01T13:00:00.000'::TIMESTAMP),
+INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, muokattu, indeksi, urakka_id, hoitokauden_alkuvuosi)
+SELECT (SELECT id FROM toteuma WHERE lisatieto = 'rahen-paasopimus-tunniste'),
        '2023-11-01T13:00:00.000',
        (SELECT id FROM tehtava WHERE nimi = 'Kuumapäällyste'),
        10,
        '2023-11-01T13:00:00.000',
        TRUE,
-       urakka.id
+       urakka.id, 2023
 FROM urakka;

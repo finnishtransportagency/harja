@@ -76,7 +76,7 @@
 (deftest tarkista-kuittauksen-vastaanotto-sahkopostilla
   (with-redefs
     [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] "http://localhost:8084/api/sahkoposti")
-     integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+     integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                             {:status 200
                                              :header "jotain"
                                              :body onnistunut-kuittaus})]
@@ -154,7 +154,7 @@
 
     (with-redefs
       [sahkoposti-api/muodosta-lahetys-uri (fn [_ _] lokaali-sahkopostipalvelin)
-       integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _]
+       integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ _ _ _ & _]
                                               {:status 200
                                                :header "jotain"
                                                :body onnistunut-kuittaus})

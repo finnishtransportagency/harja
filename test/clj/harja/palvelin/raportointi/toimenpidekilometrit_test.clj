@@ -96,18 +96,18 @@
                    (nil? solu)))
              toimenpidekilometrit)))))))
 
-(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
+(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla-1
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :toimenpidekilometrit
-                                 :konteksti          "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti          "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                                       :loppupvm     (c/to-date (t/local-date 2015 10 1))
                                                       :hoitoluokat  #{1 2 3 4 5 6 7 9 10}
                                                       :urakkatyyppi :hoito}})
-        taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015")]
+        taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Suomi, Toimenpidekilometrit ajalta 01.10.2014 - 01.10.2015")]
     (is (vector? vastaus))
     (apurit/tarkista-raportti vastaus "Toimenpidekilometrit")
     (apurit/tarkista-taulukko-kaikki-rivit
@@ -182,7 +182,7 @@
        :otsikko "K2"
        :tasaa   :oikea})))
 
-(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla
+(deftest raportin-suoritus-hallintayksikolle-toimii-usean-vuoden-aikavalilla-2
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
@@ -213,6 +213,33 @@
     (apurit/tarkista-taulukko-sarakkeet
       taulukko
       {:otsikko "Hoi­to­luok­ka"}
+      {:fmt     :numero
+       :otsikko "IsE"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "Is"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "I"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "Ib"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "Ic"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "II"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "III"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K1"
+       :tasaa   :oikea}
+      {:fmt     :numero
+       :otsikko "K2"
+       :tasaa   :oikea}
       {:fmt     :numero
        :otsikko "IsE"
        :tasaa   :oikea}

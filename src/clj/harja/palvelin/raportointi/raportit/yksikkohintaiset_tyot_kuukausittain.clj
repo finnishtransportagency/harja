@@ -21,17 +21,17 @@
         toteumat-suunnittelutiedoilla (yks-hint-tyot/liita-toteumiin-suunnittelutiedot alkupvm loppupvm toteumat suunnittelutiedot)]
     toteumat-suunnittelutiedoilla))
 
-(defn hae-tehtavat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
+(defn hae-tehtavat-hallintayksikolle [db {:keys [elinvoimakeskus-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi]}]
   (if urakoittain?
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle-urakoittain db
-                                                                             {:hallintayksikko hallintayksikko-id
+                                                                             {:elinvoimakeskus elinvoimakeskus-id
                                                                               :urakkatyyppi urakkatyyppi
                                                                               :alkupvm alkupvm
                                                                               :loppupvm loppupvm
                                                                               :rajaa_tpi (not (nil? toimenpide-id))
                                                                               :tpi toimenpide-id})
     (q/hae-yksikkohintaiset-tyot-kuukausittain-hallintayksikolle db
-                                                                 {:hallintayksikko hallintayksikko-id
+                                                                 {:elinvoimakeskus elinvoimakeskus-id
                                                                   :urakkatyyppi urakkatyyppi
                                                                   :alkupvm alkupvm
                                                                   :loppupvm loppupvm
@@ -98,7 +98,7 @@
                               kuukausittaiset-summat)))
         (into #{} (map :nimi kuukausittaiset-summat))))))
 
-(defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id hallintayksikko-id suunnittelutiedot alkupvm loppupvm toimenpide-id
+(defn hae-kuukausittaiset-summat [db {:keys [konteksti urakka-id elinvoimakeskus-id suunnittelutiedot alkupvm loppupvm toimenpide-id
                                              urakoittain? urakkatyyppi]}]
   (let [urakkatyyppi (when urakkatyyppi
                        (case urakkatyyppi
@@ -112,9 +112,9 @@
                             :alkupvm           alkupvm
                             :loppupvm          loppupvm
                             :toimenpide-id     toimenpide-id})
-    :hallintayksikko
+    :elinvoimakeskus
     (hae-tehtavat-hallintayksikolle db
-                                    {:hallintayksikko-id hallintayksikko-id
+                                    {:elinvoimakeskus-id elinvoimakeskus-id
                                      :alkupvm            alkupvm
                                      :loppupvm           loppupvm
                                      :toimenpide-id      toimenpide-id
@@ -128,15 +128,15 @@
                                :urakoittain?  urakoittain?
                                :urakkatyyppi  urakkatyyppi}))))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm toimenpide-id urakoittain? urakkatyyppi] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         suunnittelutiedot (when (= :urakka konteksti)
                             (yks-hint-tyot/suunnitellut-tehtavat db urakka-id))
         kuukausittaiset-summat (hae-kuukausittaiset-summat db {:konteksti          konteksti
                                                                :urakka-id          urakka-id
-                                                               :hallintayksikko-id hallintayksikko-id
+                                                               :elinvoimakeskus-id elinvoimakeskus-id
                                                                :suunnittelutiedot  suunnittelutiedot
                                                                :alkupvm            alkupvm
                                                                :loppupvm           loppupvm
@@ -161,7 +161,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
         oikealle-tasattavat (set (range 2 (+ 5 (count listattavat-pvmt))))]

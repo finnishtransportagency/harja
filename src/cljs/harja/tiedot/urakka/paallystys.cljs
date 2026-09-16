@@ -474,7 +474,7 @@
   HaePaallystysilmoitukset
   (process-event [_ {{urakka-id :id} :urakka
                      {:keys [valittu-sopimusnumero valittu-urakan-vuosi]} :urakka-tila
-                     :keys [valitut-tilat valitut-elyt] :as app}]
+                     :keys [valitut-tilat valitut-evkt] :as app}]
     (let [valittu-sopimusnumero (if (nil? valittu-sopimusnumero)
                                   @urakka/valittu-sopimusnumero
                                   valittu-sopimusnumero)
@@ -486,9 +486,7 @@
                         :vuosi valittu-urakan-vuosi
                         :paikkauskohteet? true
                         :tilat valitut-tilat 
-                        :elyt valitut-elyt
-                        ;; Tänne myös elyt ja muut sellaset hakuhommat, mitä paikkauskohteiden puolella käytetään
-                        }
+                        :evkt valitut-evkt}
                        {:urakka-id urakka-id
                         :sopimus-id (first valittu-sopimusnumero)
                         :vuosi valittu-urakan-vuosi})]

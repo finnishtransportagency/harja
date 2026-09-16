@@ -83,7 +83,7 @@
 (defrecord FiltteriValitseTila [uusi-tila valittu?])
 (defrecord FiltteriValitseVuosi [uusi-vuosi])
 (defrecord FiltteriValitseTyomenetelma [uusi-menetelma valittu?])
-(defrecord FiltteriValitseEly [uusi-ely valittu?])
+(defrecord FiltteriValitseElinvoimakeskus [uusi-evk valittu?])
 (defrecord TiedostoLadattu [vastaus])
 (defrecord HaePaikkauskohteet [nakymaan?])
 (defrecord HaePaikkauskohteetOnnistui [vastaus])
@@ -179,7 +179,7 @@
                  :paasta-virhe-lapi? true})))]
     lomake))
 
-(defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-elyt hae-aluekohtaiset-paikkauskohteet?] :as app}]
+(defn hae-paikkauskohteet [urakka-id {:keys [valitut-tilat valittu-vuosi valitut-tyomenetelmat valitut-evkt hae-aluekohtaiset-paikkauskohteet?] :as app}]
   ;; Piilottaa kartan kun haku tehdään, kartta on näkymässä hyvä, mutta taulukossa asiat tapahtuu
   (nav/vaihda-kartan-koko! :S)
 
@@ -191,7 +191,7 @@
        :alkupvm alkupvm
        :loppupvm loppupvm
        :tyomenetelmat valitut-tyomenetelmat
-       :elyt valitut-elyt
+       :evkt valitut-evkt
        :hae-alueen-kohteet? hae-aluekohtaiset-paikkauskohteet?}
       {:onnistui ->HaePaikkauskohteetOnnistui
        :epaonnistui ->HaePaikkauskohteetEpaonnistui
@@ -453,28 +453,28 @@
                        (disj valitut-tyomenetelmat (:id uusi-menetelma)))]
       (assoc app :valitut-tyomenetelmat menetelmat)))
 
-  FiltteriValitseEly
-  (process-event [{uusi-ely :uusi-ely valittu? :valittu?} app]
-    (let [valitut-elyt (:valitut-elyt app)
-          elyt (cond
+  FiltteriValitseElinvoimakeskus
+  (process-event [{uusi-evk :uusi-evk valittu? :valittu?} app]
+    (let [valitut-evkt (:valitut-evkt app)
+          evkt (cond
                  ;; Valitaan joku muu kuin "kaikki"
-                 (and valittu? (not= 0 (:id uusi-ely)))
-                 (-> valitut-elyt
-                   (conj (:id uusi-ely))
+                 (and valittu? (not= 0 (:id uusi-evk)))
+                 (-> valitut-evkt
+                   (conj (:id uusi-evk))
                    (disj 0))
 
                  ;; Valitaan "kaikki"
-                 (and valittu? (= 0 (:id uusi-ely)))
+                 (and valittu? (= 0 (:id uusi-evk)))
                  #{0} ;; Palautetaan kaikki valinnalla
 
                  ;; Poistetaan "kaikki" valinta
-                 (and (not valittu?) (= 0 (:id uusi-ely)))
-                 (disj valitut-elyt 0)
+                 (and (not valittu?) (= 0 (:id uusi-evk)))
+                 (disj valitut-evkt 0)
 
                  ;; Poistetaan joku muu kuin "kaikki" valinta
-                 (and (not valittu?) (not= 0 (:id uusi-ely)))
-                 (disj valitut-elyt (:id uusi-ely)))]
-      (assoc app :valitut-elyt elyt)))
+                 (and (not valittu?) (not= 0 (:id uusi-evk)))
+                 (disj valitut-evkt (:id uusi-evk)))]
+      (assoc app :valitut-evkt evkt)))
 
   TiedostoLadattu
   (process-event [{vastaus :vastaus} app]

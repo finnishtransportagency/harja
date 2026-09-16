@@ -126,6 +126,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                    )]
     [grid/muokkaus-grid
      {:tyhja "Ei materiaaleja."
+      :luokat ["materiaalit-toteuma-grid"]
       :voi-lisata? false :voi-kumota? false
       :muutos (fn [g] (reset! virheet-atom (grid/hae-virheet g)))
       :custom-toiminto {:teksti "Lisää materiaali"
@@ -255,10 +256,14 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                       [:kokonainen-tr-osoite]]}
            {:otsikko "Materiaalit" :nimi :materiaalit :palstoja 2
             :komponentti (fn [_]
-                           [materiaalit-ja-maarat
-                            materiaalitoteumat-mapissa
-                            materiaalien-virheet
-                            jarjestelman-luoma?]) :tyyppi :komponentti}
+                            [:div.materiaalit-info-ja-grid
+                        [yleiset/info-laatikko
+                         :neutraali
+                         "Ilmoita formiaatit 50 % liuostonneina ja kesäsuolat 77 % kuivatonneina."]
+                        [materiaalit-ja-maarat
+                         materiaalitoteumat-mapissa
+                         materiaalien-virheet
+                         jarjestelman-luoma?]]) :tyyppi :komponentti}
            {:otsikko "Suorittaja" :pakollinen? true :tyyppi :string :pituus-max 256
             :muokattava? (constantly (not jarjestelman-luoma?)) :nimi :suorittaja :validoi [[:ei-tyhja "Anna suorittaja"]]}
            {:otsikko "Suorittajan y-tunnus" :pakollinen? true :tyyppi :string :pituus-max 9

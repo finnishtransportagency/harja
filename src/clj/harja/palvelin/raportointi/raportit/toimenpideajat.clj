@@ -38,12 +38,12 @@
                  m)) {} toimenpideajat))
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
-                               hallintayksikko-id urakoittain? urakkatyyppi] :as parametrit}]
+                               elinvoimakeskus-id urakoittain? urakkatyyppi] :as parametrit}]
   (let [hoitoluokat (or hoitoluokat
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
                         (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat))
         parametrit {:urakka          urakka-id
-                    :hallintayksikko hallintayksikko-id
+                    :elinvoimakeskus elinvoimakeskus-id
                     :alkupvm         alkupvm
                     :loppupvm        loppupvm
                     :hoitoluokat     hoitoluokat
@@ -52,11 +52,11 @@
                                        #{(name urakkatyyppi)})}
         toimenpideajat (hae-toimenpideajat-luokiteltuna db parametrit urakoittain?)
         konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         alueen-nimi (case konteksti
                       :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                      :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                      :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                       :koko-maa "KOKO MAA")
         raportin-nimi "Toimenpiteiden ajoittuminen"
         raportin-otsikko (raportin-otsikko alueen-nimi raportin-nimi alkupvm loppupvm)

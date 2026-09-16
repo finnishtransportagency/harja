@@ -17,6 +17,10 @@
     (pvm/vuosi (pvm/nyt))
     (dec (pvm/vuosi (pvm/nyt)))))
 
+(defn mhu25-urakka? [valittu-urakka]
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm valittu-urakka))]
+    (and (= :teiden-hoito (:tyyppi valittu-urakka @nav/valittu-urakka)) (>= urakan-alkuvuosi 2025))))
+
 (defonce kustannussuunnitelma-default {:hankintakustannukset {:valinnat {:toimenpide                     :talvihoito
                                                                          :maksetaan                      :molemmat
                                                                          :kopioidaan-tuleville-vuosille? false
@@ -386,7 +390,7 @@
 (def paikkaus-default-arvot {:paikkauskohteet {:valitut-tilat #{"Kaikki"}
                                                :valittu-vuosi (pvm/vuosi (pvm/nyt)) ;; Kuluva vuosi
                                                :valitut-tyomenetelmat #{"Kaikki"}
-                                               :valitut-elyt #{0}
+                                               :valitut-evkt #{0}
                                                :paikkauskohteet? true
                                                :pot-jarjestys :tila
                                                :urakka-tila {:valittu-urakan-vuosi (pvm/vuosi (pvm/nyt))}
@@ -440,6 +444,8 @@
                                                    (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]
                               :valittu-aikavali [(pvm/hoitokauden-alkupvm (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))
                                                  (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc (pvm/hoitokauden-alkuvuosi-nykyhetkesta (pvm/nyt)))))]})
+(def sanktiot-ja-bonukset-default {})
+
 (def pot2-default-arvot {:massat nil
                          :pot2-massa-lomake nil
                          :pot2-lomake nil})
@@ -479,7 +485,8 @@
                      :tiemerkinta-muut-kustannukset {}
                      :tiemerkinta-sanktiot-ja-bonukset {}
                      :tiemerkinta-uusien-paallysteiden-merkkinnat {}
-                     :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default}))
+                     :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default
+                     :sanktiot-ja-bonukset sanktiot-ja-bonukset-default}))
 
 (defonce hallinta-hairiot (cursor tila [:hallinta-hairiot]))
 
@@ -491,6 +498,7 @@
 
 (defonce tiemerkinta-kustannukset (cursor tila [:tiemerkinta-kustannukset]))
 (defonce laatupoikkeamat (cursor tila [:laatupoikkeamat]))
+(defonce sanktiot-ja-bonukset (cursor tila [:sanktiot-ja-bonukset]))
 (defonce paikkauskohteet (cursor tila [:paikkaukset :paikkauskohteet]))
 (defonce paikkaustoteumat (cursor tila [:paikkaukset :paikkaustoteumat]))
 (defonce paikkauspaallystykset (cursor tila [:paikkaukset :paallystysilmoitukset]))
@@ -513,26 +521,13 @@
 
 (defonce suunnittelu-tehtavat (cursor tila [:suunnittelu :tehtavat]))
 (defonce suunnittelu-tehtavat-maarat (cursor tila [:suunnittelu :tehtavat-maarat]))
+(defonce suunnittelu-kalustoresurssit (cursor tila [:suunnittelu :kalustoresurssit]))
 
 (defonce suunnittelu-kustannussuunnitelma (cursor tila [:suunnittelu :kustannussuunnitelma]))
 (defonce kustannussuunnitelma-kattohinta (cursor suunnittelu-kustannussuunnitelma [:kattohinta]))
 (defonce tarjous-kustannussuunnitelma (cursor tila [:tarjous-kustannussuunnitelma]))
 
 (defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
-
-(defonce toteumat-maarien-toteumat (atom {:maarien-toteumat {:toimenpiteet nil
-                                                             :toteutuneet-maarat nil
-                                                             :hoitokauden-alkuvuosi kuluva-alkuvuosi
-                                                             :aikavali-alkupvm nil
-                                                             :aikavali-loppupvm nil
-                                                             :toteuma {:toimenpide nil
-                                                                       :tehtava nil
-                                                                       :toteuma-id nil
-                                                                       :toteuma-tehtava-id nil
-                                                                       :lisatieto nil
-                                                                       :maara nil
-                                                                       :loppupvm (pvm/nyt)}
-                                                             :syottomoodi false}}))
 
 ;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
 ;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.

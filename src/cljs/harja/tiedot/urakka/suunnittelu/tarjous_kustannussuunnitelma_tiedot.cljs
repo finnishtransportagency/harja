@@ -104,10 +104,6 @@
     {:vuosikohtaiset-summat vuosikohtaiset-summat
      :yhteensa yhteensa}))
 
-(defn scrollaa-muutoksiin [elementin-id]
-  ;; Kutsutaan kun käyttäjä generoi kuukausittaiset summat tai vahvistaa koko kustannussuunnitelman
-  (siirrin/siirry-elementin-id elementin-id 200))
-
 (defn muunna-vuodet
   "Muunnetaan UI Gridin käyttämä tietomalli bäkkärin käyttämään muotoon.
   UI Grille on oltava jokainen vuosi omassa avaimeessaa tyyliin :vuosi-2023, :vuosi-2024 jne.
@@ -497,7 +493,7 @@
                                               {:summa summa
                                                :summa_indeksikorjattu summa-indeksikorjattu})))
                              erillishankinnat)]
-      (scrollaa-muutoksiin elementti)
+      (siirrin/siirry-elementin-id elementti 5)
       (-> app
         (assoc :onko-erillishankinnat-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :erillishankinnat] erillishankinnat))))
@@ -566,7 +562,7 @@
                                                  {:summa summa
                                                   :summa_indeksikorjattu summa-indeksikorjattu})))
                                 hoidonjohtopalkkiot)]
-      (scrollaa-muutoksiin hoidonjohtopalkkio-elementti)
+      (siirrin/siirry-elementin-id hoidonjohtopalkkio-elementti 5)
       (-> app
         (assoc :onko-hoidonjohtopalkkio-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot))))
@@ -652,10 +648,7 @@
                                                          {:summa summa
                                                           :summa_indeksikorjattu summa-indeksikorjattu})))
                                         johto-ja-hallintokorvaukset)]
-      (scrollaa-muutoksiin johto-ja-hallintokorvaukset-elementti)
-
-
-
+      (siirrin/siirry-elementin-id johto-ja-hallintokorvaukset-elementti 5)
       (-> app
         (assoc :onko-jjh-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset))))
@@ -717,7 +710,7 @@
         :varoitus
         viesti/viestin-nayttoaika-pitka)
       (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
-    (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
+    (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
@@ -732,7 +725,7 @@
                    "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
           kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
       (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-pitka)
-      (scrollaa-muutoksiin "tavoite-ja-kattohinta-elementti")
+      (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
       (-> app
         (assoc :kattohinta-virhe (or kattohinta-virhe? false))
         (assoc :tallennus-kesken? false)

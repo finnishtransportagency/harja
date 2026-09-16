@@ -13,7 +13,8 @@
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]))
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+            [slingshot.slingshot :refer [try+]]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -105,7 +106,7 @@
                       :id ek-id
                       :indeksin_nimi "MAKU 2010"))
           paivitetty (first (filter #(= (:id %)
-                                       ek-id)
+                                        ek-id)
                               vastaus))]
       (is (= (:indeksin_nimi paivitetty) "MAKU 2010") "Tallennetun erilliskustannuksen indeksin nimi"))
 
@@ -137,6 +138,127 @@
     (u
       (str "DELETE FROM erilliskustannus
                     WHERE pvm = '2005-12-12' AND lisatieto = '" toteuman-lisatieto "'"))))
+
+(defn- luo-testi-bonus [urakka-id sopimus-id toimenpideinstanssi-id lisatieto tyyppi rahasumma]
+  {:urakka-id urakka-id
+   :sopimus sopimus-id
+   :toimenpideinstanssi toimenpideinstanssi-id
+   :pvm (pvm/->pvm "15.10.2021")
+   :laskutuskuukausi (pvm/->pvm "15.10.2021")
+   :rahasumma rahasumma
+   :indeksin_nimi "MAKU 2020"
+   :tyyppi tyyppi
+   :lisatieto lisatieto
+   :palauta-tallennettu? true})
+
+(deftest tallenna-erilliskustannus-hylkaa-bonusprofiilin-vastaisen-mhu-bonuksen-domain-virheena
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Bonusprofiilin vastainen write-path testi"
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto "muu-bonus" 1234.0)
+        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                 lisatieto urakka-id)))]
+    (try+
+      (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
+      (is false "Tallennuksen pitäisi hylätä bonusprofiilin vastainen bonus domain-virheellä")
+      (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi (first virheet))))
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi bonus-kirjausvirhe)))))
+    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                     lisatieto urakka-id)))]
+      (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
+
+(deftest tallenna-erilliskustannus-sallii-urakkarajatun-liikennevahinkobonuksen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-2021-2024'"))
+        bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'liikennevahinkojen_aiheuttajien_selvitysbonus'"))
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        olemassa-oleva-profiilirivi-id (ffirst (q "SELECT bpr.id
+                                                           FROM bonus_profiili_rivi bpr
+                                                                  JOIN bonus_profiili bp ON bp.id = bpr.bonus_profiili_id
+                                                                  JOIN bonus_laji bl ON bl.id = bpr.bonus_laji_id
+                                                          WHERE bp.nimi = 'teiden-hoito-bonus-2021-2024'
+                                                            AND bl.koodi = 'liikennevahinkojen_aiheuttajien_selvitysbonus'"))
+        [profiilirivi-id profiilirivi-lisatty?]
+        (if olemassa-oleva-profiilirivi-id
+          [olemassa-oleva-profiilirivi-id false]
+          [(ffirst (q (format "INSERT INTO bonus_profiili_rivi
+                               (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi,
+                                toimenpide_t2_koodi, jarjestys, aktiivinen,
+                                luoja, luotu, muokkaaja, muokattu)
+                               VALUES (%s, %s, 't2-koodi', '23150', 3, TRUE,
+                                       %s, CURRENT_TIMESTAMP, %s, CURRENT_TIMESTAMP)
+                               RETURNING id"
+                              profiili-id bonus-laji-id integraatio-id integraatio-id)))
+           true])
+        linkki-oli-olemassa? (pos? (ffirst (q (format "SELECT count(*) FROM bonus_profiili_rivi_urakka
+                                                       WHERE bonus_profiili_rivi_id = %s AND urakka_id = %s"
+                                                    profiilirivi-id urakka-id))))
+        lisatieto "Urakkarajatun liikennevahinkobonuksen tallennustesti"]
+    (u (format "INSERT INTO bonus_profiili_rivi_urakka
+                 (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu)
+                VALUES (%s, %s, %s, CURRENT_TIMESTAMP, %s, CURRENT_TIMESTAMP)
+                ON CONFLICT (bonus_profiili_rivi_id, urakka_id) DO NOTHING"
+               profiilirivi-id urakka-id integraatio-id integraatio-id))
+    (try
+      (let [tallennettu (tallenna-erilliskustannus
+                          (:db jarjestelma)
+                          +kayttaja-jvh+
+                          (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto
+                            "liikennevahinkojen_aiheuttajien_selvitysbonus" 1234.0))]
+        (is (= "liikennevahinkojen_aiheuttajien_selvitysbonus" (:tyyppi tallennettu))
+          "Urakkarajattu liikennevahinkobonus pitää voida tallentaa sallitulle urakalle"))
+      (finally
+        (u (format "DELETE FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+             lisatieto urakka-id))
+        (when-not linkki-oli-olemassa?
+          (u (format "DELETE FROM bonus_profiili_rivi_urakka
+                       WHERE bonus_profiili_rivi_id = %s AND urakka_id = %s"
+                     profiilirivi-id urakka-id)))
+        (when profiilirivi-lisatty?
+          (u (format "DELETE FROM bonus_profiili_rivi WHERE id = %s" profiilirivi-id)))))))
+
+(deftest tallenna-erilliskustannus-hylkaa-urakkarajauksen-ulkopuolisen-liikennevahinkobonuksen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Liikennevahinkobonuksen urakkarajaustesti"
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto
+                "liikennevahinkojen_aiheuttajien_selvitysbonus" 1234.0)
+        maara-ennen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                 lisatieto urakka-id)))]
+    (try+
+      (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)
+      (is false "Urakkarajauksen ulkopuolinen liikennevahinkobonus pitää hylätä")
+      (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi (first virheet))))
+        (is (= :bonus-kirjausvirhe/laji-ei-sallittu (:koodi bonus-kirjausvirhe)))))
+    (let [maara-jalkeen (ffirst (q (format "SELECT count(*) FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+                                     lisatieto urakka-id)))]
+      (is (= maara-ennen maara-jalkeen) "Hylätty bonus ei saa kirjoittua tietokantaan"))))
+
+(deftest tallenna-erilliskustannus-sallii-bonusprofiilin-mukaisen-mhu-bonuksen
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Bonusprofiilin mukainen write-path testi"
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto "asiakastyytyvaisyysbonus" 4321.0)
+        tallennettu (tallenna-erilliskustannus (:db jarjestelma) +kayttaja-jvh+ bonus)]
+    (is (= urakka-id (:urakka tallennettu)) "Sallittu bonus tallentuu edelleen oikealle urakalle")
+    (is (= toimenpideinstanssi-id (:toimenpideinstanssi tallennettu)) "Sallittu bonus tallentuu oikeaan toimenpideinstanssiin")
+    (is (= lisatieto (:lisatieto tallennettu)) "Sallittu bonus palautuu write-pathilta ennallaan")
+    (u (format "DELETE FROM erilliskustannus WHERE id = %s" (:id tallennettu)))))
+
+(deftest bonus-write-path-validoitava-rajautuu-vain-mhu-bonuslajeihin
+  (is (= true (#'toteumat/bonus-write-path-validoitava? "asiakastyytyvaisyysbonus"))
+    "MHU-bonuslajin pitää mennä write-path-validoinnin läpi")
+  (is (= false (#'toteumat/bonus-write-path-validoitava? "yllapidon_bonus"))
+    "Ylläpidon bonus ei saa ajautua MHU-bonusten write-path-validointiin")
+  (is (= false (#'toteumat/bonus-write-path-validoitava? "akillinen-hoitotyo"))
+    "Muiden erilliskustannustyyppien ei pidä ajautua bonusvalidointiin"))
 
 
 (deftest tallenna-muut-tyot-toteuma-testi
@@ -181,7 +303,7 @@
                       :toteuma {:id toteuma-id}
                       :lisatieto "Testikeissi"))
           paivitetty (first (filter #(= (get-in % [:toteuma :id])
-                                       toteuma-id)
+                                        toteuma-id)
                               vastaus))]
 
       (is (= (:lisatieto paivitetty) "Testikeissi") "Päivitetyn erilliskustannuksen lisätieto"))
@@ -208,22 +330,26 @@
                     WHERE id = " (get-in lisatty [:toteuma :id])))))
 
 
+(defn- luo-testi-yksikkohintainen-tyo [urakka-id sopimus-id tyon-pvm hoitokausi-aloituspvm hoitokausi-lopetuspvm lisatieto]
+  {:urakka-id urakka-id
+   :sopimus-id sopimus-id
+   :alkanut tyon-pvm :paattynyt tyon-pvm
+   :hoitokausi-aloituspvm hoitokausi-aloituspvm
+   :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
+   :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
+   :tyyppi :yksikkohintainen
+   :toteuma-id nil
+   :lisatieto lisatieto
+   :tehtavat [{:toimenpidekoodi 1368 :maara 333}]})
+
 (deftest tallenna-yksikkohintainen-toteuma-testi
   (let [tyon-pvm (konv/sql-timestamp (pvm/luo-pvm 2005 11 24)) ;;24.12.2005
         hoitokausi-aloituspvm (pvm/luo-pvm 2005 9 1) ; 1.10.2005
         hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30) ;30.9.2006
         urakka-id @oulun-alueurakan-2005-2010-id
         toteuman-lisatieto "Testikeissin lisätieto4"
-        tyo {:urakka-id urakka-id
-             :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-             :alkanut tyon-pvm :paattynyt tyon-pvm
-             :hoitokausi-aloituspvm hoitokausi-aloituspvm
-             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
-             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
-             :tyyppi :yksikkohintainen
-             :toteuma-id nil
-             :lisatieto toteuman-lisatieto
-             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+        tyo (luo-testi-yksikkohintainen-tyo urakka-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+              tyon-pvm hoitokausi-aloituspvm hoitokausi-lopetuspvm toteuman-lisatieto)
         hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
                            :urakan-toteumien-tehtavien-summat
                            +kayttaja-jvh+
@@ -307,16 +433,8 @@
         hoitokausi-lopetuspvm (pvm/luo-pvm 2006 8 30) ;30.9.2006
         urakka-id @oulun-alueurakan-2005-2010-id
         toteuman-lisatieto "Testikeissin lisätieto4"
-        tyo {:urakka-id urakka-id
-             :sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
-             :alkanut tyon-pvm :paattynyt tyon-pvm
-             :hoitokausi-aloituspvm hoitokausi-aloituspvm
-             :hoitokausi-lopetuspvm hoitokausi-lopetuspvm
-             :suorittajan-nimi "Alihankkijapaja Ky" :suorittajan-ytunnus "123456-Y"
-             :tyyppi :yksikkohintainen
-             :toteuma-id nil
-             :lisatieto toteuman-lisatieto
-             :tehtavat [{:toimenpidekoodi 1368 :maara 333}]}
+        tyo (luo-testi-yksikkohintainen-tyo urakka-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+              tyon-pvm hoitokausi-aloituspvm hoitokausi-lopetuspvm toteuman-lisatieto)
         hae-summat #(->> (kutsu-palvelua (:http-palvelin jarjestelma)
                            :urakan-toteumien-tehtavien-summat
                            +kayttaja-jvh+
@@ -482,8 +600,7 @@
 
       (let [toteuman-materiaalit (kutsu-palvelua (:http-palvelin jarjestelma) :hae-toteuman-materiaalitiedot +kayttaja-jvh+
                                    {:urakka-id urakka
-                                    :toteuma-id tid}
-                                   )
+                                    :toteuma-id tid})
             haettu-osoite (:tierekisteriosoite toteuman-materiaalit)]
         (is (not (nil? (:tierekisteriosoite toteuman-materiaalit))))
         (is (not (nil? (:sijainti toteuman-materiaalit))))
@@ -496,25 +613,63 @@
       (u "DELETE FROM toteuma_materiaali WHERE id in (" (clojure.string/join "," tmidt) ")")
       (u "DELETE FROM toteuma WHERE id=" tid))))
 
-(deftest materiaalin-pvm-muuttuu-cachet-pysyy-jiirissa
+(deftest materiaalin-pvm-muuttuu-reitilliset-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
-        sopimuksen-kaytetty-mat-ennen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                     [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                     [2 #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
-                                                       [2 #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
-                                                       [2 #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
+
         hoitoluokittaiset-ennen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
                                                [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
         hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2015-02-17T22:00:00.000-00:00" 1 99 4 1800M]
                                                  [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
                                                  [#inst "2015-02-13T22:00:00.000-00:00" 16 99 4 2100M]])
-        sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
-                                              (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
         hoitoluokittaiset-ennen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
                                           (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";")))
+        toteuman-id (ffirst (q (str "SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Natriumformiaatti';")))
+        tm-id (ffirst (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuman-id ";")))
+        toteuma {:id toteuman-id, :urakka urakka-id :sopimus sopimus-id
+                 :alkanut (pvm/->pvm "14.02.2015") :paattynyt (pvm/->pvm "14.02.2015")
+                 :tyyppi "materiaali" :suorittajan-nimi "Ahkera hommailija" :suorittajan-ytunnus 1234 :lisatieto "Pvm muutos ja cachet toimii"}
+        tmt [{:id tm-id :materiaalikoodi 16 :maara 2100 :toteuma toteuman-id}]]
+    ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
+    (is (= hoitoluokittaiset-ennen-odotettu hoitoluokittaiset-ennen) "hoitoluokittaisten cache ennen muutosta")
+
+    ;; kyseessä päivitys, löytyvät kannasta jo ennen palvelukutsua
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id " AND poistettu IS NOT TRUE;")))))
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma WHERE id=" toteuman-id " AND poistettu IS NOT TRUE;")))))
+
+    (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+      {:toteuma toteuma
+       :toteumamateriaalit tmt
+       :hoitokausi [#inst "2014-09-30T21:00:00.000-00:00" #inst "2015-09-30T20:59:59.000-00:00"]
+       :sopimus sopimus-id})
+    ;; Reitillistä cachea ei enää kutsuta samasa prosessissa. Se päivitetään öisin, koska se vaikuttaa vain raportteihin, eikä sitä tarvitse
+    ;; dynaamisesti päivittää ui:ta varten.
+    ;; Joten päivitetään se käsin.
+    (q (str "SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(" urakka-id "::INTEGER,'2014-10-01'::DATE,'2015-09-30'::DATE);"))
+
+
+    ;; lisäyksen jälkeenkin jutut löytyvät kannasta yhden kerran...
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id ";")))))
+    (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma WHERE id=" toteuman-id " AND poistettu IS NOT TRUE;")))))
+
+    (let [hoitoluokittaiset-jalkeen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
+                                              (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";")))]
+
+      ;; lisäyksen jälkeen cachet päivittyvät oikein, vanhalla pvm:llä ollut määrä poistuu, ja uusi määrä uudelle päivällä
+      (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen) "hoitoluokittaisten cache jalkeen muutoksen"))))
+
+(deftest materiaalin-pvm-muuttuu-reitittomat-cachet-pysyy-jiirissa
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+        sopimuksen-kaytetty-mat-ennen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                     [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                     [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 16 2000M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2015-02-17T22:00:00.000-00:00" 1 1800M]
+                                                       [sopimus-id #inst "2015-02-18T22:00:00.000-00:00" 7 200M]
+                                                       [sopimus-id #inst "2015-02-13T22:00:00.000-00:00" 16 2100M]])
+        sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
+                                              (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
         toteuman-id (ffirst (q (str "SELECT id FROM toteuma WHERE lisatieto = 'LYV-toteuma Natriumformiaatti';")))
         tm-id (ffirst (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuman-id ";")))
 
@@ -525,7 +680,6 @@
         tmt [{:id tm-id :materiaalikoodi 16 :maara 2100 :toteuma toteuman-id}]]
     ;; tarkistetaan että kaikki cachesta palautetut tulokset löytyvät expected-setistä
     (is (= sopimuksen-kaytetty-mat-ennen-odotettu sopimuksen-mat-kaytto-ennen) "sopimuksen materiaalin käyttö cache ennen muutosta")
-    (is (= hoitoluokittaiset-ennen-odotettu hoitoluokittaiset-ennen) "hoitoluokittaisten cache ennen muutosta")
 
     ;; kyseessä päivitys, löytyvät kannasta jo ennen palvelukutsua
     (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id " AND poistettu IS NOT TRUE;")))))
@@ -541,20 +695,17 @@
     (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma WHERE id=" toteuman-id " AND poistettu IS NOT TRUE;")))))
 
     (let [sopimuksen-mat-kaytto-jalkeen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
-                                                  (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))
-          hoitoluokittaiset-jalkeen (set (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
-                                              (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";")))]
+                                                  (pvm-vali-sql-tekstina "alkupvm" "'2015-02-01' AND '2015-02-28'") ";")))]
 
       ;; lisäyksen jälkeen cachet päivittyvät oikein, vanhalla pvm:llä ollut määrä poistuu, ja uusi määrä uudelle päivällä
-      (is (= sopimuksen-kaytetty-mat-jalkeen-odotettu sopimuksen-mat-kaytto-jalkeen) "sopimuksen materiaalin käyttö cache jalkeen muutoksen")
-      (is (= hoitoluokittaiset-jalkeen-odotettu hoitoluokittaiset-jalkeen) "hoitoluokittaisten cache jalkeen muutoksen"))))
+      (is (= sopimuksen-kaytetty-mat-jalkeen-odotettu sopimuksen-mat-kaytto-jalkeen) "sopimuksen materiaalin käyttö cache jalkeen muutoksen"))))
 
 
 (deftest uusi-materiaali-cachet-pysyy-jiirissa
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
         sopimuksen-kaytetty-mat-ennen-odotettu (set [])
-        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[2 #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
+        sopimuksen-kaytetty-mat-jalkeen-odotettu (set [[sopimus-id #inst "2011-02-13T22:00:00.000-00:00" 16 200M]])
         hoitoluokittaiset-ennen-odotettu (set [])
         hoitoluokittaiset-jalkeen-odotettu (set [[#inst "2011-02-13T22:00:00.000-00:00" 16 99 4 200M]])
         sopimuksen-mat-kaytto-ennen (set (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id
@@ -576,6 +727,9 @@
        :toteumamateriaalit tmt
        :hoitokausi [#inst "2010-09-30T21:00:00.000-00:00" #inst "2011-09-30T20:59:59.000-00:00"]
        :sopimus sopimus-id})
+
+    ;; Pakotetaan reitteihin liittyvän cachen päivitys käin
+    (q (str "SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(" urakka-id "::INTEGER,'2010-10-01'::DATE,'2011-09-30'::DATE);"))
 
     (let [toteuman-id-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE lisatieto='Täysin uusi jiirijutska';")))]
       (is (= 1 (ffirst (q (str "SELECT count(*) FROM toteuma_materiaali WHERE toteuma = " toteuman-id-jalkeen ";")))))

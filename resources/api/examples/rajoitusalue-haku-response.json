@@ -1,0 +1,160 @@
+{
+  "rajoitusalueet": [
+    {
+      "rajoitusalue": {
+        "rajoitusalue-id": 3,
+        "urakka-id": 3,
+        "urakkatunnus": "PR0001234",
+        "tieosoite": {
+          "tie": 34561,
+          "aosa": 9,
+          "aet": 0,
+          "losa": 9,
+          "let": 18
+        },
+        "luotu": "2026-01-30T12:00:00Z",
+        "muokattu": "2026-06-30T12:00:00Z",
+        "poistettu": false,
+        "rajoitukset": [
+          {
+            "rajoitus": {
+              "rajoitus-id": 31,
+              "hoitokausi": 2026,
+              "suolarajoitus": 1.5,
+              "kaytettava-formiaattia": false,
+              "luotu": "2026-01-30T12:00:00Z",
+              "muokattu": "2026-06-30T12:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 32,
+              "hoitokausi": 2027,
+              "suolarajoitus": 1,
+              "kaytettava-formiaattia": false,
+              "luotu": "2026-07-05T12:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 33,
+              "hoitokausi": 2028,
+              "suolarajoitus": 1,
+              "kaytettava-formiaattia": false,
+              "luotu": "2026-01-30T12:00:00Z",
+              "muokattu": "2026-06-30T12:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 34,
+              "hoitokausi": 2029,
+              "suolarajoitus": 1,
+              "kaytettava-formiaattia": false,
+              "luotu": "2026-01-30T12:00:00Z",
+              "muokattu": "2026-06-30T12:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 35,
+              "hoitokausi": 2030,
+              "suolarajoitus": 1,
+              "kaytettava-formiaattia": false,
+              "luotu": "2026-01-30T12:00:00Z",
+              "muokattu": "2026-06-30T12:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 36,
+              "hoitokausi": 2027,
+              "suolarajoitus": 1.5,
+              "kaytettava-formiaattia": false,
+              "luotu": "2026-01-30T12:00:00Z",
+              "muokattu": "2026-07-05T12:00:00Z",
+              "poistettu": true
+            }
+          }
+        ],
+        "sijaintigeometria": "LINESTRING (600686.6770000153 6792078.937000083, 600669.9240000154 6792085.895000082)"
+      }
+    },
+    {
+      "rajoitusalue": {
+        "rajoitusalue-id": 4,
+        "urakka-id": 3,
+        "urakkatunnus": "PR0001234",
+        "tieosoite": {
+          "tie": 34555,
+          "aosa": 9,
+          "aet": 0,
+          "losa":9,
+          "let": 18
+        },
+        "luotu": "2026-01-30T12:00:00Z",
+        "muokattu": "2026-06-30T12:00:00Z",
+        "poistettu": false,
+        "rajoitukset": [
+          {
+            "rajoitus": {
+              "rajoitus-id": 41,
+              "hoitokausi": 2026,
+              "suolarajoitus": 0.2,
+              "kaytettava-formiaattia": true,
+              "luotu": "2026-01-30T13:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 42,
+              "hoitokausi": 2027,
+              "suolarajoitus": 0.2,
+              "kaytettava-formiaattia": true,
+              "luotu": "2026-01-30T13:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 43,
+              "hoitokausi": 2028,
+              "suolarajoitus": 0.2,
+              "kaytettava-formiaattia": true,
+              "luotu": "2026-01-30T13:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 44,
+              "hoitokausi": 2029,
+              "suolarajoitus": 0.2,
+              "kaytettava-formiaattia": true,
+              "luotu": "2026-01-30T13:00:00Z",
+              "poistettu": false
+            }
+          },
+          {
+            "rajoitus": {
+              "rajoitus-id": 45,
+              "hoitokausi": 2030,
+              "suolarajoitus": 0.2,
+              "kaytettava-formiaattia": true,
+              "luotu": "2026-01-30T13:00:00Z",
+              "poistettu": false
+            }
+          }
+        ],
+        "sijaintigeometria": "MULTILINESTRING ((591611.1150000114 6783320.339000146, 591608.5760000111 6783323.333000147), (591608.5760000111 6783323.333000147, 591599.5880000112 6783334.367000146))"
+      }
+    }
+  ]
+}
+

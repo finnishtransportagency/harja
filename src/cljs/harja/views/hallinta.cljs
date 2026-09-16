@@ -22,6 +22,7 @@
             [harja.views.hallinta.tyokalut.tieosoitteet-nakyma :as tieosoitteet-nakyma]
             [harja.views.hallinta.tyokalut.ajastukset-nakyma :as ajastukset-nakyma]
             [harja.views.hallinta.tyokalut.raporttityokalu-nakyma :as raporttityokalu-nakyma]
+            [harja.views.hallinta.tyokalut.laatupoikkeamasanktiotyokalu-nakyma :as laatupoikkeamasanktiotyokalu-nakyma]
             [harja.views.hallinta.koulutusvideot :as koulutusvideot]
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
@@ -33,7 +34,8 @@
             [harja.views.hallinta.urakkatiedot.paallystysilmoitukset-nakyma :as paallystysilmoitukset]
             [harja.views.hallinta.rahavarausten-tehtavat :as rahavarausten-tehtavat]
             [harja.views.hallinta.urakkahenkilot :as urakkahenkilot]
-            [harja.views.hallinta.urakkatiedot.urakkaparametrit :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.urakkaparametrit-nakyma :as urakkaparametrit]
+            [harja.views.hallinta.urakkatiedot.sanktio-profiilit-nakyma :as sanktio-profiilit]
             [harja.tiedot.istunto :as istunto]))
 
 (defn hallinta []
@@ -95,20 +97,20 @@
     :mhu-tarjoushinnat
     (when (oikeudet/hallinta-tarjoushinnat)
       ^{:key "mhu-tarjoushinnat"}
-      [tarjoushinnat/tarjoushinnat]) 
-    
+      [tarjoushinnat/tarjoushinnat])
+
     "Lupaukset"
     :lupaukset
     (when (oikeudet/hallinta-lupaukset)
       ^{:key "lupaukset"}
       [lupaukset/lupaukset])
-    
+
     "Paallystysilmoitukset"
     :paallystysilmoitukset
     (when (oikeudet/hallinta-paallystysilmoitukset)
       ^{:key "paallystysilmoitukset"}
       [paallystysilmoitukset/paallystysilmoitukset])
-    
+
     "Rahavaraukset"
     :rahavaraukset
     (when (oikeudet/hallinta-rahavaraukset)
@@ -133,12 +135,18 @@
       ^{:key "urakkahenkilot"}
       [urakkahenkilot/urakkahenkilot])
 
-    "Urakoiden parametrit"
+    "Urakan parametrit"
     :urakkaparametrit
-    ;; TODO: Varmista oikeiat oikeudet
+    ;; Käytetään samaa oikeutta kuin Urakoiden henkilöt -näkymässä, koska omaa oikeutta ei ole tarpeen tehdä.
     (when (oikeudet/hallinta-urakkahenkilot)
-      ^{:key "urakkahenkilot"}
-      [urakkaparametrit/urakkaparametrit])]
+      ^{:key "urakkaparametrit"}
+      [urakkaparametrit/urakkaparametrit])
+
+    "Sanktio- ja bonusprofiilit"
+    :sanktio-profiilit
+    (when (oikeudet/hallinta-laadunseuranta-profiilit)
+      ^{:key "sanktio-profiilit"}
+      [sanktio-profiilit/sanktio-profiilit])]
 
    "Seuranta"
    :hallinta-seuranta
@@ -255,6 +263,13 @@
             (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
       ^{:key "raporttityokalut"}
       [raporttityokalu-nakyma/nayta-raporttityokalut])
+
+    "Sanktiotyökalu"
+    :sanktiotyokalu
+    (when (and (istunto/ominaisuus-kaytossa? :toteumatyokalu)
+            (oikeudet/voi-kirjoittaa? oikeudet/hallinta-toteumatyokalu))
+      ^{:key "sanktiotyokalu"}
+      [laatupoikkeamasanktiotyokalu-nakyma/laheta-sanktio])
 
     "Viestitestaus"
     :viestitestaus

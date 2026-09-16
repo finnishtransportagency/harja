@@ -108,7 +108,7 @@
     (tallenna-paikkaus db urakka-id kayttaja-id data))
   (tee-kirjausvastauksen-body {:ilmoitukset "Paikkaukset kirjattu onnistuneesti"}))
 
-(defn validoi-reikapaikkausten-sanoman-tierekisteri [db reikapaikkaukset]
+(defn validoi-reikapaikkausten-sanoman-tieosoite [db reikapaikkaukset]
   (let [ ;; Valitoidaan tierekisteriosoite - mikäli se on annettu
         validointivirheet (into [] (remove nil?
                                      (reduce (fn [virheet rp]
@@ -184,7 +184,9 @@
                                                 :aosa (get-in r [:sijainti :tieosoite :aosa])
                                                 :losa (get-in r [:sijainti :tieosoite :losa])
                                                 :aet (get-in r [:sijainti :tieosoite :aet])
-                                                :let (get-in r [:sijainti :tieosoite :let])})
+                                                :let (get-in r [:sijainti :tieosoite :let])
+                                                :ajorata (get-in r [:sijainti :tieosoite :ajr])
+                                                :kaista (get-in r [:sijainti :tieosoite :kaista])})
                                    tieosoite (if (and (not tieosoite) (get-in r [:sijainti :pistegeometria]))
                                                (let [piste (get-in r [:sijainti :pistegeometria])
                                                      t (first (tieverkko-q/hae-tr-osoite db {:x (:x piste)
@@ -220,6 +222,8 @@
                                      (assoc :aet (:aet tieosoite))
                                      (assoc :losa (:losa tieosoite))
                                      (assoc :let (:let tieosoite))
+                                     (assoc :ajorata (:ajorata tieosoite))
+                                     (assoc :kaista (:kaista tieosoite))
                                      (assoc :urakka-id urakka-id)
                                      (assoc :tyomenetelma-id tyomenetelma-id)
                                      (assoc :lahde "harja-api")
@@ -237,7 +241,7 @@
         _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
 
         reikapaikkaukset (:reikapaikkaukset data)
-        validointivirheet (validoi-reikapaikkausten-sanoman-tierekisteri db reikapaikkaukset)
+        validointivirheet (validoi-reikapaikkausten-sanoman-tieosoite db reikapaikkaukset)
 
         paikkaukset-olemassa? (every? true? (map
                                         #(boolean (seq (reikapaikkaus-q/hae-reikapaikkaus-vaikka-poistettu db {:ulkoinen-id (get-in % [:reikapaikkaus :tunniste :id])

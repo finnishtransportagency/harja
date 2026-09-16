@@ -7,7 +7,7 @@ SELECT
 FROM urakka u
 WHERE
   ((:urakka :: INTEGER IS NULL AND u.urakkanro IS NOT NULL) OR u.id = :urakka)
-  AND (:hallintayksikko :: INTEGER IS NULL OR hallintayksikko = :hallintayksikko)
+  AND (:elinvoimakeskus :: INTEGER IS NULL OR elinvoimakeskus_id = :elinvoimakeskus)
   AND (:urakka :: INTEGER IS NOT NULL OR
        (:urakka :: INTEGER IS NULL AND (TRUE IN (SELECT unnest(ARRAY[:urakkatyyppi]::urakkatyyppi[]) IS NULL) OR
                                         u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[]))))
@@ -16,16 +16,16 @@ WHERE
                                                                          OR (:alku >= alkupvm AND :loppu <= loppupvm)))
 ORDER BY nimi;
 
--- name: hae-kontekstin-hallintayksikot
--- Listaa kaikki ne hallintayksikot, joita haku koskee
+-- name: hae-kontekstin-elinvoimakeskukset
+-- Listaa kaikki ne elinvoimakeskukset, joita haku koskee
 SELECT
-  o.id           AS "hallintayksikko-id",
+  o.id           AS "elinvoimakeskus-id",
   o.nimi         AS "nimi",
-  lpad(cast(elynumero as varchar), 2, '0') AS "elynumero"
+  right(cast(o.elinvoimakeskusnumero as varchar), 2) AS "elinvoimakeskusnumero"
 FROM organisaatio o
 WHERE :liikennemuoto::liikennemuoto = liikennemuoto AND
-      tyyppi='hallintayksikko'
-ORDER BY elynumero;
+      tyyppi = 'elinvoimakeskus'
+ORDER BY elinvoimakeskusnumero;
 
 
 -- name: hae-urakoiden-nimet

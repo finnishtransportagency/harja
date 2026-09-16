@@ -238,18 +238,18 @@
 
 (def +xsd-polku+ "xsd/yha/")
 
-(def sisalto-tulos
+(defn sisalto-tulos [urakka-id]
    [:urakan-kohteiden-toteumatietojen-kirjaus
    {:xmlns "http://www.vayla.fi/xsd/yha"}
    [:urakka
     [:yha-id 5731290]
-    [:harja-id 55]
+    [:harja-id urakka-id]
     [:sampotunnus "5731290-TES2"]
     [:tunnus "YHA5731290"]
     [:kohteet
      [:kohde
       [:yha-id 123456]
-      [:harja-id 32]
+      [:harja-id 75]
       [:kohdenumero 1]
       [:kohdetyyppi 1]
       [:kohdetyotyyppi "paallystys"]
@@ -369,7 +369,7 @@
       [:kulutuskerrokselle-tehdyt-toimet
        [:kulutuskerrokselle-tehty-toimenpide
         [:yha-id 123457]
-        [:harja-id 45]
+        [:harja-id 82]
         [:poistettu false]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2024-12-16"]
@@ -412,7 +412,7 @@
          [:lisaaineet [:lisaaine [:tyyppi 1] [:pitoisuus 0.5M]]]]]
        [:kulutuskerrokselle-tehty-toimenpide
         [:yha-id 123458]
-        [:harja-id 46]
+        [:harja-id 83]
         [:poistettu false]
         [:tierekisteriosoitevali
          [:karttapaivamaara "2024-12-16"]
@@ -427,7 +427,7 @@
         [:pinta-ala 2600M]
         [:paallystetyomenetelma 31]
         [:massamenekki 90.0M]
-        [:rc-prosentti 10.0M]
+        [:rc-prosentti 10M]
         [:kokonaismassamaara 260M]
         [:massa
          [:massatyyppi 12]
@@ -456,10 +456,11 @@
 
 (deftest tarkista-kohteen-lahetyksen-sisalto
   (let [db (luo-testitietokanta)
-        odotettu-sanoma-xml (slurp "resources/xsd/yha/esimerkit/paikkauspot2-toteumatietojen-kirjaus.xml") 
-        odotettu-xml-parsittu (xml/lue odotettu-sanoma-xml)
-        kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen 2'") 
+        kohde-idt (q "SELECT id FROM yllapitokohde WHERE nimi = 'Kirkonkylä - Toppinen 2'")
         urakka-id (hae-urakan-id-nimella "POT2 testipäällystysurakka")
+        odotettu-sanoma-xml (-> (slurp "resources/xsd/yha/esimerkit/paikkauspot2-toteumatietojen-kirjaus.xml")
+                                (.replaceFirst "<harja-id>\\d+</harja-id>" (str "<harja-id>" urakka-id "</harja-id>")))
+        odotettu-xml-parsittu (xml/lue odotettu-sanoma-xml)
         urakka (first (yha-kyselyt/hae-urakan-yhatiedot db {:urakka urakka-id}))
         urakka (assoc urakka :harjaid urakka-id
                  :sampoid (yha/yhaan-lahetettava-sampoid urakka))
@@ -468,7 +469,7 @@
         sisalto (kohteen-lahetyssanoma/muodosta-sanoma urakka kohteet)
         xml (kohteen-lahetyssanoma/muodosta urakka kohteet)
         luotu-xml-parsittu (xml/lue xml)]
-    (is (= sisalto-tulos sisalto) "Sisältö ei ole muuttunut")
+    (is (= (sisalto-tulos urakka-id) sisalto) "Sisältö ei ole muuttunut")
     (is (= 10M rc-prosentti) "RC-prosentti laskettu kun kyseessä on REM-toimenpide")
     (is (xml/validi-xml? "xsd/yha/" "yha.xsd" xml) "Muodostettu XML on validia")
     (is (= odotettu-xml-parsittu luotu-xml-parsittu) "Paikkaus-POT:in XML oikein muodostettu")))

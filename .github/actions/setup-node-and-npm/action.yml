@@ -1,0 +1,38 @@
+# Future improvements:
+#  * Allow defining package.json path as an input. Hardcoding the path is enough for now.
+#  * Validate, that NPM version was installed correctly. Printing the NPM version will suffice for now.
+
+name: 'Setup Node.js and NPM'
+description: >
+  Installs specific Node.js and NPM versions that are defined in package.json of this project.
+  Also verifies tha required NPM supply chain security settings are active.
+
+inputs:
+  package-manager-cache:
+    description: >
+      Set to false to disable actions/setup-node automatic caching.
+      If not defined, "actions/setup-node"-action default functionality will be applied.
+    required: false
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Setup Node.js (version defined in package.json "engines")
+      uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      with:
+        node-version-file: 'package.json'
+        package-manager-cache: ${{ inputs.package-manager-cache }}
+    - name: Setup NPM (version defined in package.json "engines")
+      run: |
+        NPM_VERSION=$(node -pe 'require("./package.json").engines?.npm')
+
+        if [ -z "${NPM_VERSION}" ] || [ "${NPM_VERSION}" = "undefined" ]; then
+          echo "::error::NPM_VERSION is not defined in package.json 'engines.npm' setting. Cannot continue."
+          exit 1
+        fi
+
+        npm install -g npm@"${NPM_VERSION}"
+        echo "Installed NPM version: $(npm -v)"
+      shell: bash
+    - name: Verify NPM security settings
+      uses: ./.github/actions/verify-npm-security

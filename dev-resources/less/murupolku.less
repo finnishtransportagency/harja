@@ -1,6 +1,6 @@
 @import "livi_tyylit";
 
-@murupolun-elementtikorkeus: @input-korkeus;
+@murupolun-elementtikorkeus: @input-korkeus-vayla;
 
 .murupolku {
   > li {
@@ -103,8 +103,9 @@
 .murupolkuteksti {
     background-color: @white;
     border: 1px solid @harmaa7;
-    display: inline-block;
+    border-radius:  @valistys-4;
+    display: inline-flex;
     height: @murupolun-elementtikorkeus;
-    padding: 6px;
+    padding: @valistys-8 @valistys-6;
     text-wrap: nowrap;
 }

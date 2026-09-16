@@ -5,8 +5,7 @@
 # 1. Build: Aja ./build-image.sh
 # 2. Varmista, että harjan kehitystietokanta ja harja backend pyörii (ja HARJA_SALLI_OLETUSKAYTTAJA=true on harjalle asetettu)
 # 3. Testaa kontin toimintaa lokaalisti (Imitoidaan sitä, mitä GH actions tekee):
-#    docker run -it --network host \
-#     -v /absoluuttinen/polku/harja-repoon/harja/cypress:/harja/cypress ghcr.io/finnishtransportagency/harja_cypress:latest /bin/bash
+#    docker run -it --network host -v /absoluuttinen/polku/harja-repoon/harja/cypress:/harja/cypress ghcr.io/finnishtransportagency/harja_cypress:latest /bin/bash
 #
 #    Aja kontissa:
 #    $ cd /harja
@@ -18,11 +17,12 @@
 # Lue ohjeet Dockerfilejen käyttöön Github Actions container jobeissa:
 # https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions
 
-# Käytetään pohjana virallista nodejs Debian imagea.
-# Tämänhetkinen Debianin stable-release on versio: 12 (bookworm)
+# Käytetään pohjana virallista nodejs (24 LTS) Debian imagea.
+# Tämänhetkinen Debianin stable-release on versio: 13 (trixie)
 # GH Actions: "It's recommended to use Docker images based on the Debian operating system."
+# https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
 
-FROM node:22-bookworm-slim
+FROM node:24-trixie-slim
 
 # Yhdistä image harjan repositoryyn
 LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
@@ -30,25 +30,27 @@ LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/
 # NPM pakettien versiot Docker build argumentteina
 ARG NPM_CYPRESS_VERSION
 
-# "Docker actions must be run by the default Docker user (root)."
+# Riippuvuudet asennetaan roottina. Kontti ajetaan runtimessa node-käyttäjänä (-u node).
 USER root
 
 
 ###  Asenna Cypressin riippuuvudet ja muut riippuvuudet ###
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
-    libgtk2.0-0 \
-    libgtk-3-0 \
-    libnotify-dev \
-    libgconf-2-4 \
-    libgbm-dev \
-    libnss3 \
-    libxss1 \
-    libasound2 \
-    libxtst6 \
-    procps \
-    xauth \
     xvfb \
+    libglib2.0-0 \
+    libnss3 \
+    libatk1.0-0 \
+    libatk-bridge2.0-0 \
+    libcups2 \
+    libgtk-3-0 \
+    libgbm1 \
+    libasound2 \
+    # Tarvitaan https yhteyksien luomiseen kontista
+    openssl \
+    ca-certificates \
+    # Nopea lossless kompressioalgoritmi -> GitHub @actions/cache suosima
+    zstd \
     # Edge riippuvuuksia
     gnupg \
     dirmngr \
@@ -60,24 +62,23 @@ RUN apt-get update && \
     fonts-liberation \
     libcurl4 \
     libcurl3-gnutls \
-    libcurl3-nss \
     xdg-utils \
     wget \
     curl \
     nano \
-    vim-tiny \
+    # Chrome dep
+    libu2f-udev \
+    # Firefox dep
+    bzip2 \
+      \
+    # Asenna emoji fontti
+    fonts-noto-color-emoji \
       \
       \
     # Siivoa
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
 
-
-# Asenna libappindicator3-1 - ei sisälly Debian 11:aan
-#RUN wget --no-verbose /usr/src/libappindicator3-1_0.4.92-7_amd64.deb "http://ftp.us.debian.org/debian/pool/main/liba/libappindicator/libappindicator3-1_0.4.92-7_amd64.deb" && \
-#  dpkg -i /usr/src/libappindicator3-1_0.4.92-7_amd64.deb ; \
-#  apt-get install -f -y && \
-#  rm -f /usr/src/libappindicator3-1_0.4.92-7_amd64.deb
 
 # Asenna uusin Chrome selain
 # Apt-get update täytyy ajaa ennen chromen asennusta, jotta chromen asennuksen yhteydessä löytyy tarvittavat depsut
@@ -137,7 +138,9 @@ ENV CI=1 \
 RUN ls -la /root && chmod 755 /root
 
 # Asenna build argumenttina annettu versio cypress globaalisti, jotta se on helposti saatavilla
-RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" \
+# Käytä eksplisiittisesti "--ignore-scripts" lippua, jotta asennuksen yhteydessä ei ajeta pre/post install skriptejä
+RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" --ignore-scripts \
+    && cypress install \
     && cypress verify \
     # Tarkista, että cypress cache ja asennus on /root hakemistossa ja että npm exec komento toimii oletetusti prefixillä
     && cypress cache path \
@@ -147,19 +150,27 @@ RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" \
     # Tulosta polku mistä Node lataa tarvittavat moduulit
     && node -p 'module.paths'
 
+# Annetaan kaikille käyttäjille luku- ja suoritusoikeus cypress cacheen,
+# jotta non-root käyttäjä (node) pääsee käsiksi cypressin binääreihin.
+RUN chmod -R a+rX /root/.cache
+
 # Huom, koska transit-js dependency on cypress-testien itsessään tarvitsema dependency, täytyy transit-js asentaa
 # erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.
 # Tämä image tarjoaa vain cypressin ja siihen suoraan liittyvät dependencyt ja työkalut.
 
-# Työkalujen versiot
+COPY entrypoint.sh /usr/local/bin
+
+# Vaihda non-root käyttäjään
+# https://github.com/cypress-io/cypress-docker-images/tree/master/examples/included-as-non-root
+USER node
+
+# Työkalujen versiot ja käyttäjätiedot
 RUN echo  " Node version:    $(node -v) \n" \
     "NPM version:     $(npm -v) \n" \
     "Debian version:  $(cat /etc/debian_version) \n" \
     "Chrome version:  $(google-chrome --version) \n" \
     "Edge version:    $(edge --version) \n" \
-    "User:          $(whoami) \n"
-
-
-COPY entrypoint.sh /usr/local/bin
+    "User:          $(whoami) \n" \
+    "User ID: $(id -u) \n"
 
 ENTRYPOINT ["entrypoint.sh"]

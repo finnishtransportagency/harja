@@ -131,14 +131,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (when max-width
               {:style {:max-width max-width}}))
      (doall (for* [v (distinct virheet)]
-
               [:span (when virheet-ulos?
                        {:style {:display "block"}})
                #_(case tyyppi
                    :huomautus (ikonit/livicon-info-circle)
                    (ikonit/livicon-warning-sign))
                (str " " v)]))]]))
-
 
 (defn linkki
   ([otsikko toiminto]
@@ -338,7 +336,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Vaihtoehdot annetaan yleensä vectorina, mutta voi olla myös map.
    format-fn:n avulla muodostetaan valitusta arvosta näytettävä teksti."
   [{:keys [auki-fn! kiinni-fn! elementin-id]} _]
-  (let [elementin-id (or elementin-id (str (gensym "livi-pudotusvalikko")))
+  (let [generoitu-id (str (gensym "livi-pudotusvalikko")) ;; fallback, ei sido elementin-id:tä
         auki? (atom false)
         term (atom "")
         valikko-ref (atom false)
@@ -404,13 +402,13 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled disabled-vaihtoehdot itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label elementin-id] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
                                    (group-by ryhmittely vaihtoehdot))
               ryhmissa? (not (nil? ryhmitellyt-itemit))
-              nappi-id (or elementin-id (str "btn-hoitokausivalinta" "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title)))
+              nappi-id (or elementin-id generoitu-id (str "btn-hoitokausivalinta" "-" (hash vaihtoehdot) (hash naytettava-arvo) (hash title)))
               ryhmitellyt-vaihtoehdot (atom [])
               ryhmittely-fn (fn []
                               (when ryhmittely
@@ -852,6 +850,18 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
 
 (defonce infolaatikko-nakyvissa? (atom {}))
 
+(defn- hiccup?
+  "Tunnistaa Hiccup-muotoisen HTML:n (vektori joka alkaa keywordillä)"
+  [x]
+  (and (vector? x)
+    (keyword? (first x))))
+
+(defn- toissijainen-viesti-on-teksti-tai-html?
+  "Palauttaa true jos string tai Hiccup, false jos tavallinen collection"
+  [viesti]
+  (or (string? viesti)
+    (hiccup? viesti)))
+
 (defn info-laatikko
   ([tyyppi ensisijainen-viesti]
    (info-laatikko tyyppi ensisijainen-viesti nil nil {}))
@@ -864,7 +874,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
              (get @infolaatikko-nakyvissa? sulje-nappi-id))
        [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
-              :style {:width leveys :white-space "pre-line"}}
+              :style {:max-width leveys :white-space "pre-line"}}
         [:div.infolaatikon-ikoni
          (case tyyppi
            :varoitus (ikonit/livicon-warning-sign)
@@ -875,9 +885,15 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
         [:div.infolaatikon-teksti
          [:div {:style {:white-space "pre-line" :color +vari-black-default+}}
           ensisijainen-viesti]
+         ;; Mikäli toissijainen-viesti on setti, vektori tai lista, niin renderöidään jokainen elementti omalle rivilleen.
          (when toissijainen-viesti
-           [:div {:style {:padding-left "8px" :font-weight 400}}
-            toissijainen-viesti])]
+           (if (toissijainen-viesti-on-teksti-tai-html? toissijainen-viesti)
+             ;; Tulostetaan html tai teksti
+             [:div {:style {:font-weight 400}} toissijainen-viesti]
+             ;; Tulostetaan taulukkona
+             [:div {:style {:font-weight 400}}
+              (doall (for* [v toissijainen-viesti]
+                       [:div (str "• " v)]))]))]
         (when sulje-nappi-id
           ;; circular dependency, joten ei voi käyttää harja.ui.ikonit/sulje
           [:button {:class "napiton-nappi pelkka-ikoni infolaatikon-sulje-ikoni"

@@ -129,15 +129,15 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :toimenpideajat
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm (c/to-date (t/local-date 2015 10 1))
                                               :hoitoluokat #{1 2 3 4 5 6 8 7}
                                               :urakkatyyppi :hoito}})
-        taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Pohjanmaa")]
+        taulukko (apurit/taulukko-otsikolla vastaus "Pohjois-Suomi")]
     (is (vector? vastaus))
-    (apurit/tarkista-raportti vastaus "Pohjois-Pohjanmaa, Toimenpiteiden ajoittuminen ajalta 01.10.2014 - 01.10.2015")
+    (apurit/tarkista-raportti vastaus "Pohjois-Suomi, Toimenpiteiden ajoittuminen ajalta 01.10.2014 - 01.10.2015")
 
     (apurit/tarkista-taulukko-kaikki-rivit
       taulukko

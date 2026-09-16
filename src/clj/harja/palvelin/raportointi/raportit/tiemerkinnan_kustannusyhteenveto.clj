@@ -72,9 +72,9 @@
      ["Bonukset" bonukset bonukset]
      ["Yhteensä" toteumat-yhteensa toteumat-yhteensa]]))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm] :as parametrit}]
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         raportin-tiedot (hae-raportin-tiedot {:db db
                                               :urakka-id urakka-id
@@ -85,7 +85,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   "toteutuneet kustannukset" alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape

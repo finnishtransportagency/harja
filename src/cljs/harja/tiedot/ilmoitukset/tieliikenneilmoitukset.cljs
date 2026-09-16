@@ -1,27 +1,23 @@
 (ns harja.tiedot.ilmoitukset.tieliikenneilmoitukset
-  (:require [harja.domain.tieliikenneilmoitukset :as domain]
+  (:require [tuck.core :as t]
             [reagent.core :refer [atom]]
-            [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+ kuittaustyypit ilmoitustyypin-nimi +ilmoitustilat+]]
-            [harja.tiedot.navigaatio :as nav]
-            [harja.pvm :as pvm]
-            [harja.asiakas.kommunikaatio :as k]
-            [harja.tiedot.urakka :as u]
-            [harja.ui.notifikaatiot :as notifikaatiot]
-            [harja.loki :refer [log error]]
-            [alandipert.storage-atom :refer [local-storage]]
-            [cljs.core.async :refer [<!]]
             [clojure.set :as set]
-            [harja.atom :refer [paivita-periodisesti] :refer-macros [reaction<! reaction-writable]]
-            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]]
-            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
-            [harja.tiedot.ilmoitukset.viestit :as v]
-            [tuck.core :as t]
-            [harja.ui.viesti :as viesti]
-            [clojure.string :as str]
-            [reagent.core :as r]
-            [harja.tyokalut.tuck :as tuck-apurit])
+            [cljs.core.async :refer [<!]]
+            [alandipert.storage-atom :refer [local-storage]]
 
-  (:require-macros [reagent.ratom :refer [reaction run!]]
+            [harja.pvm :as pvm]
+            [harja.tiedot.urakka :as u]
+            [harja.ui.viesti :as viesti]
+            [harja.loki :refer [log error]]
+            [harja.tiedot.navigaatio :as nav]
+            [harja.asiakas.kommunikaatio :as k]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.tiedot.ilmoitukset.viestit :as v]
+            [harja.ui.notifikaatiot :as notifikaatiot]
+            [harja.tiedot.ilmoituskuittaukset :as kuittausten-tiedot]
+            [harja.domain.tieliikenneilmoitukset :refer [+ilmoitustyypit+]]
+            [harja.ui.kartta.esitettavat-asiat :refer [kartalla-esitettavaan-muotoon]])
+  (:require-macros [reagent.ratom :refer [reaction]]
                    [cljs.core.async.macros :refer [go]]))
 
 (def aikavalit [{:nimi "1 tunnin ajalta" :tunteja 1}
@@ -53,40 +49,46 @@
 
 
 (def ^{:const true}
-tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
+  tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
 
 (def ^{:const true} vaikutukset-filtterit
   [:myohassa :aiheutti-toimenpiteita])
 
+;; Lippu, josta päätellään näytetäänkö ilmoitukset kartalla
+;; Toimii myös nakymassa- lippuna
+(defonce karttataso-ilmoitukset (atom false))
+
 (def aanimerkki-uusista-ilmoituksista? (local-storage (atom true) :aanimerkki-ilmoituksista))
 (def ws-kuuntelija-ominaisuus? (local-storage (atom false) :ws-kuuntelija-ominaisuus))
+(def hae-ilmoituksia-taustalla? (local-storage (atom false) :hae-ilmoituksia-taustalla?))
 
-(def oletus-valinnat {:tyypit                               +ilmoitustyypit+
-                      :tilat                                (into #{} tila-filtterit)
-                      :hakuehto                             ""
-                      :selite                               [nil ""]
-                      :vain-myohassa?                       false
-                      :aloituskuittauksen-ajankohta         :kaikki
-                      :ilmoittaja-nimi                      ""
-                      :ilmoittaja-puhelin                   ""
-                      :valitetty-urakkaan-vakioaikavali             (second aikavalit)
+(def oletus-valinnat {:tyypit +ilmoitustyypit+
+                      :tilat (into #{} tila-filtterit)
+                      :hakuehto ""
+                      :selite [nil ""]
+                      :vain-myohassa? false
+                      :aloituskuittauksen-ajankohta :kaikki
+                      :ilmoittaja-nimi ""
+                      :ilmoittaja-puhelin ""
+                      :valitetty-urakkaan-vakioaikavali (second aikavalit)
                       :toimenpiteet-aloitettu-vakioaikavali (first toimenpiteiden-aikavalit)
-                      :valitetty-urakkaan-alkuaika                  (pvm/tuntia-sitten 12)
-                      :valitetty-urakkaan-loppuaika                 (pvm/nyt)})
+                      :valitetty-urakkaan-alkuaika (pvm/tuntia-sitten 12)
+                      :valitetty-urakkaan-loppuaika (pvm/nyt)})
+
 (def oletus-valinnat? (atom true))
 
 (defonce ilmoitukset
-  (atom {:ilmoitusnakymassa?            false
+  (atom {:ilmoitusnakymassa? false
          :edellinen-valittu-ilmoitus-id nil
-         :valittu-ilmoitus              nil
-         :uusi-kuittaus-auki?           false
-         :ensimmainen-haku-tehty?       false
-         :ilmoitushaku-id               nil ;; ilmoitushaun timeout
-         :taustahaku?                   false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
-         :ilmoitukset                   nil ;; haetut ilmoitukset
-         :valinnat                      oletus-valinnat
-         :kuittaa-monta                 nil
-         :lajittelu-suunta             :laskeva}))
+         :valittu-ilmoitus nil
+         :uusi-kuittaus-auki? false
+         :ensimmainen-haku-tehty? false
+         :ilmoitushaku-id nil ;; ilmoitushaun timeout
+         :taustahaku? false ;; true jos haku tehdään taustapollauksena (ei käyttäjän syötteestä)
+         :ilmoitukset nil ;; haetut ilmoitukset
+         :valinnat oletus-valinnat
+         :kuittaa-monta nil
+         :lajittelu-suunta :laskeva}))
 
 (defn- jarjesta-ilmoitukset [tulos suunta]
   (reverse
@@ -114,13 +116,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   (let [uusien-ilmoitusten-maara (count uudet-ilmoitukset)
         uusien-toimenpidepyyntojen-maara (count
                                            (filter #(= (:ilmoitustyyppi %) :toimenpidepyynto)
-                                                   uudet-ilmoitukset))
+                                             uudet-ilmoitukset))
         uusien-tiedoituksien-maara (count
                                      (filter #(= (:ilmoitustyyppi %) :tiedoitus)
-                                             uudet-ilmoitukset))
+                                       uudet-ilmoitukset))
         uusien-kyselyjen-maara (count
                                  (filter #(= (:ilmoitustyyppi %) :kysely)
-                                         uudet-ilmoitukset))
+                                   uudet-ilmoitukset))
         notifikaatio-body
         (fn [uusien-toimenpidepyyntojen-maara
              uusien-tiedoituksien-maara
@@ -129,14 +131,14 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                  (if (= uusien-toimenpidepyyntojen-maara 1)
                    "1 uusi toimenpidepyyntö\n"
                    (str uusien-toimenpidepyyntojen-maara " uutta toimenpidepyyntöä\n")))
-               (when (> uusien-tiedoituksien-maara 0)
-                 (if (= uusien-tiedoituksien-maara 1)
-                   "1 uusi tiedotus\n"
-                   (str uusien-tiedoituksien-maara " uutta tiedotusta\n")))
-               (when (> uusien-kyselyjen-maara 0)
-                 (if (= uusien-kyselyjen-maara 1)
-                   "1 uusi kysely\n"
-                   (str uusien-kyselyjen-maara " uutta kyselyä\n")))))]
+            (when (> uusien-tiedoituksien-maara 0)
+              (if (= uusien-tiedoituksien-maara 1)
+                "1 uusi tiedotus\n"
+                (str uusien-tiedoituksien-maara " uutta tiedotusta\n")))
+            (when (> uusien-kyselyjen-maara 0)
+              (if (= uusien-kyselyjen-maara 1)
+                "1 uusi kysely\n"
+                (str uusien-kyselyjen-maara " uutta kyselyä\n")))))]
     (when (not (empty? uudet-ilmoitukset))
       (log "[ILMO] Uudet notifioitavat ilmoitukset: " (count uudet-ilmoitukset))
       (notifikaatiot/luo-notifikaatio
@@ -144,8 +146,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
           "Uusi ilmoitus Harjassa"
           (str uusien-ilmoitusten-maara " uutta ilmoitusta Harjassa"))
         (notifikaatio-body uusien-toimenpidepyyntojen-maara
-                           uusien-tiedoituksien-maara
-                           uusien-kyselyjen-maara)
+          uusien-tiedoituksien-maara
+          uusien-kyselyjen-maara)
         optiot))))
 
 (def ^:const ilmoitushaun-viive-ms 3000)
@@ -163,29 +165,33 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   ([app] (hae app (maarita-hakuviive app)))
   ([app timeout] (hae app timeout false))
   ([{valinnat :valinnat haku :ilmoitushaku-id :as app} timeout taustahaku?]
-   (if-not (:voi-hakea? valinnat)
-     app
-     (do
-       ;; Jos seuraava haku ollaan laukaisemassa, peru se
-       (when haku
-         (.clearTimeout js/window haku))
-       (-> app
-         ;; Käynnistä automaattinen ilmoitusten HTTP-pollaus (taustahaku) jos WS-ilmoitusten kuuntelu ei ole aktiivinen
-         ;; Vanhanmallinen HTTP-pollaus toimii varakeinona ilmoitustietojen hakemiseen, mikäli WS-yhteys/kuuntelu ei jostakin syystä toimi.
-         ;; Sallitaan kuitenkin aina muun tyyppiset käyttäjän toimesta käynnistetyt ilmoitusten haut (eli, ei taustahaut)
-           (assoc :ilmoitushaku-id (when (or
-                                           (not taustahaku?)
-                                           (not (get-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?])))
-                                     (.setTimeout js/window
-                                           (t/send-async! v/->HaeIlmoitukset)
-                                           timeout)))
+   (let [pollaa? (and
+                   ;; Jos taustahaku päällä, salli pollaus vaikka ei olle näkymässä 
+                   (or @hae-ilmoituksia-taustalla? @karttataso-ilmoitukset)
+                   (or
+                     (not taustahaku?)
+                     (not (get-in app [:ws-ilmoitusten-kuuntelu :aktiivinen?]))))]
+
+     (if-not (:voi-hakea? valinnat)
+       app
+       (do
+         ;; Jos seuraava haku ollaan laukaisemassa, peru se
+         (when haku
+           (.clearTimeout js/window haku))
+         (-> app
+           ;; Käynnistä automaattinen ilmoitusten HTTP-pollaus (taustahaku) jos WS-ilmoitusten kuuntelu ei ole aktiivinen
+           ;; Vanhanmallinen HTTP-pollaus toimii varakeinona ilmoitustietojen hakemiseen, mikäli WS-yhteys/kuuntelu ei jostakin syystä toimi.
+           ;; Sallitaan kuitenkin aina muun tyyppiset käyttäjän toimesta käynnistetyt ilmoitusten haut (eli, ei taustahaut)
+           (assoc :ilmoitushaku-id (when pollaa?
+                                     (.setTimeout js/window (t/send-async! v/->HaeIlmoitukset)
+                                       timeout)))
            (assoc :taustahaku? taustahaku?)
-           (assoc :ensimmainen-haku-tehty? true))))))
+           (assoc :ensimmainen-haku-tehty? true)))))))
 
 (defn- vaihda-lajittelu-suunta [app]
-    (if (= (:lajittelu-suunta app) :laskeva)
-      (assoc app :lajittelu-suunta :nouseva)
-      (assoc app :lajittelu-suunta :laskeva)))
+  (if (= (:lajittelu-suunta app) :laskeva)
+    (assoc app :lajittelu-suunta :nouseva)
+    (assoc app :lajittelu-suunta :laskeva)))
 
 ;; Kaikki mitä UI voi ilmoitusnäkymässä tehdä, käsitellään täällä
 (extend-protocol t/Event
@@ -208,12 +214,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
           ; :haku tyyppisele kentälle pakotettu renderöinti jos arvo nil, muuten ei renderöidy jos muutos
           ; tällä tavoin ulkopuolisesta lähteestä
           app (update-in app [:valinnat] assoc :selite nil)]
-    (hae app)))
+      (hae app)))
 
   v/YhdistaValinnat
   (process-event [{valinnat :valinnat :as e} app]
     (hae
-      (update-in app [:valinnat] merge valinnat)))
+      (-> app
+        (update-in [:valinnat] merge valinnat))))
 
   v/HaeIlmoitukset
   (process-event [_ {valinnat :valinnat taustahaku? :taustahaku? :as app}]
@@ -231,25 +238,25 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
              :taustahaku? taustahaku?}))))
     (if taustahaku?
       app
-      (assoc app :ilmoitukset nil))) 
+      (assoc app :ilmoitukset nil)))
 
   v/IlmoitusHaku
   (process-event [{tulokset :tulokset} {valittu :valittu-ilmoitus :as app}]
     (let [uudet-ilmoitusidt (set/difference (into #{} (map :id (:ilmoitukset tulokset)))
-                                            (into #{} (map :id (:ilmoitukset app))))
+                              (into #{} (map :id (:ilmoitukset app))))
           uudet-ilmoitukset (filter #(uudet-ilmoitusidt (:id %)) (:ilmoitukset tulokset))]
       (when (:taustahaku? tulokset)
         (nayta-notifikaatio-uusista-ilmoituksista uudet-ilmoitukset
-                                                  {:aani? @aanimerkki-uusista-ilmoituksista?}))
+          {:aani? @aanimerkki-uusista-ilmoituksista?}))
       (hae (assoc app
              ;; Uudet ilmoitukset
              :ilmoitukset (cond-> (:ilmoitukset tulokset)
-                                  (:taustahaku? tulokset)
-                                  (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
-                                  true
-                                  (jarjesta-ilmoitukset (:lajittelu-suunta app))))
-           taustahaun-viive-ms
-           true)))
+                            (:taustahaku? tulokset)
+                            (merkitse-uudet-ilmoitukset uudet-ilmoitusidt)
+                            true
+                            (jarjesta-ilmoitukset (:lajittelu-suunta app))))
+        taustahaun-viive-ms
+        true)))
 
   v/ValitseIlmoitus
   (process-event [{id :id} app]
@@ -257,13 +264,13 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
           _ (nav/valitse-ilmoitus! id)]
       (go
         (tulos (<! (k/post! :hae-ilmoitus id)))))
-    (assoc app :ilmoituksen-haku-kaynnissa? true)) 
+    (assoc app :ilmoituksen-haku-kaynnissa? true))
 
   v/IlmoituksenTiedot
   (process-event [{ilmoitus :ilmoitus} app]
     (assoc app :valittu-ilmoitus ilmoitus
-               :edellinen-valittu-ilmoitus-id (:id ilmoitus)
-               :ilmoituksen-haku-kaynnissa? false))
+      :edellinen-valittu-ilmoitus-id (:id ilmoitus)
+      :ilmoituksen-haku-kaynnissa? false))
 
   v/PoistaIlmoitusValinta
   (process-event [_ app]
@@ -291,10 +298,10 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/ValitseKuitattavaIlmoitus
   (process-event [{i :ilmoitus} app]
     (update-in app [:kuittaa-monta :ilmoitukset]
-               (fn [ilmoitukset]
-                 (if (ilmoitukset i)
-                   (disj ilmoitukset i)
-                   (conj ilmoitukset i)))))
+      (fn [ilmoitukset]
+        (if (ilmoitukset i)
+          (disj ilmoitukset i)
+          (conj ilmoitukset i)))))
 
   v/AsetaKuittausTiedot
   (process-event [{tiedot :tiedot} {:keys [valittu-ilmoitus kuittaa-monta] :as app}]
@@ -309,7 +316,7 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
                      (:uusi-kuittaus valittu-ilmoitus)
                      (dissoc kuittaa-monta :ilmoitukset))
           ilmoitukset (or (and @nav/valittu-ilmoitus-id valittu-ilmoitus [valittu-ilmoitus])
-                          (:ilmoitukset kuittaa-monta))
+                        (:ilmoitukset kuittaa-monta))
           tulos! (t/send-async! v/->KuittaaVastaus)]
       (go
         (tulos! (<! (kuittausten-tiedot/laheta-kuittaukset! ilmoitukset kuittaus)))))
@@ -325,12 +332,12 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
     (hae
       (if (and @nav/valittu-ilmoitus-id valittu-ilmoitus)
         (-> app
-            (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
-            (update-in [:valittu-ilmoitus :kuittaukset]
-                       (fn [kuittaukset]
-                         ;; Palvelin palauttaa vektorin kuittauksia, joihin
-                         ;; olemassaolevat liitetään
-                         (into (first v) kuittaukset))))
+          (assoc-in [:valittu-ilmoitus :uusi-kuittaus] nil)
+          (update-in [:valittu-ilmoitus :kuittaukset]
+            (fn [kuittaukset]
+              ;; Palvelin palauttaa vektorin kuittauksia, joihin
+              ;; olemassaolevat liitetään
+              (into (first v) kuittaukset))))
         (assoc app
           :kuittaa-monta nil
           :pikakuittaus nil))))
@@ -366,8 +373,8 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
   v/AloitaPikakuittaus
   (process-event [{:keys [ilmoitus kuittaustyyppi]} app]
     (assoc app :pikakuittaus
-               {:ilmoitus ilmoitus
-                :tyyppi kuittaustyyppi}))
+      {:ilmoitus ilmoitus
+       :tyyppi kuittaustyyppi}))
 
   v/PaivitaPikakuittaus
   (process-event [{:keys [pikakuittaus]} app]
@@ -429,8 +436,6 @@ tila-filtterit [:kuittaamaton :vastaanotettu :aloitettu :lopetettu])
         :kuittaa-monta nil
         :pikakuittaus nil))))
 
-;; Lippu, josta päätellään näytetäänkö ilmoitukset kartalla
-(defonce karttataso-ilmoitukset (atom false))
 
 (defonce ilmoitukset-kartalla
   (reaction

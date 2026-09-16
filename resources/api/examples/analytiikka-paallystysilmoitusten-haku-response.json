@@ -2,7 +2,7 @@
   "paallystysilmoitukset": [
     {
       "takuupaivamaara": "2023-07-31T21:00:00Z",
-      "paallystyskohde": 35,
+      "paallystyskohde": 78,
       "kulutuskerrokselleTehdytToimetPOT2": [
         {
           "leveys": 4.00,
@@ -22,7 +22,7 @@
           "rc-prosentti": 100,
           "poistettu": false,
           "pituus": 650,
-          "alikohde": 51
+          "alikohde": 88
         },
         {
           "leveys": 4.00,
@@ -72,7 +72,7 @@
           "rc-prosentti": 80,
           "poistettu": false,
           "pituus": 350,
-          "alikohde": 50
+          "alikohde": 87
         },
         {
           "leveys": 4.00,
@@ -128,7 +128,7 @@
           "rc-prosentti": 10,
           "poistettu": false,
           "pituus": 300,
-          "alikohde": 49
+          "alikohde": 86
         }
       ],
       "alustalleTehdytToimetPOT2": [
@@ -322,6 +322,7 @@
       ],
       "toteutunutHinta": 98900,
       "poistettu": false,
+      "paallystysIlmoituksenTila": "Hyväksytty",
       "yhaLahetyksenTila": "Lähetetty onnistuneesti"
     }
   ]

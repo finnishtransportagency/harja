@@ -33,17 +33,17 @@
             (let [talvihoidon-rivi (first (filter #(= "Talvihoito" (:nimi %)) urakan-laskutusyhteenveto))]
               {(:urakka-id talvihoidon-rivi)
                (select-keys talvihoidon-rivi
-                            [:urakka-id :urakka-nimi :urakkatyyppi
-                             :indeksi :perusluku
-                             :suolasakko_kaytossa :lampotila_puuttuu
-                             :suolasakot_laskutetaan :suolasakot_laskutettu])}))
-          laskutusyhteenvedot)))
+                 [:urakka-id :urakka-nimi :urakkatyyppi
+                  :indeksi :perusluku
+                  :suolasakko_kaytossa :lampotila_puuttuu
+                  :suolasakot_laskutetaan :suolasakot_laskutettu])}))
+      laskutusyhteenvedot)))
 
 
 (defn aseta-sheet-nimi [[ensimmainen & muut]]
   (when ensimmainen
     (concat [(assoc-in ensimmainen [1 :sheet-nimi] "Laskutusyhteenveto")]
-            muut)))
+      muut)))
 
 
 (defn tyypin-maksuerat
@@ -54,41 +54,41 @@
 (defn urakat-joissa-indeksilaskennan-perusluku-puuttuu
   [urakoiden-lahtotiedot]
   (into #{}
-        (keep (fn [urakan-lahtotiedot]
-                (let [tiedot (second urakan-lahtotiedot)]
-                  (when (and (:indeksi tiedot)
-                             (nil? (:perusluku tiedot)))
-                    (:urakka-nimi (second urakan-lahtotiedot)))))
-              urakoiden-lahtotiedot)))
+    (keep (fn [urakan-lahtotiedot]
+            (let [tiedot (second urakan-lahtotiedot)]
+              (when (and (:indeksi tiedot)
+                      (nil? (:perusluku tiedot)))
+                (:urakka-nimi (second urakan-lahtotiedot)))))
+      urakoiden-lahtotiedot)))
 
 
 (defn urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu
   [urakoiden-lahtotiedot]
   (into #{}
-        (keep (fn [urakan-lahtotiedot]
-                (let [tiedot (second urakan-lahtotiedot)]
-                  (when (and (:suolasakko_kaytossa tiedot)
-                             (:lampotila_puuttuu tiedot)
-                             (or (nil? (:suolasakot_laskutettu tiedot))
-                                 (nil? (:suolasakot_laskutetaan tiedot))))
-                    (:urakka-nimi (second urakan-lahtotiedot)))))
-              urakoiden-lahtotiedot)))
+    (keep (fn [urakan-lahtotiedot]
+            (let [tiedot (second urakan-lahtotiedot)]
+              (when (and (:suolasakko_kaytossa tiedot)
+                      (:lampotila_puuttuu tiedot)
+                      (or (nil? (:suolasakot_laskutettu tiedot))
+                        (nil? (:suolasakot_laskutetaan tiedot))))
+                (:urakka-nimi (second urakan-lahtotiedot)))))
+      urakoiden-lahtotiedot)))
 
 
 (defn urakoittain-kentat-joiden-laskennan-indeksipuute-sotki
   [laskutusyhteenvedot]
   (apply merge
-         (mapv (fn [laskutusyhteenveto]
-                 {(:urakka-nimi (first laskutusyhteenveto))
-                  (into #{}
-                        (apply concat
-                               (keep
-                                 #(keep (fn [rivin-map-entry]
-                                          (when (nil? (val rivin-map-entry))
-                                            (key rivin-map-entry)))
-                                        (apply dissoc % (kustannuslajin-kaikki-kentat "suolasakot")))
-                                 laskutusyhteenveto)))})
-               laskutusyhteenvedot)))
+    (mapv (fn [laskutusyhteenveto]
+            {(:urakka-nimi (first laskutusyhteenveto))
+             (into #{}
+               (apply concat
+                 (keep
+                   #(keep (fn [rivin-map-entry]
+                            (when (nil? (val rivin-map-entry))
+                              (key rivin-map-entry)))
+                      (apply dissoc % (kustannuslajin-kaikki-kentat "suolasakot")))
+                   laskutusyhteenveto)))})
+      laskutusyhteenvedot)))
 
 
 (defn varoitus-indeksilaskennan-perusluku-puuttuu
@@ -97,31 +97,31 @@
     (if (= 1 (count urakat-joissa-indeksilaskennan-perusluku-puuttuu))
       "Urakan indeksilaskennan perusluku puuttuu."
       (str "Seuraavissa urakoissa indeksilaskennan perusluku puuttuu: "
-           (str/join ", "
-                     (for [u urakat-joissa-indeksilaskennan-perusluku-puuttuu]
-                       u))))))
+        (str/join ", "
+          (for [u urakat-joissa-indeksilaskennan-perusluku-puuttuu]
+            u))))))
 
 
 (defn varoitus-lampotila-puuttuu
   [urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
   (when-not (empty? urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu)
     (str "Seuraavissa urakoissa talvisuolasakko on käytössä mutta lämpötilatieto puuttuu: "
-         (str/join ", "
-                   (for [u urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
-                     u)))))
+      (str/join ", "
+        (for [u urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu]
+          u)))))
 
 
 (defn urakat-joissa-suolasakon-laskenta-epaonnistui-ja-lampotila-puuttuu
   [urakoiden-lahtotiedot]
   (into #{}
-        (keep (fn [urakan-lahtotiedot]
-                (let [tiedot (second urakan-lahtotiedot)]
-                  (when (and (:suolasakko_kaytossa tiedot)
-                             (:lampotila_puuttuu tiedot)
-                             (or (nil? (:suolasakot_laskutettu tiedot))
-                                 (nil? (:suolasakot_laskutetaan tiedot))))
-                    (:urakka-nimi (second urakan-lahtotiedot)))))
-              urakoiden-lahtotiedot)))
+    (keep (fn [urakan-lahtotiedot]
+            (let [tiedot (second urakan-lahtotiedot)]
+              (when (and (:suolasakko_kaytossa tiedot)
+                      (:lampotila_puuttuu tiedot)
+                      (or (nil? (:suolasakot_laskutettu tiedot))
+                        (nil? (:suolasakot_laskutetaan tiedot))))
+                (:urakka-nimi (second urakan-lahtotiedot)))))
+      urakoiden-lahtotiedot)))
 
 
 (defn varoitus-indeksitietojen-puuttumisesta
@@ -131,9 +131,9 @@
     varoitus-indeksilaskennan-perusluku-puuttuu
     (when-not (empty? urakat-joiden-laskennan-indeksipuute-sotki)
       (str "Seuraavissa urakoissa indeksilaskentaa ei voitu täysin suorittaa, koska tarpeellisia indeksiarvoja puuttuu: "
-           (str/join ", "
-                     (for [u urakat-joiden-laskennan-indeksipuute-sotki]
-                       u))))))
+        (str/join ", "
+          (for [u urakat-joiden-laskennan-indeksipuute-sotki]
+            u))))))
 
 
 (def varoitus-vain-jvh-voi-muokata-tietoja "Vain järjestelmän vastuuhenkilö voi syöttää indeksiarvoja ja lämpötiloja Harjaan.")
@@ -141,16 +141,16 @@
 
 (defn tee-laskutusyhteevetohaku [kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id]
   (kysely-fn db
-             (konv/sql-date hk-alkupvm)
-             (konv/sql-date hk-loppupvm)
-             (konv/sql-date alkupvm)
-             (konv/sql-date haun-loppupvm)
-             urakka-id))
+    (konv/sql-date hk-alkupvm)
+    (konv/sql-date hk-loppupvm)
+    (konv/sql-date alkupvm)
+    (konv/sql-date haun-loppupvm)
+    urakka-id))
 
 
 (defn hae-alku-ja-loppupvm [alkupvm loppupvm]
   (if (or (pvm/kyseessa-kk-vali? alkupvm loppupvm)
-          (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
+        (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm))
     ;; jos kyseessä vapaa aikaväli, lasketaan vain yksi sarake joten
     ;; hk-pvm:illä ei ole merkitystä, kunhan eivät konfliktoi alkupvm ja loppupvm kanssa
     (pvm/paivamaaran-hoitokausi alkupvm)
@@ -162,8 +162,8 @@
   (log/debug "hae-urakan-laskutusyhteenvedon-tiedot" tiedot)
 
   ;; Jos valittuna tietty vuosi, vuoden kuukausi, tai oma aikaväli, käytetään annettua alku/loppupvm
-  (let [[hk-alkupvm hk-loppupvm] (if (or koko-vuosi? vuoden-kk? valittu-aikavali?) 
-                                   [alkupvm loppupvm] 
+  (let [[hk-alkupvm hk-loppupvm] (if (or koko-vuosi? vuoden-kk? valittu-aikavali?)
+                                   [alkupvm loppupvm]
                                    (hae-alku-ja-loppupvm alkupvm loppupvm))
         ;; Haun-loppupvm käytetään vain, jos on koko hoitovuosi asetus valittuna. Se ei ole pakollinen parametri.
         ;; Mikäli sitä ei ole asetettu, muodostetaan se loppupvm:stä
@@ -178,7 +178,7 @@
                       toimenpidekoodit/tuotteen-jarjestys)
         tulos (vec
                 (sort-by (juxt (comp jarjesta-fn :tuotekoodi) :nimi)
-                         (into [] (tee-laskutusyhteevetohaku kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id))))]
+                  (into [] (tee-laskutusyhteevetohaku kysely-fn db hk-alkupvm hk-loppupvm alkupvm haun-loppupvm urakka-id))))]
     tulos))
 
 

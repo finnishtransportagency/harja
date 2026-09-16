@@ -69,6 +69,16 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-yllapitokohde-urakan-nimella
+-- Hakee ylläpitokohteen id:n urakan ja nimen perusteella
+SELECT ypk.id,
+       ypk.nimi
+  FROM yllapitokohde ypk
+ WHERE ypk.urakka = :urakka
+   AND ypk.nimi = :nimi
+   AND ypk.poistettu IS NOT TRUE
+ LIMIT 1;
+
 -- name: hae-urakkaan-liittyvat-tiemerkintakohteet
 -- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT ypk.id
@@ -778,19 +788,25 @@ WHERE yllapitokohde = :yllapitokohde
            WHERE id = :yllapitokohde) = :urakka;
 
 -- name: tallenna-yllapitokohteen-kustannukset-yhaid!
-UPDATE yllapitokohteen_kustannukset
-   SET
-       sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
-       bitumi_indeksi           = :bitumi_indeksi,
-       kaasuindeksi             = :kaasuindeksi,
-       maaramuutokset           = :maaramuutokset,
-       maku_paallysteet         = :maku_paallysteet,
-       muokattu                 = NOW(),
-       muokkaaja                = :muokkaaja
-  FROM yllapitokohde
- WHERE
-         yllapitokohteen_kustannukset.yllapitokohde = yllapitokohde.id
-   AND yllapitokohde.urakka = :urakka AND yllapitokohde.yhaid = :yhaid;
+INSERT INTO yllapitokohteen_kustannukset (yllapitokohde, sopimuksen_mukaiset_tyot, bitumi_indeksi, kaasuindeksi, maaramuutokset, maku_paallysteet, muokkaaja, muokattu )
+SELECT id,
+       :sopimuksen_mukaiset_tyot,
+       :bitumi_indeksi,
+       :kaasuindeksi,
+       :maaramuutokset,
+       :maku_paallysteet,
+       :muokkaaja,
+       NOW()
+FROM yllapitokohde WHERE urakka = :urakka AND yllapitokohde.yhaid = :yhaid
+ON CONFLICT (yllapitokohde) DO UPDATE
+    SET
+        sopimuksen_mukaiset_tyot = :sopimuksen_mukaiset_tyot,
+        bitumi_indeksi           = :bitumi_indeksi,
+        kaasuindeksi             = :kaasuindeksi,
+        maaramuutokset           = :maaramuutokset,
+        maku_paallysteet         = :maku_paallysteet,
+        muokattu                 = NOW(),
+        muokkaaja                = :muokkaaja;
 
 -- name: tallenna-yllapitokohteen-suorittava-tiemerkintaurakka!
 -- Tallentaa ylläpitokohteen aikataulun

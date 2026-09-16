@@ -56,7 +56,7 @@
   (let [maksueran-tiedot-alkuun (hae-maksueran-tiedot +testi-maksueran-numero+)
         ksuun-tiedot-alkuun (hae-kustannussuunnitelman-tiedot +testi-maksueran-numero+)
         integ-tapahtumat-alkuun (hae-integraatiotapahtumat-tietokannasta)
-        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _]
+        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
                                                                      {:status 200
                                                                       :header "jotain"
                                                                       :body (if (str/includes? kutsudata "costPlan")
@@ -90,7 +90,7 @@
         maksueran-tiedot-alkuun (hae-maksueran-tiedot likainen-maksueranumero)
         ksuun-tiedot-alkuun (hae-kustannussuunnitelman-tiedot likainen-maksueranumero)
         integ-tapahtumat-alkuun (hae-integraatiotapahtumat-tietokannasta)
-        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _]
+        vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
                                                                      {:status 200
                                                                       :header "jotain"
                                                                       :body (if (str/includes? kutsudata "CostPlan")
@@ -128,7 +128,7 @@
         _ (u (format "UPDATE urakka_parametrit SET maksuera_lahetys_sampo = false WHERE urakkaid = %s" urakka-id))
         maksueran-tiedot-alkuun (hae-maksueran-tiedot maksueran-numero)
         vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu
-                              (fn [_ _ _ _ _ _ _ _ kutsudata _ _]
+                              (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
                                 {:status 200
                                  :body onnistunut-maksuera-kuittaus})]
                   (sampo-api/laheta-maksuera-sampoon (:api-sampo jarjestelma) maksueran-numero))
@@ -152,7 +152,7 @@
         _ (u (format "UPDATE urakka_parametrit SET maksuera_lahetys_sampo = true WHERE urakkaid = %s" urakka-id))
         maksueran-tiedot-alkuun (hae-maksueran-tiedot maksueran-numero)
         vastaus (with-redefs [integraatiopiste-http/tee-http-kutsu
-                              (fn [_ _ _ _ _ _ _ _ kutsudata _ _]
+                              (fn [_ _ _ _ _ _ _ _ kutsudata _ _ & _]
                                 {:status 200
                                  :body (if (str/includes? kutsudata "costPlan")
                                          onnistunut-kustannussuunnitelma-kuittaus

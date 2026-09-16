@@ -58,9 +58,11 @@
                                         ::paikkaus/pitoisuus 3.2M
                                         ::paikkaus/sideainetyyppi "70/100"}]
    ::paikkaus/tienkohdat [{::paikkaus/ajourat [1 2]
-                                       ::paikkaus/ajorata 1
-                                       ::paikkaus/ajouravalit [1]
-                                       ::paikkaus/reunat [1]}]})
+                           ::paikkaus/ajorata 1
+                           ::paikkaus/ajouravalit [1]
+                           ::paikkaus/reunat [1]
+                           ::paikkaus/paikkaustyyppi "paikkaus"
+                           ::paikkaus/kasin-maaritelty false}]})
 
 (def testipaikkaustoteuma
   {::paikkaus/selite "Testi"
@@ -149,7 +151,9 @@
       (is (= [{::paikkaus/ajourat [1 2]
                ::paikkaus/ajorata 1
                ::paikkaus/ajouravalit [1]
-               ::paikkaus/reunat [1]}]
+               ::paikkaus/reunat [1]
+               ::paikkaus/paikkaustyyppi "paikkaus"
+               ::paikkaus/kasin-maaritelty false}]
              [(dissoc (first tienkohdat)
                       ::paikkaus/tienkohta-id)])
           "Oletetut tienkohdat löytyvät"))))
@@ -270,7 +274,9 @@
       (is (= [{::paikkaus/ajourat [1 2]
                ::paikkaus/ajorata 1
                ::paikkaus/ajouravalit [1]
-               ::paikkaus/reunat [1]}]
+               ::paikkaus/reunat [1]
+               ::paikkaus/paikkaustyyppi "paikkaus"
+               ::paikkaus/kasin-maaritelty false}]
             [(dissoc (first tienkohdat)
                ::paikkaus/tienkohta-id)])
         "Oletetut tienkohdat löytyvät"))))

@@ -50,7 +50,7 @@
                                                                             :versio (:versio valittu-rivi)})
           onnettomuudet (filter #(= "onnettomuus" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           liikenteenohjaukset (filter #(= "liikenteenohjausmuutos" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
-          yhteydenotot (filter #(= "tilaajan-yhteydenotto" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
+          yhteydenotot (filter #(contains? #{"tilaajan-yhteydenotto" "palaute"} (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           muut-kirjaukset (filter #(= "muut_kirjaukset" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           otsikko "Työmaapäiväkirja"]
       

@@ -1,0 +1,26 @@
+{  
+  "$schema": "http://json-schema.org/draft-03/schema#",  
+  "id": "urn:harja",  
+  "type": "object",  
+  "additionalProperties": false,  
+  "properties": {  
+    "nimi": {  
+      "id": "urn:harja/nimi",  
+      "type": "string",  
+      "required": false  
+    }, 
+    "pitoisuus": {  
+      "id": "urn:harja/pitoisuus",  
+      "type": "number",  
+      "minimum": 0,  
+      "required": false  
+    },
+    "maara": {
+      "id": "urn:harja/maara",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/maara.schema.json",
+      "required": false
+    }
+  }
+}

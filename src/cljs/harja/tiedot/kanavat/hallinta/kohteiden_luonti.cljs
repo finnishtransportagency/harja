@@ -83,8 +83,7 @@
 
 (defn hae-kanava-urakat! [tulos! fail!]
   (go
-    (let [vastaus (<! (k/post! :hallintayksikot
-                               {:liikennemuoto :vesi}))
+    (let [vastaus (<! (k/post! :elinvoimakeskukset {:liikennemuoto :vesi}))
           hy-id (:id (some
                        (fn [hy] (when (= (:nimi hy)
                                          "Kanavat ja avattavat sillat")
@@ -93,8 +92,7 @@
       (if (or (k/virhe? vastaus) (not hy-id))
         (fail! vastaus)
 
-        (let [vastaus (<! (k/post! :hallintayksikon-urakat
-                                   hy-id))]
+        (let [vastaus (<! (k/post! :elinvoimakeskuksen-urakat hy-id))]
           (if (k/virhe? vastaus)
             (fail! vastaus)
 

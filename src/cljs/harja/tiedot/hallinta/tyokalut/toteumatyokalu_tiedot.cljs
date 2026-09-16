@@ -37,6 +37,9 @@
                                :valittu-materiaali nil
                                :yksikko "t"
                                :materiaalimaara 123
+                               :valittu-tehtava nil
+                               :tehtavamaara 123
+                               :tehtavayksikko "tiekm"
                                :nakymassa? false}
                :lahetys-kaynnissa? false
                :mahdolliset-urakat +mahdolliset-urakat+})
@@ -50,12 +53,33 @@
    {:id 10 :nimi "Kesäsuola sorateiden kevätkunnostus" :yksikko "t"}
    {:id 11 :nimi "Kesäsuola sorateiden pölynsidonta" :yksikko "t"}])
 
+;; Tehtävät käyttävät api_tunnus-kenttää tunnisteena. Yleisimmät MHU-tehtävät.
+(def +mahdolliset-tehtavat+
+  [{:api-tunnus 1367 :nimi "Linjahiekoitus" :yksikko "jkm"}
+   {:api-tunnus 1368 :nimi "Pistehiekoitus" :yksikko "jkm"}
+   {:api-tunnus 1359 :nimi "Sorastus km" :yksikko "jkm"}
+   {:api-tunnus 1369 :nimi "Liukkaudentorjunta suolaamalla (materiaali)" :yksikko "jkm"}])
+
+(defn- muodosta-reittipisteen-tehtavat [app]
+  (let [valittu-tehtava (get-in app [:toteumatiedot :valittu-tehtava])]
+    (if valittu-tehtava
+      [{:tehtava {:id (:api-tunnus valittu-tehtava)}}]
+      [])))
+
+(defn- muodosta-toteuman-tehtavat [app]
+  (let [valittu-tehtava (get-in app [:toteumatiedot :valittu-tehtava])]
+    (if valittu-tehtava
+      [{:tehtava {:id (:api-tunnus valittu-tehtava)
+                  :maara {:yksikko (get-in app [:toteumatiedot :tehtavayksikko])
+                          :maara (js/parseFloat (get-in app [:toteumatiedot :tehtavamaara]))}}}]
+      [])))
+
 (defn muodosta-reittipiste [x y app pisteiden-maara index]
   {:reittipiste
    {:aika (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) index)
     :koordinaatit {:x x
                    :y y}
-    :tehtavat []
+    :tehtavat (muodosta-reittipisteen-tehtavat app)
     :materiaalit [{
                    :materiaali (:nimi (get-in app [:toteumatiedot :valittu-materiaali])),
                    :maara {:yksikko (get-in app [:toteumatiedot :yksikko])
@@ -77,7 +101,7 @@
                              :paattynyt (lisaa-sekunti-str-timestamppiin (get-in app [:toteumatiedot :lahetysaika]) (count (:koordinaatit app)))
                              :toteumatyyppi "kokonaishintainen"
                              :lisatieto "Normisuolaus"
-                             ;; Tähän väliin tehtävät, jos ovat pakollisia
+                             :tehtavat (muodosta-toteuman-tehtavat app)
                              :materiaalit [{:materiaali (:nimi (get-in app [:toteumatiedot :valittu-materiaali])),
                                             :maara {:yksikko (get-in app [:toteumatiedot :yksikko])
                                                     :maara (js/parseFloat (get-in app [:toteumatiedot :materiaalimaara]))}}]}
@@ -140,7 +164,7 @@
 (defrecord PaivitaRaportitEpaonnistui [vastaus])
 
 (defn hae-hallintayksikon-urakat [hal]
-  (let [_ (tuck-apurit/post! :hallintayksikon-urakat
+  (let [_ (tuck-apurit/post! :elinvoimakeskuksen-urakat
             (:id hal)
             {:onnistui ->HaeHallintayksikonUrakatOnnistui
              :epaonnistui ->HaeHallintayksikonUrakatEpaonnistui

@@ -133,7 +133,7 @@ WHERE pk."urakka-id" = :urakka-id
   AND u.id = pk."urakka-id"
   AND o.id = u.urakoitsija
   -- Valittujen elykeskusten perusteella tehtävä geometriarajaus
-  AND ((:elyt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:elyt))),
+  AND ((:evkt)::TEXT IS NULL OR (st_intersects(ST_UNION(ARRAY(select e.alue FROM organisaatio e WHERE e.id in (:evkt))),
                                                CASE
                                                         WHEN (pk.tierekisteriosoite_laajennettu).tie IS NOT NULL
                                                         THEN  (SELECT *

@@ -93,7 +93,7 @@
         _ (log/debug "Löydetyt rajoitusalueet: " rajoitusalueet)]
     rajoitusalueet))
 
-(defn suorita [db user {:keys [urakka-id alkupvm loppupvm hallintayksikko-id] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm elinvoimakeskus-id] :as parametrit}]
   (log/debug "Rajoitusalueraportti :: suorita urakka_id=" urakka-id " alkupvm=" alkupvm " loppupvm=" loppupvm)
   (let [urakka (first (urakat-q/hae-urakka db urakka-id))
         rajoitusalueet (hae-rajoitusalueet-suolatoteumien-kanssa db urakka-id alkupvm loppupvm)

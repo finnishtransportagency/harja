@@ -1,0 +1,54 @@
+# Composite action to verify that NPM supply chain security settings from .npmrc are active.
+# This action should be called before any `npm ci` or `npm install` command in workflows.
+# It fails the workflow if the expected security settings are not in effect.
+
+name: 'Verify NPM Security Settings'
+description: 'Verifies that .npmrc supply chain protection settings (ignore-scripts, allow-git) are active'
+
+runs:
+  using: 'composite'
+  steps:
+    - name: Verify NPM security settings (For NPM v11.10.x and later)
+      shell: bash
+      run: |
+        echo "::group::NPM Supply Chain Security Settings"
+
+        ignore_scripts=$(npm config get ignore-scripts)
+        allow_git=$(npm config get allow-git)
+        min_release_age=$(npm config get min-release-age)
+        
+        echo "ignore-scripts = $ignore_scripts"
+        echo "allow-git = $allow_git"
+        echo "min-release-age = $min_release_age"
+        
+        errors=0
+        
+        if [[ "$ignore_scripts" != "true" ]]; then
+          echo "::error::ignore-scripts is not enabled! Expected 'true', got '$ignore_scripts'"
+          errors=$((errors + 1))
+        fi
+        
+        if [[ "$allow_git" != "none" ]]; then
+          echo "::error::allow-git is not restricted! Expected 'none', got '$allow_git'"
+          errors=$((errors + 1))
+        fi
+        
+        if [ -z "$min_release_age" ] || [ "$min_release_age" = "null" ] || [ "$min_release_age" = "undefined" ]; then
+          echo "::error::min-release-age has no value. expected a number of days, got '$min_release_age'."
+          errors=$((errors + 1))
+        else
+          if [[ "$min_release_age" =~ ^[0-9]+$ ]] && [ "$min_release_age" -gt 0 ]; then
+            echo "Validation successful: 'min-release-age' is configured to $min_release_age days."
+          else
+            echo "::error::min-release-age is not a valid positive number, got '$min_release_age'."
+            errors=$((errors + 1))
+          fi
+        fi
+
+        if [[ $errors -gt 0 ]]; then
+          echo "::error::NPM security settings verification failed. Check that .npmrc is present and correctly configured."
+          exit 1
+        fi
+        
+        echo "✅ All NPM supply chain security settings verified"
+        echo "::endgroup::"

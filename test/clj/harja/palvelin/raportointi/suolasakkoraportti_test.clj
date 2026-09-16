@@ -167,8 +167,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :suolasakko
-                                 :konteksti          "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti          "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm      (c/to-date (t/local-date 2014 10 1))
                                               :loppupvm     (c/to-date (t/local-date 2015 9 30))
                                               :urakkatyyppi :hoito}})]
@@ -176,7 +176,7 @@
     (let [elementit (apurit/tarkista-raportti vastaus "Suolasakkoraportti")
           taulukko (apurit/taulukko-otsikolla
                     vastaus
-                    "Pohjois-Pohjanmaa, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")]
+                    "Pohjois-Suomi, Suolasakkoraportti ajalta 01.10.2014 - 30.09.2015")]
 
       (tarkista-sarakkeet taulukko)
       (apurit/tarkista-taulukko-rivit

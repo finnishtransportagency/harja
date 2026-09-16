@@ -218,7 +218,7 @@ hakutiheys-historiakuva 1200000)
       {true  (funktio true)
        false (funktio false)})))
 
-(defn- valitse-urakka?* [urakka-id hallintayksikko tyyppi valittu-urakka
+(defn- valitse-urakka?* [urakka-id elinvoimakeskus tyyppi valittu-urakka
                          hallintayksikot-joista-ei-mitaan-valittu hallintayksikot-joista-kaikki-valittu]
   (cond
 
@@ -232,7 +232,7 @@ hakutiheys-historiakuva 1200000)
     ;; kaikki urakat
     (and
       (get hallintayksikot-joista-kaikki-valittu tyyppi)
-      ((get hallintayksikot-joista-kaikki-valittu tyyppi) (:nimi hallintayksikko)))
+      ((get hallintayksikot-joista-kaikki-valittu tyyppi) (:nimi elinvoimakeskus)))
     (do
       #_(log (:nimi hallintayksikko) " on hy, joista kaikki on valittu!")
       true)
@@ -241,7 +241,7 @@ hakutiheys-historiakuva 1200000)
     ;; ei ole valinnut yhtään urakkaa (kaiki on false!)
     (and
       (get hallintayksikot-joista-ei-mitaan-valittu tyyppi)
-      ((get hallintayksikot-joista-ei-mitaan-valittu tyyppi) (:nimi hallintayksikko)))
+      ((get hallintayksikot-joista-ei-mitaan-valittu tyyppi) (:nimi elinvoimakeskus)))
     (do
       #_(log (:nimi hallintayksikko) " on hy, joista ei ole mitään valittu!")
       false)
@@ -254,40 +254,41 @@ hakutiheys-historiakuva 1200000)
 
 ;; Valitaanko palvelimelta palautettu suodatin vai ei.
 ;; Yhdistäminen tehdään muualla
-(defn- valitse-urakka? [urakka-id hallintayksikko tyyppi]
+(defn- valitse-urakka? [urakka-id elinvoimakeskus tyyppi]
   (valitse-urakka?*
-    urakka-id hallintayksikko tyyppi
+    urakka-id elinvoimakeskus tyyppi
     (:id @valittu-urakka-tilannekuvaan-tullessa)
     (get @hyt-joiden-urakoilla-ei-arvoa true)
     (get @hyt-joiden-urakoilla-ei-arvoa false)))
 
 (defn- aluesuodattimet-nested-mapiksi [tulos]
   (into {}
-        (map (fn [[tyyppi aluekokonaisuus]]
-               {tyyppi (into {}
-                             (map (fn [{:keys [hallintayksikko urakat]}]
-                                    {hallintayksikko
-                                     (into {}
-                                           (map (fn [{:keys [id nimi alue]}]
-                                                  [(tk/->Aluesuodatin id
-                                                                      (-> nimi
-                                                                          (clojure.string/replace " " "_")
-                                                                          (clojure.string/replace "," "_")
-                                                                          (clojure.string/replace "(" "_")
-                                                                          (clojure.string/replace ")" "_")
-                                                                          (keyword))
-                                                                      (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
-                                                                      alue)
-                                                   (valitse-urakka? id hallintayksikko tyyppi)])
-                                                urakat))})
-                                  aluekokonaisuus))}))
-        (group-by :tyyppi tulos)))
+    (map (fn [[tyyppi aluekokonaisuus]]
+           {tyyppi (into {}
+                     (map (fn [{:keys [elinvoimakeskus urakat]}]
+                            {elinvoimakeskus
+                             (into {}
+                               (map (fn [{:keys [id nimi alue]}]
+                                      [(tk/->Aluesuodatin id
+                                         (-> nimi
+                                           (clojure.string/replace " " "_")
+                                           (clojure.string/replace "," "_")
+                                           (clojure.string/replace "(" "_")
+                                           (clojure.string/replace ")" "_")
+                                           (keyword))
+                                         (format/lyhennetty-urakan-nimi urakan-nimen-pituus nimi)
+                                         alue)
+                                       (valitse-urakka? id elinvoimakeskus tyyppi)])
+                                 urakat))})
+                       aluekokonaisuus))}))
+    (group-by :tyyppi tulos)))
+
 
 (defn- hae-aluesuodattimet [tila urakoitsija]
   (go (let [tulos (<! (k/post! :hae-urakat-tilannekuvaan (aikaparametrilla
                                                            {:urakoitsija  (:id urakoitsija)
                                                             :nykytilanne? (= :nykytilanne tila)})))]
-        ;; tulos: [{:tyyppi :x :hallintayksikko {:id . :nimi .} :urakat [{:id :nimi}, ..]} {..}]
+        ;; tulos: [{:tyyppi :x :elinvoimakeskus {:id . :nimi .} :urakat [{:id :nimi}, ..]} {..}]
         (aluesuodattimet-nested-mapiksi tulos)
         ;; {:x {{:id . :nimi "Lappi"} [{:id 1 :nimi "Kuusamon urakka}]}
         )))
@@ -318,11 +319,11 @@ hakutiheys-historiakuva 1200000)
             {tyyppi
              (into {}
                    (map (fn [[hallintayksikko urakat]]
-                          {(:elynumero hallintayksikko)
+                          {(:evknumero hallintayksikko)
                            (into {}
                                  (map
                                    (fn [[suodatin valittu?]]
-                                     (let [vanha-arvo (get-in vanhat [tyyppi (:elynumero hallintayksikko) suodatin])
+                                     (let [vanha-arvo (get-in vanhat [tyyppi (:evknumero hallintayksikko) suodatin])
                                            arvo (uusi-tai-vanha-suodattimen-arvo vanha-arvo valittu?)]
                                        [suodatin arvo]))
                                    urakat))})

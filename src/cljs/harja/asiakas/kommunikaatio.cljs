@@ -18,7 +18,7 @@
 (defonce ^{:doc
            "Tähän atomiin tallennetaan tieto katkenneista yhteyksistä ja lähetetään
             palvelimelle logitettavaksi, kunhan yhteys palautuu."}
-         yhteyskatkokset
+  yhteyskatkokset
   (local-storage/local-storage-atom
     :yhteyskatkokset
     []
@@ -53,7 +53,7 @@
   []
   (let [host (.-host js/location)]
     (or (kehitysymparistossa-yhteiset? host)
-        (#{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"} host))))
+      (#{{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"}} host))))
 
 (defn kehitysymparistossa-localhost?
   "Tarkistaa ollaanko localhost-kehitysympäristössä"
@@ -86,8 +86,8 @@
   "Hakee CSRF-tokenin DOMista."
   []
   (-> (.getElementsByTagName js/document "body")
-      (aget 0)
-      (.getAttribute "data-anti-csrf-token")))
+    (aget 0)
+    (.getAttribute "data-anti-csrf-token")))
 
 (defn csrf-token
   "Yrittää löytää CSRF-tokenin DOMista niin kauan, että se löytyy."
@@ -96,15 +96,22 @@
     (if token
       token
       (do (<! (timeout 100))
-          (recur (get-csrf-token))))))
+        (recur (get-csrf-token))))))
 
 (defn virhe?
   "Tarkastaa onko vastaus tyhjä, sisältääkö se :failure, :virhe, tai :error avaimen, tai on EiOikeutta viesti"
   [vastaus]
   (or (nil? vastaus)
-      (roolit/ei-oikeutta? (:response vastaus))
-      (and (map? vastaus)
-           (some (partial contains? vastaus) [:failure :virhe :error]))))
+    (roolit/ei-oikeutta? (:response vastaus))
+    (and (map? vastaus)
+      (some (partial contains? vastaus) [:failure :virhe :error]))))
+
+(defn virheviesti
+  [vastaus]
+  (or (get-in vastaus [:response :virhe])
+    (get-in vastaus [:response :virheet 0 :viesti])
+    (get-in vastaus [:virheet 0 :viesti])
+    (:status-text vastaus)))
 
 ;; Testmoden voi asettaa funktioksi, jolle annetaan palvelu ja payload ja palauttaa kanavan
 (def testmode (atom nil))
@@ -138,14 +145,15 @@
         (get-in vastaus [:parse-error :original-text]))
     (let [parse-error (get-in vastaus [:parse-error :original-text])
           saatu-virhe-throw+ (when (str/includes? parse-error "throw+")
-                               (when-let [viesti (-> parse-error
-                                                   (str/replace-first #"^\s*throw\+:\s*" "")
-                                                   (edn/read-string)
-                                                   :virheet first :viesti)]
+                               (when-let [virhedata (some-> parse-error
+                                                      (str/replace-first #"^\s*throw\+:\s*" "")
+                                                      (edn/read-string))]
                                  {:status 500
                                   :status-text "Internal Server Error"
                                   :failure :error
-                                  :response {:virhe viesti}}))
+                                  :response (cond-> virhedata
+                                              (get-in virhedata [:virheet 0 :viesti])
+                                              (assoc :virhe (get-in virhedata [:virheet 0 :viesti])))}))
 
           kasitelty-vastaus (if saatu-virhe-throw+
                               saatu-virhe-throw+
@@ -259,38 +267,38 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
       (.append form-data "liite" (aget tiedostot i)))
 
     (set! (.-onload xhr)
-          (fn [event]
-            (let [request (.-target event)]
-              (case (.-status request)
-                200 (let [transit-json (.-responseText request)
-                          transit (transit/lue-transit transit-json)]
-                      (put! ch transit))
-                413 (do
-                      (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
-                      (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
-                500 (let [txt (.-responseText request)]
-                      (log "Liitelähetys epäonnistui: " txt)
-                      (put! ch {:error :liitteen-lahetys-epaonnistui
-                                :viesti (if (= txt "Virus havaittu")
-                                          txt
-                                          "tiedostotyyppi ei ole sallittu")}))
-                0 (kasittele-yhteyskatkos :tallenna-liite (.-responseText request))
-                (do
+      (fn [event]
+        (let [request (.-target event)]
+          (case (.-status request)
+            200 (let [transit-json (.-responseText request)
+                      transit (transit/lue-transit transit-json)]
+                  (put! ch transit))
+            413 (do
                   (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
-                  (put! ch {:error :liitteen-lahetys-epaonnistui})))
-              (close! ch))))
+                  (put! ch {:error :liitteen-lahetys-epaonnistui :viesti "liite on liian suuri, max. koko 32MB"}))
+            500 (let [txt (.-responseText request)]
+                  (log "Liitelähetys epäonnistui: " txt)
+                  (put! ch {:error :liitteen-lahetys-epaonnistui
+                            :viesti (if (= txt "Virus havaittu")
+                                      txt
+                                      "tiedostotyyppi ei ole sallittu")}))
+            0 (kasittele-yhteyskatkos :tallenna-liite (.-responseText request))
+            (do
+              (log "Liitelähetys epäonnistui: " (pr-str (.-responseText request)))
+              (put! ch {:error :liitteen-lahetys-epaonnistui})))
+          (close! ch))))
 
     (set! (.-onerror xhr)
-          (fn [event]
-            (let [request (.-target event)]
-              (let [txt (.-responseText request)]
-                (log "Liitelähetys epäonnistui: " txt)
-                (put! ch {:error :liitteen-lahetys-epaonnistui})))))
+      (fn [event]
+        (let [request (.-target event)]
+          (let [txt (.-responseText request)]
+            (log "Liitelähetys epäonnistui: " txt)
+            (put! ch {:error :liitteen-lahetys-epaonnistui})))))
 
     (set! (.-onprogress siirto)
-          (fn [e]
-            (when (.-lengthComputable e)
-              (put! ch (* 100 (/ (.-loaded e) (.-total e)))))))
+      (fn [e]
+        (when (.-lengthComputable e)
+          (put! ch (* 100 (/ (.-loaded e) (.-total e)))))))
 
     (.send xhr form-data)
     ch))
@@ -313,12 +321,12 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
     (doseq [[key value] params-map]
       (.append form-data (name key) value))
     (POST (str +polku+ "_/" url)
-          {:headers (anti-csrf-token-header)
-           :body form-data
-           :handler (response-handler! onnistui-fn)
-           :error-handler (response-handler! epaonnistui-fn)
-           :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
-                                                      :raw true})})))
+      {:headers (anti-csrf-token-header)
+       :body form-data
+       :handler (response-handler! onnistui-fn)
+       :error-handler (response-handler! epaonnistui-fn)
+       :response-format (transit-response-format {:reader (t/reader :json transit/read-optiot)
+                                                  :raw true})})))
 
 (defn liite-url [liite-id]
   (str (polku) "lataa-liite?id=" liite-id))
@@ -331,17 +339,17 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
 
 (defn- yhdista-parametrit [parametrit]
   (str/join "&"
-            (map (fn [[nimi arvo]]
-                   (str (name nimi) "=" arvo))
-                 (partition 2 parametrit))))
+    (map (fn [[nimi arvo]]
+           (str (name nimi) "=" arvo))
+      (partition 2 parametrit))))
 
 (defn pdf-url [tyyppi & parametrit]
   (str (polku) "pdf?_=" (name tyyppi) "&"
-       (yhdista-parametrit parametrit)))
+    (yhdista-parametrit parametrit)))
 
 (defn excel-url [tyyppi & parametrit]
   (str (polku) "excel?_=" (name tyyppi) "&"
-       (yhdista-parametrit parametrit)))
+    (yhdista-parametrit parametrit)))
 
 
 (defn wmts-polku-mml []
@@ -375,7 +383,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (when (true? @yhteys-katkennut?)
     (reset! yhteys-palautui-hetki-sitten true)
     (reset! nykyinen-pingausvali-millisekunteina
-            normaali-pingausvali-millisekunteina)
+      normaali-pingausvali-millisekunteina)
     (reset! yhteys-katkennut? false)))
 
 (defn- kasittele-yhteyskatkos [palvelu vastaus]
@@ -383,7 +391,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   (when palvelu (tallenna-yhteyskatkos! palvelu))
   (reset! yhteys-katkennut? true)
   (reset! nykyinen-pingausvali-millisekunteina
-          yhteys-katkennut-pingausvali-millisekunteina)
+    yhteys-katkennut-pingausvali-millisekunteina)
   (reset! yhteys-palautui-hetki-sitten false))
 
 (defn- kasittele-istunto-vanhentunut []
@@ -427,7 +435,7 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
         (let [vastaus (<! (post! :raportoi-yhteyskatkos {:yhteyskatkokset @yhteyskatkokset}))]
           (if-not (virhe? vastaus)
             (do (log "Yhteyskatkostiedot lähetetty!")
-                (reset! yhteyskatkokset []))
+              (reset! yhteyskatkokset []))
             (log "Yhteysvirheitä ei voitu lähettää. Yritetään kohta uudelleen."))))
       (<! (timeout 10000))
       (recur))))
@@ -436,5 +444,5 @@ Kahden parametrin versio ottaa lisäksi transducerin jolla tulosdata vektori muu
   "Muuntaa annetun Clojure datan transitiksi ja URL enkoodaa sen"
   [clj-data]
   (-> clj-data
-      transit/clj->transit
-      gstr/urlEncode))
+    transit/clj->transit
+    gstr/urlEncode))

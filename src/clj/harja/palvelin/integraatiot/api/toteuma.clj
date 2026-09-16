@@ -1,7 +1,8 @@
 (ns harja.palvelin.integraatiot.api.toteuma
   "Toteuman kirjaaminen urakalle"
-  (:require [taoensso.timbre :as log]
-            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
+  (:require [harja.pvm :as pvm]
+            [taoensso.timbre :as log]
+            [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [tee-kirjausvastauksen-body]]
             [harja.kyselyt.materiaalit :as materiaalit]
             [harja.kyselyt.toteumat :as q-toteumat]
             [harja.kyselyt.toimenpidekoodit :as q-toimenpidekoodi]
@@ -108,44 +109,19 @@
     (log/debug "Poistettu toteuman" toteuma-id "materiaalit ulkoisella ID:llä" ulkoinen-id)))
 
 (defn poista-toteumat [db kirjaaja ulkoiset-idt urakka-id]
-  (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat" ulkoiset-idt " urakka-id: " urakka-id)
+  (log/debug "Poistetaan luojan" (:id kirjaaja) "toteumat, joiden ulkoiset idt ovat"
+    ulkoiset-idt " urakka-id: " urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kayttaja-id (:id kirjaaja)
-          ;; Poistetaan ensin toteumien tehtävät ja materiaalit
           _ (doseq [ulkoinen-id ulkoiset-idt]
               (poista-toteuman-tehtavat-ulkoisella-idlla db kayttaja-id ulkoinen-id)
               (poista-toteuman-materiaalit-ulkoisella-idlla db kayttaja-id ulkoinen-id))
-        poistettavien-toteumien-paivat-ja-aikavali
-        (q-toteumat/hae-poistettavien-toteumien-paivat-ja-aikavali-ulkoisella-idlla
-        db {:urakka-id urakka-id
-          :ulkoiset-idt ulkoiset-idt})
-        toteumien-alkupvmt (map :alkanut poistettavien-toteumien-paivat-ja-aikavali)
-        aikavali (first poistettavien-toteumien-paivat-ja-aikavali)
-          aikavalin-alkupvm (:min_alkanut aikavali)
-          aikavalin-loppupvm (:max_alkanut aikavali)
-          poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla! db kayttaja-id ulkoiset-idt urakka-id)
-
-          sopimus-idt (map :id (sopimukset/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))]
+          poistettujen-maara (q-toteumat/poista-toteumat-ulkoisilla-idlla-ja-luojalla!
+                               db kayttaja-id ulkoiset-idt urakka-id)]
       (log/debug "Poistettujen määrä:" poistettujen-maara)
-      (when (and (> poistettujen-maara 0)
-              (> (count sopimus-idt) 0))
-        (do
-          ;; Päivitetään sopimuksiin liittyvät materiaalien käytöt
-          (doseq [sopimus-id sopimus-idt]
-            (doseq [alkupvm toteumien-alkupvmt]
-              (log/debug "paivita-sopimuksen-materiaalin-kaytto sopimus-id:lle: " sopimus-id " alkupvm: " alkupvm " urakkaid:" urakka-id)
-              (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                     :alkupvm alkupvm
-                                                                     :urakkaid urakka-id})))
-          ;; Päivitetään urakoihin liittyvät materiaalin käytöt
-          (when (and aikavalin-alkupvm aikavalin-loppupvm)
-            (log/debug "paivita_urakan_materiaalin_kaytto_hoitoluokittain urakka-id:lle: " urakka-id
-              " alkupvm: " aikavalin-alkupvm " loppupvm: " aikavalin-loppupvm)
-            (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                               :alkupvm aikavalin-alkupvm
-                                                                               :loppupvm aikavalin-loppupvm}))))
       (let [ilmoitukset (if (pos? poistettujen-maara)
-                          (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa." poistettujen-maara)
+                          (format "Toteumat poistettu onnistuneesti. Poistettiin: %s toteumaa."
+                            poistettujen-maara)
                           "Tunnisteita vastaavia toteumia ei löytynyt käyttäjän kirjaamista urakan toteumista.")]
         (tee-kirjausvastauksen-body {:ilmoitukset ilmoitukset})))))
 
@@ -214,16 +190,16 @@
   (doseq [tehtava (:tehtavat toteuma)]
     (log/debug "Luodaan tehtävä.")
     (let [tehtava-id (q-toimenpidekoodi/hae-tehtava-apitunnisteella db
-                       (get-in tehtava [:tehtava :id]) urakka-id)]
-      (q-toteumat/luo-toteuma_tehtava<!
-        db
-        toteuma-id
-        tehtava-id
-        (get-in tehtava [:tehtava :maara :maara])
-        (:id kirjaaja)
-        nil
-        nil
-        urakka-id))))
+                       (get-in tehtava [:tehtava :id]) urakka-id)
+          hoitokauden-alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))]
+      (q-toteumat/luo-toteuma_tehtava<! db {:toteuma toteuma-id,
+                                            :toimenpidekoodi tehtava-id,
+                                            :maara (get-in tehtava [:tehtava :maara :maara]),
+                                            :luoja (:id kirjaaja),
+                                            :paivan_hinta nil,
+                                            :lisatieto nil,
+                                            :urakka_id urakka-id,
+                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))))
 
 ;; Konvertoi apilta tulevan materiaalinimen tietokannassa olevaan materiaaliin
 (def mat-apilta->mat-db
@@ -287,10 +263,9 @@
         (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                  :virheet [{:koodi virheet/+tuntematon-materiaali+
                             :viesti (format "Tuntematon materiaali: %s." materiaali-nimi)}]}))
-      (q-toteumat/luo-toteuma-materiaali<!
-        db
-        toteuma-id
-        materiaalikoodi-id
-        (get-in materiaali [:maara :maara])
-        (:id kirjaaja)
-        urakka-id))))
+      (materiaalit/luo-toteuma-materiaali<! db {:toteuma toteuma-id,
+                                                :materiaalikoodi materiaalikoodi-id,
+                                                :maara (get-in materiaali [:maara :maara]),
+                                                :kayttaja (:id kirjaaja),
+                                                :urakka urakka-id,
+                                                :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi (:alkanut toteuma)))}))))

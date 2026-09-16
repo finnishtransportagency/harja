@@ -192,14 +192,14 @@ VALUES
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                 :loppupvm (c/to-date (t/local-date 2016 9 30))
                                 :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
+          teksti "Pohjois-Suomi, Ympäristöraportti ajalta 01.10.2015 - 30.09.2016"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (is (= raportin-nimi (:nimi (second vastaus))))
@@ -406,8 +406,8 @@ VALUES
                           :suorita-raportti
                           +kayttaja-jvh+
                           {:nimi :ymparistoraportti
-                           :konteksti "hallintayksikko"
-                           :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                           :konteksti "elinvoimakeskus"
+                           :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                            :parametrit {:alkupvm (c/to-date (t/local-date 2017 10 1))
                                         :loppupvm (c/to-date (t/local-date 2018 9 30))
                                         :urakkatyyppi :hoito}})
@@ -423,7 +423,7 @@ VALUES
 
     (is (vector? vastaus-pop-ely))
     (let [raportin-nimi "Ympäristöraportti"
-          teksti-pop-ely "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
+          teksti-pop-ely "Pohjois-Suomi, Ympäristöraportti ajalta 01.10.2017 - 30.09.2018"
           otsikko-pop-ely "Talvisuolat"
           taulukko-pop-ely (apurit/taulukko-otsikolla vastaus-pop-ely otsikko-pop-ely)
 
@@ -577,15 +577,15 @@ VALUES
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (pvm/->pvm "1.1.2018")
                                 :loppupvm (pvm/->pvm "31.12.2018")
                                 :urakkatyyppi :hoito
                                 :urakoittain? false}})]
 
     (is (vector? vastaus))
-    (let [raportin-nimi "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+    (let [raportin-nimi "Pohjois-Suomi, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
           s3-rivi0 (apurit/raporttisolun-arvo (apurit/taulukon-solu taulukko 3 0))
@@ -668,15 +668,15 @@ VALUES
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :ymparistoraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (pvm/->pvm "1.1.2018")
                                 :loppupvm (pvm/->pvm "31.12.2018")
                                 :urakkatyyppi :hoito
                                 :urakoittain? true}})]
 
     (is (vector? vastaus))
-    (let [raportin-nimi "Pohjois-Pohjanmaa, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
+    (let [raportin-nimi "Pohjois-Suomi, Ympäristöraportti ajalta 01.01.2018 - 31.12.2018"
           otsikko "Talvisuolat"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)
           foo (seq (apurit/taulukon-rivit taulukko))

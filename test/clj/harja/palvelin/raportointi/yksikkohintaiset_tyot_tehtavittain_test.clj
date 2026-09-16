@@ -86,8 +86,8 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi               :yks-hint-tehtavien-summat
-                                 :konteksti          "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti          "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit         {:alkupvm      (c/to-date (t/local-date 2005 10 10))
                                                       :loppupvm     (c/to-date (t/local-date 2010 10 10))
                                                       :urakkatyyppi :hoito}})]
@@ -98,7 +98,7 @@
                      :rajoita-pdf-rivimaara nil}
                     [:taulukko
                      {:oikealle-tasattavat-kentat #{}
-                      :otsikko                    "Pohjois-Pohjanmaa, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
+                      :otsikko                    "Pohjois-Suomi, Yksikköhintaiset työt tehtävittäin ajalta 10.10.2005 - 10.10.2010"
                       :sheet-nimi                 "Yksikköhintaiset työt tehtävittäin"
                       :tyhja                      nil
                       :viimeinen-rivi-yhteenveto? true}

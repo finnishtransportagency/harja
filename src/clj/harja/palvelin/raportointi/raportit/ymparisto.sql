@@ -27,7 +27,7 @@ FROM raportti_toteutuneet_materiaalit rtm
   JOIN urakka u ON rtm."urakka-id" = u.id AND u.urakkanro IS NOT NULL
   JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
 WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
-      AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
       AND (rtm.paiva::DATE BETWEEN :alkupvm AND :loppupvm)
       AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
       AND mk.materiaalityyppi != 'erityisalue'
@@ -58,7 +58,7 @@ SELECT
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
            JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
  WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
-   AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alkupvm::TIMESTAMP AND :loppupvm::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT id FROM paikkaustehtavat)
@@ -84,7 +84,7 @@ FROM urakka u
   LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(umkh.talvihoitoluokka::INTEGER, umkh.pvm) AS hoitoluokka) hl ON TRUE
   JOIN materiaalikoodi mk ON mk.id = umkh.materiaalikoodi
 WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
-      AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
       AND (umkh.pvm::DATE BETWEEN :alkupvm AND :loppupvm)
       -- Hiekoitushiekalle, Murskeille ja Jätteille ei näytetä hoitoluokkakohtaista luokittelua
       AND mk.materiaalityyppi NOT IN ('hiekoitushiekka','muu','murske')
@@ -123,7 +123,7 @@ FROM materiaalin_kaytto s
 WHERE s.poistettu IS NOT TRUE
       AND (s.alkupvm, s.loppupvm) OVERLAPS (:alkupvm, :loppupvm)
       AND (:urakka::integer IS NULL OR s.urakka = :urakka)
-      AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+      AND (:elinvoimakeskus::integer IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
       AND (:urakkatyyppi::urakkatyyppi IS NULL OR
            CASE
                WHEN (:urakkatyyppi::urakkatyyppi = 'hoito' OR :urakkatyyppi::urakkatyyppi = 'teiden-hoito') THEN
@@ -158,7 +158,7 @@ WHERE v.poistettu IS NOT TRUE
   -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
   AND v.hoitokauden_alkuvuosi = EXTRACT(YEAR from :alkupvm::DATE)
   AND (:urakka::integer IS NULL OR v.urakka = :urakka)
-  AND (:hallintayksikko::integer IS NULL OR u.hallintayksikko = :hallintayksikko)
+  AND (:elinvoimakeskus::integer IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
   -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
   AND u.tyyppi = 'teiden-hoito'
 GROUP BY u.id, u.nimi, mk.id, mk.nimi, tk.nimi, mk.yksikko, mk.materiaalityyppi, ml.nimi, ml.yksikko, ml.materiaalityyppi
@@ -192,7 +192,7 @@ SELECT u.id AS urakka_id,
    -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
    AND u.tyyppi = 'teiden-hoito'
    AND (:urakka::INTEGER IS NULL OR v.urakka = :urakka)
-   AND (:hallintayksikko::INTEGER IS NULL OR u.hallintayksikko = :hallintayksikko)
+   AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
    -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
    AND v.hoitokauden_alkuvuosi = EXTRACT(YEAR FROM :alkupvm::DATE)
    AND v.tehtava IN (SELECT id FROM paikkaustehtavat)

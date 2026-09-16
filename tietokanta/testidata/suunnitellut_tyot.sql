@@ -1295,12 +1295,12 @@ BEGIN
   -- URAKAN TOIMENPIDEINSTANSSIT
   FOR i IN 1..6 LOOP
     INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku, luotu)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi=toimenpidekoodit[i]),
+       VALUES (urakka_id, (SELECT id FROM toimenpide WHERE koodi=toimenpidekoodit[i]),
                urakan_nimi || ' ' || toimenpidenimet[i]::TEXT, (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku', NOW());
   END LOOP;
   INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku, luotu)
-       VALUES ((SELECT id FROM urakka WHERE nimi=urakan_nimi), (SELECT id FROM toimenpide WHERE koodi='23151'),
+       VALUES (urakka_id, (SELECT id FROM toimenpide WHERE koodi='23151'),
                urakan_nimi || ' ' || 'MHU ja HJU Hoidon johto', (SELECT alkupvm FROM urakka WHERE nimi=urakan_nimi),
                (SELECT loppupvm FROM urakka WHERE nimi=urakan_nimi), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku', NOW());
   -- URAKAN KIINTEÄHINTAISET TYÖT (eli suunnitellut hankinnat)
@@ -1735,8 +1735,9 @@ DO $$
 DECLARE
   toimenpidenimet TEXT[] := ARRAY ['Talvihoito TP', 'Liikenneympäristön hoito TP', 'Soratien hoito TP', 'Päällystepaikkaukset TP', 'MHU Ylläpito TP', 'MHU Korvausinvestointi TP', 'MHU ja HJU Hoidon johto'];
   toimenpidekoodit TEXT[] := ARRAY ['23104', '23116', '23124', '20107', '20191', '14301', '23151'];
-  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026',
-      'Raahen MHU 2023-2028', 'UUD Raasepori  MHU 2021- 2026, P', 'POP MHU Kajaani 2025-2030', 'POP MHU Suomussalmi 2024-2029', 'KOPIO POP MHU Suomussalmi 2024-2029' , 'Kittilän MHU 2025-2030'];
+  urakat TEXT[] := ARRAY ['Ivalon MHU testiurakka (uusi)', 'Iin MHU 2021-2026', 'Tampereen MHU 2022-2026', 'EPO MHU Kokkola 2024-2029, P',
+      'Raahen MHU 2023-2028', 'UUD Raasepori  MHU 2021- 2026, P', 'POP MHU Kajaani 2025-2030', 'POP MHU Suomussalmi 2024-2029',
+      'KOPIO POP MHU Suomussalmi 2024-2029' , 'Kittilän MHU 2025-2030', 'Kittilän MHU 2026-2031', 'Sodankylän MHU 2026-2031'];
   urakan_nimi TEXT;
   i INTEGER;
 BEGIN

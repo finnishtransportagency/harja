@@ -145,9 +145,9 @@ WHERE id = :id;
 
 -- name: lisaa-rahavaraus-budjettiin<!
 INSERT INTO kustannusarvioitu_tyo (vuosi, kuukausi, summa, summa_indeksikorjattu, sopimus,
-                                   toimenpideinstanssi, tehtava, rahavaraus_id, tyyppi, osio, luoja, luotu)
+                                   toimenpideinstanssi, tehtava, tehtavaryhma, rahavaraus_id, tyyppi, osio, luoja, luotu)
 VALUES (:vuosi, :kuukausi, :summa, :summa_indeksikorjattu, :sopimus_id, :toimenpideinstanssi_id,
-        :tehtava_id, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
+        :tehtava_id, :tehtavaryhma, :rahavaraus_id, 'laskutettava-tyo', 'tilaajan-rahavaraukset',
         :luoja, NOW());
 
 -- name: paivita-urakan-tavoite-ja-kattohinta!
@@ -158,10 +158,19 @@ SET tavoitehinta = :tavoitehinta,
     kattohinta_indeksikorjattu = :kattohinta_indeksikorjattu,
     muokattu = NOW(),
     muokkaaja = :muokkaaja,
-    tarjous_tavoitehinta = :tarjous_tavoitehinta
+    tarjous_tavoitehinta = :tarjous_tavoitehinta,
+    laskutusraja = :laskutusraja,
+    laskutusraja_alkuperainen = :laskutusraja_alkuperainen
 WHERE urakka = :urakka-id
   AND hoitokausi = :hoitokausinumero;
 
 -- name: lisaa-urakan-tavoite-ja-kattohinta<!
-INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu, tarjous_tavoitehinta, luotu, luoja)
-VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta, :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, NOW(), :luoja);
+INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta,
+                            kattohinta_indeksikorjattu, tarjous_tavoitehinta, laskutusraja, laskutusraja_alkuperainen, luotu, luoja)
+VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta,
+        :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, :laskutusraja, :laskutusraja_alkuperainen, NOW(), :luoja);
+
+-- name: hae-laskutusraja-kaytossa
+SELECT up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
+FROM urakka_parametrit up
+WHERE up.urakkaid = :urakka-id;

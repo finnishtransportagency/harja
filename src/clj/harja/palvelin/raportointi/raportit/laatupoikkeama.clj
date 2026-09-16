@@ -22,9 +22,9 @@
                                                                        (not (nil? laatupoikkeamatekija))
                                                                        laatupoikkeamatekija))
 
-(defn- hae-laatupoikkeamat-hallintayksikolle [db {:keys [hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
+(defn- hae-laatupoikkeamat-hallintayksikolle [db {:keys [elinvoimakeskus-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (laatupoikkeamat-q/hae-hallintayksikon-laatupoikkeamat-liitteineen-raportille db
-                                                                                hallintayksikko-id
+                                                                                elinvoimakeskus-id
                                                                                 (when urakkatyyppi (mapv name urakkatyyppi))
                                                                                 alkupvm
                                                                                 loppupvm
@@ -39,7 +39,7 @@
                                                                           (not (nil? laatupoikkeamatekija))
                                                                           laatupoikkeamatekija))
 
-(defn- hae-laatupoikkeamat [db {:keys [konteksti urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
+(defn- hae-laatupoikkeamat [db {:keys [konteksti urakka-id elinvoimakeskus-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi]}]
   (case konteksti
     :urakka
     (hae-laatupoikkeamat-urakalle db
@@ -47,9 +47,9 @@
                                    :alkupvm alkupvm
                                    :loppupvm loppupvm
                                    :laatupoikkeamatekija laatupoikkeamatekija})
-    :hallintayksikko
+    :elinvoimakeskus
     (hae-laatupoikkeamat-hallintayksikolle db
-                                           {:hallintayksikko-id hallintayksikko-id
+                                           {:elinvoimakeskus-id elinvoimakeskus-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm
                                             :laatupoikkeamatekija laatupoikkeamatekija
@@ -77,7 +77,7 @@
 (defn- kasittele-laatupoikkeamien-kohteet [laatupoikkeamarivit]
   (mapv kasittele-laatupoikkeaman-kohde laatupoikkeamarivit))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id alkupvm loppupvm laatupoikkeamatekija urakkatyyppi] :as parametrit}]
   (let [urakkatyyppi (when urakkatyyppi
                        (if (= urakkatyyppi :vesivayla)
                          (into [] urakka/vesivayla-urakkatyypit)
@@ -85,11 +85,11 @@
                            [:hoito :teiden-hoito]
                            [urakkatyyppi])))
         konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         poikkeamat (hae-laatupoikkeamat db {:konteksti konteksti
                                             :urakka-id urakka-id
-                                            :hallintayksikko-id hallintayksikko-id
+                                            :elinvoimakeskus-id elinvoimakeskus-id
                                             :alkupvm alkupvm
                                             :loppupvm loppupvm
                                             :laatupoikkeamatekija (when (and laatupoikkeamatekija
@@ -113,7 +113,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:orientaatio :landscape

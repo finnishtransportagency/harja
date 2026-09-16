@@ -20,7 +20,8 @@
   hae-urakan-kaikki-kustannusennusteet-testaus
   hae-poistettavien-kustannusennusteiden-lkm
   poista-urakan-hoitokauden-kustannusennusteet!
-  hae-urakan-kustannusennuste-lupaus-id)
+  hae-urakan-kustannusennuste-lupaus-id
+  hae-lupauksen-kaikki-kustannusennusteet-kaikki-hoitovuodet)
 
 (defn hae-lupauksen-kustannusennusteet
   "Hakee lupauksen kaikki kustannusennusteet hoitokaudelle.

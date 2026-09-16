@@ -25,7 +25,6 @@
    "johto-ja-hallintokorvaus"
    "muutostyo"])
 
-
 ;; TODO: Tarkista lomakkeen valinna ja niiden nimitykset
 (defn tyyppi-fmt
   "Palauttaa muutostyypin tietokannasta tulevan enumin nimen käyttöliittymää varten selkokielisenä. Esim. 'pysyva' -> 'Pysyvä'."
@@ -103,3 +102,6 @@
 
     ;; Jos muutoksen vaikutukset koskevat koko hoitovuotta, tarkistetaan onko hoitovuoden alun tavoitehinta vahvistettu
     (hoitovuoden-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi hoitovuosi)))
+
+;; Muutoksissa käytettävä talvisuolakerroin on kovakoodattu tähän.
+(def +talvisuolakerroin+ 0.7)

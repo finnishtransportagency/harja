@@ -1,5 +1,6 @@
 (ns harja.kyselyt.uusi-kustannussuunnitelma-kyselyt
-  (:require [harja.pvm :as pvm]
+  (:require [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
+            [harja.pvm :as pvm]
             [jeesql.core :refer [defqueries]]
             [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.domain.mhu :as mhu]
@@ -45,7 +46,7 @@
   lisaa-tavoite-ja-kattohinta<! hae-urakan-hoitovuoden-tavoitetiedot
   hae-kustannussuunnitelman-osiot lisaa-kustannussuunnitelma-osio paivita-kustannussuunnitelma-osio
   tulevilla-hoitovuosilla-arvoja? aseta-kasin-syotetty-kattohinta<!
-  paivita-kasin-syotetty-kattohinta!)
+  paivita-kasin-syotetty-kattohinta! hae-laskutusrajan-tarkistukset)
 
 (defn laske-indeksikorjattu-summa
   "Indeksikorjattu summa lasketaan summasta ja urakan voimassaolevista indekseistä. Jos summaa ei ole annettu, palautetaan nil."
@@ -1007,6 +1008,15 @@
         hoitokauden-alkupvm (pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi))
         hoitokauden-loppupvm (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))
         vahvistetut-osiot (hae-kustannussuunnitelman-osiot db {:urakkaid urakka-id :hoitovuosinro hoitovuosinro})
+        ;; Haetaan budjettitavoite
+        budjettitavoitteet (budjettisuunnittelu-q/budjettitavoite-vuodelle db urakka-id hoitovuoden-alkuvuosi)
+        ;; Haetaan tavoitehinta
+        hoitovuoden-indeksikorjattu-tavoitehinta (:tavoitehinta-indeksikorjattu budjettitavoitteet)
+        laskutusrajan-tarkistukset (hae-laskutusrajan-tarkistukset
+                                     db {:urakka urakka-id
+                                         :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi
+                                         :hoitovuoden_indeksikorjattu_tavoitehinta hoitovuoden-indeksikorjattu-tavoitehinta})
+        laskutusrajan-tarkistus (or (:laskutusrajan-tarkistus (last laskutusrajan-tarkistukset)) 0)
 
         ;; Vanhassa kustannussuunnitelmassa oli erilliset osiot eri kustannuslajeille. Uudessa ei ole, mutta tehdään näin
         ;; jotta taaksepäin yhteensopivuus säilyy.
@@ -1059,7 +1069,8 @@
              :hoitovuosi-nro hoitovuosinro
              :vahvista? vahvista?
              :vahvistaja (:id kayttaja)
-             :vahvistus-pvm vahvistus-pvm})]))
+             :vahvistus-pvm vahvistus-pvm
+             :laskutusrajan-tarkistus-summa laskutusrajan-tarkistus})]))
 
 (defn onko-tulevilla-hoitovuosilla-arvoja? [db urakka-id sopimus-id hoitovuoden-alkuvuosi urakan-loppuvuosi]
   (let [hoidonjohto-tpi-id (:id (first (tpi-kyselyt/hae-urakan-toimenpideinstanssi-toimenpidekoodilla db
@@ -1082,4 +1093,3 @@
                                   :hankinnan-toimenpideinstanssit hankinnan-toimenpiteet
                                   :erillishankinnat-tehtavaryhma-id (:id erillishankinnat-tehtavaryhma)})]
     tulevaisuudessa-arvoja))
-

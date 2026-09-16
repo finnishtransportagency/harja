@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.kulut.kulut
   "Nimiavaruutta käytetään vain urakkatyypissä teiden-hoito (MHU)."
-  (:require [clojure.string :as str]
+  (:require [clj-time.core :as t]
+            [clojure.string :as str]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
             [com.stuartsierra.component :as component]
@@ -18,7 +19,9 @@
             [harja.pvm :as pvm]
             [harja.tyokalut.big :as big]
             [harja.domain.kulut :as kulut]
+            [harja.domain.roolit :as roolit]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
             [harja.palvelin.palvelut.urakat :as urakat]
             [harja.palvelin.raportointi.excel :as excel]
             [harja.palvelin.palvelut.kulut.pdf :as kpdf]
@@ -170,8 +173,8 @@
                                                                                    :alkupvm (:alkupvm hakuehdot)
                                                                                    :loppupvm (:loppupvm hakuehdot)})
                                            (q/hae-urakan-toteutuneet-kustannukset db {:urakka (:urakka-id hakuehdot)
-                                                                                   :alkupvm (:alkupvm hakuehdot)
-                                                                                   :loppupvm (:loppupvm hakuehdot)}))))
+                                                                                      :alkupvm (:alkupvm hakuehdot)
+                                                                                      :loppupvm (:loppupvm hakuehdot)}))))
         kulukohdistukset (kasittele-kohdistukset db kulukohdistukset)
         kulukohdistukset (ryhmittele-urakan-kulut kulukohdistukset)
         kulukohdistukset (muodosta-naytettava-rakenne kulukohdistukset)]
@@ -187,17 +190,18 @@
   "Palauttaa hoitokauden kulujen summan laskutusrajaa varten."
   [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [kulut (concat (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
-                                                              :alkupvm alkupvm
-                                                              :loppupvm loppupvm})
+  (let [kulut (concat (filter :tavoitehintainen
+                              (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
+                                                                       :alkupvm alkupvm
+                                                                       :loppupvm loppupvm}))
                       (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
-                                                                 :alkupvm alkupvm
-                                                                 :loppupvm loppupvm}))
-        ;; Lasketaan summa kaikista kohdistuksista
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm}))
+        ;; Lasketaan vain tavoitehintaiset kohdistukset.
         summa (reduce (fn [acc kulu]
                         (+ acc (or (tyokalut/pyorista-kahteen-decimaaliin (:summa kulu)) 0)))
-                      0
-                      kulut)]
+                0
+                kulut)]
     summa))
 
 (defn hae-kulu-kohdistuksineen
@@ -313,8 +317,7 @@
                       (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi loppupvm)))]
     (when-not (sisalla?-fn (pvm/suomen-aikavyohykkeeseen (pvm/joda-timeksi erapaiva)))
       (throw (IllegalArgumentException.
-               (str "Eräpäivä " erapaiva " ei ole koontilaskun-kuukauden " koontilaskun-kuukausi
-                 " sisällä. Urakka id = " urakka-id))))))
+               (str "Laskun pvm " (some-> erapaiva (pvm/pvm)) " ei ole koontilaskun kuukauden sisällä."))))))
 
 (defn poista-kulun-kohdistus
   "Poistaa yksittäisen rivin kulun kohdistuksista. Palauttaa päivittyneen kantatilanteen."
@@ -332,9 +335,9 @@
   "Kuluja voi lisätä ja muokata vain siihen asti, että hoitokauden välikatselmus on pidetty. Tarkistetaan siis
   hoitokauden päätökset (välikatselmointi tehty) ja mikäli niitä löytyy, niin estetään tallennus."
   [db urakka-id erapaiva vanha-erapaiva]
-  (let [joda-local-time-erapaiva (pvm/ajan-muokkaus (pvm/joda-timeksi erapaiva) true 1 :paiva)
+  (let [joda-local-time-erapaiva (pvm/joda-timeksi erapaiva)
         joda-local-time-vanha-erapaiva (when vanha-erapaiva
-                                         (pvm/ajan-muokkaus (pvm/joda-timeksi vanha-erapaiva) true 1 :paiva))
+                                         (pvm/joda-timeksi vanha-erapaiva))
         erapaivan-vuosi (pvm/hoitokauden-alkuvuosi joda-local-time-erapaiva)
         vanhan-erapaivan-vuosi (when vanha-erapaiva
                                  (pvm/hoitokauden-alkuvuosi joda-local-time-vanha-erapaiva))
@@ -343,10 +346,30 @@
     ;; Muutetaan negaatioksi, koska kysymyksen asettelu
     (not valikatselmus-pidetty?)))
 
-(defn- validoi-kulu [db {:keys [erapaiva koontilaskun-kuukausi id kohdistukset]} urakka-id]
+(defn- kulun-muokkausoikeus-yli-2kk-vanhaan-kuluun?
+  [kayttaja urakka-id]
+  (let [sallitut-roolit #{"ELY_Urakanvalvoja"
+                          "ELY_Paakayttaja"
+                          "Tilaajan_Urakanvalvoja"}]
+    (or
+      (roolit/jvh? kayttaja)
+      (roolit/roolissa? kayttaja sallitut-roolit)
+      (roolit/rooli-urakassa? kayttaja sallitut-roolit urakka-id))))
+
+(defn- tarkista-myohainen-kulun-muokkaus
+  [user urakka-id vanha-erapaiva]
+  (when (and vanha-erapaiva
+          (pvm/jalkeen? (pvm/joda-timeksi (pvm/nyt))
+            (t/plus (pvm/joda-timeksi vanha-erapaiva) (t/months 2)))
+          (not (kulun-muokkausoikeus-yli-2kk-vanhaan-kuluun? user urakka-id)))
+    (throw (IllegalArgumentException.
+             "Kulun muokkaus yli kaksi kuukautta eräpäivän jälkeen vaatii tilaajan käyttäjäroolin."))))
+
+(defn- validoi-kulu [db user {:keys [erapaiva koontilaskun-kuukausi id kohdistukset]} urakka-id]
   (let [;; Kaikki kutsuttavat validoinnit throwaavat virheen, jos eivät mene läpi
         _ (varmista-erapaiva-on-koontilaskun-kuukauden-sisalla db koontilaskun-kuukausi erapaiva urakka-id)
         vanha-erapaiva (when id (:erapaiva (first (q/hae-kulu db {:id id}))))
+        _ (tarkista-myohainen-kulun-muokkaus user urakka-id vanha-erapaiva)
         saako-tallentaa (tarkista-saako-kulua-tallentaa db urakka-id erapaiva vanha-erapaiva)
         _ (when (not saako-tallentaa)
             (throw (IllegalArgumentException.
@@ -380,7 +403,7 @@
                              lisatieto koontilaskun-kuukausi id kohdistukset liitteet] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
-  (validoi-kulu db tiedot urakka-id)
+  (validoi-kulu db user tiedot urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [kulu {:erapaiva (konv/sql-date erapaiva)
                 :kokonaissumma kokonaissumma
@@ -626,11 +649,17 @@
                      (str "Virheellinen urakka-id " urakka-id))))
         hoitokausinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuosi)
         laskutusraja-rivi (first (q/hae-urakan-laskutusraja db {:urakka-id urakka-id
-                                                                 :hoitokausinro hoitokausinro}))
+                                                                :hoitokausinro hoitokausinro}))
         laskutusraja (:laskutusraja laskutusraja-rivi)
         laskutusraja-kaytossa? (:laskutusraja-kaytossa laskutusraja-rivi)]
     {:laskutusraja laskutusraja
      :laskutusraja-kaytossa laskutusraja-kaytossa?}))
+
+(defn hae-urakan-tavoitehintojen-tilat
+  [db kayttaja {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (let [tavoitehintojen-tilat (budjettisuunnittelu-q/urakan-tavoitehintojen-tilat db urakka-id)]
+    tavoitehintojen-tilat))
 
 (defn hae-kaikkien-tehtavaryhmien-nimet [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
@@ -738,6 +767,9 @@
       (julkaise-palvelu http :hae-urakan-laskutusraja
         (fn [user hakuehdot]
           (hae-urakan-laskutusraja db user hakuehdot)))
+      (julkaise-palvelu http :hae-urakan-tavoitehintojen-tilat
+        (fn [user hakuehdot]
+          (hae-urakan-tavoitehintojen-tilat db user hakuehdot)))
       (julkaise-palvelu http :hae-kaikkien-tehtavaryhmien-nimet
         (fn [user hakuehdot]
           (hae-kaikkien-tehtavaryhmien-nimet db user hakuehdot)))
@@ -760,6 +792,7 @@
       :hae-urakan-rahavaraukset
       :hae-hoitokauden-kulujen-summa
       :hae-urakan-laskutusraja
+      :hae-urakan-tavoitehintojen-tilat
       :hae-kaikkien-tehtavaryhmien-nimet)
     (when (:pdf-vienti this)
       (pdf-vienti/poista-pdf-kasittelija! (:pdf-vienti this) :kulut))

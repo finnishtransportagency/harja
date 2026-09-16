@@ -191,8 +191,10 @@
                 (cond
                   (not (empty? kentan-virheet)) [virheen-ohje kentan-virheet :virhe {:virheet-ulos? true
                                                                                      :max-width @virhelaatikon-max-koko}]
-                  (not (empty? kentan-varoitukset)) [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
-                                                                                                :max-width @virhelaatikon-max-koko}]
+                  (not (empty? kentan-varoitukset)) (if-let [info-laatikko (:info-laatikko sarake)]
+                                                       [:div.varoitukset info-laatikko]
+                                                       [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
+                                                                                                   :max-width @virhelaatikon-max-koko}])
                   (not (empty? kentan-huomautukset)) [virheen-ohje kentan-huomautukset :huomautus {:virheet-ulos? true
                                                                                                    :max-width @virhelaatikon-max-koko}]))
 
@@ -356,11 +358,11 @@
                          (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
                 [napit/poista
                  ""
-                 #(do (.preventDefault %)
-                    (muokkaa! muokatut-atom
-                      virheet varoitukset huomautukset skeema
-                      id assoc
-                      :poistettu true))
+                 (fn []
+                   (muokkaa! muokatut-atom
+                     virheet varoitukset huomautukset skeema
+                     id assoc
+                     :poistettu true))
                  {:teksti-nappi? false
                   :vayla-tyyli? true
                   :tooltip "Poista rivi"

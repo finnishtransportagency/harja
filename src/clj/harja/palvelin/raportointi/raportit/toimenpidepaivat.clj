@@ -11,9 +11,9 @@
 (defqueries "harja/palvelin/raportointi/raportit/toimenpideajat.sql")
 
 (defn hae-toimenpiderivit [db konteksti parametrit]
-  (let [alue (if (#{:urakka :hallintayksikko} konteksti)
+  (let [alue (if (#{:urakka :elinvoimakeskus} konteksti)
                :urakka
-               :hallintayksikko)
+               :elinvoimakeskus)
         rivit (hae-toimenpidepaivien-lukumaarat db parametrit)
         toimenpidekoodit (if (empty? rivit)
                            {}
@@ -47,12 +47,12 @@
 
 
 (defn suorita [db user {:keys [alkupvm loppupvm hoitoluokat urakka-id
-                               hallintayksikko-id urakkatyyppi]}]
+                               elinvoimakeskus-id urakkatyyppi]}]
   (let [hoitoluokat (or hoitoluokat
                         ;; Jos hoitoluokkia ei annettu, näytä kaikki (työmaakokous)
                         (into #{} (map :numero) hoitoluokat-domain/talvihoitoluokat))
         parametrit {:urakka          urakka-id
-                    :hallintayksikko hallintayksikko-id
+                    :elinvoimakeskus elinvoimakeskus-id
                     :alku            alkupvm
                     :loppu           loppupvm
                     :hoitoluokat     hoitoluokat
@@ -60,7 +60,7 @@
                                        #{"hoito" "teiden-hoito"}
                                        #{(name urakkatyyppi)})}
         konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         {:keys [alueet toimenpiderivit]} (hae-toimenpiderivit db konteksti parametrit)
         talvihoitoluokattomia-toimenpiteita? (some

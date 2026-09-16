@@ -1,11 +1,20 @@
 (ns harja.palvelin.palvelut.kulut.kustannusten-seuranta-test
   (:require [clojure.test :refer :all]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut]
-            [harja.pvm :as pvm]
             [harja.testi :refer :all]
-            [com.stuartsierra.component :as component]))
+            [harja.jms-test :refer [feikki-jms]]
+            [com.stuartsierra.component :as component]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.komponentit.fim :as fim]
+            [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
+            [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
+            [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
+            [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
+
+            [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
+            [harja.palvelin.palvelut.kulut.kulut :as kulut]
+            [harja.pvm :as pvm]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -14,13 +23,34 @@
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
           :db-replica (tietokanta/luo-tietokanta testitietokanta)
+          :integraatioloki (component/using
+                             (integraatioloki/->Integraatioloki nil)
+                             [:db])
+          :fim (component/using
+                 (fim/->FIM {:url +testi-fim+})
+                 [:db :integraatioloki])
+          :itmf (feikki-jms "itmf")
+          :api-sahkoposti (component/using
+                            (sahkoposti-api/->ApiSahkoposti {:api-sahkoposti {:suora? false
+                                                                              :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
+                                                                              :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                                                                              :palvelin "http://localhost:8084"
+                                                                              :vastausosoite "harja-ala-vastaa@vayla.fi"}
+                                                             :tloik {:toimenpidekuittausjono "Harja.HarjaToT-LOIK.Ack"}})
+                            [:http-palvelin :db :integraatioloki :itmf])
           :http-palvelin (testi-http-palvelin)
           :kustannusten-seuranta (component/using
                                    (kustannusten-seuranta/->KustannustenSeuranta)
                                    [:http-palvelin :db :db-replica #_:excel-vienti])
           :kulut (component/using
                    (kulut/->Kulut)
-                   [:http-palvelin :db])))))
+                   [:http-palvelin :db])
+          :sms (component/using (sms/luo-tekstiviesti-komponentti
+                                  {:url +testi-sms-url+ :apiavain "testiapiavain"})
+                 [:http-palvelin :db :integraatioloki])
+          :laadunseuranta (component/using
+                            (ls/->Laadunseuranta)
+                            [:http-palvelin :db :fim :api-sahkoposti :sms])))))
 
   (testit)
   (alter-var-root #'jarjestelma component/stop))
@@ -393,19 +423,56 @@ UNION ALL
       AND kt.sopimus = s.id
       AND (concat(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN '%s'::DATE AND '%s'::DATE);" urakka urakka alkupvm loppupvm))
 
-(defn- sanktiot-toteutuneet-sql-haku [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
+(defn- sanktiot-dbhaku [{:keys [urakka alkupvm loppupvm hoitokauden-alkuvuosi]}]
   (format
-    "SELECT
+    "WITH urakan_tiedot AS (
+    SELECT u.id,
+    u.tyyppi,
+    EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+    FROM urakka u
+    WHERE u.id = %s)
+    SELECT
       CASE WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
            ELSE SUM(s.maara + (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, %s::INTEGER, s.sakkoryhma))) * -1
       END AS toteutunut_summa,
       'sanktiot' AS paaryhma
       FROM sanktio s
            JOIN toimenpideinstanssi tpi ON tpi.urakka = %s AND tpi.id = s.toimenpideinstanssi
-           JOIN sanktiotyyppi st ON s.tyyppi = st.id\n     JOIN toimenpide tpk ON tpk.id = st.toimenpidekoodi
+           JOIN sanktiotyyppi st ON s.tyyppi = st.id
+           JOIN toimenpide tpk ON tpk.id = st.toimenpidekoodi
+           CROSS JOIN urakan_tiedot u
      WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
        AND s.poistettu = FALSE
-     GROUP BY s.tyyppi, s.indeksi" urakka urakka alkupvm loppupvm))
+        --- Jätetään mhu25+ urakoilta, (tai kaikilta, jos validoinnit eivät ole käytössä)
+        -- arvonvähennykset pois, ne haetaan erikseen
+        AND (s.sakkoryhma != 'arvonvahennyssanktio' OR (u.alkuvuosi < 2025 AND %s <= 2025))
+     GROUP BY s.tyyppi, s.indeksi, s.sakkoryhma"
+    urakka urakka urakka alkupvm loppupvm hoitokauden-alkuvuosi))
+
+(defn- arvonvahennykset-dbhaku [{:keys [urakka alkupvm loppupvm hoitokauden-alkuvuosi]}]
+  (format
+    "WITH urakan_tiedot AS (
+      SELECT u.id,
+      u.tyyppi,
+      EXTRACT(YEAR FROM u.alkupvm)::INT AS alkuvuosi
+      FROM urakka u
+      WHERE u.id = %s)
+    SELECT
+      CASE WHEN s.indeksi IS NULL THEN SUM(s.maara) * -1
+           ELSE SUM(s.maara + (SELECT korotus FROM sanktion_indeksikorotus(s.perintapvm, s.indeksi,s.maara, %s::INTEGER, s.sakkoryhma))) * -1
+      END AS toteutunut_summa,
+      'arvonvahennykset' AS paaryhma
+      FROM sanktio s
+           JOIN toimenpideinstanssi tpi ON tpi.urakka = %s AND tpi.id = s.toimenpideinstanssi
+           JOIN sanktiotyyppi st ON s.tyyppi = st.id
+           JOIN toimenpide tpk ON tpk.id = st.toimenpidekoodi
+           CROSS JOIN urakan_tiedot u
+     WHERE s.perintapvm BETWEEN '%s'::DATE AND '%s'::DATE
+       AND s.poistettu = FALSE
+       --- Vain mhu25+ (ja muutkin, hoitovuosi on >= 2026)
+       AND (s.sakkoryhma = 'arvonvahennyssanktio' AND (u.alkuvuosi >= 2025 OR %s > 2025))
+     GROUP BY s.tyyppi, s.indeksi"
+    urakka urakka urakka alkupvm loppupvm hoitokauden-alkuvuosi))
 
 (deftest hae-olemattomia-kustannuksia
   (let [urakka (hae-oulun-maanteiden-hoitourakan-2019-2024-id)]
@@ -414,7 +481,20 @@ UNION ALL
 (def oulumhu-parametrit {:urakka (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
                          :alkupvm "2019-10-01"
                          :loppupvm "2020-09-30"
-                         :hoitokauden-alkuvuosi 2019})
+                         :hoitokauden-alkuvuosi 2019
+                         :urakan-alkuvuosi 2019})
+
+(def kajaani-parametrit {:urakka (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+                         :alkupvm "2025-10-01"
+                         :loppupvm "2026-09-30"
+                         :hoitokauden-alkuvuosi 2025
+                         :urakan-alkuvuosi 2025})
+
+(def raahe23-parametrit {:urakka (hae-urakan-id-nimella "Raahen MHU 2023-2028")
+                         :alkupvm "2026-10-01"
+                         :loppupvm "2027-09-30"
+                         :hoitokauden-alkuvuosi 2026
+                         :urakan-alkuvuosi 2023})
 
 ;; Kustannusten seuranta koostuu budjetoiduista kustannuksista ja niihin liitetyistä toteutuneista (laskutetuista) kustannuksista.
 ;; Seuranta jaetaan monella eri kriteerillä osiin, jotta seuranta helpottuu
@@ -570,6 +650,33 @@ UNION ALL
                    :tavoitehintainen :false}]
    :koontilaskun-kuukausi "elokuu/1-hoitovuosi"})
 
+(defn lisaa-urakalle-arvonvahennys [tpi-nimi hoitokauden-alkuvuosi urakka-id]
+  (let [;; Luodaan uusi arvonvähennyssanktio
+        perustelu "Arvoja vähentämään"
+        perintapvm (pvm/->pvm-aika (str "03.12." hoitokauden-alkuvuosi " 22:00:00"))
+        av-sakko {:suorasanktio true
+                  :toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella tpi-nimi)
+                  :perintapvm perintapvm
+                  :laji :arvonvahennyssanktio
+                  :summa 123
+                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where id = 8;")))
+                           :nimi "Ei tarvita sanktiotyyppiä"}
+                  :indeksi nil}
+        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
+                        :paatos {:paatos "sanktio",
+                                 :kasittelyaika perintapvm,
+                                 :kasittelytapa :kommentit,
+                                 :perustelu perustelu}
+                        :aika perintapvm,
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm (str "1.10." hoitokauden-alkuvuosi))
+        hk-loppupvm (pvm/->pvm (str "30.09." (inc hoitokauden-alkuvuosi)))
+        _ (kutsu-http-palvelua
+                         :tallenna-suorasanktio +kayttaja-jvh+
+                         {:sanktio av-sakko
+                          :laatupoikkeama laatupoikkeama
+                          :hoitokausi [hk-alkupvm hk-loppupvm]})]))
+
 (deftest lisatyot-test
   (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
         urakkavastaava (oulun-2019-urakan-urakoitsijan-urakkavastaava)
@@ -589,8 +696,8 @@ UNION ALL
 
         ;; Lisää uusi kulu listyöstä johto-ja hallintakorvaukselle
         lisatyo-kulu (kutsu-http-palvelua :tallenna-kulu urakkavastaava
-                    {:urakka-id urakka-id
-                     :kulu-kohdistuksineen kulu})
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen kulu})
 
         vastaus (hae-kustannukset parametrit)
 
@@ -677,23 +784,48 @@ UNION ALL
 
 ;; Sanktiot
 (deftest sanktiot-test
-  (let [vastaus (hae-kustannukset oulumhu-parametrit)
-        bonukset (filter
+  (let [kustannuksetvastaus (hae-kustannukset oulumhu-parametrit)
+        sanktiot (filter
                    #(when (and
                             (= "sanktiot" (:paaryhma %))
                             ;; Filtteröidään vielä lisätyöt pois
                             (not= "lisatyo" (:toimenpideryhma %)))
                       true)
-                   vastaus)
+                   kustannuksetvastaus)
+        sanktiot-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) sanktiot))
+        sanktiot-db (q (sanktiot-dbhaku oulumhu-parametrit))
+        sanktiot-db-yht (reduce (fn [summa b]
+                                  (if b
+                                    (+ summa b)
+                                    summa))
+                          0M (map #(first %) sanktiot-db))]
+    (is (= sanktiot-toteutuneet sanktiot-db-yht))))
 
-        sanktiot-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) bonukset))
-        sanktiot-toteutuneet-sql (q (sanktiot-toteutuneet-sql-haku oulumhu-parametrit))
-        sanktiot-sql-toteutunut-summa (reduce (fn [summa b]
-                                                (if b
-                                                  (+ summa b)
-                                                  summa))
-                                        0M (map #(first %) sanktiot-toteutuneet-sql))]
-    (is (= sanktiot-toteutuneet sanktiot-sql-toteutunut-summa))))
+(deftest arvonvahennykset-test-2023-urakalle-toimii
+  (let [_ (lisaa-urakalle-arvonvahennys "Raahen MHU 2023-2028 Soratien hoito TP" 2026 (:urakka raahe23-parametrit))
+        vastaus (hae-kustannukset raahe23-parametrit)
+        arvonvahennykset (filter #(when (= "arvonvahennykset" (:paaryhma %)) true) vastaus)
+        arvonvahennykset-toteutuneet (apply + (map (fn [rivi] (:toteutunut_summa rivi)) arvonvahennykset))
+        arvonvahennykset-toteutuneet-sql (q (arvonvahennykset-dbhaku raahe23-parametrit))
+        arvonvahennykset-sql-toteutunut-summa (reduce (fn [summa b]
+                                                        (if b
+                                                          (+ summa b)
+                                                          summa))
+                                                0M (map #(first %) arvonvahennykset-toteutuneet-sql))]
+    (is (= (bigdec arvonvahennykset-toteutuneet) arvonvahennykset-sql-toteutunut-summa))))
+
+(deftest arvonvahennykset-test-2025-urakalle-toimii
+  (let [_ (lisaa-urakalle-arvonvahennys "POP MHU Kajaani 2025-2030 Talvihoito TP" 2026 (:urakka kajaani-parametrit))
+        kustannukset-palvelusta (hae-kustannukset kajaani-parametrit)
+        arvonvahennykset-palvelusta (filter #(when (= "arvonvahennykset" (:paaryhma %)) true) kustannukset-palvelusta)
+        arvonvahennykset-palvelusta-yht (apply + (map (fn [rivi] (:toteutunut_summa rivi)) arvonvahennykset-palvelusta))
+        arvonvahennykset-db (q (arvonvahennykset-dbhaku kajaani-parametrit))
+        arvonvahennykset-db-yht (reduce (fn [summa b]
+                                          (if b
+                                            (+ summa b)
+                                            summa))
+                                  0M (map #(first %) arvonvahennykset-db))]
+    (is (= (bigdec arvonvahennykset-palvelusta-yht) arvonvahennykset-db-yht))))
 
 ;; Tavoitehinnan oikaisut
 (deftest tavoitehinnanoikaisu-test-toimii

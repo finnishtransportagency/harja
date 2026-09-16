@@ -7,6 +7,7 @@
             [harja.tiedot.istunto :as istunto]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
             [harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma :as tehtavat-maarat-nakyma]
+            [harja.views.urakka.suunnittelu.kalustoresurssit :as kalustoresurssit]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
@@ -20,7 +21,7 @@
             [harja.ui.komponentti :as komp]
             [harja.domain.urakka :as ur]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm]}]
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm loppupvm]}]
   (case valilehti
     :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
                    (not (ur/vesivaylaurakkatyyppi? tyyppi)))
@@ -32,8 +33,9 @@
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
-    :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))) ;; => 2025 alkaen sekä yli 5-vuotisilla
+    :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
+    :tarjous (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))))) ;; => 2025 alkaen sekä yli 5-vuotisilla
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -88,7 +90,7 @@
                   (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
                   (some-> alkupvm pvm/vuosi (>= 2025)))
             ^{:key "tehtavat-maarat"}
-            [tehtavat-maarat-nakyma/tehtavat-maarat])
+            [tehtavat-maarat-nakyma/tehtavat-maarat]) 
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -128,4 +130,13 @@
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])]]))))
+            [kiintiot/kiintiot])
+          
+          "Kalustoresurssit"
+          :kalustoresurssit
+          (when (and
+                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (valilehti-mahdollinen? :kalustoresurssit ur))
+            ^{:key "kalustoresurssit"}
+            [kalustoresurssit/kalustoresurssit])]]))))

@@ -92,6 +92,12 @@
   :taso1 "hallinta-kayttajat",
   :kuvaus "Osio 'Hallinta' näkymä 'Käyttäjät'",
   :roolien-oikeudet {"Jarjestelmavastaava" #{"R*" "W*"}}}
+ {:sym hallinta-laadunseuranta-profiilit,
+  :osio "Hallinta",
+  :nakyma "Laadunseuranta / Profiilit",
+  :taso1 "hallinta-laadunseuranta",
+  :kuvaus "Osio 'Hallinta' näkymä 'Laadunseuranta / Profiilit'",
+  :roolien-oikeudet {"Jarjestelmavastaava" #{"R*" "W*"}}}
  {:sym hallinta-lupaukset,
   :osio "Hallinta",
   :nakyma "Lupaukset",
@@ -771,11 +777,11 @@
    "Tilaajan_laadunvalvoja" #{"R*"},
    "Tilaajan_turvallisuusvastaava" #{"R"},
    "vastuuhenkilo" #{"R"}}}
- {:sym raportit-talvisuolanlampotilaraportti,
+ {:sym raportit-talvisuolankokonaiskaytto,
   :osio "Raportit",
-  :nakyma "Talvisuolanlämpötilaraportti",
-  :taso1 "raportit-talvisuolanlampotilaraportti",
-  :kuvaus "Osio 'Raportit' näkymä 'Talvisuolanlämpötilaraportti'",
+  :nakyma "Talvisuolan kokonaiskäyttö",
+  :taso1 "raportit-talvisuolan",
+  :kuvaus "Osio 'Raportit' näkymä 'Talvisuolan kokonaiskäyttö'",
   :roolien-oikeudet
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
@@ -1101,6 +1107,23 @@
    "Jarjestelmavastaava" #{"R*"},
    "Kayttaja" #{"R+"},
    "Paakayttaja" #{"R+"},
+   "Tilaajan_Asiantuntija" #{"R*"},
+   "Tilaajan_Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "vastuuhenkilo" #{"R"}}}
+ {:sym raportit-valikatselmus,
+  :osio "Raportit",
+  :nakyma "Välikatselmus",
+  :taso1 "raportit-valikatselmus",
+  :kuvaus "Osio 'Raportit' näkymä 'Välikatselmus'",
+  :roolien-oikeudet
+  {"ELY_Kayttaja" #{"R*"},
+   "ELY_Paakayttaja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*"},
+   "Jarjestelmavastaava" #{"R*"},
+   "Kayttaja" #{"R+"},
+   "Paakayttaja" #{"R+"},
+   "Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Urakanvalvoja" #{"R*"},
@@ -1511,7 +1534,7 @@
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
    "ELY_Paakayttaja" #{"R*" "W*"},
-   "ELY_Urakanvalvoja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*" "W"},
    "Jarjestelmavastaava" #{"R*" "W*"},
    "Kayttaja" #{"R+"},
    "Laadunvalvoja" #{"R" "W"},
@@ -1519,7 +1542,7 @@
    "Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R"},
-   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
    "vastuuhenkilo" #{"R" "W"}}}
  {:sym urakat-kulut-laskutusyhteenveto,
   :osio "Urakat",
@@ -1651,11 +1674,11 @@
   :roolien-oikeudet
   {"ELY_Kayttaja" #{"R*"},
    "ELY_Laadunvalvoja" #{"R"},
-   "ELY_Paakayttaja" #{"R*" "W*"},
+   "ELY_Paakayttaja" #{"R*" "W*" "poisto*" "päätös*"},
    "ELY_Peruskayttaja" #{"R*"},
-   "ELY_Urakanvalvoja" #{"R*" "W" "päätös"},
+   "ELY_Urakanvalvoja" #{"R*" "W" "poisto" "päätös"},
    "ELY_turvallisuusvastaava" #{"R"},
-   "Jarjestelmavastaava" #{"R*" "W*" "päätös*"},
+   "Jarjestelmavastaava" #{"R*" "W*" "poisto*" "päätös*"},
    "Kayttaja" #{"R+"},
    "Laadunvalvoja" #{"R"},
    "Laatupaallikko" #{"R+"},
@@ -1664,7 +1687,7 @@
    "Tilaajan_Asiantuntija" #{"R*"},
    "Tilaajan_Kayttaja" #{"R*"},
    "Tilaajan_Rakennuttajakonsultti" #{"R" "W" "päätös"},
-   "Tilaajan_Urakanvalvoja" #{"R*" "W" "päätös"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W" "poisto" "päätös"},
    "Tilaajan_laadunvalvoja" #{"R*"},
    "Tilaajan_turvallisuusvastaava" #{"R"},
    "vastuuhenkilo" #{"R"}}}
@@ -1721,29 +1744,59 @@
   :taso1 "urakat-laadunseuranta",
   :kuvaus "Osio 'Urakat' näkymä 'Laadunseuranta / Tarkastukset'",
   :roolien-oikeudet
-  {"ELY_Kayttaja" #{"R*"},
-   "ELY_Laadunvalvoja" #{"R" "W" "aseta-näkyviin-urakoitsijalle"},
-   "ELY_Paakayttaja" #{"R*" "W*" "aseta-näkyviin-urakoitsijalle*"},
-   "ELY_Peruskayttaja" #{"R*"},
-   "ELY_Urakanvalvoja" #{"R*" "W" "aseta-näkyviin-urakoitsijalle"},
-   "ELY_turvallisuusvastaava" #{"R"},
-   "Jarjestelmavastaava" #{"R*" "W*" "aseta-näkyviin-urakoitsijalle*"},
+  {"ELY_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset*"},
+   "ELY_Laadunvalvoja"
+   #{"R"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
+   "ELY_Paakayttaja"
+   #{"R*"
+     "W*"
+     "aseta-näkyviin-urakoitsijalle*"
+     "nakee-tilaajan-tarkastukset*"},
+   "ELY_Peruskayttaja" #{"R*" "nakee-tilaajan-tarkastukset*"},
+   "ELY_Urakanvalvoja"
+   #{"R*"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset*"},
+   "ELY_turvallisuusvastaava" #{"R" "nakee-tilaajan-tarkastukset"},
+   "Jarjestelmavastaava"
+   #{"R*"
+     "W*"
+     "aseta-näkyviin-urakoitsijalle*"
+     "nakee-tilaajan-tarkastukset*"},
    "Kayttaja" #{"R+"},
    "Kelikeskus" #{"R"},
    "Laadunvalvoja" #{"R" "W"},
    "Laatupaallikko" #{"R+"},
    "Paakayttaja" #{"R+" "W+"},
    "Paivystaja" #{"R"},
-   "Rakennuttajakonsultti" #{"R" "W" "aseta-näkyviin-urakoitsijalle"},
-   "Tilaajan_Asiantuntija" #{"R*"},
-   "Tilaajan_Kayttaja" #{"R*"},
+   "Rakennuttajakonsultti"
+   #{"R"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
+   "Tilaajan_Asiantuntija" #{"R*" "nakee-tilaajan-tarkastukset*"},
+   "Tilaajan_Kayttaja" #{"R*" "nakee-tilaajan-tarkastukset*"},
    "Tilaajan_Rakennuttajakonsultti"
-   #{"R" "W" "aseta-näkyviin-urakoitsijalle"},
+   #{"R"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset"},
    "Tilaajan_Urakanvalvoja"
-   #{"R*" "W" "aseta-näkyviin-urakoitsijalle"},
+   #{"R*"
+     "W"
+     "aseta-näkyviin-urakoitsijalle"
+     "nakee-tilaajan-tarkastukset*"},
    "Tilaajan_laadunvalvoja"
-   #{"R*" "W+" "aseta-näkyviin-urakoitsijalle+"},
-   "Tilaajan_turvallisuusvastaava" #{"R"},
+   #{"R*"
+     "W+"
+     "aseta-näkyviin-urakoitsijalle+"
+     "nakee-tilaajan-tarkastukset*"},
+   "Tilaajan_turvallisuusvastaava"
+   #{"R" "nakee-tilaajan-tarkastukset"},
    "vastuuhenkilo" #{"R" "W"}}}
  {:sym urakat-liitteet,
   :osio "Urakat",
@@ -1878,6 +1931,17 @@
    "Tilaajan_Urakanvalvoja" #{"R*" "W"},
    "Tilaajan_turvallisuusvastaava" #{"R"},
    "vastuuhenkilo" #{"R" "W"}}}
+ {:sym urakat-suunnittelu-kalustoresurssit,
+  :osio "Urakat",
+  :nakyma "Suunnittelu / Kalustoresurssit",
+  :taso1 "urakat-suunnittelu",
+  :kuvaus "Osio 'Urakat' näkymä 'Suunnittelu / Kalustoresurssit'",
+  :roolien-oikeudet
+  {"ELY_Laadunvalvoja" #{"R"},
+   "ELY_Urakanvalvoja" #{"R*" "W"},
+   "Jarjestelmavastaava" #{"R*" "W*"},
+   "Tilaajan_Urakanvalvoja" #{"R*" "W"},
+   "Tilaajan_laadunvalvoja" #{"R"}}}
  {:sym urakat-suunnittelu-kokonaishintaisettyot,
   :osio "Urakat",
   :nakyma "Suunnittelu / Kokonaishintaiset työt",

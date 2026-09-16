@@ -17,10 +17,9 @@ FROM toteuma t
   LEFT JOIN LATERAL unnest(rp.tehtavat) AS rt ON TRUE
   LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(rp.talvihoitoluokka::INTEGER, t.alkanut::TIMESTAMP) AS hoitoluokka) hl ON TRUE
 WHERE (:urakka::INTEGER IS NULL OR t.urakka = :urakka)
-      AND (:hallintayksikko::INTEGER IS NULL OR t.urakka IN (SELECT id
+      AND (:elinvoimakeskus::INTEGER IS NULL OR t.urakka IN (SELECT id
                                                               FROM urakka
-                                                              WHERE hallintayksikko =
-                                                                    :hallintayksikko))
+                                                              WHERE elinvoimakeskus_id = :elinvoimakeskus))
       AND (:urakka::INTEGER IS NOT NULL OR
            (:urakka::INTEGER IS NULL AND (ARRAY[:urakkatyyppi] :: urakkatyyppi[] IS NULL OR
                                           u.tyyppi = ANY(ARRAY[:urakkatyyppi]::urakkatyyppi[])

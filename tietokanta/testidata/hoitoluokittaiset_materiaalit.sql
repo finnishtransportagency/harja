@@ -27,10 +27,10 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 
         NOW(), '2018-02-15 13:00:00+02', '2018-02-15 13:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma', (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma'), NOW(),
         (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1600, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), 2017);
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
 VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
@@ -38,10 +38,10 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 
         NOW(), '2018-02-15 12:00:00+02', '2018-02-15 12:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma2', (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma2'), NOW(),
         (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'), 1000, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus')); -- Materiaali: Hiekoitushiekka, liukkaudentorjunta
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), 2017); -- Materiaali: Hiekoitushiekka, liukkaudentorjunta
 
 -- Uudet talvihoitoluokat voimaan 2.7.2018 Tätä dataa tulkittava raporteissa uuden koodiston mukaisesti
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -50,9 +50,9 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 
         NOW(), '2018-10-15 13:00:00+02', '2018-10-15 13:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma-uudet-talvihoitoluokat');
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma-uudet-talvihoitoluokat'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1100, (SELECT id FROM urakka WHERE nimi='Oulun alueurakka 2014-2019'), 2018);
 
 -- Kajaaniin
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -61,9 +61,9 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurak
         NOW(), '2018-02-15 13:00:00+02', '2018-02-15 13:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma3');
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma3'), NOW(),
-        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1000, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'));
+        (SELECT id FROM materiaalikoodi WHERE nimi='Talvisuola, rakeinen NaCl'), 1000, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 2017);
 
 
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto)
@@ -72,10 +72,10 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi='Kajaanin alueurak
         NOW(), '2018-02-15 12:00:00+02', '2018-02-15 12:00:00+02',
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'YmpRap-toteuma4');
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'YmpRap-toteuma4'), NOW(),
         (SELECT id FROM materiaalikoodi WHERE yksiloiva_tunniste = 'abbb61e5-beee-42fd-a60d-14ec156afae5'), 1000,
-        (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019')); -- Materiaali: Hiekoitushiekka, liukkaudentorjunta
+        (SELECT id FROM urakka WHERE nimi='Kajaanin alueurakka 2014-2019'), 2017); -- Materiaali: Hiekoitushiekka, liukkaudentorjunta
 
 -- Kesäsuola sorateiden pölynsidonta (materiaalitoteuma) Ouluun - Testataan soratiehoitoluokkia
 INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi, suorittajan_ytunnus, lisatieto, luoja)
@@ -85,11 +85,11 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakk
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Pölynsidontaa Pikkaralassa',
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pölynsidontaa Pikkaralassa'), NOW(),
         (SELECT id FROM materiaalikoodi WHERE nimi = 'Kesäsuola sorateiden pölynsidonta'), 0.88,
         (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), 2017);
 
 INSERT INTO toteuman_reittipisteet (toteuma, luotu, reittipisteet) VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Pölynsidontaa Pikkaralassa'), NOW(),
                                                                            ARRAY[
@@ -110,11 +110,11 @@ VALUES ('harja-api'::lahde, (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakk
         'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6', 'Talvisuolaus Ylikiimingissä',
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
 
-INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja)
+INSERT INTO toteuma_materiaali (toteuma, luotu, materiaalikoodi, maara, urakka_id, luoja, hoitokauden_alkuvuosi)
 VALUES ((SELECT id FROM toteuma WHERE lisatieto = 'Talvisuolaus Ylikiimingissä'), NOW(),
         (SELECT id FROM materiaalikoodi WHERE nimi = 'Talvisuola, rakeinen NaCl'), 3.14,
         (SELECT id FROM urakka WHERE nimi = 'Oulun alueurakka 2014-2019'),
-        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'));
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'yit-rakennus'), 2018);
 
 -- Reittipisteet kohdistuneet osittain kevyen liikenteen väylille
 INSERT INTO toteuman_reittipisteet (toteuma, luotu, reittipisteet)

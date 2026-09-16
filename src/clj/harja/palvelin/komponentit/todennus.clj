@@ -424,11 +424,13 @@
                       oikeudet/roolit
                       ryhmat)
                     ;; Uusi tapa käsitellä roolit tarkoittaa, että roolit haetaan apin kautta ulkoisesta lähteestä
-                    (kayttajaroolit-rajapintavastauksesta db
-                      (if token-epaonnistui?
-                        nil
-                        (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi))
-                      ryhmat))
+                    (let [miam-tulos (if token-epaonnistui?
+                                       nil
+                                       (hae-kayttajaroolit-rajapinnasta db integraatioloki miam kayttajanimi))]
+                      (when (and (not token-epaonnistui?) (nil? miam-tulos))
+                        (throw+ {:type :miam-virhe
+                                 :viesti "MIAM-haku epäonnistui, kirjautuminen estetty"}))
+                      (kayttajaroolit-rajapintavastauksesta db miam-tulos ryhmat)))
            elinvoimakeskus (when (= "elinvoimakeskus" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
            ely (when (= "ely" (str/lower-case (or organisaation_nimi ""))) organisaationumero)
            organisaatio (hae-kayttajalle-organisaatio db elinvoimakeskus ely y-tunnus organisaation_nimi roolit)

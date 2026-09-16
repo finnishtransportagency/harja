@@ -163,8 +163,8 @@
                   :suorita-raportti
                   +kayttaja-jvh+
                   {:nimi :yks-hint-kuukausiraportti
-                   :konteksti "hallintayksikko"
-                   :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                   :konteksti "elinvoimakeskus"
+                   :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                    :parametrit {:alkupvm (c/to-date (t/local-date 2015 10 1))
                                 :loppupvm (c/to-date (t/local-date 2016 9 30))
                                 :urakkatyyppi :hoito}})]
@@ -189,7 +189,7 @@
                                                     7
                                                     8
                                                     9}
-                      :otsikko "Pohjois-Pohjanmaa, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
+                      :otsikko "Pohjois-Suomi, Yksikköhintaiset työt kuukausittain ajalta 01.10.2015 - 30.09.2016"
                       :tyhja nil
                       :sheet-nimi "Yksikköhintaiset työt kuukausittain"}
                      '({:otsikko "Tehtävä"

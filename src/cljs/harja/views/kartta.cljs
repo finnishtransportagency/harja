@@ -271,7 +271,7 @@
                                       :text-align "center"
                                       :top        (fmt/pikseleina (- kartan-korkeus
                                                                      (if (= :S koko)
-                                                                       0
+                                                                       61
                                                                        +kartan-napit-padding+)))
                                       :width      "100%"
                                       :z-index    100}}

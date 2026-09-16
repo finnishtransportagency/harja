@@ -12,16 +12,23 @@
      (:require-macros [harja.domain.oikeudet.makrot :refer [maarittele-oikeudet!]])))
 
 (declare on-oikeus? on-muu-oikeus?
+  raporttioikeudet
+  raportit
   raportit-tyomaapaivakirja
   raportit-kommentit
   urakat-kulut-laskunkirjoitus
   urakat-suunnittelu-suola
+  urakat-suunnittelu-kalustoresurssit
   urakat-toteumat-suola
+  urakat-toteumat-erilliskustannukset
   ;; Hallintaoikeudet
   hallinta-pohjavesialueidensiirto
   hallinta-toteumatyokalu
   hallinta-lupaukset
+  urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
+  urakat-laadunseuranta-sanktiot
+  urakat-laadunseuranta-hairiotilanteet
   urakat-paikkaukset-toteumat
   urakat-paikkaukset-kustannukset
   urakat-paikkaukset-paikkauskohteetkustannukset
@@ -30,6 +37,8 @@
   urakat-lupaukset
   urakat-suunnittelu-kustannussuunnittelu
   urakat-laadunseuranta-siltatarkastukset
+  urakat-laadunseuranta-tarkastukset
+  urakat-laadunseuranta-laatupoikkeamat
   urakat-kanavat-kanavakohteet
   urakat-paikkaukset-paikkauskohteet
   urakat-kohdeluettelo-paallystyskohteet
@@ -39,7 +48,15 @@
   urakat-vesivayla-materiaalit
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
+  urakat-toteumat-kokonaishintaisettyot
+  urakat-toteumat-erilliskustannukset
+  urakat-toteumat-muutos-ja-lisatyot
+  urakat-toteumat-vesivaylaerilliskustannukset
+  urakat-toteumat-varusteet
+  urakat-toteutus-muutkustannukset
+  urakat-toteutus-yksikkohintaisettyot
   urakat-tyomaapaivakirja
+  urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit
   hallinta-api-jarjestelmatunnukset
   urakat-yleiset
@@ -50,6 +67,7 @@
   hallinta-yhteydenpito
   hallinta-palautevayla
   hallinta-integraatiotilanne
+  hallinta-laadunseuranta-profiilit
   hallinta-urakkahenkilot
   hallinta-paallystysilmoitukset
   hallinta-lupaukset
@@ -79,7 +97,8 @@
   roolit
   tilannekuva-nykytilanne
   tilannekuva-historia
-  urakkatilanne)
+  urakkatilanne
+  ilmoitukset-ilmoitukset)
 
 (defrecord KayttoOikeus [kuvaus roolien-oikeudet])
 

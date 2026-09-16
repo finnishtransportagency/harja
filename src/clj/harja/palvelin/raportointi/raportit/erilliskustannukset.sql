@@ -35,7 +35,7 @@ FROM erilliskustannus e
   LEFT JOIN toimenpideinstanssi tpi ON tpi.id = e.toimenpideinstanssi
   LEFT JOIN sopimus s ON e.sopimus = s.id
   LEFT JOIN urakka u ON e.urakka = u.id
-  LEFT JOIN organisaatio hy ON (u.hallintayksikko = hy.id AND hy.tyyppi = 'hallintayksikko')
+  LEFT JOIN organisaatio hy ON (u.elinvoimakeskus_id = hy.id AND hy.tyyppi = 'elinvoimakeskus')
 WHERE (:urakka_annettu IS FALSE OR e.sopimus in
                                    (SELECT id FROM sopimus WHERE urakka = :urakka))
       AND (:urakka_annettu IS TRUE OR (:urakka_annettu IS FALSE AND (:urakkatyyppi::urakkatyyppi IS NULL OR
@@ -44,8 +44,8 @@ WHERE (:urakka_annettu IS FALSE OR e.sopimus in
                                                                          ELSE u.tyyppi = :urakkatyyppi::urakkatyyppi
                                                                      END)))
       AND (:urakka_annettu IS TRUE OR u.urakkanro IS NOT NULL)
-      AND (:hallintayksikko_annettu IS FALSE OR
-           u.id IN (SELECT id FROM urakka WHERE hallintayksikko = :hallintayksikko))
+      AND (:elinvoimakeskus_annettu IS FALSE OR
+           u.id IN (SELECT id FROM urakka WHERE elinvoimakeskus_id = :elinvoimakeskus))
       AND (:toimenpide::INTEGER IS NULL OR (tpi.toimenpide = :toimenpide AND e.urakka = tpi.urakka))
       AND e.laskutuskuukausi :: DATE BETWEEN :alku AND :loppu
       AND e.poistettu IS NOT TRUE

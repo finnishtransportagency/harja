@@ -286,13 +286,13 @@
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :soratietarkastusraportti
-                                 :konteksti "hallintayksikko"
-                                 :hallintayksikko-id (hae-pohjois-pohjanmaan-hallintayksikon-id)
+                                 :konteksti "elinvoimakeskus"
+                                 :elinvoimakeskus-id (hae-pohjois-suomen-evk-id)
                                  :parametrit {:alkupvm (c/to-date (t/local-date 2015 1 1))
                                               :loppupvm (c/to-date (t/local-date 2015 1 31))
                                               :urakkatyyppi :hoito}})]
     (is (vector? vastaus))
-    (let [otsikko "Pohjois-Pohjanmaa, Soratietarkastusraportti tammikuussa 2015"
+    (let [otsikko "Pohjois-Suomi, Soratietarkastusraportti tammikuussa 2015"
           taulukko (apurit/taulukko-otsikolla vastaus otsikko)]
       (apurit/tarkista-taulukko-sarakkeet taulukko
                                           {:otsikko "Päi\u00ADvä\u00ADmää\u00ADrä"}

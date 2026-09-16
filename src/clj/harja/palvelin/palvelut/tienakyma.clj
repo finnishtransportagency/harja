@@ -32,7 +32,6 @@
             [harja.kyselyt.tietyoilmoitukset :as tietyoilmoitukset-q]
             [harja.kyselyt.konversio :as konv]
             [harja.palvelin.palvelut.tilannekuva :as tilannekuva]
-            [harja.palvelin.palvelut.toteumat :as toteumat]
             [clojure.core.async :as async]
             [harja.kyselyt.kursori :as kursori]
             [harja.domain.tienakyma :as d]))

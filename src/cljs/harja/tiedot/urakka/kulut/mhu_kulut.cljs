@@ -39,6 +39,9 @@
 (defrecord HaeKulutYhteensaHakukuukauteenAsti [alkupvm loppupvm])
 (defrecord HaeKulutYhteensaHakukuukauteenAstiOnnistui [vastaus])
 (defrecord HaeKulutYhteensaHakukuukauteenAstiEpaonnistui [vastaus])
+(defrecord HaeUrakanTavoitehintojenTilat [])
+(defrecord TavoitehintojenTilatVastaanotettu [vastaus])
+(defrecord TavoitehintojenTilojenHakuEpaonnistui [vastaus])
 
 (defrecord KulujenSyotto [auki?])
 (defrecord TallennaKulu [])
@@ -574,6 +577,26 @@
   (process-event [{:keys [vastaus]} app]
     (viesti/nayta-toast! (str "Kumulatiivisten kulujen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
     (assoc app :kulut-yhteensa-hakukuukauteen-asti-haku-kaynnissa? false))
+
+  HaeUrakanTavoitehintojenTilat
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-urakan-tavoitehintojen-tilat
+      {:urakka-id (-> @tila/tila :yleiset :urakka :id)}
+      {:onnistui ->TavoitehintojenTilatVastaanotettu
+       :epaonnistui ->TavoitehintojenTilojenHakuEpaonnistui})
+    (-> app
+      (assoc :tavoitehintojen-tilojen-haku-kaynnissa? true)))
+
+  TavoitehintojenTilatVastaanotettu
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :tavoitehintojen-tilojen-haku-kaynnissa? false)
+      (assoc :urakan-tavoitehintojen-tilat vastaus)))
+
+  TavoitehintojenTilojenHakuEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! (str "Tavoitehintojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-pitka)
+    (assoc app :tavoitehintojen-tilojen-haku-kaynnissa? false))
 
   NakymastaPoistuttiin
   (process-event [_ _app]

@@ -50,7 +50,11 @@
                         #js {:source source
                              :wrapX true}))]
 
-      (.setTileUrlFunction source (partial hae-url source parametrit))
+      ;; Asetetaan URL-funktio vain kun source on uusi (luo? tai parametrit muuttuneet).
+      ;; setTileUrlFunction tyhjentää OL:n sisäisen tile-cachen, joten sitä ei saa kutsua turhaan.
+      (when (or luo? (not sama?))
+        (.setTileUrlFunction source (partial hae-url source parametrit)))
+
       (when luo?
         (.addLayer ol3 ol-layer))
 
@@ -61,7 +65,7 @@
         ;; Jos ei luoda ja parametrit eivät ole samat
         ;; asetetaan uusi source ol layeriiin
         (.setSource ol-layer source))
-      [ol-layer ::kuvataso]))
+      [ol-layer parametrit]))
 
   (hae-asiat-pisteessa [this koordinaatti extent]
     (let [ch (async/chan)]

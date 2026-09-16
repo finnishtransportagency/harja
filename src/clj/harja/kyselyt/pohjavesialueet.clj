@@ -3,3 +3,5 @@
 
 (defqueries "harja/kyselyt/pohjavesialueet.sql"
   {:positional? true})
+
+(declare paivita-pohjavesialue-kooste)

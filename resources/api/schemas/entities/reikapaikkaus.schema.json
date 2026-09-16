@@ -3,42 +3,47 @@
   "id": "urn:harja",
   "type": "object",
   "additionalProperties": false,
-  "required": true,
   "properties": {
     "tunniste": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tunniste",
       "required": true,
       "additionalProperties": false,
+      "description": "Reikäpaikkauksen tunniste urakoitsijajärjestelmässä. Tunniste tallennetaan Harjaan reikäpaikkauksen päivitämistä tai tietojen täydentämistä sekä ongelmanselvitystilanteita varten. Tunniste yksilöi paikkauksen urakan sisällä.",
       "type": "object",
       "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
     },
-    "pvm": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/pvm",
-      "type": [
-        "string"
-      ],
-      "format": "date",
-      "required": true
+    "ajankohta": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajankohta",
+      "required": true,
+      "description": "Reikäpaikkauksen toteutumisajankohta. Esim. 2026-05-30T12:12:00Z Jos täsmällinen kellonaika ei ole tiedossa, välitä tässä mahdollisimman tarkka, muu aikaleima.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "luokittelu": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/luokittelu",
+      "type": "array",
+      "description": "Välitä tässä tiedot, jos järjestelmäsi luokittelee paikkauksen jotenkin. Voit lähettää useita eri luokituksia. Esimerkkejä: Liittyi toimenpidepyyntöön, Liikennettä vaarantava, Kiireellinen.",
+       "format": "string"
     },
     "sijainti": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/sijainti",
+      "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
+      "required": true,
       "type": "object",
       "additionalProperties": false,
-      "required": true,
-      "description": "Reikäpaikkauskohteen sijainti. Anna joko tieosoite, pistegeometria tai viivageometria.",
+      "description": "Reikäpaikkauskohteen sijainti. Raportoi vähintään joko tieosoite, pistegeometria tai viivageometria. Useammankin paikannustiedon voi lähettää. Jos tieosoite ei ole tiedossa, mutta käyttäjä kertoo kaistan/ajoradan manuaalisesti valitsemalla, lähetä tieto erillisessä kaista- ja/tai ajorata-kentässä.",
+      "minProperties": 1,
       "properties": {
         "tieosoite": {
           "id": "urn:harja/yllapitokohdeosat/0/yllapitokohdeosa/sijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/tieosoitevali-tienkohdilla.schema.json"
+          "$ref": "file:resources/api/schemas/entities/tieosoitevali-kaistalla-ja-ajoradalla.schema.json"
         },
         "pistegeometria": {
           "id": "urn:harja/reitti/0/koordinaattisijainti",
           "type": "object",
           "additionalProperties": false,
-          "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json",
-          "required": false
+          "$ref": "file:resources/api/schemas/entities/koordinaattisijainti.schema.json"
         },
         "viivageometria": {
           "id": "urn:harja/viivageometria",
@@ -47,6 +52,20 @@
           "$ref": "file:resources/api/schemas/entities/viivageometriasijainti.schema.json"
         }
       }
+    },
+    "ajorata-kasinkirjaus": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/ajorata",
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 2,
+      "description": "Käyttäjän käsin valitsema ajorata. Pyri välittämään ajorata, jos et välitä käsin kirjattua kaistatietoa tai sijainniksi koneelta saatua tieosoitetta."
+    },
+    "kaista-kasinkirjaus": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kaista",
+      "type": "integer",
+      "minimum": 11,
+      "maximum": 39,
+      "description": "Käyttäjän käsin valitsema kaista. Pyri välittämään kaista, jos et välitä sijainniksi koneelta saatua tieosoitetta."
     },
     "tyomenetelma": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/tyomenetelma",
@@ -64,22 +83,24 @@
       ]
     },
     "maara": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/maara",
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/maara",
       "type": "number",
-      "required": true,
-      "description": "Yksikön mukainen määrä. Esim tonnia: 1.23"
+      "description": "Sanomassa raportoituun paikkaukseen käytetty materiaalimäärä. Yksikön mukainen määrä. Yksikkö on pakollinen tieto, jos materiaalimäärä on ilmoitettu. Esim. 0.23 tonnia."
     },
     "yksikko": {
-      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/yksikko",
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/yksikko",
       "type": "string",
-      "required": true,
-      "description": "Yksikön nimi. Esim tonnia: t"
+      "description": "Yksikkö jossa materiaalimäärä on raportoitu. Esim. t. Yksikkö on pakollinen, jos materiaalimäärä on annettu."
     },
     "kustannus": {
       "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/kustannus",
       "type": "number",
-      "required": true,
-      "description": "Kustannus euroina. Esim 45534.23"
+      "description": "Sanomassa raportoidun paikkauksen kustannus euroina. Esim. 45534.24."
     }
+  },
+  "dependencies": {
+    "maara": [
+      "yksikko"
+    ]
   }
 }

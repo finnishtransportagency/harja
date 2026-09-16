@@ -1,13 +1,13 @@
 (ns harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot
-  (:require [reagent.core :refer [atom]]
-            [tuck.core :as tuck]
-            [cljs-time.core :as t]
-            [harja.ui.viesti :as viesti]
-            [harja.tyokalut.tuck :as tuck-apurit]
-            [harja.pvm :as pvm]
+  (:require [tuck.core :as tuck]
             [clojure.string :as str]
+            [reagent.core :refer [atom]]
+
+            [harja.pvm :as pvm]
+            [harja.ui.viesti :as viesti]
             [harja.tiedot.urakka :as urakka]
-            [harja.tiedot.navigaatio :as nav]))
+            [harja.tiedot.navigaatio :as nav]
+            [harja.tyokalut.tuck :as tuck-apurit]))
 
 (def default-arvot {:rivit nil
                     :lomake-valinnat nil
@@ -56,6 +56,9 @@
 (defrecord TallennaKustannusEpaonnistui [vastaus])
 (defrecord HaeYllapitoSelitteetOnnistui [vastaus])
 (defrecord HaeYllapitoSelitteetEpaonnistui [vastaus])
+(defrecord TallennaMuokatut [muokatut])
+(defrecord PaivitysEpaonnistui [vastaus])
+(defrecord PaivitysOnnistui [vastaus])
 
 
 (defn- hae-kustannusten-selitteet
@@ -67,11 +70,11 @@
      :epaonnistui ->HaeYllapitoSelitteetEpaonnistui}))
 
 
-(defn- hae-paikkaus-kustannukset 
+(defn- hae-paikkaus-kustannukset
   "Hakee reikäpaikkausten ja muiden paikkausten kustannukset"
   [app aikavali vuosi callback]
   (tuck-apurit/post! app :hae-paikkaus-kustannukset
-    {:aikavali aikavali 
+    {:aikavali aikavali
      :vuosi vuosi
      :urakka-id @nav/valittu-urakka-id}
     callback))
@@ -80,8 +83,8 @@
 (defn- hae-sanktiot-ja-bonukset [app]
   (tuck-apurit/post! app :hae-urakan-sanktiot-ja-bonukset
     {:urakka-id @nav/valittu-urakka-id
-     :alku      (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
-     :loppu     (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+     :alku (first (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
+     :loppu (second (pvm/vuoden-aikavali @urakka/valittu-urakan-vuosi))
      :vain-yllapitokohteettomat? false
      :hae-sanktiot? true
      :hae-bonukset? true}
@@ -89,18 +92,20 @@
      :epaonnistui ->HaeSanktiotJaBonuksetEpaonnistui}))
 
 
-(defn- tallenna-yllapito-kustannus [app kustannus-tyyppi selite summa]
+(defn- tallenna-yllapito-kustannus [app kustannus-tyyppi selite summa id poistettu?]
   (tuck-apurit/post! app :tallenna-yllapito-kustannus
     {:urakka-id @nav/valittu-urakka-id
      :selite selite
      :kustannustyyppi kustannus-tyyppi
      :vuosi @urakka/valittu-urakan-vuosi
-     :summa summa}
+     :summa summa
+     :id id
+     :poistettu? poistettu?}
     {:onnistui ->TallennaKustannusOnnistui
      :epaonnistui ->TallennaKustannusEpaonnistui}))
 
 
-(defn- generoi-avain 
+(defn- generoi-avain
   "Gridi haluaa tr elementeille uniikki id:t (:tunniste)"
   []
   (gensym "yllapito-kustannus"))
@@ -135,7 +140,7 @@
   HaeKustannuksetYhteensaEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui (koko urakka): " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   HaeKustannustiedotOnnistui
@@ -144,12 +149,13 @@
 
           ;; Mäppää vastaus vectoreihin mikä kelpaa gridille
           muut-kustannukset (reduce (fn [rivit r]
-                                      ;; Käyttäjien lisäämät muut kustannukset
-                                      (conj rivit
-                                        {:id (generoi-avain)
-                                         :kokonaiskustannus (:kokonaiskustannus r)
-                                         :kustannustyyppi (:kustannustyyppi r)
-                                         :selite (:selite r)}))
+                                      (let [id (js/parseInt (str/replace (:id r) "kustannus-" ""))]
+                                        ;; Käyttäjien lisäämät muut kustannukset
+                                        (conj rivit
+                                          {:id id
+                                           :kokonaiskustannus (:kokonaiskustannus r)
+                                           :kustannustyyppi (:kustannustyyppi r)
+                                           :selite (:selite r)})))
                               []
                               ;; Muut kustannukset eivät sisällä työmenetelmää
                               (filter (fn [r] (empty? (:tyomenetelma r))) (:kustannukset vastaus)))
@@ -178,7 +184,7 @@
   HaeKustannustiedotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tietojen haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tietojen haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   HaeSanktiotJaBonuksetOnnistui
@@ -207,7 +213,7 @@
   HaeSanktiotJaBonuksetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Sanktioiden haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Sanktioiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   AvaaLomake
@@ -235,7 +241,7 @@
                        (second kustannus-selite))
                      ;; Käyttäjä ei kirjoittanut mitään 
                      "")]
-        (tallenna-yllapito-kustannus app kustannus-tyyppi selite kustannus))
+        (tallenna-yllapito-kustannus app kustannus-tyyppi selite kustannus nil false))
 
       (assoc app
         :muokataan false
@@ -244,14 +250,14 @@
 
   TallennaKustannusOnnistui
   (process-event [_ app]
-    (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! "Kustannus tallennettu onnistuneesti" :onnistui viesti/viestin-nayttoaika-lyhyt)
     (tuck/process-event (->HaeKustannustiedot) app)
     app)
 
   TallennaKustannusEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Tallennus epäonnistui, vastaus: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Tallennus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app)
 
   HaeYllapitoSelitteetOnnistui
@@ -268,5 +274,27 @@
   HaeYllapitoSelitteetEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "Selitteiden haku epäonnistui: " (pr-str vastaus))
-    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-keskipitka)
+    (viesti/nayta-toast! (str "Selitteiden haku epäonnistui: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
+    app)
+
+  TallennaMuokatut
+  (process-event [{:keys [muokatut]} app]
+    (tuck-apurit/post! app :paivita-yllapito-kustannukset
+      {:urakka-id @nav/valittu-urakka-id
+       :vuosi @urakka/valittu-urakan-vuosi
+       :muokatut muokatut}
+      {:onnistui ->PaivitysOnnistui
+       :epaonnistui ->TallennaKustannusEpaonnistui})
+    app)
+
+  PaivitysOnnistui
+  (process-event [{_vastaus :vastaus} app]
+    (viesti/nayta-toast! "Kustannusten päivitys onnistui" :onnistui viesti/viestin-nayttoaika-lyhyt)
+    (tuck/process-event (->HaeKustannustiedot) app)
+    app)
+
+  PaivitysEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.warn "Muokkaus epäonnistui, vastaus: " (pr-str vastaus))
+    (viesti/nayta-toast! (str "Muokkaus epäonnistui, vastaus: " (pr-str vastaus)) :varoitus viesti/viestin-nayttoaika-lyhyt)
     app))

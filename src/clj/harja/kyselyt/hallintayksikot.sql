@@ -1,15 +1,18 @@
--- name: listaa-hallintayksikot-kulkumuodolle
--- Hakee hallintayksiköiden perustiedot ja geometriat kulkumuodon mukaan
+-- name: listaa-elinvoimakeskukset-kulkumuodolle
 SELECT
-  id,
-  nimi,
-  alue,
-  liikennemuoto,
-  lpad(cast(elynumero AS VARCHAR), 2, '0') AS elynumero
+    id,
+    nimi,
+    alue,
+    liikennemuoto,
+    right(cast(elinvoimakeskusnumero AS VARCHAR), 2) AS evknumero
 FROM organisaatio
-WHERE tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND
-      (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO)
-ORDER BY elynumero ASC, nimi ASC;
+WHERE (
+    -- Joko haetaan elinvoimakeskuksia, joiden liikennemuoto on T, tai hallintayksiköitä (kanavat yms), joiden liikennemuoto on V
+    (tyyppi = 'elinvoimakeskus' :: ORGANISAATIOTYYPPI AND liikennemuoto = 'T' AND (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO))
+OR
+    (tyyppi = 'hallintayksikko' :: ORGANISAATIOTYYPPI AND liikennemuoto = 'V' AND (:liikennemuoto::CHARACTER IS NULL OR liikennemuoto = :liikennemuoto :: LIIKENNEMUOTO))
+    )
+ORDER BY elinvoimakeskusnumero ASC, nimi ASC;
 
 -- name: hae-organisaation-tunnistetiedot
 -- Hakee organisaation perustiedot tekstihaulla.

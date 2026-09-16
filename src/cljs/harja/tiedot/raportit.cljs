@@ -52,8 +52,8 @@
 
 (defn hallintayksikon-raportin-parametrit [hallintayksikko-id nimi parametrit]
   {:nimi nimi
-   :konteksti "hallintayksikko"
-   :hallintayksikko-id hallintayksikko-id
+   :konteksti "elinvoimakeskus"
+   :elinvoimakeskus-id hallintayksikko-id
    :parametrit parametrit})
 
 (defn suorita-raportti-hallintayksikko

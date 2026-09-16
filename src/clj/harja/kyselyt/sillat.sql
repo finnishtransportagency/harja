@@ -13,6 +13,7 @@ VALUES
 UPDATE silta
 SET tyyppi          = :tyyppi,
     siltanimi       = :siltanimi,
+    siltatunnus     = :tunnus,
     alue            = ST_GeomFromText(:geometria) :: GEOMETRY,
     tr_numero       = :numero,
     tr_alkuosa      = :aosa,
@@ -27,6 +28,14 @@ SET tyyppi          = :tyyppi,
     muokattu        = CURRENT_TIMESTAMP,
     muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
 WHERE (:silta-oid ::TEXT IS NOT NULL AND silta_oid = :silta-oid);
+
+-- name: paivita-sillat-kunnalle!
+UPDATE silta
+SET kunnan_vastuulla = true,
+    vastuu_urakka   = null,
+    muokattu        = CURRENT_TIMESTAMP,
+    muokkaaja       = (select id from kayttaja where kayttajanimi = 'Integraatio')
+WHERE silta_oid IN (:sillat) AND kunnan_vastuulla is not true;
 
 -- name: hae-sillan-tiedot
 SELECT

@@ -73,6 +73,8 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     bonukset_val_aika_yht                            NUMERIC,
     sanktiot_hoitokausi_yht                          NUMERIC,
     sanktiot_val_aika_yht                            NUMERIC,
+    arvonvahennykset_hoitokausi_yht                  NUMERIC,
+    arvonvahennykset_val_aika_yht                    NUMERIC,
     paatos_tavoitepalkkio_hoitokausi_yht             NUMERIC,
     paatos_tavoitepalkkio_val_aika_yht               NUMERIC,
     paatos_tavoiteh_ylitys_hoitokausi_yht            NUMERIC,
@@ -105,6 +107,20 @@ CREATE TYPE LY_RAPORTTI_TYOMAAKOKOUS_TULOS AS
     muut_kulut_ei_tavoite_val_aika                   NUMERIC,
     muut_kulut_ei_tavoite_hoitokausi_yht             NUMERIC,
     muut_kulut_ei_tavoite_val_aika_yht               NUMERIC,
+
+    -- Laskutusraja
+    laskutusraja_yht                                 NUMERIC,
+    laskutusraja_alkuperainen                        NUMERIC,
+    laskutusrajaan_jaljella                          NUMERIC,
+    onko_laskutusraja_kaytossa                       BOOLEAN,
+    onko_laskutusraja_ylittynyt                      BOOLEAN,
+    laskutusraja_laskutettavaa_yht                   NUMERIC,
+    laskutusraja_laskutettavaa_val_aika              NUMERIC,
+    laskutusrajan_ylittynyt_yht                      NUMERIC,
+    laskutusrajan_ylittynyt_val_aika                 NUMERIC,
+    laskutettavaa_kaikki_yht                         NUMERIC,
+    laskutettavaa_kaikki_val_aika                    NUMERIC,
+    kustannussuunnitelma_vahvistettu                 BOOLEAN,
 
     -- Pysyvät muutokset (mhu_muutos-taulusta)
     pysyvat_muutokset_hoitokausi_yht                 NUMERIC,
@@ -239,6 +255,9 @@ DECLARE
     sanktiot_rivi                         RECORD;
     sanktiot_hoitokausi_yht               NUMERIC;
     sanktiot_val_aika_yht                 NUMERIC;
+    arvonvahennykset_rivi                 RECORD;
+    arvonvahennykset_hoitokausi_yht       NUMERIC;
+    arvonvahennykset_val_aika_yht         NUMERIC;
     paatos_tavoitepalkkio_hoitokausi_yht  NUMERIC;
     paatos_tavoitepalkkio_val_aika_yht    NUMERIC;
     paatos_tavoiteh_ylitys_hoitokausi_yht NUMERIC;
@@ -303,7 +322,23 @@ DECLARE
     pysyvat_muutokset_val_aika_yht        NUMERIC := 0.0;
     pysyvat_muutokset_ed_hoitokausi       NUMERIC := 0.0;
 
-    -- Tulos 
+    -- Laskutusraja
+    laskutusraja_yht                      NUMERIC;
+    laskutusraja_alkuperainen             NUMERIC;
+    laskutusrajaan_jaljella               NUMERIC;
+    onko_laskutusraja_kaytossa            BOOLEAN;
+    onko_laskutusraja_ylittynyt           BOOLEAN;
+    -- josta laskutettavaa (sisältyy laskutusrajaan)
+    laskutusraja_laskutettavaa_yht        NUMERIC;
+    laskutusraja_laskutettavaa_val_aika   NUMERIC;
+    -- josta laskutusrajan ylittäviä kustannuksia
+    laskutusrajan_ylittynyt_yht           NUMERIC;
+    laskutusrajan_ylittynyt_val_aika      NUMERIC;
+    -- yhteenveto 
+    laskutettavaa_kaikki_yht              NUMERIC;
+    laskutettavaa_kaikki_val_aika         NUMERIC;
+    kustannussuunnitelma_vahvistettu      BOOLEAN;
+
     tulos                                 LY_RAPORTTI_TYOMAAKOKOUS_TULOS;
 
 BEGIN
@@ -324,6 +359,7 @@ BEGIN
     sopimus_id := (SELECT id FROM sopimus WHERE urakka = ur AND paasopimus IS NULL);
     SELECT u.id, u.alkupvm, u.nimi  FROM urakka u WHERE u.id = ur INTO urakan_tiedot;
     RAISE NOTICE '*** Urakan tiedot: % ', urakan_tiedot;
+    urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
 
     -------------------------
     -- Valitun aikavälin hoitokausien tavoitehinnat
@@ -332,7 +368,6 @@ BEGIN
     hoitokauden_tavoitehinta := 0;
     hoitovuoden_alun_indkorj_tavoitehinta := 0;
     tavoitehinta_oikaisu_summa := 0;
-    urakan_alkuvuosi := (SELECT EXTRACT(YEAR FROM urakan_tiedot.alkupvm) :: INTEGER);
 
     -- Laske valittujen hoitokausien tavoitehinnat yhteen
     FOR hoitokauden_vuosi IN hk_alkuvuosi..hk_loppuvuosi
@@ -1177,13 +1212,51 @@ BEGIN
         END IF;
     END LOOP;
 
+    RAISE NOTICE 'muut_kulut_hoitokausi: % ', muut_kulut_hoitokausi;
+
+    -- Arvonvähennykset (arvonvähennys on sanktio, mutta sanktiot haetaan erikseen, koska ne eivät kuulu koskaan tavoitehintaan)
+    -- Arvonvähennykset voivat kuulua tavoitehintaan.
+    --Tavoitehintaan kuuluminen: mhu25+ urakoilla kuuluu aina aina, vanhemmilla vasta hoitovuodesta 2026 tai kun validoinnit pois
+    arvonvahennykset_hoitokausi_yht := 0.0;
+    arvonvahennykset_val_aika_yht := 0.0;
+    FOR arvonvahennykset_rivi IN SELECT s.perintapvm  as pvm,
+                                        s.maara * -1  as summa
+                                 FROM sanktio s
+                                          JOIN toimenpideinstanssi tpi
+                                               ON tpi.urakka = ur AND tpi.id = s.toimenpideinstanssi
+                                          JOIN sanktiotyyppi st ON s.tyyppi = st.id
+                                 WHERE s.perintapvm BETWEEN hk_alkupvm AND aikavali_loppupvm
+                                   AND s.poistettu IS NOT TRUE
+                                   -- Vain arvonvähennyssanktiot: mhu25+ urakoilla aina,
+                                   -- vanhemmilla urakoilla hoitovuodesta 2026 tai validoinnit pois
+                                   AND s.sakkoryhma = 'arvonvahennyssanktio'
+                                   AND (urakan_alkuvuosi >= 2025 OR hk_alkuvuosi >= 2026)
+        LOOP
+            RAISE NOTICE 'arvonvahennykset_rivi: % ', arvonvahennykset_rivi;
+
+            IF arvonvahennykset_rivi.pvm <= aikavali_loppupvm THEN
+                -- Hoitokauden alusta
+                arvonvahennykset_hoitokausi_yht := arvonvahennykset_hoitokausi_yht + COALESCE(arvonvahennykset_rivi.summa, 0.0);
+                RAISE NOTICE 'arvonvahennykset_rivi.pvm <= aikavali_loppupvm THEN: %', arvonvahennykset_hoitokausi_yht;
+
+                IF arvonvahennykset_rivi.pvm >= aikavali_alkupvm AND
+                   arvonvahennykset_rivi.pvm <= aikavali_loppupvm THEN
+                    -- Laskutetaan nyt
+                    arvonvahennykset_val_aika_yht := arvonvahennykset_val_aika_yht + COALESCE(arvonvahennykset_rivi.summa, 0.0);
+                END IF;
+            END IF;
+        END LOOP;
+
     -- Tavoitehintaiset Yhteensä-  arvot,  nämä on tekohetkellä aivan samat,
     -- mutta tehty kuitenkin, jos jatkossa tämän taulukon alle tulee lisää rivejä, niitä voi tähän niputtaa
     muut_kulut_hoitokausi_yht := muut_kulut_hoitokausi
         -- Otetaan mukaan muihin tavoitehintaisiin kuluihin myös kulujen siirrot edelliselta vuodelta
         -- Käsitellään siirrot kuitenkin omana rivinään laskutusyhteenvedossa, jotta ne erottuvat selkeästi muista kuluista
-        + hk_valikatselmus_siirrot_ed_vuodelta;
-    muut_kulut_val_aika_yht := muut_kulut_val_aika;
+        + hk_valikatselmus_siirrot_ed_vuodelta + arvonvahennykset_hoitokausi_yht;
+    muut_kulut_val_aika_yht := muut_kulut_val_aika + arvonvahennykset_val_aika_yht;
+
+    RAISE NOTICE 'muut_kulut_hoitokausi_yht: % ', muut_kulut_hoitokausi_yht;
+    RAISE NOTICE 'muut_kulut_val_aika_yht: % ', muut_kulut_val_aika_yht;
 
     -- Ei tavoitehintaiset yhteensä-  arvot lasketaan bonusten ja sanktioiden jälkeen alempana
 
@@ -1286,6 +1359,7 @@ BEGIN
 
     RAISE NOTICE 'budjettia_jaljella: %', budjettia_jaljella;
 
+
     ---------------------------------------------
     ---- Muut toteutuneet kustannukset  ---------
     ---------------------------------------------
@@ -1359,6 +1433,9 @@ BEGIN
         END LOOP;
 
     -- Sanktiot
+    -- Arvonvähennyssanktiot on erotettu omaksi ryhmäkseen ja laitettu ylemmäs, missä on ne voivat kuulua tavoitehintaan
+    --   - mhu25+ urakoilla (alkuvuosi >= 2025) aina
+    --   - vanhemmilla urakoilla hoitovuodesta 2026 eteenpäin tai jos validoinnit eivät ole käytössä
     sanktiot_hoitokausi_yht := 0.0;
     sanktiot_val_aika_yht := 0.0;
     FOR sanktiot_rivi IN SELECT s.perintapvm                                      as pvm,
@@ -1374,6 +1451,11 @@ BEGIN
                                   JOIN sanktiotyyppi st ON s.tyyppi = st.id
                          WHERE s.perintapvm BETWEEN hk_alkupvm AND aikavali_loppupvm
                            AND s.poistettu IS NOT TRUE
+                           -- Jätetään arvonvähennyssanktiot pois, ne haetaan erikseen.
+                           -- Vanhoilla urakoilla (alkuvuosi < 2025) erotus tehdään vasta hoitovuodesta 2026
+                           -- tai jos validoinnit eivät ole käytössä.
+                           AND (s.sakkoryhma != 'arvonvahennyssanktio'
+                                OR (urakan_alkuvuosi < 2025 AND hk_alkuvuosi < 2026))
         LOOP
             RAISE NOTICE 'sanktiot_rivi: % ', sanktiot_rivi;
             RAISE NOTICE 'sanktiot_rivi.summa_korotettuna: %', sanktiot_rivi.summa_korotettuna;
@@ -1487,17 +1569,13 @@ BEGIN
         end loop;
 
     -- Muut kulut yhteensä, ei tavoitehintaiset
-    muut_kulut_ei_tavoite_hoitokausi_yht := bonukset_hoitokausi_yht + 
-                                            sanktiot_hoitokausi_yht + 
-                                            muut_kulut_ei_tavoite_hoitokausi + 
+    muut_kulut_ei_tavoite_hoitokausi_yht := muut_kulut_ei_tavoite_hoitokausi + 
                                             paatos_tavoitepalkkio_hoitokausi_yht + 
                                             paatos_tavoiteh_ylitys_hoitokausi_yht + 
                                             paatos_kattoh_ylitys_hoitokausi_yht +
                                             paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht;
 
-    muut_kulut_ei_tavoite_val_aika_yht := bonukset_val_aika_yht + 
-                                          sanktiot_val_aika_yht + 
-                                          muut_kulut_ei_tavoite_val_aika +
+    muut_kulut_ei_tavoite_val_aika_yht := muut_kulut_ei_tavoite_val_aika +
                                           paatos_tavoitepalkkio_val_aika_yht + 
                                           paatos_tavoiteh_ylitys_val_aika_yht +
                                           paatos_kattoh_ylitys_val_aika_yht +
@@ -1508,19 +1586,109 @@ BEGIN
     muut_kustannukset_val_aika_yht := 0.0;
 
     muut_kustannukset_hoitokausi_yht :=
-            muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht +
+            muut_kustannukset_hoitokausi_yht + lisatyot_hoitokausi_yht + 
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
             paatos_kattoh_ylitys_hoitokausi_yht + paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_hoitokausi;
-            
+    
     muut_kustannukset_val_aika_yht :=
-            muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht +
+            muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + 
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
             paatos_kattoh_ylitys_val_aika_yht + paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
             -- Ei tavoitehintaiset muut kulut
             muut_kulut_ei_tavoite_val_aika;
+    
+    ---------------------------------
+    --------- Laskutusraja ----------
+    ---------------------------------
+    
+    laskutusraja_yht := 0.0;
+    laskutusrajan_ylittynyt_yht := 0.0;
+    laskutusraja_laskutettavaa_yht := 0.0;
+    laskutusraja_laskutettavaa_val_aika := 0.0;
 
+    laskutettavaa_kaikki_yht := 0.0;
+    laskutettavaa_kaikki_val_aika := 0.0;
+    kustannussuunnitelma_vahvistettu := FALSE;
+
+    SELECT COUNT(*) > 0 AS "vahvistettu?"
+      FROM kiinteahintainen_tyo kt
+             JOIN toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
+     WHERE tpi.urakka = ur
+       AND (CONCAT(kt.vuosi, '-', kt.kuukausi, '-01')::DATE BETWEEN hk_alkupvm::DATE AND hk_loppupvm::DATE)
+       AND kt.indeksikorjaus_vahvistettu IS NOT NULL 
+      INTO kustannussuunnitelma_vahvistettu;
+
+    -- Haetaan laskutusraja jos urakka on alkanut 2025 tai jälkeen
+    IF urakan_alkuvuosi >= 2025 THEN
+        SELECT laskutusraja_kaytossa FROM urakka_parametrit WHERE urakkaid = ur INTO onko_laskutusraja_kaytossa;
+        RAISE NOTICE 'Laskutusraja käytössä: % (%)', onko_laskutusraja_kaytossa, urakan_alkuvuosi;
+    ELSE
+        onko_laskutusraja_kaytossa := FALSE;
+    END IF;
+    
+    SELECT ut.laskutusraja,
+           ut.laskutusraja_alkuperainen
+      FROM urakka_tavoite ut
+     WHERE ut.urakka = ur
+       AND ut.hoitokausi = (hk_alkuvuosi - urakan_alkuvuosi + 1)
+      INTO laskutusraja_yht, laskutusraja_alkuperainen;
+
+    laskutusraja_yht := greatest(laskutusraja_yht, 0.0);
+
+    
+    IF onko_laskutusraja_kaytossa THEN
+        ------------------------------------------------------
+        -- "josta laskutettavaa" valittu kk 
+        IF tavhin_val_aika_yht >= laskutusraja_yht THEN
+            laskutusraja_laskutettavaa_val_aika := laskutusraja_yht;
+            
+            -- Ylityksen määrä valittu kk
+            laskutusrajan_ylittynyt_val_aika := tavhin_val_aika_yht - laskutusraja_yht;
+        ELSE
+            laskutusraja_laskutettavaa_val_aika := tavhin_val_aika_yht;
+            -- Hoitokausi yht on tähän kuuhun asti olevat kulut
+            laskutusrajan_ylittynyt_val_aika := greatest(tavhin_hoitokausi_yht - laskutusraja_yht, 0);
+        END IF;
+
+        ------------------------------------------------------
+        -- "josta laskutettavaa" hoitokausi yht 
+        IF tavhin_hoitokausi_yht >= laskutusraja_yht THEN
+            laskutusraja_laskutettavaa_yht := laskutusraja_yht;
+            
+            -- Ylityksen määrä yhteensä
+            laskutusrajan_ylittynyt_yht := tavhin_hoitokausi_yht - laskutusraja_yht;
+        ELSE
+            laskutusraja_laskutettavaa_yht := tavhin_hoitokausi_yht;
+        END IF;
+
+        
+        laskutusrajaan_jaljella := greatest(0.0, laskutusraja_yht - tavhin_hoitokausi_yht); 
+        onko_laskutusraja_ylittynyt := (laskutusrajan_ylittynyt_val_aika > 0.0 OR laskutusrajan_ylittynyt_yht > 0.0);
+
+        laskutettavaa_kaikki_yht := laskutusraja_laskutettavaa_yht + muut_kustannukset_hoitokausi_yht;
+        laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muut_kustannukset_val_aika_yht;
+    END IF;
+
+
+    -- MHU25 urakoille ei lasketa sanktioita & bonuksia
+    -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
+    IF NOT onko_laskutusraja_kaytossa THEN
+        muut_kustannukset_hoitokausi_yht :=
+            muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
+
+        muut_kustannukset_val_aika_yht :=
+            muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+
+        muut_kulut_ei_tavoite_hoitokausi_yht :=
+            muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
+
+        muut_kulut_ei_tavoite_val_aika_yht :=
+            muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
+    END IF;
+    
+    
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
     yhteensa_kaikki_val_aika_yht := 0.0;
@@ -1588,6 +1756,8 @@ BEGIN
               bonukset_hoitokausi_yht, bonukset_val_aika_yht,
         -- Sanktiot
               sanktiot_hoitokausi_yht, sanktiot_val_aika_yht,
+        -- Arvonvähennykset
+              arvonvahennykset_hoitokausi_yht, arvonvahennykset_val_aika_yht,
         -- Tavoitepalkkiot
               paatos_tavoitepalkkio_hoitokausi_yht, paatos_tavoitepalkkio_val_aika_yht,
         -- Tavoitehinnan ylitys
@@ -1612,10 +1782,17 @@ BEGIN
               -- Ei tavoitehintaiset 
               muut_kulut_ei_tavoite_hoitokausi, muut_kulut_ei_tavoite_val_aika,
               muut_kulut_ei_tavoite_hoitokausi_yht, muut_kulut_ei_tavoite_val_aika_yht,
+        -- Laskutusraja
+              laskutusraja_yht, laskutusraja_alkuperainen, laskutusrajaan_jaljella,
+              onko_laskutusraja_kaytossa, onko_laskutusraja_ylittynyt,
+              laskutusraja_laskutettavaa_yht, laskutusraja_laskutettavaa_val_aika,
+              laskutusrajan_ylittynyt_yht, laskutusrajan_ylittynyt_val_aika,
+              laskutettavaa_kaikki_yht, laskutettavaa_kaikki_val_aika, kustannussuunnitelma_vahvistettu,
         -- Pysyvät muutokset
               pysyvat_muutokset_hoitokausi_yht,
               pysyvat_muutokset_val_aika_yht,
               pysyvat_muutokset_ed_hoitokausi
+
         );
     return next tulos;
 END;

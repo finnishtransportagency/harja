@@ -5,6 +5,7 @@
             [dk.ative.docjure.spreadsheet :as xls]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.palvelut.laadunseuranta.talvihoitoreitit-palvelu :as talvihoitoreitit-palvelu]
+            [harja.kyselyt.kalustoresurssit :as kalustoresurssit-q]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]))
 
@@ -53,6 +54,27 @@
         ;; Tallenna Excelistä luetut talvihoitoreitit kantaan
         excel-vastaus (talvihoitoreitit-palvelu/kasittele-excel (:db jarjestelma) urakka-id +kayttaja-jvh+ nil workbook)]
     (is (= (str/includes? (str excel-vastaus) "Reittien ja kaluston määrä ei täsmää.")) "Excel lataus ei onnistu.")))
+
+(deftest testaa-talvihoito-kalustoyhteenveto
+  (let [urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        kayttaja-id (:id +kayttaja-jvh+)
+        ;; Kirjataan urakalle luvattu kalusto kahdelle hoitoluokkaryhmälle
+        _ (kalustoresurssit-q/tallenna-kalustoresurssi<! (:db jarjestelma)
+            {:urakka-id urakka-id :hoitoluokkaryhma "ise-ib" :maara 5 :kayttaja-id kayttaja-id})
+        _ (kalustoresurssit-q/tallenna-kalustoresurssi<! (:db jarjestelma)
+            {:urakka-id urakka-id :hoitoluokkaryhma "ic-iii" :maara 3 :kayttaja-id kayttaja-id})
+        ;; Tuodaan reitit Excelistä
+        workbook (xls/load-workbook-from-file "test/resurssit/excel/talvihoitoreitit_tuonti_ok.xlsx")
+        _ (talvihoitoreitit-palvelu/kasittele-excel (:db jarjestelma) urakka-id +kayttaja-jvh+ nil workbook)
+
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakan-talvihoito-kalustoyhteenveto +kayttaja-jvh+ {:urakka-id urakka-id})]
+
+    (is (= 2 (count vastaus)) "Yhteenvedossa on rivi molemmille käytössä oleville hoitoluokkaryhmälle.")
+    (is (= ["ise-ib" "ic-iii"] (mapv :hoitoluokkaryhma vastaus)) "Rivit ovat hoitoluokkaryhmien järjestyksessä.")
+    (is (= 5 (:luvattu (first vastaus))) "Ise–Ib luvattu kalusto täsmää.")
+    (is (= 3 (:luvattu (second vastaus))) "Ic–III luvattu kalusto täsmää.")
+    (is (every? integer? (map :suunniteltu vastaus)) "Reiteille suunniteltu kalusto on kokonaisluku jokaiselle riville.")))
 
 
 (deftest testaa-talvihoitoreititys-excel-vienti

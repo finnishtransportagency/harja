@@ -14,6 +14,10 @@ on:
   pull_request:
     branches: [ develop ]
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 jobs:
   tests:
     uses: ./.github/workflows/reusable_run_app_tests.yml
@@ -21,21 +25,17 @@ jobs:
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
     permissions:
-      # Contents read lupaa tarvitaan checkout actionissa
-      contents: read
-      # Packages read lupaa tarvitaan Harjan testaukseen tarkoitettujen Docker imageiden pullaamiseen
-      packages: read
-      # Actions write oikeudella voidaan esim. listata ja poistaa artifacteja
-      actions: write
-      # Tarvitaan test-reportin julkaisuun PR:ssä
-      checks: write
+      contents: read # Tarvitaan checkout actionissa
+      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      actions: write # Tarvitaan artifactien listaamiseen ja poistamiseen
+      checks: write # Tarvitaan test-reportin julkaisuun PR:ssä
 
     with:
 
       # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
       # Testataan vanhempaa PostgreSQL versiota vasten vanhojen testipalvelimien yhteensopivuuden varmistamiseksi.
       # TODO: Käytä harjadb-latest, kun vanhempien versioiden tuesta voidaan luopua.
-      test-db-service: harjadb-13.13-3.3.3
+      test-db-service: harjadb-13.23-3.3.3
       e2e-browsers: "['chrome']"
       # PR-testeissä ajetaan vain kevyt build ja testauksen kannalta epärelevantit osat on jätetty pois.
       build-harja: 'light'

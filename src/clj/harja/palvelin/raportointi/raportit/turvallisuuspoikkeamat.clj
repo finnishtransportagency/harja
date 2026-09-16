@@ -54,6 +54,8 @@
 (defqueries "harja/palvelin/raportointi/raportit/turvallisuuspoikkeamat.sql"
             {:positional? true})
 
+(declare hae-turvallisuuspoikkeamat)
+
 (def turvallisuuspoikkeama-tyyppi
   {"tyotapaturma" "Ty\u00ADö\u00ADta\u00ADpa\u00ADtur\u00ADma"
    "vaaratilanne" "Vaa\u00ADra\u00ADti\u00ADlan\u00ADne"
@@ -119,8 +121,8 @@
                                            turpot)))
         hallintayksikon-turpot (fn [turpot alue]
                                  (filter
-                                   #(= (get-in % [:hallintayksikko :id])
-                                       (:hallintayksikko-id alue))
+                                   #(= (get-in % [:elinvoimakeskus :id])
+                                       (:elinvoimakeskus-id alue))
                                    turpot))
         turporivi (fn [turpot alue]
                     [(:nimi alue)
@@ -149,7 +151,7 @@
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
-                  [{:otsikko "Hallintayksikkö"}])
+                  [{:otsikko "Elinvoimakeskus"}])
                 [{:otsikko "Työtapaturmat"}
                  {:otsikko "Vaaratilanteet"}
                  {:otsikko "Turvallisuushavainnot"}
@@ -160,8 +162,8 @@
                                         (count (filter #(= (:vakavuusaste %) vakavuusaste) turpot)))
         hallintayksikon-turpot (fn [turpot alue]
                                  (filter
-                                   #(= (get-in % [:hallintayksikko :id])
-                                       (:hallintayksikko-id alue))
+                                   #(= (get-in % [:elinvoimakeskus :id])
+                                       (:elinvoimakeskus-id alue))
                                    turpot))
         turporivi (fn [turpot alue]
                     [(:nimi alue)
@@ -188,7 +190,7 @@
   (into []
         (concat (if urakoittain?
                   [{:otsikko "Urakka"}]
-                  [{:otsikko "Hallintayksikkö"}])
+                  [{:otsikko "Elinvoimakeskus"}])
                 [{:otsikko "Lievät"}
                  {:otsikko "Vakavat"}])))
 
@@ -226,11 +228,11 @@
                  {:otsikko "Sairaala\u00advuoro\u00ADkaudet" :leveys 9 :fmt :numero}
                  {:otsikko "Sairaus\u00adpoissa\u00ADolo\u00adpäivät" :leveys 9 :fmt :numero}])))
 
-(defn suorita [db user {:keys [urakka-id hallintayksikko-id urakoittain?
+(defn suorita [db user {:keys [urakka-id elinvoimakeskus-id urakoittain?
                                alkupvm loppupvm urakkatyyppi] :as parametrit}]
   (log/info "PARAMS: " parametrit)
   (let [konteksti (cond urakka-id :urakka
-                        hallintayksikko-id :hallintayksikko
+                        elinvoimakeskus-id :elinvoimakeskus
                         :default :koko-maa)
         urakkatyyppi (when urakkatyyppi
                        (case urakkatyyppi
@@ -242,15 +244,15 @@
                              db
                              konteksti
                              {:urakka urakka-id
-                              :hallintayksikko hallintayksikko-id
+                              :elinvoimakeskus elinvoimakeskus-id
                               :urakkatyyppi (when urakkatyyppi (mapv name urakkatyyppi))
                               :alku alkupvm
                               :loppu loppupvm})
         _ (log/debug "HAE TURPOT: ")
         _ (log/debug (pr-str {:urakka_annettu (some? urakka-id)
                               :urakka urakka-id
-                              :hallintayksikko_annettu (some? hallintayksikko-id)
-                              :hallintayksikko hallintayksikko-id
+                              :elinvoimakeskus_annettu (some? elinvoimakeskus-id)
+                              :elinvoimakeskus elinvoimakeskus-id
                               :urakkatyyppi (when urakkatyyppi (mapv name urakkatyyppi))
                               :alku alkupvm
                               :loppu loppupvm}))
@@ -263,8 +265,8 @@
                      (hae-turvallisuuspoikkeamat db
                                                  {:urakka_annettu (some? urakka-id)
                                                   :urakka urakka-id
-                                                  :hallintayksikko_annettu (some? hallintayksikko-id)
-                                                  :hallintayksikko hallintayksikko-id
+                                                  :elinvoimakeskus_annettu (some? elinvoimakeskus-id)
+                                                  :elinvoimakeskus elinvoimakeskus-id
                                                   :urakkatyyppi (when urakkatyyppi (mapv name urakkatyyppi))
                                                   :alku alkupvm
                                                   :loppu loppupvm}))
@@ -272,7 +274,7 @@
         otsikko (raportin-otsikko
                   (case konteksti
                     :urakka (:nimi (first (urakat-q/hae-urakka db urakka-id)))
-                    :hallintayksikko (:nimi (first (hallintayksikot-q/hae-organisaatio db hallintayksikko-id)))
+                    :elinvoimakeskus (:nimi (first (hallintayksikot-q/hae-organisaatio db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)]
     [:raportti {:nimi raportin-nimi}

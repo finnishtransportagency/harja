@@ -104,14 +104,14 @@
               :validoi [[:pvm-kentan-jalkeen ::u/alkupvm "Loppu ei voi olla ennen alkua"]]})
            (lomake/rivi
              (if haetut-hallintayksikot
-               {:otsikko "Hallintayksikkö"
+               {:otsikko "Elinvoimakeskus"
                 :nimi ::u/hallintayksikko
                 :tyyppi :valinta
                 :pakollinen? true
                 :valinnat haetut-hallintayksikot
-                :valinta-nayta #(if % (::o/nimi %) "- Valitse hallintayksikkö -")
+                :valinta-nayta #(if % (::o/nimi %) "- Valitse elinvoimakeskus -")
                 :aseta (fn [rivi arvo] (assoc rivi ::u/hallintayksikko (dissoc arvo :alue :type)))}
-               {:otsikko "Hallintayksikkö"
+               {:otsikko "Elinvoimakeskus"
                 :nimi ::u/hallintayksikko
                 :tyyppi :komponentti
                 :komponentti (fn [_] [ajax-loader-pieni "Haetaan hallintayksiköitä"])})
@@ -204,8 +204,8 @@
                   "Urakoita ei löytynyt")
          :rivi-klikattu #(e! (tiedot/->ValitseUrakka %))}
         [{:otsikko "Nimi" :nimi ::u/nimi}
-         {:otsikko "Hallintayksikko" :nimi :hallintayksikon-nimi
-          :hae #(get-in % [::u/hallintayksikko ::o/nimi])}
+         {:otsikko "Hallintayksikkö/evk" :nimi :elinvoimakeskus-nimi
+          :hae #(get-in % [::u/elinvoimakeskus ::o/nimi])}
          {:otsikko "Hanke" :nimi :hankkeen-nimi :hae #(get-in % [::u/hanke ::h/nimi])}
          {:otsikko "Urakoitsija" :nimi :urakoitsijan-nimi :hae #(get-in % [::u/urakoitsija ::o/nimi])}
          {:otsikko "Sopimukset (kpl)" :nimi :sopimukset-lkm :hae #(count (get % ::u/sopimukset))}
