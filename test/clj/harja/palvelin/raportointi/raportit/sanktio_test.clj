@@ -37,17 +37,17 @@
                   #inst "2025-10-01T00:00:00.000-00:00"
                   #inst "2026-09-30T00:00:00.000-00:00"
                   [{:sanktio_id 1
-                    :sanktiolaji_koodi "vaihtosanktio"
+                    :sanktiolaji_koodi "vastuuhenkilon_vaihto"
                     :sanktiolaji_nimi "Vastuuhenkilön vaihto"
-                    :sanktiotyyppi_koodi "vastuuhenkilon_vaihto"
+                    :sanktiotyyppi_koodi 0
                     :sanktiotyyppi_nimi "Vastuuhenkilön vaihto"
                     :summa -888M}]
                   []
                   []
-                  [{:sanktiolaji_koodi "vaihtosanktio"
+                  [{:sanktiolaji_koodi "vastuuhenkilon_vaihto"
                     :sanktiolaji_nimi "Vastuuhenkilön vaihto"
                     :sanktiolaji_jarjestys 10
-                    :sanktiotyyppi_koodi "vastuuhenkilon_vaihto"
+                    :sanktiotyyppi_koodi 0
                     :sanktiotyyppi_nimi "Vastuuhenkilön vaihto"}]
                   []
                   false)

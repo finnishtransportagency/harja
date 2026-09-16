@@ -609,6 +609,9 @@
 
 (deftest raportin-mhu2026-suorasanktiot-kohdistuvat-urakkaprofiiliin
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi "
+                                            "WHERE urakka = " urakka-id
+                                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
         laskutus-indeksi "raportin-mhu2026-suorasanktio-laskutusraja"
         vastuuhenkilo-indeksi "raportin-mhu2026-suorasanktio-vastuuhenkilo"
         pohjavesisuola-indeksi "raportin-mhu2026-suorasanktio-pohjavesisuola"
@@ -616,12 +619,11 @@
         tenttikeskiarvo-indeksi "raportin-mhu2026-suorasanktio-tenttikeskiarvo"
         lisaa-sanktio (fn [laji maara indeksi]
                         (u (str "INSERT INTO sanktio "
-                             "(sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, "
+                             "(sakkoryhma, maara, perintapvm, indeksi, "
                              "toimenpideinstanssi, tyyppi, suorasanktio, luoja) "
                              "VALUES ('" laji "'::SANKTIOLAJI, " maara ", DATE '2026-10-15', '"
                              indeksi "', "
-                             "(SELECT id FROM laatupoikkeama WHERE urakka = " urakka-id " LIMIT 1), "
-                             "(SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1), "
+                             toimenpideinstanssi-id ", "
                              "(SELECT id FROM sanktiotyyppi WHERE koodi = 0), TRUE, "
                              "(SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))")))
         vastaus-parametrit {:nimi       :sanktioraportti
