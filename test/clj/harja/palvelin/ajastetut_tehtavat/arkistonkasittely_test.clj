@@ -1,5 +1,6 @@
 (ns harja.palvelin.ajastetut-tehtavat.arkistonkasittely-test
-  (:require [clojure.test :refer [deftest is use-fixtures]]
+  (:require [clj-gatling.legacy-util :refer [legacy-reporter->reporter]]
+            [clojure.test :refer [deftest is use-fixtures]]
             [clj-time.periodic :refer [periodic-seq]]
             [harja.testi :refer :all]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
@@ -55,25 +56,27 @@
         (io/delete-file purettu true)))))
 
 ;; Arkisto voi sisältää hakemistoja, joilla ei ole sisältöä. Hakemistot luodaan automaattisesti kohdepolkuun.
-(defn- luo-hakemistollinen-zip [polku]
+(defn- luo-hakemistollinen-zip [polku tyhja-hakemisto?]
   (with-open [ulos (ZipOutputStream. (io/output-stream polku))]
     (.putNextEntry ulos (ZipEntry. "alikansio/"))
     (.closeEntry ulos)
-    (.putNextEntry ulos (ZipEntry. "alikansio/teksti.txt"))
-    (.write ulos (.getBytes "Test"))
-    (.closeEntry ulos)))
+    (when-not tyhja-hakemisto?
+      (.putNextEntry ulos (ZipEntry. "alikansio/teksti.txt"))
+      (.write ulos (.getBytes "Test"))
+      (.closeEntry ulos))))
 
-(defn- luo-hakemistollinen-tgz [polku]
+(defn- luo-hakemistollinen-tgz [polku tyhja-hakemisto?]
   (with-open [ulos (TarArchiveOutputStream.
                      (GzipCompressorOutputStream. (io/output-stream polku)))]
     (.putArchiveEntry ulos (TarArchiveEntry. "alikansio/"))
     (.closeArchiveEntry ulos)
-    (let [sisalto (.getBytes "Test")
-          entry (doto (TarArchiveEntry. "alikansio/teksti.txt")
-                  (.setSize (count sisalto)))]
-      (.putArchiveEntry ulos entry)
-      (.write ulos sisalto)
-      (.closeArchiveEntry ulos))))
+    (when-not tyhja-hakemisto?
+      (let [sisalto (.getBytes "Test")
+            entry (doto (TarArchiveEntry. "alikansio/teksti.txt")
+                    (.setSize (count sisalto)))]
+        (.putArchiveEntry ulos entry)
+        (.write ulos sisalto)
+        (.closeArchiveEntry ulos)))))
 
 (defn- testaa-hakemistollisen-arkiston-purku [tiedosto-nimi luo-arkisto-fn]
   (let [kansio (io/file +arkistot-target-polku+)
@@ -90,15 +93,32 @@
         (io/delete-file purettu true)
         (io/delete-file alikansio true)))))
 
+(defn- testaa-tyhjan-hakemiston-sisaltavan-arkiston-purku [tiedosto-nimi luo-arkisto-fn]
+  (let [kansio (io/file +arkistot-target-polku+)
+        arkisto (io/file kansio tiedosto-nimi)
+        alikansio (io/file kansio "alikansio")]
+    (try
+      (luo-arkisto-fn (.getPath arkisto) true)
+      (arkisto/pura-paketti (.getPath arkisto))
+      (is (true? (.isDirectory alikansio)))
+      (finally
+        (io/delete-file arkisto true)
+        (io/delete-file alikansio true)))))
+
 (deftest testaa-pura-hakemistoja-sisaltava-zip
   (testaa-hakemistollisen-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip))
 
 (deftest testaa-pura-hakemistoja-sisaltava-tgz
   (testaa-hakemistollisen-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz))
 
+(deftest testaa-pura-tyhjan-hakemiston-sisaltava-zip
+  (testaa-tyhjan-hakemiston-sisaltavan-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip))
+
+(deftest testaa-pura-tyhjan-hakemiston-sisaltava-tgz
+  (testaa-tyhjan-hakemiston-sisaltavan-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz))
+
 ;; Tietoturva: Path traversal -suojaus
 ;; Info: https://cwe.mitre.org/data/definitions/22.html
-
 (def +paha-arkisto-polku+ "test/resurssit/arkistot/paha_target/")
 (def +paha-tiedosto+ "test/resurssit/arkistot/paha.txt")
 
