@@ -57,6 +57,7 @@
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
   [harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset]
+  [harja.palvelin.raportointi.raportit.valikatselmusraportti]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -448,6 +449,14 @@
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
     :kuvaus-tarkenne "Paikkausten yhteenveto MHU"
     :kuvaus       "MHUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :valikatselmusraportti
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"urakka"}
+    :kuvaus       "Välikatselmus"
+    :vain-pdfraportti? true
+    :suorita      #'harja.palvelin.raportointi.raportit.valikatselmusraportti/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :ppu-paikkausten-yhteenveto

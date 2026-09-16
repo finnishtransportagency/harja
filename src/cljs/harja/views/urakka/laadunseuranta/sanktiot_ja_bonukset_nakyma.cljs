@@ -92,7 +92,7 @@
               arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                        (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-kaytossa? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
+              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
