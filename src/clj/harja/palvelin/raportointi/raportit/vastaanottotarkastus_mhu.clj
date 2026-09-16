@@ -9,7 +9,9 @@
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.domain.lupaus-domain :as lupaus-domain]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
@@ -298,7 +300,7 @@
     (vec
       (concat
         ;; Näytetään jos viranomaistehtäviä on kirjattu tai jos kumpaakaan ei ole kirjattu
-        (when (or (> viranomaistehtavat-yhteensa 0) (and (= viranomaistehtavat-yhteensa 0) (= osallistuminen-yhteensa 0)) )
+        (when (or (> viranomaistehtavat-yhteensa 0) (and (= viranomaistehtavat-yhteensa 0) (= osallistuminen-yhteensa 0)))
           [[:taulukko {:otsikko "Viranomaistehtävät"
                        :leveysprosentti 50
                        :viimeinen-rivi-yhteenveto? true
@@ -317,33 +319,81 @@
              {:leveys 5 :otsikko "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon (h)" :fmt :kokonaisluku}]
             (into [] (concat osallistuminen-rivit (when-not (empty? osallistuminen-rivit) osallistuminen-yhteensarivi)))]])))))
 
-(defn suorita [db user {:keys [urakka-id kasittelija]}]
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-        urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
-        raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
-        hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
-        talvisuolan-erittely (talvisuolan-erittely db urakka-id (:alkupvm urakan-tiedot) (:loppupvm urakan-tiedot))]
-    (into [:raportti {:orientaatio :landscape
-                      :nimi raportin-nimi
-                      :urakan-nimi (:nimi urakan-tiedot)
-                      :otsikon-koko :iso
-                      :raportin-yleiset-tiedot raportin-nimi}
-           (lupaukset-taulukko db urakka-id urakan-tiedot hoitokaudet)]
-      (concat
-        (when talvisuolan-erittely
-          (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
-            talvisuolan-erittely))
-        [[:otsikko "Tavoitehinnan muutokset"]
-         (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]
+(defn muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko
+  "Taulukossa ei ole erikseen kohtaa arvonvähennyksille tai muille kuluille, kuten Välikatselmuksessa. Tässä ne lisätään hankintakustannuksiin, kuten rahanvarauksetkin."
+  [db urakan-tiedot hoitokaudet kasittelija]
+  (let [urakka-id (:id urakan-tiedot)
+        rivit (mapv (fn [hoitokausi]
+                      (let [{:keys [alkupvm loppupvm]} hoitokausi
+                            vuosi (pvm/vuosi alkupvm)
+                            kustannukset (:taulukon-rivit (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id vuosi alkupvm loppupvm))
 
-        (if (:muutosten_hallinta urakan-parametrit)
-          ;; Käytännössä -25 ja sitä vanhemmilla urakoilla
-          (muodosta-tavoitehinnan-muutokset db user urakka-id hoitokaudet kasittelija)
-          ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
-          (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
+                            _ (println "kustannukset" kustannukset)
+                            hankintakustannukset (+ (or (:hankintakustannukset-toteutunut kustannukset) 0)
+                                                   (or (:rahavaraukset-toteutunut kustannukset) 0)
+                                                   (or (:arvonvahennykset-toteutunut kustannukset) 0)
+                                                   (or (:muukulu-tavoitehintainen-toteutunut kustannukset) 0))
+                            erilliskustannukset (or (:erillishankinnat-toteutunut kustannukset) 0)
+                            jjh-korvaukset (or (:johto-ja-hallintokorvaus-toteutunut kustannukset) 0)
+                            hoidonjohtopalkkiot (or (:hoidonjohdonpalkkio-toteutunut kustannukset) 0)
+                            yhteensa (+ hankintakustannukset erilliskustannukset jjh-korvaukset hoidonjohtopalkkiot)]
+                        [(str vuosi "-" (pvm/vuosi loppupvm)) hankintakustannukset erilliskustannukset jjh-korvaukset hoidonjohtopalkkiot yhteensa]))
+                hoitokaudet)
+        hankintakustannukset-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
+        erilliskustannukset-yhteensa (reduce + 0 (map #(or (nth % 2) 0) rivit))
+        jjh-korvaukset-yhteensa (reduce + 0 (map #(or (nth % 3) 0) rivit))
+        hoidonjohtopalkkiot-yhteensa (reduce + 0 (map #(or (nth % 4) 0) rivit))
+        kaikki-yhteensa (reduce + 0 (map #(or (last %) 0) rivit))
+        kustannukset-yhteensarivi [{:lihavoi? true
+                                    :korosta-hennosti? true
+                                    :rivi ["Yhteensä"
+                                           hankintakustannukset-yhteensa
+                                           erilliskustannukset-yhteensa
+                                           jjh-korvaukset-yhteensa
+                                           hoidonjohtopalkkiot-yhteensa
+                                           kaikki-yhteensa]}]
+        otsikko-title [:otsikko-title "Urakan tavoitehintaan kuuluvat kustannukset"]]
+    [[:taulukko {:otsikko "Urakan tavoitehintaan kuuluvat kustannukset"
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi "Urakan tavoitehintaan kuuluvat kustannukset"
+                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
+      [{:leveys 5 :otsikko "Hoitovuosi"}
+       {:leveys 5 :otsikko "Hankintakustannukset sis.rahavaraukset (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Erillishankinnat (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Johto- ja hallintokorvaus (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Hoidonjohtopalkkio (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
+      (into [] (concat rivit (when-not (empty? rivit) kustannukset-yhteensarivi)))]]))
 
-        (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
+  (defn suorita [db user {:keys [urakka-id kasittelija]}]
+    (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+          urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
+          raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
+          hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+          talvisuolan-erittely (talvisuolan-erittely db urakka-id (:alkupvm urakan-tiedot) (:loppupvm urakan-tiedot))]
+      (into [:raportti {:orientaatio :landscape
+                        :nimi raportin-nimi
+                        :urakan-nimi (:nimi urakan-tiedot)
+                        :otsikon-koko :iso
+                        :raportin-yleiset-tiedot raportin-nimi}
+             (lupaukset-taulukko db urakka-id urakan-tiedot hoitokaudet)]
+        (concat
+          (when talvisuolan-erittely
+            (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
+              talvisuolan-erittely))
+          [[:otsikko "Tavoitehinnan muutokset"]
+           (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]
 
-        (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)))))
+          (if (:muutosten_hallinta urakan-parametrit)
+            ;; Käytännössä -25 ja sitä vanhemmilla urakoilla
+            (muodosta-tavoitehinnan-muutokset db user urakka-id hoitokaudet kasittelija)
+            ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
+            (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
+
+          (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
+
+          (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)
+
+          (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)))))
 
 

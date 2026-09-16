@@ -12,6 +12,7 @@
             [harja.pvm :as pvm]
             [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit :as raportit]
@@ -594,5 +595,86 @@
                    (vastaanottotarkastus-mhu/lupaukset-taulukko (:db jarjestelma) urakka-id-raasepori urakan-tiedot hoitokaudet))]
     (is (= ["2021-2022" 70 100 75M]
           (first (last raportti))))))
+
+(deftest MHU25-urakan-tavoitehintaan-kuuluvat-kustannukset-muodostuvat
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        db (:db jarjestelma)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        hoitokaudet (sort-by :alkupvm
+                             (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+        kustannukset
+        {2025 {:hankintakustannukset-toteutunut 100M
+               :rahavaraukset-toteutunut 10M
+               :arvonvahennykset-toteutunut -3M
+               :muukulu-tavoitehintainen-toteutunut 2.5M
+               :erillishankinnat-toteutunut 20M
+               :johto-ja-hallintokorvaus-toteutunut 30M
+               :hoidonjohdonpalkkio-toteutunut 40M}
+         2026 {:hankintakustannukset-toteutunut 200M
+               :rahavaraukset-toteutunut 20M
+               :arvonvahennykset-toteutunut -5M
+               :muukulu-tavoitehintainen-toteutunut 4M
+               :erillishankinnat-toteutunut 21M
+               :johto-ja-hallintokorvaus-toteutunut 31M
+               :hoidonjohdonpalkkio-toteutunut 41M}
+         2027 {:hankintakustannukset-toteutunut 300M
+               :rahavaraukset-toteutunut 30M
+               :arvonvahennykset-toteutunut -7M
+               :muukulu-tavoitehintainen-toteutunut 5M
+               :erillishankinnat-toteutunut 22M
+               :johto-ja-hallintokorvaus-toteutunut 32M
+               :hoidonjohdonpalkkio-toteutunut 42M}
+         2028 {:hankintakustannukset-toteutunut 400M
+               :rahavaraukset-toteutunut 40M
+               :arvonvahennykset-toteutunut -9M
+               :muukulu-tavoitehintainen-toteutunut 6M
+               :erillishankinnat-toteutunut 23M
+               :johto-ja-hallintokorvaus-toteutunut 33M
+               :hoidonjohdonpalkkio-toteutunut 43M}
+         2029 {:hankintakustannukset-toteutunut 500M
+               :rahavaraukset-toteutunut 50M
+               :arvonvahennykset-toteutunut -11M
+               :muukulu-tavoitehintainen-toteutunut 7M
+               :erillishankinnat-toteutunut 24M
+               :johto-ja-hallintokorvaus-toteutunut 34M
+               :hoidonjohdonpalkkio-toteutunut 44M}}
+        odotetut-rivit
+        [["2025-2026" 109.5M 20M 30M 40M 199.5M]
+         ["2026-2027" 219M 21M 31M 41M 312M]
+         ["2027-2028" 328M 22M 32M 42M 424M]
+         ["2028-2029" 437M 23M 33M 43M 536M]
+         ["2029-2030" 546M 24M 34M 44M 648M]]
+        odotettu-yhteensa ["Yhteensä" 1639.5M 110M 160M 210M 2119.5M]]
+    (testing "Kajaanin urakan kaikki hoitovuodet ovat mukana"
+      (is (= [2025 2026 2027 2028 2029]
+             (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet))))
+    (with-redefs [valikatselmus-palvelu/hae-kustannukset-jarjestettyna
+                  (fn [_ _ hoitovuosi _ _]
+                    {:taulukon-rivit (get kustannukset hoitovuosi)})]
+      (let [raportin-osat
+            (vastaanottotarkastus-mhu/muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko
+              db urakan-tiedot hoitokaudet nil)
+            taulukko (first raportin-osat)
+            rivit (nth taulukko 3)]
+        (testing "hankintakustannukset sisältävät rahavaraukset, arvonvähennykset ja muut kulut"
+          (is (= odotetut-rivit
+                 (vec (butlast rivit)))))
+        (testing "yhteensä-rivi summaa kaikki kustannussarakkeet oikein"
+          (is (= odotettu-yhteensa
+                 (get-in (last rivit) [:rivi]))))
+        (testing "taulukon otsikot ovat oikein"
+          (is (= ["Hoitovuosi"
+                  "Hankintakustannukset sis.rahavaraukset (€)"
+                  "Erillishankinnat (€)"
+                  "Johto- ja hallintokorvaus (€)"
+                  "Hoidonjohtopalkkio (€)"
+                  "Yhteensä (€)"]
+                 (mapv :otsikko (nth taulukko 2)))))
+        (testing "taulukon metatiedot ovat oikein"
+          (is (= "Urakan tavoitehintaan kuuluvat kustannukset"
+                 (get-in taulukko [1 :otsikko])))
+          (is (= "Urakan tavoitehintaan kuuluvat kustannukset"
+                 (get-in taulukko [1 :sheet-nimi])))
+          (is (true? (get-in taulukko [1 :viimeinen-rivi-yhteenveto?]))))))))
 
 
