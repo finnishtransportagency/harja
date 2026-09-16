@@ -162,6 +162,31 @@ WHERE "tr-numero" = :tr-numero AND
       "tr-osa" >= :tr-alkuosa AND
       "tr-osa" <= :tr-loppuosa;
 
+-- name: hae-tieosuudet-raakana
+SELECT "tr-numero"       AS "tr-numero",
+    "tr-ajorata"      AS "tr-ajorata",
+    "tr-kaista"       AS "tr-kaista",
+    "tr-osa"          AS "tr-alkuosa",
+    GREATEST("tr-alkuetaisyys",
+       CASE WHEN "tr-osa" = :tr-alkuosa
+         THEN :tr-alkuetaisyys
+         ELSE "tr-alkuetaisyys" END) AS "tr-alkuetaisyys",
+    "tr-osa"          AS "tr-loppuosa",
+    LEAST("tr-loppuetaisyys",
+       CASE WHEN "tr-osa" = :tr-loppuosa
+         THEN :tr-loppuetaisyys
+         ELSE "tr-loppuetaisyys" END)   AS "tr-loppuetaisyys",
+    "tr-osa"          AS "alkuperainen-tr-alkuosa",
+    "tr-alkuetaisyys" AS "alkuperainen-tr-alkuetaisyys",
+    "tr-osa"          AS "alkuperainen-tr-loppuosa",
+    "tr-loppuetaisyys" AS "alkuperainen-tr-loppuetaisyys"
+  FROM tr_osoitteet
+ WHERE "tr-numero" = :tr-numero
+   AND "tr-osa" BETWEEN :tr-alkuosa AND :tr-loppuosa
+   AND (:tr-alkuosa < "tr-osa" OR :tr-alkuetaisyys < "tr-loppuetaisyys")
+   AND (:tr-loppuosa > "tr-osa" OR :tr-loppuetaisyys > "tr-alkuetaisyys")
+ ORDER BY "tr-ajorata", "tr-kaista", "tr-osa", "tr-alkuetaisyys";
+
 -- name: hae-tiet-alueella
 SELECT tie,
        -- Yhdistetään tienpätkät, ja etsitään niiden keskipiste.

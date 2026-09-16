@@ -21,7 +21,8 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- muokkauspaneeli [{:keys [otsikko otsikko-tyyli voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
-                                skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
+                                skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit
+                                paneelikomponentit-taulukon-ylaosassa? historia
                                 virhe-viesti custom-toiminto custom-yla-panel]}]
   [:div.panel-heading {:style (when (:keskita-ylos custom-toiminto) {:padding-top "0px"})}
    (when otsikko [:h2.panel-title (when otsikko-tyyli {:style otsikko-tyyli}) otsikko])
@@ -49,7 +50,7 @@
                            {:id uusi-id}
                            {})))}
          (ikonit/livicon-plus) " " (or (:lisaa-rivi opts) "Lisää rivi")])
-      (when paneelikomponentit
+      (when (and paneelikomponentit (not paneelikomponentit-taulukon-ylaosassa?))
         (map-indexed (fn [i komponentti]
                        ^{:key i}
                        [komponentti])
@@ -582,6 +583,7 @@
 
   [{:keys [otsikko otsikko-tyyli yksikko tyhja tunniste voi-poistaa? rivi-klikattu rivinumerot? voi-kumota? jarjesta-kun-kasketaan
            voi-muokata? voi-lisata? jarjesta jarjesta-avaimen-mukaan piilota-toiminnot? paneelikomponentit
+           paneelikomponentit-taulukon-ylaosassa?
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
            rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto
@@ -759,9 +761,16 @@
                                 :varoituket varoitukset :huomautukset huomautukset
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
+                                :paneelikomponentit-taulukon-ylaosassa? paneelikomponentit-taulukon-ylaosassa?
                                 :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto 
                                 :custom-yla-panel custom-yla-panel}])
             [:div.panel-body
+             (when (and paneelikomponentit paneelikomponentit-taulukon-ylaosassa?)
+               [:div.paneelikomponentit-taulukon-ylaosassa
+                (map-indexed (fn [i komponentti]
+                               ^{:key i}
+                               [komponentti])
+                  paneelikomponentit)])
              [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
               (when-not (true? piilota-table-header?)
                 [gridin-otsikot skeema rivinumerot? piilota-toiminnot?])

@@ -46,6 +46,14 @@
 (defrecord SuljeMateriaalilomake [])
 (defrecord Pot2Muokattu [])
 (defrecord LisaaPaallysterivi [atomi])
+(defrecord AvaaTieosuushaku [])
+(defrecord SuljeTieosuushaku [])
+(defrecord MuutaTieosuushaunEhtoa [avain arvo])
+(defrecord HaeTieosuudet [kayttajan-haku?])
+(defrecord HaeTieosuudetOnnistui [vastaus])
+(defrecord HaeTieosuudetEpaonnistui [vastaus])
+(defrecord ValitseTieosuus [rivi valittu?])
+(defrecord LisaaValitutTieosuudet [atomi])
 (defrecord KulutuskerrosMuokattu [muokattu?])
 (defrecord LaskeTieosoitteenPituus [tie])
 (defrecord LaskeTieosoitteenPituusOnnistui [vastaus])
@@ -54,6 +62,17 @@
 (defn- lisaa-uusi-paallystekerrosrivi!
   [rivit-atom perustiedot]
   (reset! rivit-atom (yllapitokohteet/lisaa-paallystekohdeosa @rivit-atom (count @rivit-atom) (:tr-osoite perustiedot))))
+
+(defn- lisaa-tieosuudet-paallystekerrokseen!
+  [rivit-atom tieosuudet]
+  (swap! rivit-atom
+         (fn [rivit]
+           (reduce (fn [paivitetyt-rivit tieosuus]
+                     (assoc paivitetyt-rivit
+                            (inc (count paivitetyt-rivit))
+                            (assoc (dissoc tieosuus :valittu?) :jarjestysnro 1)))
+                   rivit
+                   tieosuudet))))
 
 (defn tayta-alas?-fn
   [arvo]
@@ -456,6 +475,82 @@
   (process-event [{atomi :atomi} app]
     (lisaa-uusi-paallystekerrosrivi! atomi (get-in app [:paallystysilmoitus-lomakedata :perustiedot]))
     app)
+
+  AvaaTieosuushaku
+  (process-event [_ app]
+    (let [hakuehdot (-> app
+                        (get-in [:paallystysilmoitus-lomakedata :perustiedot :tr-osoite])
+                        (select-keys [:tr-numero :tr-alkuosa :tr-loppuosa]))]
+      (tuck/process-event (->HaeTieosuudet false)
+                          (assoc-in app [:paallystysilmoitus-lomakedata :tieosuushaku]
+                                    {:auki? true
+                                     :hakuehdot hakuehdot}))))
+
+  SuljeTieosuushaku
+  (process-event [_ app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :tieosuushaku :auki?] false))
+
+  MuutaTieosuushaunEhtoa
+  (process-event [{:keys [avain arvo]} app]
+    (assoc-in app [:paallystysilmoitus-lomakedata :tieosuushaku :hakuehdot avain] arvo))
+
+  HaeTieosuudet
+  (process-event [{:keys [kayttajan-haku?]} {{urakka-id :id} :urakka :as app}]
+    (let [paallystyskohde-id (get-in app [:paallystysilmoitus-lomakedata :paallystyskohde-id])
+          hakuehdot (get-in app [:paallystysilmoitus-lomakedata :tieosuushaku :hakuehdot])
+          parametrit (cond-> {:urakka-id urakka-id
+                              :paallystyskohde-id paallystyskohde-id}
+                       kayttajan-haku? (assoc :haku hakuehdot))]
+      (-> app
+          (assoc-in [:paallystysilmoitus-lomakedata :tieosuushaku :haetaan?] true)
+          (assoc-in [:paallystysilmoitus-lomakedata :tieosuushaku :virhe] nil)
+          (tuck-apurit/post! :hae-pot2-tieosuudet
+                             parametrit
+                             {:onnistui ->HaeTieosuudetOnnistui
+                              :epaonnistui ->HaeTieosuudetEpaonnistui}))))
+
+  HaeTieosuudetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (update-in app [:paallystysilmoitus-lomakedata :tieosuushaku]
+               merge
+               {:haetaan? false
+                :tieosuudet (mapv #(assoc % :valittu? false) (:tieosuudet vastaus))
+                :kohteen-ulkopuolelle-jatkuvat (:kohteen-ulkopuolelle-jatkuvat vastaus)
+                :virhe nil}))
+
+  HaeTieosuudetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast! "Tieosuuksien haku epäonnistui" :varoitus)
+    (update-in app [:paallystysilmoitus-lomakedata :tieosuushaku]
+               merge
+               {:haetaan? false
+                :virhe vastaus}))
+
+  ValitseTieosuus
+  (process-event [{:keys [rivi valittu?]} app]
+    (update-in app [:paallystysilmoitus-lomakedata :tieosuushaku :tieosuudet]
+               (fn [tieosuudet]
+                 (mapv #(if (= (dissoc % :valittu?) (dissoc rivi :valittu?))
+                          (assoc % :valittu? valittu?)
+                          %)
+                       tieosuudet))))
+
+  LisaaValitutTieosuudet
+  (process-event [{:keys [atomi]} app]
+    (let [valitut (->> (get-in app [:paallystysilmoitus-lomakedata :tieosuushaku :tieosuudet])
+                        (filter :valittu?))]
+      (if (seq valitut)
+        (do
+          (lisaa-tieosuudet-paallystekerrokseen! atomi valitut)
+          (viesti/nayta-toast! (if (= 1 (count valitut))
+                                 "Tieosuus lisättiin toimenpidetaulukkoon"
+                                 (str (count valitut) " tieosuutta lisättiin toimenpidetaulukkoon")))
+          (-> app
+              merkitse-muokattu
+              (update-in [:paallystysilmoitus-lomakedata :tieosuushaku :tieosuudet]
+                         (fn [tieosuudet]
+                           (mapv #(assoc % :valittu? false) tieosuudet)))))
+        app)))
 
   LaskeTieosoitteenPituus
   (process-event [{tie :tie} app]

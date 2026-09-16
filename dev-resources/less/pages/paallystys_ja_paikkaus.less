@@ -27,6 +27,92 @@
   }
 }
 
+.pot2-tieosuushaku {
+  margin-bottom: @valistys-16;
+  max-width: 45rem;
+
+  .pot2-tieosuushaku-paneeli {
+    border: 1px solid @gray200;
+    background-color: @white-dark;
+    padding: @valistys-12;
+  }
+
+  .pot2-tieosuushaku-otsikko {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: @valistys-8;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .pot2-tieosuushaku-ehdot {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: @valistys-4;
+
+    > .label-ja-kentta {
+      margin: 0;
+      width: auto;
+
+      input:not([type="checkbox"]) {
+        width: 61px;
+      }
+
+      &:first-child {
+        width: 61px;
+      }
+
+      &:not(:first-child) {
+        width: 61px;
+      }
+    }
+  }
+
+  .pot2-tieosuushaku-tulosalue {
+    margin-top: @valistys-12;
+
+    > .pot2-tieosuushaku-grid {
+      max-height: 24rem;
+      overflow-y: auto;
+
+      .grid {
+        table-layout: auto;
+      }
+
+      th,
+      td {
+        padding: @valistys-4 @valistys-6;
+        white-space: nowrap;
+      }
+
+      th {
+        font-size: @fontin-koko-taulukko-pienempi;
+      }
+
+      td {
+        font-size: @fontin-koko-taulukko-pienempi;
+      }
+    }
+
+    > .info-laatikko,
+    > button {
+      margin-top: @valistys-8;
+    }
+
+    > .info-laatikko {
+      padding: @valistys-4 @valistys-8;
+
+      .infolaatikon-ikoni {
+        padding: 0 @valistys-4 0 0;
+      }
+    }
+  }
+}
+
 .paallystysilmoitukset {
   hr {
     margin-top: 3rem;
