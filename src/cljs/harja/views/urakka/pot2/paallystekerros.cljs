@@ -88,18 +88,22 @@
                             ""
                             :else
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
-        custom-yla-panel (if-not kulutuskerros-muokattu?
-                           (if (> hyppyjen-maara 0)
-                             [:div.kulutus-hyppy-info.vahvistamaton
-                              [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
-                              [:div hyppy-teksti]]
+                        voi-muokata? (not= :lukittu (:tila perustiedot))
+        custom-yla-panel
+        (when (or tieosuushaku (some? hyppyjen-maara))
+          [:div.pot2-kulutuskerros-paneeli
+           [tieosuushaku/tieosuushaku e! {:tieosuushaku tieosuushaku} kohdeosat-atom
+            (and kirjoitusoikeus? voi-muokata?)]
+           (when-not kulutuskerros-muokattu?
+             (if (> hyppyjen-maara 0)
+               [:div.kulutus-hyppy-info.vahvistamaton
+                [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
+                [:div hyppy-teksti]]
 
-                             (when (some? hyppyjen-maara)
-                               [:div.kulutus-hyppy-info
-                                [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-                                [:div hyppy-teksti]]))
-                           nil)
-        voi-muokata? (not= :lukittu (:tila perustiedot))
+               (when (some? hyppyjen-maara)
+                 [:div.kulutus-hyppy-info
+                  [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+                  [:div hyppy-teksti]])))])
         ohjauskahva (:paallystekerros ohjauskahvat)
         kokpituus (reduce
                     (fn [acc data]
@@ -119,14 +123,13 @@
                        (:toimenpide rivi) "-"
                        (gensym)))]
     [:div
-     [tieosuushaku/tieosuushaku e! {:tieosuushaku tieosuushaku} kohdeosat-atom
-      (and kirjoitusoikeus? voi-muokata?)]
      [grid/muokkaus-grid
       {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
+      :luokat ["pot2-kulutuskerros-grid"]
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
-       :paneelikomponentit-taulukon-ylaosassa? true
        :custom-yla-panel custom-yla-panel
+        :custom-yla-panel-otsikon-alla? true
        :muutos (fn [g]
                  ;; Koska tätä kutsutaan myös sorttauksen yhteydessä, täytyy tarkistaa erillisellä funktiolla onko rivjeä muokattu
                  (let [uusi-jarjestys (grid-protokollat/hae-muokkaustila g)
@@ -454,4 +457,4 @@
         :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
             kohdeosat-atom]
-     [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")]]))
+    [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")]]))
