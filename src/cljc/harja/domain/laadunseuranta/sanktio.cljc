@@ -1,3 +1,6 @@
+;; DEPRECATED: Tämä tiedosto on deprecated. Älä enää käytä uusissa ominaisuuksissa.
+;; Käytä sanktio_profiili- ja bonus_profiili-tauluja suoraan.
+
 (ns harja.domain.laadunseuranta.sanktio
   (:require [harja.pvm :as pvm]
             [harja.domain.urakka :as urakka-domain]))

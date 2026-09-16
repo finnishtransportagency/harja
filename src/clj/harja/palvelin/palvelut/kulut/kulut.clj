@@ -190,13 +190,14 @@
   "Palauttaa hoitokauden kulujen summan laskutusrajaa varten."
   [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [kulut (concat (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
-                                                              :alkupvm alkupvm
-                                                              :loppupvm loppupvm})
-                (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
-                                                           :alkupvm alkupvm
-                                                           :loppupvm loppupvm}))
-        ;; Lasketaan summa kaikista kohdistuksista
+  (let [kulut (concat (filter :tavoitehintainen
+                              (q/hae-urakan-kulut-kohdistuksineen db {:urakka urakka-id
+                                                                       :alkupvm alkupvm
+                                                                       :loppupvm loppupvm}))
+                      (q/hae-urakan-toteutuneet-kustannukset db {:urakka urakka-id
+                                                                  :alkupvm alkupvm
+                                                                  :loppupvm loppupvm}))
+        ;; Lasketaan vain tavoitehintaiset kohdistukset.
         summa (reduce (fn [acc kulu]
                         (+ acc (or (tyokalut/pyorista-kahteen-decimaaliin (:summa kulu)) 0)))
                 0
