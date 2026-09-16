@@ -96,7 +96,7 @@
               nil])
            (when voi-lisata?
              [napit/yleinen-ensisijainen
-              "Lisää valitut toimenpidetaulukkoon"
+              "Lisää toimenpiteeksi"
               #(e! (pot2-tiedot/->LisaaValitutTieosuudet kohdeosat-atom))
               {:ikoni (ikonit/livicon-plus)
                :disabled (not valittuja?)
