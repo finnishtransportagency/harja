@@ -12,19 +12,23 @@
 (def +arkistot-target-polku+ "test/resurssit/arkistot/arkisto_target/")
 
 (defn testaa-tiedoston-purku [tiedosto-nimi]
-  (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
-  ; Tarkista, että tiedostot purkautuivat oikein
-  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "teksti.txt")))))
-  (is (= "Terve!" (slurp (str +arkistot-polku+ "teksti.txt"))))
-  (is (true? (.exists (clojure.java.io/file (str +arkistot-polku+ "kuva.png")))))
-  ; Siirrä puretut tiedostot target-kansioon
-  (io/copy (io/file (str +arkistot-polku+ "teksti.txt")) (io/file (str +arkistot-target-polku+ "teksti.txt")))
-  (io/copy (io/file (str +arkistot-polku+ "kuva.png")) (io/file (str +arkistot-target-polku+ "kuva.png")))
-  (clojure.java.io/delete-file (str +arkistot-polku+ "kuva.png"))
-  (clojure.java.io/delete-file (str +arkistot-polku+ "teksti.txt"))
-  ; Tyhjennä target-kansio
-  (kansio/poista-tiedostot +arkistot-target-polku+)
-  (is (= 1 (count (.listFiles (clojure.java.io/file +arkistot-target-polku+)))))) ;; .gitkeep tiedosto jää
+  (let [teksti (io/file +arkistot-polku+ "teksti.txt")
+        kuva (io/file +arkistot-polku+ "kuva.png")]
+    (try
+      (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
+      ;; Tarkista, että tiedostot purkautuivat oikein
+      (is (.exists teksti))
+      (is (= "Terve!" (slurp teksti)))
+      (is (.exists kuva))
+      ;; Kopioi puretut tiedostot target-kansioon ja varmista, että kansion tyhjennys toimii
+      (io/copy teksti (io/file +arkistot-target-polku+ "teksti.txt"))
+      (io/copy kuva (io/file +arkistot-target-polku+ "kuva.png"))
+      (kansio/poista-tiedostot +arkistot-target-polku+)
+      (is (= 1 (count (.listFiles (io/file +arkistot-target-polku+)))) ".gitkeep-tiedosto jää jäljelle")
+      (finally
+        (io/delete-file teksti true)
+        (io/delete-file kuva true)
+        (kansio/poista-tiedostot +arkistot-target-polku+)))))
 
 (deftest testaa-pura-macissa-tehty-zip
   (testaa-tiedoston-purku "test_zip_mac.zip"))
@@ -47,7 +51,7 @@
       (with-open [ulos (GzipCompressorOutputStream. (io/output-stream gz))]
         (.write ulos (.getBytes "Terve, terve, tässä on Heikki!")))
       (arkisto/pura-paketti (.getPath gz))
-      (is (true? (.exists purettu)))
+      (is (.exists purettu))
       (is (= "Terve, terve, tässä on Heikki!" (slurp purettu)))
       (finally
         (io/delete-file gz true)
@@ -100,16 +104,16 @@
          (io/delete-file alikansio true))))))
 
 (deftest testaa-pura-hakemistoja-sisaltava-zip
-  (testaa-hakemistollisen-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip))
+  (testaa-hakemistollisen-arkiston-purku "hakemistot_zip.zip" luo-hakemistollinen-zip))
 
 (deftest testaa-pura-hakemistoja-sisaltava-tgz
-  (testaa-hakemistollisen-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz))
+  (testaa-hakemistollisen-arkiston-purku "hakemistot_tgz.tgz" luo-hakemistollinen-tgz))
 
 (deftest testaa-pura-tyhjan-hakemiston-sisaltava-zip
-  (testaa-hakemistollisen-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip true))
+  (testaa-hakemistollisen-arkiston-purku "tyhja_hakemisto_zip.zip" luo-hakemistollinen-zip true))
 
 (deftest testaa-pura-tyhjan-hakemiston-sisaltava-tgz
-  (testaa-hakemistollisen-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz true))
+  (testaa-hakemistollisen-arkiston-purku "tyhja_hakemisto_tgz.tgz" luo-hakemistollinen-tgz true))
 
 ;; Tietoturva: Path traversal -suojaus
 ;; Info: https://cwe.mitre.org/data/definitions/22.html
