@@ -29,12 +29,12 @@
 
 .pot2-tieosuushaku {
   margin-bottom: @valistys-16;
-  max-width: 45rem;
 
   .pot2-tieosuushaku-paneeli {
-    border: 1px solid @gray200;
-    background-color: @white-dark;
-    padding: @valistys-12;
+    border-top: 1px solid @white-darker;
+    border-bottom: 1px solid @white-darker;
+    background-color: @white;
+    padding: @valistys-32;
   }
 
   .pot2-tieosuushaku-otsikko {
@@ -52,31 +52,40 @@
     align-items: flex-end;
     display: flex;
     flex-wrap: wrap;
-    gap: @valistys-4;
+    gap: @valistys-8;
+    padding-top: @valistys-16;
 
     > .label-ja-kentta {
       margin: 0;
-      width: auto;
+      min-width: 0;
+      width: 61px;
 
-      input:not([type="checkbox"]) {
-        width: 61px;
-      }
-
-      &:first-child {
-        width: 61px;
-      }
-
-      &:not(:first-child) {
+      > .kentta {
+        min-width: 0;
         width: 61px;
       }
     }
   }
 
+  .pot2-tieosuushaku-ohje {
+    font-size: 14px;
+    font-weight: 400;
+    margin-top: 24px;
+  }
+
   .pot2-tieosuushaku-tulosalue {
     margin-top: @valistys-12;
 
+    .pot2-tieosuushaku-tulosmaara {
+      font-size: 12px;
+      font-weight: 400;
+      margin-top: 24px;
+      padding-bottom: 24px;
+    }
+
     > .pot2-tieosuushaku-grid {
       max-height: 24rem;
+      max-width: 800px;
       overflow-y: auto;
 
       .grid {
@@ -85,7 +94,7 @@
 
       th,
       td {
-        padding: @valistys-4 @valistys-6;
+        padding: @valistys-8 @valistys-16;
         white-space: nowrap;
       }
 
@@ -100,7 +109,7 @@
 
     > .info-laatikko,
     > button {
-      margin-top: @valistys-8;
+      margin-top: @valistys-24;
     }
 
     > .info-laatikko {

@@ -30,24 +30,28 @@
     :tunniste (juxt :tr-numero :tr-ajorata :tr-kaista
                     :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys)
     :gridin-luokka "pot2-tieosuushaku-grid"
+    :piilota-muokkaus? true
     :data-cy "pot2-tieosuushaku-tulokset"}
    (cond-> []
      voi-lisata?
      (conj (grid/rivinvalintasarake
              {:otsikko "Valitse"
-            :leveys 1
-              :otsikkovalinta? false
+              :leveys 1
+              :otsikkovalinta? true
+              :kaikki-valittu?-fn #(and (seq tieosuudet)
+                                        (every? :valittu? tieosuudet))
+              :otsikko-valittu-fn #(e! (pot2-tiedot/->ValitseTieosuudet %))
               :rivi-valittu?-fn :valittu?
               :rivi-valittu-fn #(e! (pot2-tiedot/->ValitseTieosuus %1 %2))}))
 
      true
-    (into [{:otsikko "Tie" :nimi :tr-numero :tyyppi :numero :leveys 2}
-           {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :numero :leveys 2}
-           {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :numero :leveys 2}
-           {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :numero :leveys 2}
-           {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :numero :leveys 2}
-           {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :numero :leveys 2}
-           {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :numero :leveys 2}]))
+        (into [{:otsikko "Tie" :nimi :tr-numero :tyyppi :numero :tasaa :oikea :leveys 2}
+          {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :numero :tasaa :oikea :leveys 2}
+          {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :numero :tasaa :oikea :leveys 2}
+          {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :numero :tasaa :oikea :leveys 2}
+          {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :numero :tasaa :oikea :leveys 2}
+          {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :numero :tasaa :oikea :leveys 2}
+          {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :numero :tasaa :oikea :leveys 2}]))
    tieosuudet])
 
 (defn tieosuushaku
@@ -70,6 +74,8 @@
          [hakukentta e! hakuehdot "Alkuosa" :tr-alkuosa "pot2-tieosuushaku-alkuosa"]
          [hakukentta e! hakuehdot "Loppuosa" :tr-loppuosa "pot2-tieosuushaku-loppuosa"]
          ]
+        [:div.pot2-tieosuushaku-ohje
+         "Jos tieosat jatkuvat kohteen ulkopuolelle, listauksessa näytetään ainoastaan kohteen alku- ja loppuetäisyys, joka mahtuu kohteen sisälle."]
         (cond
           haetaan?
           [yleiset/ajax-loader "Haetaan tieosuuksia..."]
@@ -79,6 +85,8 @@
 
           (some? tieosuudet)
           [:div.pot2-tieosuushaku-tulosalue
+           [:div.pot2-tieosuushaku-tulosmaara
+            (str "Tieosuuksia yhteensä " (count tieosuudet) " kpl")]
            [tulostaulukko e! tieosuudet voi-lisata?]
            (when (seq kohteen-ulkopuolelle-jatkuvat)
              [yleiset/info-laatikko

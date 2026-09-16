@@ -53,6 +53,7 @@
 (defrecord HaeTieosuudetOnnistui [vastaus])
 (defrecord HaeTieosuudetEpaonnistui [vastaus])
 (defrecord ValitseTieosuus [rivi valittu?])
+(defrecord ValitseTieosuudet [valittu?])
 (defrecord LisaaValitutTieosuudet [atomi])
 (defrecord KulutuskerrosMuokattu [muokattu?])
 (defrecord LaskeTieosoitteenPituus [tie])
@@ -534,6 +535,12 @@
                           (assoc % :valittu? valittu?)
                           %)
                        tieosuudet))))
+
+  ValitseTieosuudet
+  (process-event [{:keys [valittu?]} app]
+    (update-in app [:paallystysilmoitus-lomakedata :tieosuushaku :tieosuudet]
+               (fn [tieosuudet]
+                 (mapv #(assoc % :valittu? valittu?) tieosuudet))))
 
   LisaaValitutTieosuudet
   (process-event [{:keys [atomi]} app]

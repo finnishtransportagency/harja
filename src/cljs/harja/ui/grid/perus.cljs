@@ -1563,15 +1563,10 @@
     (assert otsikko-valittu-fn))
 
   {:otsikko (if otsikkovalinta?
-              [napit/nappi
-               nil
-               #(if (kaikki-valittu?-fn)
-                  (otsikko-valittu-fn false)
-                  (otsikko-valittu-fn true))
-               {:ikoni (if (kaikki-valittu?-fn)
-                         (ui-ikonit/livicon-square)
-                         (ui-ikonit/livicon-check))
-                :ikoninappi? true}]
+              [kentat/tee-kentta
+               {:tyyppi :checkbox}
+               (r/wrap (boolean (kaikki-valittu?-fn))
+                 #(otsikko-valittu-fn %))]
               (or otsikko "Valitse"))
    :nimi :valinta
    :tyyppi :komponentti
