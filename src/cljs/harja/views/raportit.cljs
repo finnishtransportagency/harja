@@ -786,6 +786,12 @@
     (str "Valitse elinvoimakeskus ja urakka nähdäksesi raportit")
     (str "Ei raportteja saatavilla urakkatyypissä " urakkatyyppi)))
 
+(defn- raportin-konteksti [v-ur v-hal]
+  (cond
+    v-ur "urakka"
+    v-hal "hallintayksikko"
+    :else "koko maa"))
+
 (defn raporttivalinnat [ensimmainen-urakka-viimeksi]
   (komp/luo
     ;; Ei tällä hetkellä raporteissa sallita urakoitsijavalintaa
@@ -797,10 +803,7 @@
             ensimmainen-urakka-yksikossa (->> @nav/suodatettu-urakkalista (sort-by :nimi) (keep :nimi) first)
             nykyinen-hallintayks-avain (->> v-hal :id str keyword)
             urakan-nimen-pituus 36
-            konteksti (cond
-                        v-ur "urakka"
-                        v-hal "hallintayksikko"
-                        :else "koko maa")
+            konteksti (raportin-konteksti v-ur v-hal)
             raportissa? (some? @raportit/suoritettu-raportti)
             raporttilista @mahdolliset-raporttityypit
             ladataanko-urakoita? (some (fn [[k v]]
@@ -903,11 +906,20 @@
            [:div.raportin-asetukset
             [raportin-parametrit @valittu-raporttityyppi konteksti v-ur v-hal]])]))))
 
-(defn nayta-raportti [tyyppi r]
+(def ^:private laajan-kontekstin-raportin-ilmoitus
+  "Hallintayksikkö- ja koko maa -tasoinen raportti saatavilla vain PDF- ja Excel muodossa.")
+
+(defn- raportin-html-sallittu? [tyyppi konteksti]
+  (or (nil? (:html-kontekstit tyyppi))
+      (contains? (:html-kontekstit tyyppi) konteksti)))
+
+(defn nayta-raportti [tyyppi r konteksti]
   (komp/luo
-    (fn [tyyppi r]
+    (fn [tyyppi r konteksti]
       [:span
-       [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]])))
+       (if (raportin-html-sallittu? tyyppi konteksti)
+         [raportti/muodosta-html (assoc-in r [1 :tunniste] (:nimi tyyppi))]
+         [yleiset/info-laatikko :neutraali laajan-kontekstin-raportin-ilmoitus])])))
 
 (defn raporteissa-ruuhkaa []
   (let [yrita-uudelleen? (atom true)
@@ -931,6 +943,7 @@
 
 (defn raporttivalinnat-ja-raportti []
   (let [r @raportit/suoritettu-raportti
+        konteksti (raportin-konteksti @nav/valittu-urakka @nav/valittu-hallintayksikko)
         ensimmainen-urakka-viimeksi (atom nil)]
     [:span
      [raporttivalinnat ensimmainen-urakka-viimeksi]
@@ -942,7 +955,7 @@
        [raporteissa-ruuhkaa]
 
        (not (nil? r))
-       [nayta-raportti @valittu-raporttityyppi r])]))
+       [nayta-raportti @valittu-raporttityyppi r konteksti])]))
 
 (defn raportit []
   (komp/luo
