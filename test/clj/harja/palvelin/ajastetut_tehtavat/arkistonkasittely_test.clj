@@ -3,6 +3,7 @@
             [harja.testi :refer :all]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.tyokalut.kansio :as kansio]
+            [clojure.string :as str]
             [clojure.java.io :as io])
   (:import (java.util.zip ZipEntry ZipOutputStream)
            (org.apache.commons.compress.archivers.tar TarArchiveEntry TarArchiveOutputStream)
@@ -11,24 +12,31 @@
 (def +arkistot-polku+ "test/resurssit/arkistot/")
 (def +arkistot-target-polku+ "test/resurssit/arkistot/arkisto_target/")
 
-(defn testaa-tiedoston-purku [tiedosto-nimi]
+(defn testaa-tiedoston-purku
+  "Purkaa arkiston ja tarkistaa sisällön. Puretut tiedostot kopioidaan testikohtaiseen
+   kohdekansioon, jonka tyhjennys varmistetaan. Oma kansio per testi, jotta testien tiedostot eivät
+   overlappaa."
+  [tiedosto-nimi]
   (let [teksti (io/file +arkistot-polku+ "teksti.txt")
-        kuva (io/file +arkistot-polku+ "kuva.png")]
+        kuva (io/file +arkistot-polku+ "kuva.png")
+        kohde-kansio (io/file +arkistot-target-polku+ (str/replace tiedosto-nimi "." "_"))]
     (try
+      (.mkdirs kohde-kansio)
       (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
       ;; Tarkista, että tiedostot purkautuivat oikein
       (is (.exists teksti))
       (is (= "Terve!" (slurp teksti)))
       (is (.exists kuva))
-      ;; Kopioi puretut tiedostot target-kansioon ja varmista, että kansion tyhjennys toimii
-      (io/copy teksti (io/file +arkistot-target-polku+ "teksti.txt"))
-      (io/copy kuva (io/file +arkistot-target-polku+ "kuva.png"))
-      (kansio/poista-tiedostot +arkistot-target-polku+)
-      (is (= 1 (count (.listFiles (io/file +arkistot-target-polku+)))) ".gitkeep-tiedosto jää jäljelle")
+      ;; Kopioi puretut tiedostot kohdekansioon ja varmista, että kansion tyhjennys toimii
+      (io/copy teksti (io/file kohde-kansio "teksti.txt"))
+      (io/copy kuva (io/file kohde-kansio "kuva.png"))
+      (kansio/poista-tiedostot (.getPath kohde-kansio))
+      (is (zero? (count (.listFiles kohde-kansio))) "poista-tiedostot tyhjentää kohdekansion")
       (finally
         (io/delete-file teksti true)
         (io/delete-file kuva true)
-        (kansio/poista-tiedostot +arkistot-target-polku+)))))
+        (kansio/poista-tiedostot (.getPath kohde-kansio))
+        (io/delete-file kohde-kansio true)))))
 
 (deftest testaa-pura-macissa-tehty-zip
   (testaa-tiedoston-purku "test_zip_mac.zip"))
@@ -44,10 +52,11 @@
 
 (deftest testaa-pura-pelkka-gzip-tiedosto
   ;; Gzip voi sisältää myös yksittäisen tiedoston ilman tar-arkistoa
-  (let [kansio (io/file +arkistot-target-polku+)
+  (let [kansio (io/file +arkistot-target-polku+ "pelkka_gzip")
         gz (io/file kansio "teksti.txt.gz")
         purettu (io/file kansio "teksti.txt")]
     (try
+      (.mkdirs kansio)
       (with-open [ulos (GzipCompressorOutputStream. (io/output-stream gz))]
         (.write ulos (.getBytes "Terve, terve, tässä on Heikki!")))
       (arkisto/pura-paketti (.getPath gz))
@@ -55,26 +64,28 @@
       (is (= "Terve, terve, tässä on Heikki!" (slurp purettu)))
       (finally
         (io/delete-file gz true)
-        (io/delete-file purettu true)))))
+        (io/delete-file purettu true)
+        (io/delete-file kansio true)))))
 
 ;; Arkisto voi sisältää hakemistoja, joilla ei ole sisältöä. Hakemistot luodaan automaattisesti kohdepolkuun.
-(defn- luo-hakemistollinen-zip [polku tyhja-hakemisto?]
+;; Hakemiston nimi on parametrisoitu, jotta mahd. rinnakkain ajettavat testit eivät käytä samaa kohdekansiota.
+(defn- luo-hakemistollinen-zip [polku hakemisto tyhja-hakemisto?]
   (with-open [ulos (ZipOutputStream. (io/output-stream polku))]
-    (.putNextEntry ulos (ZipEntry. "alikansio/"))
+    (.putNextEntry ulos (ZipEntry. (str hakemisto "/")))
     (.closeEntry ulos)
     (when-not tyhja-hakemisto?
-      (.putNextEntry ulos (ZipEntry. "alikansio/teksti.txt"))
+      (.putNextEntry ulos (ZipEntry. (str hakemisto "/teksti.txt")))
       (.write ulos (.getBytes "Test"))
       (.closeEntry ulos))))
 
-(defn- luo-hakemistollinen-tgz [polku tyhja-hakemisto?]
+(defn- luo-hakemistollinen-tgz [polku hakemisto tyhja-hakemisto?]
   (with-open [ulos (TarArchiveOutputStream.
                      (GzipCompressorOutputStream. (io/output-stream polku)))]
-    (.putArchiveEntry ulos (TarArchiveEntry. "alikansio/"))
+    (.putArchiveEntry ulos (TarArchiveEntry. (str hakemisto "/")))
     (.closeArchiveEntry ulos)
     (when-not tyhja-hakemisto?
       (let [sisalto (.getBytes "Test")
-            entry (doto (TarArchiveEntry. "alikansio/teksti.txt")
+            entry (doto (TarArchiveEntry. (str hakemisto "/teksti.txt"))
                     (.setSize (count sisalto)))]
         (.putArchiveEntry ulos entry)
         (.write ulos sisalto)
@@ -82,16 +93,19 @@
 
 (defn- testaa-hakemistollisen-arkiston-purku
   "Luo arkiston, purkaa sen ja varmistaa että hakemisto syntyy kohdekansioon.
-   Kun tyhja-hakemisto? on false (oletus), tarkistetaan myös hakemiston sisältö."
+   Kun tyhja-hakemisto? on false (oletus), tarkistetaan myös hakemiston sisältö.
+   Arkiston sisältämä hakemisto nimetään arkiston tiedostonimen mukaan, jolloin
+   jokainen testi käyttää omaa uniikkia kohdekansiotaan, eikä overlappaa muiden testien kanssa."
   ([tiedosto-nimi luo-arkisto-fn]
    (testaa-hakemistollisen-arkiston-purku tiedosto-nimi luo-arkisto-fn false))
   ([tiedosto-nimi luo-arkisto-fn tyhja-hakemisto?]
    (let [kansio (io/file +arkistot-target-polku+)
          arkisto (io/file kansio tiedosto-nimi)
-         alikansio (io/file kansio "alikansio")
+         hakemisto-nimi (str/replace tiedosto-nimi "." "_")
+         alikansio (io/file kansio hakemisto-nimi)
          purettu (io/file alikansio "teksti.txt")]
      (try
-       (luo-arkisto-fn (.getPath arkisto) tyhja-hakemisto?)
+       (luo-arkisto-fn (.getPath arkisto) hakemisto-nimi tyhja-hakemisto?)
        (arkisto/pura-paketti (.getPath arkisto))
 
        (is (.isDirectory alikansio))
@@ -117,8 +131,6 @@
 
 ;; Tietoturva: Path traversal -suojaus
 ;; Info: https://cwe.mitre.org/data/definitions/22.html
-(def +paha-arkisto-polku+ "test/resurssit/arkistot/paha_target/")
-(def +paha-tiedosto+ "test/resurssit/arkistot/paha.txt")
 
 (defn- luo-paha-zip [polku]
   (with-open [ulos (ZipOutputStream. (io/output-stream polku))]
@@ -136,19 +148,26 @@
       (.write ulos sisalto)
       (.closeArchiveEntry ulos))))
 
-(defn- testaa-path-traversal [tiedosto-nimi luo-arkisto-fn]
-  (.mkdirs (io/file +paha-arkisto-polku+))
-  (io/delete-file (io/file +paha-tiedosto+) true)
-  (let [arkiston-polku (str +paha-arkisto-polku+ tiedosto-nimi)]
+(defn- testaa-path-traversal
+  "Purkaa 'pahan arkiston', joka yrittää kirjoittaa kohdekansion ulkopuolelle (../paha.txt).
+   Arkisto puretaan testikohtaiseen hakemistoon, jolloin mahdollinen hakemiston ulkopuolelle
+   karkaava tiedosto puretaan testikohtaiseen hakemistoon, eikä jaettuun kohdekansioon."
+  [tiedosto-nimi luo-arkisto-fn]
+  (let [testikansio (io/file +arkistot-target-polku+ (str/replace tiedosto-nimi "." "_"))
+        kohde-kansio (io/file testikansio "arkisto")
+        arkisto (io/file kohde-kansio tiedosto-nimi)
+        paha-tiedosto (io/file testikansio "paha.txt")]
     (try
-      (luo-arkisto-fn arkiston-polku)
-      (is (thrown? clojure.lang.ExceptionInfo (arkisto/pura-paketti arkiston-polku)))
-      (is (false? (.exists (io/file +paha-tiedosto+)))
+      (.mkdirs kohde-kansio)
+      (luo-arkisto-fn (.getPath arkisto))
+      (is (thrown? clojure.lang.ExceptionInfo (arkisto/pura-paketti (.getPath arkisto))))
+      (is (false? (.exists paha-tiedosto))
         "Arkiston purku ei saa kirjoittaa kohdekansion ulkopuolelle")
       (finally
-        (io/delete-file (io/file arkiston-polku) true)
-        (io/delete-file (io/file +paha-tiedosto+) true)
-        (io/delete-file (io/file +paha-arkisto-polku+) true)))))
+        (io/delete-file arkisto true)
+        (io/delete-file paha-tiedosto true)
+        (io/delete-file kohde-kansio true)
+        (io/delete-file testikansio true)))))
 
 (deftest testaa-zip-ei-purkaudu-kohdekansion-ulkopuolelle
   (testaa-path-traversal "paha.zip" luo-paha-zip))
