@@ -606,17 +606,32 @@
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
         kustannukset-jarjestettyna (valikatselmukset/hae-kustannukset-jarjestettyna (:db jarjestelma) urakka-id hoitokauden-alkuvuosi hoitokauden-alkupvm hoitokauden-loppupvm)
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])]
-    (is (= odotetut-paatokset-tavoitehinta-alittuu (get-in vastaus-tavoitehinnan-alitus [:paatokset])))
-    (is (= odotetut-paatokset-tavoitehinta-ylittyy (get-in vastaus-tavoitehinnan-ylitys [:paatokset])))
-    (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
-      "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
-    (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
-      "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
-    (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
-      "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
-    (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
-          alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
-      (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
-        "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
-      (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
-        "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
+        (doseq [[vastaus odotetut-paatokset]
+          [[vastaus-tavoitehinnan-alitus odotetut-paatokset-tavoitehinta-alittuu]
+           [vastaus-tavoitehinnan-ylitys odotetut-paatokset-tavoitehinta-ylittyy]]]
+          (let [pysyvat-muutokset (some :tavoitehinnan-pysyvat-muutokset (:paatokset vastaus))]
+            (is (every? #(some % (:paatokset vastaus))
+            (mapcat keys odotetut-paatokset))
+          "Vastauksessa ovat kaikki odotetut päätöstyypit")
+            (is (= (reduce + 0 (keep #(get pysyvat-muutokset %)
+                                     [:kirjallisesti_sovitut_muutokset
+                                      :pysyvat_muutokset
+                                      :muutostyo_muutokset
+                                      :johto_ja_hallintakorvaus_muutokset
+                                      :tehtava_ja_maaratoteumamuutokset
+                                      :rahavarausten_muutokset
+                                      :arvonvahennysten_muutokset]))
+                   (:tavoitehinnan_muutokset_yhteensa pysyvat-muutokset))
+                "Pysyvien muutosten yhteissummassa ovat mukana kaikki muutostyypit")))
+        (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
+            "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
+        (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
+            "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
+        (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
+            "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
+        (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
+              alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
+          (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
+              "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
+          (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
+              "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))

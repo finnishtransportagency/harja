@@ -429,6 +429,10 @@
         aikavali_alkupvm "2025-10-01"
         aikavali_loppupvm "2026-09-30"
         urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        hae-yhteenveto (fn []
+             (-> (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
+                   hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
+                 (tuotekohtainen/koosta-yhteenveto 0.0M)))
 
         ;; ----------------------------------------------------------------
         ;; Vahvista kustannussuunnitelma jotta saadaan laskutusraja arvot
@@ -495,6 +499,7 @@
         tehtavaryhma-id (hae-tehtavaryhman-id "A - Talvihoito")
         tehtava-id nil
         talvihoitosumma 1234M
+        tiedot-ennen (hae-yhteenveto)
 
         talvihoitokulu (luo-kulu
                          urakka-id "laskutettava" erapaiva "hankintakulu"
@@ -504,12 +509,9 @@
             {:urakka-id urakka-id
              :kulu-kohdistuksineen talvihoitokulu})
 
-        tiedot (q-map (format "select * from mhu_laskutusyhteenveto_tuotekohtainen('%s'::DATE, '%s'::DATE, '%s'::DATE, '%s'::DATE, %s)"
-                        hk_alkupvm hk_loppupvm aikavali_alkupvm aikavali_loppupvm urakka-id))
-
         ;; ----------------------------------------------------------------
         ;; Laskutusrajan arvot pitäisi olla saatavilla sekä näyttää oikealta
-        tiedot (tuotekohtainen/koosta-yhteenveto tiedot 0.0M)
+        tiedot (hae-yhteenveto)
 
         {:keys [onko_laskutusraja_kaytossa
                 _laskutusrajan_ylittynyt_yht
@@ -522,16 +524,17 @@
                 _kaikki-tavoitehintaiset-laskutetaan
                 _kaikki-tavoitehintaiset-laskutettu
                 _kaikki-yhteensa-laskutettu
-                laskutusraja_yht
                 onko_laskutusraja_ylittynyt
                 _laskutusrajan_ylittynyt_val_aika]} tiedot]
 
     (is (false? onko_laskutusraja_ylittynyt) "Laskutusrajan ei pitäisi olla ylittynyt")
     (is (true? onko_laskutusraja_kaytossa) "Lasktutusrajan pitäisi olla käytössä MHU25 urakalla")
-    (is (= laskutusrajaan_jaljella (- laskutusraja_yht talvihoitosumma)) "Laskutusraja pitäisi alentua kulun perusteella")
-    (is (= laskutusraja_laskutettavaa_yht talvihoitosumma) "Laskutettavaa pitäisi olla kirjatun kulun verran")
-
-    (is (= talvihoitosumma laskutusraja_laskutettavaa_yht) "Kirjattu kulu pitäisi olla laskutettavissa")))
+          (is (= (- (:laskutusrajaan_jaljella tiedot-ennen) talvihoitosumma)
+               laskutusrajaan_jaljella)
+            "Laskutusrajan pitäisi alentua kulun perusteella")
+          (is (= (+ (:laskutusraja_laskutettavaa_yht tiedot-ennen) talvihoitosumma)
+               laskutusraja_laskutettavaa_yht)
+            "Laskutettavan summan pitäisi muuttua kirjatun kulun verran")))
 
 
 (deftest tuotekohtainen-mhu2021-ei-nayta-laskutusrajaa
