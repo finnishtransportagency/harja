@@ -1,7 +1,5 @@
 (ns harja.palvelin.ajastetut-tehtavat.arkistonkasittely-test
-  (:require [clj-gatling.legacy-util :refer [legacy-reporter->reporter]]
-            [clojure.test :refer [deftest is use-fixtures]]
-            [clj-time.periodic :refer [periodic-seq]]
+  (:require [clojure.test :refer [deftest is]]
             [harja.testi :refer :all]
             [harja.palvelin.tyokalut.arkisto :as arkisto]
             [harja.palvelin.tyokalut.kansio :as kansio]
