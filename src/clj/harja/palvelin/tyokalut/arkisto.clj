@@ -1,14 +1,14 @@
 (ns harja.palvelin.tyokalut.arkisto
   (:require [clojure.java.io :as io]
-            [clojure.string :as str])
+            [clojure.string :as str]
+            [slingshot.slingshot :refer [throw+]])
   (:import (java.io BufferedInputStream File InputStream)
            (java.nio.file Path)
            (java.util.zip ZipEntry ZipInputStream)
            (org.apache.commons.compress.archivers ArchiveException ArchiveStreamFactory)
            (org.apache.commons.compress.archivers.tar TarArchiveEntry TarArchiveInputStream)
            (org.apache.commons.compress.compressors.gzip GzipCompressorInputStream GzipCompressorInputStream$Builder)
-           (org.apache.commons.io FilenameUtils))
-  (:use [slingshot.slingshot :only [try+ throw+]]))
+           (org.apache.commons.io FilenameUtils)))
 
 (defn- turvallinen-kohdetiedosto
   "Muodostaa arkiston kohdetiedoston kohdekansion sisään turvallisesti.
