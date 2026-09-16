@@ -661,7 +661,6 @@
     tavoitehintojen-tilat))
 
 (defn hae-kaikkien-tehtavaryhmien-nimet [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (q/hae-kaikkien-tehtavaryhmien-nimet db))
 
 (defn- kulu-excel
