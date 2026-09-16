@@ -76,32 +76,28 @@
         (.write ulos sisalto)
         (.closeArchiveEntry ulos)))))
 
-(defn- testaa-hakemistollisen-arkiston-purku [tiedosto-nimi luo-arkisto-fn]
-  (let [kansio (io/file +arkistot-target-polku+)
-        arkisto (io/file kansio tiedosto-nimi)
-        alikansio (io/file kansio "alikansio")
-        purettu (io/file alikansio "teksti.txt")]
-    (try
-      (luo-arkisto-fn (.getPath arkisto))
-      (arkisto/pura-paketti (.getPath arkisto))
-      (is (true? (.isDirectory alikansio)))
-      (is (= "Test" (slurp purettu)))
-      (finally
-        (io/delete-file arkisto true)
-        (io/delete-file purettu true)
-        (io/delete-file alikansio true)))))
+(defn- testaa-hakemistollisen-arkiston-purku
+  "Luo arkiston, purkaa sen ja varmistaa että hakemisto syntyy kohdekansioon.
+   Kun tyhja-hakemisto? on false (oletus), tarkistetaan myös hakemiston sisältö."
+  ([tiedosto-nimi luo-arkisto-fn]
+   (testaa-hakemistollisen-arkiston-purku tiedosto-nimi luo-arkisto-fn false))
+  ([tiedosto-nimi luo-arkisto-fn tyhja-hakemisto?]
+   (let [kansio (io/file +arkistot-target-polku+)
+         arkisto (io/file kansio tiedosto-nimi)
+         alikansio (io/file kansio "alikansio")
+         purettu (io/file alikansio "teksti.txt")]
+     (try
+       (luo-arkisto-fn (.getPath arkisto) tyhja-hakemisto?)
+       (arkisto/pura-paketti (.getPath arkisto))
 
-(defn- testaa-tyhjan-hakemiston-sisaltavan-arkiston-purku [tiedosto-nimi luo-arkisto-fn]
-  (let [kansio (io/file +arkistot-target-polku+)
-        arkisto (io/file kansio tiedosto-nimi)
-        alikansio (io/file kansio "alikansio")]
-    (try
-      (luo-arkisto-fn (.getPath arkisto) true)
-      (arkisto/pura-paketti (.getPath arkisto))
-      (is (true? (.isDirectory alikansio)))
-      (finally
-        (io/delete-file arkisto true)
-        (io/delete-file alikansio true)))))
+       (is (.isDirectory alikansio))
+
+       (when-not tyhja-hakemisto?
+         (is (= "Test" (slurp purettu))))
+       (finally
+         (io/delete-file arkisto true)
+         (io/delete-file purettu true)
+         (io/delete-file alikansio true))))))
 
 (deftest testaa-pura-hakemistoja-sisaltava-zip
   (testaa-hakemistollisen-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip))
@@ -110,10 +106,10 @@
   (testaa-hakemistollisen-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz))
 
 (deftest testaa-pura-tyhjan-hakemiston-sisaltava-zip
-  (testaa-tyhjan-hakemiston-sisaltavan-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip))
+  (testaa-hakemistollisen-arkiston-purku "hakemistot.zip" luo-hakemistollinen-zip true))
 
 (deftest testaa-pura-tyhjan-hakemiston-sisaltava-tgz
-  (testaa-tyhjan-hakemiston-sisaltavan-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz))
+  (testaa-hakemistollisen-arkiston-purku "hakemistot.tgz" luo-hakemistollinen-tgz true))
 
 ;; Tietoturva: Path traversal -suojaus
 ;; Info: https://cwe.mitre.org/data/definitions/22.html
