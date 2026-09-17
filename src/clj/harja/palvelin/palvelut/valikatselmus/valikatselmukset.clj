@@ -38,6 +38,7 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]))
 
 (defn hoitokaudet-vektorimuotoon
@@ -121,11 +122,12 @@
 
         ;; Urakan alkuvuodesta 2025 eteenpäin myös arvonvähennykset vaikuttavat tavoiteintaan. Ja -26 hoitovuodesta eteenpäin myös vanhemmilla urakoilla
         ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
-                                                                   :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)
-                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        tavoitehintaan-vaikuttavat-arvonvahennykset
+        (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                             :alkupvm (first valittu-hoitokausi)
+                                                                             :loppupvm (second valittu-hoitokausi)
+                                                                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
         hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
                                                             muutosvaikutus
                                                             arvonvahennykset-yht)]
@@ -191,10 +193,10 @@
                                        0)
         mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
         hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
-                                                                   :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)
-                                                                   :hoitokauden-alkuvuosi valittu-hoitovuosi})
+        arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
+                                                                                              :alkupvm (first valittu-hoitokausi)
+                                                                                              :loppupvm (second valittu-hoitokausi)
+                                                                                              :hoitokauden-alkuvuosi valittu-hoitovuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
         ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
         ;; ;; Vaiha alku vuosi, eli vantaa 2024 . pitää tulla elokuu 2024
@@ -296,16 +298,18 @@
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm})
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna sanktioita. Joten haetaan ne erikseen
+        ;; Arvonvähennyssanktiot filtteröidään pois, jos ne vaikuttaa tavoitehintaan, eli -25 urakoilla ja muillakin -26 hoitovuodesta alkaen
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm
                                                    :hoitokauden-alkuvuosi hoitovuosi})
 
         ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
-                                                                   :alkupvm hoitokauden-alkupvm
-                                                                   :loppupvm hoitokauden-loppupvm
-                                                                   :hoitokauden-alkuvuosi hoitovuosi})
+        tavoitehintaan-vaikuttavat-arvonvahennykset
+        (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
+                                                                             :alkupvm hoitokauden-alkupvm
+                                                                             :loppupvm hoitokauden-loppupvm
+                                                                             :hoitokauden-alkuvuosi hoitovuosi})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
@@ -345,7 +349,7 @@
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
                               :sanktiot sanktiot
-                              :arvonvahennykset arvonvahennykset
+                              :tavoitehintaan-vaikuttavat-arvonvahennykset tavoitehintaan-vaikuttavat-arvonvahennykset
                               :budjettitavoite budjettitavoite-vuodelle
                               :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
                  :paatokset paatokset
@@ -499,7 +503,7 @@
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
               (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                        :urakka-id (:urakkaid paatos-tietokannasta)}))
+                                                                  :urakka-id (:urakkaid paatos-tietokannasta)}))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -586,11 +590,11 @@
           rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
 
           ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
-          arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
-                                                                     :alkupvm (first valittu-hoitokausi)
-                                                                     :loppupvm (second valittu-hoitokausi)
-                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+          tavoitehintaan-vaikuttavat-arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                                           :alkupvm (first valittu-hoitokausi)
+                                                                                                                           :loppupvm (second valittu-hoitokausi)
+                                                                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          thv-arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
 
           ;; Verrataan kirjallisesti sovittuja muutoksia saatuihin päätöksen arvoihin
           validaatio (if-not (= (konversio/konvertoi->int (or kirjallisesti-sovitut-muutokset 0)) (konversio/konvertoi->int (:kirjallisesti_sovitut_muutokset paatos)))
@@ -621,9 +625,9 @@
                        Päätöksen mukaiset rahavarausten muutokset: " (fmt/euro-opt false false (:rahavarausten_muutokset paatos)) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
+          validaatio (if-not (= (konversio/konvertoi->int (or thv-arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
                        (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa.
-                       Järjestelmästä löytyvät arvonvähennysten muutokset:" (fmt/euro-opt false false arvonvahennykset-yht) "€.
+                       Järjestelmästä löytyvät arvonvähennysten muutokset:" (fmt/euro-opt false false thv-arvonvahennykset-yht) "€.
                        Päätöksen mukaiset rahavarausten muutokset: " (fmt/euro-opt false false (:arvonvahennysten_muutokset paatos)) " €"))
                        validaatio)
 
@@ -1240,7 +1244,8 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
+          db (:db this)
+          pdf (:pdf-vienti this)]
 
       (julkaise-palvelu http
         :hae-ketjutetusti-kumoutuvat-paatokset
@@ -1257,8 +1262,6 @@
         (fn [user tiedot]
           (tallenna-tavoitehinnan-oikaisu db user tiedot)))
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
       (julkaise-palvelu http
         :poista-tavoitehinnan-oikaisu
         (fn [user tiedot]
@@ -1268,12 +1271,6 @@
         :tallenna-kattohinnan-oikaisu
         (fn [user tiedot]
           (tallenna-kattohinnan-oikaisu db user tiedot)))
-
-      ;; FIXME Poistuu?
-      (julkaise-palvelu http
-        :poista-kattohinnan-oikaisu
-        (fn [user tiedot]
-          (poista-kattohinnan-oikaisu db user tiedot)))
 
       (julkaise-palvelu (:http-palvelin this)
         :hae-valikatselmuksen-tiedot-hoitovuodelle
@@ -1291,26 +1288,10 @@
           (tee-lupauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/lupauspaatos})
 
-      ;; FIXME Poistuu
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-lupauspaatos
-        (fn [user tiedot]
-          (poista-lupauspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/lupauspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-muutospaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-muutospaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-muutospaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1319,25 +1300,10 @@
           (tee-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-pysyvamuutospaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-pysyva-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-pysyva-muutospaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-tavoitehinnan-alituspaatos
         (fn [user tiedot]
           (tee-tavoitehinnan-alituspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-alituspaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-alituspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-alituspaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1346,26 +1312,10 @@
           (tee-tavoitehinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-tavoitehinnan-ylityspaatos
-        (fn [user tiedot]
-          (poista-tavoitehinnan-ylityspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/tavoitehinnan-ylityspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-kattohinnan-ylityspaatos
         (fn [user tiedot]
           (tee-kattohinnan-ylityspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-kattohinnan-ylityspaatos
-        (fn [user tiedot]
-          (poista-kattohinnan-ylityspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/kattohinnan-ylityspaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1374,26 +1324,10 @@
           (tee-hoitokauden-lopun-indeksikorjauspaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-indeksikorjauspaatos
-        (fn [user tiedot]
-          (poista-indeksikorjauspaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/indeksikorjauspaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-hv-lopun-tavoite-ja-kattohintapaatos
         (fn [user tiedot]
           (tee-hv-lopun-tavoite-ja-kattohintapaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-hoitovuoden-lopun-hintapaatos
-        (fn [user tiedot]
-          (poista-hoitovuoden-lopun-hintapaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoitokauden-lopun-hintapaatos})
 
       (julkaise-palvelu (:http-palvelin this)
@@ -1402,26 +1336,10 @@
           (tee-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
 
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-hoidonjohtopalkkion-muutospaatos
-        (fn [user tiedot]
-          (poista-hoidonjohtopalkkion-muutospaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/hoidonjohtopalkkiomuutospaatos})
-
       (julkaise-palvelu (:http-palvelin this)
         :tee-poytakirjan-raporttipaatos
         (fn [user tiedot]
           (tee-poytakirjan-raporttipaatos (:db this) user tiedot))
-        {:kysely-spec ::valikatselmus-domain/raporttipaatos})
-
-      ;; FIXME Poistuu: http palvelua ei tarvita, funktio jää
-      ;;  Testit hajoaa tästä
-      (julkaise-palvelu (:http-palvelin this)
-        :poista-poytakirjan-raporttipaatos
-        (fn [user tiedot]
-          (poista-poytakirjan-raporttipaatos (:db this) user tiedot))
         {:kysely-spec ::valikatselmus-domain/raporttipaatos})
       this))
 
@@ -1432,27 +1350,16 @@
       :tallenna-tavoitehinnan-oikaisu
       :poista-tavoitehinnan-oikaisu
       :tallenna-kattohinnan-oikaisu
-      :poista-kattohinnan-oikaisu
       :hae-valikatselmuksen-tiedot-hoitovuodelle
       :onko-paatoksia-tekematta
       :tee-lupauspaatos
-      :poista-lupauspaatos
       :tee-tavoitehinnan-muutospaatos
-      :poista-tavoitehinnan-muutospaatos
       :tee-tavoitehinnan-pysyvamuutospaatos
-      :poista-tavoitehinnan-pysyvamuutospaatos
       :tee-tavoitehinnan-alituspaatos
-      :poista-tavoitehinnan-alituspaatos
       :tee-tavoitehinnan-ylityspaatos
-      :poista-tavoitehinnan-ylityspaatos
       :tee-kattohinnan-ylityspaatos
-      :poista-kattohinnan-ylityspaatos
       :tee-indeksikorjauspaatos
-      :poista-indeksikorjauspaatos
       :tee-hv-lopun-tavoite-ja-kattohintapaatos
-      :poista-hoitovuoden-lopun-hintapaatos
       :tee-hoidonjohtopalkkion-muutospaatos
-      :poista-hoidonjohtopalkkion-muutospaatos
-      :tee-poytakirjan-raporttipaatos
-      :poista-poytakirjan-raporttipaatos)
+      :tee-poytakirjan-raporttipaatos)
     this))
