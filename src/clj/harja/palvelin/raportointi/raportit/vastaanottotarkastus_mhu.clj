@@ -422,22 +422,22 @@
                             tavoitehinnan-ylityspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :tavoitehinnan-ylitys)
                             tavoitehinnan-alituspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :tavoitehinnan-alitus)
                             kattohinnan-ylityspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :kattohinnan-ylitys)
-                            tavoitepalkkio (or (:tavoitepalkkio tavoitehinnan-alituspaatos) 0)
-                            hyvitys-tavoitehinnan-ylityksesta (or (:urakoitsija_maksaa tavoitehinnan-ylityspaatos) 0)
+                            tavoitepalkkio (or (and (:id tavoitehinnan-alituspaatos) (:tavoitepalkkio tavoitehinnan-alituspaatos)) 0)
+                            maksu-tavoitehinnan-ylityksesta (or (and (:id tavoitehinnan-ylityspaatos) (:urakoitsija_maksaa tavoitehinnan-ylityspaatos)) 0)
                             kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
                                                  (- toteuma-yht hoitovuoden-lopun-kattohinta)
-                                                 (or (:ylityksen_maara kattohinnan-ylityspaatos) 0))
-                            hyvitys-kattohinnan-ylityksesta (or (:urakoitsija_maksaa kattohinnan-ylityspaatos) 0)
+                                                 (or (and (:id kattohinnan-ylityspaatos) (:ylityksen_maara kattohinnan-ylityspaatos)) 0))
+                            maksu-kattohinnan-ylityksesta (or (and (:id kattohinnan-ylityspaatos) (:urakoitsija_maksaa kattohinnan-ylityspaatos)) 0)
 
-                            yhteensa (+ hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta tavoitepalkkio hyvitys-tavoitehinnan-ylityksesta kattohinnan-ylitys hyvitys-kattohinnan-ylityksesta)]
-                        [(str vuosi "-" (pvm/vuosi loppupvm)) hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta tavoitepalkkio hyvitys-tavoitehinnan-ylityksesta kattohinnan-ylitys hyvitys-kattohinnan-ylityksesta yhteensa]))
+                            yhteensa (+ hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta tavoitepalkkio maksu-tavoitehinnan-ylityksesta kattohinnan-ylitys maksu-kattohinnan-ylityksesta)]
+                        [(str vuosi "-" (pvm/vuosi loppupvm)) hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta tavoitepalkkio maksu-tavoitehinnan-ylityksesta kattohinnan-ylitys maksu-kattohinnan-ylityksesta yhteensa]))
                 hoitokaudet)
         lopun-tavoitehinta-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
         lopun-kattohinta-yhteensa (reduce + 0 (map #(or (nth % 2) 0) rivit))
         tavoitepalkkio-yhteensa (reduce + 0 (map #(or (nth % 3) 0) rivit))
-        hyvitys-tavoitehinnan-ylityksesta-yhteensa (reduce + 0 (map #(or (nth % 4) 0) rivit))
+        maksu-tavoitehinnan-ylityksesta-yhteensa (reduce + 0 (map #(or (nth % 4) 0) rivit))
         kattohinnan-ylitys-yhteensa (reduce + 0 (map #(or (nth % 5) 0) rivit))
-        hyvitys-kattohinnan-ylityksesta-yhteensa (reduce + 0 (map #(or (nth % 6) 0) rivit))
+        maksu-kattohinnan-ylityksesta-yhteensa (reduce + 0 (map #(or (nth % 6) 0) rivit))
         kaikki-yhteensa (reduce + 0 (map #(or (last %) 0) rivit))
         hinnat-yhteensarivi [{:lihavoi? true
                               :korosta-hennosti? true
@@ -445,9 +445,9 @@
                                      lopun-tavoitehinta-yhteensa
                                      lopun-kattohinta-yhteensa
                                      tavoitepalkkio-yhteensa
-                                     hyvitys-tavoitehinnan-ylityksesta-yhteensa
+                                     maksu-tavoitehinnan-ylityksesta-yhteensa
                                      kattohinnan-ylitys-yhteensa
-                                     hyvitys-kattohinnan-ylityksesta-yhteensa
+                                     maksu-kattohinnan-ylityksesta-yhteensa
                                      kaikki-yhteensa]}]
         otsikko-title [:otsikko-title "Urakan lopullinen tavoite- ja kattohinta"]]
     [[:taulukko {:otsikko "Urakan lopullinen tavoite- ja kattohinta"
@@ -458,9 +458,9 @@
        {:leveys 5 :otsikko "Hoitovuoden lopun tavoitehinta (€)" :fmt :raha}
        {:leveys 5 :otsikko "Hoitovuoden lopun kattohinta (€)" :fmt :raha}
        {:leveys 5 :otsikko "Urakoitsijan tavoitepalkkio (€)" :fmt :raha}
-       {:leveys 5 :otsikko "Urakoitsija hyvittää tavoitehinnan ylityksestä (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Urakoitsija maksaa tavoitehinnan ylityksestä (€)" :fmt :raha}
        {:leveys 5 :otsikko "Kattohinnan ylitys (€)" :fmt :raha}
-       {:leveys 5 :otsikko "Urakoitsija hyvittää kattohinnan ylityksestä (€)" :fmt :raha}]
+       {:leveys 5 :otsikko "Urakoitsija maksaa kattohinnan ylityksestä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) hinnat-yhteensarivi)))]]))
 
 (defn suorita [db user {:keys [urakka-id kasittelija]}]

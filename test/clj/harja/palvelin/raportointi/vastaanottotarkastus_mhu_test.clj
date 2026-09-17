@@ -730,8 +730,8 @@
                             :toteumiin-perustuvat-muutokset-yht 50M
                             :tavoitehintaan-vaikuttavat-arvonvahennykset [{:maara 10M}]}
                :paatokset [{:hoitovuoden-lopun-indeksikorjaus
-                            {:hoitokauden_lopun_indeksikorjaus 20M}}
-                           {:tavoitehinnan-ylitys {:urakoitsija_maksaa 30M}}]}
+                            {:id 1 :hoitokauden_lopun_indeksikorjaus 20M}}
+                           {:tavoitehinnan-ylitys {:id 1 :urakoitsija_maksaa 30M}}]}
          2026 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 2000M
                                               :hoitovuoden-lopun-kattohinta 2400M
                                               :kirjallisesti-sovitut-muutokset 200M
@@ -739,23 +739,19 @@
                                                            {:yht-toteutunut-summa 3000M}}}
                             :toteumiin-perustuvat-muutokset-yht 100M
                             :tavoitehintaan-vaikuttavat-arvonvahennykset [{:maara -20M}]}
-               :paatokset [{:hoitovuoden-lopun-indeksikorjaus
-                            {:id 1 :hoitokauden_lopun_indeksikorjaus 99M}}
-                           {:kattohinnan-ylitys
-                            {:id 2 :ylityksen_maara 50M :urakoitsija_maksaa 25M}}]}
+               :paatokset [{:hoitovuoden-lopun-indeksikorjaus {:id 1 :hoitokauden_lopun_indeksikorjaus 99M}}
+                           {:kattohinnan-ylitys {:id 2 :ylityksen_maara 50M :urakoitsija_maksaa 25M}}]}
          2027 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 3000M
                                               :hoitovuoden-lopun-kattohinta 3600M
                                               :kirjallisesti-sovitut-muutokset 0M
-                                              :yhteenveto {:kustannukset-yhteensa
-                                                           {:yht-toteutunut-summa 3300M}}}
+                                              :yhteenveto {:kustannukset-yhteensa {:yht-toteutunut-summa 3300M}}}
                             :toteumiin-perustuvat-muutokset-yht 0M
                             :tavoitehintaan-vaikuttavat-arvonvahennykset []}
-               :paatokset [{:tavoitehinnan-alitus {:tavoitepalkkio 40M}}]}
+               :paatokset [{:tavoitehinnan-alitus {:id 1 :tavoitepalkkio 40M}}]}
          2028 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 4000M
                                               :hoitovuoden-lopun-kattohinta 4800M
                                               :kirjallisesti-sovitut-muutokset 100M
-                                              :yhteenveto {:kustannukset-yhteensa
-                                                           {:yht-toteutunut-summa 4900M}}}
+                                              :yhteenveto {:kustannukset-yhteensa {:yht-toteutunut-summa 4900M}}}
                             :toteumiin-perustuvat-muutokset-yht 0M
                             :tavoitehintaan-vaikuttavat-arvonvahennykset [{:maara 50M}]}
                :paatokset []}
@@ -781,23 +777,23 @@
             taulukko (first raportin-osat)
             rivit (nth taulukko 3)]
         (testing "jokaisen hoitovuoden tavoite- ja kattohinta lasketaan oikein"
-          (is (= [["2025-2026" 1180M 1416.0M 0 30M 84.0M 0 2710.0M]
-                  ["2026-2027" 2280M 2736.0M 0 0 50M 25M 5091M]
-                  ["2027-2028" 3000M 3600.0M 40M 0 0 0 6640.0M]
-                  ["2028-2029" 4150M 4980.0M 0 0 0 0 9130.0M]
-                  ["2029-2030" 4950M 5940.0M 0 0 1060.0M 0 11950.0M]]
+          (is (= [["2025-2026" 1160M 1392.00M 0 30M 108.00M 0 2690.00M]
+                  ["2026-2027" 2280M 2736.00M 0 0 50M 25M 5091.00M]
+                  ["2027-2028" 3000M 3600.00M 40M 0 0 0 6640.00M]
+                  ["2028-2029" 4150M 4980.00M 0 0 0 0 9130.00M]
+                  ["2029-2030" 4950M 5940.00M 0 0 1060.00M 0 11950.00M]]
                 (vec (butlast rivit)))))
         (testing "yhteensä-rivi summaa kaikki sarakkeet oikein"
-          (is (= ["Yhteensä" 15560M 18672.0M 40M 30M 1194.0M 25M 35521.0M]
+          (is (= ["Yhteensä" 15540M 18648.00M 40M 30M 1218.00M 25M 35501.00M]
                 (get-in (last rivit) [:rivi]))))
         (testing "taulukon otsikot ja metatiedot ovat oikein"
           (is (= ["Hoitovuosi"
                   "Hoitovuoden lopun tavoitehinta (€)"
                   "Hoitovuoden lopun kattohinta (€)"
                   "Urakoitsijan tavoitepalkkio (€)"
-                  "Urakoitsija hyvittää tavoitehinnan ylityksestä (€)"
+                  "Urakoitsija maksaa tavoitehinnan ylityksestä (€)"
                   "Kattohinnan ylitys (€)"
-                  "Urakoitsija hyvittää kattohinnan ylityksestä (€)"]
+                  "Urakoitsija maksaa kattohinnan ylityksestä (€)"]
                 (mapv :otsikko (nth taulukko 2))))
           (is (= "Urakan lopullinen tavoite- ja kattohinta"
                 (get-in taulukko [1 :otsikko])))
