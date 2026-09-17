@@ -744,7 +744,8 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel rivi-jalkeen] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel rivi-jalkeen
+                    paneelikomponentit-ennen-custom-yla-panelia? custom-yla-panel-otsikon-alla?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
