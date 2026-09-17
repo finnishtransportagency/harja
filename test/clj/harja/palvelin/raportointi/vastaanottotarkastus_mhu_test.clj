@@ -805,7 +805,7 @@
           (is (= hoitovuodet (mapv :hoitovuosi @haut)))
           (is (every? #(= urakka-id (:urakkaid %)) @haut)))
         (let [excel-taulukko
-              (first (vastaanottotarkastus-mhu/muodosta-urakan-tavoitehinat-taulukko
+              (first (vastaanottotarkastus-mhu/muodosta-urakan-tavoitehinnat-taulukko
                        db +kayttaja-jvh+ urakan-tiedot urakan-parametrit hoitokaudet :excel))]
           (testing "Excel-raportin otsikko muodostuu"
             (is (= [[:otsikko-title "Urakan lopullinen tavoite- ja kattohinta"]]

@@ -383,7 +383,7 @@
        {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) kustannukset-yhteensarivi)))]]))
 
-(defn muodosta-urakan-tavoitehinat-taulukko [db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija]
+(defn muodosta-urakan-tavoitehinnat-taulukko [db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija]
   (let [urakka-id (:id urakan-tiedot)
         ota-paatos (fn [paatokset avain] (first (vals (first (filter #(= (ffirst %) avain) paatokset)))))
         rivit (mapv (fn [hoitokausi]
@@ -501,7 +501,7 @@
 
         (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)
 
-        (muodosta-urakan-tavoitehinat-taulukko db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija)))))
+        (muodosta-urakan-tavoitehinnat-taulukko db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija)))))
 
 
 
