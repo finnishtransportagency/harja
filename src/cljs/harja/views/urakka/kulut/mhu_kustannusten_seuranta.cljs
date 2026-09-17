@@ -485,8 +485,8 @@
                         :font-weight "700"}}
            (get-in app [:kustannukset-yhteensa :toimenpide])]
 
-          [:td.numero {:style {:width (:suunniteltu leveydet)}} (fmt->big (:yht-budjetoitu-summa (get app :kustannukset-yhteensa)))]
-          [:td.numero {:style {:width (:indeksikorjattu leveydet)}} (fmt->big (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)))]
+          [:td.numero {:style {:width (:suunniteltu leveydet)}} (fmt->big (:yht-budjetoitu-summa-ilman-muutoksia (get app :kustannukset-yhteensa)))]
+          [:td.numero {:style {:width (:indeksikorjattu leveydet)}} (fmt->big (:yht-budjetoitu-summa-indeksikorjattu-ilman-muutoksia (get app :kustannukset-yhteensa)))]
           [:td.numero {:style {:width (:muutokset leveydet)}} (str (when (> muutos-sarake-yhteensa 0) "+") (fmt->big muutos-sarake-yhteensa))]
           [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
           [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")

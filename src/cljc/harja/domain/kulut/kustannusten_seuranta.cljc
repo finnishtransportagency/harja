@@ -274,13 +274,15 @@
         budjetoitu #(get taulukon-rivit (keyword (str % "-budjetoitu")))
         budjetoitu-indeksikorjattu #(get taulukon-rivit (keyword (str % "-budjetoitu-indeksikorjattu")))
         rivit (remove #(tavoitehintaan-kuulumattomat-paaryhmat %) raportin-paaryhmat)
-        rivit-budjetoitu (remove #(= % "tavoitehinnanoikaisu") rivit)
+        rivit-ilman-muutoksia (remove #(contains? #{"muutokset" "tavoitehinnanoikaisu"} %) rivit)
 
         ;; Yhteensä tavoitehintaiset
         yhteensa {:toimenpide "Yhteensä"
                   :yht-toteutunut-summa (apply + (map toteutunut rivit))
-                  :yht-budjetoitu-summa (apply + (map budjetoitu rivit-budjetoitu))
-                  :yht-budjetoitu-summa-indeksikorjattu (apply + (map budjetoitu-indeksikorjattu rivit))}]
+                  :yht-budjetoitu-summa (apply + (map budjetoitu rivit))
+                  :yht-budjetoitu-summa-indeksikorjattu (apply + (map budjetoitu-indeksikorjattu rivit))
+                  :yht-budjetoitu-summa-ilman-muutoksia (apply + (map budjetoitu rivit-ilman-muutoksia))
+                  :yht-budjetoitu-summa-indeksikorjattu-ilman-muutoksia (apply + (map budjetoitu-indeksikorjattu rivit-ilman-muutoksia))}]
     {:taulukon-rivit taulukon-rivit
      :yhteensa yhteensa})))
 
