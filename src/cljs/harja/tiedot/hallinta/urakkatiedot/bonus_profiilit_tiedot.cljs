@@ -12,6 +12,8 @@
          :profiilit []
          :profiilin-detaljit {}
          :valittu-profiili-id nil
+         :urakkarajauksen-muokkaus-kaynnissa? false
+         :valitut-urakat {}
          :suodattimet {:teksti ""
                        :urakkatyyppi :kaikki
                        :aktiivisuus :kaikki}}))
@@ -25,6 +27,13 @@
 (defrecord HaeBonusProfiilinDetalji [profiili-id])
 (defrecord HaeBonusProfiilinDetaljiOnnistui [profiili-id vastaus])
 (defrecord HaeBonusProfiilinDetaljiEpaonnistui [profiili-id vastaus])
+(defrecord ValitseBonusProfiilirivinUrakka [profiilirivi-id urakka-id])
+(defrecord LisaaBonusProfiilirivinUrakkarajaus [profiili-id profiilirivi-id urakka-id])
+(defrecord LisaaBonusProfiilirivinUrakkarajausOnnistui [vastaus profiili-id])
+(defrecord LisaaBonusProfiilirivinUrakkarajausEpaonnistui [vastaus])
+(defrecord PoistaBonusProfiilirivinUrakkarajaus [profiili-id profiilirivi-id urakka-id])
+(defrecord PoistaBonusProfiilirivinUrakkarajausOnnistui [vastaus profiili-id])
+(defrecord PoistaBonusProfiilirivinUrakkarajausEpaonnistui [vastaus])
 (defrecord PaivitaSuodatin [avain arvo])
 
 (def urakkatyyppi-teksti sanktio-tiedot/urakkatyyppi-teksti)
@@ -137,6 +146,62 @@
   (process-event [_ app]
     (viesti/nayta-toast! "Bonus-profiilin detaljin haku epäonnistui" :varoitus)
     (assoc app :detalji-haku-kaynnissa? false))
+
+  ValitseBonusProfiilirivinUrakka
+  (process-event [{:keys [profiilirivi-id urakka-id]} app]
+    (assoc-in app [:valitut-urakat profiilirivi-id] urakka-id))
+
+  LisaaBonusProfiilirivinUrakkarajaus
+  (process-event [{:keys [profiili-id profiilirivi-id urakka-id]} app]
+    (tuck-apurit/post! :lisaa-bonus-profiilirivin-urakkarajaus
+      {:bonus-profiili-id profiili-id
+       :profiilirivi-id profiilirivi-id
+       :urakka-id urakka-id}
+      {:onnistui ->LisaaBonusProfiilirivinUrakkarajausOnnistui
+        :onnistui-parametrit [profiili-id]
+        :epaonnistui ->LisaaBonusProfiilirivinUrakkarajausEpaonnistui
+        :paasta-virhe-lapi? true})
+    (assoc app :urakkarajauksen-muokkaus-kaynnissa? true))
+
+  LisaaBonusProfiilirivinUrakkarajausOnnistui
+  (process-event [{:keys [profiili-id vastaus]} app]
+    ((tuck/current-send-function) (->HaeBonusProfiilinDetalji profiili-id))
+    (viesti/nayta-toast! "Urakkarajaus lisättiin" :onnistui)
+    (let [app (assoc app :urakkarajauksen-muokkaus-kaynnissa? false)]
+      (if-let [profiilirivi-id (:profiilirivi-id vastaus)]
+        (update app :valitut-urakat dissoc profiilirivi-id)
+        app)))
+
+  LisaaBonusProfiilirivinUrakkarajausEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Urakkarajauksen lisääminen epäonnistui" :varoitus)
+    (assoc app :urakkarajauksen-muokkaus-kaynnissa? false))
+
+  PoistaBonusProfiilirivinUrakkarajaus
+  (process-event [{:keys [profiili-id profiilirivi-id urakka-id]} app]
+    (tuck-apurit/post! :poista-bonus-profiilirivin-urakkarajaus
+      {:bonus-profiili-id profiili-id
+       :profiilirivi-id profiilirivi-id
+       :urakka-id urakka-id}
+      {:onnistui ->PoistaBonusProfiilirivinUrakkarajausOnnistui
+        :onnistui-parametrit [profiili-id]
+        :epaonnistui ->PoistaBonusProfiilirivinUrakkarajausEpaonnistui
+        :paasta-virhe-lapi? true})
+    (assoc app :urakkarajauksen-muokkaus-kaynnissa? true))
+
+  PoistaBonusProfiilirivinUrakkarajausOnnistui
+  (process-event [{:keys [profiili-id vastaus]} app]
+    ((tuck/current-send-function) (->HaeBonusProfiilinDetalji profiili-id))
+    (viesti/nayta-toast! "Urakkarajaus poistettiin" :onnistui)
+    (let [app (assoc app :urakkarajauksen-muokkaus-kaynnissa? false)]
+      (if-let [profiilirivi-id (:profiilirivi-id vastaus)]
+        (update app :valitut-urakat dissoc profiilirivi-id)
+        app)))
+
+  PoistaBonusProfiilirivinUrakkarajausEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta-toast! "Urakkarajauksen poistaminen epäonnistui" :varoitus)
+    (assoc app :urakkarajauksen-muokkaus-kaynnissa? false))
 
   PaivitaSuodatin
   (process-event [{:keys [avain arvo]} app]
