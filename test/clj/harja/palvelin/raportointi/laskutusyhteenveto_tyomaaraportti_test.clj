@@ -666,6 +666,7 @@
         ;; ----------------------------------------------------------------
         ;; Kustis on vahvistettu, kirjaa talvihoitokulu
         _ (poista-kulut-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
+        _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id hk_alkupvm hk_loppupvm)
 
         ;; Luodaan talvihoitokulut
         erapaiva (pvm/->pvm "15.10.2025")

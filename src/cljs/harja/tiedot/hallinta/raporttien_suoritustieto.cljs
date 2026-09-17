@@ -77,7 +77,6 @@
    ["yks-hint-tyot" "Yksikköhintaiset työt"]
    ["soratietarkastusraportti" "Soratietarkastusraportti"]
    ["vesivaylien-laskutusyhteenveto" "Vesiväylien laskutusyhteenveto"]
-   ["sanktioraportti-yllapito" "Sanktioraportti yllapito"]
    ["vastaanottotarkastusraportti" "Vastaanottotarkastusraportti"]
    ["vastaanottotarkastusraportti-mhu" "MHU-vastaanottotarkastusraportti"]
    ["kanavien-muutos-ja-lisatyot" "Kanavien muutos-ja lisätyöt"]
