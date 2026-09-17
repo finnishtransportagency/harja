@@ -1327,7 +1327,11 @@
     (is (nil? (:toimenpide-t2-koodi ensimmainen-rivi))
       "Kaikki-rajauksessa t2-koodin pitää olla aidosti puuttuva, ei sentinel-merkkijono")
     (is (= "Kaikki" (:toimenpideinstanssi-teksti ensimmainen-rivi))
-      "Backendin pitää muodostaa admin-näkymälle valmiiksi tulkittu teksti kaikki-rajauksesta")))
+      "Backendin pitää muodostaa admin-näkymälle valmiiksi tulkittu teksti kaikki-rajauksesta")
+    (is (seq (:urakat vastaus))
+      "Hoitoprofiilin admin-detaljin pitää palauttaa sopivan tyyppiset urakat")
+    (is (every? #(= :hoito (:tyyppi %)) (:urakat vastaus))
+      "Hoitoprofiilin admin-detalji ei saa tarjota teiden-hoito-urakoita")))
 
 (deftest hae-bonus-profiilin-tiedot-admin-palauttaa-mhu2025-profiilin-mukaiset-bonuslajit
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-mhu2025'"))
@@ -1373,6 +1377,148 @@
     (is (contains? (first (:rivit liikennevahinko-laji)) :urakat)
       "Admin-rajapinnan palautuksen pitää sisältää myös urakkarajausten nimet visualisointia varten")))
 
+(deftest lisaa-bonus-profiilirivin-urakkarajaus-julkisen-palvelun-kautta
+  (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'asiakastyytyvaisyysbonus'"))
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        profiili-id (-> (jdbc/insert! (:db jarjestelma) :bonus_profiili
+                          {:nimi "bonus-admin-urakkaliitos-palvelu-testi"
+                           :urakkatyyppi "teiden-hoito"
+                           :hoitovuosi_alku 1
+                           :hoitovuosi_loppu 20
+                           :alkupvm #inst "2025-10-01T00:00:00.000-00:00"
+                           :loppupvm nil
+                           :aktiivinen true
+                           :luoja integraatio-id
+                           :muokkaaja integraatio-id})
+                      first
+                      :id)]
+    (try
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+           profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)"))
+      (let [profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))
+            vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :lisaa-bonus-profiilirivin-urakkarajaus
+                      +kayttaja-jvh+
+                      {:bonus-profiili-id profiili-id
+                       :profiilirivi-id profiilirivi-id
+                       :urakka-id urakka-id})
+            toinen-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :lisaa-bonus-profiilirivin-urakkarajaus
+                             +kayttaja-jvh+
+                             {:bonus-profiili-id profiili-id
+                              :profiilirivi-id profiilirivi-id
+                              :urakka-id urakka-id})
+            poista-urakkarajaus! (fn []
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :poista-bonus-profiilirivin-urakkarajaus
+                                     +kayttaja-jvh+
+                                     {:bonus-profiili-id profiili-id
+                                      :profiilirivi-id profiilirivi-id
+                                      :urakka-id urakka-id}))]
+        (is (= {:profiilirivi-id profiilirivi-id
+                :urakka-id urakka-id
+                :liitos-lisatty? true}
+               vastaus))
+        (is (= {:profiilirivi-id profiilirivi-id
+                :urakka-id urakka-id
+                :liitos-lisatty? false}
+               toinen-vastaus))
+        (is (= 1 (ffirst (q (str "SELECT COUNT(*) FROM bonus_profiili_rivi_urakka "
+                                "WHERE bonus_profiili_rivi_id = " profiilirivi-id
+                                " AND urakka_id = " urakka-id)))))
+        (let [poistovastaus (poista-urakkarajaus!)]
+          (is (= {:profiilirivi-id profiilirivi-id
+                  :urakka-id urakka-id
+                  :liitos-poistettu? true}
+                 poistovastaus))
+          (is (= {:profiilirivi-id profiilirivi-id
+                  :urakka-id urakka-id
+                  :liitos-poistettu? false}
+                 (poista-urakkarajaus!))
+            "Jo poistamattoman liitoksen poistaminen ei saa näyttää onnistunutta poistoa"))
+        (is (= 0 (ffirst (q (str "SELECT COUNT(*) FROM bonus_profiili_rivi_urakka "
+                                "WHERE bonus_profiili_rivi_id = " profiilirivi-id
+                                " AND urakka_id = " urakka-id))))))
+      (finally
+        (u (str "DELETE FROM bonus_profiili_rivi_urakka WHERE bonus_profiili_rivi_id IN (SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id ")"))
+        (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
+        (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
+
+(deftest bonus-profiilirivin-urakkarajaus-palvelu-validoi-syotteet-ja-oikeudet
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-2021-2024'"))
+        toinen-profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'teiden-hoito-bonus-mhu2025'"))
+        profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))
+        eri-tyyppinen-urakka-id (ffirst (q "SELECT id
+                                                FROM urakka
+                                               WHERE poistettu IS NOT TRUE
+                                                 AND tyyppi <> 'teiden-hoito'
+                                            ORDER BY id
+                                               LIMIT 1"))]
+    (is (thrown-with-msg? Exception
+          #"EiOikeutta"
+          (ls-bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus
+            (:db jarjestelma)
+            +kayttaja-ulle+
+            {:bonus-profiili-id profiili-id
+             :profiilirivi-id profiilirivi-id
+             :urakka-id urakka-id}))
+      "Ilman profiilien kirjoitusoikeutta liitosta ei saa muuttaa")
+    (is (thrown-with-msg? IllegalArgumentException
+          #"positiivinen kokonaisluku"
+          (ls-bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus
+            (:db jarjestelma)
+            +kayttaja-jvh+
+            {:bonus-profiili-id 0
+             :profiilirivi-id profiilirivi-id
+             :urakka-id urakka-id}))
+      "Virheellinen tunniste pitää hylätä ennen kyselyä")
+    (is (thrown-with-msg? IllegalArgumentException
+          #"kelvollinen"
+          (ls-bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus
+            (:db jarjestelma)
+            +kayttaja-jvh+
+            {:bonus-profiili-id toinen-profiili-id
+             :profiilirivi-id profiilirivi-id
+             :urakka-id urakka-id}))
+      "Profiiliin kuulumaton profiilirivi pitää hylätä")
+    (is eri-tyyppinen-urakka-id
+      "Testidatassa pitää olla vähintään yksi muun tyyppinen urakka")
+    (is (thrown-with-msg? IllegalArgumentException
+          #"Urakan tyyppi ei vastaa"
+          (ls-bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus
+            (:db jarjestelma)
+            +kayttaja-jvh+
+            {:bonus-profiili-id profiili-id
+             :profiilirivi-id profiilirivi-id
+             :urakka-id eri-tyyppinen-urakka-id}))
+      "Profiiliin sopimaton urakkatyyppi pitää hylätä")
+    (is (thrown-with-msg? IllegalArgumentException
+          #"kelvollinen"
+          (ls-bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus
+            (:db jarjestelma)
+            +kayttaja-jvh+
+            {:bonus-profiili-id profiili-id
+             :profiilirivi-id profiilirivi-id
+             :urakka-id 999999999}))
+      "Olematon urakka pitää hylätä")))
+
+(deftest hoito-bonusprofiili-ei-salli-teiden-hoito-urakkaa
+  (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'hoito-bonus-2021-ja-uudemmat'"))
+        profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")]
+    (is (thrown-with-msg? IllegalArgumentException
+          #"Urakan tyyppi ei vastaa"
+          (ls-bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus
+            (:db jarjestelma)
+            +kayttaja-jvh+
+            {:bonus-profiili-id profiili-id
+             :profiilirivi-id profiilirivi-id
+             :urakka-id urakka-id}))
+      "Hoitoprofiilin ja teiden-hoito-urakan välistä liitosta ei saa tallentaa")))
+
 (deftest hae-bonus-profiilin-rivit-admin-palauttaa-urakkarajaukset-nimilla
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
         bonus-laji-id (ffirst (q "SELECT id FROM bonus_laji WHERE koodi = 'asiakastyytyvaisyysbonus'"))
@@ -1408,6 +1554,8 @@
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
           (is (= 2 (get-in rivi [:profiilirivi :urakkarajausten-maara]))
             "Urakkarajausten määrä pitää näkyä kyselykerroksessa oikein")
+          (is (= (set urakka-idt) (set (get-in rivi [:profiilirivi :urakka-idt])))
+            "Kyselykerroksen pitää palauttaa myös rajattujen urakoiden tunnisteet")
           (is (= (set odotetut-urakat) (set (get-in rivi [:profiilirivi :urakat])))
             "Kyselykerroksen pitää palauttaa rajatut urakat nimillä")))
       (finally

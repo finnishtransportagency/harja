@@ -174,6 +174,7 @@ SELECT bp.id                    AS profiili_id,
        bpr.toimenpiderajauksen_tyyppi AS profiilirivi_toimenpiderajauksen_tyyppi,
        bpr.toimenpide_t2_koodi  AS profiilirivi_toimenpide_t2_koodi,
        COUNT(DISTINCT bpru.urakka_id)                                         AS profiilirivi_urakkarajausten_maara,
+       ARRAY_REMOVE(ARRAY_AGG(DISTINCT bpru.urakka_id), NULL)                  AS profiilirivi_urakka_idt,
        ARRAY_REMOVE(ARRAY_AGG(DISTINCT COALESCE(u.lyhyt_nimi, u.nimi)), NULL) AS profiilirivi_urakat,
        bprsm.summa_euroina      AS profiilirivi_sm_summa,
        bprsm.maaritystapa       AS profiilirivi_sm_tapa,
@@ -222,3 +223,42 @@ SELECT bp.id                    AS profiili_id,
           bpr.jarjestys,
           bpr.toimenpiderajauksen_tyyppi,
           bpr.toimenpide_t2_koodi;
+
+-- name: hae-bonus-profiilin-urakat-admin
+SELECT u.id,
+       COALESCE(u.lyhyt_nimi, u.nimi) AS nimi,
+       u.tyyppi::TEXT                 AS tyyppi
+  FROM urakka u
+  WHERE u.poistettu IS NOT TRUE
+    AND u.tyyppi::TEXT = :urakkatyyppi
+ ORDER BY COALESCE(u.lyhyt_nimi, u.nimi), u.id;
+
+-- name: hae-bonus-profiilirivin-urakkaliitoksen-konteksti
+SELECT bp.id              AS bonus_profiili_id,
+       bpr.id             AS profiilirivi_id,
+       bp.urakkatyyppi    AS bonus_profiili_urakkatyyppi,
+       u.id               AS urakka_id,
+       u.tyyppi::TEXT     AS urakka_tyyppi
+  FROM bonus_profiili bp
+       JOIN bonus_profiili_rivi bpr
+         ON bpr.bonus_profiili_id = bp.id
+        AND bpr.aktiivinen IS TRUE
+       JOIN urakka u
+         ON u.id = :urakka_id
+ WHERE bp.id = :bonus_profiili_id
+   AND bpr.id = :profiilirivi_id
+   AND bp.aktiivinen IS TRUE
+   AND u.poistettu IS NOT TRUE;
+
+-- name: lisaa-bonus-profiilirivin-urakkaliitos<!
+INSERT INTO bonus_profiili_rivi_urakka
+       (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu)
+VALUES (:profiilirivi_id, :urakka_id, :kayttaja_id, CURRENT_TIMESTAMP, :kayttaja_id, CURRENT_TIMESTAMP)
+   ON CONFLICT (bonus_profiili_rivi_id, urakka_id) DO NOTHING
+RETURNING id;
+
+-- name: poista-bonus-profiilirivin-urakkaliitos<!
+DELETE FROM bonus_profiili_rivi_urakka
+ WHERE bonus_profiili_rivi_id = :profiilirivi_id
+   AND urakka_id = :urakka_id
+RETURNING id;

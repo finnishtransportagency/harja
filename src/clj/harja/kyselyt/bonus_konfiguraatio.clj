@@ -4,7 +4,11 @@
             [jeesql.core :refer [defqueries]]))
 
 (declare hae-bonus-profiilit-admin hae-urakan-bonus-profiilit hae-bonus-profiili-admin
-  hae-bonus-profiilin-rivit hae-bonus-profiilin-rivit-admin)
+  hae-bonus-profiilin-rivit hae-bonus-profiilin-rivit-admin
+  hae-bonus-profiilin-urakat-admin
+  hae-bonus-profiilirivin-urakkaliitoksen-konteksti
+  lisaa-bonus-profiilirivin-urakkaliitos<!
+  poista-bonus-profiilirivin-urakkaliitos<!)
 
 (defn- muunna-urakkatyyppi
   [rivi avainpolku]
@@ -58,6 +62,7 @@
         profiilirivi_toimenpiderajauksen_tyyppi profiilirivi_toimenpide_t2_koodi
         profiilirivi_sm_summa profiilirivi_sm_tapa profiilirivi_sm_ohje]
     urakkarajausten-maara :profiilirivi_urakkarajausten_maara
+    urakka-idt :profiilirivi_urakka_idt
     urakat :profiilirivi_urakat
     :as rivi}]
   (cond-> {:id profiilirivi_id
@@ -67,15 +72,18 @@
     (contains? rivi :profiilirivi_urakkarajausten_maara)
     (assoc :urakkarajausten-maara urakkarajausten-maara)
 
-    (contains? rivi :profiilirivi_urakat)
-  (assoc :urakat (normalisoi-vektoriksi urakat))
+    (contains? rivi :profiilirivi_urakka_idt)
+    (assoc :urakka-idt (normalisoi-vektoriksi urakka-idt))
 
-  (or (some? profiilirivi_sm_summa)
-    (some? profiilirivi_sm_tapa)
-    (some? profiilirivi_sm_ohje))
-  (assoc :summamaaritys {:summa-euroina profiilirivi_sm_summa
-              :maaritystapa profiilirivi_sm_tapa
-              :ohjeteksti profiilirivi_sm_ohje})))
+    (contains? rivi :profiilirivi_urakat)
+    (assoc :urakat (normalisoi-vektoriksi urakat))
+
+    (or (some? profiilirivi_sm_summa)
+      (some? profiilirivi_sm_tapa)
+      (some? profiilirivi_sm_ohje))
+    (assoc :summamaaritys {:summa-euroina profiilirivi_sm_summa
+                            :maaritystapa profiilirivi_sm_tapa
+                            :ohjeteksti profiilirivi_sm_ohje})))
 
 (defn muunna-bonus-konfiguraatiorivi
   [{:as rivi}]
