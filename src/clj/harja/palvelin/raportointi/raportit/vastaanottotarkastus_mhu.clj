@@ -79,41 +79,85 @@
                      talvisuolan-raportin-osiot)
         erittely (some #(when (= "Erittely hoitovuosittain" (get-in % [1 :otsikko])) %)
                    talvisuolan-raportin-osiot)
-        taulukko (cond-> [infolaatikko]
-                   true (conj yhteenveto)
+        taulukko (cond-> []
+                   infolaatikko (conj infolaatikko)
+                   yhteenveto (conj yhteenveto)
                    erittely (conj erittely))]
-    taulukko))
+    (when (seq taulukko)
+      taulukko)))
 
 (defn rahavarausten-tavoitehinnan-muutokset-taulukko [db urakka-id hoitokaudet]
   (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        raportoitavat-rahavaraukset ["Äkilliset hoitotyöt" "Vahinkojen korjaukset" "Tilaajan rahavaraus kannustinjärjestelmään"]
+        ;; Säilytetään haluttu järjestys ja poimitaan vain urakalta löytyvät
+        nimetyt-rahavaraukset (vec (keep (fn [nimi]
+                                           (some #(when (= nimi (:nimi %)) %) urakan-rahavaraukset))
+                                     raportoitavat-rahavaraukset))
+        nimetyt-rahavaraus-idt (set (map :id nimetyt-rahavaraukset))
+        ;; Kaikki muut rahavaraukset yhdistetään yhdeksi ryhmäksi
+        muut-rahavaraukset (vec (remove #(contains? nimetyt-rahavaraus-idt (:id %))
+                                  urakan-rahavaraukset))
+        rahavarausryhmat (vec (concat
+                                (map #(assoc % :rahavaraus-idt [(:id %)])
+                                  nimetyt-rahavaraukset)
+                                (when (seq muut-rahavaraukset)
+                                  [{:id :muut-tilaajan-rahavaraukset
+                                    :nimi "Muut tilaajan rahavaraukset"
+                                    :rahavaraus-idt (mapv :id muut-rahavaraukset)}])))
         rivit (mapv (fn [{:keys [alkupvm loppupvm]}]
                       (let [hoitokauden-alkuvuosi (pvm/vuosi alkupvm)
-                            rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset
-                                            db urakka-id hoitokauden-alkuvuosi)
-                            rahavaraukset-idlla (into {}
-                                                  (map (juxt :id identity)
-                                                    (remove #(= :yhteenveto (:id %)) rahavaraukset)))
-
+                            rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
+                            rahavaraukset-idlla (into {} (map (juxt :id identity)
+                                                           (remove #(= :yhteenveto (:id %)) rahavaraukset)))
+                            ryhman-summa (fn [rahavarausryhma avain]
+                                           (reduce + 0 (map (fn [rahavaraus-id]
+                                                              (or (get-in rahavaraukset-idlla [rahavaraus-id avain]) 0))
+                                                         (:rahavaraus-idt rahavarausryhma))))
                             rivit (into [(str hoitokauden-alkuvuosi "-" (pvm/vuosi loppupvm))]
                                     (let [tavoitehinnan-muutos (:tavoitehinnan-muutos (last rahavaraukset))]
                                       (concat
-                                        (mapcat (fn [{:keys [id]}]
-                                                  (let [rahavaraus (get rahavaraukset-idlla id)]
-                                                    [(or (:summa-indeksikorjattu rahavaraus) 0)
-                                                     (or (:toteumat rahavaraus) 0)]))
-                                          urakan-rahavaraukset)
+                                        (mapcat (fn [rahavarausryhma]
+                                                  [(ryhman-summa rahavarausryhma :summa-indeksikorjattu)
+                                                   (ryhman-summa rahavarausryhma :toteumat)])
+                                          rahavarausryhmat)
                                         [tavoitehinnan-muutos])))]
                         rivit))
                 hoitokaudet)
+        yhteenveto-fn (fn [rivi i1 i2]
+                        (reduce (fn [a rivi]
+                                  (let [a (assoc a :suunniteltu (+ (:suunniteltu a) (or (nth rivi i1) 0)))
+                                        a (assoc a :toteutunut (+ (:toteutunut a) (or (nth rivi i2) 0)))]
+                                    a))
+                          {:suunniteltu 0 :toteutunut 0} rivit))
+        akilliset-hoitotyot-yhteensa (yhteenveto-fn rivit 1 2)
+        vahinkojen-korjaukset-yhteensa (yhteenveto-fn rivit 3 4)
+        kannustinjarjestelma-yhteensa (yhteenveto-fn rivit 5 6)
+        loput-yhteensa (when (seq muut-rahavaraukset) (yhteenveto-fn rivit 7 8))
+        tavoitehinnan-muutokset-yhteensa (reduce + 0 (map last rivit))
+        yhteensarivi [{:lihavoi? true
+                       :korosta-hennosti? true
+                       :rivi ["Yhteensä"
+                              (:suunniteltu akilliset-hoitotyot-yhteensa)
+                              (:toteutunut akilliset-hoitotyot-yhteensa)
+                              (:suunniteltu vahinkojen-korjaukset-yhteensa)
+                              (:toteutunut vahinkojen-korjaukset-yhteensa)
+                              (:suunniteltu kannustinjarjestelma-yhteensa)
+                              (:toteutunut kannustinjarjestelma-yhteensa)
+                              (when (seq muut-rahavaraukset)
+                                (:suunniteltu loput-yhteensa))
+                              (when (seq muut-rahavaraukset)
+                                (:toteutunut loput-yhteensa))
+                              tavoitehinnan-muutokset-yhteensa]}]
         otsikot (into [{:otsikko "Hoitokausi" :leveys 5}]
                   (concat (mapcat (fn [_]
                                     [{:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
                                      {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}])
-                            urakan-rahavaraukset)
+                            rahavarausryhmat)
                     [{:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]))]
     [:taulukko {:otsikko "Rahavarausten tavoitehintamuutokset"
                 :tyhja (when (empty? hoitokaudet) "Ei hoitovuosia.")
                 :sheet-nimi "Rahavarausten tavoitehintamuutokset"
+                :viimeinen-rivi-yhteenveto? true
                 :rivi-ennen (into [{:sarakkeita 1}]
                               (concat
                                 (map (fn [{:keys [nimi]}]
@@ -121,10 +165,10 @@
                                         :sarakkeita 2
                                         :luokka "paallystys-tausta-tumma"
                                         :tasaa :oikea})
-                                  urakan-rahavaraukset)
+                                  rahavarausryhmat)
                                 [{:sarakkeita 1}]))}
      otsikot
-     rivit]))
+     (into [] (concat rivit (when-not (empty? rivit) yhteensarivi)))]))
 
 (defn muodosta-tavoitehinnan-muutokset [db user urakka-id hoitokaudet kasittelija]
   (let [rivit (mapv (fn [hoitokausi]
@@ -445,5 +489,7 @@
         (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)
 
         (muodosta-urakan-tavoitehinat-taulukko db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija)))))
+
+
 
 

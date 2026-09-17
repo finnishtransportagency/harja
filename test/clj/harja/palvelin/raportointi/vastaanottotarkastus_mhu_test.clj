@@ -117,14 +117,16 @@
             [:arvo {:arvo 30M :desimaalien-maara 2}]
             [:arvo {:arvo 5000M :desimaalien-maara 2}]]}]])
 
-(defn- muodosta-testiraportti []
+(defn- muodosta-testiraportti [valikatselmus-tehty?]
   (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
         lupaustiedot (fn [_ {:keys [valittu-hoitokausi]}]
                        (if (= (first valittu-hoitokausi) #inst "2021-10-01T00:00:00.000-00:00")
                          {:lupaus-sitoutuminen {:pisteet 70}
-                          :yhteenveto {:pisteet {:toteuma 65}}}
+                          :yhteenveto {:valikatselmus-tehty-urakalle? valikatselmus-tehty?
+                                       :pisteet {:toteuma 65}}}
                          {:lupaus-sitoutuminen {:pisteet 80}
-                          :yhteenveto {:pisteet {:toteuma 75}}}))]
+                          :yhteenveto {:valikatselmus-tehty-urakalle? valikatselmus-tehty?
+                                       :pisteet {:toteuma 75}}}))]
     (with-redefs [materiaalit-kyselyt/hae-talvisuolan-kokonaismaara (fn [_ _] [{:kokonaismaara 1000M}])
                   lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle lupaustiedot
                   valikatselmus-q/hae-bonukset (fn [_ {:keys [alkupvm]}]
@@ -143,24 +145,30 @@
                   (fn [_ _]
                     [{:id 1 :nimi "Äkilliset hoitotyöt"}
                      {:id 2 :nimi "Vahinkojen korjaukset"}
-                     {:id 3 :nimi "Tilaajan rahavaraus kannustinjärjestelmään"}])
+                     {:id 3 :nimi "Tilaajan rahavaraus kannustinjärjestelmään"}
+                     {:id 4 :nimi "Muu rahavaraus 1"}
+                     {:id 5 :nimi "Muu rahavaraus 2"}])
                   rahavaraus-kyselyt/muutosten-rahavaraukset
                   (fn [_ _ hoitokauden-alkuvuosi]
                     (if (= hoitokauden-alkuvuosi 2021)
                       [{:id 1 :summa-indeksikorjattu 100M :toteumat 80M :tavoitehinnan-muutos -20M}
                        {:id 2 :summa-indeksikorjattu 50M :toteumat 40M :tavoitehinnan-muutos -10M}
                        {:id 3 :summa-indeksikorjattu 25M :toteumat 20M :tavoitehinnan-muutos -5M}
-                       {:id :yhteenveto :summa-indeksikorjattu 175M :toteumat 140M :tavoitehinnan-muutos -35M}]
+                       {:id 4 :summa-indeksikorjattu 10M :toteumat 8M :tavoitehinnan-muutos -2M}
+                       {:id 5 :summa-indeksikorjattu 20M :toteumat 15M :tavoitehinnan-muutos -5M}
+                       {:id :yhteenveto :summa-indeksikorjattu 205M :toteumat 163M :tavoitehinnan-muutos -42M}]
                       [{:id 1 :summa-indeksikorjattu 200M :toteumat 150M :tavoitehinnan-muutos -50M}
                        {:id 2 :summa-indeksikorjattu 100M :toteumat 90M :tavoitehinnan-muutos -10M}
                        {:id 3 :summa-indeksikorjattu 50M :toteumat 45M :tavoitehinnan-muutos -5M}
-                       {:id :yhteenveto :summa-indeksikorjattu 350M :toteumat 285M :tavoitehinnan-muutos -65M}]))]
+                       {:id 4 :summa-indeksikorjattu 30M :toteumat 20M :tavoitehinnan-muutos -10M}
+                       {:id 5 :summa-indeksikorjattu 40M :toteumat 30M :tavoitehinnan-muutos -10M}
+                       {:id :yhteenveto :summa-indeksikorjattu 420M :toteumat 335M :tavoitehinnan-muutos -85M}]))]
       (vastaanottotarkastus-mhu/suorita (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id}))))
 
 (deftest raportti-sisaltaa-lupaukset-hoitovuosittain
-  (let [raportti (muodosta-testiraportti)]
+  (let [raportti (muodosta-testiraportti true)]
     (is (= [:taulukko
-            {:otsikko "Lupaukset" :sheet-nimi "Lupaukset" :tyhja nil}
+            {:otsikko "Lupaukset" :sheet-nimi "Lupaukset" :samalle-sheetille? false :tyhja nil}
             [{:otsikko "Hoitovuosi" :leveys 5}
              {:otsikko "Tarjouksen lupauspisteet" :leveys 5}
              {:otsikko "Toteutuneet lupauspisteet" :leveys 5}
@@ -172,60 +180,37 @@
              ["2029-2030" 80 75 150M]]]
           (nth raportti 2)))))
 
+(deftest raportti-ei-sisalla-toteutuneita-lupauspisteita-ilman-valikatselmusta
+  (let [raportti (muodosta-testiraportti false)
+        lupaus-taulukko (nth raportti 2)
+        lupaus-rivit (nth lupaus-taulukko 3)]
+    (is (= [nil nil nil nil nil]
+          (mapv #(nth % 2) lupaus-rivit)))))
+
 (deftest raportti-sisaltaa-talvisuolan-kokonaiskayttomaaran
-  (let [raportti (muodosta-testiraportti)]
-    (is (= [:otsikko "Talvisuolan kokonaiskäyttömäärä"]
-          (nth raportti 3)))
-    (is (= ["Kohtuullistettu käyttöraja + 5% (tonnia)" 31.50M]
-          (let [rivi (nth (nth (nth raportti 4) 3) 0)]
-            [(first rivi) (get-in rivi [1 1 :arvo])])))
-    (is (= ["Toteuma (tonnia)" 1000M]
-          (let [rivi (nth (nth (nth raportti 4) 3) 1)]
-            [(first rivi) (get-in rivi [1 1 :arvo])])))
-    (is (= ["Erotus (tonnia)" 968.50M]
-          (let [rivi (nth (nth (nth raportti 4) 3) 2)]
-            [(first rivi) (get-in rivi [1 1 :arvo])])))
-    (is (= ["Kirjattu sakon määrä (euroa)" 0]
-          (let [rivi (nth (nth (nth raportti 4) 3) 3)]
-            [(first rivi) (get-in rivi [1 1 :arvo])])))
-    (is (= 50
-          (get-in raportti [4 1 :leveysprosentti])))
-    (is (= false
-          (get-in raportti [4 1 :viimeinen-rivi-yhteenveto?])))
-    (is (= testi-talvisuolan-erittely
-          (nth raportti 5)))
-    (is (not-any? #(and (vector? %)
-                     (= "Ympäristöraportti" (get-in % [1 :otsikko])))
-          raportti))))
+  (let [raportti (muodosta-testiraportti false)
+        yhteenveto-arvot (nth (some (fn [osa]
+                                      (when (and (vector? osa)
+                                              (= :yhteenveto-laatikko (first osa))
+                                              (= "Koko urakka-ajan yhteenveto (kuivatonneina)" (get-in osa [1 :otsikko])))
+                                        osa))
+                                (tree-seq coll? seq raportti)) 2)]
+    (is (= {:avain "Tehtävä- ja määräluettelon mukainen käyttöraja", :arvo "30,00 t"} (nth yhteenveto-arvot 0)))
+    (is (= {:avain "Kohtuullistettu käyttöraja", :arvo "30,00 t"} (nth yhteenveto-arvot 1)))
+    (is (= {:avain "Suurin urakassa sallittu käyttömäärä + 5 %", :arvo "31,50 t"} (nth yhteenveto-arvot 2)))
+    (is (= {:avain "Toteuma koko urakka-ajalta", :arvo "5 000,00 t", :lihavoi? true} (nth yhteenveto-arvot 3)))
+    (is (= {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma", :arvo "4 968,50 t", :lihavoi? true} (nth yhteenveto-arvot 4)))
 
-(deftest talvisuolan-erittely-kasittee-puuttuvan-yhteenvedon
-  (with-redefs [talvisuola/suorita (fn [_ _ _] [:raportti {}])
-                materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
-                (fn [_ _] [{:kokonaismaara 1000M}])
-                valikatselmus-q/hae-sanktiot (fn [_ _] [])]
-    (is (nil? (#'vastaanottotarkastus-mhu/talvisuolan-erittely nil 1 :excel)))))
-
-(deftest talvisuolan-erittely-ei-palauta-puuttuvaa-erittelya
-  (with-redefs [talvisuola/suorita
-                (fn [_ _ _]
-                  [:raportti {}
-                   [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
-                    []
-                    [["Suurin urakassa sallittu käyttömäärä + 5 %"
-                      [:arvo {:arvo 1050M}]]]]])
-                materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
-                (fn [_ _] [{:kokonaismaara 1000M}])
-                valikatselmus-q/hae-sanktiot (fn [_ _] [])]
-    (let [raportin-osat (#'vastaanottotarkastus-mhu/talvisuolan-erittely nil 1 :excel)]
-      (is (= 1 (count raportin-osat)))
-      (is (= "Yhteenveto" (get-in (first raportin-osat) [1 :otsikko]))))))
+    ;; Validoidaan koko taulukko
+    (is (= testi-talvisuolan-erittely (nth raportti 6)))))
 
 (deftest raportti-sisaltaa-rahavarausten-tavoitehinnan-muutokset
-  (let [raportti (muodosta-testiraportti)]
+  (let [raportti (muodosta-testiraportti true)]
     (is (= [:taulukko
             {:otsikko "Rahavarausten tavoitehintamuutokset"
              :sheet-nimi "Rahavarausten tavoitehintamuutokset"
              :tyhja nil
+             :viimeinen-rivi-yhteenveto? true
              :rivi-ennen [{:sarakkeita 1}
                           {:teksti "Äkilliset hoitotyöt"
                            :sarakkeita 2
@@ -239,6 +224,10 @@
                            :sarakkeita 2
                            :luokka "paallystys-tausta-tumma"
                            :tasaa :oikea}
+                          {:teksti "Muut tilaajan rahavaraukset"
+                           :sarakkeita 2
+                           :luokka "paallystys-tausta-tumma"
+                           :tasaa :oikea}
                           {:sarakkeita 1}]}
             [{:otsikko "Hoitokausi" :leveys 5}
              {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
@@ -247,51 +236,19 @@
              {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
              {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
              {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
+             {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
              {:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]
-            [["2025-2026"
-              200M
-              150M
-              100M
-              90M
-              50M
-              45M
-              -65M]
-             ["2026-2027"
-              200M
-              150M
-              100M
-              90M
-              50M
-              45M
-              -65M]
-             ["2027-2028"
-              200M
-              150M
-              100M
-              90M
-              50M
-              45M
-              -65M]
-             ["2028-2029"
-              200M
-              150M
-              100M
-              90M
-              50M
-              45M
-              -65M]
-             ["2029-2030"
-              200M
-              150M
-              100M
-              90M
-              50M
-              45M
-              -65M]]]
-          (nth raportti 7)))
-    (is (not-any? #(and (vector? %)
-                     (= "Ympäristöraportti" (get-in % [1 :otsikko])))
-          raportti))))
+            [["2025-2026" 200M 150M 100M 90M 50M 45M 70M 50M -85M]
+             ["2026-2027" 200M 150M 100M 90M 50M 45M 70M 50M -85M]
+             ["2027-2028" 200M 150M 100M 90M 50M 45M 70M 50M -85M]
+             ["2028-2029" 200M 150M 100M 90M 50M 45M 70M 50M -85M]
+             ["2029-2030" 200M 150M 100M 90M 50M 45M 70M 50M -85M]
+             {:lihavoi? true
+              :korosta-hennosti? true
+              :rivi ["Yhteensä" 1000M 750M 500M 450M 250M 225M 350M 250M -425M]}]]
+          (nth raportti 8)))
+    (is (not-any? #(and (vector? %) (= "Ympäristöraportti" (get-in % [1 :otsikko]))) raportti))))
 
 (deftest MHU25-urakan-tavoitehinnan-muutokset-muodostuvat-kaikille-hoitovuosille
   (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
@@ -665,7 +622,8 @@
         hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet (:db jarjestelma) urakka-id-raasepori))
         raportti (with-redefs [lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle
                                (fn [_ _] {:lupaus-sitoutuminen {:pisteet 70}
-                                          :yhteenveto {:pisteet {:maksimi 100, :ennuste 100, :toteuma 100}}})
+                                          :yhteenveto {:pisteet {:maksimi 100, :ennuste 100, :toteuma 100}
+                                                       :valikatselmus-tehty-urakalle? true}})
                                valikatselmus-q/hae-bonukset (fn [_ _] [{:rahasumma 100M}])
                                valikatselmus-q/hae-sanktiot (fn [_ _] [{:maara -25M}])]
                    (vastaanottotarkastus-mhu/lupaukset-taulukko (:db jarjestelma) urakka-id-raasepori urakan-tiedot hoitokaudet))]
@@ -854,5 +812,3 @@
           (testing "Excel-raportin otsikko muodostuu"
             (is (= [[:otsikko-title "Urakan lopullinen tavoite- ja kattohinta"]]
                   (get-in excel-taulukko [1 :excel-alkutekstit])))))))))
-
-
