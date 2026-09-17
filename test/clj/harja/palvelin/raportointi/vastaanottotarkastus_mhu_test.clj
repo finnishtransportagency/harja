@@ -61,32 +61,71 @@
     :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}])
 
 (def ^:private testi-talvisuolan-erittely
-  [:taulukko {:otsikko "Erittely hoitovuosittain"} [] []])
+  [:taulukko {:otsikko "Erittely hoitovuosittain" :samalle-sheetille? true :sheet-nimi "Talvihoitosuolat" :tyhja nil}
+   [{:fmt :kokonaisluku :leveys 1 :otsikko "Hoitovuosi" :tasaa :vasen}
+    {:fmt :numero :leveys 1 :otsikko "Keskilämpötilojen keskiarvo tarkastelujaksolla (°C)" :tasaa :oikea}
+    {:fmt :numero :leveys 1 :otsikko "Keskilämpötilojen keskiarvo pitkällä aikavälillä (°C)" :tasaa :oikea}
+    {:fmt :numero :leveys 1 :otsikko "Erotus (°C)" :tasaa :oikea}
+    {:fmt :teksti :leveys 1 :otsikko "Lämpötilan vaikutus käyttörajaan" :tasaa :oikea}
+    {:fmt :numero :leveys 1 :otsikko "Käyttöraja tehtävä- ja määräluettelossa (kuivatonnia)" :tasaa :oikea}
+    {:fmt :numero :leveys 1 :otsikko "Kohtuullistettu käyttöraja (kuivatonnia)" :tasaa :oikea}
+    {:fmt :numero :leveys 1 :otsikko "Toteuma (kuivatonnia)" :tasaa :oikea}]
+   [[[:arvo {:arvo "2025-2026"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "-"}]
+     "-"
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 1000M :desimaalien-maara 2}]]
+    [[:arvo {:arvo "2026-2027"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "-"}]
+     "-"
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 1000M :desimaalien-maara 2}]]
+    [[:arvo {:arvo "2027-2028"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "-"}]
+     "-"
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 1000M :desimaalien-maara 2}]]
+    [[:arvo {:arvo "2028-2029"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "-"}]
+     "-"
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 1000M :desimaalien-maara 2}]]
+    [[:arvo {:arvo "2029-2030"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "Ei vielä saatavilla"}]
+     [:arvo {:arvo "-"}]
+     "-"
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 6M :desimaalien-maara 2}]
+     [:arvo {:arvo 1000M :desimaalien-maara 2}]]
+    {:korosta-hennosti? true
+     :lihavoi? true
+     :rivi [[:arvo {:arvo "Yhteensä"}] nil nil nil nil
+            [:arvo {:arvo 30M :desimaalien-maara 2}]
+            [:arvo {:arvo 30M :desimaalien-maara 2}]
+            [:arvo {:arvo 5000M :desimaalien-maara 2}]]}]])
 
 (defn- muodosta-testiraportti []
-  (let [lupaustiedot (fn [_ {:keys [valittu-hoitokausi]}]
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        lupaustiedot (fn [_ {:keys [valittu-hoitokausi]}]
                        (if (= (first valittu-hoitokausi) #inst "2021-10-01T00:00:00.000-00:00")
                          {:lupaus-sitoutuminen {:pisteet 70}
                           :yhteenveto {:pisteet {:toteuma 65}}}
                          {:lupaus-sitoutuminen {:pisteet 80}
-                          :yhteenveto {:pisteet {:toteuma 75}}}))
-        talvisuolan-erittely testi-talvisuolan-erittely]
-    (with-redefs [urakat-q/hae-urakka (fn [_ _] [{:nimi "Testiurakka"
-                                                  :alkupvm #inst "2021-01-01T00:00:00.000-00:00"
-                                                  :loppupvm #inst "2023-12-31T23:59:59.000-00:00"}])
-                  urakat-q/hae-urakan-hoitokaudet (fn [_ _] testi-hoitokaudet)
-                  urakat-q/hae-urakan-parametrit (fn [_ _] [{:muutosten_hallinta false}])
-                  muutos-ja-lisatyoraportti/hae-tavoitehinnan-oikaisut (fn [_ _] [])
-                  muutos-ja-lisatyoraportti/hae-lisatoiden-kulukohdistukset (fn [_ _] [])
-                  talvisuola/suorita (fn [_ _ _]
-                                       [:raportti {}
-                                        [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"}
-                                         []
-                                         [["Suurin urakassa sallittu käyttömäärä + 5 %"
-                                           [:arvo {:arvo 1050M}]]]]
-                                        talvisuolan-erittely])
-                  materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
-                  (fn [_ _] [{:kokonaismaara 1000M}])
+                          :yhteenveto {:pisteet {:toteuma 75}}}))]
+    (with-redefs [materiaalit-kyselyt/hae-talvisuolan-kokonaismaara (fn [_ _] [{:kokonaismaara 1000M}])
                   lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle lupaustiedot
                   valikatselmus-q/hae-bonukset (fn [_ {:keys [alkupvm]}]
                                                  (if (= alkupvm (-> testi-hoitokaudet first :alkupvm))
@@ -116,7 +155,7 @@
                        {:id 2 :summa-indeksikorjattu 100M :toteumat 90M :tavoitehinnan-muutos -10M}
                        {:id 3 :summa-indeksikorjattu 50M :toteumat 45M :tavoitehinnan-muutos -5M}
                        {:id :yhteenveto :summa-indeksikorjattu 350M :toteumat 285M :tavoitehinnan-muutos -65M}]))]
-      (vastaanottotarkastus-mhu/suorita (:db jarjestelma) nil {:urakka-id 1}))))
+      (vastaanottotarkastus-mhu/suorita (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id}))))
 
 (deftest raportti-sisaltaa-lupaukset-hoitovuosittain
   (let [raportti (muodosta-testiraportti)]
@@ -126,24 +165,27 @@
              {:otsikko "Tarjouksen lupauspisteet" :leveys 5}
              {:otsikko "Toteutuneet lupauspisteet" :leveys 5}
              {:otsikko "Bonus/Sanktiot (€)" :leveys 5 :fmt :raha}]
-            [["2021-2022" 70 65 75M]
-             ["2022-2023" 80 75 150M]]]
+            [["2025-2026" 80 75 150M]
+             ["2026-2027" 80 75 150M]
+             ["2027-2028" 80 75 150M]
+             ["2028-2029" 80 75 150M]
+             ["2029-2030" 80 75 150M]]]
           (nth raportti 2)))))
 
 (deftest raportti-sisaltaa-talvisuolan-kokonaiskayttomaaran
   (let [raportti (muodosta-testiraportti)]
     (is (= [:otsikko "Talvisuolan kokonaiskäyttömäärä"]
           (nth raportti 3)))
-    (is (= ["Kohtuullistettu käyttöraja + 5% (tonnia)" 1050M]
+    (is (= ["Kohtuullistettu käyttöraja + 5% (tonnia)" 31.50M]
           (let [rivi (nth (nth (nth raportti 4) 3) 0)]
             [(first rivi) (get-in rivi [1 1 :arvo])])))
     (is (= ["Toteuma (tonnia)" 1000M]
           (let [rivi (nth (nth (nth raportti 4) 3) 1)]
             [(first rivi) (get-in rivi [1 1 :arvo])])))
-    (is (= ["Erotus (tonnia)" -50M]
+    (is (= ["Erotus (tonnia)" 968.50M]
           (let [rivi (nth (nth (nth raportti 4) 3) 2)]
             [(first rivi) (get-in rivi [1 1 :arvo])])))
-    (is (= ["Kirjattu sakon määrä (euroa)" 100M]
+    (is (= ["Kirjattu sakon määrä (euroa)" 0]
           (let [rivi (nth (nth (nth raportti 4) 3) 3)]
             [(first rivi) (get-in rivi [1 1 :arvo])])))
     (is (= 50
@@ -210,8 +252,46 @@
              {:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
              {:otsikko "Toteutunut määrä (€)" :leveys 5 :fmt :raha}
              {:otsikko "Tavoitehinnan muutos (€)" :leveys 5 :fmt :raha}]
-            [["2021-2022" 100M 80M 50M 40M 25M 20M -35M]
-             ["2022-2023" 200M 150M 100M 90M 50M 45M -65M]]]
+            [["2025-2026"
+              200M
+              150M
+              100M
+              90M
+              50M
+              45M
+              -65M]
+             ["2026-2027"
+              200M
+              150M
+              100M
+              90M
+              50M
+              45M
+              -65M]
+             ["2027-2028"
+              200M
+              150M
+              100M
+              90M
+              50M
+              45M
+              -65M]
+             ["2028-2029"
+              200M
+              150M
+              100M
+              90M
+              50M
+              45M
+              -65M]
+             ["2029-2030"
+              200M
+              150M
+              100M
+              90M
+              50M
+              45M
+              -65M]]]
           (nth raportti 7)))
     (is (not-any? #(and (vector? %)
                      (= "Ympäristöraportti" (get-in % [1 :otsikko])))
@@ -292,7 +372,7 @@
           (is (= hoitovuodet @rahavaraus-kutsut)))
         (testing "tehtävämäärämuutoksille välitetään kaikki hoitokaudet"
           (is (every? #(= (mapv (juxt :alkupvm :loppupvm) hoitokaudet)
-                        (:hoitokaudet %))
+                         (:hoitokaudet %))
                 @maaramuutos-kutsut)))))))
 
 (deftest MHU25-urakan-lisatyot-muodostuvat-kaikille-hoitovuosille
@@ -368,7 +448,7 @@
     (try
       (u (format "DELETE FROM toteuma_tehtava
                    WHERE toteuma IN (SELECT id FROM toteuma WHERE lisatieto LIKE '%s%%')"
-                 tunniste))
+           tunniste))
       (u (format "DELETE FROM toteuma WHERE lisatieto LIKE '%s%%'" tunniste))
       (doseq [[tehtava-id hoitovuosi alkanut maara] toteumat]
         (let [lisatieto (str tunniste "-" tehtava-id "-" alkanut)]
@@ -376,11 +456,11 @@
                        (luoja, lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, lisatieto)
                        VALUES (%s, 'harja-ui'::lahde, %s, %s, NOW(), '%s', '%s',
                                'kokonaishintainen'::toteumatyyppi, '%s')"
-                    (:id +kayttaja-jvh+) urakka-id sopimus-id alkanut alkanut lisatieto))
+               (:id +kayttaja-jvh+) urakka-id sopimus-id alkanut alkanut lisatieto))
           (i (format "INSERT INTO toteuma_tehtava
                        (luoja, toteuma, luotu, toimenpidekoodi, maara, urakka_id, lisatieto, hoitokauden_alkuvuosi)
                        VALUES (%s, (SELECT id FROM toteuma WHERE lisatieto = '%s'), NOW(), %s, %s, %s, '%s', %s)"
-                    (:id +kayttaja-jvh+) lisatieto tehtava-id maara urakka-id lisatieto hoitovuosi))))
+               (:id +kayttaja-jvh+) lisatieto tehtava-id maara urakka-id lisatieto hoitovuosi))))
       (let [raportin-osat (vastaanottotarkastus-mhu/muodosta-virhanomaistehtavat-taulukko
                             db urakka-id hoitokaudet nil)
             vanhan-tehtavan-taulukko (first raportin-osat)
@@ -425,27 +505,27 @@
       (finally
         (u (format "DELETE FROM toteuma_tehtava
                      WHERE toteuma IN (SELECT id FROM toteuma WHERE lisatieto LIKE '%s%%')"
-                   tunniste))
+             tunniste))
         (u (format "DELETE FROM toteuma WHERE lisatieto LIKE '%s%%'" tunniste))))))
 
 (defn- lisaa-testin-lisatyo-kohdistus!
   [{:keys [urakka-id toimenpideinstanssi-id tunniste erapaiva summa lisatyon-lisatieto
-            tyyppi kulu-poistettu? kohdistus-poistettu?]
+           tyyppi kulu-poistettu? kohdistus-poistettu?]
     :or {tyyppi "lisatyo"
          kulu-poistettu? false
          kohdistus-poistettu? false}}]
   (let [maksueratyyppi (if (= tyyppi "lisatyo") "lisatyo" "kokonaishintainen")
         kulu-id (lisaa-kulu-urakalle summa erapaiva urakka-id toimenpideinstanssi-id nil maksueratyyppi
-                                      {:lisatieto tunniste
-                                       :lisatyon-lisatieto lisatyon-lisatieto
-                                       :kulu-poistettu? kulu-poistettu?
-                                       :kohdistus-poistettu? kohdistus-poistettu?})]
+                  {:lisatieto tunniste
+                   :lisatyon-lisatieto lisatyon-lisatieto
+                   :kulu-poistettu? kulu-poistettu?
+                   :kohdistus-poistettu? kohdistus-poistettu?})]
     kulu-id))
 
 (defn- siivoa-testin-lisatyot! [tunniste]
   (u (format "DELETE FROM kulu_kohdistus
                WHERE kulu IN (SELECT id FROM kulu WHERE lisatieto LIKE '%s%%')"
-             tunniste))
+       tunniste))
   (u (format "DELETE FROM kulu WHERE lisatieto LIKE '%s%%'" tunniste)))
 
 (deftest MHU25-urakan-lisatyot-suodatetaan-kyselyssa
@@ -475,7 +555,7 @@
            :tunniste (str tunniste "-" vuosi "-alku")
            :erapaiva (str vuosi "-10-01")
            :summa alku-summa
-           :lisatyon-lisatieto (str "Kajaani lisätyö " vuosi)} )
+           :lisatyon-lisatieto (str "Kajaani lisätyö " vuosi)})
         (lisaa-testin-lisatyo-kohdistus!
           {:urakka-id urakka-id
            :toimenpideinstanssi-id tpi-id
@@ -601,7 +681,7 @@
         db (:db jarjestelma)
         urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         hoitokaudet (sort-by :alkupvm
-                             (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+                      (urakat-q/hae-urakan-hoitokaudet db urakka-id))
         kustannukset
         {2025 {:hankintakustannukset-toteutunut 100M
                :rahavaraukset-toteutunut 10M
@@ -647,7 +727,7 @@
         odotettu-yhteensa ["Yhteensä" 1639.5M 110M 160M 210M 2119.5M]]
     (testing "Kajaanin urakan kaikki hoitovuodet ovat mukana"
       (is (= [2025 2026 2027 2028 2029]
-             (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet))))
+            (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet))))
     (with-redefs [valikatselmus-palvelu/hae-kustannukset-jarjestettyna
                   (fn [_ _ hoitovuosi _ _]
                     {:taulukon-rivit (get kustannukset hoitovuosi)})]
@@ -658,10 +738,10 @@
             rivit (nth taulukko 3)]
         (testing "hankintakustannukset sisältävät rahavaraukset, arvonvähennykset ja muut kulut"
           (is (= odotetut-rivit
-                 (vec (butlast rivit)))))
+                (vec (butlast rivit)))))
         (testing "yhteensä-rivi summaa kaikki kustannussarakkeet oikein"
           (is (= odotettu-yhteensa
-                 (get-in (last rivit) [:rivi]))))
+                (get-in (last rivit) [:rivi]))))
         (testing "taulukon otsikot ovat oikein"
           (is (= ["Hoitovuosi"
                   "Hankintakustannukset sis.rahavaraukset (€)"
@@ -669,12 +749,114 @@
                   "Johto- ja hallintokorvaus (€)"
                   "Hoidonjohtopalkkio (€)"
                   "Yhteensä (€)"]
-                 (mapv :otsikko (nth taulukko 2)))))
+                (mapv :otsikko (nth taulukko 2)))))
         (testing "taulukon metatiedot ovat oikein"
           (is (= "Urakan tavoitehintaan kuuluvat kustannukset"
-                 (get-in taulukko [1 :otsikko])))
+                (get-in taulukko [1 :otsikko])))
           (is (= "Urakan tavoitehintaan kuuluvat kustannukset"
-                 (get-in taulukko [1 :sheet-nimi])))
+                (get-in taulukko [1 :sheet-nimi])))
           (is (true? (get-in taulukko [1 :viimeinen-rivi-yhteenveto?]))))))))
+
+(deftest MHU25-urakan-lopullinen-tavoite-ja-kattohinta-muodostuvat
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        db (:db jarjestelma)
+        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
+        hoitokaudet (sort-by :alkupvm
+                      (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+        hoitovuodet (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet)
+        hoitovuoden-tiedot
+        {2025 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 1000M
+                                              :hoitovuoden-lopun-kattohinta 1200M
+                                              :kirjallisesti-sovitut-muutokset 100M
+                                              :yhteenveto {:kustannukset-yhteensa
+                                                           {:yht-toteutunut-summa 1500M}}}
+                            :toteumiin-perustuvat-muutokset-yht 50M
+                            :tavoitehintaan-vaikuttavat-arvonvahennykset [{:maara 10M}]}
+               :paatokset [{:hoitovuoden-lopun-indeksikorjaus
+                            {:hoitokauden_lopun_indeksikorjaus 20M}}
+                           {:tavoitehinnan-ylitys {:urakoitsija_maksaa 30M}}]}
+         2026 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 2000M
+                                              :hoitovuoden-lopun-kattohinta 2400M
+                                              :kirjallisesti-sovitut-muutokset 200M
+                                              :yhteenveto {:kustannukset-yhteensa
+                                                           {:yht-toteutunut-summa 3000M}}}
+                            :toteumiin-perustuvat-muutokset-yht 100M
+                            :tavoitehintaan-vaikuttavat-arvonvahennykset [{:maara -20M}]}
+               :paatokset [{:hoitovuoden-lopun-indeksikorjaus
+                            {:id 1 :hoitokauden_lopun_indeksikorjaus 99M}}
+                           {:kattohinnan-ylitys
+                            {:id 2 :ylityksen_maara 50M :urakoitsija_maksaa 25M}}]}
+         2027 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 3000M
+                                              :hoitovuoden-lopun-kattohinta 3600M
+                                              :kirjallisesti-sovitut-muutokset 0M
+                                              :yhteenveto {:kustannukset-yhteensa
+                                                           {:yht-toteutunut-summa 3300M}}}
+                            :toteumiin-perustuvat-muutokset-yht 0M
+                            :tavoitehintaan-vaikuttavat-arvonvahennykset []}
+               :paatokset [{:tavoitehinnan-alitus {:tavoitepalkkio 40M}}]}
+         2028 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 4000M
+                                              :hoitovuoden-lopun-kattohinta 4800M
+                                              :kirjallisesti-sovitut-muutokset 100M
+                                              :yhteenveto {:kustannukset-yhteensa
+                                                           {:yht-toteutunut-summa 4900M}}}
+                            :toteumiin-perustuvat-muutokset-yht 0M
+                            :tavoitehintaan-vaikuttavat-arvonvahennykset [{:maara 50M}]}
+               :paatokset []}
+         2029 {:yhteenveto {:budjettitavoite {:hoitovuoden-lopun-tavoitehinta 5000M
+                                              :hoitovuoden-lopun-kattohinta 6000M
+                                              :kirjallisesti-sovitut-muutokset -50M
+                                              :yhteenveto {:kustannukset-yhteensa
+                                                           {:yht-toteutunut-summa 7000M}}}
+                            :toteumiin-perustuvat-muutokset-yht 0M
+                            :tavoitehintaan-vaikuttavat-arvonvahennykset []}
+               :paatokset []}}
+        haut (atom [])]
+    (is (= [2025 2026 2027 2028 2029] hoitovuodet))
+    (is (true? (:muutosten_hallinta urakan-parametrit)))
+    (is (= 1.2M (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+    (with-redefs [valikatselmus-palvelu/hae-valikatselmuksen-tiedot-hoitovuodelle
+                  (fn [_ _ parametrit]
+                    (swap! haut conj parametrit)
+                    (get hoitovuoden-tiedot (:hoitovuosi parametrit)))]
+      (let [raportin-osat
+            (vastaanottotarkastus-mhu/muodosta-urakan-tavoitehinat-taulukko
+              db +kayttaja-jvh+ urakan-tiedot urakan-parametrit hoitokaudet nil)
+            taulukko (first raportin-osat)
+            rivit (nth taulukko 3)]
+        (testing "jokaisen hoitovuoden tavoite- ja kattohinta lasketaan oikein"
+          (is (= [["2025-2026" 1180M 1416.0M 0 30M 84.0M 0 2710.0M]
+                  ["2026-2027" 2280M 2736.0M 0 0 50M 25M 5091M]
+                  ["2027-2028" 3000M 3600.0M 40M 0 0 0 6640.0M]
+                  ["2028-2029" 4150M 4980.0M 0 0 0 0 9130.0M]
+                  ["2029-2030" 4950M 5940.0M 0 0 1060.0M 0 11950.0M]]
+                (vec (butlast rivit)))))
+        (testing "yhteensä-rivi summaa kaikki sarakkeet oikein"
+          (is (= ["Yhteensä" 15560M 18672.0M 40M 30M 1194.0M 25M 35521.0M]
+                (get-in (last rivit) [:rivi]))))
+        (testing "taulukon otsikot ja metatiedot ovat oikein"
+          (is (= ["Hoitovuosi"
+                  "Hoitovuoden lopun tavoitehinta (€)"
+                  "Hoitovuoden lopun kattohinta (€)"
+                  "Urakoitsijan tavoitepalkkio (€)"
+                  "Urakoitsija hyvittää tavoitehinnan ylityksestä (€)"
+                  "Kattohinnan ylitys (€)"
+                  "Urakoitsija hyvittää kattohinnan ylityksestä (€)"]
+                (mapv :otsikko (nth taulukko 2))))
+          (is (= "Urakan lopullinen tavoite- ja kattohinta"
+                (get-in taulukko [1 :otsikko])))
+          (is (= "Urakan lopullinen tavoite- ja kattohinta"
+                (get-in taulukko [1 :sheet-nimi])))
+          (is (true? (get-in taulukko [1 :viimeinen-rivi-yhteenveto?])))
+          (is (nil? (get-in taulukko [1 :excel-alkutekstit]))))
+        (testing "haku tehdään kerran jokaista hoitovuotta ja oikeaa urakkaa kohden"
+          (is (= hoitovuodet (mapv :hoitovuosi @haut)))
+          (is (every? #(= urakka-id (:urakkaid %)) @haut)))
+        (let [excel-taulukko
+              (first (vastaanottotarkastus-mhu/muodosta-urakan-tavoitehinat-taulukko
+                       db +kayttaja-jvh+ urakan-tiedot urakan-parametrit hoitokaudet :excel))]
+          (testing "Excel-raportin otsikko muodostuu"
+            (is (= [[:otsikko-title "Urakan lopullinen tavoite- ja kattohinta"]]
+                  (get-in excel-taulukko [1 :excel-alkutekstit])))))))))
 
 

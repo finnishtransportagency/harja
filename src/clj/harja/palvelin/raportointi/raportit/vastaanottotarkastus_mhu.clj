@@ -327,8 +327,6 @@
                       (let [{:keys [alkupvm loppupvm]} hoitokausi
                             vuosi (pvm/vuosi alkupvm)
                             kustannukset (:taulukon-rivit (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id vuosi alkupvm loppupvm))
-
-                            _ (println "kustannukset" kustannukset)
                             hankintakustannukset (+ (or (:hankintakustannukset-toteutunut kustannukset) 0)
                                                    (or (:rahavaraukset-toteutunut kustannukset) 0)
                                                    (or (:arvonvahennykset-toteutunut kustannukset) 0)
@@ -365,35 +363,117 @@
        {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) kustannukset-yhteensarivi)))]]))
 
-  (defn suorita [db user {:keys [urakka-id kasittelija]}]
-    (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-          urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
-          raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
-          hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
-          talvisuolan-erittely (talvisuolan-erittely db urakka-id (:alkupvm urakan-tiedot) (:loppupvm urakan-tiedot))]
-      (into [:raportti {:orientaatio :landscape
-                        :nimi raportin-nimi
-                        :urakan-nimi (:nimi urakan-tiedot)
-                        :otsikon-koko :iso
-                        :raportin-yleiset-tiedot raportin-nimi}
-             (lupaukset-taulukko db urakka-id urakan-tiedot hoitokaudet)]
-        (concat
-          (when talvisuolan-erittely
-            (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
-              talvisuolan-erittely))
-          [[:otsikko "Tavoitehinnan muutokset"]
-           (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]
+(defn muodosta-urakan-tavoitehinat-taulukko [db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija]
+  (let [urakka-id (:id urakan-tiedot)
+        ota-paatos (fn [paatokset avain] (first (vals (first (filter #(= (ffirst %) avain) paatokset)))))
+        rivit (mapv (fn [hoitokausi]
+                      (let [{:keys [alkupvm loppupvm]} hoitokausi
+                            vuosi (pvm/vuosi alkupvm)
+                            hoitovuoden-tiedot (valikatselmus-palvelu/hae-valikatselmuksen-tiedot-hoitovuodelle
+                                                 db user {:urakkaid urakka-id :hoitovuosi vuosi})
+                            budjettitavoite-vuodelle (get-in hoitovuoden-tiedot [:yhteenveto :budjettitavoite])
+                            toteuma-yht (or (get-in budjettitavoite-vuodelle [:yhteenveto :kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+                            kirjallisesti-sovitut-muutokset (when (:muutosten_hallinta urakan-parametrit)
+                                                              (get-in hoitovuoden-tiedot [:yhteenveto :budjettitavoite :kirjallisesti-sovitut-muutokset]))
+                            toteumiin-perustuvat-muutokset-yht (when (:muutosten_hallinta urakan-parametrit)
+                                                                 (get-in hoitovuoden-tiedot [:yhteenveto :toteumiin-perustuvat-muutokset-yht]))
+                            thv-arvonvahennykset-yht (apply + (map #(or (:maara %) 0) (get-in hoitovuoden-tiedot [:yhteenveto :tavoitehintaan-vaikuttavat-arvonvahennykset])))
+                            pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
+                            ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
+                            ;; Sekä arvonvähennykset
+                            hoitovuoden-lopun-tavoitehinta (or (:hoitovuoden-lopun-tavoitehinta budjettitavoite-vuodelle) 0)
+                            ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
+                            hv-lopun-indkorjaus-paatos (ota-paatos (:paatokset hoitovuoden-tiedot) :hoitovuoden-lopun-indeksikorjaus)
+                            hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hv-lopun-indkorjaus-paatos) 0)
+                            hoitovuoden-lopun-tavoitehinta (+ hoitovuoden-lopun-tavoitehinta
+                                                             ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
+                                                             (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus)
+                                                             pysyvat-muutokset-toteuma-muutokset-yht
+                                                             thv-arvonvahennykset-yht)
 
-          (if (:muutosten_hallinta urakan-parametrit)
-            ;; Käytännössä -25 ja sitä vanhemmilla urakoilla
-            (muodosta-tavoitehinnan-muutokset db user urakka-id hoitokaudet kasittelija)
-            ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
-            (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
+                            hoitovuoden-lopun-kattohinta (or (get-in hoitovuoden-tiedot [:yhteenveto :budjettitavoite :hoitovuoden-lopun-kattohinta]) 0)
+                            ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
+                            ;; Sekä arvonvähennykset
+                            hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
+                                                           (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                                           (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                                           (* thv-arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
-          (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
+                            tavoitehinnan-ylityspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :tavoitehinnan-ylitys)
+                            tavoitehinnan-alituspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :tavoitehinnan-alitus)
+                            kattohinnan-ylityspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :kattohinnan-ylitys)
+                            tavoitepalkkio (or (:tavoitepalkkio tavoitehinnan-alituspaatos) 0)
+                            hyvitys-tavoitehinnan-ylityksesta (or (:urakoitsija_maksaa tavoitehinnan-ylityspaatos) 0)
+                            kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
+                                                 (- toteuma-yht hoitovuoden-lopun-kattohinta)
+                                                 (or (:ylityksen_maara kattohinnan-ylityspaatos) 0))
+                            hyvitys-kattohinnan-ylityksesta (or (:urakoitsija_maksaa kattohinnan-ylityspaatos) 0)
 
-          (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)
+                            yhteensa (+ hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta tavoitepalkkio hyvitys-tavoitehinnan-ylityksesta kattohinnan-ylitys hyvitys-kattohinnan-ylityksesta)]
+                        [(str vuosi "-" (pvm/vuosi loppupvm)) hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta tavoitepalkkio hyvitys-tavoitehinnan-ylityksesta kattohinnan-ylitys hyvitys-kattohinnan-ylityksesta yhteensa]))
+                hoitokaudet)
+        lopun-tavoitehinta-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
+        lopun-kattohinta-yhteensa (reduce + 0 (map #(or (nth % 2) 0) rivit))
+        tavoitepalkkio-yhteensa (reduce + 0 (map #(or (nth % 3) 0) rivit))
+        hyvitys-tavoitehinnan-ylityksesta-yhteensa (reduce + 0 (map #(or (nth % 4) 0) rivit))
+        kattohinnan-ylitys-yhteensa (reduce + 0 (map #(or (nth % 5) 0) rivit))
+        hyvitys-kattohinnan-ylityksesta-yhteensa (reduce + 0 (map #(or (nth % 6) 0) rivit))
+        kaikki-yhteensa (reduce + 0 (map #(or (last %) 0) rivit))
+        hinnat-yhteensarivi [{:lihavoi? true
+                              :korosta-hennosti? true
+                              :rivi ["Yhteensä"
+                                     lopun-tavoitehinta-yhteensa
+                                     lopun-kattohinta-yhteensa
+                                     tavoitepalkkio-yhteensa
+                                     hyvitys-tavoitehinnan-ylityksesta-yhteensa
+                                     kattohinnan-ylitys-yhteensa
+                                     hyvitys-kattohinnan-ylityksesta-yhteensa
+                                     kaikki-yhteensa]}]
+        otsikko-title [:otsikko-title "Urakan lopullinen tavoite- ja kattohinta"]]
+    [[:taulukko {:otsikko "Urakan lopullinen tavoite- ja kattohinta"
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi "Urakan lopullinen tavoite- ja kattohinta"
+                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
+      [{:leveys 5 :otsikko "Hoitovuosi"}
+       {:leveys 5 :otsikko "Hoitovuoden lopun tavoitehinta (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Hoitovuoden lopun kattohinta (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Urakoitsijan tavoitepalkkio (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Urakoitsija hyvittää tavoitehinnan ylityksestä (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Kattohinnan ylitys (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Urakoitsija hyvittää kattohinnan ylityksestä (€)" :fmt :raha}]
+      (into [] (concat rivit (when-not (empty? rivit) hinnat-yhteensarivi)))]]))
 
-          (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)))))
+(defn suorita [db user {:keys [urakka-id kasittelija]}]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
+        raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
+        hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+        talvisuolan-erittely (talvisuolan-erittely db urakka-id (:alkupvm urakan-tiedot) (:loppupvm urakan-tiedot))]
+    (into [:raportti {:orientaatio :landscape
+                      :nimi raportin-nimi
+                      :urakan-nimi (:nimi urakan-tiedot)
+                      :otsikon-koko :iso
+                      :raportin-yleiset-tiedot raportin-nimi}
+           (lupaukset-taulukko db urakka-id urakan-tiedot hoitokaudet)]
+      (concat
+        (when talvisuolan-erittely
+          (into [[:otsikko "Talvisuolan kokonaiskäyttömäärä"]]
+            talvisuolan-erittely))
+        [[:otsikko "Tavoitehinnan muutokset"]
+         (rahavarausten-tavoitehinnan-muutokset-taulukko db urakka-id hoitokaudet)]
+
+        (if (:muutosten_hallinta urakan-parametrit)
+          ;; Käytännössä -25 ja sitä vanhemmilla urakoilla
+          (muodosta-tavoitehinnan-muutokset db user urakka-id hoitokaudet kasittelija)
+          ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
+          (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
+
+        (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
+
+        (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)
+
+        (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)
+
+        (muodosta-urakan-tavoitehinat-taulukko db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija)))))
 
 
