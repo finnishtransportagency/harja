@@ -113,10 +113,18 @@
     }
 
     > .info-laatikko {
-      padding: @valistys-4 @valistys-8;
+      padding: @valistys-4 @valistys-20;
 
       .infolaatikon-ikoni {
+        align-self: center;
+        display: flex;
+        flex: 0 0 24px;
+        justify-content: center;
         padding: 0 @valistys-4 0 0;
+
+        svg path {
+          fill: @blue-dark;
+        }
       }
     }
   }
@@ -557,7 +565,7 @@ div.yllapitokohteet {
 }
 
 .paallystyskustannusten-toiminnot-container {
-    height: @valistys-48;
+  height: @valistys-48;
 }
 
 .paallystyskustannusten-toiminnot {
@@ -598,7 +606,6 @@ div.yllapitokohteet {
     }
 
     > .muokkaustoiminnot {
-      float: none;
       margin-left: auto;
       order: 2;
     }
