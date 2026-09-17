@@ -1,18 +1,12 @@
 (ns harja.views.urakka.pot2.tieosuushaku
   (:require [reagent.core :as r]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+            [harja.domain.tierekisteri :as tierekisteri]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]))
-
-(defn- osoite-tekstina
-  [{:keys [tr-numero tr-ajorata tr-kaista tr-alkuosa tr-alkuetaisyys
-           tr-loppuosa tr-loppuetaisyys]}]
-  (str tr-numero " / " tr-alkuosa "/" tr-alkuetaisyys
-       " - " tr-loppuosa "/" tr-loppuetaisyys
-       ", ajorata " tr-ajorata ", kaista " tr-kaista))
 
 (defn- hakukentta [e! hakuehdot otsikko avain data-cy]
   [kentat/tee-otsikollinen-kentta
@@ -92,7 +86,8 @@
              [yleiset/info-laatikko
               :neutraali
               "Seuraavat tieosat jatkuvat kohteen ulkopuolelle. Listauksessa näkyy vain pääkohteen sisällä oleva osuus."
-              (map osoite-tekstina kohteen-ulkopuolelle-jatkuvat)
+              (map #(tierekisteri/tierekisteriosoite-tekstina % {:teksti-tie? false})
+                   kohteen-ulkopuolelle-jatkuvat)
               nil])
            (when voi-lisata?
              [napit/yleinen-ensisijainen

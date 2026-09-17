@@ -167,10 +167,9 @@ SELECT "tr-numero"       AS "tr-numero",
     "tr-ajorata"      AS "tr-ajorata",
     "tr-kaista"       AS "tr-kaista",
     "tr-osa"          AS "tr-alkuosa",
-    GREATEST("tr-alkuetaisyys",
-       CASE WHEN "tr-osa" = :tr-alkuosa
-         THEN :tr-alkuetaisyys
-         ELSE "tr-alkuetaisyys" END) AS "tr-alkuetaisyys",
+    CASE WHEN "tr-osa" = :tr-alkuosa
+      THEN GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+      ELSE "tr-alkuetaisyys" END AS "tr-alkuetaisyys",
     "tr-osa"          AS "tr-loppuosa",
     LEAST("tr-loppuetaisyys",
        CASE WHEN "tr-osa" = :tr-loppuosa
