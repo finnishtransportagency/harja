@@ -342,19 +342,21 @@
                             vuosi (pvm/vuosi alkupvm)
                             kustannukset (:taulukon-rivit (valikatselmus-palvelu/hae-kustannukset-jarjestettyna db urakka-id vuosi alkupvm loppupvm))
                             hankintakustannukset (+ (or (:hankintakustannukset-toteutunut kustannukset) 0)
-                                                   (or (:rahavaraukset-toteutunut kustannukset) 0)
-                                                   (or (:arvonvahennykset-toteutunut kustannukset) 0)
-                                                   (or (:muukulu-tavoitehintainen-toteutunut kustannukset) 0))
+                                                   (or (:rahavaraukset-toteutunut kustannukset) 0))
+                            arvonvahennykset (or (:arvonvahennykset-toteutunut kustannukset) 0)
+                            muut-kulut (or (:muukulu-tavoitehintainen-toteutunut kustannukset) 0)
                             erilliskustannukset (or (:erillishankinnat-toteutunut kustannukset) 0)
                             jjh-korvaukset (or (:johto-ja-hallintokorvaus-toteutunut kustannukset) 0)
                             hoidonjohtopalkkiot (or (:hoidonjohdonpalkkio-toteutunut kustannukset) 0)
-                            yhteensa (+ hankintakustannukset erilliskustannukset jjh-korvaukset hoidonjohtopalkkiot)]
-                        [(str vuosi "-" (pvm/vuosi loppupvm)) hankintakustannukset erilliskustannukset jjh-korvaukset hoidonjohtopalkkiot yhteensa]))
+                            yhteensa (+ hankintakustannukset erilliskustannukset jjh-korvaukset hoidonjohtopalkkiot arvonvahennykset muut-kulut)]
+                        [(str vuosi "-" (pvm/vuosi loppupvm)) hankintakustannukset erilliskustannukset jjh-korvaukset hoidonjohtopalkkiot arvonvahennykset muut-kulut yhteensa]))
                 hoitokaudet)
         hankintakustannukset-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
         erilliskustannukset-yhteensa (reduce + 0 (map #(or (nth % 2) 0) rivit))
         jjh-korvaukset-yhteensa (reduce + 0 (map #(or (nth % 3) 0) rivit))
         hoidonjohtopalkkiot-yhteensa (reduce + 0 (map #(or (nth % 4) 0) rivit))
+        arvonvahennykset-yhteensa (reduce + 0 (map #(or (nth % 5) 0) rivit))
+        muut-kulut-yhteensa (reduce + 0 (map #(or (nth % 6) 0) rivit))
         kaikki-yhteensa (reduce + 0 (map #(or (last %) 0) rivit))
         kustannukset-yhteensarivi [{:lihavoi? true
                                     :korosta-hennosti? true
@@ -363,6 +365,8 @@
                                            erilliskustannukset-yhteensa
                                            jjh-korvaukset-yhteensa
                                            hoidonjohtopalkkiot-yhteensa
+                                           arvonvahennykset-yhteensa
+                                           muut-kulut-yhteensa
                                            kaikki-yhteensa]}]
         otsikko-title [:otsikko-title "Urakan tavoitehintaan kuuluvat kustannukset"]]
     [[:taulukko {:otsikko "Urakan tavoitehintaan kuuluvat kustannukset"
@@ -374,6 +378,8 @@
        {:leveys 5 :otsikko "Erillishankinnat (€)" :fmt :raha}
        {:leveys 5 :otsikko "Johto- ja hallintokorvaus (€)" :fmt :raha}
        {:leveys 5 :otsikko "Hoidonjohtopalkkio (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Arvonvahennykset (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Muut kulut (€)" :fmt :raha}
        {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) kustannukset-yhteensarivi)))]]))
 

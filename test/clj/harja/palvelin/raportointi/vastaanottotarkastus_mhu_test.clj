@@ -673,12 +673,12 @@
                :johto-ja-hallintokorvaus-toteutunut 34M
                :hoidonjohdonpalkkio-toteutunut 44M}}
         odotetut-rivit
-        [["2025-2026" 109.5M 20M 30M 40M 199.5M]
-         ["2026-2027" 219M 21M 31M 41M 312M]
-         ["2027-2028" 328M 22M 32M 42M 424M]
-         ["2028-2029" 437M 23M 33M 43M 536M]
-         ["2029-2030" 546M 24M 34M 44M 648M]]
-        odotettu-yhteensa ["Yhteensä" 1639.5M 110M 160M 210M 2119.5M]]
+        [["2025-2026" 110M 20M 30M 40M -3M 2.5M 199.5M]
+         ["2026-2027" 220M 21M 31M 41M -5M 4M 312M]
+         ["2027-2028" 330M 22M 32M 42M -7M 5M 424M]
+         ["2028-2029" 440M 23M 33M 43M -9M 6M 536M]
+         ["2029-2030" 550M 24M 34M 44M -11M 7M 648M]]
+        odotettu-yhteensa ["Yhteensä" 1650M 110M 160M 210M -35M 24.5M 2119.5M]]
     (testing "Kajaanin urakan kaikki hoitovuodet ovat mukana"
       (is (= [2025 2026 2027 2028 2029]
             (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet))))
@@ -702,6 +702,8 @@
                   "Erillishankinnat (€)"
                   "Johto- ja hallintokorvaus (€)"
                   "Hoidonjohtopalkkio (€)"
+                  "Arvonvahennykset (€)"
+                  "Muut kulut (€)"
                   "Yhteensä (€)"]
                 (mapv :otsikko (nth taulukko 2)))))
         (testing "taulukon metatiedot ovat oikein"
