@@ -17,26 +17,33 @@
    kohdekansioon, jonka tyhjennys varmistetaan. Oma kansio per testi, jotta testien tiedostot eivät
    overlappaa."
   [tiedosto-nimi]
-  (let [teksti (io/file +arkistot-polku+ "teksti.txt")
-        kuva (io/file +arkistot-polku+ "kuva.png")
-        kohde-kansio (io/file +arkistot-target-polku+ (str/replace tiedosto-nimi "." "_"))]
+  (let [testikansio (io/file +arkistot-target-polku+ (str/replace tiedosto-nimi "." "_"))
+        arkisto-tiedosto (io/file testikansio tiedosto-nimi)
+        teksti (io/file testikansio "teksti.txt")
+        kuva (io/file testikansio "kuva.png")
+        kohde-kansio (io/file testikansio "kohde")]
     (try
       (.mkdirs kohde-kansio)
-      (arkisto/pura-paketti (str +arkistot-polku+ tiedosto-nimi))
+      ;; Kopioi arkisto-tiedosto testikansioon, jotta alkuperäinen resurssi pysyy kunnossa
+      (io/copy (io/file +arkistot-polku+ tiedosto-nimi) arkisto-tiedosto)
+      ;; Pura testikansiossa oleva arkisto-tiedosto
+      (arkisto/pura-paketti (.getPath arkisto-tiedosto))
       ;; Tarkista, että tiedostot purkautuivat oikein
       (is (.exists teksti))
       (is (= "Terve!" (slurp teksti)))
       (is (.exists kuva))
-      ;; Kopioi puretut tiedostot kohdekansioon ja varmista, että kansion tyhjennys toimii
+      ;; Kopioi puretut tiedostot kohdekansioon ja testaa, että kansion tyhjennys toimii
       (io/copy teksti (io/file kohde-kansio "teksti.txt"))
       (io/copy kuva (io/file kohde-kansio "kuva.png"))
       (kansio/poista-tiedostot (.getPath kohde-kansio))
       (is (zero? (count (.listFiles kohde-kansio))) "poista-tiedostot tyhjentää kohdekansion")
       (finally
+        (io/delete-file arkisto-tiedosto true)
         (io/delete-file teksti true)
         (io/delete-file kuva true)
         (kansio/poista-tiedostot (.getPath kohde-kansio))
-        (io/delete-file kohde-kansio true)))))
+        (io/delete-file kohde-kansio true)
+        (io/delete-file testikansio true)))))
 
 (deftest testaa-pura-macissa-tehty-zip
   (testaa-tiedoston-purku "test_zip_mac.zip"))
