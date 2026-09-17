@@ -47,17 +47,20 @@
                            :nykyhetki (pvm/nyt)}
         lupaustiedot (if vanha-urakka?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db lupaus-parametrit)
-                       (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db lupaus-parametrit))]
+                       (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db lupaus-parametrit))
+        valikatselmus-tehty? (get-in lupaustiedot [:yhteenveto :valikatselmus-tehty-urakalle?])]
     [(str hoitovuosi "-" (pvm/vuosi loppupvm))
      (get-in lupaustiedot [:lupaus-sitoutuminen :pisteet])
-     (get-in lupaustiedot [:yhteenveto :pisteet :toteuma])
+     ;; Ei näytetä toteutuneita pisteitä, vaikka ne olisi tiedossa, ennenkuin päätös on tehty ja välikatselmus on lopullinen
+     (when valikatselmus-tehty? (get-in lupaustiedot [:yhteenveto :pisteet :toteuma]))
      (hae-bonus-sanktiot db urakka-id hoitokausi hoitovuosi)]))
 
 (defn lupaukset-taulukko [db urakka-id urakan-tiedot hoitokaudet]
   (let [vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)]
     [:taulukko {:otsikko "Lupaukset"
                 :tyhja (when (empty? hoitokaudet) "Ei hoitovuosia.")
-                :sheet-nimi "Lupaukset"}
+                :sheet-nimi "Lupaukset"
+                :samalle-sheetille? false}
      [{:otsikko "Hoitovuosi" :leveys 5}
       {:otsikko "Tarjouksen lupauspisteet" :leveys 5}
       {:otsikko "Toteutuneet lupauspisteet" :leveys 5}
