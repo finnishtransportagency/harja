@@ -466,14 +466,21 @@
 (defn suorita [db user {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
-        raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
+        raportin-nimi "Vastaanottotarkastus - MHU"
+        aikajakso (str (pvm/pvm (:alkupvm urakan-tiedot)) " - " (pvm/pvm (:loppupvm urakan-tiedot)))
         hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
         talvisuolan-erittely (talvisuolan-erittely db urakka-id kasittelija)]
     (into [:raportti {:orientaatio :landscape
                       :nimi raportin-nimi
                       :urakan-nimi (:nimi urakan-tiedot)
+                      :aikajakso aikajakso
                       :otsikon-koko :iso
-                      :raportin-yleiset-tiedot raportin-nimi}
+                      :raportin-yleiset-tiedot raportin-nimi
+                      :alkupvm (pvm/pvm (:alkupvm urakan-tiedot))
+                      :loppupvm (pvm/pvm (:loppupvm urakan-tiedot))}
+           ;; Lisätään aikajakso
+           (when-not (= kasittelija :excel) [:teksti (str (:nimi urakan-tiedot) " | Aikaväli: " aikajakso)])
+
            (lupaukset-taulukko db urakka-id urakan-tiedot hoitokaudet)]
       (concat
         (when talvisuolan-erittely
