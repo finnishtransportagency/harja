@@ -203,9 +203,7 @@
                 materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
                 (fn [_ _] [{:kokonaismaara 1000M}])
                 valikatselmus-q/hae-sanktiot (fn [_ _] [])]
-    (is (nil? (#'vastaanottotarkastus-mhu/talvisuolan-erittely
-                nil 1 #inst "2021-01-01T00:00:00.000-00:00"
-                #inst "2021-12-31T23:59:59.000-00:00")))))
+    (is (nil? (#'vastaanottotarkastus-mhu/talvisuolan-erittely nil 1 :excel)))))
 
 (deftest talvisuolan-erittely-ei-palauta-puuttuvaa-erittelya
   (with-redefs [talvisuola/suorita
@@ -218,9 +216,7 @@
                 materiaalit-kyselyt/hae-talvisuolan-kokonaismaara
                 (fn [_ _] [{:kokonaismaara 1000M}])
                 valikatselmus-q/hae-sanktiot (fn [_ _] [])]
-    (let [raportin-osat (#'vastaanottotarkastus-mhu/talvisuolan-erittely
-                          nil 1 #inst "2021-01-01T00:00:00.000-00:00"
-                          #inst "2021-12-31T23:59:59.000-00:00")]
+    (let [raportin-osat (#'vastaanottotarkastus-mhu/talvisuolan-erittely nil 1 :excel)]
       (is (= 1 (count raportin-osat)))
       (is (= "Yhteenveto" (get-in (first raportin-osat) [1 :otsikko]))))))
 

@@ -69,53 +69,20 @@
 
 (defn- talvisuolan-erittely
   "Talvisuolan kokonaiskäyttömäärä osion sisään tulee yhteenveto ja hoitovuosikotainen erittely."
-  [db urakka-id urakan-alkupvm urakan-loppupvm]
-  (let [talvisuolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-kokonaismaara db
-                                           {:urakka-id urakka-id
-                                            :alkupvm urakan-alkupvm
-                                            :loppupvm urakan-loppupvm}))
-        ;; Yritetään hyödyntää olemassa oleva raportti täysimääräisesti
+  [db urakka-id kasittelija]
+  (let [;; Yritetään hyödyntää olemassa oleva raportti täysimääräisesti
         talvisuolan-raportin-osiot (yleinen/osat (talvisuola/suorita db nil {:urakka-id urakka-id
-                                                                             :kasittelija :excel}))
+                                                                             :kasittelija kasittelija} false))
+        infolaatikko (some #(when (= :infolaatikko (first %)) %) talvisuolan-raportin-osiot)
         yhteenveto (some #(when (= "Koko urakka-ajan yhteenveto (kuivatonneina)"
                                   (get-in % [1 :otsikko])) %)
                      talvisuolan-raportin-osiot)
-        kohtuullistettu-kayttoraja-plus-viisi-prosenttia
-        (some #(when (= "Suurin urakassa sallittu käyttömäärä + 5 %" (first %))
-                 (get-in % [1 1 :arvo]))
-          (get yhteenveto 3 []))
-        sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
-                                                   :alkupvm urakan-alkupvm
-                                                   :loppupvm urakan-loppupvm
-                                                   :hoitokauden-alkuvuosi (pvm/vuosi urakan-alkupvm)})
-        kirjattu-sakon-maara (summa (filter #(= :talvisuolan_ylitys (:sakkoryhma %)) sanktiot) :maara)
-        toteuma (or (:kokonaismaara talvisuolan-kokonaismaara) 0)
-        erotus (- toteuma (or kohtuullistettu-kayttoraja-plus-viisi-prosenttia 0))
-        yhteenveto-taulukko [:taulukko {:otsikko "Yhteenveto"
-                                        :leveysprosentti 50
-                                        :viimeinen-rivi-yhteenveto? false
-                                        :sheet-nimi "Talvisuolan yhteenveto"
-                                        :piilota-otsikot? true}
-                             [{:otsikko "" :leveys 8}
-                              {:otsikko "" :leveys 2 :tasaa :oikea}]
-                             [["Kohtuullistettu käyttöraja + 5% (tonnia)"
-                               [:arvo {:arvo kohtuullistettu-kayttoraja-plus-viisi-prosenttia
-                                       :desimaalien-maara 2}]]
-                              ["Toteuma (tonnia)"
-                               [:arvo {:arvo toteuma
-                                       :desimaalien-maara 2}]]
-                              ["Erotus (tonnia)"
-                               [:arvo {:arvo erotus
-                                       :desimaalien-maara 2}]]
-                              ["Kirjattu sakon määrä (euroa)"
-                               [:arvo {:arvo kirjattu-sakon-maara
-                                       :fmt :raha
-                                       :desimaalien-maara 2}]]]]
         erittely (some #(when (= "Erittely hoitovuosittain" (get-in % [1 :otsikko])) %)
-                   talvisuolan-raportin-osiot)]
-    (when yhteenveto
-      (cond-> [yhteenveto-taulukko]
-        erittely (conj erittely)))))
+                   talvisuolan-raportin-osiot)
+        taulukko (cond-> [infolaatikko]
+                   true (conj yhteenveto)
+                   erittely (conj erittely))]
+    taulukko))
 
 (defn rahavarausten-tavoitehinnan-muutokset-taulukko [db urakka-id hoitokaudet]
   (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
@@ -451,7 +418,7 @@
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
         raportin-nimi (str "Vastaanottotarkastus - MHU " (:nimi urakan-tiedot))
         hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
-        talvisuolan-erittely (talvisuolan-erittely db urakka-id (:alkupvm urakan-tiedot) (:loppupvm urakan-tiedot))]
+        talvisuolan-erittely (talvisuolan-erittely db urakka-id kasittelija)]
     (into [:raportti {:orientaatio :landscape
                       :nimi raportin-nimi
                       :urakan-nimi (:nimi urakan-tiedot)
