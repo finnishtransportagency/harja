@@ -20,7 +20,7 @@
     :arvo-atom (r/atom (get hakuehdot avain))
     :kentta-params {:tyyppi :numero
                     :kokonaisluku? true
-                    :min 0
+                    :vaadi-ei-negatiivinen? true
                     :data-cy data-cy
                     :toiminta-f #(e! (pot2-tiedot/->MuutaTieosuushaunEhtoa avain %))}}])
 
