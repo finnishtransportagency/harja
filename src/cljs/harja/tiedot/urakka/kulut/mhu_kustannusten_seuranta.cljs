@@ -27,6 +27,9 @@
 (defrecord HaeBudjettitavoite [])
 (defrecord HaeBudjettitavoiteHakuOnnistui [vastaus])
 (defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
+(defrecord HaeUrakanParametrit [urakkaid])
+(defrecord HaeUrakanParametritOnnistui [vastaus])
+(defrecord HaeUrakanParametritEpaonnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisut [urakka])
 (defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
@@ -102,6 +105,23 @@
   HaeBudjettitavoiteHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
+    app)
+
+  HaeUrakanParametrit
+  (process-event [{urakkaid :urakkaid} app]
+    (tuck-apurit/post! :hae-urakan-parametrit {:urakkaid urakkaid}
+      {:onnistui ->HaeUrakanParametritOnnistui
+       :epaonnistui ->HaeUrakanParametritEpaonnistui
+       :paasta-virhe-lapi? true})
+    app)
+
+  HaeUrakanParametritOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :urakan-parametrit vastaus))
+
+  HaeUrakanParametritEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta! "Urakan parametrien haku epäonnistui!" :danger)
     app)
 
   HaeOnkoPaatoksiaTekematta

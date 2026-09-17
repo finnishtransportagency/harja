@@ -387,6 +387,7 @@
         erillishankinnat (taulukoi-paaryhman-tehtavat :hoidonjohdonpalkkio (:tehtavat (:erillishankinnat rivit-paaryhmittain)))
         johto-ja-hallintokorvaukset (taulukoi-paaryhman-tehtavat :johto-ja-hallintokorvaus (:tehtavat (:johto-ja-hallintokorvaus rivit-paaryhmittain)))
         rahavaraukset-toimenpiteet (toimenpidetason-rivitys e! app (:rahavaraukset rivit-paaryhmittain))
+        muutosten-hallinta-kaytossa? (get-in app [:urakan-parametrit :muutosten_hallinta])
         muutokset-rivit (toimenpidetason-rivitys e! app (:muutokset rivit-paaryhmittain) true)
         bonukset (:bonukset rivit-paaryhmittain)
         ulkopuoliset-rahavaraukset (:ulkopuoliset-rahavaraukset rivit-paaryhmittain)
@@ -451,7 +452,7 @@
          (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain true true false)
          (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true true false)
          (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain true true false)
-         (paaryhman-rivitys e! app "Muutokset" :muutokset muutokset-rivit rivit-paaryhmittain false false true)
+         (when muutosten-hallinta-kaytossa? (paaryhman-rivitys e! app "Muutokset" :muutokset muutokset-rivit rivit-paaryhmittain false false true))
          (paaryhman-rivitys e! app "Arvonvähennykset" :arvonvahennykset arvonvahennykset rivit-paaryhmittain false false true)
          (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true true false)
          (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false true false)
@@ -486,7 +487,7 @@
 
           [:td.numero {:style {:width (:suunniteltu leveydet)}} (fmt->big (:yht-budjetoitu-summa (get app :kustannukset-yhteensa)))]
           [:td.numero {:style {:width (:indeksikorjattu leveydet)}} (fmt->big (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)))]
-          [:td.numero {:style {:width (:muutokset leveydet)}} (str (when (> muutos-sarake-yhteensa 0) "+ ") (fmt->big muutos-sarake-yhteensa))]
+          [:td.numero {:style {:width (:muutokset leveydet)}} (str (when (> muutos-sarake-yhteensa 0) "+") (fmt->big muutos-sarake-yhteensa))]
           [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
           [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
                 :style {:width (:erotus leveydet)}} (str (when yht-negatiivinen? "+ ") (fmt->big (- (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa])
@@ -632,6 +633,7 @@
                                                 kuluva-hoitokausi)
                             kuluva-vuosi (pvm/vuosi (first kuluva-hoitokausi))]
                         (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
+                        (e! (kustannusten-seuranta-tiedot/->HaeUrakanParametrit valittu-urakka-id))
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
                               (if (= "Kaikki" valittu-kuukausi)
                                 nil
