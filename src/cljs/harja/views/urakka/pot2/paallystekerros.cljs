@@ -9,15 +9,15 @@
    [harja.ui.grid.protokollat :as grid-protokollat]
    [harja.ui.grid :as grid]
    [harja.ui.ikonit :as ikonit]
-  [harja.ui.napit :as napit]
-  [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+   [harja.ui.napit :as napit]
+   [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
    [harja.tiedot.urakka.paallystys :as paallystys]
    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-  [harja.views.urakka.pot2.tieosuushaku :as tieosuushaku]
+   [harja.views.urakka.pot2.tieosuushaku :as tieosuushaku]
    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
    [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
-  [harja.validointi :as v]
+   [harja.validointi :as v]
    [harja.fmt :as fmt]
    [harja.domain.paikkaus :as paikkaus]))
 
@@ -88,7 +88,7 @@
                             ""
                             :else
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
-                        voi-muokata? (not= :lukittu (:tila perustiedot))
+        voi-muokata? (not= :lukittu (:tila perustiedot))
         custom-yla-panel
         (when (or tieosuushaku (some? hyppyjen-maara))
           [:div.pot2-kulutuskerros-paneeli
@@ -125,11 +125,11 @@
     [:div
      [grid/muokkaus-grid
       {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
-      :luokat ["pot2-kulutuskerros-grid"]
+       :luokat ["pot2-kulutuskerros-grid"]
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
        :custom-yla-panel custom-yla-panel
-        :custom-yla-panel-otsikon-alla? true
+       :custom-yla-panel-otsikon-alla? true
        :muutos (fn [g]
                  ;; Koska tätä kutsutaan myös sorttauksen yhteydessä, täytyy tarkistaa erillisellä funktiolla onko rivjeä muokattu
                  (let [uusi-jarjestys (grid-protokollat/hae-muokkaustila g)
@@ -181,19 +181,19 @@
        ;;                         (select-keys rivi tr/paaluvali-avaimet)
        ;;                         tr-ajorata)))
        #_#_:on-rivi-blur on-rivi-blur
-      :paneelikomponentit [(fn []
-                             [napit/nappi
-                              "Hae tieosuus"
-                              #(e! (pot2-tiedot/->AvaaTieosuushaku))
-                              {:ikoni (ikonit/livicon-search)
-                               :luokka "nappi-toissijainen"
-                               :data-cy "pot2-avaa-tieosuushaku"}])
-                           (fn []
-                             [napit/nappi
-                              "Lisää toimenpide"
-                              #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
-                              {:ikoni (ikonit/livicon-plus)
-                               :luokka "nappi-toissijainen"}])]
+       :paneelikomponentit [(fn []
+                              [napit/nappi
+                               "Hae tieosuus"
+                               #(e! (pot2-tiedot/->AvaaTieosuushaku))
+                               {:ikoni (ikonit/livicon-search)
+                                :luokka "nappi-toissijainen"
+                                :data-cy "pot2-avaa-tieosuushaku"}])
+                            (fn []
+                              [napit/nappi
+                               "Lisää toimenpide"
+                               #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
+                               {:ikoni (ikonit/livicon-plus)
+                                :luokka "nappi-toissijainen"}])]
        :ohjaus ohjauskahva :validoi-alussa? true
        :virheet virheet-atom
        :varoitukset varoitukset-atom
@@ -456,5 +456,5 @@
         :tasaa :keskita
         :komponentti-args [e! app kirjoitusoikeus? kohdeosat-atom :paallystekerros voi-muokata? ohjauskahva]
         :komponentti pot2-yhteiset/rivin-toiminnot-sarake}]
-            kohdeosat-atom]
-    [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")]]))
+      kohdeosat-atom]
+     [:div.kulutus-pituus-yhteensa (str "Pituus yhteensä: " kokpituus " m")]]))
