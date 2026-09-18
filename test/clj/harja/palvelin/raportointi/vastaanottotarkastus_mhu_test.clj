@@ -7,6 +7,7 @@
 
             [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.pvm :as pvm]
@@ -707,7 +708,7 @@
                   "Erillishankinnat (€)"
                   "Johto- ja hallintokorvaus (€)"
                   "Hoidonjohtopalkkio (€)"
-                  "Arvonvahennykset (€)"
+                  "Arvonvähennykset (€)"
                   "Muut kulut (€)"
                   "Yhteensä (€)"]
                 (mapv :otsikko (nth taulukko 2)))))
@@ -815,3 +816,71 @@
           (testing "Excel-raportin otsikko muodostuu"
             (is (= [[:otsikko-title "Urakan lopullinen tavoite- ja kattohinta"]]
                   (get-in excel-taulukko [1 :excel-alkutekstit])))))))))
+
+(deftest sanktiotaulukko-erottelee-muistutukset-poikkeamaraportit-ja-arvonvahennykset
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
+                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
+                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
+                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
+        sanktiot (fn [_ {:keys [alkupvm]}]
+                   (if (= alkupvm (-> hoitokaudet first :alkupvm))
+                     [{:sakkoryhma "muistutus"}
+                      {:sakkoryhma "arvonvahennyssanktio" :maara -20M}
+                      {:sakkoryhma "A" :maara -30M}
+                      {:maara -5M}]
+                     [{:sakkoryhma "muistutus"}
+                      {:sakkoryhma "arvonvahennyssanktio" :maara -2M}
+                      {:sakkoryhma "A" :maara -3M}]))]
+    (with-redefs [valikatselmus-q/hae-sanktiot sanktiot
+                  laatupoikkeamat-q/hae-poikkeamaraportilliset-laatupoikkeamat
+                  (fn [_ {:keys [alku]}]
+                    (if (= alku (-> hoitokaudet first :alkupvm))
+                      [{} {}]
+                      [{}]))]
+      (is (= [:taulukko
+              {:otsikko "Kirjalliset muistutukset, sanktiot, arvonvähennykset ja poikkeamaraportit"
+               :viimeinen-rivi-yhteenveto? true
+               :sheet-nimi "Kirjalliset muistutukset, sanktiot, arvonvähennykset ja poikkeamaraportit"
+               :excel-alkutekstit nil}
+              [{:leveys 5 :otsikko "Hoitovuosi"}
+               {:leveys 5 :otsikko "Muistutuksia (kpl)" :fmt :kokonaisluku}
+               {:leveys 5 :otsikko "Poikkeamaraportit, jotka eivät johtaneet sakkoihin (kpl)" :fmt :kokonaisluku}
+               {:leveys 5 :otsikko "Sanktiot (€)" :fmt :raha}
+               {:leveys 5 :otsikko "Arvonvähennykset (€)" :fmt :raha}]
+              [["2021-2022" 1 2 -35M -20M]
+               ["2022-2023" 1 1 -3M -2M]
+               {:lihavoi? true
+                :korosta-hennosti? true
+                :rivi ["Yhteensä" 2 3 -38M -22M]}]]
+            (first (vastaanottotarkastus-mhu/muodosta-sanktiot-taulukko (:db jarjestelma) urakka-id hoitokaudet :html)))))))
+
+(deftest bonustaulukko-erottelee-lupausbonukset-asiastyytyvaisyysbonukset
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
+                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
+                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
+                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
+        bonukset (fn [_ {:keys [alkupvm]}]
+                   (if (= alkupvm (-> hoitokaudet first :alkupvm))
+                     [{:tyyppi "lupausbonus" :rahasumma 20M}
+                      {:tyyppi "asiastyytyvaisyysbonus" :rahasumma 30M}]
+                     [{:tyyppi "lupausbonus" :rahasumma 2M}
+                      {:tyyppi "asiastyytyvaisyysbonus" :rahasumma 3M}]))]
+    (with-redefs [vastaanottotarkastus-mhu/hae-bonukset-vastaanottotarkastusraportille bonukset]
+      (is (= [:taulukko
+              {:otsikko "Bonukset"
+               :viimeinen-rivi-yhteenveto? true
+               :sheet-nimi "Bonukset"
+               :excel-alkutekstit nil}
+              [{:leveys 5 :otsikko "Hoitovuosi"}
+               {:leveys 5 :otsikko "Lupausbonus (€)" :fmt :raha}
+               {:leveys 5 :otsikko "Asiakastyytyväisyysbonus (€)" :fmt :raha}
+               {:leveys 5 :otsikko "Muut bonukset (€)" :fmt :raha}
+               {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
+              [["2021-2022" 20M 0 30M 50M]
+               ["2022-2023" 2M 0 3M 5M]
+               {:lihavoi? true
+                :korosta-hennosti? true
+                :rivi ["Yhteensä" 22M 0 33M 55M]}]]
+            (first (vastaanottotarkastus-mhu/muodosta-bonukset-taulukko (:db jarjestelma) urakka-id hoitokaudet :html)))))))
