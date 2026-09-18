@@ -512,8 +512,6 @@ FROM loydetyt_ilmoitukset li
 ORDER BY i."valitetty-urakkaan" ASC
 LIMIT 10000;
 
-
-
 -- name: hae-id-ilmoitus-idlla
 -- Hakee id:n ilmoitus-id:llä
 SELECT id
