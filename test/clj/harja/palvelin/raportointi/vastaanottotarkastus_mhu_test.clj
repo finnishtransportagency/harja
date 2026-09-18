@@ -772,7 +772,7 @@
                     (swap! haut conj parametrit)
                     (get hoitovuoden-tiedot (:hoitovuosi parametrit)))]
       (let [raportin-osat
-            (vastaanottotarkastus-mhu/muodosta-urakan-tavoitehinat-taulukko
+            (vastaanottotarkastus-mhu/muodosta-urakan-tavoitehinnat-taulukko
               db +kayttaja-jvh+ urakan-tiedot urakan-parametrit hoitokaudet nil)
             taulukko (first raportin-osat)
             rivit (nth taulukko 3)]
