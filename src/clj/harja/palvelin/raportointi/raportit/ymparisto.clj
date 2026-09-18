@@ -346,10 +346,15 @@
                              [(str (:nimi urakka) (when urakkanumero? (str " (" (:nro urakka) ")")))])
 
                            ;; Materiaalin nimi
-                           [[:arvo-ja-selite (if (and (= kasittelija :excel) (:yksikko materiaali) (not (:yht-rivi materiaali)))
-                                               (update (materiaalin-nimi-ja-selite (:nimi materiaali)) :selite
-                                                 #(str % (when % ", ") (:yksikko materiaali)))
-                                               (materiaalin-nimi-ja-selite (:nimi materiaali)))]]
+                           (let [nimi-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))
+                                 lisaa-yksikko? (and
+                                                  (= kasittelija :excel)
+                                                  (:yksikko materiaali)
+                                                  (not (:yht-rivi materiaali)))]
+                             [[:arvo-ja-selite
+                               (cond-> nimi-ja-selite
+                                 lisaa-yksikko?
+                                 (update :selite #(str % (when % ", ") (:yksikko materiaali))))]])
 
                            ;; Kuukausittaiset määrät, viiva jos tyhjä.
                            (map #(or (kk-arvot %) "–") kuukaudet)
