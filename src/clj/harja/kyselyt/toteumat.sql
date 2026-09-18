@@ -299,7 +299,8 @@ SET alkanut           = :alkanut,
   tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
   tyokoneen_lisatieto = :tyokoneen-lisatieto,
-  lahde               = :lahde::lahde
+  lahde               = :lahde::lahde,
+  reitti              = :reitti
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
