@@ -1,6 +1,7 @@
 (ns harja.palvelin.integraatiot.api.ilmoitukset
   "Tieliikennelmoitusten haku ja ilmoitustoimenpiteiden kirjaus"
   (:require [com.stuartsierra.component :as component]
+            [clojure.set :as set]
             [org.httpkit.server :refer [with-channel on-close send!]]
             [clojure.spec.alpha :as s]
             [clj-time.coerce :as c]
@@ -175,11 +176,10 @@
 (s/def ::alkuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
 (s/def ::loppuaika #(and (string? %) (> (count %) 20) (valid-aikamuoto? %)))
 
-(defn- tarkista-ilmoitus-haun-parametrit [parametrit]
+(defn- tarkista-ilmoitus-haun-parametrit [parametrit pakolliset]
   (parametrivalidointi/tarkista-parametrit
     parametrit
-    {:ytunnus "Y-tunnus puuttuu"
-     :alkuaika "Alkuaika puuttuu"})
+    pakolliset)
   (when (not (s/valid? ::alkuaika (:alkuaika parametrit)))
     (virheet/heita-viallinen-apikutsu-poikkeus
       {:koodi virheet/+puutteelliset-parametrit+
@@ -204,43 +204,72 @@
    :f8 :kuittaaja_organisaatio_ytunnus
    :f9 :kanava})
 
+(defn- muunna-kuittausrivi [r]
+  (when (not (nil? (:f1 r)))
+    (let [r (-> r (set/rename-keys db-kuittaus->avaimet))]
+      (assoc r :kuitattu (sql-timestamp-str->utc-timestr (:kuitattu r))))))
+
+(defn- normalisoi-ilmoitusten-kuittaukset [ilmoitukset]
+  (->> ilmoitukset
+    (map #(update % :kuittaukset konversio/jsonb->clojuremap))
+    (map #(update % :kuittaukset
+             (fn [rivit]
+               (keep muunna-kuittausrivi rivit))))))
+
+(defn- muodosta-ilmoitusten-vastaus [ilmoitukset]
+  {:ilmoitukset
+   (map (fn [ilmoitus]
+          (sanomat/rakenna-ilmoitus
+            (konversio/alaviiva->rakenne ilmoitus)))
+     ilmoitukset)})
+
+(defn- ilmoitus-haun-loppuaika [loppuaika]
+  (if loppuaika
+    (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+    (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti))))
+
 (defn hae-ilmoitukset-ytunnuksella
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
   on mahdollista eritellä."
   [db {:keys [ytunnus alkuaika loppuaika] :as parametrit} kayttaja]
   (log/info "Hae ilmoitukset ytunnuksella :: parametrit:" parametrit)
-  (tarkista-ilmoitus-haun-parametrit parametrit)
+  (tarkista-ilmoitus-haun-parametrit
+    parametrit
+    {:ytunnus "Y-tunnus puuttuu"
+     :alkuaika "Alkuaika puuttuu"})
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
         alkuaika (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-        loppuaika (if loppuaika
-                    (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
-                    (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
+        loppuaika (ilmoitus-haun-loppuaika loppuaika)
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
                       db
                       {:ytunnus ytunnus
                        :alkuaika alkuaika
-                       :loppuaika loppuaika})
-        ilmoitukset
-        (->> ilmoitukset
-          (map #(update % :kuittaukset konversio/jsonb->clojuremap))
-          (map #(update % :kuittaukset
-                   (fn [rivit]
-                     (let [tulos (keep
-                                   (fn [r]
-                                     ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
-                                     (when (not (nil? (:f1 r)))
-                                       (let [r (-> r (clojure.set/rename-keys db-kuittaus->avaimet))
-                                             r (assoc r :kuitattu (sql-timestamp-str->utc-timestr (:kuitattu r)))]
-                                         r)))
-                                   rivit)]
-                       tulos)))))
-        vastaus {:ilmoitukset
-                 (map (fn [ilmoitus]
-                         (sanomat/rakenna-ilmoitus
-                           (konversio/alaviiva->rakenne ilmoitus)))
-                   ilmoitukset)}]
-    vastaus))
+                       :loppuaika loppuaika})]
+    (-> ilmoitukset
+      normalisoi-ilmoitusten-kuittaukset
+      muodosta-ilmoitusten-vastaus)))
+
+(defn hae-ilmoitukset-urakka-idlla
+  "Haetaan ilmoitukset urakka-id:llä ja aikavälillä. Kuittaukset aggregoidaan SQL:ssä ja normalisoidaan Clojure-puolella."
+  [db {:keys [id alkuaika loppuaika] :as parametrit} kayttaja]
+  (log/info "Hae ilmoitukset urakka-idlla :: parametrit:" parametrit)
+  (tarkista-ilmoitus-haun-parametrit
+    parametrit
+    {:id "Urakka-id puuttuu"
+     :alkuaika "Alkuaika puuttuu"})
+  (let [urakka-id (Integer/parseInt id)
+        _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+        alkuaika (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
+        loppuaika (ilmoitus-haun-loppuaika loppuaika)
+        ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-urakka-idlla
+                      db
+                      {:urakka-id urakka-id
+                       :alkuaika alkuaika
+                       :loppuaika loppuaika})]
+    (-> ilmoitukset
+      normalisoi-ilmoitusten-kuittaukset
+      muodosta-ilmoitusten-vastaus)))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
@@ -264,6 +293,21 @@
         (kasittele-kevyesti-get-kutsu db integraatioloki "api" :hae-ilmoitukset-ytunnuksella request
           (fn [parametrit kayttaja db]
             (hae-ilmoitukset-ytunnuksella db parametrit kayttaja))
+          :luku)))
+
+    (julkaise-reitti
+      http :hae-ilmoitukset-urakka-idlla
+      (GET "/api/urakat/:id/ilmoitukset/haku/:alkuaika/:loppuaika" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "api" :hae-ilmoitukset-urakka-idlla request
+          (fn [parametrit kayttaja db]
+            (hae-ilmoitukset-urakka-idlla db parametrit kayttaja))
+          :luku)))
+    (julkaise-reitti
+      http :hae-ilmoitukset-urakka-idlla
+      (GET "/api/urakat/:id/ilmoitukset/haku/:alkuaika" request
+        (kasittele-kevyesti-get-kutsu db integraatioloki "api" :hae-ilmoitukset-urakka-idlla request
+          (fn [parametrit kayttaja db]
+            (hae-ilmoitukset-urakka-idlla db parametrit kayttaja))
           :luku)))
 
 
@@ -291,4 +335,5 @@
     (poista-palvelut http :hae-ilmoitukset)
     (poista-palvelut http :kirjaa-ilmoitustoimenpide)
     (poista-palvelut http :hae-ilmoitukset-ytunnuksella)
+    (poista-palvelut http :hae-ilmoitukset-urakka-idlla)
     this))
