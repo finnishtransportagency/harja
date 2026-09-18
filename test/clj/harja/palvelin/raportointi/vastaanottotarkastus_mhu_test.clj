@@ -14,7 +14,6 @@
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
-            [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit :as raportit]
             [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu :as vastaanottotarkastus-mhu]))
 
@@ -34,6 +33,14 @@
 (use-fixtures :each
   urakkatieto-fixture
   jarjestelma-fixture)
+
+(defn etsi-taulukko-avaimella-ja-otsikolla [raportti avain otsikko]
+  (some (fn [osa]
+          (when (and (vector? osa)
+                  (= avain (first osa))
+                  (= otsikko (get-in osa [1 :otsikko])))
+            osa))
+    (tree-seq coll? seq raportti)))
 
 ;; Meillä on kaksi vastaantottotarkastusraporttia, joista toinen on päällystysurakoille ja toinen MHU-urakoille.
 ;; Testataan, että ne ovat rekisteröityinä eri urakkatyyppien alle ja että ne eroavat toisistaan.
@@ -166,7 +173,8 @@
       (vastaanottotarkastus-mhu/suorita (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id}))))
 
 (deftest raportti-sisaltaa-lupaukset-hoitovuosittain
-  (let [raportti (muodosta-testiraportti true)]
+  (let [raportti (muodosta-testiraportti true)
+        lupaustaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Lupaukset")]
     (is (= [:taulukko
             {:otsikko "Lupaukset" :sheet-nimi "Lupaukset" :samalle-sheetille? false :tyhja nil}
             [{:otsikko "Hoitovuosi" :leveys 5}
@@ -178,23 +186,19 @@
              ["2027-2028" 80 75 150M]
              ["2028-2029" 80 75 150M]
              ["2029-2030" 80 75 150M]]]
-          (nth raportti 2)))))
+          lupaustaulukko))))
 
 (deftest raportti-ei-sisalla-toteutuneita-lupauspisteita-ilman-valikatselmusta
   (let [raportti (muodosta-testiraportti false)
-        lupaus-taulukko (nth raportti 2)
-        lupaus-rivit (nth lupaus-taulukko 3)]
+        lupaustaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Lupaukset")
+        lupaus-rivit (nth lupaustaulukko 3)]
     (is (= [nil nil nil nil nil]
           (mapv #(nth % 2) lupaus-rivit)))))
 
 (deftest raportti-sisaltaa-talvisuolan-kokonaiskayttomaaran
   (let [raportti (muodosta-testiraportti false)
-        yhteenveto-arvot (nth (some (fn [osa]
-                                      (when (and (vector? osa)
-                                              (= :yhteenveto-laatikko (first osa))
-                                              (= "Koko urakka-ajan yhteenveto (kuivatonneina)" (get-in osa [1 :otsikko])))
-                                        osa))
-                                (tree-seq coll? seq raportti)) 2)]
+        yhteenveto-arvot (nth (etsi-taulukko-avaimella-ja-otsikolla raportti :yhteenveto-laatikko "Koko urakka-ajan yhteenveto (kuivatonneina)") 2)
+        talvisuolataulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Erittely hoitovuosittain")]
     (is (= {:avain "Tehtävä- ja määräluettelon mukainen käyttöraja", :arvo "30,00 t"} (nth yhteenveto-arvot 0)))
     (is (= {:avain "Kohtuullistettu käyttöraja", :arvo "30,00 t"} (nth yhteenveto-arvot 1)))
     (is (= {:avain "Suurin urakassa sallittu käyttömäärä + 5 %", :arvo "31,50 t"} (nth yhteenveto-arvot 2)))
@@ -202,10 +206,11 @@
     (is (= {:avain "josta sallitun käyttömäärän ylittävä, sanktioon johtava toteuma", :arvo "4 968,50 t", :lihavoi? true} (nth yhteenveto-arvot 4)))
 
     ;; Validoidaan koko taulukko
-    (is (= testi-talvisuolan-erittely (nth raportti 6)))))
+    (is (= testi-talvisuolan-erittely talvisuolataulukko))))
 
 (deftest raportti-sisaltaa-rahavarausten-tavoitehinnan-muutokset
-  (let [raportti (muodosta-testiraportti true)]
+  (let [raportti (muodosta-testiraportti true)
+        taulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Rahavarausten tavoitehintamuutokset")]
     (is (= [:taulukko
             {:otsikko "Rahavarausten tavoitehintamuutokset"
              :sheet-nimi "Rahavarausten tavoitehintamuutokset"
@@ -247,7 +252,7 @@
              {:lihavoi? true
               :korosta-hennosti? true
               :rivi ["Yhteensä" 1000M 750M 500M 450M 250M 225M 350M 250M -425M]}]]
-          (nth raportti 8)))
+          taulukko))
     (is (not-any? #(and (vector? %) (= "Ympäristöraportti" (get-in % [1 :otsikko]))) raportti))))
 
 (deftest MHU25-urakan-tavoitehinnan-muutokset-muodostuvat-kaikille-hoitovuosille
