@@ -1962,8 +1962,8 @@
   Anna tpi-id muodossa integer
   Anna tryhma-id muodossa integer
   Anna maksueratyyppi kokonaishintainen/lisatyo"
-  [summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi]
-  (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
+  ([summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi]
+   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
         laskutuspvm (pvm/iso-8601->pvm erapaiva)
         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
         kohdistustyyppi (if (= maksueratyyppi "lisatyo")
@@ -1983,6 +1983,41 @@
                                                   tyyppi, luotu)
                       VALUES (0, %s, %s, %s, %s, '%s', '%s', now());"
                kulu-id summa tpi-id tryhma-id maksueratyyppi kohdistustyyppi))]))
+
+  ([summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi
+    {:keys [lisatieto lisatyon-lisatieto kulu-poistettu? kohdistus-poistettu?]
+     :or {kulu-poistettu? false
+          kohdistus-poistettu? false}}]
+   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
+         laskutuspvm (pvm/iso-8601->pvm erapaiva)
+         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
+         kohdistustyyppi (if (= maksueratyyppi "lisatyo")
+                           "lisatyo"
+                           "hankintakulu")
+         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,
+                                              koontilaskun_kuukausi, lisatieto, poistettu)
+                              VALUES (%s, '%s'::DATE, %s, %s, '%s', '%s', %s)"
+                           summa
+                           erapaiva
+                           urakka-id
+                           (:id +kayttaja-jvh+)
+                           koontilaskun-kuukausi
+                           lisatieto
+                           (if kulu-poistettu? "TRUE" "FALSE")))]
+     (u (format "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi,
+                                              tehtavaryhma, maksueratyyppi, luoja, tyyppi,
+                                              lisatyon_lisatieto, poistettu)
+                 VALUES (0, %s, %s, %s, %s, '%s', %s, '%s', '%s', %s)"
+              kulu-id
+              summa
+              tpi-id
+              tryhma-id
+              maksueratyyppi
+              (:id +kayttaja-jvh+)
+              kohdistustyyppi
+              lisatyon-lisatieto
+              (if kohdistus-poistettu? "TRUE" "FALSE")))
+     kulu-id)))
 
 (defn lisaa-suorasanktio-urakalle
   "Anna sakkoryhma (esim: 'A','C', 'arvonvahennyssanktio', 'vaihtosanktio'
