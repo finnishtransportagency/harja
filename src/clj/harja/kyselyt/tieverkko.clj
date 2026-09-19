@@ -10,7 +10,7 @@
 (declare hae-tr-osoite-valille* hae-tr-osoite* hae-trpisteiden-valinen-tieto tierekisteriosoite-viivaksi
   onko-osoitteen-etaisyydet-validit? hae-osien-pituudet onko-tie-olemassa? hae-tieosan-tiedot onko-tr-yhtenainen?
   hae-ajoratojen-pituudet hae-tieosoitteet tieosoitteen-ajoratakilometrit-kaistaaineistosta
-  hae-tieviivat-pisteille-aika)
+  hae-tieviivat-pisteille-aika hae-tieosuudet-raakana)
 
 (defn hae-tr-osoite-valille-ehka
   "Hakee TR osoitteen pisteille. Jos teille ei löydy yhteistä pistettä, palauttaa nil."
@@ -32,6 +32,48 @@
   (map (fn [tieto]
          (update tieto :pituudet konv/jsonb->clojuremap))
        (hae-trpisteiden-valinen-tieto db params))  )
+
+(defn- sama-yhtenainen-tieosuus? [edellinen seuraava]
+  (and (= (select-keys edellinen [:tr-numero :tr-ajorata :tr-kaista])
+          (select-keys seuraava [:tr-numero :tr-ajorata :tr-kaista]))
+       (or (and (= (:tr-loppuosa edellinen) (:tr-alkuosa seuraava))
+                (= (:tr-loppuetaisyys edellinen) (:tr-alkuetaisyys seuraava)))
+           (= (inc (:tr-loppuosa edellinen)) (:tr-alkuosa seuraava)))))
+
+(defn- yhdista-yhtenaiset-tieosuudet [tieosuudet]
+  (reduce (fn [yhdistetyt tieosuus]
+            (if-let [edellinen (peek yhdistetyt)]
+              (if (sama-yhtenainen-tieosuus? edellinen tieosuus)
+                (conj (pop yhdistetyt)
+                      (assoc edellinen
+                             :tr-loppuosa (:tr-loppuosa tieosuus)
+                             :tr-loppuetaisyys (:tr-loppuetaisyys tieosuus)))
+                (conj yhdistetyt tieosuus))
+              [tieosuus]))
+          []
+          tieosuudet))
+
+(defn hae-tieosuudet [db params]
+  (let [raakatieosuudet (hae-tieosuudet-raakana db params)
+        osoiteavaimet [:tr-numero :tr-ajorata :tr-kaista
+                       :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]
+        alkuperaiset-avaimet {:alkuperainen-tr-alkuosa :tr-alkuosa
+                              :alkuperainen-tr-alkuetaisyys :tr-alkuetaisyys
+                              :alkuperainen-tr-loppuosa :tr-loppuosa
+                              :alkuperainen-tr-loppuetaisyys :tr-loppuetaisyys}
+        rajatut (map #(select-keys % osoiteavaimet) raakatieosuudet)
+        ulkopuolelle-jatkuvat (->> raakatieosuudet
+                                   (filter #(not= (select-keys % [:tr-alkuosa :tr-alkuetaisyys
+                                                                  :tr-loppuosa :tr-loppuetaisyys])
+                                                  (set/rename-keys
+                                                    (select-keys % (keys alkuperaiset-avaimet))
+                                                    alkuperaiset-avaimet)))
+                                   (map #(merge (select-keys % [:tr-numero :tr-ajorata :tr-kaista])
+                                                (set/rename-keys
+                                                  (select-keys % (keys alkuperaiset-avaimet))
+                                                  alkuperaiset-avaimet))))]
+    {:tieosuudet (yhdista-yhtenaiset-tieosuudet rajatut)
+     :kohteen-ulkopuolelle-jatkuvat (yhdista-yhtenaiset-tieosuudet ulkopuolelle-jatkuvat)}))
 
 (defn laske-max-loppuetaisyys [osoitteet]
   (let [laske-loppuetaisyys (fn [{:keys [pituus tr-alkuetaisyys]}]
