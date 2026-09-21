@@ -12,9 +12,6 @@ on:
       skip-migrations:
         required: true
         type: boolean
-      service-arn:
-        required: true
-        type: string
       commit-sha:
         required: true
         type: string
@@ -180,20 +177,23 @@ jobs:
 
       - name: '[Test-envs] Configure automatic stop'
         env:
-          SERVICE_ARN: ${{ inputs.service-arn }}
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
           ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
           KEEP_RUNNING: ${{ inputs.keep-running }}
         run: |
+          SERVICE_ARN="arn:aws:ecs:eu-west-1:${AWS_ACCOUNT_ID}:service/${ECS_CLUSTER_NAME}/${ECS_SERVICE_NAME}"
+          
           if [ "$KEEP_RUNNING" = "true" ]; then
             echo "Disabling automatic stop for $ECS_SERVICE_NAME"
-
+          
             aws ecs tag-resource \
               --region eu-west-1 \
               --resource-arn "$SERVICE_ARN" \
               --tags key=HARJA_AUTOSS_IGNORE,value=true
           else
             echo "Enabling automatic stop for $ECS_SERVICE_NAME"
-
+          
             aws ecs untag-resource \
               --region eu-west-1 \
               --resource-arn "$SERVICE_ARN" \

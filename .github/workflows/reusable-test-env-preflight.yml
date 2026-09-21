@@ -91,5 +91,3 @@ jobs:
             echo "Container does not exist in task definition: $ECS_CONTAINER_NAME"
             exit 1
           fi
-
-          echo "service_arn=$SERVICE_ARN" >> "$GITHUB_OUTPUT"

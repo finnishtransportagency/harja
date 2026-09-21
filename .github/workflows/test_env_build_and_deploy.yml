@@ -72,7 +72,6 @@ jobs:
       environment: ${{ inputs.environment }}
       keep-running: ${{ inputs.keep-running }}
       skip-migrations: ${{ inputs.skip-migrations }}
-      service-arn: ${{ needs.preflight.outputs.service_arn }}
       commit-sha: ${{ needs.build.outputs.commit_sha }}
       ref-tag: ${{ needs.build.outputs.ref_tag }}
     secrets: inherit
