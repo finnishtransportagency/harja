@@ -17,6 +17,7 @@ on:
 jobs:
   preflight:
     runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
     timeout-minutes: 10
 
     permissions:
