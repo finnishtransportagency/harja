@@ -41,7 +41,9 @@ jobs:
   preflight:
     name: "Preflight ${{ inputs.environment }}"
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
     timeout-minutes: 10
 
     permissions:
