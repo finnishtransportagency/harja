@@ -246,9 +246,9 @@
 
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
-        summa (if (decimal? summa)
-                (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
-                summa)
+        pyynto-summa (if (decimal? summa)
+                       (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                       summa)
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
@@ -263,14 +263,29 @@
         paivamaara (or paivamaara perintapvm)
         _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
-        _ (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
-            db
-            {:urakka-id urakka
-             :urakan-alkupvm (:alkupvm urakan-tiedot)
-             :paivamaara paivamaara
-             :soveltuvuuskonteksti soveltuvuuskonteksti
-             :laji laji
-             :sanktiotyyppi-id sanktiotyyppi})
+        profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+                       db
+                       {:urakka-id urakka
+                        :urakan-alkupvm (:alkupvm urakan-tiedot)
+                        :paivamaara paivamaara
+                        :soveltuvuuskonteksti soveltuvuuskonteksti
+                        :laji laji
+                        :sanktiotyyppi-id sanktiotyyppi})
+        automaattinen-summa-raakana (some->> profiilirivi
+                                      :profiilirivi
+                                      :summamaaritykset
+                                      (filter #(= :automaattinen (:maaritystapa %)))
+                                      first
+                                      :summa-euroina)
+        summa (if (and (= :A laji)
+                    (= "teiden-hoito" (:tyyppi urakan-tiedot))
+                    (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2025))
+                (if (and (number? automaattinen-summa-raakana)
+                      (Double/isFinite (double automaattinen-summa-raakana)))
+                  (double automaattinen-summa-raakana)
+                  (throw (IllegalArgumentException.
+                           "MHU26 A-sanktion automaattinen summamääritys puuttuu tai on epäkelpo.")))
+                pyynto-summa)
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -452,7 +467,7 @@
   (let [olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))
         laatupoikkeaman-sanktion-muokkaus? (boolean (and olemassa-oleva-sanktio
-                                                       (not (:suorasanktio olemassa-oleva-sanktio))))]
+                                                      (not (:suorasanktio olemassa-oleva-sanktio))))]
     (when laatupoikkeaman-sanktion-muokkaus?
       ;; Varmistetaan että muokattava sanktio kuuluu annettuun urakkaan. Varsinainen muokkausoikeus
       ;; tulee kirjoitusoikeudesta (W), joka on jo vaadittu ylhäällä.
@@ -464,9 +479,9 @@
             sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
         ;; Vanhoilla urakoilla käsittelytapa valitaan sanktiolomakkeella.
         ;; Päätöksen tallennus käyttää laatupoikkeaman päätöstä, joten pidä arvot samoina.
-        laatupoikkeama (if (:kasittelytapa sanktio)
-                 (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
-                 laatupoikkeama)
+            laatupoikkeama (if (:kasittelytapa sanktio)
+                             (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
+                             laatupoikkeama)
             ;; Laatupoikkeaman kautta tehtyä sanktiota muokattaessa säilytetään laatupoikkeaman ne
             ;; kentät, joita sanktiolomake ei näytä eikä käsittele oikein (tekijä, selvityspyyntö sekä
             ;; poikkeamaraportti-lippu). Näin muokkaus ei tyhjennä niitä. Suorasanktioille ja uusille
@@ -486,8 +501,8 @@
             {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
             _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
                 (konv/sql-timestamp kasittelyaika)
-              (if (keyword? paatos) (name paatos) paatos) perustelu
-              (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
+                (if (keyword? paatos) (name paatos) paatos) perustelu
+                (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
                 (:id user)
                 id)
             sanktio-id (tallenna-laatupoikkeaman-sanktio
