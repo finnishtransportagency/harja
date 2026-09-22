@@ -220,7 +220,7 @@
 (defn palvelukutsu-poista-sanktio [kayttaja sanktio-id urakka-id]
   (kutsu-http-palvelua
     :poista-sanktio kayttaja {:id sanktio-id
-                                   :urakka-id urakka-id}))
+                              :urakka-id urakka-id}))
 
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
@@ -492,6 +492,72 @@
             :sanktiotyyppi-id sanktiotyyppi-id}
            @validointikutsu)
       "Suorasanktion tallennuksen pitää validoida aktiivinen sanktio-konfiguraatio oikeassa kontekstissa")))
+
+(deftest tallenna-mhu26-a-sanktio-kayttaa-profiilin-automaattista-summaa
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2611 profiilin automaattinen summa"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            tallennettu (first (q-map (str "SELECT maara FROM sanktio WHERE id = " sanktio-id)))]
+        (is (= 6000M (:maara tallennettu))
+          "MHU26 A-ryhmän määrä pitää ottaa aktiivisesta profiilista, ei pyynnön summasta"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-a-sanktio-hylkaa-puuttuvan-automaattisen-summan
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2611 puuttuva automaattinen summa"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _]
+                      {:profiilirivi {:summamaaritykset [{:maaritystapa :automaattinen
+                                                          :summa-euroina nil}]}})]
+        (is (thrown-with-msg?
+              IllegalArgumentException
+              #"MHU26 A-sanktion automaattinen summamääritys puuttuu tai on epäkelpo\."
+              (palvelukutsu-tallenna-suorasanktio
+                +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
 (deftest tallenna-suorasanktio-ei-kayta-enaa-legacy-validointia-profiilipohjaisessa-polussa
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -1840,10 +1906,10 @@
                  :ohjeteksti nil
                  :jarjestys 2}
                 {:maaritystapa :manuaalinen
-                  :summa-euroina nil
+                 :summa-euroina nil
                  :ohjeteksti "tai sopimuksen mukaan"
                  :jarjestys 3}]
-              (:summamaaritykset rivi))
+               (:summamaaritykset rivi))
           "Admin-palautuksen pitää näyttää profiilirivin summamääritykset myös ohjetekstin kanssa")
         (is (= [6000M 12000M] (:lukitut-summat rivi))
           "Admin-palautuksen pitää näyttää profiiliriviin kytketyt lukitut summat"))
@@ -1922,10 +1988,10 @@
                  :ohjeteksti nil
                  :jarjestys 2}
                 {:maaritystapa :manuaalinen
-                  :summa-euroina nil
+                 :summa-euroina nil
                  :ohjeteksti "tai sopimuksen mukaan"
                  :jarjestys 3}]
-              (:summamaaritykset sanktiotyyppi))
+               (:summamaaritykset sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa summamääritykset myös sanktiotyypin yhteydessä")
         (is (= [6000M 12000M] (:lukitut-summat sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiiliriviin sidotut lukitut summat sanktiotyypin yhteydessä"))
