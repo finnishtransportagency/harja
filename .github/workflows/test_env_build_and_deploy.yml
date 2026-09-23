@@ -285,16 +285,12 @@ jobs:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
 
-      - name: '[Test-envs] Start ECS service'
-        env:
-          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
-          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
-        run: |
-          aws ecs update-service \
-            --region eu-west-1 \
-            --cluster "$ECS_CLUSTER_NAME" \
-            --service "$ECS_SERVICE_NAME" \
-            --desired-count 1
+      - name: '[Test-envs] Start ECS Fargate tasks'
+        uses: ./.github/actions/start-fargate-tasks
+        timeout-minutes: 10
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
 
       - name: '[Test-envs] Configure automatic stop'
         env:
