@@ -286,6 +286,8 @@ jobs:
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           service: ${{ vars.ECS_SERVICE_NAME }}
+          # Ohita ECS service-stability check
+          check-stability: 'false'
 
       - name: '[Test-envs] Configure automatic stop'
         env:
