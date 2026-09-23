@@ -30,11 +30,15 @@ on:
         type: boolean
         default: false
 
-permissions: {}
+run-name: '[Test-envs] Build and deploy: ${{ inputs.environment }}'
 
 concurrency:
   group: ${{ inputs.environment }}-deploy
   cancel-in-progress: false
+
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
 
 jobs:
 
