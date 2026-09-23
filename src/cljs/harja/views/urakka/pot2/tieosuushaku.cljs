@@ -9,14 +9,17 @@
             [harja.ui.yleiset :as yleiset]))
 
 (defn- hakukentta [e! hakuehdot otsikko avain data-cy]
-  [kentat/tee-otsikollinen-kentta
-   {:otsikko otsikko
-    :arvo-atom (r/atom (get hakuehdot avain))
-    :kentta-params {:tyyppi :numero
-                    :kokonaisluku? true
-                    :vaadi-ei-negatiivinen? true
-                    :data-cy data-cy
-                    :toiminta-f #(e! (pot2-tiedot/->MuutaTieosuushaunEhtoa avain %))}}])
+  (r/with-let [arvo-atom (r/atom (get hakuehdot avain))]
+    [kentat/tee-otsikollinen-kentta
+     {:otsikko otsikko
+      :arvo-atom arvo-atom
+      :kentta-params {:tyyppi :numero
+                      :kokonaisluku? true
+                      :vaadi-ei-negatiivinen? true
+                      :data-cy data-cy
+                      :on-blur #(when (nil? @arvo-atom)
+                                  (e! (pot2-tiedot/->MuutaTieosuushaunEhtoa avain nil)))
+                      :toiminta-f #(e! (pot2-tiedot/->MuutaTieosuushaunEhtoa avain %))}}]))
 
 (defn- tulostaulukko [e! tieosuudet voi-lisata?]
   [grid/grid
@@ -67,7 +70,13 @@
          [hakukentta e! hakuehdot "Tie" :tr-numero "pot2-tieosuushaku-tie"]
          [hakukentta e! hakuehdot "Alkuosa" :tr-alkuosa "pot2-tieosuushaku-alkuosa"]
          [hakukentta e! hakuehdot "Loppuosa" :tr-loppuosa "pot2-tieosuushaku-loppuosa"]
-         ]
+          [napit/nappi
+           "Hae tieosuudet"
+           #(e! (pot2-tiedot/->HaeTieosuudet true))
+           {:ikoni (ikonit/livicon-search)
+            :luokka "nappi-toissijainen"
+            :disabled (or haetaan? hakuehdot-puuttuvat?)
+            :data-cy "pot2-hae-tieosuudet"}]]
         [:div.pot2-tieosuushaku-ohje
          "Jos tieosat jatkuvat kohteen ulkopuolelle, listauksessa näytetään ainoastaan kohteen alku- ja loppuetäisyys, joka mahtuu kohteen sisälle."]
         (cond

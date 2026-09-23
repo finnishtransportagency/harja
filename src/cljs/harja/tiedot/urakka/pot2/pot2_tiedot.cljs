@@ -493,11 +493,7 @@
 
   MuutaTieosuushaunEhtoa
   (process-event [{:keys [avain arvo]} app]
-    (let [app (assoc-in app [:paallystysilmoitus-lomakedata :tieosuushaku :hakuehdot avain] arvo)
-          hakuehdot (get-in app [:paallystysilmoitus-lomakedata :tieosuushaku :hakuehdot])]
-      (if (every? (comp some? hakuehdot) [:tr-numero :tr-alkuosa :tr-loppuosa])
-        (tuck/process-event (->HaeTieosuudet true) app)
-        app)))
+    (assoc-in app [:paallystysilmoitus-lomakedata :tieosuushaku :hakuehdot avain] arvo))
 
   HaeTieosuudet
   (process-event [{:keys [kayttajan-haku?]} {{urakka-id :id} :urakka :as app}]
