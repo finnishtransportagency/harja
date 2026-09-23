@@ -835,8 +835,8 @@
         tarjous-hankinnat (filter (fn [rivi] (= "hankintakustannukset" (:osio rivi))) (:kustannukset hoitovuoden-tarjous))
         tarjous-hankinnat-yht (:summa (first tarjous-hankinnat))
 
-        kilpailutettavat-hankinnat-yht (bigdec (or kilpailutettavat-hankinnat-yht 0.0))
-        tarjous-hankinnat-yht (bigdec (or tarjous-hankinnat-yht 0.0))
+        kilpailutettavat-hankinnat-yht (round2 2 (bigdec (or kilpailutettavat-hankinnat-yht 0.0)))
+        tarjous-hankinnat-yht (round2 2 (bigdec (or tarjous-hankinnat-yht 0.0)))
 
         pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
         pysyvat-muutokset-maara (bigdec (or pysyvat-muutokset-maara 0.0))
