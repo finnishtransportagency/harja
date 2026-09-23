@@ -1,0 +1,84 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "urn:harja/liitteen-vastaanotto-request",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["otsikko", "liite"],
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
+    },
+    "liite": {
+      "id": "urn:harja/liite",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["kategoria", "tunniste", "tiedosto"],
+      "properties": {
+        "kategoria": {
+          "id": "urn:harja/liite/kategoria",
+          "type": "string",
+          "enum": [
+            "siltatarkastus"
+          ],
+          "description": "Liitteen kohdeluokka, esimerkiksi siltatarkastus. Palvelin hyväksyy vain tuetut kategoriat."
+        },
+        "tunniste": {
+          "id": "urn:harja/liite/tunniste",
+          "type": "object",
+          "description": "Kategorian mukaiset tunnisteet aiemmin lähetetyn tiedon löytämiseksi."
+        },
+        "tiedosto": {
+          "id": "urn:harja/liite/tiedosto",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["nimi", "tyyppi", "sisalto"],
+          "properties": {
+            "nimi": {
+              "id": "urn:harja/liite/tiedosto/nimi",
+              "type": "string"
+            },
+            "tyyppi": {
+              "id": "urn:harja/liite/tiedosto/tyyppi",
+              "type": "string"
+            },
+            "kuvaus": {
+              "id": "urn:harja/liite/tiedosto/kuvaus",
+              "type": "string"
+            },
+            "sisalto": {
+              "id": "urn:harja/liite/tiedosto/sisalto",
+              "type": "string"
+            }
+          }
+        }
+      },
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "kategoria": {"const": "siltatarkastus"}
+            },
+            "required": ["kategoria"]
+          },
+          "then": {
+            "properties": {
+              "tunniste": {
+                "properties": {
+                  "siltatarkastus": {
+                    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+                  },
+                  "siltatarkastuskohde": {"type": "string", "minLength": 1}
+                },
+                "required": ["siltatarkastus", "siltatarkastuskohde"],
+                "additionalProperties": false
+              }
+            }
+          }
+        }
+      ]
+    }
+  }
+}
