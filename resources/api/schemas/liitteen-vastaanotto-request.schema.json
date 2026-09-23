@@ -1,21 +1,21 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "$id": "urn:harja/liitteen-vastaanotto-request",
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/liitteen-vastaanotto-request",
   "type": "object",
   "additionalProperties": false,
-  "required": ["otsikko", "liite"],
   "properties": {
     "otsikko": {
       "id": "urn:harja/otsikko",
       "type": "object",
       "additionalProperties": false,
-      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json"
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
     },
     "liite": {
       "id": "urn:harja/liite",
       "type": "object",
       "additionalProperties": false,
-      "required": ["kategoria", "tunniste", "tiedosto"],
+      "required": true,
       "properties": {
         "kategoria": {
           "id": "urn:harja/liite/kategoria",
@@ -23,26 +23,46 @@
           "enum": [
             "siltatarkastus"
           ],
-          "description": "Liitteen kohdeluokka, esimerkiksi siltatarkastus. Palvelin hyväksyy vain tuetut kategoriat."
+          "description": "Liitteen kohdeluokka. Palvelin hyväksyy vain tuetut kategoriat.",
+          "required": true
         },
         "tunniste": {
           "id": "urn:harja/liite/tunniste",
           "type": "object",
-          "description": "Kategorian mukaiset tunnisteet aiemmin lähetetyn tiedon löytämiseksi."
+          "additionalProperties": false,
+          "description": "Kategorian mukaiset tunnisteet aiemmin lähetetyn tiedon löytämiseksi.",
+          "required": true,
+          "properties": {
+            "siltatarkastus": {
+              "id": "urn:harja/liite/tunniste/siltatarkastus",
+              "type": "object",
+              "additionalProperties": false,
+              "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+              "required": true
+            },
+            "siltatarkastuskohde": {
+              "id": "urn:harja/liite/tunniste/siltatarkastuskohde",
+              "type": "string",
+              "minLength": 1,
+              "required": true
+            }
+          }
         },
         "tiedosto": {
           "id": "urn:harja/liite/tiedosto",
           "type": "object",
           "additionalProperties": false,
-          "required": ["nimi", "tyyppi", "sisalto"],
+          "required": true,
           "properties": {
             "nimi": {
               "id": "urn:harja/liite/tiedosto/nimi",
-              "type": "string"
+              "type": "string",
+              "required": true
             },
             "tyyppi": {
               "id": "urn:harja/liite/tiedosto/tyyppi",
-              "type": "string"
+              "type": "string",
+              "required": true
             },
             "kuvaus": {
               "id": "urn:harja/liite/tiedosto/kuvaus",
@@ -50,35 +70,12 @@
             },
             "sisalto": {
               "id": "urn:harja/liite/tiedosto/sisalto",
-              "type": "string"
+              "type": "string",
+              "required": true
             }
           }
         }
-      },
-      "allOf": [
-        {
-          "if": {
-            "properties": {
-              "kategoria": {"const": "siltatarkastus"}
-            },
-            "required": ["kategoria"]
-          },
-          "then": {
-            "properties": {
-              "tunniste": {
-                "properties": {
-                  "siltatarkastus": {
-                    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
-                  },
-                  "siltatarkastuskohde": {"type": "string", "minLength": 1}
-                },
-                "required": ["siltatarkastus", "siltatarkastuskohde"],
-                "additionalProperties": false
-              }
-            }
-          }
-        }
-      ]
+      }
     }
   }
 }
