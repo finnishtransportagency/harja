@@ -11,8 +11,8 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "liite": {
-      "id": "urn:harja/liite",
+    "liite-taydennys": {
+      "id": "urn:harja/liite-taydennys",
       "type": "object",
       "additionalProperties": false,
       "required": true,
@@ -30,15 +30,15 @@
           "description": "Liitteen kohdeluokka. Palvelin hyväksyy vain tuetut kategoriat.",
           "required": true
         },
-        "tunniste": {
-          "id": "urn:harja/toteumat/0/toteuma/tunniste",
+        "kategoria-tunniste": {
+          "id": "urn:harja/liite-taydennys/tunniste",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
           "required": true
           },
           "siltatarkastuskohde": {
-            "id": "urn:harja/liite/siltatarkastuskohde",
+            "id": "urn:harja/liite-taydennys/siltatarkastuskohde",
             "type": "string",
             "enum": [
               "maatukienSiisteysJaKunto",
@@ -66,13 +66,14 @@
               "tieluiskienSiisteysJaKunto",
               "portaidenSiisteysJaKunto"
             ],
-            "description": "",
+            "description": "lisää tänne jotain",
             "required": false
           },
-        "liitteet": {
-          "id": "urn:harja/tarkastukset/0/liitteet",
-          "type": "array",
-          "$ref": "file:resources/api/schemas/entities/liitteet.schema.json"
+        "liite": {
+          "id": "urn:harja/liite-taydennys/liite",
+          "type": "object",
+          "$ref": "file:resources/api/schemas/entities/liite.schema.json",
+          "required": true
         }
       }
     }

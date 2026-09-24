@@ -18,13 +18,15 @@
                       :viesti viesti}]}))
 
 (defn- tallenna-siltatarkastuskohteen-liitteet
-  [{id :id} {:keys [liite]} kayttaja db liitteiden-hallinta]
+  [{id :id} {:keys [liite-taydennys]} kayttaja db liitteiden-hallinta]
   (let [urakka-id (Integer/parseInt id)
-        ulkoinen-id (str (get-in liite [:tunniste :id]))
-        kohde (get liite :siltatarkastuskohde)
+        ulkoinen-id (str (get-in liite-taydennys [:kategoria-tunniste :id]))
+        kohde (get liite-taydennys :siltatarkastuskohde)
         kohde-id (get siltatarkastukset/api-kohde->numero kohde)
-        tarkastuksen-liitteet (:liitteet liite)]
+        liite (:liite liite-taydennys)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (when-not kohde
+      (heita-liitevirhe "Siltatarkastuksen kohde puuttuu"))
     (when-not kohde-id
       (heita-liitevirhe (format "Tuntematon siltatarkastuksen kohde: %s" kohde)))
     (let [siltatarkastus (first (silta-q/hae-siltatarkastus-ulkoisella-idlla-ja-urakalla
@@ -39,11 +41,11 @@
           urakka-id
           (:id siltatarkastus)
           kohde-id
-          tarkastuksen-liitteet))
+          [{:liite liite}]))
       (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
 
 (defn vastaanota-liite [parametrit data kayttaja db liitteiden-hallinta]
-  (let [kategoria (get-in data [:liite :kategoria])]
+  (let [kategoria (get-in data [:liite-taydennys :kategoria])]
     (if (= "siltatarkastuskohde" kategoria)
       (tallenna-siltatarkastuskohteen-liitteet
         parametrit data kayttaja db liitteiden-hallinta)
