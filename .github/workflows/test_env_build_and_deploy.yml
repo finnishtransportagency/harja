@@ -1,7 +1,9 @@
 ## Testiympäristöjen deployment prosessi
-## -> antaa valita branchin 
+## -> antaa valita branchin
+## -> tarkistaa deployment-kohteen ennen buildia
+## -> buildaa uberjarin ilman AWS-tunnuksia
 ## -> buildaa imagen testi ECR:rään (erillään prodista)
-## -> deployaa imagen <test-env> ECS konttiin  
+## -> deployaa imagen <test-env> ECS konttiin
 name: '[Test-envs] Build and deploy'
 
 on:
@@ -22,47 +24,97 @@ on:
         required: true
         type: boolean
         default: false
+      skip-migrations:
+        description: "Ohita Flyway-migraatiot?"
+        required: true
+        type: boolean
+        default: false
 
-permissions: {}
+run-name: '[Test-envs] Build and deploy: ${{ inputs.environment }}'
 
 concurrency:
   group: ${{ inputs.environment }}-deploy
   cancel-in-progress: false
 
+# Aseta least-privilege default permissionit workflowille
+# Job-kohtaiset oikeudet määritellään jobeissa erikseen
+permissions: {}
+
 jobs:
 
-  deploy:
-    name: "Deploy branch to ${{ inputs.environment }}"
+  preflight:
+    name: "Preflight ${{ inputs.environment }}"
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
+    timeout-minutes: 10
 
     permissions:
-      id-token: write # OIDC tokenia tarvitaan AWS roolin omaksumiseen
-      contents: read # Tarvitaan checkout actionissa
-      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        with:
+          aws-region: 'eu-west-1'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
+          role-duration-seconds: 900
+          role-skip-session-tagging: true
+
+      # Varmista ennen buildia, että valitun testiympäristön ECS-resurssit ovat olemassa
+      # Kaikki testiympäristöt eivät ole välttämättä deployattuna infrassa, sekä loogiset ID:t voivat muuttua
+      - name: '[Test-envs] Preflight deployment target'
+        uses: ./.github/actions/verify-ecs-deployment-target
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
+          task-definition: ${{ vars.ECS_TASK_DEFINITION_NAME }}
+          container: ${{ vars.ECS_CONTAINER_NAME }}
+          region: eu-west-1
+
+  build:
+    name: "Build branch for ${{ inputs.environment }}"
+    needs: preflight
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    permissions:
+      contents: read
+      packages: read
+
+    outputs:
+      commit_sha: ${{ steps.git-sha.outputs.sha }}
+      ref_tag: ${{ steps.ref-tag.outputs.ref_tag }}
 
     steps:
       - name: '[Test-envs] Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-      
-      ## Buildi tarvii tietokannan 
+
+      # Buildi tarvitsee paikallisen tietokannan, mutta ei AWS-tunnuksia
       - name: '[Test-envs] Start database for build'
         uses: ./.github/actions/start-test-db
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
-          password: ${{ secrets.GITHUB_TOKEN }}
+          password: ${{ github.token }}
           service-name: harjadb-latest
 
-      ## rev-parse == commit 
+      # rev-parse == commit
       - name: '[Test-envs] Resolve checked out commit'
         id: git-sha
         run: echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
 
-      ## ref_name == branchi
-      ## Tagataan image näillä 
+      # ref_name == branchi
+      # Tagataan image branchilla ja testiympäristöllä
       - name: '[Test-envs] Resolve sanitized ref tag'
         id: ref-tag
         env:
@@ -77,8 +129,44 @@ jobs:
         with:
           build-laadunseuranta: 'false'
 
+      # Deploy-job ajetaan eri runnerissa, joten buildattu uberjar pitää toiselle jobille artifactina
+      - name: '[Test-envs] Upload build artifact'
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
+        with:
+          name: harja-uberjar-${{ github.run_id }}
+          path: ./target/harja-0.0.1-SNAPSHOT-standalone.jar
+          if-no-files-found: error
+          retention-days: 1
+
+  deploy:
+    name: "Deploy branch to ${{ inputs.environment }}"
+    needs:
+      - preflight
+      - build
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 60
+
+    permissions:
+      id-token: write
+      contents: read
+      actions: read
+
+    steps:
+      - name: '[Test-envs] Checkout code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: '[Test-envs] Download build artifact'
+        uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
+        with:
+          name: harja-uberjar-${{ github.run_id }}
+          # Pura samaan kansioon, kuin mitä Dockerfilessä odotetaan
+          path: ./target
+
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           aws-region: 'eu-west-1'
           role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
@@ -99,8 +187,8 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          REF_TAG: ${{ steps.ref-tag.outputs.ref_tag }}
-          COMMIT_SHA: ${{ steps.git-sha.outputs.sha }}
+          REF_TAG: ${{ needs.build.outputs.ref_tag }}
+          COMMIT_SHA: ${{ needs.build.outputs.commit_sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           docker build --provenance=false \
@@ -109,23 +197,25 @@ jobs:
             --file "$DOCKERFILE_PATH" .
 
           echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
-      
-      # Käynnistä tietokanta jos ei ole jo käynnissä 
+
+      # Käynnistä tietokanta jos ei ole jo käynnissä
+      # Testiympäristön RDS-klusteri voi olla myös kokonaan pysäytettynä, joten odota että se on käytettävissä ennen migraatioita.
+      # Kirjoitushetkellä käytetään serverless v2 auto-stoppia, mutta pidetään chekki tämä silti
       - name: '[Test-envs] Start Aurora database'
         env:
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           DB_CLUSTER="harja-test-db-${ENVIRONMENT#test-}"
           echo "Checking RDS cluster: $DB_CLUSTER"
-          
+
           STATUS=$(aws rds describe-db-clusters \
             --region eu-west-1 \
             --db-cluster-identifier "$DB_CLUSTER" \
             --query 'DBClusters[0].Status' \
             --output text)
-          
+
           echo "RDS Cluster status: $STATUS"
-          
+
           if [ "$STATUS" = "stopped" ]; then
             echo "Starting $DB_CLUSTER..."
             aws rds start-db-cluster \
@@ -133,36 +223,37 @@ jobs:
               --db-cluster-identifier "$DB_CLUSTER" \
               --no-cli-pager > /dev/null
           fi
-          
+
           while true; do
             STATUS=$(aws rds describe-db-clusters \
               --region eu-west-1 \
               --db-cluster-identifier "$DB_CLUSTER" \
               --query 'DBClusters[0].Status' \
               --output text)
-          
+
             echo "Waiting to start.. RDS Cluster status: $STATUS"
-          
+
             if [ "$STATUS" = "available" ]; then
               echo "Done, $DB_CLUSTER is running"
               break
             fi
-          
+
             sleep 10
           done
 
       - name: '[Test-envs] Run migrations'
+        if: ${{ !inputs.skip-migrations }}
         uses: ./.github/actions/run-migrations-to-test-env
         with:
-          commit-sha: ${{ steps.git-sha.outputs.sha }}
+          commit-sha: ${{ needs.build.outputs.commit_sha }}
           function-name: HarjaTestMigrationRunner-${{ inputs.environment }}
 
       - name: '[Test-envs] Push image to ECR'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          REF_TAG: ${{ steps.ref-tag.outputs.ref_tag }}
-          COMMIT_SHA: ${{ steps.git-sha.outputs.sha }}
+          REF_TAG: ${{ needs.build.outputs.ref_tag }}
+          COMMIT_SHA: ${{ needs.build.outputs.commit_sha }}
         run: |
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
@@ -179,54 +270,48 @@ jobs:
 
       - name: Update ECS task definition
         id: task-def
-        uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea
+        uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea # v1.9.0
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.build-image.outputs.image }}
 
       - name: Deploy ECS task definition
-        uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de
+        uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
         with:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
 
-      - name: '[Test-envs] Start ECS service'
-        env:
-          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
-          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
-        run: |
-          aws ecs update-service \
-            --region eu-west-1 \
-            --cluster "$ECS_CLUSTER_NAME" \
-            --service "$ECS_SERVICE_NAME" \
-            --desired-count 1
-          
+      - name: '[Test-envs] Start ECS Fargate tasks'
+        uses: ./.github/actions/start-fargate-tasks
+        timeout-minutes: 10
+        with:
+          cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          service: ${{ vars.ECS_SERVICE_NAME }}
+          # Ohita ECS service-stability check
+          check-stability: 'false'
+
       - name: '[Test-envs] Configure automatic stop'
         env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
           ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
           ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
           KEEP_RUNNING: ${{ inputs.keep-running }}
         run: |
-          SERVICE_ARN=$(aws ecs describe-services \
-            --region eu-west-1 \
-            --cluster "$ECS_CLUSTER_NAME" \
-            --services "$ECS_SERVICE_NAME" \
-            --query 'services[0].serviceArn' \
-            --output text)
-      
+          SERVICE_ARN="arn:aws:ecs:eu-west-1:${AWS_ACCOUNT_ID}:service/${ECS_CLUSTER_NAME}/${ECS_SERVICE_NAME}"
+          
           if [ "$KEEP_RUNNING" = "true" ]; then
             echo "Disabling automatic stop for $ECS_SERVICE_NAME"
-      
+          
             aws ecs tag-resource \
               --region eu-west-1 \
               --resource-arn "$SERVICE_ARN" \
               --tags key=HARJA_AUTOSS_IGNORE,value=true
           else
             echo "Enabling automatic stop for $ECS_SERVICE_NAME"
-      
+          
             aws ecs untag-resource \
               --region eu-west-1 \
               --resource-arn "$SERVICE_ARN" \
