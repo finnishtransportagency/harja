@@ -12,6 +12,7 @@ export const pageloadTimeout = 30000;
 export const testiurakkaMhu25 = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
 export const testiurakkaMhu24 = "POP MHU Suomussalmi 2024-2029";
 export const testiurakkaMhu19 = "Oulun MHU 2019-2024";
+export const testiurakkaMhu26 = "Sodankylän MHU 2026-2031";
 export const testiurakkaMhu23 = "Raahen MHU 2023-2028";
 export const evkLappi = "Lappi";
 export const evkPohjoisSuomi = "Pohjois-Suomi";
