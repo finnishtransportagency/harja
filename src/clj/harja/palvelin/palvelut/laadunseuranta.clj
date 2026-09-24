@@ -274,13 +274,17 @@
         automaattinen-summa-raakana (some->> profiilirivi
                                       :profiilirivi
                                       :summamaaritykset
-                                      (filter #(= :automaattinen (:maaritystapa %)))
+                                      (filter #(and (= :automaattinen (:maaritystapa %))
+                                                 (number? (:summa-euroina %))
+                                                 (pos? (:summa-euroina %))
+                                                 (Double/isFinite (double (:summa-euroina %)))))
                                       first
                                       :summa-euroina)
         summa (if (and (= :A laji)
                     (= "teiden-hoito" (:tyyppi urakan-tiedot))
-                    (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2025))
+                    (= 2026 (-> urakan-tiedot :alkupvm pvm/vuosi)))
                 (if (and (number? automaattinen-summa-raakana)
+                      (pos? automaattinen-summa-raakana)
                       (Double/isFinite (double automaattinen-summa-raakana)))
                   (double automaattinen-summa-raakana)
                   (throw (IllegalArgumentException.
