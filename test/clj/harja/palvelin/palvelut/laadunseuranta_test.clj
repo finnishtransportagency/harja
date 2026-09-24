@@ -524,9 +524,9 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
-(deftest tallenna-mhu26-a-sanktio-hylkaa-puuttuvan-automaattisen-summan
+(deftest tallenna-mhu26-a-sanktio-kayttaa-seuraavaa-kelvollista-automaattista-summaa
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
-        perustelu "HARJA-2611 puuttuva automaattinen summa"
+        perustelu "HARJA-2611 seuraava kelvollinen automaattinen summa"
         tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
                             " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
         sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
@@ -550,7 +550,21 @@
       (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
                     (fn [_ _]
                       {:profiilirivi {:summamaaritykset [{:maaritystapa :automaattinen
-                                                          :summa-euroina nil}]}})]
+                                                          :summa-euroina nil}
+                                                         {:maaritystapa :automaattinen
+                                                          :summa-euroina -1M}
+                                                         {:maaritystapa :automaattinen
+                                                          :summa-euroina 6000M}]}})]
+        (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                           +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+              tallennettu (first (q-map (str "SELECT maara FROM sanktio WHERE id = " sanktio-id)))]
+          (is (= 6000M (:maara tallennettu)))))
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _]
+                      {:profiilirivi {:summamaaritykset [{:maaritystapa :automaattinen
+                                                          :summa-euroina nil}
+                                                         {:maaritystapa :automaattinen
+                                                          :summa-euroina -1M}]}})]
         (is (thrown-with-msg?
               IllegalArgumentException
               #"MHU26 A-sanktion automaattinen summamääritys puuttuu tai on epäkelpo\."
