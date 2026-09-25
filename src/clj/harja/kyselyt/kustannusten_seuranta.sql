@@ -357,10 +357,10 @@ SELECT COALESCE(mmk.summa, 0)           AS budjetoitu_summa,
        -- kustannussuunnitelman lukujen sisällä eli kilpailutettavissa hankinnoissa
        COALESCE(mmk.summa, 0)           AS budjetoitu_summa_indeksikorjattu,
        COALESCE(SUM(lk.summa), 0)       AS toteutunut_summa,
-       lk.maksueratyyppi::TEXT          AS maksutyyppi,
+       MIN(lk.maksueratyyppi)::TEXT     AS maksutyyppi,
        'hankinta'                       AS toimenpideryhma,
-       COALESCE(tr.nimi, tk.nimi)       AS tehtava_nimi,
-       CASE
+       MIN(COALESCE(tr.nimi, tk.nimi))  AS tehtava_nimi,
+       MIN(CASE
            WHEN (tk.koodi = '23104' AND lk.rahavaraus_id IS NULL) THEN 'Talvihoito'
            WHEN (tk.koodi = '23116' AND lk.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
            WHEN (tk.koodi = '23124' AND lk.rahavaraus_id IS NULL) THEN 'Sorateiden hoito'
@@ -368,10 +368,10 @@ SELECT COALESCE(mmk.summa, 0)           AS budjetoitu_summa,
            WHEN (tk.koodi = '20191' AND lk.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
            WHEN (tk.koodi = '14301' AND lk.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
            WHEN lk.rahavaraus_id IS NOT NULL THEN COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi)
-       END                               AS toimenpide,
+       END)                              AS toimenpide,
        MIN(l.erapaiva)::TEXT             AS ajankohta,
        'toteutunut'                      AS toteutunut,
-       tr.jarjestys                      AS jarjestys,
+       MIN(tr.jarjestys)                 AS jarjestys,
        'muutokset'                       AS paaryhma,
        NOW()                             AS indeksikorjaus_vahvistettu,
        'erillisrahoitettu-muutos'        AS kulu_tyyppi,
@@ -404,10 +404,7 @@ WHERE mm.urakka = :urakka
   AND mm.poistettu IS NOT TRUE 
   AND mm.alityyppi::TEXT = 'erillisrahoitus' 
   AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
-GROUP BY tr.nimi, tk.nimi, lk.tyyppi, 
-         mm.syy, mmk.summa, mm.alityyppi, lk.maksueratyyppi, 
-         l.erapaiva, l.urakka, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste, 
-         lk.rahavaraus_id, COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi), lk.tavoitehintainen
+GROUP BY mm.syy, mmk.summa, mm.alityyppi
 UNION ALL
 -- Pysyvät muutokset
 -- Aikaisempien hoitokausien muutokset, jotka lasketaan hankintakustannuksiin
