@@ -356,11 +356,11 @@
     :kuvaus       "Ylläpidon aikataulu"
     :urakkatyyppi #{:paallystys :tiemerkinta}}
 
-   {:nimi         :vastaanottotarkastusraportti
+   {:nimi         :vastaanottotarkastusraportti-paallystys
     :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
     :konteksti    #{"elinvoimakeskus" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
-    :kuvaus       "Vastaanottotarkastusraportti"
+    :kuvaus       "Vastaanottotarkastusraportti - Päällystys"
     :kuvaus-suuri-konteksti "Päällystysurakoiden yhteenveto"
     :urakkatyyppi #{:paallystys}}
 
