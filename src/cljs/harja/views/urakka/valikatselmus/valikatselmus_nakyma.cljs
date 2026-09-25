@@ -204,30 +204,38 @@
         (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))))))
 
 (defn valikatselmus* [e! app]
-  (let [valittu-hoitokausi (or @urakan-tiedot/valittu-hoitokausi
-                             (:valittu-hoitokausi app))
+  (let [valittu-hoitokausi (or @urakan-tiedot/valittu-hoitokausi (:valittu-hoitokausi app))
         hoitokauden-alkuvuosi (varmista-hoitokauden-alkuvuosi valittu-hoitokausi)]
-    (komp/luo
-      (komp/lippu valikatselmus-tiedot/valikatselmus-nakymassa?)
-      (komp/piirretty (fn [this]
-                        (let [valittu-urakka-id @nav/valittu-urakka-id]
-                          (e! (valikatselmus-tiedot/->HaeValikatselmuksenTiedot
-                                valittu-urakka-id
-                                hoitokauden-alkuvuosi)))))
-      (fn [e! app]
-        [:div {:id "vayla"}
-         (if (:haku-kaynnissa? app)
-           [:div.valikatselmus-haku
-            [yleiset/ajax-loader-pieni "Haetaan välikatselmuksen tietoja..."]]
-           [:div.valikatselmus-container
-            [:div.col-xs-12.col-md-7
+   (komp/luo
+     (komp/lippu valikatselmus-tiedot/valikatselmus-nakymassa?)
+     (komp/piirretty (fn [this]
+                       (let [valittu-urakka-id @nav/valittu-urakka-id]
+                         (e! (valikatselmus-tiedot/->HaeValikatselmuksenTiedot
+                               valittu-urakka-id
+                               hoitokauden-alkuvuosi)))))
+     (fn [e! app]
+       (let [nakyma-app (if (nil? (:valittu-hoitokausi app))
+                          (assoc app
+                            :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                            :valittu-hoitokausi
+                            [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+                             (pvm/paivan-lopussa
+                               (pvm/hoitokauden-loppupvm
+                                 (inc hoitokauden-alkuvuosi)))])
+                          app)]
+         [:div {:id "vayla"}
+          (if (:haku-kaynnissa? nakyma-app)
+            [:div.valikatselmus-haku
+             [yleiset/ajax-loader-pieni "Haetaan välikatselmuksen tietoja..."]]
+            [:div.valikatselmus-container
+             [:div.col-xs-12.col-md-7
 
-             [valikatselmus-otsikko-ja-tiedot e! app]
-             [:div.paatokset
-              [paatoskomponentit e! app]]]
-            [:div.col-xs-12.col-md-5
-             [:div.yhteenveto-container
-              [yhteevetolaatikko/yhteenvetolaatikko e! app]]]])]))))
+              [valikatselmus-otsikko-ja-tiedot e! nakyma-app]
+              [:div.paatokset
+               [paatoskomponentit e! nakyma-app]]]
+             [:div.col-xs-12.col-md-5
+              [:div.yhteenveto-container
+               [yhteevetolaatikko/yhteenvetolaatikko e! nakyma-app]]]])])))))
 
 (defn valikatselmus []
   (tuck/tuck tila/valikatselmus valikatselmus*))
