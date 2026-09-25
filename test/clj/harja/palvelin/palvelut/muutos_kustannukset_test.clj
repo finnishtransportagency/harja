@@ -176,6 +176,56 @@
       (is (= 1230M (:budjetoitu_summa_indeksikorjattu v1)))
       (is (= 1230M (:toteutunut_summa v1))))))
 
+(deftest erillisrahoitetun-muutostyon-kulut-yhdistyvat-yhdeksi-riviksi
+  (let [erillisrahoitettu-muutostyo (hae-muutostyot)
+        muutostyo (:muutostyo erillisrahoitettu-muutostyo)
+        muutostyo-syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
+        tallenna-kulu
+        (fn [summa erapaiva]
+          (kutsu-palvelua
+            (:http-palvelin jarjestelma)
+            :tallenna-kulu
+            +kayttaja-jvh+
+            {:urakka-id +urakka+
+             :kulu-kohdistuksineen
+             {:kokonaissumma summa
+              :erapaiva (pvm/->pvm erapaiva)
+              :kohdistukset [{:rivi 0
+                              :summa summa
+                              :tavoitehintainen :true
+                              :valittu-muutostyo muutostyo
+                              :lukittu? false
+                              :lisatyo? false
+                              :poistettu false
+                              :toimenpideinstanssi +tpi+
+                              :tyyppi :erillisrahoitettu-muutos}]
+              :urakka +urakka+
+              :liitteet []
+              :tyyppi "laskutettava"
+              :koontilaskun-kuukausi "lokakuu/5-hoitovuosi"}}))]
+
+    (tallenna-kulu 100 "02.10.2025")
+    (tallenna-kulu 150 "10.10.2025")
+
+    (let [kustannusten-seuranta
+          (hae-kustannusten-seuranta
+            {:urakka +urakka+
+             :alkupvm "2025-10-01"
+             :loppupvm "2026-09-30"
+             :hoitokauden-alkuvuosi 2025})
+
+          muutoksen-rivit
+          (filter
+            #(and (= "erillisrahoitettu-muutos" (:kulu_tyyppi %))
+               (= muutostyo-syy (:muutostyo_syy %)))
+            kustannusten-seuranta)]
+
+      (is (= 1 (count muutoksen-rivit))
+        "Kahden eri päivänä olevan kulun pitää näkyä yhtenä rivinä")
+
+      (is (= 250M (:toteutunut_summa (first muutoksen-rivit)))
+        "Yhden rivin summan pitää sisältää molemmat kulut"))))
+
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
   (let [erillisrahoitettu-muutostyo (hae-muutostyot)
