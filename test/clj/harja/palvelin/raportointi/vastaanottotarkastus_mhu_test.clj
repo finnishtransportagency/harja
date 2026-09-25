@@ -16,6 +16,7 @@
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.palvelin.raportointi.raportit :as raportit]
+            [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
             [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu :as vastaanottotarkastus-mhu]))
 
 (defn jarjestelma-fixture [testit]
@@ -149,7 +150,7 @@
                                                    [{:sakkoryhma :talvisuolan_ylitys :maara 100M}]
                                                    :else
                                                    [{:maara -50M}]))
-                  rahavaraus-kyselyt/hae-urakan-rahavaraukset
+                  rahavaraus-kyselyt/hae-urakan-perusnimiset-rahavaraukset
                   (fn [_ _]
                     [{:id 1 :nimi "Äkilliset hoitotyöt"}
                      {:id 2 :nimi "Vahinkojen korjaukset"}
@@ -253,8 +254,40 @@
              {:lihavoi? true
               :korosta-hennosti? true
               :rivi ["Yhteensä" 1000M 750M 500M 450M 250M 225M 350M 250M -425M]}]]
-          taulukko))
-    (is (not-any? #(and (vector? %) (= "Ympäristöraportti" (get-in % [1 :otsikko]))) raportti))))
+          taulukko))))
+
+(deftest vastaanottotarkastusraportti-sisaltaa-ymparistoraportin
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        db (:db jarjestelma)
+        hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+        ymparistoraportin-suorita ymparisto/suorita
+        kutsutut-parametrit (atom [])
+        taulukoiden-otsikot ["Talvisuolat"
+                             "Formiaatit"
+                             "Kesäsuola"
+                             "Hiekoitushiekka"
+                             "Murskeet"
+                             "Paikkausmateriaalit"
+                             "Muut materiaalit"]]
+    (with-redefs [ymparisto/suorita
+                  (fn [db kayttaja parametrit]
+                    (swap! kutsutut-parametrit conj parametrit)
+                    (ymparistoraportin-suorita db kayttaja parametrit))]
+      (let [raportti (muodosta-testiraportti true)
+            taulukot (mapv #(etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko %)
+                       taulukoiden-otsikot)]
+        (testing "ympäristöraporttia kutsutaan kerran koko sopimuskaudelle"
+          (is (= 1 (count @kutsutut-parametrit)))
+          (is (= {:alkupvm (:alkupvm (first hoitokaudet))
+                  :loppupvm (:loppupvm (last hoitokaudet))
+                  :urakka-id urakka-id
+                  :urakoittain? false
+                  :urakkatyyppi :teiden-hoito
+                  :koko-urakkaaika? true}
+                (first @kutsutut-parametrit))))
+        (testing "ympäristöraportti sisältää kaikki päätaulukot"
+          (is (= taulukoiden-otsikot
+                (mapv #(get-in % [1 :otsikko]) taulukot))))))))
 
 (deftest MHU25-urakan-tavoitehinnan-muutokset-muodostuvat-kaikille-hoitovuosille
   (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
