@@ -337,7 +337,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :vastaanottotarkastusraportti
+                  {:nimi :vastaanottotarkastusraportti-paallystys
                    :konteksti "urakka"
                    :urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
                    :parametrit {:vuosi 2017 :urakkatyyppi :paallystys}})
@@ -363,7 +363,7 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :vastaanottotarkastusraportti
+                  {:nimi :vastaanottotarkastusraportti-paallystys
                    :konteksti "urakka"
                    :urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
                    :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
@@ -387,10 +387,9 @@
   (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :vastaanottotarkastusraportti
+                  {:nimi :vastaanottotarkastusraportti-paallystys
                    :konteksti "koko maa"
                    :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
-        _ (println "Vastaus: " (pr-str vastaus))
         otsikko (-> vastaus (nth 1))
         yha-kohteet (-> vastaus (nth 2))
         muut-kustannukset (-> vastaus (nth 6))
@@ -433,7 +432,7 @@
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :vastaanottotarkastusraportti
+                  {:nimi :vastaanottotarkastusraportti-paallystys
                    :konteksti "koko maa"
                    :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
 
@@ -455,7 +454,7 @@
         vastaus2 (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
                   +kayttaja-jvh+
-                  {:nimi :vastaanottotarkastusraportti
+                  {:nimi :vastaanottotarkastusraportti-paallystys
                    :konteksti "koko maa"
                    :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
         pkluokat2 (-> vastaus2 (nth 11))
@@ -466,7 +465,7 @@
         vastaus-tyhja (kutsu-palvelua (:http-palvelin jarjestelma)
                         :suorita-raportti
                         +kayttaja-jvh+
-                        {:nimi :vastaanottotarkastusraportti
+                        {:nimi :vastaanottotarkastusraportti-paallystys
                          :konteksti "koko maa"
                          :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
 
@@ -486,7 +485,7 @@
         vastaus-ei-yotoita (kutsu-palvelua (:http-palvelin jarjestelma)
                              :suorita-raportti
                              +kayttaja-jvh+
-                             {:nimi :vastaanottotarkastusraportti
+                             {:nimi :vastaanottotarkastusraportti-paallystys
                               :konteksti "koko maa"
                               :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
 
@@ -502,7 +501,7 @@
         vastaus-pk2-yotyot (kutsu-palvelua (:http-palvelin jarjestelma)
                              :suorita-raportti
                              +kayttaja-jvh+
-                             {:nimi :vastaanottotarkastusraportti
+                             {:nimi :vastaanottotarkastusraportti-paallystys
                               :konteksti "koko maa"
                               :parametrit {:vuosi 2023 :urakkatyyppi :paallystys}})
         yotyot-pk2 (-> vastaus-pk2-yotyot (nth 13))

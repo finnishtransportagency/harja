@@ -178,3 +178,17 @@
              (.getRow 0)
              (.getCell 0)
              (.getStringCellValue))))))
+
+(deftest taulukon-otsikot-voi-piilottaa
+  (let [workbook (XSSFWorkbook.)]
+    (excel/muodosta-excel
+      [:taulukko {:nimi "Testi"
+                  :sheet-nimi "Testi"
+                  :piilota-otsikot? true}
+       [{:otsikko "Määrä"}]
+       [[400]]]
+      workbook)
+    (let [sheet (.getSheetAt workbook 0)]
+      (is (= 400.0 (.getNumericCellValue (.getCell (.getRow sheet 2) 0))))
+      (is (nil? (.getRow sheet 3))))))
+

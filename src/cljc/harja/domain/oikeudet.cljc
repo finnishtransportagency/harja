@@ -21,11 +21,6 @@
   urakat-suunnittelu-kalustoresurssit
   urakat-toteumat-suola
   urakat-toteumat-erilliskustannukset
-  ;; Hallintaoikeudet
-  hallinta-pohjavesialueidensiirto
-  hallinta-toteumatyokalu
-  hallinta-lupaukset
-  urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-talvihoitoreititys
   urakat-laadunseuranta-sanktiot
   urakat-laadunseuranta-hairiotilanteet
@@ -49,7 +44,6 @@
   urakat-vesivaylatoimenpiteet
   urakat-kanavat-liikenne
   urakat-toteumat-kokonaishintaisettyot
-  urakat-toteumat-erilliskustannukset
   urakat-toteumat-muutos-ja-lisatyot
   urakat-toteumat-vesivaylaerilliskustannukset
   urakat-toteumat-varusteet
@@ -57,9 +51,13 @@
   urakat-toteutus-yksikkohintaisettyot
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
+  urakat-yleiset
+
+  ;; Hallintaoikeudet
+  hallinta-pohjavesialueidensiirto
+  hallinta-toteumatyokalu
   hallinta-indeksit
   hallinta-api-jarjestelmatunnukset
-  urakat-yleiset
   hallinta-tarjoushinnat
   hallinta-rahavaraukset
   hallinta-koulutusvideot
@@ -75,6 +73,7 @@
   hallinta-lampotilat
   hallinta-valitavoitteet
   hallinta-tehtavat
+
   urakat-suunnittelu-tehtava-ja-maaraluettelo
   urakat-suunnittelu-kokonaishintaisettyot
   urakat-suunnittelu-yksikkohintaisettyot

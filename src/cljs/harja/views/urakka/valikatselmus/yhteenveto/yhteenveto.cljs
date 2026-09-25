@@ -19,13 +19,17 @@
 
 (defn osio-lopun-tavoite-ja-katto
   [{:keys [urakan-parametrit hoitokauden-alkuvuosi]}
-   {:keys [hoitovuoden-alun-indeksikorjattu-tavoitehinta tavoitehinnan-muutokset
+   {:keys [hoitovuoden-alun-indeksikorjattu-tavoitehinta tavoitehinnan-oikaisut-24-urakoille
            kirjallisesti-sovitut-muutokset menneet-pysyvat-muutokset
            toteumiin-perustuvat-muutokset-yht pysyvat-muutokset-toteuma-muutokset-yht
            thv-arvonvahennykset-yht hoitokauden_lopun_indeksikorjaus
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
   (let [;; Täällä näytetään arvonvähennykset, jos ne kuuluvat tavoitehintaan
-        nayta-arvonvahennykset? (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
+        nayta-arvonvahennykset? (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)
+        ;; Lasketaan tässä lopullinen tavoitehinnan muutokset yhteenvetoarvo - 25 urakoille
+        tavoitehinnan-muutokset-yhteenveto-25 (+ pysyvat-muutokset-toteuma-muutokset-yht thv-arvonvahennykset-yht)
+        ;; Tavoitehinnan muutokset -24 urakoille ja 2026 vuonna -24 urakoille
+        tavoitehinnan-muutokset-yhteenveto-24 (+ tavoitehinnan-oikaisut-24-urakoille thv-arvonvahennykset-yht)]
 
     ;; Tämä :aria-live on tässä ruudunlukijaa varten, jotta se jätä tätä DOM:ssa 
     ;; linkin jälkeen olevaa h3-otsikkoa lukematta (tapahtui ainakin Windowsin Lukija-toiminnolla)
@@ -70,8 +74,8 @@
         [:<>
          [:div.flex-row.summa-rivi
           [:span "Tavoitehinnan muutokset"]
-          [:span (str (when (> pysyvat-muutokset-toteuma-muutokset-yht 0) "+")
-                   (fmt/euro-opt false pysyvat-muutokset-toteuma-muutokset-yht))]]
+          [:span (str (when (> tavoitehinnan-muutokset-yhteenveto-25 0) "+")
+                   (fmt/euro-opt false tavoitehinnan-muutokset-yhteenveto-25))]]
 
          (when kirjallisesti-sovitut-muutokset
            [:div.flex-row.summa-rivi
@@ -98,12 +102,12 @@
         [:<>
          [:div.flex-row.summa-rivi
           [:span "Tavoitehinnan muutokset"]
-          [:span (str (when (> tavoitehinnan-muutokset 0) "+")
-                   (fmt/euro-opt false tavoitehinnan-muutokset))]]
+          [:span (str (when (> tavoitehinnan-muutokset-yhteenveto-24 0) "+")
+                   (fmt/euro-opt false tavoitehinnan-muutokset-yhteenveto-24))]]
 
          (when nayta-arvonvahennykset?
            [:div.flex-row.summa-rivi
-            [:span "Arvonvähennysten tavoitehintamuutokset"]
+            [:span "• Arvonvähennysten tavoitehintamuutokset"]
             [:span (fmt/euro-opt false thv-arvonvahennykset-yht)]])])
 
 
