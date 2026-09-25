@@ -191,7 +191,7 @@
     (hoitoluokat/soratieluokan-nimi luokka)))
 
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet hoitokaudet urakoittain? osamateriaalit yksikot-soluissa?
-                               nayta-suunnittelu? urakkanumero? koko-urakkaaika?] :as _taulukon-tiedot}]
+                               nayta-suunnittelu? urakkanumero? koko-urakkaaika?] :as _taulukon-tiedot} kasittelija]
   (let [isantarivi-indeksi (atom -1)
         ;; Raportilla voidaan näyttää joko kuukaudet (esim 11/24) tai hoitovuoden (esim 2024-2025)
         arvosarakkeet (if (seq hoitokaudet) hoitokaudet kuukaudet)
@@ -339,7 +339,15 @@
                              [(str (:nimi urakka) (when urakkanumero? (str " (" (:nro urakka) ")")))])
 
                            ;; Materiaalin nimi
-                           [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
+                           (let [nimi-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))
+                                 lisaa-yksikko? (and
+                                                  (= kasittelija :excel)
+                                                  (:yksikko materiaali)
+                                                  (not (:yht-rivi materiaali)))]
+                             [[:arvo-ja-selite
+                               (cond-> nimi-ja-selite
+                                 lisaa-yksikko?
+                                 (update :selite #(str % (when % ", ") (:yksikko materiaali))))]])
 
                            ;; Arvosarakkeiden määrät, viiva jos tyhjä.
                            (map #(or (kk-arvot %) "–") arvosarakkeet)
@@ -566,22 +574,19 @@
 
 (defn muodosta-kesasuolan-yhteensa-rivi [urakoittain? materiaali-kaikki-kesasuolat-yhteensa kesasuolatoteumat kesasuolan-suunnittelurivi]
   (let [kokonaismaara (apply + (map :maara (second kesasuolan-suunnittelurivi)))]
-   (if-not (empty? kesasuolatoteumat)
-     (map (fn [[{_materiaali :materiaali urakka :urakka :as avain} rivit]]
-            [avain (conj rivit {:maara kokonaismaara
-                                :talvitieluokka nil :kk nil :urakka (when urakoittain? urakka)
-                                :materiaali materiaali-kaikki-kesasuolat-yhteensa})])
-       kesasuolatoteumat)
-     (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
-             :materiaali materiaali-kaikki-kesasuolat-yhteensa}
-            [{:kk nil :maara kokonaismaara}]]))))
+    (if-not (empty? kesasuolatoteumat)
+      (map (fn [[{_materiaali :materiaali urakka :urakka :as avain} rivit]]
+             [avain (conj rivit {:maara kokonaismaara
+                                 :talvitieluokka nil :kk nil :urakka (when urakoittain? urakka)
+                                 :materiaali materiaali-kaikki-kesasuolat-yhteensa})])
+        kesasuolatoteumat)
+      (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
+              :materiaali materiaali-kaikki-kesasuolat-yhteensa}
+             [{:kk nil :maara kokonaismaara}]]))))
 
-(defn suorita [db _user {:keys [alkupvm loppupvm
-                                urakka-id elinvoimakeskus-id
-                                urakoittain? urakkatyyppi urakkanumero? tyomaakokousraportti? koko-urakkaaika?] :as _parametrit}]
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id urakoittain? urakkatyyppi urakkanumero?
+                               tyomaakokousraportti? kasittelija koko-urakkaaika?] :as parametrit}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
-        ;koko-urakkaaika? true ;; Pakotetaan se testien ajaksi
-        #_#_alkupvm (pvm/->pvm "01.10.2021") ;; Pakotetaan se testien ajaksi
         urakoittain? (if urakka-id false urakoittain?)
         ;;tyomaakokousraportissa näytetään aina koko hoitovuoden tiedot, vaikka on kuukausi valittuna
         alkupvm (if tyomaakokousraportti? (first (pvm/paivamaaran-hoitokausi alkupvm)) alkupvm)
@@ -696,26 +701,26 @@
 
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Talvisuolat")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "talvisuola"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "talvisuola"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Formiaatit")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "formiaatti"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "formiaatti"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Kesäsuola")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "kesasuola"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "kesasuola"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Hiekoitushiekka")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "hiekoitushiekka"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "hiekoitushiekka"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Murskeet")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Paikkausmateriaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "paikkausmateriaali"))
                         (assoc :yksikot-soluissa? false)
-                        (assoc :nayta-suunnittelu? true)))
+                        (assoc :nayta-suunnittelu? true)) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
                         (assoc :yksikot-soluissa? true)
-                        (assoc :nayta-suunnittelu? false)))]))
+                        (assoc :nayta-suunnittelu? false)) kasittelija)]))
