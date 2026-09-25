@@ -76,6 +76,63 @@
               urakkatieto-fixture
               jarjestelma-fixture)
 
+(deftest hae-pot2-tieosuudet-paakohteen-rajoilla
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (u (str "UPDATE yllapitokohde
+               SET tr_numero = 6666,
+                   tr_alkuosa = 1,
+                   tr_alkuetaisyys = 200,
+                   tr_loppuosa = 1,
+                   tr_loppuetaisyys = 2200
+             WHERE id = " paallystyskohde-id))
+    (u "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = 6666")
+    (u "INSERT INTO tr_osoitteet
+          (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+        VALUES
+          (6666, 1, 11, 1, 0, 1500, 1),
+          (6666, 1, 11, 1, 1500, 2500, 1)")
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-pot2-tieosuudet
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :paallystyskohde-id paallystyskohde-id})]
+      (is (= [{:tr-numero 6666
+               :tr-ajorata 1
+               :tr-kaista 11
+               :tr-alkuosa 1
+               :tr-alkuetaisyys 200
+               :tr-loppuosa 1
+               :tr-loppuetaisyys 2200}]
+             (:tieosuudet vastaus))))))
+
+(deftest hae-pot2-tieosuudet-kayttajan-hakurajauksella
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (u "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = 6666")
+    (u "INSERT INTO tr_osoitteet
+          (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+        VALUES
+          (6666, 1, 11, 2, 100, 1500, 1),
+          (6666, 1, 11, 2, 1500, 2500, 1)")
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-pot2-tieosuudet
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :paallystyskohde-id paallystyskohde-id
+                                   :haku {:tr-numero 6666
+                                          :tr-alkuosa 2
+                                          :tr-loppuosa 2}})]
+      (is (= [{:tr-numero 6666
+               :tr-ajorata 1
+               :tr-kaista 11
+               :tr-alkuosa 2
+               :tr-alkuetaisyys 100
+               :tr-loppuosa 2
+               :tr-loppuetaisyys 2500}]
+             (:tieosuudet vastaus)))
+      (is (empty? (:kohteen-ulkopuolelle-jatkuvat vastaus))))))
+
 (def pot-testidata
   {:versio 1
    :perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
