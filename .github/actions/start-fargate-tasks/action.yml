@@ -3,9 +3,14 @@ description: 'Käynnistää sammutetut Harja servicen Fargate taskit (OIDC auten
 
 inputs:
   cluster:
-    description: "Harja app Fargate cluster name"
+    description: 'Harja app Fargate cluster name'
+    required: true
   service:
-    description: "Harja app Fargate service name"
+    description: 'Harja app Fargate service name'
+    required: true
+  check-stability:
+    description: 'Odota, että palvelu on vakaa käynnistämisen jälkeen'
+    default: 'true'
 
 runs:
   using: "composite"
@@ -15,6 +20,7 @@ runs:
         SHA: ${{ inputs.commit-sha }}
         CLUSTER_NAME: ${{ inputs.cluster }}
         SERVICE_NAME: ${{ inputs.service }}
+        CHECK_STABILITY: ${{ inputs.check-stability }}
         DESIRED_COUNT: "1"
         WAIT_TIME_SEC: "10"
 
@@ -27,9 +33,11 @@ runs:
         aws ecs update-service --cluster "${CLUSTER_NAME}" --service $AVAILABLE_SERVICE \
         --desired-count "${DESIRED_COUNT}" --region eu-west-1  1> /dev/null
         
-        echo "Waiting for services to be stable..."
-        aws ecs wait services-stable \
-          --cluster "${CLUSTER_NAME}" --services "${AVAILABLE_SERVICE}" --region eu-west-1
+        if [[ "$CHECK_STABILITY" == "true" ]]; then
+          echo "Waiting for services to be stable..."
+          aws ecs wait services-stable \
+            --cluster "${CLUSTER_NAME}" --services "${AVAILABLE_SERVICE}" --region eu-west-1
+        fi
         echo "Done."
       shell: bash
 
