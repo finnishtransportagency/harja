@@ -254,3 +254,30 @@ SELECT u.id AS urakka_id,
 -- "materiaali_*" nimeen
 SELECT id,nimi, yksikko, materiaalityyppi as tyyppi FROM materiaalikoodi
  WHERE materiaalityyppi != 'erityisalue';
+
+-- name: hae-talvisuolan-kokonaiskayttoraja-raportille
+-- MHU urakoille Haetaan urakka_tehtavamaarat tauluun tallennettu Liukkauden torjunta suolaamalla - tehtävälle suunniteltu määrä.
+-- Alueurakoille (tyyppi = 'hoito') haetaan suolasakko taulusta talvisuolaraja, jos se on käytössä.
+SELECT MIN(v.urakka) as urakka_id,
+       u.nimi as urakka_nimi,
+       SUM(v.laskettu_maara) as talvisuolaraja
+FROM urakka_tehtavamaara_yhteenveto v
+     JOIN urakka u ON v.urakka = u.id AND u.tyyppi = 'teiden-hoito'
+WHERE v.tehtava = (SELECT id
+                   FROM tehtava
+                   WHERE suunnitteluyksikko = 'kuivatonnia'
+                     AND suoritettavatehtava = 'suolaus')
+  AND v.hoitokauden_alkuvuosi in (:hoitokauden-alkuvuodet)
+  AND v.urakka IN (:urakka_idt)
+  AND true = (SELECT tallennettu FROM sopimuksen_tehtavamaarat_tallennettu WHERE urakka = u.id LIMIT 1)
+GROUP BY v.urakka, u.nimi
+UNION
+SELECT ss.urakka as urakka_id,
+       u.nimi as urakka_nimi,
+       ss.talvisuolaraja
+FROM suolasakko ss
+         JOIN urakka u ON ss.urakka = u.id AND u.tyyppi = 'hoito'
+WHERE ss.urakka in (:urakka_idt)
+  AND ss.hoitokauden_alkuvuosi IN (:hoitokauden-alkuvuodet)
+  AND ss.kaytossa IS TRUE
+GROUP BY ss.urakka, u.nimi, ss.talvisuolaraja;
