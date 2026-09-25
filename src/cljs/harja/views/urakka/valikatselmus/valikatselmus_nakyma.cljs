@@ -12,6 +12,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
             [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakan-tiedot]
             [harja.tiedot.urakka.kulut.yhteiset :as t-yhteiset]
             [harja.tiedot.urakka.valikatselmus.valikatselmus-tiedot :as valikatselmus-tiedot]
 
@@ -203,19 +204,17 @@
         (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))))))
 
 (defn valikatselmus* [e! app]
-  (komp/luo
-    (komp/lippu valikatselmus-tiedot/valikatselmus-nakymassa?)
-    (komp/piirretty (fn [this]
-                      (let [{:keys [valittu-kuukausi valittu-hoitokausi]} app
-                            valittu-urakka-id @nav/valittu-urakka-id
-                            ;; Varmista, että hoitokauden-alkuvuosi on urakan alkupäivän ja loppupäivän välissä
-                            hoitokauden-alkuvuosi (varmista-hoitokauden-alkuvuosi valittu-hoitokausi)]
-                        (e! (valikatselmus-tiedot/->HaeValikatselmuksenTiedot valittu-urakka-id hoitokauden-alkuvuosi)))))
-    (fn [e! app]
-      (let [hoitokauden-alkuvuosi (varmista-hoitokauden-alkuvuosi (:valittu-hoitokausi app))
-            app (assoc app :hoitokauden-alkuvuosi hoitokauden-alkuvuosi)
-            app (assoc app :valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
-                                                (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi)))])]
+  (let [valittu-hoitokausi (or @urakan-tiedot/valittu-hoitokausi
+                             (:valittu-hoitokausi app))
+        hoitokauden-alkuvuosi (varmista-hoitokauden-alkuvuosi valittu-hoitokausi)]
+    (komp/luo
+      (komp/lippu valikatselmus-tiedot/valikatselmus-nakymassa?)
+      (komp/piirretty (fn [this]
+                        (let [valittu-urakka-id @nav/valittu-urakka-id]
+                          (e! (valikatselmus-tiedot/->HaeValikatselmuksenTiedot
+                                valittu-urakka-id
+                                hoitokauden-alkuvuosi)))))
+      (fn [e! app]
         [:div {:id "vayla"}
          (if (:haku-kaynnissa? app)
            [:div.valikatselmus-haku
