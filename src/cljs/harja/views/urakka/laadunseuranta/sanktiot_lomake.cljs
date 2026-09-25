@@ -94,7 +94,6 @@
         mahdolliset-sanktiolajit (if (or mhu25? (>= hoitokauden-alkuvuosi 2026))
                                    (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
                                    @tiedot/valitun-urakan-sanktiolajit)
-        kaikki-sanktiotyypit @tiedot/sanktiotyypit
         sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
@@ -106,21 +105,26 @@
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
         ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
-        mhu26-a? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                   (= 2026 urakan-alkuvuosi)
-                   (= :A (:laji @muokattu)))
-        tyyppi-valinnat (if mhu26-a?
-                          (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
-                          (vec (sanktio-domain/sanktiolaji->sanktiotyypit
-                                 (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm)))
-        aktiivinen-tyyppi (if mhu26-a?
-                            (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
-                            (:tyyppi @muokattu))
-        automaattinen-summa (when mhu26-a?
+        tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
+        aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
+        kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                 aktiivinen-tyyppi)
+        automaattinen-summa (when kiintea-profiilisumma?
                               (tiedot/sanktiotyypin-automaattinen-summa aktiivinen-tyyppi))
+        omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
+        omailmoitettu (boolean (and omailmoitus-sallittu? (:omailmoitettu @muokattu)))
+        normaalimaara (if kiintea-profiilisumma?
+                        automaattinen-summa
+                        (:normaalimaara @muokattu))
+        lopullinen-maara (when normaalimaara
+                           (if omailmoitettu
+                             (/ normaalimaara 2)
+                             normaalimaara))
         tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
-                                mhu26-a?
-                                (assoc :summa automaattinen-summa))
+                                kiintea-profiilisumma?
+                                (assoc :normaalimaara normaalimaara
+                                  :omailmoitettu omailmoitettu
+                                  :summa lopullinen-maara))
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
@@ -249,7 +253,7 @@
                                   ;; Muussa tapauksessa, ei tehdä muutoksia
                                   :else rivi)]
                        (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
-                         (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
+                         (assoc rivi :summa nil :omailmoitettu false :toimenpideinstanssi nil :indeksi nil)
                          rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
             :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
@@ -273,24 +277,34 @@
               ::lomake/col-luokka "col-xs-12"
               :nimi :tyyppi
               :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                       (if (<= urakan-alkuvuosi 2024)
-                         (let [kohdistukset (tiedot/valittavat-kulun-kohdistukset
-                                              @tiedot-urakka/urakan-toimenpideinstanssit
-                                              (:nimi tyyppi))
-                               tpi (cond
-                                     ;; Jos toimenpidekoodi löytyy, käytä sitä
-                                     tpk (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
-                                     ;; Jos vain yksi vaihtoehto, esivalitse se
-                                     (= 1 (count kohdistukset)) (:tpi_id (first kohdistukset))
-                                     ;; Muuten säilytä nykyinen arvo
-                                     :else (:toimenpideinstanssi sanktio))]
-                           (-> sanktio
-                             (assoc :tyyppi tyyppi)
-                             (assoc :toimenpideinstanssi tpi)
-                             (assoc :tpi_id tpi)))
-                         (cond-> (assoc sanktio :tyyppi tyyppi)
-                           mhu26-a?
-                           (assoc :summa (tiedot/sanktiotyypin-automaattinen-summa tyyppi)))))
+                       (let [sanktio (if (<= urakan-alkuvuosi 2024)
+                                       (let [kohdistukset (tiedot/valittavat-kulun-kohdistukset
+                                                            @tiedot-urakka/urakan-toimenpideinstanssit
+                                                            (:nimi tyyppi))
+                                             tpi (cond
+                                                   ;; Jos toimenpidekoodi löytyy, käytä sitä
+                                                   tpk (:tpi_id (tiedot/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
+                                                   ;; Jos vain yksi vaihtoehto, esivalitse se
+                                                   (= 1 (count kohdistukset)) (:tpi_id (first kohdistukset))
+                                                   ;; Muuten säilytä nykyinen arvo
+                                                   :else (:toimenpideinstanssi sanktio))]
+                                         (assoc sanktio :tyyppi tyyppi :toimenpideinstanssi tpi :tpi_id tpi))
+                                       (assoc sanktio :tyyppi tyyppi))
+                             kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                                      tyyppi)
+                             automaattinen-summa (when kiintea-profiilisumma?
+                                                   (tiedot/sanktiotyypin-automaattinen-summa tyyppi))
+                             omailmoitettu (boolean (and (:voi-puolittaa-omailmoituksella tyyppi)
+                                                      (:omailmoitettu sanktio)))]
+                         (cond-> (assoc sanktio :omailmoitettu omailmoitettu)
+                           kiintea-profiilisumma?
+                           (assoc :normaalimaara automaattinen-summa
+                             :summa (when automaattinen-summa
+                                      (if omailmoitettu
+                                        (/ automaattinen-summa 2)
+                                        automaattinen-summa)))
+                           (not kiintea-profiilisumma?)
+                           (assoc :normaalimaara nil :summa nil))))
               :valinta-arvo identity
               :aseta-vaikka-sama? true
               :valinnat tyyppi-valinnat
@@ -426,17 +440,26 @@
          (apply lomake/ryhma {:rivi? true}
            (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
                              {:otsikko "Sanktion suuruus" :nimi :summa :tyyppi :euro
-                              :muokattava? (constantly (not mhu26-a?))
+                              :muokattava? (constantly (not kiintea-profiilisumma?))
                               :vaadi-positiivinen-numero? true
                               ::lomake/col-luokka "col-xs-4"
-                              :hae #(if mhu26-a?
-                                      (when-let [summa automaattinen-summa]
+                              :hae #(if kiintea-profiilisumma?
+                                      (when-let [summa lopullinen-maara]
                                         (Math/abs summa))
                                       (when (:summa %)
                                         (Math/abs (:summa %))))
                               :pakollinen? true :uusi-rivi? true
                               :validoi [[:ei-tyhja "Anna summa"]
                                         [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+
+                           (when omailmoitus-sallittu?
+                             {:otsikko "Urakoitsijan omailmoitus"
+                              :nimi :omailmoitettu
+                              :tyyppi :checkbox
+                              :uusi-rivi? true
+                              :hae :omailmoitettu
+                              :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
+                              :selite "Urakoitsija ilmoitti itse laadunalituksesta tai tehtävän laiminlyönnistä"})
 
                            ;; MHU21-> urakoille ei näytetä indeksiä
                            (when (and (<= urakan-alkuvuosi 2020) (sanktio-domain/muu-kuin-muistutus? @muokattu))

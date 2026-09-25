@@ -111,14 +111,12 @@
   (domain-sanktio/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
 
 (defn sanktiotyypin-automaattinen-summa
-  [{:keys [summamaaritykset]}]
-  (some (fn [{:keys [maaritystapa summa-euroina]}]
-          (when (and (= :automaattinen maaritystapa)
-                  (number? summa-euroina)
-                  (pos? summa-euroina)
-                  (js/isFinite summa-euroina))
-            summa-euroina))
-    summamaaritykset))
+  [sanktiotyyppi]
+  (domain-sanktio/sanktiotyypin-kiintea-automaattinen-summa sanktiotyyppi))
+
+(defn sanktiotyypilla-kiintea-automaattinen-summa?
+  [sanktiotyyppi]
+  (domain-sanktio/sanktiotyypilla-kiintea-automaattinen-summamaaritys? sanktiotyyppi))
 
 (def valitun-urakan-sanktiolajit
   "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."

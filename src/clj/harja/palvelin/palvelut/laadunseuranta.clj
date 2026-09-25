@@ -239,7 +239,8 @@
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava] :as sanktio}
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava
+                   omailmoitettu] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -271,25 +272,29 @@
                         :soveltuvuuskonteksti soveltuvuuskonteksti
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
-        automaattinen-summa-raakana (some->> profiilirivi
-                                      :profiilirivi
-                                      :summamaaritykset
-                                      (filter #(and (= :automaattinen (:maaritystapa %))
-                                                 (number? (:summa-euroina %))
-                                                 (pos? (:summa-euroina %))
-                                                 (Double/isFinite (double (:summa-euroina %)))))
-                                      first
-                                      :summa-euroina)
-        summa (if (and (= :A laji)
-                    (= "teiden-hoito" (:tyyppi urakan-tiedot))
-                    (= 2026 (-> urakan-tiedot :alkupvm pvm/vuosi)))
-                (if (and (number? automaattinen-summa-raakana)
-                      (pos? automaattinen-summa-raakana)
-                      (Double/isFinite (double automaattinen-summa-raakana)))
-                  (double automaattinen-summa-raakana)
-                  (throw (IllegalArgumentException.
-                           "MHU26 A-sanktion automaattinen summamääritys puuttuu tai on epäkelpo.")))
-                pyynto-summa)
+        profiilin-summamaaritykset (:profiilirivi profiilirivi)
+        kiintea-automaattinen-summa? (sanktiot-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                       profiilin-summamaaritykset)
+        automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
+                                      profiilin-summamaaritykset)
+        normaalimaara (if kiintea-automaattinen-summa?
+                        (if (and (number? automaattinen-summa-raakana)
+                              (pos? automaattinen-summa-raakana)
+                              (Double/isFinite (double automaattinen-summa-raakana)))
+                          (double automaattinen-summa-raakana)
+                          (throw (IllegalArgumentException.
+                                   (str "Sanktiolajin " (name laji)
+                                     " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
+                        pyynto-summa)
+        omailmoitettu (if (nil? omailmoitettu) false omailmoitettu)
+        _ (when-not (boolean? omailmoitettu)
+            (throw (IllegalArgumentException.
+                     "Omailmoitusvalinnan pitää olla totuusarvo.")))
+        _ (when (and omailmoitettu
+                  (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
+            (throw (IllegalArgumentException.
+                     "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
+        summa (if omailmoitettu (/ normaalimaara 2) normaalimaara)
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -306,6 +311,8 @@
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
+                :normaalimaara normaalimaara
+                :omailmoitettu omailmoitettu
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)
                            (- (Math/abs summa))
