@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio
-  (:require [clojure.string :as str]
+  (:require [clojure.java.jdbc :as jdbc]
+            [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.bonus-konfiguraatio :as q]
@@ -247,6 +248,7 @@
                :toimenpide-t2-koodi t2-koodi
                :toimenpideinstanssi-teksti (if (= :kaikki rajauksen-tyyppi) "Kaikki" t2-koodi)
                :urakkarajausten-maara (get-in rivi [:profiilirivi :urakkarajausten-maara])
+               :urakka-idt (get-in rivi [:profiilirivi :urakka-idt])
                :urakat (->> (get-in rivi [:profiilirivi :urakat])
                          sort
                          vec)
@@ -290,6 +292,75 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
   (let [profiili (-> (hae-bonus-profiili-admin-tiedot db bonus-profiili-id)
                    taydenna-bonus-profiilin-yhteenveto)
-        rivit (q/hae-bonus-profiilin-rivit-admin db {:bonus_profiili_id bonus-profiili-id})]
+        rivit (q/hae-bonus-profiilin-rivit-admin db {:bonus_profiili_id bonus-profiili-id})
+        urakat (->> (q/hae-bonus-profiilin-urakat-admin
+                      db
+                      {:urakkatyyppi (name (:urakkatyyppi profiili))})
+                  (mapv #(update % :tyyppi keyword)))]
     {:profiili profiili
-     :lajit (muodosta-bonus-lajit-admin rivit)}))
+     :lajit (muodosta-bonus-lajit-admin rivit)
+     :urakat urakat}))
+
+(defn- vaadi-positiivinen-kokonaisluku!
+  [nimi arvo]
+  (when-not (and (integer? arvo) (pos? arvo))
+    (throw (IllegalArgumentException.
+             (str nimi " pitää olla positiivinen kokonaisluku."))))
+  arvo)
+
+(defn- vaadi-bonus-profiilirivin-urakkaliitoksen-konteksti
+  [db {:keys [bonus-profiili-id profiilirivi-id urakka-id]}]
+  (let [konteksti (first (q/hae-bonus-profiilirivin-urakkaliitoksen-konteksti
+                           db
+                           {:bonus_profiili_id bonus-profiili-id
+                            :profiilirivi_id profiilirivi-id
+                            :urakka_id urakka-id}))]
+    (when-not konteksti
+      (throw (IllegalArgumentException.
+               "Bonusprofiilin, profiilirivin ja urakan yhdistelmä ei ole kelvollinen.")))
+    (when-not (= (:bonus_profiili_urakkatyyppi konteksti)
+                 (:urakka_tyyppi konteksti))
+      (throw (IllegalArgumentException.
+               "Urakan tyyppi ei vastaa bonusprofiilin tyyppiä.")))
+    konteksti))
+
+(defn lisaa-bonus-profiilirivin-urakkarajaus
+  [db user {:keys [bonus-profiili-id profiilirivi-id urakka-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
+  (vaadi-positiivinen-kokonaisluku! "Bonusprofiilin id" bonus-profiili-id)
+  (vaadi-positiivinen-kokonaisluku! "Profiilirivin id" profiilirivi-id)
+  (vaadi-positiivinen-kokonaisluku! "Urakan id" urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (vaadi-bonus-profiilirivin-urakkaliitoksen-konteksti
+      db
+      {:bonus-profiili-id bonus-profiili-id
+       :profiilirivi-id profiilirivi-id
+       :urakka-id urakka-id})
+    (let [liitos (q/lisaa-bonus-profiilirivin-urakkaliitos<!
+                   db
+                   {:profiilirivi_id profiilirivi-id
+                    :urakka_id urakka-id
+                    :kayttaja_id (:id user)})]
+      {:profiilirivi-id profiilirivi-id
+       :urakka-id urakka-id
+       :liitos-lisatty? (some? liitos)})))
+
+(defn poista-bonus-profiilirivin-urakkarajaus
+  [db user {:keys [bonus-profiili-id profiilirivi-id urakka-id]}]
+  (oikeudet/vaadi-kirjoitusoikeus oikeudet/hallinta-laadunseuranta-profiilit user)
+  (vaadi-positiivinen-kokonaisluku! "Bonusprofiilin id" bonus-profiili-id)
+  (vaadi-positiivinen-kokonaisluku! "Profiilirivin id" profiilirivi-id)
+  (vaadi-positiivinen-kokonaisluku! "Urakan id" urakka-id)
+  (jdbc/with-db-transaction [db db]
+    (vaadi-bonus-profiilirivin-urakkaliitoksen-konteksti
+      db
+      {:bonus-profiili-id bonus-profiili-id
+       :profiilirivi-id profiilirivi-id
+       :urakka-id urakka-id})
+    (let [liitos (q/poista-bonus-profiilirivin-urakkaliitos<!
+                  db
+                  {:profiilirivi_id profiilirivi-id
+                   :urakka_id urakka-id})]
+      {:profiilirivi-id profiilirivi-id
+       :urakka-id urakka-id
+       :liitos-poistettu? (some? liitos)})))
