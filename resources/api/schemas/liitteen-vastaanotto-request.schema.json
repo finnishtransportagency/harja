@@ -1,0 +1,81 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/liitteen-vastaanotto-request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "liite-taydennys": {
+      "id": "urn:harja/liite-taydennys",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "kategoria": {
+          "id": "urn:harja/liite/kategoria",
+          "type": "string",
+          "enum": [
+            "siltatarkastuskohde",
+            "tarkastus",
+            "tarkastushavainto",
+            "laatupoikkeama",
+            "turvallisuuspoikkeama"
+          ],
+          "description": "Liitteen kohdeluokka. Palvelin hyväksyy vain tuetut kategoriat.",
+          "required": true
+        },
+        "kategoria-tunniste": {
+          "id": "urn:harja/liite-taydennys/tunniste",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+          "required": true
+          },
+          "siltatarkastuskohde": {
+            "id": "urn:harja/liite-taydennys/siltatarkastuskohde",
+            "type": "string",
+            "enum": [
+              "maatukienSiisteysJaKunto",
+              "valitukienSiisteysJaKunto",
+              "laakeritasojenSiisteysJaKunto",
+              "kansilaatta",
+              "paallysteenKunto",
+              "reunapalkinSiisteysJaKunto",
+              "reunapalkinLiikuntasauma",
+              "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto",
+              "sillanpaidenSaumat",
+              "sillanJaPenkereenRaja",
+              "kaiteidenJaSuojaverkkojenVauriot",
+              "liikuntasaumalaitteidenSiisteysJaKunto",
+              "laakerit",
+              "syoksytorvet",
+              "tippuputket",
+              "kosketussuojatJaNiidenKiinnitykset",
+              "valaistuslaitteet",
+              "johdotJaKaapelit",
+              "liikennemerkit",
+              "kuivatuslaitteidenSiisteysJaKunto",
+              "etuluiskienSiisteysJaKunto",
+              "keilojenSiisteysJaKunto",
+              "tieluiskienSiisteysJaKunto",
+              "portaidenSiisteysJaKunto"
+            ],
+            "description": "lisää tänne jotain",
+            "required": false
+          },
+        "liite": {
+          "id": "urn:harja/liite-taydennys/liite",
+          "type": "object",
+          "$ref": "file:resources/api/schemas/entities/liite.schema.json",
+          "required": true
+        }
+      }
+    }
+  }
+}

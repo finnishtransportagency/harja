@@ -8,6 +8,9 @@
 (def +kirjausvastaus+ "api/schemas/kirjaus-response.schema.json")
 (def kirjausvastaus (tee-validaattori "api/schemas/kirjaus-response.schema.json"))
 
+(def +liitteen-vastaanotto+ "api/schemas/liitteen-vastaanotto-request.schema.json")
+(def liitteen-vastaanotto (tee-validaattori +liitteen-vastaanotto+))
+
 (def +urakan-haku-vastaus+ "api/schemas/urakan-haku-response.schema.json")
 (def urakan-haku-vastaus (tee-validaattori "api/schemas/urakan-haku-response.schema.json"))
 (def +urakoiden-haku-vastaus+ "api/schemas/urakoiden-haku-response.schema.json")
