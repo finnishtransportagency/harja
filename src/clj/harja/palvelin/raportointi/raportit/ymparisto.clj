@@ -35,13 +35,6 @@
    :yht-rivi true
    :tyyppi "kesasuola"})
 
-(def materiaali-kaikki-heikoitushiekat-yhteensa
-  {:id 999
-   :nimi "Hiekoitushiekka yhteensä"
-   :yksikko "t"
-   :yht-rivi true
-   :tyyppi "hiekoitushiekka"})
-
 (def materiaali-kaikki-murskeet-yhteensa
   {:id 999
    :nimi "Murskeet yhteensä"
@@ -97,13 +90,6 @@
                      :urakkatyyppi (some-> urakkatyyppi name)
                      :elinvoimakeskus elinvoimakeskus-id
                      :urakoittain? urakoittain?}))
-
-(defn- materiaalin-nimi [nimi]
-  (if-not (= "Talvisuola" nimi)
-    nimi
-    ;; Osa käyttäjistä on sekoittanut Talvisuola nimen tarkoittavan kaikkea käytettyä
-    ;; talvisuolaa. Tehdään siihen ero kertomalla että tämä on rakeista NaCl:ia
-    "Talvisuola, NaCl"))
 
 (defn- materiaalin-nimi-ja-selite [nimi]
   (case nimi
