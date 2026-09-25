@@ -45,7 +45,7 @@
 ;; Meillä on kaksi vastaantottotarkastusraporttia, joista toinen on päällystysurakoille ja toinen MHU-urakoille.
 ;; Testataan, että ne ovat rekisteröityinä eri urakkatyyppien alle ja että ne eroavat toisistaan.
 (deftest vastaanottotarkastusraportit-ovat-erilliset
-  (let [paallystys (get raportit/raportit-nimen-mukaan :vastaanottotarkastusraportti)
+  (let [paallystys (get raportit/raportit-nimen-mukaan :vastaanottotarkastusraportti-paallystys)
         mhu (get raportit/raportit-nimen-mukaan :vastaanottotarkastusraportti-mhu)]
     (testing "molemmat raportit ovat rekisteröityinä"
       (is (some? paallystys))
@@ -176,7 +176,7 @@
   (let [raportti (muodosta-testiraportti true)
         lupaustaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Lupaukset")]
     (is (= [:taulukko
-            {:otsikko "Lupaukset" :sheet-nimi "Lupaukset" :samalle-sheetille? false :tyhja nil}
+            {:otsikko "Lupaukset" :sheet-nimi "Lupaukset" :samalle-sheetille? false :tyhja nil :viimeinen-rivi-yhteenveto? true}
             [{:otsikko "Hoitovuosi" :leveys 5}
              {:otsikko "Tarjouksen lupauspisteet" :leveys 5}
              {:otsikko "Toteutuneet lupauspisteet" :leveys 5}
@@ -185,15 +185,23 @@
              ["2026-2027" 80 75 150M]
              ["2027-2028" 80 75 150M]
              ["2028-2029" 80 75 150M]
-             ["2029-2030" 80 75 150M]]]
+             ["2029-2030" 80 75 150M]
+             {:korosta-hennosti? true
+              :lihavoi? true
+              :rivi ["Yhteensä"
+                     ""
+                     ""
+                     750M]}]]
           lupaustaulukko))))
 
 (deftest raportti-ei-sisalla-toteutuneita-lupauspisteita-ilman-valikatselmusta
   (let [raportti (muodosta-testiraportti false)
         lupaustaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Lupaukset")
         lupaus-rivit (nth lupaustaulukko 3)]
+    (is (= ["2025-2026" "2026-2027" "2027-2028" "2028-2029" "2029-2030"]
+          (mapv #(nth % 0) (take 5 lupaus-rivit))))
     (is (= [nil nil nil nil nil]
-          (mapv #(nth % 2) lupaus-rivit)))))
+          (mapv #(nth % 2) (take 5 lupaus-rivit))))))
 
 (deftest raportti-sisaltaa-talvisuolan-kokonaiskayttomaaran
   (let [raportti (muodosta-testiraportti false)
@@ -260,7 +268,7 @@
         db (:db jarjestelma)
         hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
         hoitovuodet (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet)
-        odotetut-rivit [["2025-2026" 110M]
+        odotetut-rivit [["2025-2026" -3290M]
                         ["2026-2027" -157.5M]
                         ["2027-2028" 0]
                         ["2028-2029" 8.25M]
@@ -314,7 +322,7 @@
         (testing "jokainen hoitovuosi käyttää oman vuoden kaikkia lähdearvoja"
           (is (= odotetut-rivit (vec (butlast rivit)))))
         (testing "yhteensä-rivi summaa hoitovuosien tulokset"
-          (is (= ["Yhteensä" -46.75M]
+          (is (= ["Yhteensä" -3446.75M]
                 (get-in (last rivit) [:rivi]))))
         (testing "taulukon metatiedot säilyvät"
           (is (= "Harjaan kirjatut tavoitehinnan muutokset"

@@ -132,7 +132,7 @@
 (defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi
                                                     kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
                                                     jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa
-                                                    arvonvahennykset-yht]
+                                                    thv-arvonvahennykset-yht]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
 
@@ -146,7 +146,7 @@
 
           tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0) (or pysyvat-muutokset 0) (or muutostyo-muutokset 0)
                                             (or jjh-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0)
-                                            (or arvonvahennykset-yht 0))
+                                            (or thv-arvonvahennykset-yht 0))
           ;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
           tavoitehinnan-pysyva-muutospaatos (-> tavoitehinnan-pysyva-muutospaatos
@@ -157,7 +157,7 @@
                                               (assoc :toteumiin_perustuvat_muutokset (+ (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0)))
                                               (assoc :tehtava_ja_maaratoteumamuutokset (or tehtava-ja-maaramuutos-summa 0))
                                               (assoc :rahavarausten_muutokset (or rahavarausmuutos-summa 0))
-                                              (assoc :arvonvahennysten_muutokset (or arvonvahennykset-yht 0))
+                                              (assoc :arvonvahennysten_muutokset (or thv-arvonvahennykset-yht 0))
                                               (assoc :tavoitehinnan_muutokset_yhteensa (or tavoitehinna-muutokset-yhteensa 0))
                                               (assoc :hoitovuosi-kesken? (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi))))
                                               (assoc :virheet (when-not (empty? virheet) virheet)))
@@ -463,7 +463,7 @@
 
 ;; Hoitovuoden lopun tavoite- ja kattohinta
 (defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi paatokset tavoitehinta-indeksikorjattu
-                                                 tavoitehinnan-muutokset taman-vuoden-muutokset-summa hoitokauden-lopun-indeksikorjaus
+                                                 tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-lopun-indeksikorjaus
                                                  hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus
                                                  tietokanta-paatokset mahdolliset-paatokset tavoitehinta-vahvistettu? urakan-parametrit]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
@@ -502,14 +502,21 @@
                     (conj "Hoitovuosi on kesken."))
 
           hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") paatokset))
-          hintamuutos (if tavoitehinnan-muutokset (apply + (map #(or (:summa %) 0) tavoitehinnan-muutokset)) 0)
-          ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset
-          hintamuutos (if (>= 2024 urakan-alkuvuosi) hintamuutos taman-vuoden-muutokset-summa)
+          ;; Tavoitehinnan oikaisut on -24 asti käytössä.
+          hintamuutos-oikaisut (if tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut)) 0)
+          ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset sekä arvonvähennykset
+          hintamuutos (if (<= urakan-alkuvuosi 2024)
+                        ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset
+                        (if (>= 2026  valittu-hoitovuosi)
+                          (+ hintamuutos-oikaisut thv-arvonvahennykset-yht)
+                          hintamuutos-oikaisut)
+                        (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht))
+          hoitovuoden-lopun-tavoitehinta (+ (or tavoitehinta-indeksikorjattu 0) (or hintamuutos 0) (or hoitokauden-lopun-indeksikorjaus 0))
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
                         (assoc :nimi "Hoitovuoden lopun tavoite- ja kattohinta") ;; Nimi löytyy, jos päätösten alkuvuosia ei kovakoodaten vaihdeta testitarkoituksissa
                         (assoc :tavoitehinta_ennen tavoitehinta-indeksikorjattu)
-                        (assoc :tavoitehinta_jalkeen (+ (or tavoitehinta-indeksikorjattu 0) (or hintamuutos 0) (or hoitokauden-lopun-indeksikorjaus 0)))
+                        (assoc :tavoitehinta_jalkeen hoitovuoden-lopun-tavoitehinta)
                         (assoc :tavoitehinnan_muutokset hintamuutos)
                         (assoc :hoitokauden_lopun_indeksikorjaus (or hoitokauden-lopun-indeksikorjaus 0))
                         (assoc :kattohinta hoitovuoden-lopun-kattohinta)
