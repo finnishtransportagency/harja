@@ -19,6 +19,14 @@ on:
           - test-qa3
           - test-demo
           - test-koulutus
+      build-mode:
+        description: "Valitse build-mode"
+        required: true
+        type: choice
+        options:
+          - preview
+          - production
+        default: preview
       keep-running:
         description: "Pidä ympäristö käynnissä yön yli?"
         required: true
@@ -30,7 +38,7 @@ on:
         type: boolean
         default: false
 
-run-name: '[Test-envs] Build and deploy: ${{ inputs.environment }}'
+run-name: '[Test-envs] Build and deploy: ${{ inputs.environment }} (${{ inputs.build-mode }})'
 
 concurrency:
   group: ${{ inputs.environment }}-deploy
@@ -127,7 +135,9 @@ jobs:
       - name: '[Test-envs] Build Harja Uberjar'
         uses: ./.github/actions/build-harja-app
         with:
+          build-mode: ${{ inputs.build-mode }}
           build-laadunseuranta: 'false'
+          build-uberjar: 'true'
 
       # Deploy-job ajetaan eri runnerissa, joten buildattu uberjar pitää toiselle jobille artifactina
       - name: '[Test-envs] Upload build artifact'

@@ -1,0 +1,9 @@
+{:main harja.asiakas.main
+ :optimizations :none
+ :output-to "resources/public/js/harja.js"
+ :output-dir "resources/public/js/out"
+ :asset-path "js/out"
+ :source-map true
+ :closure-output-charset "US-ASCII"
+ :recompile-dependents true
+ :parallel-build true}

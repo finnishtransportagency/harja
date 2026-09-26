@@ -10,6 +10,9 @@ inputs:
   build-front-end:
     description: 'Build front-end'
     default: 'true'
+  build-mode:
+    description: 'Build-asetus: preview (nopea, ei optimoitu) tai production (vastaa tuotantoa)'
+    default: 'production'
   build-laadunseuranta:
     description: 'Build laadunseuranta'
     default: 'true'
@@ -45,16 +48,27 @@ runs:
 
     - name: Build front-end
       if: ${{ inputs.build-front-end == 'true' }}
+      env:
+        BUILD_MODE: ${{ inputs.build-mode }}
       run: |
-        echo "Building frontend"
+        case "$BUILD_MODE" in
+          preview) FRONTEND_ALIAS=compile-preview ;;
+          production) FRONTEND_ALIAS=compile-prod ;;
+          *)
+            echo "Virhe: tuntematon build-mode '$BUILD_MODE' (sallitut arvot: preview, production)." >&2
+            exit 1
+            ;;
+        esac
+
+        echo "Käännetään frontend ($BUILD_MODE)..."
         
         echo "Building less styles..."
         npx lessc dev-resources/less/application.less resources/public/css/application.css
         npx lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css
         echo "Done."
         
-        echo "Building cljs (with lein default profiles + ci + prod-cljs)..."
-        lein with-profile +ci,+prod-cljs compile-prod
+        echo "Käännetään ClojureScript (lein +ci,+prod-cljs, $FRONTEND_ALIAS)..."
+        lein with-profile +ci,+prod-cljs "$FRONTEND_ALIAS"
         echo "Done."
       shell: bash
 
