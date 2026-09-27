@@ -1,12 +1,9 @@
 # HUOM: Tämä Action vaatii, että jobissa on Harjan testitietokanta ajossa ennen kuin tämän actionin ajaa.
 
 name: 'Build Harja'
-description: 'Buildaa Harjan osat ja paketoi ne Uberjarriin. Huom: Jobissa täytyy testitietokannan olla ajossa!'
+description: 'Buildaa Harjan osat ja paketoi ne Uberjarriin. Uberjar-paketoinnin yhteydessä käännettään myös backend. Huom: Jobissa täytyy testitietokannan olla ajossa!'
 
 inputs:
-  build-back-end:
-    description: 'Build back-end'
-    default: 'true'
   build-front-end:
     description: 'Build front-end'
     default: 'true'
@@ -35,15 +32,6 @@ runs:
         echo "Leiningen projektin :jvm-opts (+ci profiililla):"
         lein with-profile +ci pprint :jvm-opts
         echo "::endgroup::"
-      shell: bash
-
-    - name: Build back-end
-      if: ${{ inputs.build-back-end == 'true' }}
-      # CI-profiili (profiles.clj :ci) yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
-      # LEIN_JVM_OPTS ei vaikuta projekti-JVM:iin koska project.clj:ssä on :jvm-opts ^:replace.
-      run: |
-        echo "Building backend"
-        lein with-profile +ci do compile
       shell: bash
 
     - name: Build front-end
@@ -81,6 +69,9 @@ runs:
 
     - name: Build uberjar
       if: ${{ inputs.build-uberjar == 'true' }}
+      # Uberjar-profiilin :aot :all kääntää backendin tässä vaiheessa.
+      # CI-profiili (profiles.clj :ci) yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
+      # LEIN_JVM_OPTS ei vaikuta projekti-JVM:iin koska project.clj:ssä on :jvm-opts ^:replace.
       run: |
         echo "Building uberjar"
         lein with-profile +ci uberjar
