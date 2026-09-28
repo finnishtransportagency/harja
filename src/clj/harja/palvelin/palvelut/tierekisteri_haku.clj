@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.tierekisteri-haku
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-palvelut poista-palvelut]]
             [clojure.spec.alpha :as s]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tieverkko :as tv]
@@ -164,6 +164,34 @@
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
+(s/def ::tr-numero nat-int?)
+(s/def ::tr-alkuosa nat-int?)
+(s/def ::tr-alkuetaisyys nat-int?)
+(s/def ::tr-loppuosa nat-int?)
+(s/def ::tr-loppuetaisyys nat-int?)
+(s/def ::hae-tr-tieosuudet-kysely
+  (s/and (s/keys :req-un [::tr-numero]
+                 :opt-un [::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys])
+         (fn [params]
+           (and (or (not (contains? params :tr-alkuetaisyys)) (contains? params :tr-alkuosa))
+                (or (not (contains? params :tr-loppuetaisyys)) (contains? params :tr-loppuosa))
+                (let [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}
+                      (merge {:tr-alkuosa 0 :tr-alkuetaisyys 0
+                              :tr-loppuosa Integer/MAX_VALUE :tr-loppuetaisyys Integer/MAX_VALUE}
+                             params)]
+                  (neg? (compare [tr-alkuosa tr-alkuetaisyys]
+                                 [tr-loppuosa tr-loppuetaisyys])))))))
+
+(defn hae-tr-tieosuudet [db params]
+  (let [rajat (merge {:tr-alkuosa 0 :tr-alkuetaisyys 0
+                      :tr-loppuosa Integer/MAX_VALUE :tr-loppuetaisyys Integer/MAX_VALUE}
+                     params)]
+    (->> (tv/hae-tieosuudet db rajat)
+         :tieosuudet
+         (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
+                        :tr-loppuosa :tr-loppuetaisyys))
+         vec)))
+
 (defn hae-tienumerot-kartalle [db params]
   (tv/hae-tiet-alueella db params))
 
@@ -213,6 +241,11 @@
       :hae-tienumerot-kartalle (fn [_ params]
                                  (oikeudet/ei-oikeustarkistusta!)
                                  (hae-tienumerot-kartalle db params)))
+    (julkaise-palvelu http-palvelin :hae-tr-tieosuudet
+                     (fn [_ params]
+                       (oikeudet/ei-oikeustarkistusta!)
+                       (hae-tr-tieosuudet db params))
+                     {:kysely-spec ::hae-tr-tieosuudet-kysely})
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
@@ -222,6 +255,7 @@
       :hae-osien-pituudet
       :hae-tr-pituudet
       :hae-tr-tiedot
+      :hae-tr-tieosuudet
       :hae-tr-osan-ajoradat
       :hae-tr-osan-ajoratojen-geometriat
       :hae-tr-gps-koordinaateilla
