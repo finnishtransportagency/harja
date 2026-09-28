@@ -185,3 +185,54 @@
       (is (str/includes? (:body vastaus) "Loppuaika väärässä muodossa")))))
 
 
+
+(deftest hae-ilmoitukset-urakka-idlla-onnistuu
+  (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
+        huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
+        ilmoitusid (rand-int 92333123)
+        db-timestamp (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 1)
+        _ (luo-ilmoitus ilmoitusid 4 db-timestamp)
+        _ (anna-lukuoikeus kayttaja)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset/haku/" kuukausi-sitten "/" huomenna)]
+                  kayttaja portti)]
+    (is (= 200 (:status vastaus)))
+    (is (str/includes? (:body vastaus) (str ilmoitusid)))))
+
+(deftest hae-ilmoitukset-urakka-idlla-onnistuu-ilman-loppuaikaa
+  (let [alkuaika "2022-01-01T00:00:00+03"
+        _ (anna-lukuoikeus kayttaja)
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset/haku/" alkuaika)]
+                  kayttaja portti)]
+    (is (= 200 (:status vastaus)))))
+
+(deftest hae-ilmoitukset-urakka-idlla-epaonnistuu-tuntematon-urakka
+  (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/999999/ilmoitukset/haku/" alkuaika "/" loppuaika)]
+                  kayttaja portti)]
+    (is (= 400 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "tuntematon-urakka"))))
+
+(deftest hae-ilmoitukset-urakka-idlla-epaonnistuu-ei-kayttoikeutta
+  (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+        vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/5/ilmoitukset/haku/" alkuaika "/" loppuaika)]
+                  kayttaja portti)]
+    (is (= 400 (:status vastaus)))
+    (is (str/includes? (:body vastaus) "kayttajalla-puutteelliset-oikeudet"))))
+
+(deftest hae-ilmoitukset-urakka-idlla-epaonnistuu-vaarat-hakuparametrit
+  (testing "Alkuaika on väärässä muodossa"
+    (let [alkuaika (.format (SimpleDateFormat. "YY-MM-d'T'HH:mm:ssX") (Date.))
+          loppuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset/haku/" alkuaika "/" loppuaika)]
+                    kayttaja portti)]
+      (is (= 400 (:status vastaus)))
+      (is (str/includes? (:body vastaus) "puutteelliset-parametrit"))))
+  (testing "Loppuaika on väärässä muodossa"
+    (let [alkuaika (.format (SimpleDateFormat. "yyyy-MM-dd'T'HH:mm:ssX") (Date.))
+          loppuaika (.format (SimpleDateFormat. "-MM-dd'T'HH:mm:ssX") (Date.))
+          vastaus (api-tyokalut/get-kutsu [(str "/api/urakat/4/ilmoitukset/haku/" alkuaika "/" loppuaika)]
+                    kayttaja portti)]
+      (is (= 400 (:status vastaus)))
+      (is (str/includes? (:body vastaus) "Loppuaika väärässä muodossa")))))
