@@ -54,7 +54,7 @@
 (defn tieosuushaku
   [e! {:keys [tieosuushaku]} kohdeosat-atom voi-lisata?]
   (let [{:keys [auki? hakuehdot haetaan? tieosuudet
-                kohteen-ulkopuolelle-jatkuvat virhe]} tieosuushaku
+                kohteen-ulkopuolelle-jatkuvat tieosuuksia-rajattu? virhe]} tieosuushaku
         valittuja? (some :valittu? tieosuudet)
         hakuehdot-puuttuvat? (some nil? ((juxt :tr-numero :tr-alkuosa :tr-loppuosa) hakuehdot))]
     [:div.pot2-tieosuushaku
@@ -89,7 +89,13 @@
           (some? tieosuudet)
           [:div.pot2-tieosuushaku-tulosalue
            [:div.pot2-tieosuushaku-tulosmaara
-            (str "Tieosuuksia yhteensä " (count tieosuudet) " kpl")]
+            (if tieosuuksia-rajattu?
+              (str "Näytetään " (count tieosuudet) " tieosuutta")
+              (str "Tieosuuksia yhteensä " (count tieosuudet) " kpl"))]
+           (when tieosuuksia-rajattu?
+             [yleiset/info-laatikko
+              :neutraali
+              "Hakutuloksia on yli 100, joten näytössä ovat vain ensimmäiset 100 tieosuutta. Pienennä hakuehtoja nähdäksesi kaikki tulokset."])
            [tulostaulukko e! tieosuudet voi-lisata?]
            (when (seq kohteen-ulkopuolelle-jatkuvat)
              [yleiset/info-laatikko

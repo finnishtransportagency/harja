@@ -39,8 +39,10 @@
                    ::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys]))
 (s/def ::tieosuudet (s/coll-of ::tieosuus :kind vector?))
 (s/def ::kohteen-ulkopuolelle-jatkuvat (s/coll-of ::tieosuus :kind vector?))
+(s/def ::tieosuuksia-rajattu? boolean?)
 (s/def ::hae-tieosuudet-vastaus
-  (s/keys :req-un [::tieosuudet ::kohteen-ulkopuolelle-jatkuvat]))
+  (s/keys :req-un [::tieosuudet ::kohteen-ulkopuolelle-jatkuvat]
+          :opt-un [::tieosuuksia-rajattu?]))
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"

@@ -7,6 +7,8 @@
 (defqueries "harja/kyselyt/tieverkko.sql"
             {:positional? true})
 
+(def ^:private tieosuushaun-tulosten-raja 100)
+
 (declare hae-tr-osoite-valille* hae-tr-osoite* hae-trpisteiden-valinen-tieto tierekisteriosoite-viivaksi
   onko-osoitteen-etaisyydet-validit? hae-osien-pituudet onko-tie-olemassa? hae-tieosan-tiedot onko-tr-yhtenainen?
   hae-ajoratojen-pituudet hae-tieosoitteet tieosoitteen-ajoratakilometrit-kaistaaineistosta
@@ -54,7 +56,9 @@
           tieosuudet))
 
 (defn hae-tieosuudet [db params]
-  (let [raakatieosuudet (hae-tieosuudet-raakana db params)
+  (let [kaikki-raakatieosuudet (hae-tieosuudet-raakana db (assoc params :limit (inc tieosuushaun-tulosten-raja)))
+        tieosuuksia-rajattu? (> (count kaikki-raakatieosuudet) tieosuushaun-tulosten-raja)
+        raakatieosuudet (take tieosuushaun-tulosten-raja kaikki-raakatieosuudet)
         osoiteavaimet [:tr-numero :tr-ajorata :tr-kaista
                        :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]
         alkuperaiset-avaimet {:alkuperainen-tr-alkuosa :tr-alkuosa
@@ -73,7 +77,8 @@
                                                   (select-keys % (keys alkuperaiset-avaimet))
                                                   alkuperaiset-avaimet))))]
     {:tieosuudet (yhdista-yhtenaiset-tieosuudet rajatut)
-     :kohteen-ulkopuolelle-jatkuvat (yhdista-yhtenaiset-tieosuudet ulkopuolelle-jatkuvat)}))
+      :kohteen-ulkopuolelle-jatkuvat (yhdista-yhtenaiset-tieosuudet ulkopuolelle-jatkuvat)
+      :tieosuuksia-rajattu? tieosuuksia-rajattu?}))
 
 (defn laske-max-loppuetaisyys [osoitteet]
   (let [laske-loppuetaisyys (fn [{:keys [pituus tr-alkuetaisyys]}]
