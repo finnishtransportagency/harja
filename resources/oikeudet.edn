@@ -1097,6 +1097,24 @@
    "Tilaajan_Rakennuttajakonsultti" #{"R"},
    "Tilaajan_Urakanvalvoja" #{"R*"},
    "vastuuhenkilo" #{"R"}}}
+ {:sym raportit-vastaanottotarkastusraportti-mhu,
+  :osio "Raportit",
+  :nakyma "Vastaanottotarkastusraportti - MHU",
+  :taso1 "raportit-vastaanottotarkastusraportti",
+  :kuvaus
+  "Osio 'Raportit' näkymä 'Vastaanottotarkastusraportti - MHU'",
+  :roolien-oikeudet
+  {"ELY_Kayttaja" #{"R*"},
+   "ELY_Paakayttaja" #{"R*"},
+   "ELY_Urakanvalvoja" #{"R*"},
+   "Jarjestelmavastaava" #{"R*"},
+   "Kayttaja" #{"R+"},
+   "Paakayttaja" #{"R+"},
+   "Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Asiantuntija" #{"R*"},
+   "Tilaajan_Rakennuttajakonsultti" #{"R"},
+   "Tilaajan_Urakanvalvoja" #{"R*"},
+   "vastuuhenkilo" #{"R"}}}
  {:sym raportit-vesivaylalaskutusyhteenveto,
   :osio "Raportit",
   :nakyma "Vesiväylälaskutusyhteenveto",
