@@ -2,7 +2,7 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, normaalimaara, omailmoitettu, maara,
+(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, normaalimaara, omailmoitettu, maara, sanktio_profiili_rivi, maaritystapa,
  laskutusrajan_ylitys, indeksi, laatupoikkeama, suorasanktio, tehtavaryhma, tehtava, luoja, luotu)
 VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman_kasittelytapa,
         :ryhma :: sanktiolaji, :tyyppi,
@@ -16,7 +16,7 @@ VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman
                       JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
              WHERE s.id = :tyyppi
                AND t.urakka = :urakka)),
-        :vakiofraasi, :normaalimaara, :omailmoitettu, :summa, :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
+        :vakiofraasi, :normaalimaara, :omailmoitettu, :summa, :sanktio_profiili_rivi, :maaritystapa, :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
         :tehtavaryhma, :tehtava, :luoja, NOW());
 
 -- name: paivita-sanktio!
@@ -39,6 +39,8 @@ SET perintapvm           = :perintapvm,
     normaalimaara       = :normaalimaara,
     omailmoitettu       = :omailmoitettu,
     maara                = :summa,
+    sanktio_profiili_rivi = :sanktio_profiili_rivi,
+    maaritystapa         = :maaritystapa,
     laskutusrajan_ylitys = :laskutusrajan-ylitys,
     indeksi              = :indeksi,
     laatupoikkeama       = :laatupoikkeama,
@@ -96,6 +98,8 @@ SELECT s.id,
        s.maara                AS summa,
        s.normaalimaara,
        s.omailmoitettu,
+      s.sanktio_profiili_rivi,
+      s.maaritystapa,
        s.laskutusrajan_ylitys AS "laskutusrajan-ylitys",
        s.sakkoryhma           AS laji,
        s.suorasanktio,

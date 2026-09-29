@@ -524,6 +524,245 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
+(deftest tallenna-sanktio-kayttaa-profiilin-automaattista-summaa-ilman-vuosirajausta
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        perustelu "Profiili määrää sanktion summan ilman vuosirajausta"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 13"))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2025-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2025 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2025 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2025")
+        hk-loppupvm (pvm/->pvm "30.9.2026")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            tallennettu (first (q-map (str "SELECT maara FROM sanktio WHERE id = " sanktio-id)))]
+        (is (= 4000M (:maara tallennettu))
+          "Aktiivisen sanktioprofiilin automaattinen summa ohittaa pyynnön summan myös MHU25-urakassa"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-b-sanktiot-kayttavat-profiilin-normaalimaaraa
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2612 B-profiilin normaalimäärät"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        tyypit-ja-maarat {18 14000M 19 11000M 20 9000M 17 6000M 21 4000M}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (doseq [[tyyppi odotettu-maara] tyypit-ja-maarat]
+        (let [sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi WHERE koodi = " tyyppi)))
+              sanktio {:suorasanktio true
+                       :laji :B
+                       :summa 777
+                       :toimenpideinstanssi tpi-id
+                       :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                       :tyyppi {:id sanktiotyyppi-id}
+                       :soveltuvuuskonteksti :urakka}
+              sanktio-id (palvelukutsu-tallenna-suorasanktio
+                           +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+              tallennettu (first (q-map (str "SELECT normaalimaara, omailmoitettu, maara FROM sanktio WHERE id = " sanktio-id)))]
+          (is (= {:normaalimaara odotettu-maara
+                  :omailmoitettu false
+                  :maara odotettu-maara}
+                 tallennettu)
+            (str "MHU26 B-tyypin " tyyppi " määrät tulevat profiilista"))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-c-sanktio-validioi-manuaalisen-maaran
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2614 C-ryhmän manuaalinen määrä"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        sanktio {:suorasanktio true
+                 :laji :C
+                 :summa 12.34M
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            tallennettu (first (q-map (str "SELECT sanktio_profiili_rivi, maaritystapa, normaalimaara, omailmoitettu, maara "
+                                        "FROM sanktio WHERE id = " sanktio-id)))]
+        (is (= "manuaalinen" (:maaritystapa tallennettu)))
+        (is (number? (:sanktio_profiili_rivi tallennettu)))
+        (is (= {:normaalimaara 4000M :omailmoitettu false :maara 12.34M}
+               (select-keys tallennettu [:normaalimaara :omailmoitettu :maara])))
+        (is (thrown-with-msg?
+              IllegalArgumentException
+              #"enintään kaksi desimaalia"
+              (palvelukutsu-tallenna-suorasanktio
+                +kayttaja-jvh+ (assoc sanktio :summa 12.345M) laatupoikkeama hk-alkupvm hk-loppupvm)))
+        (is (thrown-with-msg?
+              IllegalArgumentException
+              #"vähintään 0"
+              (palvelukutsu-tallenna-suorasanktio
+                +kayttaja-jvh+ (assoc sanktio :summa -0.01M) laatupoikkeama hk-alkupvm hk-loppupvm))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-asiakirjamerkinnan-sanktio-kayttaa-urakkaprofiilin-kiinteaa-summaa
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2617 asiakirjamerkinnän sanktio"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0"))
+        sanktio {:suorasanktio true
+                 :laji :asiakirjamerkintojen_paikkansa_pitamattomyys
+                 :summa 1
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :tekija :tilaaja
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            tallennettu (first (q-map (str "SELECT normaalimaara, omailmoitettu, maara FROM sanktio WHERE id = " sanktio-id)))]
+        (is (= {:normaalimaara 20000M
+                :omailmoitettu false
+                :maara 20000M}
+               tallennettu)
+          "Urakka-kontekstin aktiivinen profiilirivi ohittaa pyynnön summan")
+        (try+
+          (kutsu-http-palvelua
+            :tallenna-laatupoikkeama
+            +kayttaja-jvh+
+            (assoc (assoc-in laatupoikkeama [:paatos :paatos] :sanktio)
+              :sanktiot [(assoc sanktio :suorasanktio false)]))
+          (is false "Vain urakka-kontekstiin määriteltyä lajia ei saa tallentaa laatupoikkeaman kautta")
+          (catch [:type :sanktio-kirjausvirhe] {:keys [sanktio-kirjausvirhe]}
+            (is (= :sanktiolaji-ei-sallittu (:koodi sanktio-kirjausvirhe)))
+            (is (= :laatupoikkeama (:soveltuvuuskonteksti sanktio-kirjausvirhe))))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-b-sanktion-omailmoituspuolitus-on-idempotentti-muokkauksessa
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2612 B-omailmoituksen idempotenssi"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        sanktio {:suorasanktio true
+                 :laji :B
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-03T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "3.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "3.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            listausrivi (first (filter #(= sanktio-id (:id %))
+                                 (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-urakan-sanktiot-ja-bonukset
+                                   +kayttaja-jvh+
+                                   {:urakka-id urakka-id
+                                    :alku hk-alkupvm
+                                    :loppu hk-loppupvm})))
+            lue #(first (q-map (str "SELECT normaalimaara, omailmoitettu, maara FROM sanktio WHERE id = " sanktio-id)))]
+        (is (= {:normaalimaara 14000M :omailmoitettu false :maara 14000M} (lue)))
+        (is (= 14000M (:normaalimaara listausrivi))
+          "Muokkausnäkymän listaus palauttaa profiilin normaalimäärän")
+        (is (false? (:omailmoitettu listausrivi))
+          "Muokkausnäkymän listaus palauttaa tallennetun omailmoitusarvon")
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ (assoc sanktio :id sanktio-id :omailmoitettu true) laatupoikkeama hk-alkupvm hk-loppupvm)
+        (is (= {:normaalimaara 14000M :omailmoitettu true :maara 7000M} (lue)))
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ (assoc sanktio :id sanktio-id :omailmoitettu false :summa 1) laatupoikkeama hk-alkupvm hk-loppupvm)
+        (is (= {:normaalimaara 14000M :omailmoitettu false :maara 14000M} (lue))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-b-sanktio-sailyttaa-normaalimaaran-tilannekuvana
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2618 sanktion normaalimäärän tilannekuva"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        sanktio {:suorasanktio true
+                 :laji :B
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-04T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "4.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "4.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            profiilirivi-id (ffirst (q (str "SELECT sanktio_profiili_rivi FROM sanktio WHERE id = " sanktio-id)))]
+        (u (str "UPDATE sanktio_profiili_rivi_summamaaritys "
+             "SET summa_euroina = 19000 "
+             "WHERE sanktio_profiili_rivi_id = " profiilirivi-id " AND maaritystapa = 'automaattinen'"))
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ (assoc sanktio :id sanktio-id :omailmoitettu false :summa 1)
+          laatupoikkeama hk-alkupvm hk-loppupvm)
+        (is (= {:normaalimaara 14000M :omailmoitettu false :maara 14000M}
+               (first (q-map (str "SELECT normaalimaara, omailmoitettu, maara FROM sanktio WHERE id = " sanktio-id))))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest tallenna-mhu26-a-sanktio-kayttaa-seuraavaa-kelvollista-automaattista-summaa
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         perustelu "HARJA-2611 seuraava kelvollinen automaattinen summa"
@@ -567,7 +806,7 @@
                                                           :summa-euroina -1M}]}})]
         (is (thrown-with-msg?
               IllegalArgumentException
-              #"MHU26 A-sanktion automaattinen summamääritys puuttuu tai on epäkelpo\."
+              #"Sanktiolajin A profiilin automaattinen summamääritys puuttuu tai on epäkelpo\."
               (palvelukutsu-tallenna-suorasanktio
                 +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))))
       (finally
@@ -978,7 +1217,7 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :laskutusrajan-ylitys nil :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :omailmoitettu false, :laskutusrajan-ylitys nil :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
     :tehtava {:id nil :nimi nil}
     :tehtavaryhma {:id nil :nimi nil}
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
@@ -987,7 +1226,7 @@
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :kasittelytapa nil, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
+    :summa -777.0, :normaalimaara nil, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :kasittelytapa nil, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
     :perintapvm #inst "2019-10-11T21:00:00.000-00:00",
     :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 

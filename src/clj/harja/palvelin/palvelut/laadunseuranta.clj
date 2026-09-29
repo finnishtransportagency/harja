@@ -237,6 +237,23 @@
        :laji laji
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
+(defn- vaadi-manuaalinen-maara
+  [maara]
+  (when-not (number? maara)
+    (throw (IllegalArgumentException. "Manuaalisen sanktion määrän pitää olla numero.")))
+  (let [maara (-> (bigdec (str maara))
+                (.stripTrailingZeros))]
+    (when (or (neg? maara) (> (.scale maara) 2))
+      (throw (IllegalArgumentException.
+               "Manuaalisen sanktion määrän pitää olla vähintään 0 ja sisältää enintään kaksi desimaalia.")))
+    maara))
+
+(defn- absoluuttinen-maara
+  [maara]
+  (if (decimal? maara)
+    (.abs (bigdec maara))
+    (Math/abs maara)))
+
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava
@@ -246,6 +263,8 @@
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+        olemassa-oleva-sanktio (when (id-olemassa? id)
+                                 (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
         pyynto-summa (if (decimal? summa)
                        (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
@@ -273,19 +292,23 @@
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
         profiilin-summamaaritykset (:profiilirivi profiilirivi)
+        maaritystapa (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa)
+        profiilin-manuaalinen-viitemaara
+        (when (= :manuaalinen maaritystapa)
+          (some (fn [{:keys [summa-euroina]}]
+                  (when (number? summa-euroina)
+                    summa-euroina))
+            (:summamaaritykset profiilin-summamaaritykset)))
         kiintea-automaattinen-summa? (sanktiot-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
-        normaalimaara (if kiintea-automaattinen-summa?
-                        (if (and (number? automaattinen-summa-raakana)
-                              (pos? automaattinen-summa-raakana)
-                              (Double/isFinite (double automaattinen-summa-raakana)))
-                          (double automaattinen-summa-raakana)
-                          (throw (IllegalArgumentException.
-                                   (str "Sanktiolajin " (name laji)
-                                     " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
-                        pyynto-summa)
+        tilannekuvan-maaritystapa (some-> olemassa-oleva-sanktio :maaritystapa keyword)
+        tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
+        manuaalinen-maara (when (= :manuaalinen maaritystapa)
+                            (if (= :C laji)
+                              (vaadi-manuaalinen-maara summa)
+                              pyynto-summa))
         omailmoitettu (if (nil? omailmoitettu) false omailmoitettu)
         _ (when-not (boolean? omailmoitettu)
             (throw (IllegalArgumentException.
@@ -294,7 +317,25 @@
                   (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
             (throw (IllegalArgumentException.
                      "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
-        summa (if omailmoitettu (/ normaalimaara 2) normaalimaara)
+        normaalimaara (if (and tilannekuvan-automaattinen-maara?
+                            (number? (:normaalimaara olemassa-oleva-sanktio))
+                            (pos? (:normaalimaara olemassa-oleva-sanktio))
+                            (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
+                        (:normaalimaara olemassa-oleva-sanktio)
+                        (if (= :manuaalinen maaritystapa)
+                          (or profiilin-manuaalinen-viitemaara manuaalinen-maara)
+                          (if kiintea-automaattinen-summa?
+                            (if (and (number? automaattinen-summa-raakana)
+                                  (pos? automaattinen-summa-raakana)
+                                  (Double/isFinite (double automaattinen-summa-raakana)))
+                              (double automaattinen-summa-raakana)
+                              (throw (IllegalArgumentException.
+                                       (str "Sanktiolajin " (name laji)
+                                         " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
+                            pyynto-summa)))
+        summa (if (= :manuaalinen maaritystapa)
+                manuaalinen-maara
+                (if omailmoitettu (/ normaalimaara 2) normaalimaara))
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -313,10 +354,13 @@
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
                 :normaalimaara normaalimaara
                 :omailmoitettu omailmoitettu
+                :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                                         (get-in profiilirivi [:profiilirivi :id]))
+                :maaritystapa (some-> (or tilannekuvan-maaritystapa maaritystapa) name)
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)
-                           (- (Math/abs summa))
-                           (Math/abs summa)))
+                           (- (absoluuttinen-maara summa))
+                           (absoluuttinen-maara summa)))
                 :laskutusrajan-ylitys laskutusrajan-ylitys
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama-id
