@@ -1143,7 +1143,7 @@ WHERE u.alkupvm + interval '12 hour' <= current_timestamp
 ORDER BY etaisyys ASC 
 LIMIT 50;
 
--- name: hae-urakka-urakkantunnisteella
+-- name: hae-urakka-urakkatunnisteella
 -- Urakkatunniste on yleisesti tunnettu ja eri järjestelmissä käytetty, Samposta saatu tunniste urakalle
 -- Ei palauta kanava- ja vesiväyläurakoita
 SELECT
@@ -1178,7 +1178,7 @@ FROM urakka u
 WHERE u.urakkanro = :urakka
   -- Palautetaan voimassa olevat ja tulevat urakat.
   -- Palautetaan päättyneet urkakat kuukauden ajan päättymisen jälkeen.
-  AND loppupvm + interval '1 month' >= current_date
+  AND loppupvm + interval '1 week' >= current_date
   AND u.tyyppi in ('hoito',
                  'teiden-hoito',
                  'paallystys',
