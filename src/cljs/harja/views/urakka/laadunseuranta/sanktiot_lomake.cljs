@@ -5,6 +5,7 @@
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -94,7 +95,6 @@
         mahdolliset-sanktiolajit (if (or mhu25? (>= hoitokauden-alkuvuosi 2026))
                                    (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
                                    @tiedot/valitun-urakan-sanktiolajit)
-        kaikki-sanktiotyypit @tiedot/sanktiotyypit 
         sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
@@ -106,8 +106,34 @@
         tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
         ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
-        tyyppi-valinnat (vec (sanktio-domain/sanktiolaji->sanktiotyypit
-                               (:laji @muokattu) kaikki-sanktiotyypit urakan-alkupvm))
+        tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
+        aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
+        c-ryhman-maaritys (when (= :C (:laji @muokattu))
+                (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
+                  (when (and (= :manuaalinen maaritystapa)
+                       (some? summa-euroina)
+                       (not (str/blank? ohjeteksti)))
+                    {:summa-euroina summa-euroina
+                     :ohjeteksti ohjeteksti}))
+                  (:summamaaritykset aktiivinen-tyyppi)))
+        kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                 aktiivinen-tyyppi)
+        automaattinen-summa (when kiintea-profiilisumma?
+                              (tiedot/sanktiotyypin-automaattinen-summa aktiivinen-tyyppi))
+        omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
+        omailmoitettu (boolean (and omailmoitus-sallittu? (:omailmoitettu @muokattu)))
+        normaalimaara (if kiintea-profiilisumma?
+                        automaattinen-summa
+                        (:normaalimaara @muokattu))
+        lopullinen-maara (when normaalimaara
+                           (if omailmoitettu
+                             (/ normaalimaara 2)
+                             normaalimaara))
+        tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
+                                kiintea-profiilisumma?
+                                (assoc :normaalimaara normaalimaara
+                                  :omailmoitettu omailmoitettu
+                                  :summa lopullinen-maara))
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
@@ -144,8 +170,6 @@
             (and yllapitokohdeurakka? yllapitokohteet)))
 
       [:div
-       [harja.ui.debug/debug @muokattu]
-
        [lomake/lomake
         {:otsikko "SANKTION TIEDOT"
          :otsikko-elementti :h4
@@ -164,7 +188,7 @@
                            [napit/yleinen-ensisijainen
                             (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
                             (fn []
-                              (tallenna-fn (lomake/ilman-lomaketietoja @muokattu))
+                              (tallenna-fn tallennettava-sanktio)
                               (reset! sivupaneeli-auki?-atom false)
                               (reset! tiedot/valittu-sanktio nil))
                             {:ikoni (ikonit/tallenna)
@@ -175,7 +199,7 @@
                             (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
                             (fn []
                               (tiedot/tallenna-sanktio
-                                (lomake/ilman-lomaketietoja @muokattu)
+                                tallennettava-sanktio
                                 urakka-id
                                 #(reset! sivupaneeli-auki?-atom false)))
                             {:luokka "nappi-ensisijainen"
@@ -211,48 +235,48 @@
             :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                (let [;; Ota vanhan tyypin id talteen, jotta valinta ei riipu mapin identiteetistä.
-                      vanha-tyyppi-id (get-in rivi [:tyyppi :id])
-                      rivi (-> rivi
-                             (assoc :laji arvo)
-                             (dissoc :tyyppi)
-                             (assoc :tyyppi nil))
-                      s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
-                      vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id) 
-                      yksi-tyyppi (first s-tyypit) 
-                      toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
-                      rivi (cond
+                     (let [;; Ota vanhan tyypin id talteen, jotta valinta ei riipu mapin identiteetistä.
+                           vanha-tyyppi-id (get-in rivi [:tyyppi :id])
+                           rivi (-> rivi
+                                  (assoc :laji arvo)
+                                  (dissoc :tyyppi)
+                                  (assoc :tyyppi nil))
+                           s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
+                           vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id)
+                           yksi-tyyppi (first s-tyypit)
+                           toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
+                           rivi (cond
                                   ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
                                   ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                             (and (= 1 (count s-tyypit)) yksi-tyyppi (not= toimenpideinstansseja 1))
-                             (assoc rivi
-                               :tyyppi yksi-tyyppi
-                               :toimenpideinstanssi
-                               (when (:toimenpidekoodi yksi-tyyppi)
-                                 (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi yksi-tyyppi)))))
+                                  (and (= 1 (count s-tyypit)) yksi-tyyppi (not= toimenpideinstansseja 1))
+                                  (assoc rivi
+                                    :tyyppi yksi-tyyppi
+                                    :toimenpideinstanssi
+                                    (when (:toimenpidekoodi yksi-tyyppi)
+                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi yksi-tyyppi)))))
                                   ;; Jos vanha tyyppi, löytyy sanktiolajin tyyppilistasta
-                             (and (> (count s-tyypit) 1)
-                               vanha-tyyppi)
-                             (assoc rivi :tyyppi vanha-tyyppi
-                               :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                                  (and (> (count s-tyypit) 1)
+                                    vanha-tyyppi)
+                                  (assoc rivi :tyyppi vanha-tyyppi
+                                    :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
                                   ;; Muussa tapauksessa, ei tehdä muutoksia
-                             :else rivi)]
-                  (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
-                    (assoc rivi :summa nil :toimenpideinstanssi nil :indeksi nil)
-                    rivi)))
+                                  :else rivi)]
+                       (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
+                         (assoc rivi :summa nil :omailmoitettu false :toimenpideinstanssi nil :indeksi nil)
+                         rivi)))
             :valinnat (vec mahdolliset-sanktiolajit)
             :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
 
          ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus
-          (when (and (not lukutila?) (= :talvisuolan_ylitys (:laji @muokattu)))
-            {:otsikko ""
-             :nimi :talvisuolan-kokonaiskayton-ylitys
-             ::lomake/col-luokka "col-xs-12"
-             :tyyppi :komponentti
-             :komponentti (fn [rivi]
-                            [yleiset/info-laatikko :neutraali
-                             [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
+         (when (and (not lukutila?) (= :talvisuolan_ylitys (:laji @muokattu)))
+           {:otsikko ""
+            :nimi :talvisuolan-kokonaiskayton-ylitys
+            ::lomake/col-luokka "col-xs-12"
+            :tyyppi :komponentti
+            :komponentti (fn [rivi]
+                           [yleiset/info-laatikko :neutraali
+                            [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
 
          (when-not (or yllapitourakka? vesivaylaurakka? (= :laskutus_yli_laskutusrajan (:laji @muokattu)))
            (if (not lukutila?)
@@ -262,22 +286,34 @@
               ::lomake/col-luokka "col-xs-12"
               :nimi :tyyppi
               :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                       (if (<= urakan-alkuvuosi 2024)
-                         (let [kohdistukset (tiedot/valittavat-kulun-kohdistukset
-                                              @tiedot-urakka/urakan-toimenpideinstanssit
-                                              (:nimi tyyppi))
-                               tpi (cond
-                                     ;; Jos toimenpidekoodi löytyy, käytä sitä
-                                     tpk (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
-                                     ;; Jos vain yksi vaihtoehto, esivalitse se
-                                     (= 1 (count kohdistukset)) (:tpi_id (first kohdistukset))
-                                     ;; Muuten säilytä nykyinen arvo
-                                     :else (:toimenpideinstanssi sanktio))]
-                           (-> sanktio
-                             (assoc :tyyppi tyyppi)
-                             (assoc :toimenpideinstanssi tpi)
-                             (assoc :tpi_id tpi)))
-                         (assoc sanktio :tyyppi tyyppi)))
+                       (let [sanktio (if (<= urakan-alkuvuosi 2024)
+                                       (let [kohdistukset (tiedot/valittavat-kulun-kohdistukset
+                                                            @tiedot-urakka/urakan-toimenpideinstanssit
+                                                            (:nimi tyyppi))
+                                             tpi (cond
+                                                   ;; Jos toimenpidekoodi löytyy, käytä sitä
+                                                   tpk (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
+                                                   ;; Jos vain yksi vaihtoehto, esivalitse se
+                                                   (= 1 (count kohdistukset)) (:tpi_id (first kohdistukset))
+                                                   ;; Muuten säilytä nykyinen arvo
+                                                   :else (:toimenpideinstanssi sanktio))]
+                                         (assoc sanktio :tyyppi tyyppi :toimenpideinstanssi tpi :tpi_id tpi))
+                                       (assoc sanktio :tyyppi tyyppi))
+                             kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                                      tyyppi)
+                             automaattinen-summa (when kiintea-profiilisumma?
+                                                   (tiedot/sanktiotyypin-automaattinen-summa tyyppi))
+                             omailmoitettu (boolean (and (:voi-puolittaa-omailmoituksella tyyppi)
+                                                      (:omailmoitettu sanktio)))]
+                         (cond-> (assoc sanktio :omailmoitettu omailmoitettu)
+                           kiintea-profiilisumma?
+                           (assoc :normaalimaara automaattinen-summa
+                             :summa (when automaattinen-summa
+                                      (if omailmoitettu
+                                        (/ automaattinen-summa 2)
+                                        automaattinen-summa)))
+                           (not kiintea-profiilisumma?)
+                           (assoc :normaalimaara nil :summa nil))))
               :valinta-arvo identity
               :aseta-vaikka-sama? true
               :valinnat tyyppi-valinnat
@@ -370,15 +406,15 @@
 
          ;; Kun sanktiolajina on "laskutusrajan ylitys" niin näytetään summa eri nimisenä ja eri kohdassa
          (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
-          {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
-           :nimi :summa
-           :tyyppi :euro
-           :kentan-arvon-luokka "fontti-20-kevyempi"
-           :muokattava? (constantly false)
-           :vaadi-positiivinen-numero? true
-           ::lomake/col-luokka "col-xs-8"
-           :hae #(when (:summa %) (Math/abs (:summa %)))
-           :pakollinen? true :uusi-rivi? true})
+           {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
+            :nimi :summa
+            :tyyppi :euro
+            :kentan-arvon-luokka "fontti-20-kevyempi"
+            :muokattava? (constantly false)
+            :vaadi-positiivinen-numero? true
+            ::lomake/col-luokka "col-xs-8"
+            :hae #(when (:summa %) (Math/abs (:summa %)))
+            :pakollinen? true :uusi-rivi? true})
 
          ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
          (when (or
@@ -413,12 +449,29 @@
          (apply lomake/ryhma {:rivi? true}
            (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
                              {:otsikko "Sanktion suuruus" :nimi :summa :tyyppi :euro
+                              :muokattava? (constantly (not kiintea-profiilisumma?))
                               :vaadi-positiivinen-numero? true
                               ::lomake/col-luokka "col-xs-4"
-                              :hae #(when (:summa %) (Math/abs (:summa %)))
+                              :hae #(if kiintea-profiilisumma?
+                                      (when-let [summa lopullinen-maara]
+                                        (Math/abs summa))
+                                      (when (:summa %)
+                                        (Math/abs (:summa %))))
+                              :vihje (when c-ryhman-maaritys
+                                       (str "-" (fmt/euro-opt false (:summa-euroina c-ryhman-maaritys))
+                                         " " (:ohjeteksti c-ryhman-maaritys)))
                               :pakollinen? true :uusi-rivi? true
                               :validoi [[:ei-tyhja "Anna summa"]
                                         [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+
+                           (when omailmoitus-sallittu?
+                             {:otsikko "Urakoitsijan omailmoitus"
+                              :nimi :omailmoitettu
+                              :tyyppi :checkbox
+                              :uusi-rivi? true
+                              :hae :omailmoitettu
+                              :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
+                              :selite "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"})
 
                            ;; MHU21-> urakoille ei näytetä indeksiä
                            (when (and (<= urakan-alkuvuosi 2020) (sanktio-domain/muu-kuin-muistutus? @muokattu))
@@ -444,21 +497,21 @@
 
            ;; MHU25 urakoilla ei ole käsittelyaikaa enää, vaan sen korvaa Määrätty pvm
            (if (not mhu25?)
-            {:otsikko "Käsitelty" :nimi :kasittelyaika
-             :pakollinen? true
-             :muokattava? (constantly voi-muokata?) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
-             ::lomake/col-luokka "col-xs-3"
-             :hae (comp :kasittelyaika :paatos :laatupoikkeama)
-             :aseta (fn [rivi arvo]
-                      (let [rivi (cond-> rivi
+             {:otsikko "Käsitelty" :nimi :kasittelyaika
+              :pakollinen? true
+              :muokattava? (constantly voi-muokata?) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
+              ::lomake/col-luokka "col-xs-3"
+              :hae (comp :kasittelyaika :paatos :laatupoikkeama)
+              :aseta (fn [rivi arvo]
+                       (let [rivi (cond-> rivi
                                    ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
                                    ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
-                                   (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                   (assoc-in [:perintapvm] arvo))]
-                        (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
-             :fmt pvm/pvm-opt :tyyppi :pvm
-             :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                       (partial talvisuolan-validointi-fn)]}
+                                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
+                                    (assoc-in [:perintapvm] arvo))]
+                         (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
+              :fmt pvm/pvm-opt :tyyppi :pvm
+              :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                        (partial talvisuolan-validointi-fn)]}
 
              {:otsikko "Määrätty" :nimi :maarattypvm
               :pakollinen? true
@@ -544,30 +597,30 @@
               ::lomake/col-luokka "col-xs-6"}))
 
           ;; MHU25 urakoille näytetään määräystapa valintana.
-          (when mhu25?
-            (if (not lukutila?)
-              {:otsikko "Määräystapa"
-               :radio-luokka "maaraystapa-ei-marginia"
-               :nimi :maaraystapa
-               :tyyppi :radio-group
-               :pakollinen? true
-               :uusi-rivi? true
-               :nayta-rivina? true
-               ::lomake/col-luokka "col-xs-12"
-               :vaihtoehdot [:tyomaakokous :valikatselmus]
-               :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
-                                  :valikatselmus "Välikatselmus"}}
+         (when mhu25?
+           (if (not lukutila?)
+             {:otsikko "Määräystapa"
+              :radio-luokka "maaraystapa-ei-marginia"
+              :nimi :maaraystapa
+              :tyyppi :radio-group
+              :pakollinen? true
+              :uusi-rivi? true
+              :nayta-rivina? true
+              ::lomake/col-luokka "col-xs-12"
+              :vaihtoehdot [:tyomaakokous :valikatselmus]
+              :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
+                                 :valikatselmus "Välikatselmus"}}
 
-              {:otsikko "Määräystapa"
-               :nimi :maaraystapa
-               :tyyppi :teksti
-               :muokattava? (constantly false)
-               ::lomake/col-luokka "col-xs-12"
-               :fmt (fn [arvo]
-                      (case arvo
-                        :tyomaakokous "Työmaakokous"
-                        :valikatselmus "Välikatselmus"
-                        arvo))}))
+             {:otsikko "Määräystapa"
+              :nimi :maaraystapa
+              :tyyppi :teksti
+              :muokattava? (constantly false)
+              ::lomake/col-luokka "col-xs-12"
+              :fmt (fn [arvo]
+                     (case arvo
+                       :tyomaakokous "Työmaakokous"
+                       :valikatselmus "Välikatselmus"
+                       arvo))}))
 
          {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
           :nimi :kasittelytapa

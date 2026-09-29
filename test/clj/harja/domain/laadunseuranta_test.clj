@@ -18,48 +18,48 @@
 
     (testing "Hoidon urakat, kun arvonvähennys on vielä vanhassa sanktiolistassa"
       (is (= hoidon-lajit-arvonvahennyksella
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025))
+             (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2025))
         "MHU24-urakka ennen hoitovuotta 2026 -> arvonvähennyssanktio mukana")
       (is (= hoidon-lajit-arvonvahennyksella
-            (sanktio-domain/urakan-sanktiolajit alueurakka 2025))
+             (sanktio-domain/urakan-sanktiolajit alueurakka 2025))
         "Alueurakka ennen hoitovuotta 2026 -> arvonvähennyssanktio mukana"))
 
     (testing "Hoidon urakat, kun arvonvähennys on siirtynyt omalle lomakkeelle"
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2026))
+             (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2026))
         "MHU24-urakka hoitovuodesta 2026 alkaen -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027))
+             (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027))
         "MHU24-urakka hoitovuonna 2027 -> ei arvonvähennyssanktiota")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit alueurakka 2026))
+             (sanktio-domain/urakan-sanktiolajit alueurakka 2026))
         "Alueurakka hoitovuodesta 2026 alkaen -> ei arvonvähennyssanktiota")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025))
+             (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2025))
         "MHU25-urakka -> ei arvonvähennyssanktiota vanhassa listassa hoitovuodesta riippumatta")
       (is (= hoidon-lajit-ilman-arvonvahennysta
-            (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2027))
+             (sanktio-domain/urakan-sanktiolajit mhu25-urakka 2027))
         "MHU25-urakka hoitovuonna 2027 -> ei arvonvähennyssanktiota"))
 
     (testing "Ylläpidon urakat saavat aina ylläpidon lajit, hoitovuodesta riippumatta"
       (is (= yllapidon-lajit
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2026)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2027)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2026)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2027)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2026)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2027)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2026)
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2027))
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2025)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2026)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :paallystys} 2027)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2025)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2026)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :paikkaus} 2027)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2025)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2026)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :tiemerkinta} 2027)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2025)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2026)
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :valaistus} 2027))
         "Ylläpidon sanktiolajit"))
 
     (testing "Tuntematon urakkatyyppi"
       (is (= []
-            (sanktio-domain/urakan-sanktiolajit {:tyyppi :vesivayla-hoito} 2025))
+             (sanktio-domain/urakan-sanktiolajit {:tyyppi :vesivayla-hoito} 2025))
         "Muille urakkatyypeille ei tarjota sanktiolajeja"))))
 
 (deftest laatupoikkeaman-mahdolliset-sanktiolajit
@@ -83,16 +83,16 @@
     ;; Laatupoikkeamissa hoidon urakat saavat aina arvonvähennyssanktion (validoinnista riippumatta).
     (testing "Hoidon urakat laatupoikkeamissa"
       (is (= hoidon-lajit
-            (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :hoito :alkupvm alkupvm})
-            (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :teiden-hoito :alkupvm alkupvm}))
+             (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :hoito :alkupvm alkupvm})
+             (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :teiden-hoito :alkupvm alkupvm}))
         (str "Hoidon sanktiolajit laatupoikkeamissa")))
 
     (testing "Ylläpidon urakat laatupoikkeamissa"
       (is (= yllapidon-lajit
-            (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paallystys :alkupvm alkupvm})
-            (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paikkaus :alkupvm alkupvm})
-            (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :tiemerkinta :alkupvm alkupvm})
-            (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :valaistus :alkupvm alkupvm}))
+             (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paallystys :alkupvm alkupvm})
+             (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :paikkaus :alkupvm alkupvm})
+             (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :tiemerkinta :alkupvm alkupvm})
+             (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi :valaistus :alkupvm alkupvm}))
         (str "Ylläpidon sanktiolajit laatupoikkeamissa")))))
 
 (deftest sanktiolajien-tyyppien-urakkakohtaiset-poikkeudet
@@ -157,6 +157,20 @@
     (testing "Tuntematon laji ei palauta tyyppeja"
       (is (= []
              (sanktio-domain/sanktio-konfiguraation-sanktiotyypit sanktio-konfiguraatio :tuntematon))))))
+
+(deftest sanktiotyypin-kiintea-automaattinen-summa-erottaa-kaavan
+  (let [kiintea {:summamaaritykset [{:maaritystapa :automaattinen
+                                     :summa-euroina 4000M}]}
+        kaava {:summamaaritykset [{:maaritystapa :automaattinen
+                                   :summa-euroina 2000M
+                                   :ohjeteksti "alkavalta viikolta"}]}
+        manuaalinen {:summamaaritykset [{:maaritystapa :manuaalinen
+                                         :ohjeteksti "Kirjaa summa"}]}]
+    (is (true? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kiintea)))
+    (is (= 4000M (sanktio-domain/sanktiotyypin-kiintea-automaattinen-summa kiintea)))
+    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kaava)))
+    (is (nil? (sanktio-domain/sanktiotyypin-kiintea-automaattinen-summa kaava)))
+    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? manuaalinen)))))
 
 (deftest liikennevahinkobonus-ja-alihankintabonus-palauttavat-kanoniset-nimet
   (is (= "Bonus alihankintasopimusten maksuehdoista"
