@@ -302,3 +302,40 @@
   
   (testing "ELY käyttäjä (ei urakanvalvoja) ei voi syöttää kustannusennusteita"
     (is (not (oikeudet/on-muu-oikeus? "kustannusennuste" oikeudet/urakat-lupaukset 1 ely-kayttaja)))))
+
+;; ELYn pääkäyttäjä (rooli yleisroolina)
+(def ely-pk {:roolit #{"ELY_Paakayttaja"}
+             :urakkaroolit {}
+             :organisaatioroolit {}
+             :organisaatio ely
+             :organisaation-urakat ely-urakat})
+
+(deftest laatupoikkeaman-sanktion-poisto-oikeus
+  ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii "poisto"-oikeuden, joka on
+  ;; määritelty roolit-Excelissä näkymälle Urakat / Laadunseuranta / Sanktiot.
+  (testing "ELY-urakanvalvoja saa poistaa omassa urakassaan (poisto)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-uv)))
+
+  (testing "ELY-urakanvalvoja ei saa poistaa urakassa, johon häntä ei ole nimetty"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 ely-uv)))
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-uv-eri-elyssa))))
+
+  (testing "Tilaajan urakanvalvoja saa poistaa omassa urakassaan (poisto)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 tilaajan-uv)))
+
+  (testing "Tilaajan urakanvalvoja ei saa poistaa urakassa, johon häntä ei ole nimetty"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 tilaajan-uv))))
+
+  (testing "ELY-pääkäyttäjä saa poistaa missä tahansa urakassa (vaatii poisto*)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-pk))
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 ely-pk)))
+
+  (testing "Järjestelmävastaava saa poistaa missä tahansa urakassa (vaatii poisto*)"
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 jvh))
+    (is (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 42 jvh)))
+
+  (testing "Urakoitsijan pääkäyttäjä ei saa poistaa"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ur-pk))))
+
+  (testing "ELY-peruskäyttäjä (ELY_Kayttaja) ei saa poistaa"
+    (is (not (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot 1 ely-kayttaja)))))

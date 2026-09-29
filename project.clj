@@ -14,7 +14,7 @@
 
                  ;;;;;;; Yleiset ;;;;;;;
 
-                 [prismatic/schema "1.4.1"]
+                 [prismatic/schema "1.4.2"]
                  [org.clojure/core.async "1.7.701"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
@@ -35,7 +35,7 @@
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.3.0"]
+                 [com.taoensso/truss "2.5.1"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "6.8.0"]
@@ -61,7 +61,7 @@
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.cache "1.2.999"]
                  [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
@@ -78,16 +78,16 @@
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.14.1"]
+                 [com.mchange/c3p0 "0.14.2"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "35.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "35.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "35.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "35.0" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.10" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.11" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -148,8 +148,8 @@
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
 
-                 ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.17"]
+                 ;; Apache Commons Compress (arkistoiden purku, tar + gzip)
+                 [org.apache.commons/commons-compress "1.28.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]
@@ -170,18 +170,12 @@
   :managed-dependencies [[org.apache.poi/poi "5.5.1"]
                          [org.apache.poi/poi-scratchpad "5.5.1"]
                          [org.apache.poi/poi-ooxml "5.5.1"]
-                         ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
-                         ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
-                         ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
-                         ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.28.0"]
-
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.1"]
-                         [com.fasterxml.jackson.core/jackson-core "2.21.4"]
+                         [tools.jackson.core/jackson-core "3.2.2"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.2"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.14.0"]]
 

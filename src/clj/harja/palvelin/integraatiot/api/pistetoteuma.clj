@@ -13,7 +13,8 @@
             [harja.palvelin.integraatiot.api.toteuma :as api-toteuma]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi])
+            [harja.palvelin.integraatiot.api.validointi.toteumat :as toteuman-validointi]
+            [harja.geo :as geo])
   (:use [slingshot.slingshot :only [throw+]]))
 
 (defn tee-onnistunut-vastaus []
@@ -21,7 +22,10 @@
 
 (defn tallenna-yksittainen-pistetoteuma [db urakka-id kirjaaja {:keys [toteuma sijainti tyokone]} jsonhash]
   (log/debug "Käsitellään yksittäinen pistetoteuma tunnisteella " (get-in toteuma [:tunniste :id]))
-  (let [toteuma (assoc toteuma :reitti nil)
+  (let [piste-geometria (geo/geometry
+                          (geo/clj->pg {:type :point
+                                        :coordinates ((juxt :x :y) (:koordinaatit sijainti))}))
+        toteuma (assoc toteuma :reitti piste-geometria)
         toteuma-id (api-toteuma/paivita-tai-luo-uusi-toteuma db urakka-id kirjaaja toteuma tyokone)
         _ (toteumat-q/lisaa-toteumalle-jsonhash! db {:id toteuma-id :hash jsonhash})
         aika (aika-string->java-sql-date (:alkanut toteuma))]

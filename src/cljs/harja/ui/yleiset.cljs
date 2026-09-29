@@ -131,14 +131,12 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
             (when max-width
               {:style {:max-width max-width}}))
      (doall (for* [v (distinct virheet)]
-
               [:span (when virheet-ulos?
                        {:style {:display "block"}})
                #_(case tyyppi
                    :huomautus (ikonit/livicon-info-circle)
                    (ikonit/livicon-warning-sign))
                (str " " v)]))]]))
-
 
 (defn linkki
   ([otsikko toiminto]

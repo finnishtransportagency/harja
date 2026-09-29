@@ -197,6 +197,13 @@
 
           _ (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi = %s AND perintapvm = '%s'::DATE"
                  hallinnollinen-tpi-id testipvm))
+             tuotekohtainen-laskutusyhteenveto-ennen
+             (laskutus-q/hae-laskutusyhteenvedon-tiedot-tuotekohtainen (:db jarjestelma)
+               {:urakka (int urakka-id)
+                :hk_alkupvm alkupvm
+                :hk_loppupvm loppupvm
+                :aikavali_alkupvm alkupvm
+                :aikavali_loppupvm loppupvm})
           _ (lisaa-suorasanktio-urakalle sanktiomaara "vaihtosanktio" testipvm urakka-id
               hallinnollinen-tpi-id styyppi-laiminlyonti-id nil nil)
           _ (lisaa-suorasanktio-urakalle arvonvahennysmaara "arvonvahennyssanktio" testipvm urakka-id
@@ -209,15 +216,28 @@
              :aikavali_alkupvm alkupvm
              :aikavali_loppupvm loppupvm})
           ;; MHU ja HJU hoidon johto - tuotteen rivi
+            hoidonjohto-rivi-ennen (first (filter #(= (:nimi %) "MHU ja HJU hoidon johto")
+                              tuotekohtainen-laskutusyhteenveto-ennen))
           hoidonjohto-rivi (first (filter #(= (:nimi %) "MHU ja HJU hoidon johto") tuotekohtainen-laskutusyhteenveto))
           ;; Haetaan talvihoito riviltä, koska tehtäväryhmänä on b1-talvihoito
+            talvihoito-rivi-ennen (first (filter #(= (:nimi %) "Talvihoito")
+                               tuotekohtainen-laskutusyhteenveto-ennen))
           talvihoito-rivi (first (filter #(= (:nimi %) "Talvihoito") tuotekohtainen-laskutusyhteenveto))
+            hoidonjohto-rivi-ennen (into (sorted-map) hoidonjohto-rivi-ennen)
           hoidonjohto-rivi (into (sorted-map) hoidonjohto-rivi)
+            talvihoito-rivi-ennen (into (sorted-map) talvihoito-rivi-ennen)
           talvihoito-rivi (into (sorted-map) talvihoito-rivi)]
 
-      (is (= odotettu-sanktio (:sakot_laskutetaan hoidonjohto-rivi))
-          "Vain tavallinen sanktio kuuluu ::sakot_laskutetaan-kenttään")
-      (is (= odotettu-arvonvahennys (:arvonvahennykset_laskutetaan talvihoito-rivi))
-          "Arvonvähennys kuuluu arvonvahennykset_laskutetaan-kenttään"))))
+          (is (= odotettu-sanktio
+             (- (:sakot_laskutetaan hoidonjohto-rivi)
+              (:sakot_laskutetaan hoidonjohto-rivi-ennen)))
+            "Lisätty tavallinen sanktio kuuluu ::sakot_laskutetaan-kenttään")
+          (is (= odotettu-arvonvahennys
+             (- (or (:arvonvahennykset_laskutetaan talvihoito-rivi) 0M)
+              (or (:arvonvahennykset_laskutetaan talvihoito-rivi-ennen) 0M)))
+            "Lisätty arvonvähennys kuuluu arvonvahennykset_laskutetaan-kenttään")
+
+          (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi IN (%s, %s) AND perintapvm = '%s'::DATE"
+               hallinnollinen-tpi-id tehtavaryhman-tpi testipvm)))))
 
 

@@ -53,6 +53,8 @@
   urakat-toteumat-muutos-ja-lisatyot
   urakat-toteumat-vesivaylaerilliskustannukset
   urakat-toteumat-varusteet
+  urakat-toteutus-muutkustannukset
+  urakat-toteutus-yksikkohintaisettyot
   urakat-tyomaapaivakirja
   urakat-kohdeluettelo-paikkauskohteet
   hallinta-indeksit

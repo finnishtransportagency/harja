@@ -18,6 +18,29 @@
 (def +rem-toimenpide+ 31)
 (def +remo-toimenpide+ 33)
 (def +rem-tas-toimenpide+ 4)
+(def +massamenekin-maksimi+ 50)
+
+(s/def ::urakka-id pos-int?)
+(s/def ::paallystyskohde-id pos-int?)
+(s/def ::tr-numero nat-int?)
+(s/def ::tr-ajorata nat-int?)
+(s/def ::tr-kaista nat-int?)
+(s/def ::tr-alkuosa nat-int?)
+(s/def ::tr-alkuetaisyys nat-int?)
+(s/def ::tr-loppuosa nat-int?)
+(s/def ::tr-loppuetaisyys nat-int?)
+(s/def ::haku (s/and (s/keys :req-un [::tr-numero ::tr-alkuosa ::tr-loppuosa])
+                     #(<= (:tr-alkuosa %) (:tr-loppuosa %))))
+(s/def ::hae-tieosuudet-kysely
+  (s/keys :req-un [::urakka-id ::paallystyskohde-id]
+          :opt-un [::haku]))
+(s/def ::tieosuus
+  (s/keys :req-un [::tr-numero ::tr-ajorata ::tr-kaista
+                   ::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys]))
+(s/def ::tieosuudet (s/coll-of ::tieosuus :kind vector?))
+(s/def ::kohteen-ulkopuolelle-jatkuvat (s/coll-of ::tieosuus :kind vector?))
+(s/def ::hae-tieosuudet-vastaus
+  (s/keys :req-un [::tieosuudet ::kohteen-ulkopuolelle-jatkuvat]))
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
@@ -53,7 +76,7 @@
                                 (= (:toimenpide rivi) 21)
                                 (= (:toimenpide rivi) 22)))
                :fmt #(fmt/desimaaliluku-opt % 1)}
-   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
+  :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmenekki" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
                         :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
                         }

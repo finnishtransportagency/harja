@@ -45,7 +45,7 @@
   (let [paatos-avain :hoidonjohtopalkkion-muutos
         paatos-tehty? (some? (:id paatos))
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))]
-    ^{:key (str "kattohinnan-ylitys-" (gensym))}
+    ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
      [valikatselmus-yhteiset/paatosotsikko-ja-avaus e! "Hoidonjohtopalkkion muutos" paatos-tehty? paatos-avain avatut-paatokset
       (partial valikatselmus-tiedot/avaa-tai-sulje-haitari) (valikatselmus-tiedot/->AvaaPaatos paatos-avain)]
@@ -88,9 +88,13 @@
                                                       "Päätöksen tallentaminen luo kulun Harjaan. Kulua ei lasketa tavoitehintaan.")) nil nil]]
 
           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? (and (not (:virheet paatos)) voi-muokata?)
+           ;; Vahvista
            #(e! (valikatselmus-tiedot/->TallennaHoidonjohtopalkkionMuutospaatos paatos))
-           (valikatselmus-yhteiset/paatoksen-poistovarmistus-modaali {:peru-paatos-fn #(e! (valikatselmus-tiedot/->PoistaHoidonjohtopalkkionMuutospaatos paatos))
-                                                                      :teksti "Automaattisesti kirjattu kulu poistetaan."})]
+           ;; Peru päätös 
+           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
+                  paatos
+                  (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]
+
           (when (:virheet paatos)
             [:div.muokkaustoiminnot
              [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"

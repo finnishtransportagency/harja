@@ -27,6 +27,7 @@
 
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
 
             [harja.views.urakka.valinnat :as urakka-valinnat]
@@ -86,14 +87,13 @@
               oikeus-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-laadunseuranta-sanktiot
                                 (:id @nav/valittu-urakka))
               muokataan-vanhaa? (some? (:id @muokattu))
-              suorasanktio? (:suorasanktio @muokattu)
               lupaus? (some #{:lupaussanktio :lupausbonus} #{(:laji @muokattu)})
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
               bonusten-syotto? (= :bonukset (:lomake @tila))
               arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                        (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-kaytossa? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
+              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -114,14 +114,14 @@
            (when (and lukutila? muokataan-vanhaa?)
              [:div.flex-row.alkuun.valistys16
               [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
-               ;; Estä muokkaus-nappulan käyttö laatupoikkeaman kautta tehdyille sanktioille
-               ;; ja urakan_paatos-taulusta haetuille sanktioille ja bonuksille
+               ;; Muokkaus vaatii kirjoitusoikeuden (W). Lupaussanktioita ja -bonuksia ei voi muokata
+               ;; tällä lomakkeella, koska ne tehdään välikatselmuksessa lupauspäätöksen yhteydessä.
                ;; TODO: Jos/kun lupaussanktio ja lupausbonus sanktio/bonus lajeille tehdään muokkausmahdollisuus tälle lomakkeelle
-               ;;       niin, poista "lupaus?" ehto. Lupausbonus ja lupaussanktio tehdään välikatselmuksessa, kun lupauspäätöstä tehdään.
-               {:disabled (or (not suorasanktio?) lupaus?)}]
+               ;;       niin, poista "lupaus?" ehto.
+               {:disabled (or (not oikeus-muokata?) lupaus?)}]
               (cond
-                (not suorasanktio?)
-                [yleiset/vihje "Lukitun laatupoikkeaman sanktiota ei voi enää muokata." nil 18]
+                (not oikeus-muokata?)
+                [yleiset/vihje (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-sanktiot) nil 18]
                 lupaus?
                 [yleiset/vihje "Lupaussanktiota tai lupausbonusta ei voi muokata tällä lomakkeella" nil 18])])
 
@@ -309,11 +309,12 @@
        (if yllapitourakka?
          {:otsikko "Kuvaus" :nimi :vakiofraasi
           :hae #(sanktio-domain/yllapidon-sanktiofraasin-nimi (:vakiofraasi %)) :leveys 3}
-         {:otsikko "Tyyppi" :nimi :sanktiotyyppi :hae (comp :nimi :tyyppi)
-          :leveys 2.5 :fmt #(cond
-                              (and % (= "Ei tarvita sanktiotyyppiä" %)) "–"
-                              (and % (not= "Ei tarvita sanktiotyyppiä" %)) %
-                              :else "–")})
+         {:otsikko "Tyyppi" :nimi :sanktiotyyppi
+          :hae (fn [rivi]
+                 (sanktiotyyppi-domain/sanktiotyypin-nimi
+                   (sanktio-domain/sanktiolaji->teksti (:laji rivi))
+                   (:tyyppi rivi)))
+          :leveys 2.5 :fmt #(or % "–")})
        (when (not yllapitourakka?)
          {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka
           :tyyppi :komponentti :komponentti tiedot/sanktion-tai-bonuksen-kuvaus :leveys 3})

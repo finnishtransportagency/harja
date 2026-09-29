@@ -2,6 +2,8 @@
   "Sanktiolomake"
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
@@ -70,6 +72,11 @@
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
+        ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
+        ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.
+        saa-poistaa? (or suorasanktio?
+                       (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot
+                         (:id @nav/valittu-urakka)))
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
@@ -175,7 +182,7 @@
                              :ikoni (ikonit/tallenna)
                              :disabled (or (not voi-muokata?)
                                          (not (lomake/voi-tallentaa? sanktio)))}]))
-                       (when (and voi-muokata? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
+                       (when (and voi-muokata? saa-poistaa? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
                          [:button.nappi-kielteinen.oikealle
                           {:class (when @tallennus-kaynnissa "disabled")
                            :on-click
@@ -275,7 +282,11 @@
               :aseta-vaikka-sama? true
               :valinnat tyyppi-valinnat
               :valinta-nayta (fn [arvo]
-                               (if (or (nil? arvo) (nil? (:nimi arvo))) "Valitse sanktiotyyppi" (:nimi arvo)))
+                               (if (or (nil? arvo) (nil? (:nimi arvo)))
+                                 "Valitse sanktiotyyppi"
+                                 (sanktiotyyppi-domain/sanktiotyypin-nimi
+                                   (tiedot/valitun-urakan-sanktiolajin-nimi (:laji @muokattu))
+                                   arvo)))
               :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
 
              ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
@@ -283,7 +294,10 @@
              ;; joten näytetään tyyppi pelkkänä tekstinä.
              {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
               ::lomake/col-luokka "col-xs-12"
-              :hae (comp :nimi :tyyppi)}))
+              :hae (fn [rivi]
+                     (sanktiotyyppi-domain/sanktiotyypin-nimi
+                       (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
+                       (:tyyppi rivi)))}))
 
          (when yllapitokohdeurakka?
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
@@ -313,7 +327,7 @@
             ::lomake/col-luokka "col-xs-12"
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
             :pakollinen? true
-            :muokattava? (if suorasanktio? (constantly voi-muokata?) (constantly false) )
+            :muokattava? (constantly voi-muokata?)
             :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})
 
 
@@ -333,7 +347,7 @@
           :nimi :perustelu
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
-          :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?))
+          :muokattava? (constantly voi-muokata?)
           :hae (comp :perustelu :paatos :laatupoikkeama)
           :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
           :tyyppi :text :koko [80 3]
@@ -432,7 +446,7 @@
            (if (not mhu25?)
             {:otsikko "Käsitelty" :nimi :kasittelyaika
              :pakollinen? true
-             :muokattava? (if (not suorasanktio?) (constantly false) (constantly voi-muokata?)) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
+             :muokattava? (constantly voi-muokata?) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
              ::lomake/col-luokka "col-xs-3"
              :hae (comp :kasittelyaika :paatos :laatupoikkeama)
              :aseta (fn [rivi arvo]
@@ -558,7 +572,7 @@
          {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if mhu25? (constantly false) (constantly voi-muokata?))
+          :muokattava? (if (not mhu25?) (constantly voi-muokata?) (constantly false))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
           :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)

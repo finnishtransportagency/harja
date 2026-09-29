@@ -1429,3 +1429,9 @@ SELECT u.id,
                 WHERE klu.urakka = u.id
                   AND (klu.poistettu IS NULL OR klu.poistettu = FALSE));
 
+-- name: hae-urakat-joilla-voi-olla-parametreja
+-- Vain MHU urakoilla voi olla parametreja, joten rajataan haku niihin.
+SELECT id, nimi, alkupvm, loppupvm, elinvoimakeskus_id
+  FROM urakka
+ WHERE tyyppi = 'teiden-hoito'
+ ORDER BY elinvoimakeskus_id, nimi;

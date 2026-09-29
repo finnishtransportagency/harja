@@ -1,5 +1,6 @@
 (ns harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu
   (:require [com.stuartsierra.component :as component]
+            [clojure.java.io :as io]
             [clojure.java.jdbc :as jdbc]
             [harja.pvm :as pvm]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
@@ -30,9 +31,24 @@
   (jdbc/with-db-transaction [db db]
     (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id (pvm/vuosi (first (:valittu-hoitokausi tiedot))))))
 
+(defn hae-tehtavaprofiilit
+  "Lukee tehtävien pikatäytön arvot dev-resources-konfiguraatiosta."
+  [http-palvelin _kayttaja]
+  (-> (:asetukset http-palvelin)
+    :dev-resources-path
+    (io/file "testidata/tehtava_profiilit.edn")
+    slurp
+    read-string))
+
 (defrecord TehtavatJaMaarat []
   component/Lifecycle
   (start [this]
+    (when (:kehitysmoodi (:http-palvelin this))
+      (julkaise-palvelu (:http-palvelin this)
+        :hae-tehtavaprofiilit
+        (fn [user]
+          (hae-tehtavaprofiilit (:http-palvelin this) user))))
+
     (julkaise-palvelu (:http-palvelin this)
       :hae-tehtavat-ja-maarat
       (fn [user tiedot]
@@ -46,6 +62,7 @@
 
   (stop [this]
     (poista-palvelut (:http-palvelin this)
+      :hae-tehtavaprofiilit
       :hae-tehtavat-ja-maarat
       :tallenna-tehtavat-ja-maarat)
     this))
