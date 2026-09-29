@@ -32,7 +32,7 @@
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
   (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
   (tarkista-kutsu db kayttaja urakkanro)
-  (let [urakan-tiedot (first (urakat/hae-tieurakka-urakkanumerolla db urakkanro))
+  (let [urakan-tiedot (first (urakat/hae-urakka-urakkantunnisteella db urakkanro))
         _ (when (nil? urakan-tiedot)
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
