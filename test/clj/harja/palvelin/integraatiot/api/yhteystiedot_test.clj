@@ -102,7 +102,7 @@
           vastaus (api-tyokalut/get-kutsu (str "/api/urakat/yhteystiedot/" urakkatunniste) livi-jarjestelmakayttaja portti)
           odotettu-virhe "tuntematon-urakka"
           palautunut-virhe (get-in (cheshire/decode (:body vastaus) true) [:virheet 0 :virhe :koodi])]
-      (is (= 400 (:status vastaus)) "Päättyneen urakan ietoja ei löydy")
+      (is (= 400 (:status vastaus)) "Päättyneen urakan tietoja ei löydy")
       (is (= odotettu-virhe palautunut-virhe)))))
 
 ;; Varmista, ettei kanavaurakkaa löydetä
