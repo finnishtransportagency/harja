@@ -2,8 +2,15 @@
 ## -> antaa valita branchin
 ## -> tarkistaa deployment-kohteen ennen buildia
 ## -> buildaa uberjarin ilman AWS-tunnuksia
-## -> buildaa imagen testi ECR:rään (erillään prodista)
-## -> deployaa imagen <test-env> ECS konttiin
+## -> ajaa tietokantamigraatiot rinnakkain buildin kanssa (nopeuttaa prosessia)
+## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa vain commit-SHA-tagilla
+## -> siirtää branch-tagin imagelle ja deployaa imagen <test-env> ECS konttiin SHA-tagilla
+## -> raportoi, jos kanta migroitiin mutta sovellusta ei deployattu
+##
+##  Kuvaus jobien välisistä riippuvuuksista:
+##   preflight ─┬─ build ── image ─┬─ deploy
+##              └─ database ───────┘
+##                                  report (vain virhetilanteissa)
 name: '[Test-envs] Build and deploy'
 
 on:
@@ -149,7 +156,7 @@ jobs:
           build-laadunseuranta: 'false'
           build-uberjar: 'true'
 
-      # Deploy-job ajetaan eri runnerissa, joten buildattu uberjar pitää toiselle jobille artifactina
+      # Image-job ajetaan eri runnerissa, joten buildattu uberjar pitää siirtää jobille artifactina
       - name: '[Test-envs] Upload build artifact'
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
@@ -158,14 +165,21 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  deploy:
-    name: "Deploy branch to ${{ inputs.environment }}"
+  # Rakentaa imagen ja pushaa sen VAIN commit-SHA-tagilla.
+  # Branch-tagia (REF_TAG) ei pushata tässä, koska migraatio voi olla vielä kesken rinnakkaisessa database-jobissa.
+  # Jos REF_TAG osoittaisi uuteen imageen ennen migraatiota, ECS:n seuraava taskin käynnistys
+  # (esim. auto-stopin jälkeen) voisi ajaa uutta sovellusta migroimatonta kantaa vasten.
+  # Image buildataan ja pushataan erillään, koska app build-jobissa ei käytetä AWS-tunnuksia (tietoturva).
+  image:
+    name: "Build and push image for ${{ inputs.environment }}"
     needs:
       - preflight
       - build
     runs-on: ubuntu-latest
-    environment: ${{ inputs.environment }}
-    timeout-minutes: 60
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
+    timeout-minutes: 30
 
     permissions:
       id-token: write
@@ -202,21 +216,64 @@ jobs:
         with:
           mask-password: 'true'
 
-      - name: '[Test-envs] Build and tag Harja Docker image'
-        id: build-image
+      - name: '[Test-envs] Build Harja Docker image'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          REF_TAG: ${{ needs.preflight.outputs.ref_tag }}
           COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           docker build --provenance=false \
-            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA" \
             --file "$DOCKERFILE_PATH" .
 
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" >> "$GITHUB_OUTPUT"
+      - name: '[Test-envs] Push image to ECR (commit SHA tag only)'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
+        run: |
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
+
+  # Tämä ajetaan rinnakkain buildin kanssa.
+  # Hox: Testiympäristöjen suhteen voidaan sallia hiukan riskisempi rinnakkainen ajo ja nopeuttaa workflowta.
+  # Jos jotain ongelmia ilmenee, voi kehittäjä vain tehdä uuden korjaavan deploymentin.
+  # Jobi ajetaan _aina_ (myös skip-migrations-tilassa), koska app tarvitsee toimiakseen käynnissä olevan kannan.
+  #
+  # HUOM: Tätä jobia EI saa peruuttaa kesken migraation. Jobin peruutus ei pysäytä Lambdaa pilvessä,
+  #       vaan Flyway-ajo jatkuu taustalla. Tällöin myöskään report-job ei tiedä migraation tilaa.
+  #       Uudelleenajo on turvallinen, kunhan Lambda on tehnyt työnsä loppuun.
+  database:
+    name: "Prepare database for ${{ inputs.environment }}"
+    needs: preflight
+    runs-on: ubuntu-latest
+    environment:
+      name: ${{ inputs.environment }}
+      deployment: false
+    # Pidempi kuin migraatio-Lambdan 900 sekunnin aikakatkaisu + mahdollinen Auroran käynnistys täysin stopped-tilasta
+    timeout-minutes: 30
+
+    permissions:
+      id-token: write
+      contents: read
+
+    # migrated=true julkaistaan vasta, kun Lambda on palauttanut onnistuneen tuloksen
+    outputs:
+      migrated: ${{ steps.migration-result.outputs.migrated }}
+
+    steps:
+      - name: '[Test-envs] Checkout code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          aws-region: 'eu-west-1'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
 
       # Käynnistä tietokanta jos ei ole jo käynnissä
       # Testiympäristön RDS-klusteri voi olla myös kokonaan pysäytettynä, joten odota että se on käytettävissä ennen migraatioita.
@@ -268,15 +325,65 @@ jobs:
           commit-sha: ${{ needs.preflight.outputs.commit_sha }}
           function-name: HarjaTestMigrationRunner-${{ inputs.environment }}
 
-      - name: '[Test-envs] Push image to ECR'
+      # Ajetaan vain, jos edellinen migraatio-steppi onnistui
+      - name: '[Test-envs] Mark database as migrated'
+        id: migration-result
+        if: ${{ !inputs.skip-migrations }}
+        run: echo "migrated=true" >> "$GITHUB_OUTPUT"
+
+  # Ajetaan lopuksi vain, kun image-, database- ja preflight- jobit ovat onnistuneet
+  deploy:
+    name: "Deploy branch to ${{ inputs.environment }}"
+    needs:
+      - preflight
+      - image
+      - database
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    timeout-minutes: 60
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: '[Test-envs] Checkout code'
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Assume role with OIDC
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
+        with:
+          aws-region: 'eu-west-1'
+          role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
+          role-duration-seconds: 3600
+          role-skip-session-tagging: true
+
+      # ECR URL sisältää AWS-tilin ID:n (joka on secret repossa, joten GitHub sensuroi sen job-outputeista).
+      # Siksi image-URI muodostetaan tässä jobissa, eikä sitä tuoda image-jobista.
+      - name: '[Test-envs] Authenticate with AWS ECR'
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@03f1aad4c6c7ffd436567f42f9384779290529bd # v2.1.7
+        with:
+          mask-password: 'true'
+
+      # Pushaa branch-tagi (REF_TAG) jo pushattuun Commit SHA-tagattuun imageen.
+      # Tämä tehdään vasta migraation jälkeen, jotta REF_TAG ei koskaan osoita migroimatonta kantaa vastaan.
+      # Dockerin `imagetools create` kopioi vain imagen manifestin (sama digest), ei tarvita erillistä `docker pull`-vaihetta.
+      - name: '[Test-envs] Push ref tag'
+        id: image-uri
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
           REF_TAG: ${{ needs.preflight.outputs.ref_tag }}
           COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
         run: |
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG"
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
+          docker buildx imagetools create \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" \
+            "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
+
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA" >> "$GITHUB_OUTPUT"
 
       - name: '[Test-envs] Download task definition'
         env:
@@ -294,7 +401,7 @@ jobs:
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
-          image: ${{ steps.build-image.outputs.image }}
+          image: ${{ steps.image-uri.outputs.image }}
 
       - name: Deploy ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
@@ -337,3 +444,46 @@ jobs:
               --resource-arn "$SERVICE_ARN" \
               --tag-keys HARJA_AUTOSS_IGNORE
           fi
+
+  # Raportoi osittain onnistuneen ajon: kanta on migroitu, mutta sovellusta ei deployattu.
+  # Eli, deployment on jäänyt tilaan jossa kannassa on uusi versio, mutta sovellus ei ole päivitetty.
+  # Ajetaan vain, jos jokin jobi epäonnistui tai peruutettiin JA migraatio ehti onnistua.
+  report:
+    name: "Report partial deployment to ${{ inputs.environment }}"
+    needs:
+      - preflight
+      - build
+      - image
+      - database
+      - deploy
+    if: ${{ (failure() || cancelled()) && needs.database.outputs.migrated == 'true' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    permissions: {}
+
+    steps:
+      - name: '[Test-envs] Report migrated database without deployment'
+        env:
+          COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          BUILD_RESULT: ${{ needs.build.result }}
+          IMAGE_RESULT: ${{ needs.image.result }}
+          DEPLOY_RESULT: ${{ needs.deploy.result }}
+        run: |
+          MESSAGE="Migraatiot on ajettu, mutta sovellusta ei deployattu. Ympäristössä ${ENVIRONMENT} ajetaan vanhaa sovellusversiota uutta skeemaa vasten. Korjaa virhe ja aja workflow uudelleen, tai käytä \"Re-run failed jobs\" -toimintoa, jos virhe oli häiriö."
+
+          echo "::error title=Partial deployment::${MESSAGE}"
+
+          {
+            echo "## ⚠️ Osittainen deployment: ${ENVIRONMENT}"
+            echo ""
+            echo "${MESSAGE}"
+            echo ""
+            echo "| Job | Tulos |"
+            echo "|-----|-------|"
+            echo "| build | ${BUILD_RESULT} |"
+            echo "| image | ${IMAGE_RESULT} |"
+            echo "| database | success (migroitu) |"
+            echo "| deploy | ${DEPLOY_RESULT} |"
+          } >> "$GITHUB_STEP_SUMMARY"
