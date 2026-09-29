@@ -41,15 +41,15 @@ export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', urakkaEvk).click()
-    cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
+    cy.contains('.haku-lista-item', urakkaEvk, {timeout: pageloadTimeout}).click()
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
     cy.contains('Näytä päättyneet').click();
-    cy.wait(250); // Toimii varmemmin, kun ei ole niin kiire
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
     cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
     cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
     cy.wait('@sanktiot', {timeout: clickTimeout})
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
 }
 
