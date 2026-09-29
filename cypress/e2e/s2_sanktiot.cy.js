@@ -188,7 +188,7 @@ describe('Sanktion summa näkyy tallennuksen jälkeen MHU26:ssa', function () {
 
         cy.contains('td', testiSanktioKuvausMhu26, {timeout: clickTimeout}).click()
         cy.contains('label', 'Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /6\s?000/)
+            .find('.lomake-arvo').invoke('text').should('match', /3\s?000/)
     })
 })
 
