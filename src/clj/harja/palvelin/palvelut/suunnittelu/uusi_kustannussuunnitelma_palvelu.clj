@@ -52,11 +52,12 @@
           indeksikerroin-str (:indeksikerroin-str indeksikertoimet)
 
           ;; Hae tarjouksen tiedot
-          tarjous (if-not vanha-urakka?
-                    (tarjous-kyselyt/hae-tarjous db urakka-id)
+          ;; urakka_tarjous taulua käytetään, jos kyseessä on vanha urakka ja sille ei ole laitettu hoitovuoden_alun_tavoitehinta näkymää käyttöön
+          tarjous (if (and vanha-urakka? (not (:hoitovuoden_alun_tavoitehinta_kaytossa urakan-parametrit)))
                     (suunnitelma-q/hae-vanhan-urakan-hoitovuoden-tarjous db
                       {:urakka_id urakka-id
-                       :hoitokausi hoitovuosinro}))
+                       :hoitokausi hoitovuosinro})
+                    (tarjous-kyselyt/hae-tarjous db urakka-id))
 
           ;: Hae rahavaraukset
           rahavaraukset (suunnitelma-q/hae-rahavaraukset db sopimus-id urakka-id hoitovuoden-alkuvuosi)
