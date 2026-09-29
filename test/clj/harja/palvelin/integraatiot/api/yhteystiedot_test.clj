@@ -93,6 +93,18 @@
       (is (sisaltaa-roolin? yhteyshenkilot "ELY urakanvalvoja"))
       (is (sisaltaa-roolin? yhteyshenkilot "Kunnossapitopäällikkö")))))
 
+(deftest tarkista-yhteystietojen-haku-paattynyt-urakka
+  (with-fake-http
+    [(str "http://localhost:" portti "/api/urakat/yhteystiedot/130") :allow
+     fim-url fim-vastaus]
+    (let [_ (anna-lukuoikeus livi-jarjestelmakayttaja)
+          urakkatunniste 130
+          vastaus (api-tyokalut/get-kutsu (str "/api/urakat/yhteystiedot/" urakkatunniste) livi-jarjestelmakayttaja portti)
+          odotettu-virhe "tuntematon-urakka"
+          palautunut-virhe (get-in (cheshire/decode (:body vastaus) true) [:virheet 0 :virhe :koodi])]
+      (is (= 400 (:status vastaus)) "Päättyneen urakan ietoja ei löydy")
+      (is (= odotettu-virhe palautunut-virhe)))))
+
 ;; Varmista, ettei kanavaurakkaa löydetä
 (deftest tarkista-ettei-kanavaurakkaa-loydy
   (let [kanavaurakat
