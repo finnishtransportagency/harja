@@ -5,6 +5,7 @@
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -107,6 +108,14 @@
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
         aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
+        c-ryhman-maaritys (when (= :C (:laji @muokattu))
+                (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
+                  (when (and (= :manuaalinen maaritystapa)
+                       (some? summa-euroina)
+                       (not (str/blank? ohjeteksti)))
+                    {:summa-euroina summa-euroina
+                     :ohjeteksti ohjeteksti}))
+                  (:summamaaritykset aktiivinen-tyyppi)))
         kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
                                  aktiivinen-tyyppi)
         automaattinen-summa (when kiintea-profiilisumma?
@@ -283,7 +292,7 @@
                                                             (:nimi tyyppi))
                                              tpi (cond
                                                    ;; Jos toimenpidekoodi löytyy, käytä sitä
-                                                   tpk (:tpi_id (tiedot/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
+                                                   tpk (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
                                                    ;; Jos vain yksi vaihtoehto, esivalitse se
                                                    (= 1 (count kohdistukset)) (:tpi_id (first kohdistukset))
                                                    ;; Muuten säilytä nykyinen arvo
@@ -448,6 +457,9 @@
                                         (Math/abs summa))
                                       (when (:summa %)
                                         (Math/abs (:summa %))))
+                              :vihje (when c-ryhman-maaritys
+                                       (str "-" (fmt/euro-opt false (:summa-euroina c-ryhman-maaritys))
+                                         " " (:ohjeteksti c-ryhman-maaritys)))
                               :pakollinen? true :uusi-rivi? true
                               :validoi [[:ei-tyhja "Anna summa"]
                                         [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
@@ -459,7 +471,7 @@
                               :uusi-rivi? true
                               :hae :omailmoitettu
                               :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
-                              :selite "Urakoitsija ilmoitti itse laadunalituksesta tai tehtävän laiminlyönnistä"})
+                              :selite "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"})
 
                            ;; MHU21-> urakoille ei näytetä indeksiä
                            (when (and (<= urakan-alkuvuosi 2020) (sanktio-domain/muu-kuin-muistutus? @muokattu))
