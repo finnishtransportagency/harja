@@ -1195,13 +1195,6 @@ ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'siltakorjaus' THEN 7
              END;
 
--- name: onko-kaynnissa-tai-tuleva-urakkanro?
--- single?: true
-SELECT exists(SELECT id
-              FROM urakka
-              WHERE urakkanro = :urakkanro
-                AND loppupvm >= current_date);
-
 -- name: tuhoa-tekniset-laitteet-urakkadata!
 DELETE
 FROM tekniset_laitteet_urakka;

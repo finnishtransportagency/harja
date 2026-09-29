@@ -22,12 +22,7 @@
     (log/error (format "Kayttajatunnuksela: %s ei ole oikeutta hakea urakan yhteystietoja." (:kayttajatunnus kayttaja)))
     (throw+ {:type virheet/+kayttajalla-puutteelliset-oikeudet+
              :virheet [{:koodi virheet/+kayttajalla-puutteelliset-oikeudet+
-                        :viesti (format "Käyttäjällä ei oikeuksia urakkaan: %s" urakkanro)}]}))
-  (when-not (urakat/onko-kaynnissa-tai-tuleva-urakkanro? db urakkanro)
-    (log/warn (format "Yritettiin hakea yhteystiedot tuntemattomalle tai päättyneelle urakalle: %s." urakkanro))
-    (throw+ {:type virheet/+viallinen-kutsu+
-             :virheet [{:koodi virheet/+tuntematon-urakka-koodi+
-                        :viesti (format "Urakkanumerolla: %s ei löydy voimassa olevaa urakkaa Harjassa." urakkanro)}]})))
+                        :viesti (format "Käyttäjällä ei oikeuksia urakkaan: %s" urakkanro)}]})))
 
 (defn hae-urakan-yhteystiedot [db fim {urakkanro :urakkanro} kayttaja]
   (log/debug (format "Haetaan urakan (urakkanro: %s) tiedot käyttäjälle: %s." urakkanro kayttaja))
