@@ -41,6 +41,7 @@ export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
 
     cy.visit("/")
 
+    cy.get('.ladataan-harjaa', {timeout: pageloadTimeout}).should('not.exist')
     cy.contains('.haku-lista-item', urakkaEvk, {timeout: pageloadTimeout}).click()
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
