@@ -120,7 +120,9 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         // Sivupaaneelista tyyppi
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent().find('input').first().clear().type(1234);
+        // Sivupaneelissa MHU25-profiilin summa on kiinteä
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
+            .find('.lomake-arvo').invoke('text').should('match', /4\s?000/);
 
         // Käsittely ja laskutus
         cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittely ja laskutus');

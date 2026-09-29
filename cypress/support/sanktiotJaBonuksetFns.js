@@ -38,6 +38,7 @@ export function siivoaBonuksetKannasta(lisatieto) {
 // Navigoi urakan Laadunseuranta > Sanktiot ja bonukset -näkymään
 export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
     cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot')
+    cy.intercept('POST', '_/hae-urakan-sanktio-konfiguraatio').as('sanktiokonfiguraatio')
 
     cy.visit("/")
 
@@ -45,12 +46,18 @@ export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
     cy.contains('.haku-lista-item', urakkaEvk, {timeout: pageloadTimeout}).click()
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
-    cy.contains('Näytä päättyneet').click();
+    cy.contains('label', 'Näytä päättyneet')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
     cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
     cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
     cy.wait('@sanktiot', {timeout: clickTimeout})
+    cy.wait('@sanktiokonfiguraatio', {timeout: clickTimeout})
+        .its('response.statusCode').should('be.within', 200, 299)
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
 }
 
