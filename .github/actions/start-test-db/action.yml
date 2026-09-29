@@ -1,5 +1,5 @@
 name: 'Start test database'
-description: 'Käynnistää testitietokannan taustalle ja ajaa siihen migraatiot ja testidataa'
+description: 'Käynnistää testitietokannan taustalle ja ajaa migraatiot; testidatan lisäämisen voi ohittaa'
 
 inputs:
   registry:
@@ -18,6 +18,10 @@ inputs:
   service-name:
     description: 'Testitietokannan compose servicen nimi. Saatavilla olevat servicet on määritelty docker-compose.yml:ään'
     required: true
+  skip-testdata:
+    description: 'Ohita testidatan lisääminen testitietokantaan (nopeampi tietokannan alustus)'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
@@ -57,9 +61,15 @@ runs:
         docker exec --user postgres harjadb psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
       shell: bash
 
-    - name: Run migrations and test data into harja-postgres service
+    - name: Run migrations into the test database
       run: |
-        echo "Running migrations and test data into harja-postgres service..."
+        echo "Running migrations..."
         docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
+      shell: bash
+
+    - name: Insert test data into the test database
+      if: ${{ inputs.skip-testdata != 'true' }}
+      run: |
+        echo "Inserting test data..."
         docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
       shell: bash

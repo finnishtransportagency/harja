@@ -107,7 +107,7 @@ jobs:
         with:
           persist-credentials: false
 
-      # Buildi tarvitsee paikallisen tietokannan, mutta ei AWS-tunnuksia
+      # Build tarvitsee vain paikallisen tietokannan skeeman, mutta ei testidataa eikä AWS-tunnuksia
       - name: '[Test-envs] Start database for build'
         uses: ./.github/actions/start-test-db
         with:
@@ -115,6 +115,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ github.token }}
           service-name: harjadb-latest
+          skip-testdata: 'true'
 
       # rev-parse == commit
       - name: '[Test-envs] Resolve checked out commit'
