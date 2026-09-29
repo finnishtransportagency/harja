@@ -79,7 +79,7 @@
           formaatti "yyyy-MM-dd'T'HH:mm:ss"
           alkupvm (str (df/unparse (df/formatter formaatti) (tc/from-date alkupvm)) "Z")
           loppupvm (str (df/unparse (df/formatter formaatti) (tc/from-date loppupvm)) "Z")
-          odotettu-vastaus (str "{\"urakka\":{\"elynro\":14,\"alueurakkanro\":\"1443\",\"loppupvm\":\"" loppupvm
+          odotettu-vastaus (str "{\"urakka\":{\"elynro\":380049,\"alueurakkanro\":\"1443\",\"loppupvm\":\"" loppupvm
                              "\",\"nimi\":\"Rovaniemen MHU testiurakka (1. hoitovuosi)\",\"sampoid\":\"MHU-TESTI-LAP-ROV\",\"alkupvm\":\"" alkupvm
                              "\",\"elynimi\":\"Lappi\",\"urakoitsija\":{\"nimi\":\"YIT Rakennus Oy\",\"ytunnus\":\"1565583-5\",\"katuosoite\":\"Panuntie 11, PL 36\",\"postinumero\":\"621  \"},"
                              "\"yhteyshenkilot\":[{\"yhteyshenkilo\":{\"rooli\":\"ELY urakanvalvoja\",\"nimi\":\"Erkki Elyläinen\",\"puhelinnumero\":\"0982345\",\"email\":\"erkki@example.com\",\"organisaatio\":\"ELY\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Urakan vastuuhenkilö\",\"nimi\":\"Ulla Urakoitsija\",\"puhelinnumero\":\"234234\",\"email\":\"ulla@example.com\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Kunnossapitopäällikkö\",\"nimi\":\"Åsa Linnasalo\",\"puhelinnumero\":\"044 261 2773\",\"email\":\"AsaLinnasalo@cuvox.de\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}},{\"yhteyshenkilo\":{\"rooli\":\"Sillanvalvoja\",\"nimi\":\"Vihtori Ollila\",\"puhelinnumero\":\"042 220 6892\",\"email\":\"VihtoriOllila@einrot.com\",\"organisaatio\":\"YIT Rakennus Oy\",\"vastuuhenkilo\":false,\"varahenkilo\":false}}]}}")
