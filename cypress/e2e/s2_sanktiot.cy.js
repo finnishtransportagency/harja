@@ -192,6 +192,97 @@ describe('Sanktion summa näkyy tallennuksen jälkeen MHU26:ssa', function () {
     })
 })
 
+describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', function () {
+    const testiSanktioKuvausMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi";
+    const testiSanktioPerusteluMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi-perustelu";
+    const tyyppiMhu26B = 'Talvihoito Ise/Is/L';
+
+    before(function () {
+        siivoaSanktiotKannasta(testiSanktioKuvausMhu26B);
+    });
+
+    after(function () {
+        siivoaSanktiotKannasta(testiSanktioKuvausMhu26B);
+    });
+
+    it('tallentaa ja muokkaa B-ryhmän omailmoitussanktion idempotentisti', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu26, evkLappi)
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B1')
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'B - Vakava laiminlyönti'})
+        cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: tyyppiMhu26B})
+        cy.get('label').contains('Tapahtumapaikka').parent().parent().parent().find('input').first().clear().type(testiSanktioKuvausMhu26B)
+        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiSanktioPerusteluMhu26B)
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('02.10.2026')
+        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first().clear().type('02.10.2026')
+        cy.get('label').contains('Perustelu').click()
+        cy.get('label[for*=hoitovuosi] + div').valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
+
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
+        cy.contains('label', 'Urakoitsijan omailmoitus').should('be.visible').click()
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.wait('@tallennaMhu26B1', {timeout: clickTimeout}).then(({response}) => {
+            expect(response, 'Tallennuspyynnön vastaus puuttuu').to.exist;
+            expect(response.statusCode, 'B-sanktion tallennus epäonnistui').to.be.within(200, 299);
+        })
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
+        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
+        cy.contains('B - Vakava laiminlyönti').should('be.visible')
+        cy.contains(tyyppiMhu26B).should('be.visible')
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+        cy.contains('label', 'Urakoitsijan omailmoitus').parent().find('input').should('be.checked')
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B2')
+        cy.contains('label', 'Urakoitsijan omailmoitus').click()
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.wait('@tallennaMhu26B2', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
+        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
+        cy.contains('label', 'Urakoitsijan omailmoitus').parent().find('input').should('not.be.checked')
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B3')
+        cy.contains('label', 'Urakoitsijan omailmoitus').click()
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.wait('@tallennaMhu26B3', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
+        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+        cy.contains('label', 'Urakoitsijan omailmoitus').parent().find('input').should('be.checked')
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B4')
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.wait('@tallennaMhu26B4', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
+        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
+        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+    })
+})
+
 describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
     before(function () {
         siivoaSanktiotKannasta(testiSanktioKuvaus2);
