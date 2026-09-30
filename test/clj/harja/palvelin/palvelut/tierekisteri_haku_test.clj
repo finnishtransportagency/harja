@@ -115,6 +115,7 @@
                   :tr-loppuosa 1 :tr-loppuetaisyys 10}
                  {:tr-alkuosa 1 :tr-alkuetaisyys 100
                   :tr-loppuosa 1 :tr-loppuetaisyys 100}
+                 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-loppuetaisyys 0}
                  {:tr-alkuosa -1}]]
     (is (thrown? Exception
                  (kutsu :hae-tr-tieosuudet +kayttaja-jvh+
