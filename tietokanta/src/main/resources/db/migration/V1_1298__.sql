@@ -25,6 +25,7 @@ DROP ROUTINE IF EXISTS kopioi_toteuma_hk_taulu(TEXT, INTEGER);
 DROP ROUTINE IF EXISTS luo_toteuma_hk_taulut(INTEGER, INTEGER);
 DROP ROUTINE IF EXISTS luo_toteuma_hk_taulu(TEXT, INTEGER, INTEGER);
 DROP ROUTINE IF EXISTS vaihda_toteuma_hk_taulut();
+DROP ROUTINE IF EXISTS palauta_toteuma_hk_alkutilaan();
 
 
 -- Partitiointiavaimena käytetään lähdetauluissa jo olevaa
@@ -346,7 +347,32 @@ BEGIN
             (urakka_id, hoitokauden_alkuvuosi)
         INCLUDE (toteuma, maara)
         WHERE poistettu = FALSE;
-    ANALYZE public.toteuma_materiaali_hk;
+
+    -- Lisätään toteuma-partitioille uudet toimivat indeksi
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_010101_191001_urakka_alkanut_tyyppi_idx ON public.toteuma_010101_191001 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_191001_200701_urakka_alkanut_tyyppi_idx ON public.toteuma_191001_200701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_200701_210101_urakka_alkanut_tyyppi_idx ON public.toteuma_200701_210101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_210101_210701_urakka_alkanut_tyyppi_idx ON public.toteuma_210101_210701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_210701_220101_urakka_alkanut_tyyppi_idx ON public.toteuma_210701_220101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_220101_230101_urakka_alkanut_tyyppi_idx ON public.toteuma_220101_220701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_230101_240101_urakka_alkanut_tyyppi_idx ON public.toteuma_220701_230101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_230101_240101_urakka_alkanut_tyyppi_idx ON public.toteuma_230101_230701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_230701_240101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_240101_240701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_240701_250101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_250101_250701_urakka_alkanut_tyyppi_idx ON public.toteuma_250101_250701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_250701_260101_urakka_alkanut_tyyppi_idx ON public.toteuma_250701_260101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_260101_260701_urakka_alkanut_tyyppi_idx ON public.toteuma_260101_260701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_260701_270101_urakka_alkanut_tyyppi_idx ON public.toteuma_260701_270101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_270101_270701_urakka_alkanut_tyyppi_idx ON public.toteuma_270101_270701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_270701_280101_urakka_alkanut_tyyppi_idx ON public.toteuma_270701_280101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_280101_280701_urakka_alkanut_tyyppi_idx ON public.toteuma_280101_280701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_280701_290101_urakka_alkanut_tyyppi_idx ON public.toteuma_280701_290101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_290101_290701_urakka_alkanut_tyyppi_idx ON public.toteuma_290101_290701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_290701_300101_urakka_alkanut_tyyppi_idx ON public.toteuma_290701_300101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_300101_991231_urakka_alkanut_tyyppi_idx ON public.toteuma_300101_991231 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+
+
     RAISE NOTICE 'Indeksit luotu';
 
     -- Viiteavaimet vain tauluihin, joihin alkuperäisissäkin tauluissa viitataan.
@@ -444,7 +470,19 @@ CREATE OR REPLACE PROCEDURE partitioi_toteumat_hoitokausittain(eran_koko INTEGER
     LANGUAGE plpgsql AS
 $$
 BEGIN
-    -- Lukitaan toteuma_tehtava ja toteuma_materiaali, jotta kukaan ei voi kirjoittaa niihin kopioinnin aikana.
+    -- Estetään kirjoitukset lähdetauluihin kopioinnin ajaksi.
+    IF NOT EXISTS (SELECT 1
+                   FROM pg_trigger
+                   WHERE tgrelid = 'public.toteuma'::REGCLASS
+                     AND tgname = 'tg_estaa_toteuma_hk_kirjoitus'
+                     AND NOT tgisinternal) THEN
+        CREATE TRIGGER tg_estaa_toteuma_hk_kirjoitus
+            BEFORE INSERT OR UPDATE OR DELETE
+            ON public.toteuma
+            FOR EACH ROW
+        EXECUTE FUNCTION estä_kirjoitukset();
+    END IF;
+
     IF NOT EXISTS (SELECT 1
                    FROM pg_trigger
                    WHERE tgrelid = 'public.toteuma_tehtava'::REGCLASS
@@ -475,6 +513,12 @@ BEGIN
     CALL viimeistele_toteuma_hk_taulut();
     CALL vaihda_toteuma_hk_taulut();
 
+    -- toteuma-taulua ei nimetä uudelleen, joten sen kirjoitusesto poistetaan tässä.
+    DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
+        ON public.toteuma;
+
+    NOTICE 'Toteumataulujen kirjoitusestot poistettu ja partitiointi valmis';
+
 END;
 $$;
 
@@ -491,6 +535,9 @@ BEGIN
 
     DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
         ON public.toteuma_materiaali;
+
+    DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
+        ON public.toteuma;
 
     RAISE NOTICE 'Toteumataulujen kirjoitusestot poistettu';
 END;
@@ -586,6 +633,8 @@ BEGIN
         ON public.toteuma_tehtava_vanha;
     DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
         ON public.toteuma_materiaali_vanha;
+    DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
+        ON public.toteuma;
 
     DROP VIEW IF EXISTS public.toteuma_tehtava_hk CASCADE;
     DROP VIEW IF EXISTS public.toteuma_materiaali_hk CASCADE;
@@ -617,9 +666,9 @@ $$;
 --
 -- Ajo (jokainen omana lauseenaan, ei transaktiolohkon sisällä):
 --   CALL partitioi_toteumat_hoitokausittain();
--- Jos ajo keskeytyy ja on tarpeen aloittaa se kokonan alusta, niin poista kirjoitusestot.
--- Tätä ei tarvita, jos kaikki menee hienosti. Ne taulut, jotka on lukittu on nimetty uudelleen ja niitä ei enää käytetä.
--- Mutta jos homma menee pieleen ja partitioituja tauluja ei saadakaan käyttöön, niin on tärkeää avata lukot ja päästää liikenne taas läpi.
+-- Jos kopiointi keskeytyy ennen tauluvaihtoa ja se halutaan aloittaa alusta:
+--   SELECT palauta_toteuma_hk_alkutilaan();
+-- Jos osittaiset kohteet halutaan säilyttää ja vain avata alkuperäiset taulut kirjoituksille:
 --   CALL poista_toteuma_hk_kirjoitusestot();
 
 
@@ -631,7 +680,7 @@ $$;
 --   1. Poistaa *_hk-näkymät.
 --   2. Poistaa uudet partitioidut toteuma_tehtava- ja toteuma_materiaali-taulut
 --      sekä niiden partitiot, indeksit ja avaimet CASCADE-optiolla.
---   3. Poistaa vanhoista tauluista migraation kirjoituseston triggerit.
+--   3. Poistaa vanhoista tauluista ja toteuma-taulusta migraation kirjoituseston triggerit.
 --   4. Nimeää toteuma_tehtava_vanha- ja toteuma_materiaali_vanha-taulut takaisin
 --      nimille toteuma_tehtava ja toteuma_materiaali.
 --   5. Poistaa migraation siirron tilataulun.
@@ -655,3 +704,114 @@ $$;
 --     JOIN pg_namespace n ON n.oid = c.relnamespace
 --    WHERE n.nspname = 'public'
 --      AND c.relname IN ('toteuma_tehtava_hk', 'toteuma_materiaali_hk');
+
+
+-- Palauttaa alkuperäiset lähdetaulut käyttöön epäonnistuneen kopioinnin jälkeen
+-- ennen kuin taulut on vaihdettu partitioituihin tauluihin.
+-- Partitioidut kohteet ja siirron tila poistetaan, jotta seuraava ajo alkaa alusta.
+CREATE OR REPLACE FUNCTION palauta_toteuma_hk_alkutilaan()
+    RETURNS VOID
+    LANGUAGE plpgsql AS
+$$
+BEGIN
+    IF to_regclass('public.toteuma_tehtava_vanha') IS NOT NULL
+        OR to_regclass('public.toteuma_materiaali_vanha') IS NOT NULL THEN
+        RAISE EXCEPTION 'Taulut on jo vaihdettu; nollausta ei tehdä, jotta uuteen tauluun tallennettua dataa ei hävitetä';
+    END IF;
+
+    IF NOT EXISTS (SELECT 1
+                   FROM pg_class c
+                            JOIN pg_namespace n ON n.oid = c.relnamespace
+                   WHERE n.nspname = 'public'
+                     AND c.relname = 'toteuma_tehtava'
+                     AND c.relkind = 'r')
+        OR NOT EXISTS (SELECT 1
+                       FROM pg_class c
+                                JOIN pg_namespace n ON n.oid = c.relnamespace
+                       WHERE n.nspname = 'public'
+                         AND c.relname = 'toteuma_materiaali'
+                         AND c.relkind = 'r') THEN
+        RAISE EXCEPTION 'Alkuperäisiä toteumatauluja ei löydy tavallisina tauluina; nollausta ei tehdä';
+    END IF;
+
+    IF EXISTS (SELECT 1
+               FROM pg_class c
+                        JOIN pg_namespace n ON n.oid = c.relnamespace
+               WHERE n.nspname = 'public'
+                 AND c.relname IN ('toteuma_tehtava_hk', 'toteuma_materiaali_hk')
+                 AND c.relkind <> 'p') THEN
+        RAISE EXCEPTION 'Kohdenimellä on muu kuin odotettu partitioitu taulu; nollausta ei tehdä';
+    END IF;
+
+    IF EXISTS (SELECT 1
+               FROM pg_class c
+                        JOIN pg_namespace n ON n.oid = c.relnamespace
+               WHERE n.nspname = 'public'
+                 AND c.relname = 'toteuma_hk_siirto_tila'
+                 AND c.relkind <> 'r') THEN
+        RAISE EXCEPTION 'Siirron tilanimi on käytössä muulla kuin taululla; nollausta ei tehdä';
+    END IF;
+
+    -- Pidetään lähdetaulujen kirjoitukset pysäytettyinä koko nollauksen ajan.
+    LOCK TABLE public.toteuma,
+               public.toteuma_tehtava,
+               public.toteuma_materiaali
+        IN SHARE ROW EXCLUSIVE MODE;
+
+    -- Vaihto on voinut valmistua samalla, kun lukkoja odotettiin.
+    IF to_regclass('public.toteuma_tehtava_vanha') IS NOT NULL
+        OR to_regclass('public.toteuma_materiaali_vanha') IS NOT NULL
+        OR NOT EXISTS (SELECT 1
+                       FROM pg_class c
+                                JOIN pg_namespace n ON n.oid = c.relnamespace
+                       WHERE n.nspname = 'public'
+                         AND c.relname = 'toteuma_tehtava'
+                         AND c.relkind = 'r')
+        OR NOT EXISTS (SELECT 1
+                       FROM pg_class c
+                                JOIN pg_namespace n ON n.oid = c.relnamespace
+                       WHERE n.nspname = 'public'
+                         AND c.relname = 'toteuma_materiaali'
+                         AND c.relkind = 'r') THEN
+        RAISE EXCEPTION 'Taulut vaihdettiin nollauksen aikana; nollausta ei tehdä';
+    END IF;
+
+    IF EXISTS (SELECT 1
+               FROM pg_class c
+                        JOIN pg_namespace n ON n.oid = c.relnamespace
+               WHERE n.nspname = 'public'
+                 AND c.relname IN ('toteuma_tehtava_hk', 'toteuma_materiaali_hk')
+                 AND c.relkind <> 'p')
+        OR EXISTS (SELECT 1
+                   FROM pg_class c
+                            JOIN pg_namespace n ON n.oid = c.relnamespace
+                   WHERE n.nspname = 'public'
+                     AND c.relname = 'toteuma_hk_siirto_tila'
+                     AND c.relkind <> 'r') THEN
+        RAISE EXCEPTION 'Nollattavien kohteiden tyypit muuttuivat; nollausta ei tehdä';
+    END IF;
+
+    IF to_regclass('public.toteuma_tehtava_hk') IS NOT NULL THEN
+        EXECUTE 'LOCK TABLE public.toteuma_tehtava_hk IN ACCESS EXCLUSIVE MODE';
+    END IF;
+    IF to_regclass('public.toteuma_materiaali_hk') IS NOT NULL THEN
+        EXECUTE 'LOCK TABLE public.toteuma_materiaali_hk IN ACCESS EXCLUSIVE MODE';
+    END IF;
+    IF to_regclass('public.toteuma_hk_siirto_tila') IS NOT NULL THEN
+        EXECUTE 'LOCK TABLE public.toteuma_hk_siirto_tila IN ACCESS EXCLUSIVE MODE';
+    END IF;
+
+    DROP TABLE IF EXISTS public.toteuma_tehtava_hk;
+    DROP TABLE IF EXISTS public.toteuma_materiaali_hk;
+    DROP TABLE IF EXISTS public.toteuma_hk_siirto_tila;
+
+    DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
+        ON public.toteuma_tehtava;
+    DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
+        ON public.toteuma_materiaali;
+    DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
+        ON public.toteuma;
+
+    RAISE NOTICE 'Osittaiset partitioidut taulut poistettu ja alkuperäisten taulujen kirjoitukset avattu';
+END;
+$$;
