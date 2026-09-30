@@ -8,6 +8,7 @@
             [taoensso.timbre :as log]
             [harja.domain
              [oikeudet :as oikeudet]
+             [pot2 :as pot2-domain]
              [yllapitokohde :as yllapitokohde]
              [tierekisteri :as tr-domain]]
             [clojure.string :as str])
@@ -164,33 +165,21 @@
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
-(s/def ::tr-numero nat-int?)
-(s/def ::tr-alkuosa nat-int?)
-(s/def ::tr-alkuetaisyys nat-int?)
-(s/def ::tr-loppuosa nat-int?)
-(s/def ::tr-loppuetaisyys nat-int?)
-(s/def ::hae-tr-tieosuudet-kysely
-  (s/and (s/keys :req-un [::tr-numero]
-                 :opt-un [::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys])
-         (fn [params]
-           (and (or (not (contains? params :tr-alkuetaisyys)) (contains? params :tr-alkuosa))
-                (or (not (contains? params :tr-loppuetaisyys)) (contains? params :tr-loppuosa))
-                (let [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}
-                      (merge {:tr-alkuosa 0 :tr-alkuetaisyys 0
-                              :tr-loppuosa Integer/MAX_VALUE :tr-loppuetaisyys Integer/MAX_VALUE}
-                             params)]
-                  (neg? (compare [tr-alkuosa tr-alkuetaisyys]
-                                 [tr-loppuosa tr-loppuetaisyys])))))))
+(def ^:private tieosuushaun-oletusrajat
+  {:tr-alkuosa 0
+   :tr-alkuetaisyys 0
+   :tr-loppuosa Integer/MAX_VALUE
+   :tr-loppuetaisyys Integer/MAX_VALUE})
 
-(defn hae-tr-tieosuudet [db params]
-  (let [rajat (merge {:tr-alkuosa 0 :tr-alkuetaisyys 0
-                      :tr-loppuosa Integer/MAX_VALUE :tr-loppuetaisyys Integer/MAX_VALUE}
-                     params)]
-    (->> (tv/hae-tieosuudet db rajat)
-         :tieosuudet
-         (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
-                        :tr-loppuosa :tr-loppuetaisyys))
-         vec)))
+(defn hae-tr-tieosuudet
+  "Hakee tien kaistakohtaiset tieosuudet tieosoitejärjestyksessä. Puuttuvat rajat laajentavat hakua tien alkuun tai loppuun."
+  [db params]
+  (->> (merge tieosuushaun-oletusrajat params)
+       (tv/hae-tieosuudet db)
+       :tieosuudet
+       (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
+                      :tr-loppuosa :tr-loppuetaisyys))
+       vec))
 
 (defn hae-tienumerot-kartalle [db params]
   (tv/hae-tiet-alueella db params))
@@ -245,7 +234,8 @@
                      (fn [_ params]
                        (oikeudet/ei-oikeustarkistusta!)
                        (hae-tr-tieosuudet db params))
-                     {:kysely-spec ::hae-tr-tieosuudet-kysely})
+                     {:kysely-spec ::pot2-domain/hae-tr-tieosuudet-kysely
+                      :vastaus-spec ::pot2-domain/tieosuudet})
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
