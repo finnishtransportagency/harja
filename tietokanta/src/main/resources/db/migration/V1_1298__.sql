@@ -66,9 +66,11 @@ CREATE OR REPLACE PROCEDURE luo_toteuma_hk_taulu(lahdetaulu TEXT,
     LANGUAGE plpgsql AS
 $$
 DECLARE
-    kohdetaulu TEXT := lahdetaulu || '_hk';
-    hk         INTEGER;
-    partitio   TEXT;
+    kohdetaulu  TEXT := lahdetaulu || '_hk';
+    hk          INTEGER;
+    partitio    TEXT;
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     IF to_regclass(format('public.%I', kohdetaulu)) IS NULL THEN
         EXECUTE format(
@@ -111,8 +113,11 @@ BEGIN
     VALUES (lahdetaulu, kohdetaulu)
     ON CONFLICT (lahde_taulu) DO NOTHING;
 
-    RAISE NOTICE 'Taulun % partitiot valmiina (hoitokaudet % - %)',
-        kohdetaulu, ensimmainen_hoitokausi, viimeinen_hoitokausi;
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Taulun % partitiot valmiina (hoitokaudet % - %); alkoi %, päättyi %, kesti % s',
+        kohdetaulu, ensimmainen_hoitokausi, viimeinen_hoitokausi,
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
 
@@ -124,7 +129,9 @@ CREATE OR REPLACE PROCEDURE luo_toteuma_hk_taulut(ensimmainen_hoitokausi INTEGER
     LANGUAGE plpgsql AS
 $$
 DECLARE
-    viimeinen INTEGER := viimeinen_hoitokausi;
+    viimeinen    INTEGER := viimeinen_hoitokausi;
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     IF viimeinen IS NULL THEN
         SELECT GREATEST(hoitokauden_alkuvuosi(max(alkanut)),
@@ -138,6 +145,10 @@ BEGIN
 
     CALL luo_toteuma_hk_taulu('toteuma_tehtava', ensimmainen_hoitokausi, viimeinen);
     CALL luo_toteuma_hk_taulu('toteuma_materiaali', ensimmainen_hoitokausi, viimeinen);
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Partitioitujen kohdetaulujen luonti valmis; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
     -- Hox. Tämä on laajennettavissa periatteessa mille tahansa taululle, jolla on hotokauden_alkuvuosi-sarake.
     -- Esim jos toteuman_reittipisteet taululle lisäisi hoitokauden_alkuvuosi-sarakkeen, voisi senkin partitioida samalla tavalla.
 END;
@@ -160,7 +171,8 @@ DECLARE
     eran_ylaraja    BIGINT;
     erassa          BIGINT;
     arvio_yhteensa  BIGINT;
-    aloitus_aika    TIMESTAMP := clock_timestamp();
+    aloitus_aika    TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika    TIMESTAMPTZ;
     alku_siirretty  BIGINT;
     kulunut_s       NUMERIC;
     jaljella_s      NUMERIC;
@@ -181,7 +193,10 @@ BEGIN
     END IF;
 
     IF onko_valmis THEN
-        RAISE NOTICE 'Taulu % on jo kopioitu (% riviä), ohitetaan', lahdetaulu, rivit_yhteensa;
+        lopetus_aika := clock_timestamp();
+        RAISE NOTICE 'Taulu % on jo kopioitu (% riviä), ohitetaan; alkoi %, päättyi %, kesti % s',
+            lahdetaulu, rivit_yhteensa, aloitus_aika, lopetus_aika,
+            round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
         RETURN;
     END IF;
 
@@ -262,9 +277,10 @@ BEGIN
     WHERE t.lahde_taulu = lahdetaulu;
     COMMIT;
 
-    RAISE NOTICE 'Kopiointi % -> % valmis, yhteensä % riviä, kesto % s',
-        lahdetaulu, kohdetaulu, rivit_yhteensa,
-        round(EXTRACT(EPOCH FROM clock_timestamp() - aloitus_aika));
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Kopiointi % -> % valmis, yhteensä % riviä; alkoi %, päättyi %, kesti % s',
+        lahdetaulu, kohdetaulu, rivit_yhteensa, aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
 
@@ -272,9 +288,16 @@ $$;
 CREATE OR REPLACE PROCEDURE kopioi_toteuma_hk_data(eran_koko INTEGER DEFAULT 500000)
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     CALL kopioi_toteuma_hk_taulu('toteuma_tehtava', eran_koko);
     CALL kopioi_toteuma_hk_taulu('toteuma_materiaali', eran_koko);
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Toteumataulujen datan kopiointi valmis; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
     -- Jos tätä laajennetaan uusille tauluille, niin tänne myös se uusi taulu muistaa lisätä
 END;
 $$;
@@ -286,7 +309,9 @@ CREATE OR REPLACE PROCEDURE viimeistele_toteuma_hk_taulut()
     LANGUAGE plpgsql AS
 $$
 DECLARE
-    kesken TEXT;
+    kesken       TEXT;
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     SELECT string_agg(lahde_taulu, ', ')
     INTO kesken
@@ -349,28 +374,28 @@ BEGIN
         WHERE poistettu = FALSE;
 
     -- Lisätään toteuma-partitioille uudet toimivat indeksi
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_010101_191001_urakka_alkanut_tyyppi_idx ON public.toteuma_010101_191001 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_191001_200701_urakka_alkanut_tyyppi_idx ON public.toteuma_191001_200701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_200701_210101_urakka_alkanut_tyyppi_idx ON public.toteuma_200701_210101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_210101_210701_urakka_alkanut_tyyppi_idx ON public.toteuma_210101_210701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_210701_220101_urakka_alkanut_tyyppi_idx ON public.toteuma_210701_220101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_220101_230101_urakka_alkanut_tyyppi_idx ON public.toteuma_220101_220701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_230101_240101_urakka_alkanut_tyyppi_idx ON public.toteuma_220701_230101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_230101_240101_urakka_alkanut_tyyppi_idx ON public.toteuma_230101_230701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_230701_240101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_240101_240701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_240701_250101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_250101_250701_urakka_alkanut_tyyppi_idx ON public.toteuma_250101_250701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_250701_260101_urakka_alkanut_tyyppi_idx ON public.toteuma_250701_260101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_260101_260701_urakka_alkanut_tyyppi_idx ON public.toteuma_260101_260701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_260701_270101_urakka_alkanut_tyyppi_idx ON public.toteuma_260701_270101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_270101_270701_urakka_alkanut_tyyppi_idx ON public.toteuma_270101_270701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_270701_280101_urakka_alkanut_tyyppi_idx ON public.toteuma_270701_280101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_280101_280701_urakka_alkanut_tyyppi_idx ON public.toteuma_280101_280701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_280701_290101_urakka_alkanut_tyyppi_idx ON public.toteuma_280701_290101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_290101_290701_urakka_alkanut_tyyppi_idx ON public.toteuma_290101_290701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_290701_300101_urakka_alkanut_tyyppi_idx ON public.toteuma_290701_300101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
-    CREATE INDEX CONCURRENTLY IF NOT EXISTS toteuma_300101_991231_urakka_alkanut_tyyppi_idx ON public.toteuma_300101_991231 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_010101_191001_urakka_alkanut_tyyppi_idx ON public.toteuma_010101_191001 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_191001_200701_urakka_alkanut_tyyppi_idx ON public.toteuma_191001_200701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_200701_210101_urakka_alkanut_tyyppi_idx ON public.toteuma_200701_210101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_210101_210701_urakka_alkanut_tyyppi_idx ON public.toteuma_210101_210701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_210701_220101_urakka_alkanut_tyyppi_idx ON public.toteuma_210701_220101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_220101_230101_urakka_alkanut_tyyppi_idx ON public.toteuma_220101_220701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_230101_240101_urakka_alkanut_tyyppi_idx ON public.toteuma_220701_230101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_230101_240101_urakka_alkanut_tyyppi_idx ON public.toteuma_230101_230701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_230701_240101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_240101_240701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_240101_250101_urakka_alkanut_tyyppi_idx ON public.toteuma_240701_250101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_250101_250701_urakka_alkanut_tyyppi_idx ON public.toteuma_250101_250701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_250701_260101_urakka_alkanut_tyyppi_idx ON public.toteuma_250701_260101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_260101_260701_urakka_alkanut_tyyppi_idx ON public.toteuma_260101_260701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_260701_270101_urakka_alkanut_tyyppi_idx ON public.toteuma_260701_270101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_270101_270701_urakka_alkanut_tyyppi_idx ON public.toteuma_270101_270701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_270701_280101_urakka_alkanut_tyyppi_idx ON public.toteuma_270701_280101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_280101_280701_urakka_alkanut_tyyppi_idx ON public.toteuma_280101_280701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_280701_290101_urakka_alkanut_tyyppi_idx ON public.toteuma_280701_290101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_290101_290701_urakka_alkanut_tyyppi_idx ON public.toteuma_290101_290701 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_290701_300101_urakka_alkanut_tyyppi_idx ON public.toteuma_290701_300101 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
+    CREATE INDEX IF NOT EXISTS toteuma_300101_991231_urakka_alkanut_tyyppi_idx ON public.toteuma_300101_991231 (urakka, alkanut) INCLUDE (id, tyyppi) WHERE poistettu = false;
 
 
     RAISE NOTICE 'Indeksit luotu';
@@ -413,6 +438,10 @@ BEGIN
         FOR EACH ROW
     EXECUTE PROCEDURE poista_muistetut_laskutusyht_toteuma_tehtava();
 
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Toteumataulujen viimeistely valmis; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
 
@@ -423,6 +452,9 @@ $$;
 CREATE OR REPLACE PROCEDURE vaihda_toteuma_hk_taulut()
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
 
     -- Varmistellaan, että taulut todellakin ovat olemassa
@@ -438,6 +470,12 @@ BEGIN
         RENAME TO toteuma_tehtava_vanha;
     ALTER TABLE public.toteuma_materiaali
         RENAME TO toteuma_materiaali_vanha;
+
+    -- Siirrä sequencet uusille tauluille. Tämä on tärkeää, koska vanhojen taulujen seq on jo käytetty loppuun.
+    ALTER SEQUENCE public.toteuma_tehtava_id_seq
+        OWNED BY public.toteuma_tehtava_hk.id;
+    ALTER SEQUENCE public.toteuma_materiaali_id_seq
+        OWNED BY public.toteuma_materiaali_hk.id;
 
     -- Otetaan uudet partitioidut taulut käyttöön.
     ALTER TABLE public.toteuma_tehtava_hk
@@ -459,7 +497,10 @@ BEGIN
     SET muokattu = CURRENT_TIMESTAMP
     WHERE lahde_taulu IN ('toteuma_tehtava', 'toteuma_materiaali');
 
-    RAISE NOTICE 'Toteumataulut vaihdettu partitioituihin tauluihin; vanhat taulut ovat *_vanha-nimillä';
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Toteumataulut vaihdettu partitioituihin tauluihin; vanhat taulut ovat *_vanha-nimillä; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
 
@@ -469,6 +510,9 @@ $$;
 CREATE OR REPLACE PROCEDURE partitioi_toteumat_hoitokausittain(eran_koko INTEGER DEFAULT 500000)
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     -- Estetään kirjoitukset lähdetauluihin kopioinnin ajaksi.
     IF NOT EXISTS (SELECT 1
@@ -517,7 +561,10 @@ BEGIN
     DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
         ON public.toteuma;
 
-    NOTICE 'Toteumataulujen kirjoitusestot poistettu ja partitiointi valmis';
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Toteumataulujen kirjoitusestot poistettu ja partitiointi valmis; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 
 END;
 $$;
@@ -529,6 +576,9 @@ $$;
 CREATE OR REPLACE PROCEDURE poista_toteuma_hk_kirjoitusestot()
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
         ON public.toteuma_tehtava;
@@ -539,7 +589,10 @@ BEGIN
     DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
         ON public.toteuma;
 
-    RAISE NOTICE 'Toteumataulujen kirjoitusestot poistettu';
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Toteumataulujen kirjoitusestot poistettu; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
 
@@ -564,6 +617,8 @@ DECLARE
     nykyinen_materiaali_tyyppi "char";
     hk_tehtava_tyyppi        "char";
     hk_materiaali_tyyppi     "char";
+    aloitus_aika              TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika              TIMESTAMPTZ;
 BEGIN
     IF to_regclass('public.toteuma_tehtava_vanha') IS NULL
         OR to_regclass('public.toteuma_materiaali_vanha') IS NULL THEN
@@ -639,6 +694,12 @@ BEGIN
     DROP VIEW IF EXISTS public.toteuma_tehtava_hk CASCADE;
     DROP VIEW IF EXISTS public.toteuma_materiaali_hk CASCADE;
 
+    -- Siirretään sekvenssit varmuuskopioille ennen uusien taulujen pudotusta.
+    ALTER SEQUENCE public.toteuma_tehtava_id_seq
+        OWNED BY public.toteuma_tehtava_vanha.id;
+    ALTER SEQUENCE public.toteuma_materiaali_id_seq
+        OWNED BY public.toteuma_materiaali_vanha.id;
+
     -- Partitioitu päätaulu ja siihen kuuluvat partitiot, indeksit sekä
     -- migraatiossa lisätyt avaimet poistetaan yhtenä kokonaisuutena.
     DROP TABLE public.toteuma_tehtava CASCADE;
@@ -652,7 +713,10 @@ BEGIN
 
     DROP TABLE IF EXISTS public.toteuma_hk_siirto_tila CASCADE;
 
-    RAISE NOTICE 'Toteumataulut palautettu migraatiota edeltävään tilaan';
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Toteumataulut palautettu migraatiota edeltävään tilaan; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
 
@@ -713,6 +777,9 @@ CREATE OR REPLACE FUNCTION palauta_toteuma_hk_alkutilaan()
     RETURNS VOID
     LANGUAGE plpgsql AS
 $$
+DECLARE
+    aloitus_aika TIMESTAMPTZ := clock_timestamp();
+    lopetus_aika TIMESTAMPTZ;
 BEGIN
     IF to_regclass('public.toteuma_tehtava_vanha') IS NOT NULL
         OR to_regclass('public.toteuma_materiaali_vanha') IS NOT NULL THEN
@@ -812,6 +879,9 @@ BEGIN
     DROP TRIGGER IF EXISTS tg_estaa_toteuma_hk_kirjoitus
         ON public.toteuma;
 
-    RAISE NOTICE 'Osittaiset partitioidut taulut poistettu ja alkuperäisten taulujen kirjoitukset avattu';
+    lopetus_aika := clock_timestamp();
+    RAISE NOTICE 'Osittaiset partitioidut taulut poistettu ja alkuperäisten taulujen kirjoitukset avattu; alkoi %, päättyi %, kesti % s',
+        aloitus_aika, lopetus_aika,
+        round(EXTRACT(EPOCH FROM (lopetus_aika - aloitus_aika)), 2);
 END;
 $$;
