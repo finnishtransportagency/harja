@@ -94,6 +94,7 @@ FROM (SELECT
                                                            WHERE id = :toimenpide))
                                              AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
             AND tt.poistettu IS NOT TRUE
+            AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
       GROUP BY toimenpidekoodi) x
   JOIN tehtava tk ON x.tpk_id = tk.id
 ORDER BY nimi;
@@ -243,9 +244,7 @@ SELECT
   t.suorittajan_ytunnus,
   t.lisatieto,
   k.jarjestelma                   AS jarjestelmanlisaama,
-  (SELECT nimi
-   FROM tehtava tpk
-   WHERE id = tt.toimenpidekoodi) AS toimenpide,
+  tpk.nimi                        AS toimenpide,
   t.tr_numero,
   t.tr_alkuosa,
   t.tr_alkuetaisyys,
@@ -254,15 +253,17 @@ SELECT
 
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
-                          AND urakka = :urakka
-                          AND sopimus = :sopimus
-                          AND alkanut >= :alkupvm
-                          AND paattynyt <= :loppupvm
-                          AND tyyppi = :tyyppi :: toteumatyyppi
-                          AND toimenpidekoodi = :toimenpidekoodi
-                          AND tt.poistettu IS NOT TRUE
+                          AND t.urakka = :urakka
+                          AND t.sopimus = :sopimus
+                          AND (t.alkanut >= :alkupvm AND t.alkanut < (:loppupvm::DATE + interval '1 day')::DATE)
+                          AND t.tyyppi = :tyyppi :: toteumatyyppi
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN tehtava tpk ON tpk.id = tt.toimenpidekoodi
+WHERE tt.poistettu IS NOT TRUE
+      AND tt.urakka_id = :urakka
+      AND tt.toimenpidekoodi = :toimenpidekoodi
+      AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
 ORDER BY t.alkanut DESC
 LIMIT 301;
 
@@ -433,7 +434,7 @@ WITH osa_toteumat AS
                    LEFT JOIN toteuma_materiaali tm
                              ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           WHERE t.urakka = :urakka
-            AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+            AND (t.alkanut >= :alkupvm::DATE AND t.alkanut < (:loppupvm::DATE + INTERVAL '1 day'))
             AND t.poistettu = FALSE
           GROUP BY tt.toimenpidekoodi, k.jarjestelma)
 SELECT tk.id                                     AS toimenpidekoodi_id,
