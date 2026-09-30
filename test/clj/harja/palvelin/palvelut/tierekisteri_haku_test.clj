@@ -49,6 +49,100 @@
    :tr-alkuosa b
    :tr-loppuosa c})
 
+(deftest hae-tr-tieosuudet-koko-tie
+  (luo-tr-osoitteet [[1 100 500 11]])
+  (is (= [{:tr-numero tienumero
+           :tr-ajorata 1
+           :tr-kaista 11
+           :tr-alkuosa 1
+           :tr-alkuetaisyys 100
+           :tr-loppuosa 1
+           :tr-loppuetaisyys 500}]
+         (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {:tr-numero tienumero}))))
+
+(deftest hae-tr-tieosuudet-rajauksella
+  (luo-tr-osoitteet [[1 100 500 11]
+                     [1 500 1000 11]
+                     [2 0 600 11]])
+  (let [hae (fn [rajaus]
+              (kutsu :hae-tr-tieosuudet +kayttaja-jvh+
+                     (assoc rajaus :tr-numero tienumero)))
+        koko-tie [{:tr-numero tienumero :tr-ajorata 1 :tr-kaista 11
+                   :tr-alkuosa 1 :tr-alkuetaisyys 100 :tr-loppuosa 2 :tr-loppuetaisyys 600}]]
+    (testing "vierekkäiset osuudet yhdistyvät myös osarajan yli"
+      (is (= koko-tie (hae {}))))
+    (testing "pelkkä alkupään rajaus"
+      (is (= [(assoc (first koko-tie) :tr-alkuetaisyys 300)]
+             (hae {:tr-alkuosa 1 :tr-alkuetaisyys 300})))
+      (is (= koko-tie (hae {:tr-alkuosa 1}))))
+    (testing "pelkkä loppupään rajaus"
+      (is (= [(assoc (first koko-tie) :tr-loppuosa 1 :tr-loppuetaisyys 700)]
+             (hae {:tr-loppuosa 1 :tr-loppuetaisyys 700}))))
+    (testing "molemmat rajat ja puuttuvan etäisyyden oletusarvo"
+      (is (= [(assoc (first koko-tie) :tr-alkuetaisyys 300
+                     :tr-loppuosa 1 :tr-loppuetaisyys 700)]
+             (hae {:tr-alkuosa 1 :tr-alkuetaisyys 300
+                   :tr-loppuosa 1 :tr-loppuetaisyys 700})))
+      (is (= [(assoc (first koko-tie) :tr-loppuosa 1 :tr-loppuetaisyys 1000)]
+             (hae {:tr-loppuosa 1}))))
+    (testing "tuntemattomalla tiellä ei ole tieosuuksia"
+      (is (= [] (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {:tr-numero 99999999}))))))
+
+(deftest hae-tr-tieosuudet-jarjestys-ja-raot
+  (luo-tr-osoitteet [[1 0 100 21]
+                     [1 200 300 21]
+                     [1 0 100 11]
+                     [2 0 100 11]])
+  (u (str "INSERT INTO tr_osoitteet
+           (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+           VALUES (" tienumero ", 2, 11, 1, 0, 100, 1)"))
+  (let [tulos (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {:tr-numero tienumero})]
+      (is (= [[1 0 1 11 2 100]
+        [1 0 1 21 1 100]
+        [1 0 2 11 1 100]
+            [1 200 1 21 1 300]]
+           (mapv (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
+                       :tr-loppuosa :tr-loppuetaisyys) tulos)))
+    (is (every? #(= #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa
+                       :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys}
+                    (set (keys %))) tulos))))
+
+(deftest hae-tr-tieosuudet-virheelliset-rajat
+  (doseq [rajaus [{:tr-alkuetaisyys 1}
+                 {:tr-loppuetaisyys 1}
+                 {:tr-alkuosa 3 :tr-loppuosa 2}
+                 {:tr-alkuosa 1 :tr-alkuetaisyys 20
+                  :tr-loppuosa 1 :tr-loppuetaisyys 10}
+                 {:tr-alkuosa 1 :tr-alkuetaisyys 100
+                  :tr-loppuosa 1 :tr-loppuetaisyys 100}
+                 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-loppuetaisyys 0}
+                 {:tr-alkuosa -1}]]
+    (is (thrown? Exception
+                 (kutsu :hae-tr-tieosuudet +kayttaja-jvh+
+                        (assoc rajaus :tr-numero tienumero)))))
+  (is (thrown? Exception
+               (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {}))))
+
+(deftest hae-osien-tiedot-suoraan
+  (luo-tr-osoitteet [[1 0 100 11]
+                     [1 100 200 11]
+                     [1 0 200 12]
+                     [1 300 400 11]])
+  (let [tulos (tierekisteri-haku/hae-osien-tiedot
+                (:db jarjestelma)
+                {:tr-numero tienumero :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1})]
+    (is (= [{:tr-numero tienumero
+             :tr-osa 1
+             :pituudet {:pituus 300
+                        :tr-alkuetaisyys 0
+                        :ajoradat [{:tr-ajorata 1
+                                    :osiot [{:pituus 200 :tr-alkuetaisyys 0
+                                             :kaistat [{:pituus 200 :tr-kaista 11 :tr-alkuetaisyys 0}
+                                                       {:pituus 200 :tr-kaista 12 :tr-alkuetaisyys 0}]}
+                                            {:pituus 100 :tr-alkuetaisyys 300
+                                             :kaistat [{:pituus 100 :tr-kaista 11 :tr-alkuetaisyys 300}]}]}]}}]
+           tulos))))
+
 (deftest sama-kaista-ja-rako
   (luo-tr-osoitteet [[1 0 1500 11]
                      [1 1500 2500 11]

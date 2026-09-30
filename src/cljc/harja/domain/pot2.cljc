@@ -42,6 +42,17 @@
 (s/def ::hae-tieosuudet-vastaus
   (s/keys :req-un [::tieosuudet ::kohteen-ulkopuolelle-jatkuvat]))
 
+(defn- tieosuushaun-vali-kasvava? [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
+  (neg? (compare [(or tr-alkuosa 0) (or tr-alkuetaisyys 0)]
+                 [(or tr-loppuosa ##Inf) (or tr-loppuetaisyys ##Inf)])))
+
+(s/def ::hae-tr-tieosuudet-kysely
+  (s/and (s/keys :req-un [::tr-numero]
+                 :opt-un [::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys])
+         #(or (nil? (:tr-alkuetaisyys %)) (some? (:tr-alkuosa %)))
+         #(or (nil? (:tr-loppuetaisyys %)) (some? (:tr-loppuosa %)))
+         tieosuushaun-vali-kasvava?))
+
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]

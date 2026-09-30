@@ -1,5 +1,5 @@
 (ns harja.palvelin.palvelut.tierekisteri-haku
-  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+  (:require [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu julkaise-palvelut poista-palvelut]]
             [clojure.spec.alpha :as s]
             [com.stuartsierra.component :as component]
             [harja.kyselyt.tieverkko :as tv]
@@ -8,6 +8,7 @@
             [taoensso.timbre :as log]
             [harja.domain
              [oikeudet :as oikeudet]
+             [pot2 :as pot2-domain]
              [yllapitokohde :as yllapitokohde]
              [tierekisteri :as tr-domain]]
             [clojure.string :as str])
@@ -164,6 +165,22 @@
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
+(def ^:private tieosuushaun-oletusrajat
+  {:tr-alkuosa 0
+   :tr-alkuetaisyys 0
+   :tr-loppuosa Integer/MAX_VALUE
+   :tr-loppuetaisyys Integer/MAX_VALUE})
+
+(defn hae-tr-tieosuudet
+  "Hakee tien kaistakohtaiset tieosuudet tieosoitejärjestyksessä. Puuttuvat rajat laajentavat hakua tien alkuun tai loppuun."
+  [db params]
+  (->> (merge tieosuushaun-oletusrajat params)
+       (tv/hae-tieosuudet db)
+       :tieosuudet
+       (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
+                      :tr-loppuosa :tr-loppuetaisyys))
+       vec))
+
 (defn hae-tienumerot-kartalle [db params]
   (tv/hae-tiet-alueella db params))
 
@@ -213,6 +230,12 @@
       :hae-tienumerot-kartalle (fn [_ params]
                                  (oikeudet/ei-oikeustarkistusta!)
                                  (hae-tienumerot-kartalle db params)))
+    (julkaise-palvelu http-palvelin :hae-tr-tieosuudet
+                     (fn [_ params]
+                       (oikeudet/ei-oikeustarkistusta!)
+                       (hae-tr-tieosuudet db params))
+                     {:kysely-spec ::pot2-domain/hae-tr-tieosuudet-kysely
+                      :vastaus-spec ::pot2-domain/tieosuudet})
     this)
   (stop [{http :http-palvelin :as this}]
     (poista-palvelut http
@@ -222,6 +245,7 @@
       :hae-osien-pituudet
       :hae-tr-pituudet
       :hae-tr-tiedot
+      :hae-tr-tieosuudet
       :hae-tr-osan-ajoradat
       :hae-tr-osan-ajoratojen-geometriat
       :hae-tr-gps-koordinaateilla
