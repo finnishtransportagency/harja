@@ -196,14 +196,14 @@
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
                     (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
-                    (and validoinnit-kaytossa? (not (:muutosten_hallinta urakan-parametrit))
+                    (and validoinnit-kaytossa? (:muutosten_hallinta urakan-parametrit)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
                     (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
 
                     (and validoinnit-kaytossa? (not (seq hoitokauden-indeksikuukaudet)))
                     (conj "Hoitokauden indekseissä puutteita.")
 
-                    (and validoinnit-kaytossa? alkuperainen-pisteluku)
+                    (and validoinnit-kaytossa? (not alkuperainen-pisteluku))
                     (conj "Hoitokauden indeksiluvuissa puutteita."))
 
           indeksipaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) paatokset))
@@ -252,7 +252,7 @@
                           (assoc :pistelukujen_muutos_prosentteina muutos-prosentteina)
                           (assoc :indeksikorotuksen_prosenttiosuus indeksikorotuksen-prosenttiosuus)
                           (assoc :hoitokauden_lopun_indeksikorjaus hoitokauden-lopun-indeksikorjaus)
-                          (assoc :virheet virheet))
+                          (assoc :virheet (when-not (empty? virheet) virheet)))
 
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Hoitovuoden lopun indeksikorjaus")) paatokset)
           paatokset (sort-by :jarjestys (conj paatokset indeksipaatos))]
