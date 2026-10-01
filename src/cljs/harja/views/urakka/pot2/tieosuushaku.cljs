@@ -70,15 +70,13 @@
          [hakukentta e! hakuehdot "Tie" :tr-numero "pot2-tieosuushaku-tie"]
          [hakukentta e! hakuehdot "Alkuosa" :tr-alkuosa "pot2-tieosuushaku-alkuosa"]
          [hakukentta e! hakuehdot "Loppuosa" :tr-loppuosa "pot2-tieosuushaku-loppuosa"]
-          [napit/nappi
-           "Hae tieosuudet"
-           #(e! (pot2-tiedot/->HaeTieosuudet true))
-           {:ikoni (ikonit/livicon-search)
-            :luokka "nappi-toissijainen"
-            :disabled (or haetaan? hakuehdot-puuttuvat?)
-            :data-cy "pot2-hae-tieosuudet"}]]
-        [:div.pot2-tieosuushaku-ohje
-         "Jos tieosat jatkuvat kohteen ulkopuolelle, listauksessa näytetään ainoastaan kohteen alku- ja loppuetäisyys, joka mahtuu kohteen sisälle."]
+         [napit/nappi
+          "Hae tieosuudet"
+          #(e! (pot2-tiedot/->HaeTieosuudet true))
+          {:ikoni (ikonit/livicon-search)
+           :luokka "nappi-toissijainen"
+           :disabled (or haetaan? hakuehdot-puuttuvat?)
+           :data-cy "pot2-hae-tieosuudet"}]]
         (cond
           haetaan?
           [yleiset/ajax-loader "Haetaan tieosuuksia..."]
@@ -102,7 +100,7 @@
               :neutraali
               "Seuraavat tieosat jatkuvat kohteen ulkopuolelle. Listauksessa näkyy vain pääkohteen sisällä oleva osuus."
               (map #(tierekisteri/tierekisteriosoite-tekstina % {:teksti-tie? false})
-                   kohteen-ulkopuolelle-jatkuvat)
+                kohteen-ulkopuolelle-jatkuvat)
               nil])
            (when voi-lisata?
              [napit/yleinen-ensisijainen
