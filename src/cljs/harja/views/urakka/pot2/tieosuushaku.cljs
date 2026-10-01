@@ -6,7 +6,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
-            [harja.ui.yleiset :as yleiset]))
+            [harja.ui.yleiset :as yleiset]
+            [harja.fmt :as fmt]))
 
 (defn- hakukentta [e! hakuehdot otsikko avain data-cy]
   (r/with-let [arvo-atom (r/atom (get hakuehdot avain))]
@@ -42,13 +43,13 @@
               :rivi-valittu-fn #(e! (pot2-tiedot/->ValitseTieosuus %1 %2))}))
 
      true
-        (into [{:otsikko "Tie" :nimi :tr-numero :tyyppi :numero :tasaa :oikea :leveys 2}
-          {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :numero :tasaa :oikea :leveys 2}
-          {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :numero :tasaa :oikea :leveys 2}
-          {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :numero :tasaa :oikea :leveys 2}
-          {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :numero :tasaa :oikea :leveys 2}
-          {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :numero :tasaa :oikea :leveys 2}
-          {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :numero :tasaa :oikea :leveys 2}]))
+        (into [{:otsikko "Tie" :nimi :tr-numero :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}
+          {:otsikko "Ajorata" :nimi :tr-ajorata :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}
+          {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}
+          {:otsikko "Aosa" :nimi :tr-alkuosa :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}
+          {:otsikko "Aet" :nimi :tr-alkuetaisyys :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}
+          {:otsikko "Losa" :nimi :tr-loppuosa :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}
+          {:otsikko "Let" :nimi :tr-loppuetaisyys :tyyppi :numero :fmt #(fmt/desimaaliluku-opt % 0) :tasaa :oikea :leveys 2}]))
    tieosuudet])
 
 (defn tieosuushaku
