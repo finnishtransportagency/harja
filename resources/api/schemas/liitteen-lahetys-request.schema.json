@@ -1,6 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-03/schema#",
-  "id": "urn:harja/liitteen-vastaanotto-request",
+  "id": "urn:harja/liitteen-lahetys-request",
   "type": "object",
   "additionalProperties": false,
   "properties": {
@@ -11,14 +11,14 @@
       "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
       "required": true
     },
-    "liite-taydennys": {
-      "id": "urn:harja/liite-taydennys",
+    "liite-lahetys": {
+      "id": "urn:harja/liite-lahetys",
       "type": "object",
       "additionalProperties": false,
       "required": true,
       "properties": {
-        "kategoria": {
-          "id": "urn:harja/liite/kategoria",
+        "kohdeluokka": {
+          "id": "urn:harja/liite/kohdeluokka",
           "type": "string",
           "enum": [
             "siltatarkastuskohde",
@@ -30,15 +30,15 @@
           "description": "Liitteen kohdeluokka. Palvelin hyväksyy vain tuetut kategoriat.",
           "required": true
         },
-        "kategoria-tunniste": {
-          "id": "urn:harja/liite-taydennys/tunniste",
+        "kohdetunniste": {
+          "id": "urn:harja/liite-lahetys/kohdetunniste",
           "type": "object",
           "additionalProperties": false,
           "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
           "required": true
           },
           "siltatarkastuskohde": {
-            "id": "urn:harja/liite-taydennys/siltatarkastuskohde",
+            "id": "urn:harja/liite-lahetys/siltatarkastuskohde",
             "type": "string",
             "enum": [
               "maatukienSiisteysJaKunto",
@@ -66,11 +66,11 @@
               "tieluiskienSiisteysJaKunto",
               "portaidenSiisteysJaKunto"
             ],
-            "description": "lisää tänne jotain",
+            "description": "Jos kohdeluokka on siltatarkastuskohde, tarvitaan kohdetunnisteen lisäksi siltatarkastuskohde",
             "required": false
           },
         "liite": {
-          "id": "urn:harja/liite-taydennys/liite",
+          "id": "urn:harja/liite-lahetys/liite",
           "type": "object",
           "$ref": "file:resources/api/schemas/entities/liite.schema.json",
           "required": true
