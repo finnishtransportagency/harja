@@ -1,0 +1,82 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja/liitteen-lahetys-request",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "otsikko": {
+      "id": "urn:harja/otsikko",
+      "type": "object",
+      "additionalProperties": false,
+      "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+      "required": true
+    },
+    "liite-lahetys": {
+      "id": "urn:harja/liite-lahetys",
+      "type": "object",
+      "additionalProperties": false,
+      "required": true,
+      "properties": {
+        "kohdeluokka": {
+          "id": "urn:harja/liite/kohdeluokka",
+          "type": "string",
+          "enum": [
+            "siltatarkastuskohde",
+            "tarkastus",
+            "tarkastushavainto",
+            "laatupoikkeama",
+            "turvallisuuspoikkeama"
+          ],
+          "description": "Liitteen kohdeluokka. Palvelin hyväksyy vain tuetut kategoriat.",
+          "required": true
+        },
+        "kohdetunniste": {
+          "id": "urn:harja/liite-lahetys/kohdetunniste",
+          "type": "object",
+          "additionalProperties": false,
+          "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+          "description": "Kohde on urakan raportointivastuulla oleva tietokokonaisuus kuten tarkastus tai laatupoikkeama. Tunniste on se id, jolla tietokokonaisuus urakoitsijajärjestelmässä tunnistetaan. Kohdetunniste voi olla esimerkiksi aiemmin Harjaan lähetetyn tarkastuksen tunniste urakoitsijajärjestelmässä. Tunnisteen avulla lähetetty liite linkitetään oikeaan tietokokonaisuuteen. Jos tietokokonaisuutta eli kohdetta ei ole aiemmin Harjaan lähetetty, liitettä ei voida liittää kohteeseen.",
+          "required": true
+          },
+        "siltatarkastuskohde": {
+          "id": "urn:harja/liite-lahetys/siltatarkastuskohde",
+          "type": "string",
+          "enum": [
+            "maatukienSiisteysJaKunto",
+            "valitukienSiisteysJaKunto",
+            "laakeritasojenSiisteysJaKunto",
+            "kansilaatta",
+            "paallysteenKunto",
+            "reunapalkinSiisteysJaKunto",
+            "reunapalkinLiikuntasauma",
+            "reunapalkinJaPaallysteenValisenSaumanSiisteysJaKunto",
+            "sillanpaidenSaumat",
+            "sillanJaPenkereenRaja",
+            "kaiteidenJaSuojaverkkojenVauriot",
+            "liikuntasaumalaitteidenSiisteysJaKunto",
+            "laakerit",
+            "syoksytorvet",
+            "tippuputket",
+            "kosketussuojatJaNiidenKiinnitykset",
+            "valaistuslaitteet",
+            "johdotJaKaapelit",
+            "liikennemerkit",
+            "kuivatuslaitteidenSiisteysJaKunto",
+            "etuluiskienSiisteysJaKunto",
+            "keilojenSiisteysJaKunto",
+            "tieluiskienSiisteysJaKunto",
+            "portaidenSiisteysJaKunto"
+          ],
+          "description": "Jos kohdeluokka on siltatarkastuskohde, tarvitaan kohdetunnisteen lisäksi siltatarkastuskohde",
+          "required": false
+        },
+        "liite": {
+          "id": "urn:harja/liite-lahetys/liite",
+          "type": "object",
+          "$ref": "file:resources/api/schemas/entities/liite.schema.json",
+          "required": true
+        }
+      }
+    }
+  }
+}
