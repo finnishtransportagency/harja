@@ -281,25 +281,36 @@
                                                                                                                            :urakkakohtainen-nimi (:nimi toimenkuva)})
                                                                          toimenkuva-kannasta)]
                                            palautettava-toimenkuva))
-                    toimenkuvadb (if (:id tarjousdb)
+                    ;; Ratkaise id joka tapauksessa — validoi payloadin id, fallback nimellä
+                    toimenkuva-id (or (:id uusi-db-toimenkuva)
+                                    (let [payload-id (:johto_ja_hallintokorvaus_toimenkuva_id toimenkuva)]
+                                      (when (and payload-id
+                                              (toimenkuva-kyselyt/onko-toimenkuva-olemassa?
+                                                db {:toimenkuva-id payload-id}))
+                                        payload-id))
+                                    (:id (first (toimenkuva-kyselyt/hae-urakan-toimenkuva
+                                                  db {:toimenkuva (:toimenkuva toimenkuva)
+                                                      :urakkaid urakka-id}))))
+
+                    toimenkuvadb (if (and (:id tarjousdb) toimenkuva-id)
                                    (first (hae-toimenkuva-tarjoukselle db
                                             {:tarjous_id (:id tarjousdb)
                                              :maksukausi (:maksukausi toimenkuva)
                                              :urakka_id urakka-id
                                              :hoitokauden_alkuvuosi (:hoitokauden_alkuvuosi toimenkuva)
-                                             :johto_ja_hallintokorvaus_toimenkuva_id (or (:id uusi-db-toimenkuva) (:johto_ja_hallintokorvaus_toimenkuva_id toimenkuva))
+                                             :johto_ja_hallintokorvaus_toimenkuva_id toimenkuva-id
                                              :osio (:osio toimenkuva)}))
                                    nil)]
                 (if toimenkuvadb
-                  (paivita-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuvadb
-                                                                      :summa (:summa toimenkuva)
-                                                                      :muokkaaja kayttaja-id))
-                  (let [toimenkuva (if uusi-db-toimenkuva
-                                     (assoc toimenkuva :johto_ja_hallintokorvaus_toimenkuva_id (:id uusi-db-toimenkuva))
-                                     toimenkuva)]
-
-                    (tallenna-tarjouksen-johto-ja-hallintokorvaus<! db (assoc toimenkuva
-                                                                         :tarjous_id (:id tietokantatarjous)))))))
+                  (paivita-tarjouksen-johto-ja-hallintokorvaus<!
+                    db (assoc toimenkuvadb
+                         :summa (:summa toimenkuva)
+                         :muokkaaja kayttaja-id))
+                  (when toimenkuva-id ;; nil-id:llä ei insertoida
+                    (tallenna-tarjouksen-johto-ja-hallintokorvaus<!
+                      db (assoc toimenkuva
+                           :johto_ja_hallintokorvaus_toimenkuva_id toimenkuva-id
+                           :tarjous_id (:id tietokantatarjous)))))))
             vuosittaiset-toimenkuvat)]))
 
 (defn tallenna-tarjous-tietokantaan
