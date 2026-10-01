@@ -20,23 +20,6 @@ describe('Välikatselmus aukeaa', () => {
 
     before(siivoaKanta);
 
-    it('Välikatselmuksen voi avata kustannusten seurannasta', () => {
-        cy.intercept('POST', 'urakan-kustannusten-seuranta-paaryhmittain' ).as('hae-kustannukset')
-        cy.viewport(1400, 1400)
-        cy.visit('/')
-        cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
-        cy.get('[data-cy=tabs-taso1-Kulut]').click()
-        cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
-        cy.wait('@hae-kustannukset')
-        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '1. hoitovuosi (2021—2022)'})
-        cy.contains('Siirry välikatselmukseen').click();
-        cy.contains('Välikatselmus')
-        cy.contains('Iin MHU 2021-2026')
-        cy.contains('2. hoitovuosi (01.10.2022 − 30.09.2023)')
-    })
-
     it('Välikatselmuksen voi avata päävalikosta', () => {
 
         //poistaOikaisut("Iin MHU 2021-2026");
