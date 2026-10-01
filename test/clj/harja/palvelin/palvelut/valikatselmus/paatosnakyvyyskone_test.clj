@@ -188,18 +188,18 @@
 
 (deftest mhu-vuodelle-2025-palautaa-oikein
   (let [odotetut-kaikki-paatokset '({:hoitotyyppi #{"MHU"} :jarjestys 2 :nakyvyys_alkaen 2021 :nakyvyys_asti 2028 :nimi "Tavoitehinnan muutokset" :paatostyyppi "tavoitehinnan-muutokset" :urakan_alkuvuosi 2021 :avain :tavoitehinnan-muutokset :riippuu []}
-                             {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 2 :nakyvyys_alkaen 2025 :nimi "Tavoitehinnan pysyvät muutokset" :paatostyyppi "tavoitehinnan-pysyvat-muutokset" :urakan_alkuvuosi 2025 :avain :tavoitehinnan-muutokset :riippuu []}
-                             {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :nakyvyys_alkaen 2024 :nimi "Hoitovuoden lopun indeksikorjaus" :paatostyyppi "indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :avain :indeksikorjaus :riippuu [{:avain :tavoitehinnan-muutokset}]}
-                             {:hoitotyyppi #{"MHU"} :jarjestys 4 :nakyvyys_alkaen 2025 :nimi "Hoitovuoden lopun tavoite- ja kattohinta" :paatostyyppi "hoitovuoden-lopun-hinta-v2" :tyyppi "C" :urakan_alkuvuosi 2025 :avain :hoitovuoden-lopun-hinta :riippuu [{:avain :tavoitehinnan-muutokset} {:avain :indeksikorjaus}]}
-                             {:hoitotyyppi #{"MHU"} :jarjestys 5 :nakyvyys_alkaen 2019 :nimi "Tavoitehinnan alitus" :paatostyyppi "tavoitehinta" :urakan_alkuvuosi 2019 :avain :tavoitehinnan-alitus :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
-                             {:hoitotyyppi #{"MHU"} :jarjestys 6 :nakyvyys_alkaen 2019 :nimi "Tavoitehinnan ylitys" :paatostyyppi "tavoitehinta" :tyyppi "A" :urakan_alkuvuosi 2019 :avain :tavoitehinnan-ylitys :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
-                             {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 6 :nakyvyys_alkaen 2019 :nimi "Tavoitehinnan ylitys" :paatostyyppi "tavoitehinta" :tyyppi "B" :urakan_alkuvuosi 2024 :avain :tavoitehinnan-ylitys :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
-                             {:hoitotyyppi #{"MHU"} :jarjestys 7 :nakyvyys_alkaen 2019 :nimi "Kattohinnan ylitys" :paatostyyppi "kattohinta" :urakan_alkuvuosi 2019 :avain :kattohinnan-ylitys :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
-                             {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :nakyvyys_alkaen 2019 :nimi "Lupaukset" :paatostyyppi "lupaus" :tyyppi "bonus" :urakan_alkuvuosi 2019 :avain :lupaus :riippuu [{:avain :hoitovuoden-lopun-hinta :urakan_alkuvuosi_alkaen 2025}]}
-                             {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :nakyvyys_alkaen 2019 :nimi "Lupaukset" :paatostyyppi "lupaus" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :avain :lupaus :riippuu [{:avain :hoitovuoden-lopun-hinta :urakan_alkuvuosi_alkaen 2025}]}
-                             {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :nakyvyys_alkaen 2019 :nimi "Lupaukset" :paatostyyppi "lupaus" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :avain :lupaus :riippuu [{:avain :hoitovuoden-lopun-hinta :urakan_alkuvuosi_alkaen 2025}]}
-                             {:hoitotyyppi #{"MHU"} :jarjestys 9 :nakyvyys_alkaen 2024 :nimi "Hoidonjohtopalkkion muutos" :paatostyyppi "hoidonjohtopalkkio" :urakan_alkuvuosi 2021 :avain :hoidonjohtopalkkio :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
-                             {:hoitotyyppi #{"MHU"} :jarjestys 10 :nakyvyys_alkaen 2024 :nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :paatostyyppi "raportti" :urakan_alkuvuosi 2020 :avain :raportti :riippuu []})
+                                    {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 2 :nakyvyys_alkaen 2025 :nimi "Tavoitehinnan pysyvät muutokset" :paatostyyppi "tavoitehinnan-pysyvat-muutokset" :urakan_alkuvuosi 2025 :avain :tavoitehinnan-muutokset :riippuu []}
+                                    {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 3 :nakyvyys_alkaen 2024 :nimi "Hoitovuoden lopun indeksikorjaus" :paatostyyppi "indeksikorjaus" :tyyppi nil :urakan_alkuvuosi 2024 :avain :indeksikorjaus :riippuu [{:avain :tavoitehinnan-muutokset}]}
+                                    {:hoitotyyppi #{"MHU"} :jarjestys 4 :nakyvyys_alkaen 2025 :nimi "Hoitovuoden lopun tavoite- ja kattohinta" :paatostyyppi "hoitovuoden-lopun-hinta-v2" :tyyppi "C" :urakan_alkuvuosi 2025 :avain :hoitovuoden-lopun-hinta :riippuu [{:avain :tavoitehinnan-muutokset} {:avain :indeksikorjaus}]}
+                                    {:hoitotyyppi #{"MHU"} :jarjestys 5 :nakyvyys_alkaen 2019 :nimi "Tavoitehinnan alitus" :paatostyyppi "tavoitehinta" :urakan_alkuvuosi 2019 :avain :tavoitehinnan-alitus :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
+                                    {:hoitotyyppi #{"MHU"} :jarjestys 6 :nakyvyys_alkaen 2019 :nimi "Tavoitehinnan ylitys" :paatostyyppi "tavoitehinta" :tyyppi "A" :urakan_alkuvuosi 2019 :avain :tavoitehinnan-ylitys :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
+                                    {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 6 :nakyvyys_alkaen 2019 :nimi "Tavoitehinnan ylitys" :paatostyyppi "tavoitehinta" :tyyppi "B" :urakan_alkuvuosi 2024 :avain :tavoitehinnan-ylitys :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
+                                    {:hoitotyyppi #{"MHU"} :jarjestys 7 :nakyvyys_alkaen 2019 :nimi "Kattohinnan ylitys" :paatostyyppi "kattohinta" :urakan_alkuvuosi 2019 :avain :kattohinnan-ylitys :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
+                                    {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :nakyvyys_alkaen 2019 :nimi "Lupaukset" :paatostyyppi "lupaus" :tyyppi "bonus" :urakan_alkuvuosi 2019 :avain :lupaus :riippuu [{:avain :hoitovuoden-lopun-hinta :urakan_alkuvuosi_alkaen 2025}]}
+                                    {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :nakyvyys_alkaen 2019 :nimi "Lupaukset" :paatostyyppi "lupaus" :tyyppi "sanktio" :urakan_alkuvuosi 2019 :avain :lupaus :riippuu [{:avain :hoitovuoden-lopun-hinta :urakan_alkuvuosi_alkaen 2025}]}
+                                    {:hoitotyyppi #{"MHU" "MHU+"} :jarjestys 8 :nakyvyys_alkaen 2019 :nimi "Lupaukset" :paatostyyppi "lupaus" :tyyppi "taytetty" :urakan_alkuvuosi 2019 :avain :lupaus :riippuu [{:avain :hoitovuoden-lopun-hinta :urakan_alkuvuosi_alkaen 2025}]}
+                                    {:hoitotyyppi #{"MHU"} :jarjestys 9 :nakyvyys_alkaen 2024 :nimi "Hoidonjohtopalkkion muutos" :paatostyyppi "hoidonjohtopalkkio" :urakan_alkuvuosi 2021 :avain :hoidonjohtopalkkio :riippuu [{:avain :hoitovuoden-lopun-hinta}]}
+                                    {:hoitotyyppi #{"MHU"} :jarjestys 10 :nakyvyys_alkaen 2024 :nimi "Välikatselmuspöytäkirjaan liitettävät raportit" :paatostyyppi "raportti" :urakan_alkuvuosi 2020 :avain :raportti :riippuu []})
         odotetut-filtteroidyt-paatokset [{:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "tavoitehinnan-pysyvat-muutokset", :jarjestys 2, :riippuu [], :nimi "Tavoitehinnan pysyvät muutokset", :urakan_alkuvuosi 2025, :avain :tavoitehinnan-muutokset, :nakyvyys_alkaen 2025}
                                          {:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "indeksikorjaus", :jarjestys 3, :riippuu [{:avain :tavoitehinnan-muutokset}], :nimi "Hoitovuoden lopun indeksikorjaus", :urakan_alkuvuosi 2024, :avain :indeksikorjaus, :tyyppi nil, :nakyvyys_alkaen 2024}
                                          {:hoitotyyppi #{"MHU"}, :paatostyyppi "hoitovuoden-lopun-hinta-v2", :jarjestys 4, :riippuu [{:avain :tavoitehinnan-muutokset} {:avain :indeksikorjaus}], :nimi "Hoitovuoden lopun tavoite- ja kattohinta", :urakan_alkuvuosi 2025, :avain :hoitovuoden-lopun-hinta, :tyyppi "C", :nakyvyys_alkaen 2025}
@@ -511,3 +511,48 @@
           (is (some? (:virheet lupauspaatos)) "Päätöksessä on virhe")
           (is (str/includes? (:virheet lupauspaatos) "prosentit")
             "Virheviesti mainitsee puuttuvat prosentit"))))))
+
+(deftest valmistele-tavoitehinnan-pysyva-muutospaatos
+  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakan-tiedot (:db jarjestelma) urakkaid))
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        urakan-loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
+        indeksi "MAKU 2015"
+        kuluva-hoitovuosi 2025
+        mahdolliset-paatokset [{:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "tavoitehinnan-pysyvat-muutokset", :jarjestys 2, :riippuu [], :nimi "Tavoitehinnan pysyvät muutokset", :urakan_alkuvuosi 2025, :avain :tavoitehinnan-muutokset, :nakyvyys_alkaen 2025}
+                               {:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "indeksikorjaus", :jarjestys 3, :riippuu [{:avain :tavoitehinnan-muutokset}], :nimi "Hoitovuoden lopun indeksikorjaus", :urakan_alkuvuosi 2024, :avain :indeksikorjaus, :tyyppi nil, :nakyvyys_alkaen 2024}
+                               {:hoitotyyppi #{"MHU+"}, :paatostyyppi "hoitovuoden-lopun-hinta-v2", :jarjestys 4, :riippuu [{:avain :tavoitehinnan-muutokset} {:avain :indeksikorjaus}], :nimi "Hoitovuoden lopun tavoite- ja kattohinta", :urakan_alkuvuosi 2024, :avain :hoitovuoden-lopun-hinta, :tyyppi "B", :nakyvyys_alkaen 2024}
+                               {:hoitotyyppi #{"MHU+"}, :paatostyyppi "tavoitehinta", :jarjestys 5, :riippuu [{:avain :hoitovuoden-lopun-hinta}], :nimi "Tavoitehinnan alitus", :urakan_alkuvuosi 2024, :avain :tavoitehinnan-alitus, :nakyvyys_alkaen 2024}
+                               {:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "tavoitehinta", :jarjestys 6, :riippuu [{:avain :hoitovuoden-lopun-hinta}], :nimi "Tavoitehinnan ylitys", :urakan_alkuvuosi 2024, :avain :tavoitehinnan-ylitys, :tyyppi "B", :nakyvyys_alkaen 2019}
+                               {:hoitotyyppi #{"MHU+"}, :paatostyyppi "kattohinta", :jarjestys 7, :riippuu [{:avain :hoitovuoden-lopun-hinta}], :nimi "Kattohinnan ylitys", :urakan_alkuvuosi 2024, :avain :kattohinnan-ylitys, :nakyvyys_alkaen 2024}
+                               {:hoitotyyppi #{"MHU+" "MHU"}, :hoitovuosi-kesken? false, :paatostyyppi "lupaus", :jarjestys 8, :virheet ["Toteutuneet pisteet täyttämättä." "Hoitovuoden lopun tavoite- ja kattohinta -päätöstä ei ole vahvistettu."], :lupaussanktio nil, :toteutuneet_pisteet nil, :tarjous_tavoitehinta 1988273.5M, :riippuu [{:avain :hoitovuoden-lopun-hinta, :urakan_alkuvuosi_alkaen 2025}], :tavoitehinta 2091663.722M, :bonusprosentti 0.08M, :nimi "Lupaukset", :urakan_alkuvuosi 2019, :luvatut_pisteet 80, :indeksi "MAKU 2020", :avain :lupaus, :sanktioprosentti 0.18M, :tyyppi "taytetty", :lupausbonus nil, :indeksikorotus nil, :nakyvyys_alkaen 2019}
+                               {:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "hoidonjohtopalkkio", :jarjestys 9, :riippuu [{:avain :hoitovuoden-lopun-hinta}], :nimi "Hoidonjohtopalkkion muutos", :urakan_alkuvuosi 2024, :avain :hoidonjohtopalkkio, :nakyvyys_alkaen 2024}
+                               {:hoitotyyppi #{"MHU+" "MHU"}, :paatostyyppi "raportti", :jarjestys 10, :riippuu [], :nimi "Välikatselmuspöytäkirjaan liitettävät raportit", :urakan_alkuvuosi 2024, :avain :raportti, :nakyvyys_alkaen 2024}]
+        kirjallisesti-sovitut-muutokset 8800
+        pysyvat-muutokset 10000
+        muutostyo-muutokset 300
+        jjh-muutokset -1500
+        tehtava-ja-maaramuutos-summa 0
+        rahavarausmuutos-summa -31560
+        toteumiin-perustuvat-muutokset (+ tehtava-ja-maaramuutos-summa rahavarausmuutos-summa)
+        thv-arvonvahennykset-yht -3400
+        tavoitehinna-muutokset-yhteensa (+ kirjallisesti-sovitut-muutokset toteumiin-perustuvat-muutokset
+                                          thv-arvonvahennykset-yht)
+        tavhin-pysyva-muutospaatos (first
+                                     (filter #(= (:nimi %) "Tavoitehinnan pysyvät muutokset")
+                                       (kone/valmistele-tavoitehinnan-pysyva-muutospaatos false mahdolliset-paatokset kuluva-hoitovuosi
+                                         kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
+                                         jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht)))
+
+        _ (is (= (:kirjallisesti_sovitut_muutokset tavhin-pysyva-muutospaatos) kirjallisesti-sovitut-muutokset))
+        _ (is (= (:pysyvat_muutokset tavhin-pysyva-muutospaatos) pysyvat-muutokset))
+        _ (is (= (:johto_ja_hallintakorvaus_muutokset tavhin-pysyva-muutospaatos) jjh-muutokset))
+        _ (is (= (:muutostyo_muutokset tavhin-pysyva-muutospaatos) muutostyo-muutokset))
+        _ (is (= (:toteumiin_perustuvat_muutokset tavhin-pysyva-muutospaatos) (+ tehtava-ja-maaramuutos-summa rahavarausmuutos-summa)))
+        _ (is (= (:rahavarausten_muutokset tavhin-pysyva-muutospaatos) rahavarausmuutos-summa))
+        _ (is (= (:tehtava_ja_maaratoteumamuutokset tavhin-pysyva-muutospaatos) tehtava-ja-maaramuutos-summa))
+        _ (is (= (:arvonvahennysten_muutokset tavhin-pysyva-muutospaatos) thv-arvonvahennykset-yht))
+        _ (is (= (:tavoitehinnan_muutokset_yhteensa tavhin-pysyva-muutospaatos) tavoitehinna-muutokset-yhteensa))
+        _ (is (= (:hoitovuosi-kesken? tavhin-pysyva-muutospaatos) false))
+        _ (is (= (:virheet tavhin-pysyva-muutospaatos) nil))]))

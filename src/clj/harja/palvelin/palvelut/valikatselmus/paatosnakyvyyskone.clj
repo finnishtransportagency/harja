@@ -144,8 +144,9 @@
                     (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken."))
 
-          tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0) (or pysyvat-muutokset 0) (or muutostyo-muutokset 0)
-                                            (or jjh-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0)
+          toteumiin-perustuvat-muutokset (+ (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+          tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0)
+                                            (or toteumiin-perustuvat-muutokset 0)
                                             (or thv-arvonvahennykset-yht 0))
           ;; Korvataan koneelta saatu päätös tässä valistellulta
           tavoitehinnan-pysyva-muutospaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan pysyvät muutokset") %) paatokset))
@@ -154,7 +155,7 @@
                                               (assoc :pysyvat_muutokset (or pysyvat-muutokset 0))
                                               (assoc :johto_ja_hallintakorvaus_muutokset (or jjh-muutokset 0))
                                               (assoc :muutostyo_muutokset (or muutostyo-muutokset 0))
-                                              (assoc :toteumiin_perustuvat_muutokset (+ (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0)))
+                                              (assoc :toteumiin_perustuvat_muutokset toteumiin-perustuvat-muutokset)
                                               (assoc :tehtava_ja_maaratoteumamuutokset (or tehtava-ja-maaramuutos-summa 0))
                                               (assoc :rahavarausten_muutokset (or rahavarausmuutos-summa 0))
                                               (assoc :arvonvahennysten_muutokset (or thv-arvonvahennykset-yht 0))
