@@ -172,7 +172,7 @@
         hoitovuoden-lopun-indeksikorjattu-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
         hoitokauden-alun-tavoitehinta (valikatselmus-q/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta db {:urakka-id urakkaid :hoitokauden-alkuvuosi valittu-hoitovuosi})
         oikaistu-kattohinta (:kattohinta-oikaistu budjettitavoite-vuodelle)
-        hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
+        hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
         tarjouksen-tavoitehinta (:tarjous-tavoitehinta budjettitavoite-vuodelle)
 
         muokkaa-kattohinta? (:muokkaa_kattohinta_kasin urakan-parametrit)
@@ -220,11 +220,11 @@
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht)
-        mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit)
-        mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset mahdolliset-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos validoinnit-kaytossa? mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos validoinnit-kaytossa? urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitovuoden-lopun-indeksikorjattu-tavoitehinta hoitovuoden-lopun-kattohinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
-        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset validoinnit-kaytossa? urakkaid mahdolliset-paatokset hoitovuoden-lopun-kattohinta toteutuneet-kustannukset valittu-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-ylityspaatos validoinnit-kaytossa? urakkaid mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitovuoden-lopun-indeksikorjattu-tavoitehinta hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
+        mahdolliset-paatokset (paatoskone/valmistele-kattohinnan-paatokset validoinnit-kaytossa? urakkaid mahdolliset-paatokset hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia toteutuneet-kustannukset valittu-hoitovuosi urakan-alkuvuosi urakan-loppuvuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-hoidonjohtopalkkionmuutospaatos validoinnit-kaytossa? valittu-hoitovuosi mahdolliset-paatokset hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta hoidonjohtopalkkio tietokanta-paatokset urakan-alkuvuosi)
         mahdolliset-paatokset (paatoskone/valmistele-raporttipaatos validoinnit-kaytossa? valittu-hoitovuosi mahdolliset-paatokset)
 
@@ -241,6 +241,8 @@
                                 mahdolliset-paatokset)
 
         ;; Poista vielä keskenään ristiriitaiset päätökset
+        hvltjk-paatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) tietokanta-paatokset))
+        hoitovuoden-lopun-kattohinta (if (:id hvltjk-paatos) (:kattohinta hvltjk-paatos) hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia)
         mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
         ;; Yhdistä päätökset listaksi. Tietokannasta haetut päätökset ovat tärkeydeltään tärkeämpiä, kuin päätöskoneelta saadut
@@ -766,9 +768,18 @@
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
           urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
+          urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
           urakan-loppuvuoden-alkuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
           urakan-parametrit (first (q-urakat/hae-urakan-parametrit db urakka-id))
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
+          hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
+          hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
+          valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
+          indeksikorjauspaatos (first (paatos-kyselyt/hae-hoitokauden-indeksikorjaus-paatokset db {:urakkaid urakka-id
+                                                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+          ;; Hoitokauden lopun indeksikorjaus
+          hoitokauden-lopun-indeksikorjaus (or (paatos-kyselyt/hae-hoitokauden-lopun-indeksikorjaus db {:urakkaid urakka-id
+                                                                                                        :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}) 0)
 
           ;; Varmistetaan, että päätöstä ei ole vielä tehty
           olemassaoleva-paatos (first (paatos-kyselyt/hae-kattohinta-paatokset db {:urakkaid urakka-id
@@ -781,7 +792,47 @@
           koko-budjettitavoite (budjettisuunnittelu-q/hae-budjettitavoite db {:urakka urakka-id})
           ;; Valitaan tämän käytetyn hoitovuoden budjettitavoite
           budjettitavoite-vuodelle (some #(when (= (:hoitokauden-alkuvuosi %) hoitokauden-alkuvuosi) %) koko-budjettitavoite)
+          ;; Hoitovuoden lopun kattohintaa ei saada suoraan tietokannasta
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
+          ;; Haetaan pysyviin muutoksiin perustuvat tiedot
+          kirjallisesti-sovitut-muutokset (:kirjallisesti-sovitut-muutokset budjettitavoite-vuodelle)
+
+          muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
+          tehtava-ja-maaramuutokset (when (:muutosten_hallinta urakan-parametrit)
+                                      (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja
+                                        {:urakka-id urakka-id
+                                         :laskenta-automatiikka? true
+                                         :hoitokaudet (hoitokaudet-vektorimuotoon (q-urakat/hae-urakan-hoitokaudet db urakka-id))
+                                         :valittu-hoitokausi valittu-hoitokausi}))
+          rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
+          tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
+                                         (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
+                                         0)
+          ;; Varmistetaan, että urakan muutosten hallinta on päällä
+          taman-vuoden-muutokset-summa (if (:muutosten_hallinta urakan-parametrit)
+                                         (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+                                         0)
+          arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                :alkupvm (first valittu-hoitokausi)
+                                                                                                :loppupvm (second valittu-hoitokausi)
+                                                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+          ;; Hoitovuoden lopun kattohintaa ei saada ikävä kyllä suoraa mitenkään tietokannasta. Se täytyy laskea
+          tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+          ;; Tavoitehinnan oikaisut on -24 asti käytössä.
+          hintamuutos-oikaisut (if tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut)) 0)
+          ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset sekä arvonvähennykset
+          hintamuutos (if (<= urakan-alkuvuosi 2024)
+                        ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset
+                        (if (>= 2026  hoitokauden-alkuvuosi)
+                          (+ hintamuutos-oikaisut thv-arvonvahennykset-yht)
+                          hintamuutos-oikaisut)
+                        (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht))
+
+          hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
+                                         (* (if (:id indeksikorjauspaatos) 0 hoitokauden-lopun-indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                         (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                         (* hintamuutos-oikaisut (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
           validaatio (if (< (:siirrettava_maara paatos) 0)
                        (conj validaatio (str "Siirrettävä määrä on pienempi 0,00 €."))
@@ -801,7 +852,7 @@
 
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa.
-                       Hoitovuoden lopun kattohinta:" (fmt/euro-opt false false hoitovuoden-lopun-kattohinta) " €.
+                       Hoitovuoden lopun suunniteltu kattohinta:" (fmt/euro-opt false false hoitovuoden-lopun-kattohinta) " €.
                        Päätöksen mukainen kattohinta: " (fmt/euro-opt false false (:kattohinta paatos)) " €"))
                        validaatio)
 
@@ -908,11 +959,17 @@
     (let [validaatio #{}
           urakka-id (:urakkaid paatos)
           urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
+          urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))
           urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
           hoitokauden-alkuvuosi (:hoitokauden_alkuvuosi paatos)
           hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitokauden-alkuvuosi)
           hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
           valittu-hoitokausi [hoitokauden-alkupvm hoitokauden-loppupvm]
+          indeksikorjauspaatos (first (paatos-kyselyt/hae-hoitokauden-indeksikorjaus-paatokset db {:urakkaid urakka-id
+                                                                                                   :hoitokauden_alkuvuosi hoitokauden-alkuvuosi}))
+          ;; Hoitokauden lopun indeksikorjaus
+          hoitokauden-lopun-indeksikorjaus (paatos-kyselyt/hae-hoitokauden-lopun-indeksikorjaus db {:urakkaid urakka-id
+                                                                                                    :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
 
           ;; Varmista, että päätöstä ei ole vielä tehty
           olemassaoleva-paatos (first (paatos-kyselyt/hae-hoitokauden-lopun-hinta-paatokset db {:urakkaid urakka-id
@@ -932,7 +989,47 @@
                        Hoitovuoden lopun tavoitehinta: " (fmt/euro-opt false false hoitovuoden-lopun-tavoitehinta) " €.
                        Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta_jalkeen paatos)) " €"))
                        validaatio)
+          ;; Hoitovuoden lopun kattohintaa ei saada suoraan tietokannasta
           hoitovuoden-lopun-kattohinta (:hoitovuoden-lopun-kattohinta budjettitavoite-vuodelle)
+          ;; Haetaan pysyviin muutoksiin perustuvat tiedot
+          kirjallisesti-sovitut-muutokset (:kirjallisesti-sovitut-muutokset budjettitavoite-vuodelle)
+
+          muutos-rahavaraukset (rahavaraus-kyselyt/muutosten-rahavaraukset db urakka-id hoitokauden-alkuvuosi)
+          tehtava-ja-maaramuutokset (when (:muutosten_hallinta urakan-parametrit)
+                                      (muutos-palvelu/hae-tehtava-maaramuutokset db kayttaja
+                                        {:urakka-id urakka-id
+                                         :laskenta-automatiikka? true
+                                         :hoitokaudet (hoitokaudet-vektorimuotoon (q-urakat/hae-urakan-hoitokaudet db urakka-id))
+                                         :valittu-hoitokausi valittu-hoitokausi}))
+          rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
+          tehtava-ja-maaramuutos-summa (if tehtava-ja-maaramuutokset
+                                         (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
+                                         0)
+          ;; Varmistetaan, että urakan muutosten hallinta on päällä
+          taman-vuoden-muutokset-summa (if (:muutosten_hallinta urakan-parametrit)
+                                         (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+                                         0)
+          arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                :alkupvm (first valittu-hoitokausi)
+                                                                                                :loppupvm (second valittu-hoitokausi)
+                                                                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+          ;; Hoitovuoden lopun kattohintaa ei saada ikävä kyllä suoraa mitenkään tietokannasta. Se täytyy laskea
+          tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
+          ;; Tavoitehinnan oikaisut on -24 asti käytössä.
+          hintamuutos-oikaisut (if tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut)) 0)
+          ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset sekä arvonvähennykset
+          hintamuutos (if (<= urakan-alkuvuosi 2024)
+                        ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset
+                        (if (>= 2026  hoitokauden-alkuvuosi)
+                          (+ hintamuutos-oikaisut thv-arvonvahennykset-yht)
+                          hintamuutos-oikaisut)
+                        (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht))
+          hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
+                                         (* (if (:id indeksikorjauspaatos) 0 hoitokauden-lopun-indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                         (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                         (* hintamuutos-oikaisut (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-kattohinta) (konversio/konvertoi->int (:kattohinta paatos)))
                        (conj validaatio (str "Kattohinta ei täsmää suunnitelman kanssa.
                        Hoitovuoden lopun kattohinta: " (fmt/euro-opt false false hoitovuoden-lopun-kattohinta) " €.
