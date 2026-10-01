@@ -287,10 +287,24 @@
                                       0)
         tot (get-in kustannusdata [:yhteensa :yht-toteutunut-summa])
         tot-ilman-arvonvahennyksia (- tot arvonvahennykset-toteutunut)
-        erotus (when (not= 0 bud) (- tot-ilman-arvonvahennyksia bud-indeksikorjattu))
-        prosentti (if (or (= 0M tot-ilman-arvonvahennyksia) (= 0M bud-indeksikorjattu))
+        muutokset-budjetoitu (or
+                               (get-in kustannusdata [:taulukon-rivit :muutokset-budjetoitu])
+                               0)
+        tavoitehinnanoikaisu-budjetoitu (or
+                                          (get-in kustannusdata [:taulukon-rivit :tavoitehinnanoikaisu-budjetoitu])
+                                          0)
+        erotus (-
+                 tot-ilman-arvonvahennyksia
+                 bud-indeksikorjattu
+                 muutokset-budjetoitu
+                 tavoitehinnanoikaisu-budjetoitu)
+        vertailubudjetti (+
+                           bud-indeksikorjattu
+                           muutokset-budjetoitu
+                           tavoitehinnanoikaisu-budjetoitu)
+        prosentti (if (or (= 0M tot-ilman-arvonvahennyksia) (= 0M vertailubudjetti))
                     0
-                    (laske-prosentti tot-ilman-arvonvahennyksia bud-indeksikorjattu))
+                    (laske-prosentti tot-ilman-arvonvahennyksia vertailubudjetti))
         muutokset (reduce + 0
                     (cond-> [(or (get-in kustannusdata [:taulukon-rivit :arvonvahennykset-toteutunut]) 0)
                              (or (get-in kustannusdata [:taulukon-rivit :tavoitehinnanoikaisu-budjetoitu]) 0)]
