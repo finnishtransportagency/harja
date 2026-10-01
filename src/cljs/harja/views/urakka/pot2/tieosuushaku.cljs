@@ -7,6 +7,7 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
+            [harja.ui.viesti :as viesti]
             [harja.fmt :as fmt]))
 
 (defn- hakukentta [e! hakuehdot otsikko avain data-cy]
@@ -57,7 +58,10 @@
   (let [{:keys [auki? hakuehdot haetaan? tieosuudet
                 kohteen-ulkopuolelle-jatkuvat tieosuuksia-rajattu? virhe]} tieosuushaku
         valittuja? (some :valittu? tieosuudet)
-        hakuehdot-puuttuvat? (some nil? ((juxt :tr-numero :tr-alkuosa :tr-loppuosa) hakuehdot))]
+        hakuehdot-puuttuvat? (some nil? ((juxt :tr-numero :tr-alkuosa :tr-loppuosa) hakuehdot))
+        hakuehdot-virheellinen? (and (some? (:tr-alkuosa hakuehdot))
+                   (some? (:tr-loppuosa hakuehdot))
+                   (> (:tr-alkuosa hakuehdot) (:tr-loppuosa hakuehdot)))]
     [:div.pot2-tieosuushaku
      (if-not auki?
        nil
@@ -73,7 +77,9 @@
          [hakukentta e! hakuehdot "Loppuosa" :tr-loppuosa "pot2-tieosuushaku-loppuosa"]
          [napit/nappi
           "Hae tieosuudet"
-          #(e! (pot2-tiedot/->HaeTieosuudet true))
+          #(if hakuehdot-virheellinen?
+             (viesti/nayta-toast! "Alkuosa ei voi olla loppuosaa suurempi" :varoitus)
+             (e! (pot2-tiedot/->HaeTieosuudet true)))
           {:ikoni (ikonit/livicon-search)
            :luokka "nappi-toissijainen"
            :disabled (or haetaan? hakuehdot-puuttuvat?)
