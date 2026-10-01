@@ -58,7 +58,7 @@
       http :api-vastaanota-liite
       (POST "/api/urakat/:id/liite" request
         (kasittele-kutsu db integraatioloki :vastaanota-liite request
-          json-skeemat/liitteen-vastaanotto json-skeemat/kirjausvastaus
+          json-skeemat/liitteen-lahetys json-skeemat/kirjausvastaus
           (fn [parametrit data kayttaja db]
             (vastaanota-liite parametrit data kayttaja db liitteiden-hallinta))
           :kirjoitus)))
