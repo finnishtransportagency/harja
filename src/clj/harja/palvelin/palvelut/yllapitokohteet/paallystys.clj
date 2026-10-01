@@ -64,13 +64,10 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
   (let [paakohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
-        haku (if haku
-               (assoc haku
-                      :tr-alkuetaisyys 0
-                      :tr-loppuetaisyys Integer/MAX_VALUE)
-               (select-keys paakohde
-                            [:tr-numero :tr-alkuosa :tr-alkuetaisyys
-                             :tr-loppuosa :tr-loppuetaisyys]))]
+        haku (-> (or haku
+                (select-keys paakohde [:tr-numero :tr-alkuosa :tr-loppuosa]))
+              (assoc :tr-alkuetaisyys 0
+                  :tr-loppuetaisyys Integer/MAX_VALUE))]
     (tieverkko-q/hae-tieosuudet db haku)))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat evkt]}]

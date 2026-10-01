@@ -76,7 +76,7 @@
               urakkatieto-fixture
               jarjestelma-fixture)
 
-(deftest hae-pot2-tieosuudet-paakohteen-rajoilla
+(deftest hae-pot2-tieosuudet-ei-rajaa-tulosta-paakohteen-etaisyyksilla
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
     (u (str "UPDATE yllapitokohde
@@ -101,9 +101,9 @@
                :tr-ajorata 1
                :tr-kaista 11
                :tr-alkuosa 1
-               :tr-alkuetaisyys 200
+               :tr-alkuetaisyys 0
                :tr-loppuosa 1
-               :tr-loppuetaisyys 2200}]
+               :tr-loppuetaisyys 2500}]
              (:tieosuudet vastaus))))))
 
 (deftest hae-pot2-tieosuudet-kayttajan-hakurajauksella
