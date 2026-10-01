@@ -334,7 +334,7 @@
 
 (defn valmistele-tavoitehinnan-ylityspaatos [validoinnit-kaytossa? urakkaid paatokset urakan-alkuvuosi
                                              urakan-loppuvuosi kuluva-hoitovuosi hoitovuoden-lopun-tavoitehinta
-                                             hoitovuoden-lopun-kattohinta kustannukset tietokanta-paatokset
+                                             hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kustannukset tietokanta-paatokset
                                              tavoitehinta-vahvistettu? urakan-parametrit]
   ;; Edeltävät vaatimukset: Kaikille: Hoitovuoden tulee olla päättynyt
   ;; -24 vuodesta alkaen lisäksi:
@@ -364,11 +364,15 @@
                     (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken."))
 
+          ;; Kattohinta arvioidaan tietokannasta hakemalla, mutta jos hoitovuoden lopun tavoite- ja kattohinta -päätös on tehty, niin se saadaan sieltä
+          hvltjk-paatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") %) tietokanta-paatokset))
+          kattohinta (if (:id hvltjk-paatos) (:kattohinta hvltjk-paatos) hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia)
+
           ;; Ylitys + tavoitehinta ei voi ylittää kattohintaa. Eli maksettavat rahat on aina tavoitehinnan ja
           ;; kattohinnan väliin jääviä summia. Kattohinnan ylittävät summat menee aina urakoitsijan maksettavaksi
           tavoitehinnan-ylitys (min
                                  (- (or kustannukset 0) (or hoitovuoden-lopun-tavoitehinta 0))
-                                 (- (or hoitovuoden-lopun-kattohinta 0) (or hoitovuoden-lopun-tavoitehinta 0)))
+                                 (- (or kattohinta 0) (or hoitovuoden-lopun-tavoitehinta 0)))
           tavoitehinnan-ylityspaatos (first (filter #(when (= (:nimi %) "Tavoitehinnan ylitys") %) paatokset))
           paatokset (remove (fn [paatos] (= (:nimi paatos) "Tavoitehinnan ylitys")) paatokset)
 
