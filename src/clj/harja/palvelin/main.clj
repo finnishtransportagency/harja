@@ -576,7 +576,7 @@
 
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :pdf-vienti])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)

@@ -889,7 +889,7 @@ BEGIN
         -- Arvonvähennykset haetaan erikseen (2025+ urakoilla aina, vanhemmilla urakoilla ei huomioida tässä)
         RAISE NOTICE 'arvonvahennys tpi : %',  t.tpi;
         RAISE NOTICE 'arvonvahennys hk_alkuvuosi : %',  hk_alkuvuosi;
-        RAISE NOTICE 'arvonvahennykset : %',  (SELECT s.maara * -1 AS maara
+        RAISE NOTICE 'arvonvahennykset : %',  (SELECT SUM(s.maara * -1)
                                                FROM sanktio s
                                                         JOIN toimenpideinstanssi tpi ON tpi.urakka = ur AND tpi.id = s.toimenpideinstanssi
                                                WHERE s.toimenpideinstanssi = t.tpi

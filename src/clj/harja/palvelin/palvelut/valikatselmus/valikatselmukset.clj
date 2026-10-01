@@ -38,6 +38,7 @@
             [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta-palvelu]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
+            [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta-palvelu]))
 
 (defn hoitokaudet-vektorimuotoon
@@ -121,11 +122,12 @@
 
         ;; Urakan alkuvuodesta 2025 eteenpäin myös arvonvähennykset vaikuttavat tavoiteintaan. Ja -26 hoitovuodesta eteenpäin myös vanhemmilla urakoilla
         ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
-                                                                   :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)
-                                                                   :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        tavoitehintaan-vaikuttavat-arvonvahennykset
+        (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                             :alkupvm (first valittu-hoitokausi)
+                                                                             :loppupvm (second valittu-hoitokausi)
+                                                                             :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
         hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
                                                             muutosvaikutus
                                                             arvonvahennykset-yht)]
@@ -191,10 +193,10 @@
                                        0)
         mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
         hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
-                                                                   :alkupvm (first valittu-hoitokausi)
-                                                                   :loppupvm (second valittu-hoitokausi)
-                                                                   :hoitokauden-alkuvuosi valittu-hoitovuosi})
+        arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
+                                                                                              :alkupvm (first valittu-hoitokausi)
+                                                                                              :loppupvm (second valittu-hoitokausi)
+                                                                                              :hoitokauden-alkuvuosi valittu-hoitovuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
         ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
         ;; ;; Vaiha alku vuosi, eli vantaa 2024 . pitää tulla elokuu 2024
@@ -296,16 +298,18 @@
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm})
         ;; Kustannusten mukana ei tule tarvittavalla tasolla erotettuna sanktioita. Joten haetaan ne erikseen
+        ;; Arvonvähennyssanktiot filtteröidään pois, jos ne vaikuttaa tavoitehintaan, eli -25 urakoilla ja muillakin -26 hoitovuodesta alkaen
         sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakkaid
                                                    :alkupvm hoitokauden-alkupvm
                                                    :loppupvm hoitokauden-loppupvm
                                                    :hoitokauden-alkuvuosi hoitovuosi})
 
         ;; Arvonvahennykset vaikuttavat tavoitehintaan, joten ne haetaan omana kokonaisuutenaan.
-        arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakkaid
-                                                                   :alkupvm hoitokauden-alkupvm
-                                                                   :loppupvm hoitokauden-loppupvm
-                                                                   :hoitokauden-alkuvuosi hoitovuosi})
+        tavoitehintaan-vaikuttavat-arvonvahennykset
+        (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
+                                                                             :alkupvm hoitokauden-alkupvm
+                                                                             :loppupvm hoitokauden-loppupvm
+                                                                             :hoitokauden-alkuvuosi hoitovuosi})
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])
 
         ;; Muutosten aiheuttamat muutokset tavoitehinnassa
@@ -345,7 +349,7 @@
                               :kustannukset (:taulukon-rivit kustannukset-jarjestettyna)
                               :bonukset bonukset
                               :sanktiot sanktiot
-                              :arvonvahennykset arvonvahennykset
+                              :tavoitehintaan-vaikuttavat-arvonvahennykset tavoitehintaan-vaikuttavat-arvonvahennykset
                               :budjettitavoite budjettitavoite-vuodelle
                               :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
                  :paatokset paatokset
@@ -586,11 +590,11 @@
           rahavarausmuutos-summa (or (:tavoitehinnan-muutos (last muutos-rahavaraukset)) 0)
 
           ;; Haetaan siis tavoitehintaan vaikuttavat arvonvähennykset
-          arvonvahennykset (valikatselmus-q/hae-arvonvahennykset db {:urakka-id urakka-id
-                                                                     :alkupvm (first valittu-hoitokausi)
-                                                                     :loppupvm (second valittu-hoitokausi)
-                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-          arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+          tavoitehintaan-vaikuttavat-arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                                           :alkupvm (first valittu-hoitokausi)
+                                                                                                                           :loppupvm (second valittu-hoitokausi)
+                                                                                                                           :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+          thv-arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
 
           ;; Verrataan kirjallisesti sovittuja muutoksia saatuihin päätöksen arvoihin
           validaatio (if-not (= (konversio/konvertoi->int (or kirjallisesti-sovitut-muutokset 0)) (konversio/konvertoi->int (:kirjallisesti_sovitut_muutokset paatos)))
@@ -621,9 +625,9 @@
                        Päätöksen mukaiset rahavarausten muutokset: " (fmt/euro-opt false false (:rahavarausten_muutokset paatos)) " €"))
                        validaatio)
 
-          validaatio (if-not (= (konversio/konvertoi->int (or arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
+          validaatio (if-not (= (konversio/konvertoi->int (or thv-arvonvahennykset-yht 0)) (konversio/konvertoi->int (:arvonvahennysten_muutokset paatos)))
                        (conj validaatio (str "Päätökseltä tullut summa ei täsmää tallennettujen tietojen kanssa.
-                       Järjestelmästä löytyvät arvonvähennysten muutokset:" (fmt/euro-opt false false arvonvahennykset-yht) "€.
+                       Järjestelmästä löytyvät arvonvähennysten muutokset:" (fmt/euro-opt false false thv-arvonvahennykset-yht) "€.
                        Päätöksen mukaiset rahavarausten muutokset: " (fmt/euro-opt false false (:arvonvahennysten_muutokset paatos)) " €"))
                        validaatio)
 
@@ -1240,7 +1244,8 @@
   component/Lifecycle
   (start [this]
     (let [http (:http-palvelin this)
-          db (:db this)]
+          db (:db this)
+          pdf (:pdf-vienti this)]
 
       (julkaise-palvelu http
         :hae-ketjutetusti-kumoutuvat-paatokset

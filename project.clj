@@ -61,7 +61,7 @@
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.cache "1.2.999"]
                  [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
@@ -148,8 +148,8 @@
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
 
-                 ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.18"]
+                 ;; Apache Commons Compress (arkistoiden purku, tar + gzip)
+                 [org.apache.commons/commons-compress "1.28.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]
@@ -170,18 +170,12 @@
   :managed-dependencies [[org.apache.poi/poi "5.5.1"]
                          [org.apache.poi/poi-scratchpad "5.5.1"]
                          [org.apache.poi/poi-ooxml "5.5.1"]
-                         ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
-                         ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
-                         ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
-                         ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.28.0"]
-
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.2"]
-                         [com.fasterxml.jackson.core/jackson-core "2.22.2"]
+                         [tools.jackson.core/jackson-core "3.2.3"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.3"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.14.0"]]
 

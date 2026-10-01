@@ -320,6 +320,7 @@
         testikayttaja (kayttaja urakka-id)
         luoja-id (:id (first (q-map "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'")))
         toimenpideinstanssi-id (:id (first (q-map (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s ORDER BY id LIMIT 1" urakka-id))))
+        ;; Haetaan "Ei tarvita sanktiotyyppiä"
         sanktiotyyppi-id (:id (first (q-map "SELECT id FROM sanktiotyyppi WHERE koodi = 0 LIMIT 1")))
         tavallinen-sanktio-kuvaus "Välikatselmuksen arvonvähennystesti - tavallinen sanktio"
         arvonvahennys-kuvaus "Välikatselmuksen arvonvähennystesti - arvonvähennys"
@@ -353,13 +354,45 @@
                       (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) testikayttaja
                         {:urakkaid urakka-id :hoitovuosi hoitokauden-alkuvuosi}))
             sanktiot (get-in vastaus [:yhteenveto :sanktiot])
-            arvonvahennykset (get-in vastaus [:yhteenveto :arvonvahennykset])]
+            arvonvahennykset (get-in vastaus [:yhteenveto :tavoitehintaan-vaikuttavat-arvonvahennykset])]
         (is (seq sanktiot) "Sanktiot pitäisi löytyä")
         (is (seq arvonvahennykset) "Arvonvähennykset pitäisi löytyä")
         (is (some #(= (- tavallinen-sanktio-maara) (:maara %)) sanktiot) "Tavallisen sanktion löytyy")
         (is (not-any? #(= "arvonvahennyssanktio" (:sakkoryhma %)) sanktiot) "Sanktiot-lista ei saa sisältää arvonvähennyksiä MHU 2025+ -urakalla")
         (is (every? #(= "arvonvahennyssanktio" (:sakkoryhma %)) arvonvahennykset) "Arvonvähennysten listalla saa olla vain arvonvähennyksiä")
         (is (some #(= (- arvonvahennys-maara) (:maara %)) arvonvahennykset) "Lisätty arvonvähennys löytyy")))))
+
+(deftest hae-valikatselmuksen-tiedot-mhu24-arvonvahennys-vaikuttaa-tavoitehintaan
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        testikayttaja (kayttaja urakka-id)
+        toimenpideinstanssi-id (:id (first (q-map (format "SELECT id FROM toimenpideinstanssi WHERE urakka = %s ORDER BY id LIMIT 1" urakka-id))))
+        sanktiotyyppi-id (:id (first (q-map "SELECT id FROM sanktiotyyppi WHERE koodi = 0 LIMIT 1")))
+        vuoden-2024-arvonvahennys-maara 3456.78M
+        vuoden-2026-arvonvahennys-maara 4567.89M]
+    (lisaa-suorasanktio-urakalle vuoden-2024-arvonvahennys-maara "arvonvahennyssanktio" "2024-11-12"
+      urakka-id toimenpideinstanssi-id sanktiotyyppi-id nil nil)
+    (let [yhteenveto-2024
+          (:yhteenveto
+            (with-redefs [pvm/nyt (constantly (pvm/luo-pvm-dec-kk 2027 10 15))]
+              (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) testikayttaja
+                {:urakkaid urakka-id :hoitovuosi 2024})))]
+      (is (some #(= (- vuoden-2024-arvonvahennys-maara) (:maara %)) (:sanktiot yhteenveto-2024))
+        "Vuoden 2024 arvonvähennyksen pitää näkyä sanktioissa")
+      (is (not-any? #(= (- vuoden-2024-arvonvahennys-maara) (:maara %))
+                    (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto-2024))
+        "Vuoden 2024 arvonvähennys ei saa näkyä tavoitehintaan vaikuttavissa arvonvähennyksissä"))
+    (lisaa-suorasanktio-urakalle vuoden-2026-arvonvahennys-maara "arvonvahennyssanktio" "2026-11-12"
+      urakka-id toimenpideinstanssi-id sanktiotyyppi-id nil nil)
+    (let [yhteenveto-2026
+          (:yhteenveto
+            (with-redefs [pvm/nyt (constantly (pvm/luo-pvm-dec-kk 2027 10 15))]
+              (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) testikayttaja
+                {:urakkaid urakka-id :hoitovuosi 2026})))]
+      (is (some #(= (- vuoden-2026-arvonvahennys-maara) (:maara %))
+                (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto-2026))
+        "Vuoden 2026 arvonvähennyksen pitää näkyä tavoitehintaan vaikuttavissa arvonvähennyksissä")
+      (is (not-any? #(= (- vuoden-2026-arvonvahennys-maara) (:maara %)) (:sanktiot yhteenveto-2026))
+        "Vuoden 2026 arvonvähennys ei saa näkyä sanktioissa"))))
 
 (deftest onko-paatoksia-tekematta-vuodelle-2021-test
   (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
@@ -573,17 +606,32 @@
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
         kustannukset-jarjestettyna (valikatselmukset/hae-kustannukset-jarjestettyna (:db jarjestelma) urakka-id hoitokauden-alkuvuosi hoitokauden-alkupvm hoitokauden-loppupvm)
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])]
-    (is (= odotetut-paatokset-tavoitehinta-alittuu (get-in vastaus-tavoitehinnan-alitus [:paatokset])))
-    (is (= odotetut-paatokset-tavoitehinta-ylittyy (get-in vastaus-tavoitehinnan-ylitys [:paatokset])))
-    (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
-      "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
-    (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
-      "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
-    (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
-      "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
-    (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
-          alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
-      (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
-        "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
-      (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
-        "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
+        (doseq [[vastaus odotetut-paatokset]
+          [[vastaus-tavoitehinnan-alitus odotetut-paatokset-tavoitehinta-alittuu]
+           [vastaus-tavoitehinnan-ylitys odotetut-paatokset-tavoitehinta-ylittyy]]]
+          (let [pysyvat-muutokset (some :tavoitehinnan-pysyvat-muutokset (:paatokset vastaus))]
+            (is (every? #(some % (:paatokset vastaus))
+            (mapcat keys odotetut-paatokset))
+          "Vastauksessa ovat kaikki odotetut päätöstyypit")
+            (is (= (reduce + 0 (keep #(get pysyvat-muutokset %)
+                                     [:kirjallisesti_sovitut_muutokset
+                                      :pysyvat_muutokset
+                                      :muutostyo_muutokset
+                                      :johto_ja_hallintakorvaus_muutokset
+                                      :tehtava_ja_maaratoteumamuutokset
+                                      :rahavarausten_muutokset
+                                      :arvonvahennysten_muutokset]))
+                   (:tavoitehinnan_muutokset_yhteensa pysyvat-muutokset))
+                "Pysyvien muutosten yhteissummassa ovat mukana kaikki muutostyypit")))
+        (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
+            "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
+        (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
+            "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
+        (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
+            "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
+        (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
+              alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
+          (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
+              "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
+          (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
+              "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
