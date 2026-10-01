@@ -64,11 +64,12 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
   (let [paakohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
-        haku (-> (or haku
-                (select-keys paakohde [:tr-numero :tr-alkuosa :tr-loppuosa]))
-              (assoc :tr-alkuetaisyys 0
-                  :tr-loppuetaisyys Integer/MAX_VALUE))]
-    (tieverkko-q/hae-tieosuudet db haku)))
+        hakuehdot (or haku
+                     (select-keys paakohde [:tr-numero :tr-alkuosa :tr-loppuosa]))
+        koko-osien-haku (assoc hakuehdot
+                               :tr-alkuetaisyys 0
+                               :tr-loppuetaisyys Integer/MAX_VALUE)]
+    (tieverkko-q/hae-tieosuudet db koko-osien-haku)))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat evkt]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
