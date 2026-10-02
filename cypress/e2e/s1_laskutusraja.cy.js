@@ -29,6 +29,18 @@ function trimmaaArvo(arvo) {
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
 }
 
+function valitseEnsimmainenHoitovuosi() {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+        cy.contains('1. hoitovuosi').click();
+    });
+}
+
+function valitseEnsimmainenKulujenHoitovuosi() {
+    cy.get('[data-cy=hoitokausi-valinta]').click();
+    cy.contains('li', '1. hoitovuosi').click();
+}
+
 function avaaOulunKulujenKohdistus() {
     avaaHarjaTimeoutilla();
 
@@ -94,10 +106,7 @@ describe('Laskutusraja', function () {
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
 
         // Valitse 1. hoitovuosi
-        cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
-            cy.get('button').click({force: true});
-            cy.contains('1. hoitovuosi').click();
-        });
+        valitseEnsimmainenHoitovuosi();
 
         // Tallenna jotain kilpailutettaviin hankintoihin
         cy.get('#kilpailutettavat-hankinnat-elementti table.grid tbody tr:nth-child(1) td input')
@@ -187,6 +196,7 @@ describe('Laskutusraja', function () {
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kulujen kohdistus"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+        valitseEnsimmainenKulujenHoitovuosi();
 
         // Odota että laskutusraja haetaan
         cy.wait('@hae-laskutusraja', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
@@ -230,6 +240,7 @@ describe('Laskutusraja', function () {
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+        valitseEnsimmainenKulujenHoitovuosi();
 
         // Odota että laskutusraja haetaan
         cy.wait('@hae-laskutusraja', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
