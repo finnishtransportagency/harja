@@ -1,0 +1,204 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tiemerkinnan-kustannukset": {
+      "type": "array",
+      "description": "Lista urakoiden tiemerkinnan kustannuksista",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "urakkaid": {
+            "type": "integer",
+            "description": "Urakan tunniste"
+          },
+          "urakkatunnus": {
+            "type": "string",
+            "description": "Urakasta eri järjestelmissä ja geometria-aineistoissa käytetty tunniste. Uudemmissa urakoissa sama kuin urakan Sampo-id, vanhemmissa urakoissa tunnisteena käytetään alueurakkanumeroa."
+          },
+          "korjauskustannukset": {
+            "type": "array",
+            "description": "Tiemerkintäurakan toteutuneet korjauskustannukset. Kustannukset kirjataan Harjassa sopimusvuosikohtaisina kokonaissummina.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sopimusvuosi": {
+                  "type": "integer",
+                  "description": "Kustannusvuosi"
+                },
+                "korjauskustannus-id": {
+                  "type": "integer",
+                  "description": "Korjauskustannuksen Harjassa yksilöivä id."
+                },
+                "kustannus": {
+                  "type": "number",
+                  "description": "Korjauskustannusten kokonaissumma euroina. Kustannuksen poistaminen tapahtuu muuttamalla arvo nollaksi."
+                },
+                "pk1%": {
+                  "type": ["number", "null"],
+                  "description": "PK1-luokan prosenttiosuus korjauksen kokonaiskustannuksista."
+                },
+                "pk2%": {
+                  "type": ["number", "null"],
+                  "description": "PK2-luokan prosenttiosuus korjauksen kokonaiskustannuksista."
+                },
+                "pk3%": {
+                  "type": ["number", "null"],
+                  "description": "PK3-luokan prosenttiosuus korjauksen kokonaiskustannuksista."
+                },
+                "korjauskustannus-luotu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Korjauskustannuksen luontiaika."
+                },
+                "korjauskustannus-muokattu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Korjauskustannuksen muokkausaika."
+                }
+              },
+              "required": [
+                "sopimusvuosi",
+                "korjauskustannus-id"
+              ]
+            }
+          },
+          "paallystyskohdekustannukset": {
+            "type": "array",
+            "description": "Lista päällystyskohteen kustannuksista sopimusvuosittain",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sopimusvuosi": {
+                  "type": "integer",
+                  "description": "Kustannusvuosi"
+                },
+                "paallystyskohde-id": {
+                  "type": "integer",
+                  "description": "Päällystyskohteen Harjassa yksilöivä id. Kohde tunnistetaan samalla id:llä myös päällystyskohteiden hakurajapinnassa."
+                },
+                "paallystyskohteen-yha-id": {
+                  "type": "integer",
+                  "description": "Päällystyskohteen YHAssa yksilöivä id. Kohde tunnistetaan samalla id:llä myös päällystyskohteiden hakurajapinnassa."
+                },
+                "nimi": {
+                  "type": "string",
+                  "description": "Päällystyskohteen nimi"
+                },
+                "kohdenumero": {
+                  "type": ["string", "integer"],
+                  "description": "Päällystyskohteen numero"
+                },
+                "linjamerkinnat": {
+                  "type": "number",
+                  "description": "Päällystyskohteen linjamerkintöjen kustannukset euroina."
+                },
+                "pienmerkinnat": {
+                  "type": "number",
+                  "description": "Päällystyskohteen pienmerkintöjen kustannukset euroina."
+                },
+                "jyrsinnat": {
+                  "type": "number",
+                  "description": "Päällystyskohteen jyrsintöjen kustannukset euroina"
+                },
+                "muut-kustannukset": {
+                  "type": "number",
+                  "description": "Päällystyskohteen muut kustannukset euroina"
+                },
+                "paallystyskohde-poistettu": {
+                  "type": "boolean",
+                  "description": "Onko päällystyskohde poistettu. Jos päällystyskohde on poistettu, sen kustannukset on katsottava poistetuiksi, vaikka määrä olisikin > 0 e. Poistamattoman päällystyskohteen kustannus poistetaan muuttamalla arvo nollaksi."
+                },
+                "paallystyskohde-kustannus-luotu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Päällystyskohteen kustannuksen luontiaika."
+                },
+                "paallystyskohde-kustannus-muokattu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Päällystyskohteen kustannuksen muokkausaika."
+                }
+              },
+              "required": [
+                "sopimusvuosi",
+                "paallystyskohde-id"
+              ]
+            }
+          },
+          "paikkauskohdekustannukset": {
+            "type": "array",
+            "description": "Lista paikkauskohteen kustannuksista sopimusvuosittain.",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "properties": {
+                "sopimusvuosi": {
+                  "type": "integer",
+                  "description": "Kustannusvuosi."
+                },
+                "paikkauskohde-id": {
+                  "type": "integer",
+                  "description": "Paikkauskohteen Harjassa yksilöivä id."
+                },
+                "nimi": {
+                  "type": "string",
+                  "description": "Paikkauskohteen nimi."
+                },
+                "ulkoinen-id": {
+                  "type": ["string", "integer"],
+                  "description": "Paikkauskohteen tunniste urakoitsijajärjestelmässä, excelissä tms. Harja vaatii, että ulkoinen-id on urakkakohtainen, mutta eri urakoilla voi olla samoja tunnisteita käytössä. Sama tunniste palautuu myös paikkauskohteiden hakurajapinnassa."
+                },
+                "linjamerkinnat": {
+                  "type": "number",
+                  "description": "Paikkauskohteen linjamerkintöjen kustannukset euroina."
+                },
+                "pienmerkinnat": {
+                  "type": "number",
+                  "description": "Paikkauskohteen pienmerkintöjen kustannukset euroina."
+                },
+                "jyrsinnat": {
+                  "type": "number",
+                  "description": "Paikkauskohteen jyrsintöjen kustannukset euroina."
+                },
+                "muut-kustannukset": {
+                  "type": "number",
+                  "description": "Paikkauskohteen muut kustannukset euroina."
+                },
+                "paikkauskohde-poistettu": {
+                  "type": "boolean",
+                  "description": "Onko paikkauskohde poistettu. Jos paikkauskohde on on poistettu, sen kustannukset on katsottava poistetuiksi, vaikka määrä olisikin > 0 e. Poistamattoman paikkauskohteen kustannus poistetaan muuttamalla arvo nollaksi."
+                },
+                "paikkauskohde-kustannus-luotu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Paikkauskohteen kustannuksen luontiaika."
+                },
+                "paikkauskohde-kustannus-muokattu": {
+                  "type": "string",
+                  "format": "date-time",
+                  "description": "Paikkauskohteen kustannuksen muokkausaika."
+                }
+              },
+              "required": [
+                "sopimusvuosi",
+                "paikkauskohde-id"
+              ]
+            }
+          }
+        },
+        "required": [
+          "urakkaid",
+          "urakkatunnus"
+        ]
+      }
+    }
+  },
+  "required": [
+    "tiemerkinnan-kustannukset"
+  ]
+}
