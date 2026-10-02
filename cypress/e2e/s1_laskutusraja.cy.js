@@ -240,6 +240,9 @@ describe('Laskutusraja', function () {
         cy.get('[data-cy=tabs-taso1-Kulut]').click();
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click();
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
+        cy.wait('@hae-laskutusraja', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
+        cy.wait('@hae-hoitokauden-kulujen-summa', {timeout: visibleTimeout}).its('response.statusCode').should('equal', 200);
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: visibleTimeout}).should('not.exist');
         valitseEnsimmainenKulujenHoitovuosi();
 
         // Odota että laskutusraja haetaan
