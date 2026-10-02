@@ -69,40 +69,14 @@ jobs:
       id-token: write
       contents: read
 
-    # Kaikki jobit käyttävät näitä samoja outputteja,
-    # jotta build, image ja migraatio vaiheet viittaavat varmasti samaan committiin
-    outputs:
-      commit_sha: ${{ github.sha }}
-      env_tag: ${{ steps.env-tag.outputs.env_tag }}
-
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # Env-tag kertoo ECR:ssä yhdellä silmäyksellä, mitä imagea yksittäinen ympäristö ajaa:
-      #   <env>-<build-mode>-<sha12>-<branch>, esim. test-qa1-preview-c4cd6ad7bb12-feature-x
-      # Ympäristötunniste on aina tagin alussa, koska ECR lifecycle -säännöt suodattavat tagin prefixin perusteella.
-      # Branchin nimi on viimeisenä, jotta ainoastaan se katkaistaan Docker-tagien 128 merkin rajan ylittyessä.
-      - name: '[Test-envs] Resolve environment tag'
-        id: env-tag
-        env:
-          RAW_REF: ${{ github.ref_name }}
-          ENVIRONMENT: ${{ inputs.environment }}
-          BUILD_MODE: ${{ inputs.build-mode }}
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          BRANCH=$(printf '%s' "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
-          PREFIX="${ENVIRONMENT}-${BUILD_MODE}-${COMMIT_SHA:0:12}-"
-          MAX_BRANCH_NAME_LENGTH=$((128 - ${#PREFIX}))
-          ENV_TAG="${PREFIX}${BRANCH:0:$MAX_BRANCH_NAME_LENGTH}"
-
-          echo "Environment tag: $ENV_TAG"
-          echo "env_tag=$ENV_TAG" >> "$GITHUB_OUTPUT"
-
       - name: Assume role with OIDC
-        uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
+        uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
           aws-region: 'eu-west-1'
           role-to-assume: 'arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/cicd-github-harja-app-admin'
@@ -135,18 +109,6 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      # Migraatio ajetaan preflightin commit_sha:lla, joten buildin täytyy käyttää samaa committia
-      - name: '[Test-envs] Verify checked out commit'
-        env:
-          EXPECTED_SHA: ${{ needs.preflight.outputs.commit_sha }}
-        run: |
-          ACTUAL_SHA=$(git rev-parse HEAD)
-          if [ "$ACTUAL_SHA" != "$EXPECTED_SHA" ]; then
-            echo "::error::Checked out commit $ACTUAL_SHA differs from preflight commit $EXPECTED_SHA"
-            exit 1
-          fi
-          echo "Build commit verified: $ACTUAL_SHA"
 
       # Build tarvitsee vain paikallisen tietokannan skeeman, mutta ei testidataa eikä AWS-tunnuksia
       - name: '[Test-envs] Start database for build'
@@ -289,7 +251,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           DB_CLUSTER="harja-test-db-${ENVIRONMENT#test-}"
-          echo "Checking RDS cluster: $DB_CLUSTER"
+          echo "Tarkistetaan RDS-klusteri: $DB_CLUSTER"
 
           STATUS=$(aws rds describe-db-clusters \
             --region eu-west-1 \
@@ -297,38 +259,27 @@ jobs:
             --query 'DBClusters[0].Status' \
             --output text)
 
-          echo "RDS Cluster status: $STATUS"
+          echo "RDS-klusterin tila: $STATUS"
 
           if [ "$STATUS" = "stopped" ]; then
-            echo "Starting $DB_CLUSTER..."
+            echo "Käynnistetään $DB_CLUSTER..."
             aws rds start-db-cluster \
               --region eu-west-1 \
               --db-cluster-identifier "$DB_CLUSTER" \
               --no-cli-pager > /dev/null
           fi
 
-          while true; do
-            STATUS=$(aws rds describe-db-clusters \
-              --region eu-west-1 \
-              --db-cluster-identifier "$DB_CLUSTER" \
-              --query 'DBClusters[0].Status' \
-              --output text)
-
-            echo "Waiting to start.. RDS Cluster status: $STATUS"
-
-            if [ "$STATUS" = "available" ]; then
-              echo "Done, $DB_CLUSTER is running"
-              break
-            fi
-
-            sleep 10
-          done
+          echo "Odotetaan, että $DB_CLUSTER on käytettävissä..."
+          aws rds wait db-cluster-available \
+            --region eu-west-1 \
+            --db-cluster-identifier "$DB_CLUSTER"
+          echo "$DB_CLUSTER on käytettävissä"
 
       - name: '[Test-envs] Run migrations'
         if: ${{ !inputs.skip-migrations }}
         uses: ./.github/actions/run-migrations-to-test-env
         with:
-          commit-sha: ${{ needs.preflight.outputs.commit_sha }}
+          commit-sha: ${{ github.sha }}
           function-name: HarjaTestMigrationRunner-${{ inputs.environment }}
 
       # Ajetaan vain, jos edellinen migraatio-steppi onnistui
@@ -357,6 +308,26 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
+
+      # Env-tag kertoo ECR:ssä yhdellä silmäyksellä, mitä imagea yksittäinen ympäristö ajaa:
+      #   <env>-<build-mode>-<sha12>-<branch>, esim. test-qa1-preview-c4cd6ad7bb12-feature-x
+      # Ympäristötunniste on aina tagin alussa, koska ECR lifecycle -säännöt suodattavat tagin prefixin perusteella.
+      # Branchin nimi on viimeisenä, jotta ainoastaan se katkaistaan Docker-tagien 128 merkin rajan ylittyessä.
+      - name: '[Test-envs] Resolve env-tag'
+        id: env-tag
+        env:
+          RAW_REF: ${{ github.ref_name }}
+          ENVIRONMENT: ${{ inputs.environment }}
+          BUILD_MODE: ${{ inputs.build-mode }}
+          COMMIT_SHA: ${{ github.sha }}
+        run: |
+          BRANCH=$(printf '%s' "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          PREFIX="${ENVIRONMENT}-${BUILD_MODE}-${COMMIT_SHA:0:12}-"
+          MAX_BRANCH_NAME_LENGTH=$((128 - ${#PREFIX}))
+          ENV_TAG="${PREFIX}${BRANCH:0:$MAX_BRANCH_NAME_LENGTH}"
+
+          echo "Ympäristötagi: $ENV_TAG"
+          echo "env_tag=$ENV_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Assume role with OIDC
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
@@ -393,6 +364,32 @@ jobs:
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
           image: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}:${{ needs.image.outputs.build_tag }}
 
+      # Aseta autostop ennen ECS-deployta, jotta valinta säilyy myös käynnistyksen epäonnistuessa.
+      - name: '[Test-envs] Configure automatic stop'
+        env:
+          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
+          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
+          KEEP_RUNNING: ${{ inputs.keep-running }}
+        run: |
+          SERVICE_ARN="arn:aws:ecs:eu-west-1:${AWS_ACCOUNT_ID}:service/${ECS_CLUSTER_NAME}/${ECS_SERVICE_NAME}"
+
+          if [ "$KEEP_RUNNING" = "true" ]; then
+            echo "Disabling automatic stop for $ECS_SERVICE_NAME"
+
+            aws ecs tag-resource \
+              --region eu-west-1 \
+              --resource-arn "$SERVICE_ARN" \
+              --tags key=HARJA_AUTOSS_IGNORE,value=true
+          else
+            echo "Enabling automatic stop for $ECS_SERVICE_NAME"
+
+            aws ecs untag-resource \
+              --region eu-west-1 \
+              --resource-arn "$SERVICE_ARN" \
+              --tag-keys HARJA_AUTOSS_IGNORE
+          fi
+
       - name: Deploy ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
         with:
@@ -408,7 +405,7 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          ENV_TAG: ${{ needs.preflight.outputs.env_tag }}
+          ENV_TAG: ${{ steps.env-tag.outputs.env_tag }}
           BUILD_TAG: ${{ needs.image.outputs.build_tag }}
         run: |
           docker buildx imagetools create --prefer-index=false \
@@ -423,28 +420,3 @@ jobs:
           service: ${{ vars.ECS_SERVICE_NAME }}
           # Ohita ECS service-stability check
           check-stability: 'false'
-
-      - name: '[Test-envs] Configure automatic stop'
-        env:
-          AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
-          ECS_CLUSTER_NAME: ${{ vars.ECS_CLUSTER_NAME }}
-          ECS_SERVICE_NAME: ${{ vars.ECS_SERVICE_NAME }}
-          KEEP_RUNNING: ${{ inputs.keep-running }}
-        run: |
-          SERVICE_ARN="arn:aws:ecs:eu-west-1:${AWS_ACCOUNT_ID}:service/${ECS_CLUSTER_NAME}/${ECS_SERVICE_NAME}"
-          
-          if [ "$KEEP_RUNNING" = "true" ]; then
-            echo "Disabling automatic stop for $ECS_SERVICE_NAME"
-          
-            aws ecs tag-resource \
-              --region eu-west-1 \
-              --resource-arn "$SERVICE_ARN" \
-              --tags key=HARJA_AUTOSS_IGNORE,value=true
-          else
-            echo "Enabling automatic stop for $ECS_SERVICE_NAME"
-          
-            aws ecs untag-resource \
-              --region eu-west-1 \
-              --resource-arn "$SERVICE_ARN" \
-              --tag-keys HARJA_AUTOSS_IGNORE
-          fi
