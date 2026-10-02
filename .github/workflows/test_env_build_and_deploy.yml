@@ -3,8 +3,9 @@
 ## -> tarkistaa deployment-kohteen ennen buildia
 ## -> buildaa uberjarin ilman AWS-tunnuksia
 ## -> ajaa tietokantamigraatiot rinnakkain buildin kanssa (nopeuttaa prosessia)
-## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa vain commit-SHA-tagilla
-## -> siirtää branch-tagin imagelle ja deployaa imagen <test-env> ECS konttiin SHA-tagilla
+## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa väliaikaisella build-<run_id>-tagilla
+## -> deployaa imagen <test-env> ECS konttiin digestillä ja tagaa sen ympäristötagilla (env-tag)
+##    (<env>-<build-mode>-<sha12>-<branch>), jonka perusteella ECR lifecycle säilyttää yhden imagen per ympäristö
 ## -> raportoi, jos kanta migroitiin mutta sovellusta ei deployattu
 ##
 ##  Kuvaus jobien välisistä riippuvuuksista:
@@ -73,7 +74,7 @@ jobs:
     # jotta build, image ja migraatio vaiheet viittaavat varmasti samaan committiin
     outputs:
       commit_sha: ${{ github.sha }}
-      ref_tag: ${{ steps.ref-tag.outputs.ref_tag }}
+      env_tag: ${{ steps.env-tag.outputs.env_tag }}
 
     steps:
       - name: Checkout code
@@ -81,16 +82,25 @@ jobs:
         with:
           persist-credentials: false
 
-      # ref_name == branchi
-      # Tagataan image branchilla ja testiympäristöllä
-      - name: '[Test-envs] Resolve sanitized ref tag'
-        id: ref-tag
+      # Env-tag kertoo ECR:ssä yhdellä silmäyksellä, mitä imagea yksittäinen ympäristö ajaa:
+      #   <env>-<build-mode>-<sha12>-<branch>, esim. test-qa1-preview-c4cd6ad7bb12-feature-x
+      # Ympäristötunniste on aina tagin alussa, koska ECR lifecycle -säännöt suodattavat tagin prefixin perusteella.
+      # Branchin nimi on viimeisenä, jotta ainoastaan se katkaistaan Docker-tagien 128 merkin rajan ylittyessä.
+      - name: '[Test-envs] Resolve environment tag'
+        id: env-tag
         env:
           RAW_REF: ${{ github.ref_name }}
           ENVIRONMENT: ${{ inputs.environment }}
+          BUILD_MODE: ${{ inputs.build-mode }}
+          COMMIT_SHA: ${{ github.sha }}
         run: |
-          REF_TAG=$(echo "$RAW_REF-$ENVIRONMENT" | sed 's/[^a-zA-Z0-9]/-/g')
-          echo "ref_tag=$REF_TAG" >> "$GITHUB_OUTPUT"
+          BRANCH=$(printf '%s' "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          PREFIX="${ENVIRONMENT}-${BUILD_MODE}-${COMMIT_SHA:0:12}-"
+          MAX_BRANCH_NAME_LENGTH=$((128 - ${#PREFIX}))
+          ENV_TAG="${PREFIX}${BRANCH:0:$MAX_BRANCH_NAME_LENGTH}"
+
+          echo "Environment tag: $ENV_TAG"
+          echo "env_tag=$ENV_TAG" >> "$GITHUB_OUTPUT"
 
       - name: Assume role with OIDC
         uses: aws-actions/configure-aws-credentials@cbe3b392738ccf3f987d68400dafcf4b0624a56c # v6.2.4
@@ -165,11 +175,11 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Rakentaa imagen ja pushaa sen VAIN commit-SHA-tagilla.
-  # Branch-tagia (REF_TAG) ei pushata tässä, koska migraatio voi olla vielä kesken rinnakkaisessa database-jobissa.
-  # Jos REF_TAG osoittaisi uuteen imageen ennen migraatiota, ECS:n seuraava taskin käynnistys
-  # (esim. auto-stopin jälkeen) voisi ajaa uutta sovellusta migroimatonta kantaa vasten.
-  # Image buildataan ja pushataan erillään, koska app build-jobissa ei käytetä AWS-tunnuksia (tietoturva).
+  # Image-job buildaa imagen ja pushaa sen väliaikaisella `build-<run_id>`-tagilla.
+  # Env-tagia ei aseteta vielä tässä, koska migraatio voi olla vielä kesken ja deploy voi epäonnistua.
+  # ECR lifecycle säilyttää env-tagatuista imageista vain uusimman, joten tagataan image env-tagilla vasta deploy-vaiheessa.
+  # Epäonnistuneen ajon `build-run`-tagattu image siivotaan pois ECR livecyclen toimesta erikseen.
+  # Image buildataan ja pushataan erillään, koska app build-jobissa ei saa käyttää AWS-tunnuksia (tietoturva).
   image:
     name: "Build and push image for ${{ inputs.environment }}"
     needs:
@@ -185,6 +195,10 @@ jobs:
       id-token: write
       contents: read
       actions: read
+
+    # Outputataan buildatun imagen yksilöivä digest-tunniste
+    outputs:
+      image_digest: ${{ steps.push-image.outputs.digest }}
 
     steps:
       - name: '[Test-envs] Checkout code'
@@ -220,22 +234,41 @@ jobs:
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
+          # Väliaikainen, mutta uniikki build-tag, joka osoittaa workflown run-id:hen
+          BUILD_TAG: build-${{ github.run_id }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           docker build --provenance=false \
-            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA" \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" \
             --file "$DOCKERFILE_PATH" .
 
-      - name: '[Test-envs] Push image to ECR (commit SHA tag only)'
+      - name: '[Test-envs] Push image to ECR (build tag only)'
+        id: push-image
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
-        run: |
-          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
+          BUILD_TAG: build-${{ github.run_id }}
 
-  # Tämä ajetaan rinnakkain buildin kanssa.
+        # Digest haetaan ECR:stä, jotta deploy viittaa täsmälleen ECR:ssä olevaan imagen manifestiin
+        run: |
+          docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
+
+          DIGEST=$(aws ecr describe-images \
+            --region eu-west-1 \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="$BUILD_TAG" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)
+
+          if [[ "$DIGEST" != sha256:* ]]; then
+            echo "::error::Could not resolve image digest for tag $BUILD_TAG"
+            exit 1
+          fi
+
+          echo "Pushed image with digest: $DIGEST"
+          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
+
+  # Tämä ajetaan rinnakkain buildin kanssa, ja se vaatii vain 'preflight'-vaiheen onnistumisen.
   # Hox: Testiympäristöjen suhteen voidaan sallia hiukan riskisempi rinnakkainen ajo ja nopeuttaa workflowta.
   # Jos jotain ongelmia ilmenee, voi kehittäjä vain tehdä uuden korjaavan deploymentin.
   # Jobi ajetaan _aina_ (myös skip-migrations-tilassa), koska app tarvitsee toimiakseen käynnissä olevan kannan.
@@ -368,22 +401,16 @@ jobs:
         with:
           mask-password: 'true'
 
-      # Pushaa branch-tagi (REF_TAG) jo pushattuun Commit SHA-tagattuun imageen.
-      # Tämä tehdään vasta migraation jälkeen, jotta REF_TAG ei koskaan osoita migroimatonta kantaa vastaan.
-      # Dockerin `imagetools create` kopioi vain imagen manifestin (sama digest), ei tarvita erillistä `docker pull`-vaihetta.
-      - name: '[Test-envs] Push ref tag'
+      # Task definition lukitaan imagen yksilöivään digestiin: tagien vaihtaminen ECR:ssä ei voi vaihtaa
+      # ympäristössä ajettavaa imagea (esim. taskin uudelleenkäynnistys käynnistää varmuudella aina saman imagen).
+      - name: '[Test-envs] Resolve image URI'
         id: image-uri
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          REF_TAG: ${{ needs.preflight.outputs.ref_tag }}
-          COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
+          IMAGE_DIGEST: ${{ needs.image.outputs.image_digest }}
         run: |
-          docker buildx imagetools create \
-            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$REF_TAG" \
-            "$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA"
-
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY:$COMMIT_SHA" >> "$GITHUB_OUTPUT"
+          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY@$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
 
       - name: '[Test-envs] Download task definition'
         env:
@@ -411,6 +438,34 @@ jobs:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
           wait-for-service-stability: false
 
+      # Env-tagi asetetaan vasta, kun ECS-service on päivitetty uuteen task definitioniin.
+      # ECR Lifecycle säilyttää ympäristön prefixillä vain uusimman imagen, joten aiemmin asetettu tagi
+      # voisi epäonnistuneessa deployssa siivota ympäristössä yhä ajossa olevan imagen.
+      # Digest tarkistetaan lopuksi, koska task definition viittaa digestiin.
+      - name: '[Test-envs] Tag deployed image with environment tag'
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
+          ENV_TAG: ${{ needs.preflight.outputs.env_tag }}
+          IMAGE_DIGEST: ${{ needs.image.outputs.image_digest }}
+        run: |
+          docker buildx imagetools create \
+            -t "$ECR_REGISTRY/$ECR_REPOSITORY:$ENV_TAG" \
+            "$ECR_REGISTRY/$ECR_REPOSITORY@$IMAGE_DIGEST"
+
+          TAGGED_DIGEST=$(aws ecr describe-images \
+            --region eu-west-1 \
+            --repository-name "$ECR_REPOSITORY" \
+            --image-ids imageTag="$ENV_TAG" \
+            --query 'imageDetails[0].imageDigest' \
+            --output text)
+
+          if [ "$TAGGED_DIGEST" != "$IMAGE_DIGEST" ]; then
+            echo "::error::Environment tag $ENV_TAG points to $TAGGED_DIGEST, expected deployed digest $IMAGE_DIGEST"
+            exit 1
+          fi
+
+          echo "Tagged $IMAGE_DIGEST as $ENV_TAG"
       - name: '[Test-envs] Start ECS Fargate tasks'
         uses: ./.github/actions/start-fargate-tasks
         timeout-minutes: 10
