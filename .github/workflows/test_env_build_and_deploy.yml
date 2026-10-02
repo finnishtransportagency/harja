@@ -11,7 +11,6 @@
 ##  Kuvaus jobien välisistä riippuvuuksista:
 ##   preflight ─┬─ build ── image ─┬─ deploy
 ##              └─ database ───────┘
-##                                  report (vain virhetilanteissa)
 name: '[Test-envs] Build and deploy'
 
 on:
@@ -249,8 +248,7 @@ jobs:
   # Jobi ajetaan _aina_ (myös skip-migrations-tilassa), koska app tarvitsee toimiakseen käynnissä olevan kannan.
   #
   # HUOM: Tätä jobia EI saa peruuttaa kesken migraation. Jobin peruutus ei pysäytä Lambdaa pilvessä,
-  #       vaan Flyway-ajo jatkuu taustalla. Tällöin myöskään report-job ei tiedä migraation tilaa.
-  #       Uudelleenajo on turvallinen, kunhan Lambda on tehnyt työnsä loppuun.
+  #       vaan Flyway-ajo jatkuu taustalla. Uudelleenajo on turvallinen, kunhan Lambda on tehnyt työnsä loppuun.
   database:
     name: "Prepare database for ${{ inputs.environment }}"
     needs: preflight
@@ -450,46 +448,3 @@ jobs:
               --resource-arn "$SERVICE_ARN" \
               --tag-keys HARJA_AUTOSS_IGNORE
           fi
-
-  # Raportoi osittain onnistuneen ajon: kanta on migroitu, mutta sovellusta ei deployattu.
-  # Eli, deployment on jäänyt tilaan jossa kannassa on uusi versio, mutta sovellus ei ole päivitetty.
-  # Ajetaan vain, jos jokin jobi epäonnistui tai peruutettiin JA migraatio ehti onnistua.
-  report:
-    name: "Report partial deployment to ${{ inputs.environment }}"
-    needs:
-      - preflight
-      - build
-      - image
-      - database
-      - deploy
-    if: ${{ (failure() || cancelled()) && needs.database.outputs.migrated == 'true' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-
-    permissions: {}
-
-    steps:
-      - name: '[Test-envs] Report migrated database without deployment'
-        env:
-          COMMIT_SHA: ${{ needs.preflight.outputs.commit_sha }}
-          ENVIRONMENT: ${{ inputs.environment }}
-          BUILD_RESULT: ${{ needs.build.result }}
-          IMAGE_RESULT: ${{ needs.image.result }}
-          DEPLOY_RESULT: ${{ needs.deploy.result }}
-        run: |
-          MESSAGE="Migraatiot on ajettu, mutta sovellusta ei deployattu. Ympäristössä ${ENVIRONMENT} ajetaan vanhaa sovellusversiota uutta skeemaa vasten. Korjaa virhe ja aja workflow uudelleen, tai käytä \"Re-run failed jobs\" -toimintoa, jos virhe oli häiriö."
-
-          echo "::error title=Partial deployment::${MESSAGE}"
-
-          {
-            echo "## ⚠️ Osittainen deployment: ${ENVIRONMENT}"
-            echo ""
-            echo "${MESSAGE}"
-            echo ""
-            echo "| Job | Tulos |"
-            echo "|-----|-------|"
-            echo "| build | ${BUILD_RESULT} |"
-            echo "| image | ${IMAGE_RESULT} |"
-            echo "| database | success (migroitu) |"
-            echo "| deploy | ${DEPLOY_RESULT} |"
-          } >> "$GITHUB_STEP_SUMMARY"
