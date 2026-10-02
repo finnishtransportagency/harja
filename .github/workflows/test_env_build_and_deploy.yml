@@ -3,8 +3,8 @@
 ## -> tarkistaa deployment-kohteen ennen buildia
 ## -> buildaa uberjarin ilman AWS-tunnuksia
 ## -> ajaa tietokantamigraatiot rinnakkain buildin kanssa (nopeuttaa prosessia)
-## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa väliaikaisella build-<run_id>-tagilla
-## -> deployaa imagen <test-env> ECS konttiin digestillä ja tagaa sen ympäristötagilla (env-tag)
+## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa uniikilla build-<run_id>-<run_attempt>-tagilla
+## -> deployaa imagen <test-env> ECS konttiin build-tagilla ja tagaa sen ympäristötagilla (env-tag)
 ##    (<env>-<build-mode>-<sha12>-<branch>), jonka perusteella ECR lifecycle säilyttää yhden imagen per ympäristö
 ## -> raportoi, jos kanta migroitiin mutta sovellusta ei deployattu
 ##
@@ -175,10 +175,10 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Image-job buildaa imagen ja pushaa sen väliaikaisella `build-<run_id>`-tagilla.
+  # Image-job buildaa imagen ja pushaa sen uniikilla `build-<run_id>-<run_attempt>`-tagilla.
   # Env-tagia ei aseteta vielä tässä, koska migraatio voi olla vielä kesken ja deploy voi epäonnistua.
   # ECR lifecycle säilyttää env-tagatuista imageista vain uusimman, joten tagataan image env-tagilla vasta deploy-vaiheessa.
-  # Epäonnistuneen ajon `build-run`-tagattu image siivotaan pois ECR livecyclen toimesta erikseen.
+  # Epäonnistuneen ajon build-tagattu image siivotaan pois ECR lifecyclen toimesta erikseen.
   # Image buildataan ja pushataan erillään, koska app build-jobissa ei saa käyttää AWS-tunnuksia (tietoturva).
   image:
     name: "Build and push image for ${{ inputs.environment }}"
@@ -196,9 +196,9 @@ jobs:
       contents: read
       actions: read
 
-    # Outputataan buildatun imagen yksilöivä digest-tunniste
+    # Tagi on uniikki per ajoyritys. Deploy-jobin uudelleenajo käyttää tämän jobin aiempaa outputtia.
     outputs:
-      image_digest: ${{ steps.push-image.outputs.digest }}
+      build_tag: build-${{ github.run_id }}-${{ github.run_attempt }}
 
     steps:
       - name: '[Test-envs] Checkout code'
@@ -230,43 +230,18 @@ jobs:
         with:
           mask-password: 'true'
 
-      - name: '[Test-envs] Build Harja Docker image'
+      - name: '[Test-envs] Build and push Harja Docker image'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          # Väliaikainen, mutta uniikki build-tag, joka osoittaa workflown run-id:hen
-          BUILD_TAG: build-${{ github.run_id }}
+          # Uusi ajoyritys saa oman tagin eikä siirrä edellisen deploymentin imageviittausta.
+          BUILD_TAG: build-${{ github.run_id }}-${{ github.run_attempt }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           docker build --provenance=false \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG" \
             --file "$DOCKERFILE_PATH" .
-
-      - name: '[Test-envs] Push image to ECR (build tag only)'
-        id: push-image
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          BUILD_TAG: build-${{ github.run_id }}
-
-        # Digest haetaan ECR:stä, jotta deploy viittaa täsmälleen ECR:ssä olevaan imagen manifestiin
-        run: |
           docker push "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
-
-          DIGEST=$(aws ecr describe-images \
-            --region eu-west-1 \
-            --repository-name "$ECR_REPOSITORY" \
-            --image-ids imageTag="$BUILD_TAG" \
-            --query 'imageDetails[0].imageDigest' \
-            --output text)
-
-          if [[ "$DIGEST" != sha256:* ]]; then
-            echo "::error::Could not resolve image digest for tag $BUILD_TAG"
-            exit 1
-          fi
-
-          echo "Pushed image with digest: $DIGEST"
-          echo "digest=$DIGEST" >> "$GITHUB_OUTPUT"
 
   # Tämä ajetaan rinnakkain buildin kanssa, ja se vaatii vain 'preflight'-vaiheen onnistumisen.
   # Hox: Testiympäristöjen suhteen voidaan sallia hiukan riskisempi rinnakkainen ajo ja nopeuttaa workflowta.
@@ -401,17 +376,6 @@ jobs:
         with:
           mask-password: 'true'
 
-      # Task definition lukitaan imagen yksilöivään digestiin: tagien vaihtaminen ECR:ssä ei voi vaihtaa
-      # ympäristössä ajettavaa imagea (esim. taskin uudelleenkäynnistys käynnistää varmuudella aina saman imagen).
-      - name: '[Test-envs] Resolve image URI'
-        id: image-uri
-        env:
-          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-          ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          IMAGE_DIGEST: ${{ needs.image.outputs.image_digest }}
-        run: |
-          echo "image=$ECR_REGISTRY/$ECR_REPOSITORY@$IMAGE_DIGEST" >> "$GITHUB_OUTPUT"
-
       - name: '[Test-envs] Download task definition'
         env:
           ECS_TASK_DEFINITION_NAME: ${{ vars.ECS_TASK_DEFINITION_NAME }}
@@ -422,13 +386,14 @@ jobs:
             --query taskDefinition \
             > harja-task-definition.json
 
+      # Uniikkia build-tagia ei siirretä toiseen imageen, joten myös myöhempi käynnistys käyttää samaa imagea.
       - name: Update ECS task definition
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@138c24f321fdbdf7edee4a685519d253cae2cdea # v1.9.0
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
-          image: ${{ steps.image-uri.outputs.image }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}:${{ needs.image.outputs.build_tag }}
 
       - name: Deploy ECS task definition
         uses: aws-actions/amazon-ecs-deploy-task-definition@c465972ecbd160473f22e683363b422a5412a3de # v2.6.3
@@ -441,31 +406,17 @@ jobs:
       # Env-tagi asetetaan vasta, kun ECS-service on päivitetty uuteen task definitioniin.
       # ECR Lifecycle säilyttää ympäristön prefixillä vain uusimman imagen, joten aiemmin asetettu tagi
       # voisi epäonnistuneessa deployssa siivota ympäristössä yhä ajossa olevan imagen.
-      # Digest tarkistetaan lopuksi, koska task definition viittaa digestiin.
       - name: '[Test-envs] Tag deployed image with environment tag'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
           ENV_TAG: ${{ needs.preflight.outputs.env_tag }}
-          IMAGE_DIGEST: ${{ needs.image.outputs.image_digest }}
+          BUILD_TAG: ${{ needs.image.outputs.build_tag }}
         run: |
-          docker buildx imagetools create \
+          docker buildx imagetools create --prefer-index=false \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$ENV_TAG" \
-            "$ECR_REGISTRY/$ECR_REPOSITORY@$IMAGE_DIGEST"
+            "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
 
-          TAGGED_DIGEST=$(aws ecr describe-images \
-            --region eu-west-1 \
-            --repository-name "$ECR_REPOSITORY" \
-            --image-ids imageTag="$ENV_TAG" \
-            --query 'imageDetails[0].imageDigest' \
-            --output text)
-
-          if [ "$TAGGED_DIGEST" != "$IMAGE_DIGEST" ]; then
-            echo "::error::Environment tag $ENV_TAG points to $TAGGED_DIGEST, expected deployed digest $IMAGE_DIGEST"
-            exit 1
-          fi
-
-          echo "Tagged $IMAGE_DIGEST as $ENV_TAG"
       - name: '[Test-envs] Start ECS Fargate tasks'
         uses: ./.github/actions/start-fargate-tasks
         timeout-minutes: 10
