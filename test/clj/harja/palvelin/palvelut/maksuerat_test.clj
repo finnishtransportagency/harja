@@ -54,6 +54,11 @@
         bonus_summa 1000M
         ;; Poistetaan kaikki bonukset ja sanktiot urakalta
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id (pvm/->pvm "01.10.2021") (pvm/->pvm "30.09.2026"))
+        maksuerat-ennen (kutsu-palvelua (:http-palvelin jarjestelma)
+            :hae-urakan-maksuerat +kayttaja-jvh+ urakka-id)
+        hoidonjohto-ennen (first (filter (fn [rivi]
+                   (= "Iin MHU 2021-2026 MHU ja HJU Hoidon johto" (get-in rivi [:toimenpideinstanssi :nimi])))
+                 (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat-ennen)))
 
         ;; Luodaan alihankintabonus vuodelle 2021 - kaikki bonukset menevät hoidon johto toimenpideinstanssille
         _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
@@ -71,7 +76,8 @@
                                                        (= "Iin MHU 2021-2026 MHU ja HJU Hoidon johto" (get-in rivi [:toimenpideinstanssi :nimi])))
                                                (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)))
         ;; Varmistetaan, että molemmat bonukset kuuluvat hoidon johdon toimenpideinstanssin alle, koska ne on luotu ennen 1.10.2022
-        _ (is (= 2000.000M (get-in kokonaishintaiset-hoidonjohto [:maksuera :summa])))]
+        _ (is (= (+ (get-in hoidonjohto-ennen [:maksuera :summa]) (* 2 bonus_summa))
+            (get-in kokonaishintaiset-hoidonjohto [:maksuera :summa])))]
     (is (= 7 (count maksuerat)))
     (is (= (count (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)) 7))))
 
@@ -83,6 +89,11 @@
         bonus_summa 1000M
         ;; Poistetaan kaikki bonukset ja sanktiot urakalta
         _ (poista-bonukset-ja-sanktiot-aikavalilta urakka-id (pvm/->pvm "01.10.2021") (pvm/->pvm "30.09.2026"))
+        maksuerat-ennen (kutsu-palvelua (:http-palvelin jarjestelma)
+            :hae-urakan-maksuerat +kayttaja-jvh+ urakka-id)
+        hoidonjohto-ennen (first (filter (fn [rivi]
+                   (= "Iin MHU 2021-2026 MHU ja HJU Hoidon johto" (get-in rivi [:toimenpideinstanssi :nimi])))
+                 (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat-ennen)))
         ;; Luodaan alihankintabonus vuodelle 2022
         _ (u (format "INSERT INTO erilliskustannus (sopimus, toimenpideinstanssi, pvm, laskutuskuukausi, rahasumma, urakka, tyyppi)
                       VALUES (%s, %s, '%s'::DATE, '%s'::DATE, %s, %s, '%s'::erilliskustannustyyppi)"
@@ -99,4 +110,5 @@
                                      (= "Iin MHU 2021-2026 MHU ja HJU Hoidon johto" (get-in rivi [:toimenpideinstanssi :nimi])))
                              (filter #(= :kokonaishintainen (:tyyppi (:maksuera %))) maksuerat)))
         ;; Varmistetaan, että molemmat bonukset kuuluvat hoidon johdon toimenpideinstanssin alle, koska ne on luotu ennen 1.10.2022
-        _ (is (= 2000.000M (get-in hoidonjohto [:maksuera :summa])))]))
+        _ (is (= (+ (get-in hoidonjohto-ennen [:maksuera :summa]) (* 2 bonus_summa))
+            (get-in hoidonjohto [:maksuera :summa])))]))
