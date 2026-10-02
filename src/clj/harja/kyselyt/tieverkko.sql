@@ -185,7 +185,7 @@ SELECT "tr-numero"       AS "tr-numero",
    AND (:tr-alkuosa < "tr-osa" OR (:tr-alkuosa = "tr-osa" AND :tr-alkuetaisyys < "tr-loppuetaisyys"))
    AND (:tr-loppuosa > "tr-osa" OR (:tr-loppuosa = "tr-osa" AND :tr-loppuetaisyys > "tr-alkuetaisyys"))
  ORDER BY "tr-ajorata", "tr-kaista", "tr-osa", "tr-alkuetaisyys"
- LIMIT :limit;
+ LIMIT :rajoita-tieosuuksien-maara;
 
 -- name: hae-tiet-alueella
 SELECT tie,

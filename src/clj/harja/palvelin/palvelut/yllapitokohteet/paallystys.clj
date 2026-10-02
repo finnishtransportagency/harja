@@ -68,7 +68,8 @@
                      (select-keys paakohde [:tr-numero :tr-alkuosa :tr-loppuosa]))
         koko-osien-haku (assoc hakuehdot
                                :tr-alkuetaisyys 0
-                               :tr-loppuetaisyys Integer/MAX_VALUE)]
+                               :tr-loppuetaisyys Integer/MAX_VALUE
+                               :rajoita-tieosuuksien-maara pot2-domain/+tieosuushaun-rajoitus+)]
     (tieverkko-q/hae-tieosuudet db koko-osien-haku)))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat evkt]}]
