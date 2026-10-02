@@ -76,7 +76,7 @@
               urakkatieto-fixture
               jarjestelma-fixture)
 
-(deftest hae-pot2-tieosuudet-paakohteen-rajoilla
+(deftest hae-pot2-tieosuudet-ei-rajaa-tulosta-paakohteen-etaisyyksilla
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
         paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
     (u (str "UPDATE yllapitokohde
@@ -101,10 +101,33 @@
                :tr-ajorata 1
                :tr-kaista 11
                :tr-alkuosa 1
-               :tr-alkuetaisyys 200
+               :tr-alkuetaisyys 0
                :tr-loppuosa 1
-               :tr-loppuetaisyys 2200}]
+               :tr-loppuetaisyys 2500}]
              (:tieosuudet vastaus))))))
+
+(deftest hae-pot2-tieosuudet-rajaa-tulokset-endpointissa
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (u (str "UPDATE yllapitokohde
+               SET tr_numero = 6666,
+                   tr_alkuosa = 1,
+                   tr_alkuetaisyys = 0,
+                   tr_loppuosa = 201,
+                   tr_loppuetaisyys = 100
+             WHERE id = " paallystyskohde-id))
+    (u "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = 6666")
+    (u (str "INSERT INTO tr_osoitteet
+               (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+             SELECT 6666, 1, 1 + (osa % 2), osa, 0, 100, 1
+               FROM generate_series(1, 201) AS osa"))
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-pot2-tieosuudet
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :paallystyskohde-id paallystyskohde-id})]
+      (is (= 200 (count (:tieosuudet vastaus))))
+      (is (:tieosuuksia-rajattu? vastaus)))))
 
 (deftest hae-pot2-tieosuudet-kayttajan-hakurajauksella
   (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
