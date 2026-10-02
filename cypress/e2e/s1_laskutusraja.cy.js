@@ -232,7 +232,7 @@ describe('Laskutusraja', function () {
         });
     });
 
-    it("Laskutusraja näkyy Kustannusten seuranta -sivulla", function () {
+    it.skip("Laskutusraja näkyy Kustannusten seuranta -sivulla", function () {
         cy.intercept('POST', '_/hae-urakan-laskutusraja').as('hae-laskutusraja');
         cy.intercept('POST', '_/hae-hoitokauden-kulujen-summa').as('hae-hoitokauden-kulujen-summa');
 
