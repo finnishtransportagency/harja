@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
             [harja.domain.tierekisteri :as tierekisteri]
+            [harja.domain.pot2 :as pot2-domain]
             [harja.ui.grid :as grid]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -100,7 +101,9 @@
            (when tieosuuksia-rajattu?
              [yleiset/info-laatikko
               :neutraali
-              "Hakutuloksia on yli 100, joten näytössä ovat vain ensimmäiset 100 tieosuutta. Pienennä hakuehtoja nähdäksesi kaikki tulokset."])
+                (str "Hakutuloksia on yli " pot2-domain/+tieosuushaun-rajoitus+
+                 ", joten näytössä ovat vain ensimmäiset " pot2-domain/+tieosuushaun-rajoitus+
+                 " tieosuutta. Pienennä hakuehtoja nähdäksesi kaikki tulokset.")])
            [tulostaulukko e! tieosuudet voi-lisata?]
            (when (seq kohteen-ulkopuolelle-jatkuvat)
              [yleiset/info-laatikko

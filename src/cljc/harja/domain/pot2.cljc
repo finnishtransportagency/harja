@@ -19,7 +19,7 @@
 (def +remo-toimenpide+ 33)
 (def +rem-tas-toimenpide+ 4)
 (def +massamenekin-maksimi+ 50)
-(def +tieosuushaun-rajoitus+ 100)
+(def +tieosuushaun-rajoitus+ 200)
 
 (s/def ::urakka-id pos-int?)
 (s/def ::paallystyskohde-id pos-int?)
