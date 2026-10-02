@@ -73,7 +73,8 @@
                  :tr-alkuosa 1
                  :tr-alkuetaisyys 0
                  :tr-loppuosa 1001
-                 :tr-loppuetaisyys 100})]
+                 :tr-loppuetaisyys 100
+                 :rajoita-tieosuuksien-maara 100})]
     (is (= 100 (count (:tieosuudet tulos))))
     (is (:tieosuuksia-rajattu? tulos))))
 
