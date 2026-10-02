@@ -20,6 +20,13 @@ function avaaTarjousNakyma(urakkanimi, alue) {
     avaaTarjous(urakkanimi, alue);
 }
 
+function valitseEnsimmainenHoitovuosi() {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+        cy.contains('1. hoitovuosi').click();
+    });
+}
+
 function trimmaaArvo(arvo) {
     // Poistaa ylimääräiset välilyönnit ja trimmauksella
     return arvo.toString().replace(/\s+/g, ' ').replace('€', '').replace(' ', '').replace(',', '.').trim();
@@ -218,6 +225,7 @@ describe('Tarjous-näkymä', function () {
 
             // Siirrytään kustiksen puolelle
             avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
+            valitseEnsimmainenHoitovuosi();
 
             // Varmista tarjoussummat kustiksessa
             cy.contains('Kilpailutettavat hankinnat').should('be.visible');
