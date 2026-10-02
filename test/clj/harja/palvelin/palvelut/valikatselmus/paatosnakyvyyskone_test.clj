@@ -555,7 +555,7 @@
 
 (deftest valmistele-hv-lopun-tavoite-ja-kattohinta-ei-indeksipaatosta-testi-toimii
   (let [urakan-alkuvuosi 2025
-        indeksipaatos-tehty? false
+        ;indeksipaatos-tehty? false
         valittu-hoitovuosi 2025
         paatos-nimi "Hoitovuoden lopun tavoite- ja kattohinta"
         hoitovuoden-alun-indeksikorjattu-tavoitehinta 2091663.72M
@@ -564,14 +564,19 @@
         thv-arvonvahennykset-yht -3400M
         hintamuutos (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
         tavoitehinnan-muutokset (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
-        hoitokauden-lopun-indeksikorjaus 33466.62M          ;; Jos indeksikorjausta ei ole tehty, niin tätä ei lisätä, koska se on jo tietokannasta löytyvässä summassa
+        hoitokauden-lopun-indeksikorjaus 0 #_  33466.62M          ;; Jos indeksikorjausta ei ole tehty, niin tätä ei lisätä, koska se on jo tietokannasta löytyvässä summassa
         hoitovuoden-lopun-tavoitehinta (+ (or hoitovuoden-alun-indeksikorjattu-tavoitehinta 0) (or hintamuutos 0) (or hoitokauden-lopun-indeksikorjaus 0))
-        kattohintakerroin 1.2M
+        _ (println "hoitovuoden-alun-indeksikorjattu-tavoitehinta" hoitovuoden-alun-indeksikorjattu-tavoitehinta)
+        _ (println "hintamuutos" hintamuutos)
+        _ (println "hoitokauden-lopun-indeksikorjaus" hoitokauden-lopun-indeksikorjaus)
+        _ (println "hoitovuoden-lopun-tavoitehinta" hoitovuoden-lopun-tavoitehinta)
+        kattohintakerroin 1.2
         hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-alun-indeksikorjattu-tavoitehinta kattohintakerroin)
-        hoitovuoden-lopun-kattohinta (* (+ hoitovuoden-alun-indeksikorjattu-tavoitehinta hintamuutos (if indeksipaatos-tehty? hoitokauden-lopun-indeksikorjaus 0)) kattohintakerroin)
+        hoitovuoden-lopun-kattohinta (* (+ hoitovuoden-alun-indeksikorjattu-tavoitehinta hintamuutos hoitokauden-lopun-indeksikorjaus) kattohintakerroin)
         lisaa-hoitokauden-lopun-indeksikorjaus true
         tietokanta-paatokset [{:nimi "Tavoitehinnan pysyvät muutokset" :id 1}
-                              {:nimi "Hoitovuoden lopun indeksikorjaus" :id 2}]
+                              ;{:nimi "Hoitovuoden lopun indeksikorjaus" :id 2} -- Koska tätä ei ole tehty, niin ei lisätä indeksiä summaan
+                              ]
 
         mahdolliset-paatokset [{:muutostyo_muutokset 300M, :hoitotyyppi #{"MHU+" "MHU"}, :hoitovuosi-kesken? false, :paatostyyppi "tavoitehinnan-pysyvat-muutokset", :jarjestys 2, :rahavarausten_muutokset -31560.00000M, :tehtava_ja_maaratoteumamuutokset 0.0, :virheet nil, :riippuu [], :toteumiin_perustuvat_muutokset -31560.0, :nimi "Tavoitehinnan pysyvät muutokset", :urakan_alkuvuosi 2025, :pysyvat_muutokset 10000M, :arvonvahennysten_muutokset -3400M, :avain :tavoitehinnan-muutokset, :kirjallisesti_sovitut_muutokset 8800M, :tavoitehinnan_muutokset_yhteensa -26160.0, :nakyvyys_alkaen 2025, :johto_ja_hallintakorvaus_muutokset -1500M}
                                {:alkuperaisen_pisteluvun_kuukausi "elokuu 2025", :hoitotyyppi #{"MHU+" "MHU"}, :kuukausien_keskiarvo 164.54999999999998, :tavoitehinnan_muutokset -22760.0, :paatostyyppi "indeksikorjaus", :indeksikorotuksen_prosenttiosuus 1.6, :jarjestys 3, :virheet ["Kustannussuunnitelma vahvistamatta." "Hoitokauden indeksiluvuissa puutteita."], :pistelukujen_muutos 5.8, :hoitokauden_kuukaudet '({:kuukausi "2025 Lokakuu", :indeksiluku 160.8M} {:kuukausi "2025 Marraskuu", :indeksiluku 161.9M} {:kuukausi "2025 Joulukuu", :indeksiluku 163.0M} {:kuukausi "2026 Tammikuu", :indeksiluku 161.1M} {:kuukausi "2026 Helmikuu", :indeksiluku 162.2M} {:kuukausi "2026 Maaliskuu", :indeksiluku 163.3M} {:kuukausi "2026 Huhtikuu", :indeksiluku 164.3M} {:kuukausi "2026 Toukokuu", :indeksiluku 165.4M} {:kuukausi "2026 Kesäkuu", :indeksiluku 166.5M} {:kuukausi "2026 Heinäkuu", :indeksiluku 167.6M} {:kuukausi "2026 Elokuu", :indeksiluku 168.7M} {:kuukausi "2026 Syyskuu", :indeksiluku 169.8M}), :pistelukujen_muutos_prosentteina 3.6, :riippuu [{:avain :tavoitehinnan-muutokset}], :nimi "Hoitovuoden lopun indeksikorjaus", :urakan_alkuvuosi 2024, :avain :indeksikorjaus, :hv_alun_indkorj_tavoitehinta 2091663.722M, :alkuperainen_pisteluku 158.7M, :hv_lopun_tavoitehinta_ennen_indkorj 2068903.722, :tyyppi nil, :hoitokauden_lopun_indeksikorjaus 33466.619552000004, :puuttuvat_kuukaudet (), :nakyvyys_alkaen 2024}
@@ -590,15 +595,16 @@
                         (kone/valmistele-hv-lopun-tavoite-ja-kattohinta
                           true urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset hoitovuoden-alun-indeksikorjattu-tavoitehinta
                           tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
-                          hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin
+                          hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitokauden-lopun-indeksikorjaus
                           lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset
-                          tavoitehinta-vahvistettu? urakan-parametrit)))]
+                          tavoitehinta-vahvistettu? urakan-parametrit)))
+        _ (println "paatos :: :tavoitehinta_jalkeen" (:tavoitehinta_jalkeen paatos) "erotus" (- hoitovuoden-lopun-tavoitehinta (:tavoitehinta_jalkeen paatos)))]
     (is (= paatos-nimi (:nimi paatos)) )
     (is (= hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta_ennen paatos)) )
     (is (= hoitovuoden-lopun-tavoitehinta (:tavoitehinta_jalkeen paatos)) )
     (is (= tavoitehinnan-muutokset (:tavoitehinnan_muutokset paatos)) )
     (is (= hoitokauden-lopun-indeksikorjaus (:hoitokauden_lopun_indeksikorjaus paatos)) )
-    (is (= hoitovuoden-lopun-kattohinta (bigdec (:kattohinta paatos))) )
+    (is (= (bigdec hoitovuoden-lopun-kattohinta) (bigdec (:kattohinta paatos))) )
     (is (= kattohintakerroin (:kattohintakerroin paatos)) )))
 
 (deftest valmistele-hv-lopun-tavoite-ja-kattohinta-indeksipaatos-mukana-test
@@ -639,7 +645,7 @@
                         (kone/valmistele-hv-lopun-tavoite-ja-kattohinta
                           true urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset hoitovuoden-alun-indeksikorjattu-tavoitehinta
                           tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
-                          hoitokauden-lopun-indeksikorjaus hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin
+                          hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitokauden-lopun-indeksikorjaus
                           lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset
                           tavoitehinta-vahvistettu? urakan-parametrit)))]
     (is (= paatos-nimi (:nimi paatos)) )
@@ -648,4 +654,62 @@
     (is (= tavoitehinnan-muutokset (:tavoitehinnan_muutokset paatos)) )
     (is (= hoitokauden-lopun-indeksikorjaus (:hoitokauden_lopun_indeksikorjaus paatos)) )
     (is (= hoitovuoden-lopun-kattohinta (bigdec (:kattohinta paatos))) )
-    (is (= kattohintakerroin (:kattohintakerroin paatos)) )))
+    (is (= kattohintakerroin (:kattohintakerroin paatos)))))
+
+(deftest valmistele-tavoitehinnan-ylityspaatos-kun-kattohinta-ei-ylity-toimii
+  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) urakkaid))
+        urakan-alkuvuosi 2025
+        urakan-loppuvuosi 2030
+        kuluva-hoitovuosi 2025
+        mahdolliset-paatokset (apurit/kaikki-mahdolliset-paatokset "MHU" urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
+        tietokanta-paatokset []
+        paatos-nimi "Tavoitehinnan ylitys"
+
+        hoitovuoden-lopun-tavoitehinta 2098970.34
+        hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-lopun-tavoitehinta 1.2)
+        ylityksen-maara 100
+        toteutuneet-kustannukset (+ hoitovuoden-lopun-tavoitehinta ylityksen-maara)
+        tavoitehinta-vahvistettu? false
+
+        vastaus (kone/valmistele-tavoitehinnan-ylityspaatos
+                  false urakkaid mahdolliset-paatokset urakan-alkuvuosi
+                  urakan-loppuvuosi kuluva-hoitovuosi hoitovuoden-lopun-tavoitehinta
+                  hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia toteutuneet-kustannukset tietokanta-paatokset
+                  tavoitehinta-vahvistettu? urakan-parametrit)
+        paatos (first (filter #(= (:nimi %) paatos-nimi) vastaus))
+        ]
+    (is (= paatos-nimi (:nimi paatos)))
+    (is (= (bigdec ylityksen-maara) (bigdec (:ylityksen_maara paatos))))
+    (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset paatos)))
+    (is (= false (:viimeinen_hoitokausi paatos)))
+    (is (= nil (:virheet paatos)))))
+
+(deftest valmistele-tavoitehinnan-ylityspaatos-kun-kattohinta-ylittyy-toimii
+  (let [urakkaid (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit (:db jarjestelma) urakkaid))
+        urakan-alkuvuosi 2025
+        urakan-loppuvuosi 2030
+        kuluva-hoitovuosi 2025
+        mahdolliset-paatokset (apurit/kaikki-mahdolliset-paatokset "MHU" urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
+        tietokanta-paatokset []
+        paatos-nimi "Tavoitehinnan ylitys"
+
+        hoitovuoden-lopun-tavoitehinta 2098970.34
+        hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-lopun-tavoitehinta 1.2)
+        ylityksen-maara 100
+        toteutuneet-kustannukset (+ hoitovuoden-lopun-tavoitehinta ylityksen-maara)
+        tavoitehinta-vahvistettu? false
+
+        vastaus (kone/valmistele-tavoitehinnan-ylityspaatos
+                  false urakkaid mahdolliset-paatokset urakan-alkuvuosi
+                  urakan-loppuvuosi kuluva-hoitovuosi hoitovuoden-lopun-tavoitehinta
+                  hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia toteutuneet-kustannukset tietokanta-paatokset
+                  tavoitehinta-vahvistettu? urakan-parametrit)
+        paatos (first (filter #(= (:nimi %) paatos-nimi) vastaus))
+        ]
+    (is (= paatos-nimi (:nimi paatos)))
+    (is (= (bigdec ylityksen-maara) (bigdec (:ylityksen_maara paatos))))
+    (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset paatos)))
+    (is (= false (:viimeinen_hoitokausi paatos)))
+    (is (= nil (:virheet paatos)))))

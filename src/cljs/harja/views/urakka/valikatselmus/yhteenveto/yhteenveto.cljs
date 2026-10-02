@@ -158,9 +158,25 @@
 
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
         ;; Lasketaan siis tavoitehinnan ylitys ja alitus olemassa olevista luvuista.
-        tavoitehinnan-ylitys (if (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta))
+        _ (js/console.log "toteuma-yht" toteuma-yht)
+        _ (js/console.log "hoitovuoden-lopun-tavoitehinta" hoitovuoden-lopun-tavoitehinta)
+        _ (js/console.log "hoitovuoden-lopun-kattohinta" hoitovuoden-lopun-kattohinta)
+        _ (js/console.log "(luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara)" (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara))
+
+        tavoitehinnan-ylitys (cond
+                               ;; Ei ole päätöstä, mutta toteuma on suurempi kuin tavoitehinta ja pienempi kuin kattohinta
+                               (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta) (<= toteuma-yht hoitovuoden-lopun-kattohinta))
                                (- toteuma-yht hoitovuoden-lopun-tavoitehinta)
-                               (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara))
+
+                               ;; Ei ole päätöstä ja toteuma on suurempi kuin kattohointa
+                               (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
+                               (- hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
+
+                               ;; Jos päätös on, niin käytetään sitä
+                               (:id tavoitehinnan-ylityspaatos)
+                               (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara)
+                               ;;Toivotaan, että tänne ei mennä koskaan.
+                               :else 0)
 
         tavoitehinnan-alitus (if (and (not tavoitehinnan-alituspaatos) (< toteuma-yht hoitovuoden-lopun-tavoitehinta))
                                (- hoitovuoden-lopun-tavoitehinta toteuma-yht)
