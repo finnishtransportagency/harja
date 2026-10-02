@@ -14,5 +14,6 @@
  ;; frontti kaatuu ilman prefixiä
  :rename-prefix "h"
 
- ;:parallel-build false Failaa randomisti
+ ;; NOTE: Aseta false, jos prod-buildit alkavat failaamaan satunnaisesti
+ :parallel-build true
  :closure-output-charset "US-ASCII"}

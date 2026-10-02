@@ -230,6 +230,16 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Iin MHU 2021-2026 MHU Ylläpito TP') AND tyyppi = 'kokonaishintainen'));
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = (SELECT id from toimenpideinstanssi WHERE nimi = 'Iin MHU 2021-2026 MHU Korvausinvestointi TP') AND tyyppi = 'kokonaishintainen'));
 
+-- maksuerät Raahen 23 urakkaan
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Talvihoito TP'), 'kokonaishintainen', 'Raahen MHU 2023-2028 Talvihoito TP' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Liikenneympäristön hoito TP'), 'kokonaishintainen', 'Raahen MHU 2023-2028 Liikenneympäristön hoito TP' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Soratien hoito TP'), 'kokonaishintainen', 'Raahen MHU 2023-2028 Soratien hoito TP' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 MHU ja HJU Hoidon johto'), 'kokonaishintainen', 'Raahen MHU 2023-2028 MHU ja HJU Hoidon johto' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 Päällystepaikkaukset TP'), 'kokonaishintainen', 'Raahen MHU 2023-2028 Päällystepaikkaukset TP' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 MHU Ylläpito TP'), 'kokonaishintainen', 'Raahen MHU 2023-2028 MHU Ylläpito TP' );
+INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'Raahen MHU 2023-2028 MHU Korvausinvestointi TP'), 'kokonaishintainen', 'Raahen MHU 2023-2028 MHU Korvausinvestointi TP' );
+
+
 -- suomussalmi
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'POP MHU Suomussalmi 2024-2029 Talvihoito TP'), 'kokonaishintainen', 'POP MHU Suomussalmi 2024-2029 Talvihoito' );
 INSERT INTO maksuera (toimenpideinstanssi, tyyppi, nimi) VALUES ((SELECT id from toimenpideinstanssi WHERE nimi = 'POP MHU Suomussalmi 2024-2029 Liikenneympäristön hoito TP'), 'kokonaishintainen', 'POP MHU Suomussalmi 2024-2029 Liikenneympäristön hoito' );

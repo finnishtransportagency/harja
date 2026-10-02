@@ -1,12 +1,13 @@
 (ns harja.views.urakka.yllapitokohteet.kustannukset-apurit
   "Ylläpidon kustannusten apufunktiot"
-  (:require [harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot :as tiedot]
-            [harja.fmt :as fmt]
-            [harja.ui.lomake :as lomake]
-            [harja.ui.protokollat :as protokollat]
+  (:require [harja.fmt :as fmt]
             [harja.ui.grid :as grid]
+            [harja.ui.napit :as napit]
+            [harja.ui.lomake :as lomake]
+            [harja.tyokalut.tuck :as tuck-apurit]
+            [harja.ui.protokollat :as protokollat]
             [harja.ui.yleiset :refer [ajax-loader]]
-            [harja.ui.napit :as napit])
+            [harja.tiedot.urakka.yllapitokohteet.kustannukset-tiedot :as tiedot])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
@@ -18,9 +19,9 @@
     (filter some? selitteet)))
 
 
-(defn selitehaku 
-  "Kopsattu tieliikenneilmoitukset.cljs, tehty funktioksi johon passataan tuck app staten käyttäjien lisäämät selitteet
-   Käytetään autofillinä jotka tarjotaan alasvetovalintoihin kun käyttäjä kirjoittaa selitettä"
+(defn selitehaku
+  "Käytetään autofillinä jotka tarjotaan alasvetovalintoihin kun käyttäjä kirjoittaa selitettä.
+  Autofillinä jo urakalle listatut selitteet"
   [selitteet]
   (reify protokollat/Haku
     (hae [_ teksti]
@@ -28,7 +29,7 @@
                 itemit (if (< (count teksti) 1)
                          (vals selitteet)
                          (filter #(not= (.indexOf (.toLowerCase (val %))
-                                                  (.toLowerCase teksti)) -1)
+                                          (.toLowerCase teksti)) -1)
                            selitteet))]
             (vec (sort itemit)))))))
 
@@ -49,11 +50,11 @@
      :footer [:<>
               [:div.muokkaus-modal-napit
                ;; Tallenna
-               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKustannus lomake-valinnat))  {:disabled (not voi-tallentaa?)
-                                                                                               :data-attributes {:data-cy "tallena-yllapito-kustannus"}}]
+               [napit/tallenna "Tallenna" #(e! (tiedot/->TallennaKustannus lomake-valinnat)) {:disabled (not voi-tallentaa?)
+                                                                                              :data-attributes {:data-cy "tallena-yllapito-kustannus"}}]
                ;; Peruuta 
                [napit/yleinen-toissijainen "Peruuta" #(e! (tiedot/->SuljeLomake)) {:data-attributes {:data-cy "yllapito-kustannus-peruuta"}}]]]}
-    
+
     ;; Tyyppi
     [(lomake/rivi
        {:otsikko "Kustannuksen tyyppi"
@@ -97,45 +98,57 @@
     lomake-valinnat]])
 
 
-(defn muut-kustannukset-grid [{:keys [haku-kaynnissa? muut-kustannukset 
-                                      kustannukset-yhteensa urakka-ajan-kustannukset-yhteensa] :as _app} valittu-vuosi]
+(defn muut-kustannukset-grid [e! {:keys [haku-kaynnissa? muut-kustannukset
+                                         kustannukset-yhteensa urakka-ajan-kustannukset-yhteensa] :as _app} valittu-vuosi]
 
-  [grid/grid {:tyhja (if haku-kaynnissa?
-                       [ajax-loader "Haku käynnissä..."]
-                       "Valitulle aikavälille ei löytynyt mitään.")
-              :tunniste :id
-              :sivuta grid/vakiosivutus
-              :voi-kumota? false
-              :piilota-toiminnot? true
-              :piilota-otsikot? true
-              ;; Ylläpidon kustannuksten yhteenveto
-              ;; Lisätään 2 riviä gridin päätteeksi
-              :rivi-jalkeen-fn (fn [_rivit]
-                                 [;; Vuosi yhteensä
-                                  ^{:luokka "kustannukset-yhteenveto"}
-                                  [{:teksti (str valittu-vuosi " Kustannukset yhteensä") :luokka "lihavoitu"}
-                                   {}
-                                   {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}]
-                                  ;; Urakka-aika yhteensä
-                                  ^{:luokka "kustannukset-yhteenveto"}
-                                  [{:teksti "Urakka-ajan kustannukset yhteensä" :luokka "lihavoitu"}
-                                   {}
-                                   {:teksti (str (fmt/euro-opt false urakka-ajan-kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}]])}
+  (let [muokattava-fn #(and
+                         (not= (:kustannustyyppi %) "Sanktiot")
+                         (not= (:kustannustyyppi %) "Bonukset"))]
+    [grid/grid {:tyhja (if haku-kaynnissa?
+                         [ajax-loader "Haku käynnissä..."]
+                         "Valitulle aikavälille ei löytynyt mitään.")
+                :sivuta 25
+                :tunniste :id
+                :voi-kumota? false
+                :voi-lisata? false
+                :piilota-otsikot? true
+                :tallenna-vain-muokatut true
+                :mahdollista-rivin-valinta? false
+                :voi-poistaa? #(muokattava-fn %)
+                :tallenna (fn [sisalto]
+                            (tuck-apurit/e-kanavalla! e! tiedot/->TallennaMuokatut sisalto))
 
-   [{:tyyppi :string
-     :nimi :kustannustyyppi
-     :luokka "text-nowrap"
-     :leveys 1}
+                ;; Ylläpidon kustannuksten yhteenveto
+                ;; Lisätään 2 riviä gridin päätteeksi
+                :rivi-jalkeen-fn (fn [_rivit]
+                                   [;; Vuosi yhteensä
+                                    ^{:luokka "kustannukset-yhteenveto"}
+                                    [{:teksti (str valittu-vuosi " Kustannukset yhteensä") :luokka "lihavoitu"}
+                                     {}
+                                     {:teksti (str (fmt/euro-opt false kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}]
+                                    ;; Urakka-aika yhteensä
+                                    ^{:luokka "kustannukset-yhteenveto"}
+                                    [{:teksti "Urakka-ajan kustannukset yhteensä" :luokka "lihavoitu"}
+                                     {}
+                                     {:teksti (str (fmt/euro-opt false urakka-ajan-kustannukset-yhteensa) " €") :tasaa :oikea :luokka "lihavoitu"}]])}
 
-    {:tyyppi :string
-     :nimi :selite
-     :luokka "text-nowrap"
-     :leveys 1}
+     [{:tyyppi :string
+       :nimi :kustannustyyppi
+       :luokka "text-nowrap"
+       :muokattava? (constantly false)
+       :leveys 10}
 
-    {:tyyppi :euro
-     :desimaalien-maara 2
-     :nimi :kokonaiskustannus
-     :tasaa :oikea
-     :luokka "text-nowrap"
-     :leveys 1}]
-   muut-kustannukset])
+      {:tyyppi :string
+       :nimi :selite
+       :luokka "text-nowrap"
+       :muokattava? #(muokattava-fn %)
+       :leveys 10}
+
+      {:tyyppi :euro
+       :desimaalien-maara 2
+       :nimi :kokonaiskustannus
+       :tasaa :oikea
+       :luokka "text-nowrap"
+       :muokattava? #(muokattava-fn %)
+       :leveys 1}]
+     muut-kustannukset]))

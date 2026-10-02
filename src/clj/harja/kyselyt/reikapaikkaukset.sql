@@ -18,7 +18,8 @@ SELECT    p.id,
           p.loppuaika,
           p.maara, 
           p.kustannus,
-          p.pkluokka
+          p.pkluokka,
+          p.luokittelu
 FROM      paikkaus p 
 WHERE     p."urakka-id" = :urakka-id 
 AND       (:tie::TEXT IS NULL OR (p.tierekisteriosoite).tie = :tie)
@@ -60,7 +61,8 @@ INSERT INTO paikkaus (
   kustannus,
   "reikapaikkaus-yksikko",
   maara,
-  sijainti 
+  luokittelu,
+  sijainti
 )
 VALUES (
   'reikapaikkaus',                -- "paikkaus-tyyppi", aina reikäpaikkaus
@@ -88,9 +90,21 @@ VALUES (
   :kustannus::NUMERIC, -- kustannus
   :yksikko::TEXT, -- "reikapaikkaus-yksikko"
   :maara::INT, -- maara
+  :luokittelu::TEXT[], -- paikkauksen kategoisoinnit
   (SELECT tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)) -- sijainti geometria
 );
 
+-- name: lisaa-tai-paivita-reikapaikkauksen-tienkohta!
+-- Reikäpaikkauksessa voi olla vain yksi tienkohta. Älä käytä samaa logiikkaa urapaikkauksissa.
+INSERT INTO paikkauksen_tienkohta ("paikkaus-id", ajorata, kaista, paikkaustyyppi, "kasin-maaritelty")
+VALUES (:paikkaus-id, :ajorata, :kaista, 'reikapaikkaus'::PAIKKAUSTYYPPI, :kasin-maaritelty)
+ON CONFLICT ("paikkaus-id") WHERE paikkaustyyppi = 'reikapaikkaus' DO
+UPDATE
+SET "paikkaus-id"      = :paikkaus-id,
+    ajorata            = :ajorata,
+    kaista             = :kaista,
+    paikkaustyyppi     = 'reikapaikkaus'::PAIKKAUSTYYPPI,
+    "kasin-maaritelty" = :kasin-maaritelty;
 
 -- name: paivita-reikapaikkaus!
 UPDATE paikkaus SET
@@ -103,9 +117,18 @@ UPDATE paikkaus SET
   kustannus               = :kustannus::NUMERIC,
   "reikapaikkaus-yksikko" = :yksikko::TEXT, 
   maara                   = :maara::INT,
+  luokittelu              = :luokittelu::TEXT[],
   sijainti                = (SELECT tieosoitteelle_geometria(:tie::INT, :aosa::INT, :aet::INT, :losa::INT, :let::INT)),
   poistettu               = FALSE -- Jos tuodaan jo poistettu rivi, merkataan se ei-poistetuksi 
 WHERE "urakka-id" = :urakka-id AND "ulkoinen-id" = :ulkoinen-id;
+
+-- name: paivita-reikapaikkauksen-tienkohta!
+UPDATE paikkauksen_tienkohta
+SET ajorata = :ajorata,
+    kaista = :kaista,
+    "kasin-maaritelty" = :kasin-maaritelty
+WHERE "paikkaus-id" = :paikkaus-id;
+
 
 -- name: hae-reikapaikkaus-vaikka-poistettu
 -- Tätä käytetään myös API:n kautta. On tärkeää löytää myös poistetut reikäpaikkaukset, jotta niitä voidaan muokata.
@@ -118,7 +141,6 @@ SELECT *
 
 -- name: hae-kaikki-tyomenetelmat
 SELECT * FROM paikkauskohde_tyomenetelma;
-
 
 -- name: poista-reikapaikkaustoteuma!
 UPDATE  paikkaus 

@@ -1,0 +1,29 @@
+@import "../yleiset.less";
+
+.urakan-parametrit {
+  .urakan-parametrit-valitsin {
+    max-width: 24rem;
+    margin-bottom: @valistys-16;
+  }
+
+  .urakan-parametrit-lista {
+    max-width: 25rem;
+
+    .urakan-parametrit-rivi {
+      display: flex;
+      justify-content: space-between;
+      padding: @valistys-8 0;
+      border-bottom: 1px solid @gray225;
+
+      dt {
+        font-weight: bold;
+        margin-right: @valistys-16;
+      }
+
+      dd {
+        margin: 0;
+        text-align: right;
+      }
+    }
+  }
+}

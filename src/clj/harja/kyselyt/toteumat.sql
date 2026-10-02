@@ -94,6 +94,7 @@ FROM (SELECT
                                                            WHERE id = :toimenpide))
                                              AND (:tehtava :: INTEGER IS NULL OR tk.id = :tehtava))
             AND tt.poistettu IS NOT TRUE
+            AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
       GROUP BY toimenpidekoodi) x
   JOIN tehtava tk ON x.tpk_id = tk.id
 ORDER BY nimi;
@@ -243,9 +244,7 @@ SELECT
   t.suorittajan_ytunnus,
   t.lisatieto,
   k.jarjestelma                   AS jarjestelmanlisaama,
-  (SELECT nimi
-   FROM tehtava tpk
-   WHERE id = tt.toimenpidekoodi) AS toimenpide,
+  tpk.nimi                        AS toimenpide,
   t.tr_numero,
   t.tr_alkuosa,
   t.tr_alkuetaisyys,
@@ -254,15 +253,17 @@ SELECT
 
 FROM toteuma_tehtava tt
   INNER JOIN toteuma t ON tt.toteuma = t.id
-                          AND urakka = :urakka
-                          AND sopimus = :sopimus
-                          AND alkanut >= :alkupvm
-                          AND paattynyt <= :loppupvm
-                          AND tyyppi = :tyyppi :: toteumatyyppi
-                          AND toimenpidekoodi = :toimenpidekoodi
-                          AND tt.poistettu IS NOT TRUE
+                          AND t.urakka = :urakka
+                          AND t.sopimus = :sopimus
+                          AND (t.alkanut >= :alkupvm AND t.alkanut < (:loppupvm::DATE + interval '1 day')::DATE)
+                          AND t.tyyppi = :tyyppi :: toteumatyyppi
                           AND t.poistettu IS NOT TRUE
   LEFT JOIN kayttaja k ON k.id = t.luoja
+  LEFT JOIN tehtava tpk ON tpk.id = tt.toimenpidekoodi
+WHERE tt.poistettu IS NOT TRUE
+      AND tt.urakka_id = :urakka
+      AND tt.toimenpidekoodi = :toimenpidekoodi
+      AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
 ORDER BY t.alkanut DESC
 LIMIT 301;
 
@@ -299,7 +300,8 @@ SET alkanut           = :alkanut,
   tyokonetyyppi       = :tyokonetyyppi,
   tyokonetunniste     = :tyokonetunniste,
   tyokoneen_lisatieto = :tyokoneen-lisatieto,
-  lahde               = :lahde::lahde
+  lahde               = :lahde::lahde,
+  reitti              = :reitti
 WHERE ulkoinen_id = :id AND urakka = :urakka;
 
 -- name: luo-toteuma<!
@@ -415,6 +417,8 @@ WHERE e.urakka = :urakka
 -- Ryhmittele ja summaa tiedot toimenpidekoodin eli tehtävän perusteella. Suunnitellut toteumat
 -- haetaan erikseen ja ilman suunnittelua olevat toteumat erikseen, käyttäen unionia.
 -- Haetaan tarpeeksi tietoa, jotta tehtävän sisältämät erilliset toteumat voidaan hakea erikseen.
+-- Urakoitsijajärjestelmästä kirjatut tehtävään liittyvät määrät otetaan mukaan vain, jos tehtava-taulussa
+-- on niin sarakkeessa "laske-api-maara-mukaan?" määritelty. Käsin kirjatut määrät lasketaan mukaan aina.
 WITH osa_toteumat AS
          (SELECT tt.toimenpidekoodi  AS toimenpidekoodi,
                  SUM(tt.maara)       AS maara,
@@ -422,38 +426,44 @@ WITH osa_toteumat AS
                  :urakka             AS urakka,     -- Hakuehtojen perusteella tiedetään urakka, joten käytetään sitä
                  MAX(t.id)           AS toteuma_id, -- Kaikilla on sama toimenpidekoodi, joten on sama mitä toteumaa tietojen yhdistämisessä käytetään
                  MAX(tt.id)          AS toteuma_tehtava_id,
-                 MAX(t.tyyppi::TEXT) AS tyyppi      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
+                 MAX(t.tyyppi::TEXT) AS tyyppi,      -- Kaikilla on sama tyyppi, joten otetaan vain niistä joku
+                 k.jarjestelma       AS urakoitsijajarjestelmasta -- Joidenkin tehtävien urakoitsijajärjestelmästä tulleita kirjauksia ei oteta mukaan yhteissummaan
           FROM toteuma t
                    JOIN toteuma_tehtava tt ON t.id = tt.toteuma AND tt.urakka_id = :urakka AND tt.poistettu = FALSE AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                   JOIN kayttaja k ON tt.luoja = k.id -- Tallentajan tieto tarvitaan, että tiedetään tuliko määrä järjestelmästä vai kirjattiinko se käsin
                    LEFT JOIN toteuma_materiaali tm
                              ON t.id = tm.toteuma AND tm.urakka_id = :urakka AND tm.poistettu = FALSE AND tm.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
           WHERE t.urakka = :urakka
-            AND (t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE)
+            AND (t.alkanut >= :alkupvm::DATE AND t.alkanut < (:loppupvm::DATE + INTERVAL '1 day'))
             AND t.poistettu = FALSE
-          GROUP BY tt.toimenpidekoodi)
+          GROUP BY tt.toimenpidekoodi, k.jarjestelma)
 SELECT tk.id                                     AS toimenpidekoodi_id,
        o.otsikko                                 AS toimenpide,
        tk.nimi                                   AS tehtava,
        SUM(ot.maara)                             AS maara,
        SUM(ot.materiaalimaara)                   AS materiaalimaara,
-       SUM(ut.laskettu_maara)                    AS suunniteltu_maara,
+       ut.laskettu_maara                         AS suunniteltu_maara,
        tk.kasin_lisattava_maara                  AS kasin_lisattava_maara,
        tk.suunnitteluyksikko                     AS yk,
        CASE
            WHEN o.otsikko = '9 LISÄTYÖT'
                THEN 'lisatyo'
            ELSE 'kokonaishintainen' END          AS tyyppi
-
 FROM tehtava tk
-     -- Alataso on linkitetty toimenpidekoodiin
-     JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
-     JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
-     LEFT JOIN urakka_tehtavamaara_yhteenveto ut ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-                    AND tk.id = ut.tehtava
-     LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi
-     JOIN urakka u on u.id = :urakka
+         -- Alataso on linkitetty toimenpidekoodiin
+         JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
+         JOIN tehtavaryhmaotsikko o
+              ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+         LEFT JOIN urakka_tehtavamaara_yhteenveto ut
+                   ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+                       AND tk.id = ut.tehtava
+         LEFT JOIN osa_toteumat ot ON tk.id = ot.toimenpidekoodi AND
+    -- Rajataan pois urakoitsijajärjestelmästä tuodut toteumamäärät, jos tehtävän määrittely niin vaatii
+                                      ((ot.urakoitsijajarjestelmasta IS FALSE OR ot.urakoitsijajarjestelmasta IS NULL) OR
+                                       (tk."laske-api-maara-mukaan?" IS TRUE AND ot.urakoitsijajarjestelmasta IS TRUE))
+         JOIN urakka u on u.id = :urakka
 WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjata toteumia käsin
-      (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
+    (tk.aluetieto = false OR (tk.aluetieto = TRUE AND tk.kasin_lisattava_maara = TRUE))
   AND tk."mhu-tehtava?" = true -- Rajataan pois ne, jotka eivät ole mhu tehtäviä.
   AND (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
@@ -466,7 +476,8 @@ WHERE -- Rajataan pois hoitoluokka- eli aluetiedot paitsi, jos niihin saa kirjat
                                  'e32341fc-775a-490a-8eab-c98b8849f968',
                                  '0c466f20-620d-407d-87b0-3cbb41e8342e',
                                  'c058933e-58d3-414d-99d1-352929aa8cf9'))
-GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ot.tyyppi
+-- Groupattu myös laskettu_maara-sarakkeella, koska suunnittelutietoa ei saa summata eri riveiltä yhteen. Sama suunniteltu määrä koskee kaikkia toteumarivejä hoitovuoden aikana.
+GROUP BY tk.id, tk.nimi, o.otsikko, tk.kasin_lisattava_maara, tk.suunnitteluyksikko, ut.laskettu_maara, ot.tyyppi
 ORDER BY o.otsikko asc, tk.nimi asc;
 
 -- name: listaa-tehtavan-toteumat
@@ -474,6 +485,7 @@ ORDER BY o.otsikko asc, tk.nimi asc;
 -- Summataan järjestelmän kautta lisätyt toteumat yhdelle riville, koska niitä tulee kymmeniätuhansia
 -- yhden hoitokauden aikana ja mikään käyttöliittymä ei pysty niitä näyttämään järkevästi.
 -- Käsin lisätyt toteumat sen sijaan listataan yksitellen.
+-- Jos tehtävätaulussa on niin määritelty, ei järjestelmästä kirjattuja toteumia oteta ollenkaan mukaan.
 SELECT 0 as id,
        now() as alkanut,
        sum(tt.maara) as maara,
@@ -483,7 +495,7 @@ SELECT 0 as id,
 FROM toteuma t
      JOIN toteuma_tehtava tt ON tt.toteuma = t.id AND tt.urakka_id = :urakka AND tt.poistettu = FALSE
      LEFT JOIN toteuma_materiaali tm on tm.toteuma = t.id AND tm.urakka_id = :urakka AND tm.poistettu = FALSE
-     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id
+     JOIN tehtava tk ON tk.id = tt.toimenpidekoodi AND tt.toimenpidekoodi = :toimenpidekoodi-id AND tk."laske-api-maara-mukaan?" IS NOT FALSE
      JOIN kayttaja k ON k.id = t.luoja AND k.jarjestelma = true
 WHERE t.urakka = :urakka
   AND t.alkanut BETWEEN :alkupvm::DATE AND :loppupvm::DATE

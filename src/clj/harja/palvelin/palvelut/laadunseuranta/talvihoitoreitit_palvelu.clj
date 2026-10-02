@@ -4,9 +4,11 @@
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut julkaise-palvelu poista-palvelut transit-vastaus]]
             [harja.kyselyt.talvihoitoreitit :as talvihoitoreitit-q]
+            [harja.kyselyt.kalustoresurssit :as kalustoresurssit-q]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.kalustoresurssit :as kalustoresurssit-domain]
             [ring.middleware.multipart-params :refer [wrap-multipart-params]]
             [slingshot.slingshot :refer [throw+ try+]]
             [dk.ative.docjure.spreadsheet :as xls]
@@ -17,6 +19,15 @@
   (log/debug "hae-urakan-talvihoitoreitit ::user" user)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
   (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id))
+
+(defn hae-urakan-kalustoyhteenveto
+  "Kokoaa MHU26-urakan kalustoyhteenvedon: Suunnittelu / Kalustoresurssit -sivulla luvattu
+   kalusto suhteessa talvihoitoreiteille suunniteltuun kalustoon hoitoluokkaryhmittäin."
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-talvihoitoreititys user urakka-id)
+  (let [luvatut-kalustoresurssit (kalustoresurssit-q/hae-urakan-kalustoresurssit db {:urakka-id urakka-id})
+        reitit (talvihoitoreitit-q/hae-ja-muokkaa-talvihoitoreitit db urakka-id)]
+    (kalustoresurssit-domain/kokoa-kalustoyhteenveto luvatut-kalustoresurssit reitit)))
 
 (defn kasittele-excel [db urakka-id kayttaja req workbook]
   (let [;; Excelistä löytyneille talvihoitoreitteille koostetaan atomeihin statuksia. Päivittyneet omaansa, uudet lisäykset omaansa
@@ -109,6 +120,10 @@
       (fn [user tiedot]
         (hae-urakan-talvihoitoreitit db user tiedot)))
 
+    (julkaise-palvelut http-palvelin :hae-urakan-talvihoito-kalustoyhteenveto
+      (fn [user tiedot]
+        (hae-urakan-kalustoyhteenveto db user tiedot)))
+
     (julkaise-palvelu http-palvelin :lue-talvihoitoreitit-excelista
       (wrap-multipart-params (fn [request] (vastaanota-excel db request)))
       {:ring-kasittelija? true})
@@ -126,6 +141,7 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-urakan-talvihoitoreitit
+      :hae-urakan-talvihoito-kalustoyhteenveto
       :lue-talvihoitoreitit-excelista
       :poista-talvihoitoreitti)
     this))

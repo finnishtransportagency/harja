@@ -42,7 +42,7 @@ jobs:
     steps:
       - name: Find and label stale PRs
         id: label-stale-prs
-        uses: actions/stale@eb5cf3af3ac0a1aa4c9c45633dd1ae542a27a899 # v10.3.0
+        uses: actions/stale@4391f3da665fdf50b6810c1a66712fb9ba21aa93 # v11.0.0
         with:
           debug-only: ${{ github.event.inputs.dry-run }}
           stale-pr-label: "Stale"
@@ -101,7 +101,7 @@ jobs:
             return formattedList;
 
       - name: Send a summary of stale PRs into Slack
-        uses: slackapi/slack-github-action@45a88b9581bfab2566dc881e2cd66d334e621e2c # v3.0.3
+        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
         # https://github.com/actions/stale?tab=readme-ov-file#list-of-output-options
         if: ${{ steps.stale-prs-list.outcome == 'success' && steps.stale-prs-list.outputs.result != '' }}
         with:

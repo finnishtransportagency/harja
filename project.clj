@@ -14,11 +14,11 @@
 
                  ;;;;;;; Yleiset ;;;;;;;
 
-                 [prismatic/schema "1.4.1"]
-                 [org.clojure/core.async "1.6.681"]
+                 [prismatic/schema "1.4.2"]
+                 [org.clojure/core.async "1.7.701"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "1.1.357"]
+                 [com.cognitect/transit-clj "1.1.363"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -35,13 +35,13 @@
                  ;;   Näistä voi tulla konflikteja, jotka täytyy ottaa huomioon: https://www.taoensso.com/dependency-conflicts
 
                  ;; Clojure ja ClojureScript assertointi
-                 [com.taoensso/truss "2.3.0"]
+                 [com.taoensso/truss "2.5.1"]
 
                  ;; Lokitus
                  [com.taoensso/timbre "6.8.0"]
 
                  ;; Figwheel tarvitsee log4j-coren
-                 [org.apache.logging.log4j/log4j-core "2.26.0"]
+                 [org.apache.logging.log4j/log4j-core "2.26.1"]
 
                  ;; --
 
@@ -57,11 +57,11 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.4"]
+                 [ring/ring-core "1.15.5"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.cache "1.2.999"]
                  [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
@@ -74,20 +74,20 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.11"]
+                 [org.postgresql/postgresql "42.7.13"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
-                 [com.mchange/c3p0 "0.14.1"]
+                 [com.mchange/c3p0 "0.14.2"]
                  ;; Jeesql ja specql ovat SQL-kyselyjen generointiin
                  [webjure/jeesql "0.4.7"]
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "34.4" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -101,7 +101,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.7" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.11" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -148,8 +148,8 @@
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
 
-                 ;; Apache ANT core (arkistoiden purku yms. org.apache.tools.tar)
-                 [org.apache.ant/ant "1.10.17"]
+                 ;; Apache Commons Compress (arkistoiden purku, tar + gzip)
+                 [org.apache.commons/commons-compress "1.28.0"]
 
                  ;; Apache POI wrapper (Excel yms lukemiseen)
                  [dk.ative/docjure "1.22.0"]
@@ -170,15 +170,14 @@
   :managed-dependencies [[org.apache.poi/poi "5.5.1"]
                          [org.apache.poi/poi-scratchpad "5.5.1"]
                          [org.apache.poi/poi-ooxml "5.5.1"]
-                         ;; Ratkaise: CVE-2024-26308 ja CVE-2024-25710
-                         ;;  Päivitetään POI-ooxml mukana tullut transitiivinen kirjasto, joka sisältää korjauksen haavoittuvuuksiin.
-                         ;;  (POI-ooxml ei kuitenkaan käytä haavoittuneen kirjaston version riskialtista osaa)
-                         ;;  TODO: Tämä muutos voidaan poistaa, kunhan poi-ooxml ottaa mukaan uudemman version kirjastosta.
-                         [org.apache.commons/commons-compress "1.28.0"]
-
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.22.0"]]
+                         [commons-codec "1.22.1"]
+                         ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
+                         [tools.jackson.core/jackson-core "3.2.3"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.3"]
+                         ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
+                         [com.google.code.gson/gson "2.14.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
@@ -230,8 +229,11 @@
                                     "dev-resources/js/harja.js"
                                     "dev-resources/tmp"
                                     "target"
+                                    "resources/public/css"
+                                    "resources/public/js/out"
+                                    "resources/public/js/harja"
                                     "resources/public/js/harja.js"
-                                    "resources/public/js/harja"]
+                                    "resources/public/laadunseuranta/js/compiled/out"]
 
   ;; Palvelimen buildin tietoja
   :source-paths ["src/clj" "src/cljc" "laadunseuranta/clj-src" "laadunseuranta/cljc-src" "src/shared-cljc"]
@@ -282,7 +284,21 @@
                    :ohita :ohita
                    :default (fn [m]
                               (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
-                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))}
+                                (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))))
+                   ;; Shard-selektorit backend CI-testejä varten:
+                   ;; Jaetaan :default-selektorin läpäisevät testit namespacen nimen hashin perusteella kahteen osaan
+                   ;; rinnakkaista backend-testien ajoa varten (ks. reusable_run_app_tests.yml).
+                   ;; HUOM: näiden pitää olla itsenäisiä (fn [m] ...) -literaaleja, koska lein test evaluoi
+                   ;; test-selectors-arvot uudelleen erillisessä aliprosessissa, jossa project.clj:n
+                   ;; muut top-level-määrittelyt (esim. defn-) eivät ole käytettävissä.
+                   :shard-1 (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
+                                (and (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))
+                                     (= 0 (mod (hash (str (:ns m))) 2)))))
+                   :shard-2 (fn [m]
+                              (let [testit-joita-ei-ajeta #{:integraatio :hidas :ohita}]
+                                (and (nil? (some #(true? (val %)) (select-keys m testit-joita-ei-ajeta)))
+                                     (= 1 (mod (hash (str (:ns m))) 2)))))}
 
   ;; JAI ImageIO tarvitsee MANIFEST arvoja toimiakseen
   ;; Normaalisti ne tulevat sen omasta paketista, mutta uberjar tapauksessa
@@ -298,4 +314,3 @@
 
   ;;:doo {:paths {:phantom "phantomjs --local-storage-path=/tmp --local-storage-quota=1024 --offline-storage-path=/tmp --offline-storage-quota=1024"}}
   )
-

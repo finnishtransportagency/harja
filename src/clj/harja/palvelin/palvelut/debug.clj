@@ -355,6 +355,15 @@
        :viesti (.getMessage e)
        :virhe (pr-str e)})))
 
+(defn hae-tierekisteriosoite-koordinaateista
+  "Palauttaa tierekisteriosoitteen annetuista alkusijainti/loppusijainti-koordinaateista.
+  Käyttää samaa päättelylogiikkaa kuin integraatioiden laatupoikkeama-API."
+  [db {:keys [alkusijainti loppusijainti]}]
+  (let [tr-osoite (sijainnit/hae-tierekisteriosoite db alkusijainti loppusijainti)]
+    {:tr-osoite tr-osoite
+     :alkusijainti alkusijainti
+     :loppusijainti loppusijainti}))
+
 (defn vaadi-jvh! [palvelu-fn]
   (fn [user payload]
     (if-not (roolit/jvh? user)
@@ -410,7 +419,9 @@
       :debug-hae-pkluokkageometriat
       (vaadi-jvh! (partial #'hae-pkluokkageometriat db))
       :debug-ilmoitus-xml
-      (vaadi-jvh! (partial #'ilmoitus-xml db)))
+      (vaadi-jvh! (partial #'ilmoitus-xml db))
+      :debug-hae-tierekisteriosoite-koordinaateista
+      (vaadi-jvh! (partial #'hae-tierekisteriosoite-koordinaateista db)))
     this)
 
   (stop [{http :http-palvelin :as this}]
@@ -433,5 +444,6 @@
       :debug-hae-tieturvalliusuus-geometriat
       :debug-hae-yllapitokohteen-geometriat
       :debug-hae-pkluokkageometriat
-      :debug-ilmoitus-xml)
+      :debug-ilmoitus-xml
+      :debug-hae-tierekisteriosoite-koordinaateista)
     this))

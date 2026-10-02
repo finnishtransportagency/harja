@@ -157,7 +157,7 @@
                        ["15.03.2020"
                         "666-TES"
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
-                        "Alihankinta­bonus"
+                        "Bonus alihankintasopimusten maksuehdoista"
                         500M
                         0]
                        ["15.10.2019"
@@ -175,7 +175,7 @@
                        ["15.10.2019"
                         "666-TES"
                         "Oulu MHU Hallinnolliset toimenpiteet TP"
-                        "Alihankinta­bonus"
+                        "Bonus alihankintasopimusten maksuehdoista"
                         1000M
                         0]
                        ["15.10.2019"
@@ -533,8 +533,10 @@
                  -150.30834708590292112000M))]]))))
 
 (deftest erilliskustannusten-tyypit
-  (is (= (ek-raportti/erilliskustannuksen-nimi "alihankintabonus") "Alihankinta\u00ADbonus"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "alihankintabonus") "Bonus alihankintasopimusten maksuehdoista"))
   (is (= (ek-raportti/erilliskustannuksen-nimi "asiakastyytyvaisyysbonus") "As.tyyt.\u00ADbonus"))
+  (is (= (ek-raportti/erilliskustannuksen-nimi "liikennevahinkojen_aiheuttajien_selvitysbonus")
+         "Bonus liikennevahinkojen aiheuttajien selvittämisestä"))
   (is (= (ek-raportti/erilliskustannuksen-nimi "lupausbonus") "Lupaus\u00ADbonus"))
   (is (= (ek-raportti/erilliskustannuksen-nimi "muu") "Muu"))
   (is (= (ek-raportti/erilliskustannuksen-nimi "tavoitepalkkio") "Tavoite\u00ADpalkkio"))

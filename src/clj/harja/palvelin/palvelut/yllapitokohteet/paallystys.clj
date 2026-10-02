@@ -59,6 +59,20 @@
   [paallystysilmoitus]
   (= (:versio paallystysilmoitus) 2))
 
+(defn hae-pot2-tieosuudet
+  [db user {:keys [urakka-id paallystyskohde-id haku]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
+  (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
+  (let [paakohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
+        haku (if haku
+               (assoc haku
+                      :tr-alkuetaisyys 0
+                      :tr-loppuetaisyys Integer/MAX_VALUE)
+               (select-keys paakohde
+                            [:tr-numero :tr-alkuosa :tr-alkuetaisyys
+                             :tr-loppuosa :tr-loppuetaisyys]))]
+    (tieverkko-q/hae-tieosuudet db haku)))
+
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat evkt]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
@@ -1059,6 +1073,11 @@
       (julkaise-palvelu http :urakan-paallystysilmoitus-paallystyskohteella
                         (fn [user tiedot]
                           (hae-urakan-paallystysilmoitus-paallystyskohteella db user tiedot)))
+      (julkaise-palvelu http :hae-pot2-tieosuudet
+                        (fn [user tiedot]
+                          (hae-pot2-tieosuudet db user tiedot))
+                        {:kysely-spec ::pot2-domain/hae-tieosuudet-kysely
+                         :vastaus-spec ::pot2-domain/hae-tieosuudet-vastaus})
       (julkaise-palvelu http :tallenna-paallystysilmoitus
                         (fn [user tiedot]
                           (tallenna-paallystysilmoitus db user fim email tiedot))
@@ -1097,6 +1116,7 @@
       (:http-palvelin this)
       :urakan-paallystysilmoitukset
       :urakan-paallystysilmoitus-paallystyskohteella
+      :hae-pot2-tieosuudet
       :tallenna-paallystysilmoitus
       :tallenna-paallystyskohteet
       :tallenna-paallystysilmoitusten-takuupvmt

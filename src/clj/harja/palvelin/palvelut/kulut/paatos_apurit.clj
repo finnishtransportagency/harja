@@ -58,6 +58,9 @@
                    :summa (:lupaussanktio paatos),
                    :toimenpideinstanssi toimenpideinstanssi-id,
                    :perintapvm kohdistuspvm
+                   :maarattypvm kohdistuspvm
+                   :kasittelytapa :valikatselmus
+                   :maaraystapa "valikatselmus"
                    ;; Lupaussanktion tyyppiä ei tarvitse valita
                    :tyyppi lupaussanktiotyyppi
                    :indeksi indeksi}

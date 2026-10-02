@@ -172,22 +172,31 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     kustannuslaji,
     toimenpideinstanssi,
     hoitokauden_alkuvuosi,
-    summa
+    summa,
+    tehtavamaaramuutos_kirjattu,
+    syy
   ) VALUES (
     :versio,
     :muutos_id,
     :kustannuslaji::SUUNNITTELU_OSIO,
     :toimenpideinstanssi,
     :hoitokauden_alkuvuosi,
-    :summa
+    :summa,
+    :tehtavamaaramuutos-kirjattu?,
+    :syy
 ) ON CONFLICT (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi)
 DO UPDATE SET
   versio               = EXCLUDED.versio,
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
-  summa                = EXCLUDED.summa
+  summa                = EXCLUDED.summa,
+  tehtavamaaramuutos_kirjattu = EXCLUDED.tehtavamaaramuutos_kirjattu,
+  syy                  = EXCLUDED.syy
 -- Päivitetään vain jos tulee uusi määrämuutos
-WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
+-- Tai jos halutaan tallentaa muutos ilman tehtävämääriä
+WHERE (kv.summa, kv.tehtavamaaramuutos_kirjattu, kv.syy)
+  IS DISTINCT FROM
+      (EXCLUDED.summa, EXCLUDED.tehtavamaaramuutos_kirjattu, EXCLUDED.syy);
 
 
 -- name: luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<!
@@ -419,6 +428,8 @@ SELECT
                         'toimenpideinstanssi', kust.toimenpideinstanssi,
                         'summa', kust.summa,
                         'hoitokauden_alkuvuosi', kust.hoitokauden_alkuvuosi,
+                        'tehtavamaaramuutos-kirjattu?', kust.tehtavamaaramuutos_kirjattu,
+                        'syy', kust.syy,
                         'versio', kust.versio
                     )
                     ORDER BY kust.toimenpideinstanssi, kust.hoitokauden_alkuvuosi

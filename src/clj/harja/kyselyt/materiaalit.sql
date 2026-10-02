@@ -91,6 +91,9 @@ WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 -- name: paivita-sopimuksen-materiaalin-kaytto
 SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus :: INTEGER, :alkupvm :: DATE, :urakkaid :: INTEGER);
 
+-- name: paivita-sopimuksen-materiaalikaytto-muutospaivalla
+SELECT paivita_sopimuksen_materiaalikaytto_muutospaivalla(:sopimus :: INTEGER, :muutospvm :: DATE, :urakkaid :: INTEGER);
+
 -- name: paivita-koko-sopimuksen-materiaalin-kaytto
 SELECT paivita_koko_sopimuksen_materiaalin_kaytto(:sopimus :: INTEGER);
 
@@ -109,8 +112,8 @@ SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(
     :alkupvm::DATE,
     :loppupvm::DATE);
 
---name: paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla
-SELECT paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla(
+--name: paivita-urakan-materiaalinkaytto-hoitoluokittain-muutospaivalla
+SELECT paivita_urakan_materiaalinkaytto_hoitoluokittain_muutospaivalla(
     :urakka::INTEGER,
     :muutospvm::DATE);
 

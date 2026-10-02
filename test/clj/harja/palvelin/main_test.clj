@@ -148,6 +148,7 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
+    :kalustoresurssit
     :api-sampo
     :harja-status
     :rajoitusalue-pituudet
@@ -176,7 +177,8 @@
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
-    :tehtavat-maarat})
+    :tehtavat-maarat
+    :urakkaparametrit-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -239,6 +241,7 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
+    :kalustoresurssit
     :api-sampo
     :harja-status
     :info
@@ -268,7 +271,8 @@
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
-    :tehtavat-maarat})
+    :tehtavat-maarat
+    :urakkaparametrit-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

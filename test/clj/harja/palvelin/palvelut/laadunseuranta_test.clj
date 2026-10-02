@@ -1,35 +1,44 @@
 (ns harja.palvelin.palvelut.laadunseuranta-test
   (:require [clojure.test :refer :all]
-            [slingshot.slingshot :refer [throw+]]
-            [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
-            [harja.palvelin.komponentit.tietokanta :as tietokanta]
-            [harja.palvelin.palvelut.laadunseuranta :as ls]
-            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
-            [harja.testi :refer :all]
+            [clojure.java.io :as io]
+            [slingshot.slingshot :refer [try+ throw+]]
+            [clojure.string :as str]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
+
+            [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
+            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto]
+            [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
+
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+
+
+
+
             [harja.palvelin.komponentit.fim :as fim]
             [harja.palvelin.komponentit.fim-test :refer [+testi-fim+]]
             [harja.palvelin.integraatiot.sms.sms-test :refer [+testi-sms-url+]]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
-            [clojure.java.io :as io]
-            [harja.palvelin.integraatiot.jms :as jms]
+            [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.palvelin.palvelut.laadunseuranta :as ls]
+            [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
-            [harja.fmt :as fmt]
+            [harja.palvelin.raportointi.testiapurit :as raportti-apurit]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
-            [clojure.string :as str]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
+            [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
+            [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.kyselyt.sanktiot :as sanktiot-q]
-            [harja.kyselyt.sanktio-konfiguraatio :as sanktio-konfig-q]
-            [harja.kyselyt.konversio :as konv]
-            [harja.tyokalut.testidatan-kaytto :as testidatan-kaytto])
-  (:import (java.util UUID))
+            [harja.kyselyt.konversio :as konv])
+  (:import (java.util UUID)
+           (clojure.lang ExceptionInfo)
+           (harja.domain.roolit EiOikeutta))
   (:use org.httpkit.fake))
 
 (defn jarjestelma-fixture [testit]
@@ -208,9 +217,9 @@
                                      :laatupoikkeama lp
                                      :hoitokausi [hk-alkupvm hk-loppupvm]}))
 
-(defn palvelukutsu-poista-suorasanktio [kayttaja sanktio-id urakka-id]
+(defn palvelukutsu-poista-sanktio [kayttaja sanktio-id urakka-id]
   (kutsu-http-palvelua
-    :poista-suorasanktio kayttaja {:id sanktio-id
+    :poista-sanktio kayttaja {:id sanktio-id
                                    :urakka-id urakka-id}))
 
 (deftest tallenna-suorasanktio-paallystysurakassa-sakko-ja-bonus
@@ -312,8 +321,8 @@
         (is (= (hae-oulun-alueurakan-2014-2019-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
         (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
 
-        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-suorasanktio-rajapinnan kautta"
-          (let [poistettu-sanktio-id (palvelukutsu-poista-suorasanktio
+        (testing "Poista suorasanktio ja siihen liittyvä laatupoikkeama :poista-sanktio-rajapinnan kautta"
+          (let [poistettu-sanktio-id (palvelukutsu-poista-sanktio
                                        +kayttaja-jvh+ (:id lisatty-hoidon-sakko) (hae-oulun-alueurakan-2014-2019-id))
                 poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama poistettu-sanktio-id)]
             (is (= true (:poistettu poistettu-suorasanktio-kannassa)))
@@ -323,12 +332,94 @@
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
+(deftest poista-laatupoikkeaman-sanktio-peruu-paatoksen-eika-poista-laatupoikkeamaa
+  ;; Laatupoikkeaman kautta määrätyn (ei-suora)sanktion poisto eroaa suorasanktion poistosta:
+  ;; laatupoikkeamaa EI poisteta, vaan sen päätös perutaan (nollataan), jolloin laatupoikkeaman
+  ;; lukitus poistuu ja sitä voi taas muokata (vrt. HARJA-1954). Päätös perutaan silloinkin,
+  ;; kun laatupoikkeamalle jää muita aktiivisia sanktioita.
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        perustelu "Poistotesti: laatupoikkeaman sanktion poisto"
+        sanktiorunko {:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
+                      :laji :A
+                      :tyyppi 12
+                      :indeksi "MAKU 2010"
+                      :suorasanktio false
+                      :toimenpideinstanssi 4
+                      :vakiofraasi nil}
+        laatupoikkeama {:yllapitokohde nil
+                        :sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Poistotesti kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :tr {:numero 1 :alkuosa 1 :alkuetaisyys 1 :loppuosa 2 :loppuetaisyys 2}
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kohde "Poistotesti kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :puhelin
+                                 :kasittelyaika #inst "2016-09-15T09:00:01.000-00:00"
+                                 :perustelu perustelu}
+                        :sanktiot [(assoc sanktiorunko :summa 100)
+                                   (assoc sanktiorunko :summa 200)]}
+        ;; Rakennuttajakonsultilla on kirjoitusoikeus (W) muttei "poisto"-oikeutta.
+        rakennuttajakonsultti {:sahkoposti "rk@example.org"
+                               :kayttajanimi "rk-testi"
+                               :sukunimi "Konsultti"
+                               :etunimi "Reijo"
+                               :roolit #{}
+                               :id 22
+                               :organisaatio {:id 10 :nimi "Pohjois-Pohjanmaa" :tyyppi "hallintayksikko"}
+                               :organisaation-urakat #{urakka-id}
+                               :organisaatioroolit {}
+                               :urakkaroolit {urakka-id #{"Rakennuttajakonsultti"}}}
+        tallennettu (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+        lp-id (:id tallennettu)
+        sanktiot (:sanktiot tallennettu)
+        poistettava-id (get-in sanktiot [0 :id])
+        jaava-id (get-in sanktiot [1 :id])]
+
+    (is (= 2 (count sanktiot)) "Laatupoikkeamalla on kaksi sanktiota")
+
+    (testing "Ennen poistoa laatupoikkeamalla on päätös"
+      (let [lp (first (q-map "SELECT kasittelyaika, paatos, perustelu FROM laatupoikkeama WHERE id = " lp-id ";"))]
+        (is (some? (:kasittelyaika lp)) "Käsittelyaika on asetettu")
+        (is (some? (:paatos lp)) "Päätös on asetettu")))
+
+    (testing "Ilman poisto-oikeutta laatupoikkeaman sanktiota ei voi poistaa"
+      (let [vastaus (try
+                      (palvelukutsu-poista-sanktio rakennuttajakonsultti jaava-id urakka-id)
+                      (catch ExceptionInfo e e))]
+        (is (= ExceptionInfo (type vastaus)) "Poisto heittää poikkeuksen")
+        (is (= EiOikeutta (type (ex-data vastaus))) "Poikkeus on oikeuksien puutteesta")
+        (is (false? (boolean (:poistettu (q-sanktio-leftjoin-laatupoikkeama jaava-id))))
+          "Sanktio jää aktiiviseksi kun poisto estyy")
+        (let [lp (first (q-map "SELECT kasittelyaika, paatos FROM laatupoikkeama WHERE id = " lp-id ";"))]
+          (is (some? (:kasittelyaika lp)) "Laatupoikkeaman päätös säilyy kun poisto estyy"))))
+
+    (testing "Poisto-oikeudella laatupoikkeaman sanktion poisto peruu päätöksen mutta säilyttää laatupoikkeaman"
+      (let [poistettu-id (palvelukutsu-poista-sanktio +kayttaja-jvh+ poistettava-id urakka-id)
+            poistettu-sanktio (q-sanktio-leftjoin-laatupoikkeama poistettava-id)
+            jaava-sanktio (q-sanktio-leftjoin-laatupoikkeama jaava-id)
+            lp (first (q-map (str "SELECT poistettu, kasittelyaika, paatos, perustelu, "
+                               "kasittelytapa, muu_kasittelytapa "
+                               "FROM laatupoikkeama WHERE id = ") lp-id ";"))]
+        (is (= poistettava-id poistettu-id) "Poisto palauttaa poistetun sanktion id:n")
+        (is (true? (:poistettu poistettu-sanktio)) "Poistettu sanktio on merkitty poistetuksi")
+        (is (false? (boolean (:lp_poistettu poistettu-sanktio))) "Laatupoikkeamaa EI ole poistettu")
+        (is (false? (boolean (:poistettu jaava-sanktio))) "Toinen sanktio jää aktiiviseksi")
+        (is (nil? (:kasittelyaika lp)) "Käsittelyaika on nollattu")
+        (is (nil? (:paatos lp)) "Päätös on nollattu")
+        (is (nil? (:perustelu lp)) "Perustelu on nollattu")
+        (is (nil? (:kasittelytapa lp)) "Käsittelytapa on nollattu")
+        (is (nil? (:muu_kasittelytapa lp)) "Muu käsittelytapa on nollattu")))))
+
 (deftest tallenna-suorasanktio-2021-alkavassa-mhu-urakassa-sakko
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         perustelu "ABC koira kävelee MHU-alueella"
         tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
         ;; asetetaan tähän indeksi jolla on arvo, jotta varmistetaan että backendin varmistus toimii, indeksi pitää siis tässä tapauksessa nillata
         sanktio {:suorasanktio true, :laji :A, :summa 777, :indeksi "MAKU 2015", :toimenpideinstanssi tpi-id-iin-talvihoito, :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :maaraystapa "tyomaakokous"
                  :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;"))),
                           :nimi "Talvihoito, päätiet", :toimenpidekoodi 618}}
         laatupoikkeama {:tekijanimi "Max Power"
@@ -349,12 +440,298 @@
     (is (= "Talvihoito, päätiet" (:nimi (:tyyppi lisatty-hoidon-sakko))) "Hoitourakan sakon oikea sanktiotyyppi")
     (is (= -777.0 (:summa lisatty-hoidon-sakko)) "Hoitourakan sakon oikea summa")
     (is (nil? (:indeksi lisatty-hoidon-sakko)) "Indeksi oltava nil koska MHU jonka alkuvuosi > 2020")
+    (is (= "tyomaakokous" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa tallentuu lisäyksessä")
     (is (= (hae-iin-maanteiden-hoitourakan-2021-2026-id) (get-in lisatty-hoidon-sakko [:laatupoikkeama :urakka])) "Hoitourakan sanktiorunko-hoito oikea summa")
     (is (= perustelu (get-in lisatty-hoidon-sakko [:laatupoikkeama :paatos :perustelu])) "Hoitourakan sanktiorunko-hoito oikea summa")
+
+    (palvelukutsu-tallenna-suorasanktio
+      +kayttaja-jvh+ (assoc sanktio :id sanktio-id :maaraystapa "valikatselmus") laatupoikkeama hk-alkupvm hk-loppupvm)
+    (is (= "valikatselmus" (ffirst (q "SELECT maaraystapa FROM sanktio WHERE id = " sanktio-id)))
+      "Määräystapa päivittyy updatessa")
 
 
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest tallenna-suorasanktio-validoi-aktiivisen-sanktio-konfiguraation
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC aktiivinen sanktio-konfiguraatio"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")
+        validointikutsu (atom nil)]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ params]
+                      (reset! validointikutsu params))]
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (= {:urakka-id urakka-id
+            :hoitovuosi 1
+            :soveltuvuuskonteksti :urakka
+            :laji :A
+            :sanktiotyyppi-id sanktiotyyppi-id}
+           @validointikutsu)
+      "Suorasanktion tallennuksen pitää validoida aktiivinen sanktio-konfiguraatio oikeassa kontekstissa")))
+
+(deftest tallenna-suorasanktio-ei-kayta-enaa-legacy-validointia-profiilipohjaisessa-polussa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC ei legacy-validointia suorasanktiossa"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")
+        legacy-validointeja (atom 0)]
+    (try
+      (with-redefs [ls/vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+                    (fn [& _]
+                      (swap! legacy-validointeja inc))
+                    ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _])]
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (zero? @legacy-validointeja)
+      "Suorasanktion profiilipohjainen write-path ei saa käyttää legacy-validointia")))
+
+(deftest tallenna-laatupoikkeama-validoi-aktiivisen-sanktio-konfiguraation-laatupoikkeama-kontekstissa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC laatupoikkeaman aktiivinen sanktio-konfiguraatio"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :laji :A
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}
+                 :summa 777
+                 :suorasanktio false
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :vakiofraasi nil}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Kuvaus"
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :perustelu perustelu}
+                        :sanktiot [sanktio]}
+        validointikutsu (atom nil)]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ params]
+                      (reset! validointikutsu params))]
+        (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (= {:urakka-id urakka-id
+            :hoitovuosi 1
+            :soveltuvuuskonteksti :laatupoikkeama
+            :laji :A
+            :sanktiotyyppi-id sanktiotyyppi-id}
+           @validointikutsu)
+      "Laatupoikkeaman sanktion tallennuksen pitää validoida aktiivinen sanktio-konfiguraatio laatupoikkeama-kontekstissa")))
+
+(deftest tallenna-laatupoikkeama-ei-kayta-enaa-legacy-validointia-profiilipohjaisessa-polussa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC ei legacy-validointia laatupoikkeamassa"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 13;")))
+        sanktio {:perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :laji :A
+                 :tyyppi {:id sanktiotyyppi-id
+                          :nimi "Talvihoito, päätiet"
+                          :toimenpidekoodi 618}
+                 :summa 777
+                 :suorasanktio false
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :vakiofraasi nil}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Kuvaus"
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :perustelu perustelu}
+                        :sanktiot [sanktio]}
+        legacy-validointeja (atom 0)]
+    (try
+      (with-redefs [ls/vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+                    (fn [& _]
+                      (swap! legacy-validointeja inc))
+                    ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _])]
+        (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (zero? @legacy-validointeja)
+      "Laatupoikkeaman profiilipohjainen write-path ei saa käyttää legacy-validointia")))
+
+(deftest tallenna-suorasanktio-ei-validoi-yllapidon-bonusta-aktiivista-sanktio-konfiguraatiota-vasten
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        perustelu "ABC yllapidon bonus ilman write-path-validointia"
+        perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+        bonus {:suorasanktio true
+               :laji :yllapidon_bonus
+               :summa -4321
+               :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
+               :perintapvm perintapvm
+               :vakiofraasi :laadunvalvontaan-liittyvien-mittausten-ym-toimien-laiminlyonnit}
+        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00")
+                        :urakka urakka-id
+                        :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")
+        validointeja (atom 0)]
+    (try
+      (with-redefs [ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+                    (fn [_ _]
+                      (swap! validointeja inc))]
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+ bonus laatupoikkeama hk-alkupvm hk-loppupvm))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+    (is (zero? @validointeja)
+      "Ylläpidon bonus jätetään ensimmäisellä kierroksella write-path-validoinnin ulkopuolelle")))
+
+(deftest tallenna-suorasanktio-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC profiilin vastainen suorasanktio"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        profiilin-vastainen-tyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 10;")))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id profiilin-vastainen-tyyppi-id
+                          :nimi "Hallinnolliset laiminlyönnit"
+                          :toimenpidekoodi nil}}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")]
+    (try+
+      (palvelukutsu-tallenna-suorasanktio +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+      (is false "Suorasanktion tallennuksen pitäisi hylätä profiilin vastainen yhdistelmä")
+      (catch [:type :sanktio-kirjausvirhe] {:keys [virheet sanktio-kirjausvirhe]}
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi (first virheet))))
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi sanktio-kirjausvirhe)))
+        (is (= (str "Sanktiolaji: A ei mahdollinen sanktiotyypille id: " profiilin-vastainen-tyyppi-id)
+               (:viesti (first virheet)))))
+      (catch SecurityException virhe
+        (is false (str "Väärä virhetyyppi vuoti ulos legacy-validoinnista: " (.getMessage virhe)))))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest tallenna-laatupoikkeama-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        perustelu "ABC profiilin vastainen laatupoikkeama"
+        tpi-id-iin-talvihoito (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        profiilin-vastainen-tyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi where koodi = 10;")))
+        sanktio {:perintapvm #inst "2021-10-02T21:00:00.000-00:00"
+                 :laji :A
+                 :tyyppi {:id profiilin-vastainen-tyyppi-id
+                          :nimi "Hallinnolliset laiminlyönnit"
+                          :toimenpidekoodi nil}
+                 :summa 777
+                 :suorasanktio false
+                 :toimenpideinstanssi tpi-id-iin-talvihoito
+                 :vakiofraasi nil}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Kuvaus"
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :perustelu perustelu}
+                        :sanktiot [sanktio]}]
+    (try+
+      (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
+      (is false "Laatupoikkeaman tallennuksen pitäisi hylätä profiilin vastainen yhdistelmä")
+      (catch [:type :sanktio-kirjausvirhe] {:keys [virheet sanktio-kirjausvirhe]}
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi (first virheet))))
+        (is (= :sanktiotyyppi-ei-sallittu (:koodi sanktio-kirjausvirhe)))
+        (is (= (str "Sanktiolaji: A ei mahdollinen sanktiotyypille id: " profiilin-vastainen-tyyppi-id)
+               (:viesti (first virheet)))))
+      (catch SecurityException virhe
+        (is false (str "Väärä virhetyyppi vuoti ulos legacy-validoinnista: " (.getMessage virhe)))))
+    (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest vaadi-sallittu-sanktiokonfiguraatiorivi-heittaa-paikallisen-domain-virheen
+  (try+
+    (with-redefs [ls-sanktio-konfiguraatio/hae-sanktio-profiilin-rivit-kontekstissa
+                  (fn [_ _]
+                    {:rivit []})]
+      (ls-sanktio-konfiguraatio/vaadi-sallittu-sanktiokonfiguraatiorivi
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :soveltuvuuskonteksti :urakka
+         :laji :A
+         :sanktiotyyppi-id 16})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos laji puuttuu profiilista"))
+    (catch [:type :sanktio-kirjausvirhe] {:keys [virheet sanktio-kirjausvirhe]}
+      (is (= :sanktiolaji-ei-sallittu (:koodi (first virheet)))
+        "Virheen pitää käyttää paikallista domain-koodia, jotta UI voi näyttää ymmärrettävän viestin")
+      (is (= :sanktiolaji-ei-sallittu (:koodi sanktio-kirjausvirhe))
+        "Lisätiedoissa pitää säilyttää sama domain-koodi myöhempää käyttöä varten")
+      (is (= "Sanktiolaji A ei ole sallittu urakan sanktio-konfiguraatiossa."
+             (:viesti (first virheet)))
+        "Virheen pitää sisältää käyttäjälle näytettävä viesti"))))
 
 (deftest tallenna-suorasanktio-ei-salli-vaaran-urakkatyypin-sanktiolajia
   (let [perustelu "ABC gorilla gävelee"
@@ -466,7 +843,7 @@
           poistettu-suorasanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id)
           poistettu-lp-sanktio-kannassa (q-sanktio-leftjoin-laatupoikkeama lisatyn-sanktion-id-lp)
           poistettu-hoidon-sakko (first (filter #(= -637.27 (:summa %)) sanktiot-suorasanktion-poistamisen-jalkeen))]
-      (testing "poista-suorasanktio-hoitourakassa"
+      (testing "poista-sanktio-hoitourakassa"
         (is (and (number? (:id lisatty-hoidon-sakko)) (number? (:id poistettu-suorasanktio-kannassa))) "Tallennus palauttaa uuden id:n")
         (is (= :A (:laji lisatty-hoidon-sakko) (keyword (:laji poistettu-suorasanktio-kannassa))) "Hoitourakan bonuksen oikea sanktiolaji")
         (is (not= true (:poistettu lisatty-hoidon-sakko)) "Sakkoa ei poistettu")
@@ -521,14 +898,16 @@
 
 (def odotettu-urakan-jalkeinen-sanktio
   [{:yllapitokohde {:tr {:loppuetaisyys nil, :loppuosa nil, :numero nil, :alkuetaisyys nil, :alkuosa nil}, :numero nil, :id nil, :nimi nil :yhaid nil}
-    :suorasanktio false, :laji :C, :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :indeksikorjaus nil
+    :suorasanktio false, :laji :C, :laskutusrajan-ylitys nil :maarattypvm #inst"2019-10-10T21:00:00.000-00:00" :maaraystapa nil :indeksikorjaus nil
+    :tehtava {:id nil :nimi nil}
+    :tehtavaryhma {:id nil :nimi nil}
     :laatupoikkeama {:sijainti {:type :point, :coordinates [418237.0 7207744.0]},
-                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370000000-00:00",
+                     :kuvaus "Sanktion sisältävä laatupoikkeama 5b", :aika #inst "2019-10-10T21:06:06.370-00:00",
                      :tr {:alkuetaisyys 5, :loppuetaisyys 4, :numero 1, :loppuosa 3, :alkuosa 2}
                      :selvityspyydetty false, :urakka 4, :tekija "tilaaja", :kohde "Testikohde", :id 18, :tarkastuspiste 123, :tekijanimi " ", :selvitysannettu false,
                      :paatos {:paatos "hylatty", :perustelu "Ei tässä ole mitään järkeä", :kasittelyaika #inst "2019-10-10T21:06:06.370-00:00", :kasittelytapa :puhelin, :muukasittelytapa ""}}
 
-    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5,, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
+    :summa -777.0, :indeksi "MAKU 2005", :toimenpideinstanssi 5, :kasittelytapa nil, :kasittelyaika (konv/java-date #inst "2019-10-10T21:06:06.370-00:00") :id 9,
     :perintapvm #inst "2019-10-11T21:00:00.000-00:00",
     :tyyppi maarapaivan-ylitys-sanktiotyyppi, :vakiofraasi nil}])
 
@@ -542,7 +921,9 @@
                                                                    :vain-yllapitokohteettomat? nil})]
     (is (= vastaus odotettu-urakan-jalkeinen-sanktio))))
 
-;;  Tämä testi varmistaa, että hoidon alueurakoissa (urakan tyyppi = 'hoito'), jotka ovat alkaneet 2018 tai aiemmin, sanktioiden indeksilaskenta menee oikein ja samalla tavalla sanktiopalvelussa, laskutusyhteenvedossa ja sanktioraportissa.
+;;  Tämä testi varmistaa, että hoidon alueurakoissa (urakan tyyppi = 'hoito'), jotka ovat alkaneet 2018 tai aiemmin, sanktioiden indeksilaskenta menee oikein sanktiopalvelussa ja laskutusyhteenvedossa.
+;;  Sanktioraportti EI näytä indeksikorotuksia (speksin mukaan indeksit on piilotettu raportilta), joten
+;;  raportilta tarkistetaan vain indeksitön sanktioiden summa Yhteenveto-osiosta.
 (deftest urakka-alkaen-2018-tai-ennen-indeksikorotus-perintapvm-pisteluvun-mukaan
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         alkupvm (pvm/luo-pvm 2016 9 1)
@@ -554,7 +935,6 @@
                                                                    :vain-yllapitokohteettomat? nil})
         sanktio-100e (first (filter #(= -100.0 (:summa %)) vastaus))
         summat-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :summa vastaus))))
-        indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (- (reduce + 0 (remove nil? (map :indeksikorjaus vastaus))))
 
         sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
                           :suorita-raportti
@@ -565,9 +945,7 @@
                            :parametrit {:urakkatyyppi :hoito
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm}})
-        sanktiotaulukko (nth sanktioraportti 4)
-        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
-        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
+        sanktioraportti-sakot-yhteensa (raportti-apurit/hae-yhteenveto-arvo sanktioraportti "Sanktiot yhteensä")
         laskutusyhteenvedosta-samat-sanktiot (map
                                                #(select-keys % [:sakot_laskutetaan
                                                                 :sakot_laskutetaan_ind_korotus
@@ -582,14 +960,9 @@
     (is (= (count vastaus) 8) "Sanktioita odotettu määrä testikannassa.")
 
     (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2)
-           (fmt/desimaaliluku sanktioraportti-sakot-ilman-indeksia-yhteensa 2)
+           (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
            "1900,67")
-      "Sanktioiden summat palvelusta.")
-
-    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2)
-           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
-           "571,66")
-      "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+      "Sanktioiden summat palvelusta (raportti ei näytä indeksikorotusta).")
 
     (is (= (fmt/desimaaliluku sakkojen-indeksikorotukset-yhteensa-laskutusyhteenvedosta 2) "−571,66")
       "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
@@ -622,7 +995,6 @@
         ei-bonus-pred #(not (str/includes? (name (:laji %)) "bonus"))
         sanktio (first vastaus)
         summat-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :summa vastaus)))
-        indeksikorotukset-yhteensa-hae-sanktiot-palvelusta (reduce + 0 (remove nil? (map :indeksikorjaus vastaus)))
 
         sanktioraportti (kutsu-palvelua (:http-palvelin jarjestelma)
                           :suorita-raportti
@@ -633,10 +1005,7 @@
                            :parametrit {:urakkatyyppi :teiden-hoito
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm}})
-        sanktiotaulukko (nth sanktioraportti 4)
-        sanktioraportti-sakot-ilman-indeksia-yhteensa (last (:rivi (nth (last sanktiotaulukko) 35)))
-        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
-        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
+        sanktioraportti-sakot-yhteensa (raportti-apurit/hae-yhteenveto-arvo sanktioraportti "Sanktiot yhteensä")
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -653,11 +1022,8 @@
     (is (= (:summa sanktio) -100.2) "sanktion summa palautuu oikein")
     (is (= (:indeksikorjaus sanktio) -8.1162) "sanktion indeksikorjaus laskettu oikein")
     (is (= (fmt/desimaaliluku (- summat-yhteensa-hae-sanktiot-palvelusta) 2)
-           (fmt/desimaaliluku sanktioraportti-sakot-ilman-indeksia-yhteensa 2)
-           "100,20") "Sanktioiden summat palvelusta.")
-    (is (= (fmt/desimaaliluku (- indeksikorotukset-yhteensa-hae-sanktiot-palvelusta) 2)
-           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
-           "8,12") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+           (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
+           "100,20") "Sanktioiden summat palvelusta (raportti ei näytä indeksikorotusta).")
     (is (= (fmt/desimaaliluku (- sakot-indeksikorotuksineen-laskutusyhteenvedosta) 2) "108,32") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
 
     (is (= (fmt/desimaaliluku (+ (:summa sanktio) (:indeksikorjaus sanktio)) 3)
@@ -686,9 +1052,7 @@
                            :parametrit {:urakkatyyppi :teiden-hoito
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm}})
-        sanktiotaulukko (nth sanktioraportti 4)
-        sanktioraportti-indeksit-yhteensa (last (:rivi (nth (last sanktiotaulukko) 36)))
-        sanktioraportti-sakot-yhteensa (last (:rivi (nth (last sanktiotaulukko) 37)))
+        sanktioraportti-sakot-yhteensa (raportti-apurit/hae-yhteenveto-arvo sanktioraportti "Sanktiot yhteensä")
         laskutusyhteenvedosta-samat-sanktiot (map
                                                :sakot_laskutetaan
                                                (lyv-yhteiset/hae-laskutusyhteenvedon-tiedot
@@ -704,10 +1068,8 @@
     (is (= (:indeksikorjaus sanktio) 0.0) "sanktion indeksikorjaus laskettu oikein")
     (is (= (fmt/desimaaliluku summat-yhteensa-hae-sanktiot-palvelusta 2)
            (fmt/desimaaliluku sanktioraportti-sakot-yhteensa 2)
-           "1000,00") "Sanktioiden summat palvelusta.")
-    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2)
-           (fmt/desimaaliluku sanktioraportti-indeksit-yhteensa 2)
-           "0,00") "Kaikki indeksikorotkset summattuna hae-sanktiot palvelusta")
+           "1000,00") "Sanktioiden summat palvelusta (raportti ei näytä indeksikorotusta).")
+    (is (= (fmt/desimaaliluku indeksikorotukset-yhteensa-hae-sanktiot-palvelusta 2) "0,00") "Sanktiopalvelu ei tee indeksikorotusta 2021 alkaen MHU-urakoille")
     (is (= (fmt/desimaaliluku sakot-indeksikorotuksineen-laskutusyhteenvedosta 2) "−1000,00") "Kaikki indeksikorotkset summattuna laskutusyhteenvedosta")
 
     (is (= (fmt/desimaaliluku (+ (:summa sanktio) (:indeksikorjaus sanktio)) 3)
@@ -762,10 +1124,15 @@
 
 (defn- legacy-sanktio-konfiguraatio-odotus [db urakka soveltuvuuskonteksti]
   (let [kaikki-sanktiotyypit (sanktiot-q/hae-sanktiotyypit db)
+        ;; Legacy-odotus vastaa vanhaa toimintaa, jossa arvonvähennyssanktio on aina mukana hoidon urakoilla:
+        ;; validoinnit käytössä (true) ja kuluvan hoitokauden alkuvuosi ennen vuotta 2026.
+        kuluvan-hoitokauden-alkuvuosi 2025
         lajit (case soveltuvuuskonteksti
                 :laatupoikkeama (sanktio-domain/laatupoikkeaman-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
                                                                               :alkupvm (:alkupvm urakka)})
-                (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))}))]
+                (sanktio-domain/urakan-sanktiolajit {:tyyppi (keyword (:tyyppi urakka))
+                                                     :alkupvm (:alkupvm urakka)}
+                  kuluvan-hoitokauden-alkuvuosi))]
     (mapv (fn [jarjestys laji]
             {:laji laji
              :rivin-tyyppi (legacy-rivin-tyyppi laji)
@@ -800,7 +1167,7 @@
             soveltuvuuskonteksti soveltuvuuskontekstit]
       (let [urakka (first (q-map (format "SELECT id, tyyppi, alkupvm FROM urakka WHERE id = %s" urakka-id)))
             odotettu (legacy-sanktio-konfiguraatio-odotus (:db jarjestelma) urakka soveltuvuuskonteksti)
-            toteutunut (ls/hae-urakan-sanktio-konfiguraatio
+            toteutunut (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                          (:db jarjestelma)
                          +kayttaja-jvh+
                          {:urakka-id urakka-id
@@ -830,7 +1197,7 @@
     (testing "Virheellinen soveltuvuuskonteksti aiheuttaa eksplisiittisen validointivirheen"
       (is (thrown-with-msg? IllegalArgumentException
             #"Virheellinen soveltuvuuskonteksti"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -840,7 +1207,7 @@
     (testing "Puuttuva soveltuvuuskonteksti ei saa johtaa hiljaiseen onnistumiseen"
       (is (thrown-with-msg? IllegalArgumentException
             #"Virheellinen soveltuvuuskonteksti"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -861,7 +1228,7 @@
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)]
     (is (thrown-with-msg? IllegalArgumentException
           #"Sanktio-profiilia ei loytynyt"
-          (ls/hae-urakan-sanktio-konfiguraatio
+          (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
             (:db jarjestelma)
             +kayttaja-jvh+
             {:urakka-id urakka-id
@@ -871,7 +1238,7 @@
 (deftest hae-urakan-sanktio-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
-        profiili-id (get-in (ls/hae-urakan-sanktio-konfiguraatio
+        profiili-id (get-in (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                               (:db jarjestelma)
                               +kayttaja-jvh+
                               {:urakka-id urakka-id
@@ -892,7 +1259,7 @@
          :muokkaaja integraatio-id})
       (is (thrown-with-msg? IllegalArgumentException
             #"Useita aktiivisia sanktio-profiileja"
-            (ls/hae-urakan-sanktio-konfiguraatio
+            (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
               (:db jarjestelma)
               +kayttaja-jvh+
               {:urakka-id urakka-id
@@ -940,12 +1307,13 @@
     (is (= :asiakastyytyvaisyysbonus (:laji laji)) "Seedatun bonuslajin pitää löytyä palautuksesta")
     (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:nimi laji))
       "MHU21-24 profiilissa asiakastyytyväisyysbonus pitää näyttää uudella nimellä")
-    (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus} (into #{} (map :laji lajit)))
-      "MHU21-24 profiilissa pitää olla vain specin mukaiset bonuslajit")
-    (is (= :t2-koodi (:toimenpideinstanssi-rajauksen-tyyppi ensimmainen-rivi))
+    (is (= #{:asiakastyytyvaisyysbonus :alihankintabonus}
+           (into #{} (map :laji lajit)))
+      "Puutteellisessa testidatassa MHU21-24-liikennevahinkobonus ohitetaan")
+    (is (= :t2-koodi (:toimenpiderajauksen-tyyppi ensimmainen-rivi))
       "Teiden-hoidon seedatun bonusrivin pitää näkyä eksplisiittisesti t2-koodiin rajattuna")
-    (is (contains? ensimmainen-rivi :toimenpideinstanssi-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
-    (is (= "23150" (:toimenpideinstanssi-t2-koodi ensimmainen-rivi)) "Teiden-hoidon seedatun bonusrivin pitää näyttää 23150-haara")))
+    (is (contains? ensimmainen-rivi :toimenpide-t2-koodi) "Palautetun rakenteen alimman tason pitää näyttää bonusprofiilirivin t2-koodi")
+    (is (= "23150" (:toimenpide-t2-koodi ensimmainen-rivi)) "Teiden-hoidon seedatun bonusrivin pitää näyttää 23150-haara")))
 
 (deftest hae-bonus-profiilin-tiedot-admin-palauttaa-kaikki-rajauksen-ilman-sentinelia
   (let [profiili-id (ffirst (q "SELECT id FROM bonus_profiili WHERE nimi = 'hoito-bonus-2021-ja-uudemmat'"))
@@ -954,9 +1322,9 @@
                   +kayttaja-jvh+
                   {:bonus-profiili-id profiili-id})
         ensimmainen-rivi (-> vastaus :lajit first :rivit first)]
-    (is (= :kaikki (:toimenpideinstanssi-rajauksen-tyyppi ensimmainen-rivi))
+    (is (= :kaikki (:toimenpiderajauksen-tyyppi ensimmainen-rivi))
       "Hoitoprofiilin seedatun bonusrivin pitää näkyä eksplisiittisesti kaikki-rajauksena")
-    (is (nil? (:toimenpideinstanssi-t2-koodi ensimmainen-rivi))
+    (is (nil? (:toimenpide-t2-koodi ensimmainen-rivi))
       "Kaikki-rajauksessa t2-koodin pitää olla aidosti puuttuva, ei sentinel-merkkijono")
     (is (= "Kaikki" (:toimenpideinstanssi-teksti ensimmainen-rivi))
       "Backendin pitää muodostaa admin-näkymälle valmiiksi tulkittu teksti kaikki-rajauksesta")))
@@ -970,7 +1338,7 @@
         lajit (:lajit vastaus)
         laji (first lajit)]
     (is (= profiili-id (get-in vastaus [:profiili :id])))
-    (is (= 1 (count lajit)) "MHU25 profiilissa pitää olla vain yksi manuaalinen bonuslaji")
+    (is (= 1 (count lajit)) "Puutteellisessa testidatassa MHU25-liikennevahinkobonus ohitetaan")
     (is (= :asiakastyytyvaisyysbonus (:laji laji)))
     (is (= "Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta" (:nimi laji))
       "MHU25 profiilissa sama looginen bonus pitää näyttää uudella nimellä")
@@ -1027,14 +1395,14 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
-         profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+           profiili-id ", " bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [profiilirivi-id (ffirst (q (str "SELECT id FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id)))]
         (doseq [urakka-id urakka-idt]
           (u (str "INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id, luoja, luotu, muokkaaja, muokattu) VALUES ("
                profiilirivi-id ", " urakka-id ", " integraatio-id ", CURRENT_TIMESTAMP, " integraatio-id ", CURRENT_TIMESTAMP)")))
-        (let [rivit (sanktio-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
+        (let [rivit (bonus-konfig-q/hae-bonus-profiilin-rivit-admin (:db jarjestelma) {:bonus_profiili_id profiili-id})
               rivi (first rivit)]
           (is (= 1 (count rivit))
             "Custom-profiilin kyselyn pitää palauttaa yksi bonusprofiilirivi")
@@ -1064,9 +1432,9 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (u (str "INSERT INTO bonus_profiili_laji_esitystiedot (bonus_profiili_id, bonus_laji_id, nimi, luoja, luotu, muokkaaja, muokattu) VALUES ("
@@ -1107,9 +1475,9 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1124,6 +1492,141 @@
       (finally
         (u (str "DELETE FROM bonus_profiili_rivi WHERE bonus_profiili_id = " profiili-id))
         (u (str "DELETE FROM bonus_profiili WHERE id = " profiili-id))))))
+
+(defn hae-toimenpideinstanssin-id-23150
+  "Hakee ensimmäisen toimenpideinstanssin ID:n, joka kuuluu urakkaan ja jonka
+   toimenpideen t2-koodi on '23150'."
+  [urakka-id]
+  (ffirst (q (str "SELECT tpi.id\n"
+               "  FROM toimenpideinstanssi tpi\n"
+               "       JOIN toimenpide t3 ON t3.id = tpi.toimenpide\n"
+               "       JOIN toimenpide t2 ON t2.id = t3.emo\n"
+               " WHERE tpi.urakka = " urakka-id "\n"
+               "   AND t2.koodi = '23150'\n"
+               " ORDER BY tpi.id\n"
+               " LIMIT 1"))))
+
+(deftest hae-urakan-bonus-konfiguraatio-rajapinta-palauttaa-seedatun-mhu-profiilin
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakan-bonus-konfiguraatio
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :hoitovuosi 1
+                   :toimenpideinstanssi-id toimenpideinstanssi-id})]
+    (is (= :teiden-hoito (:urakkatyyppi (:profiili vastaus))))
+    (is (= [:asiakastyytyvaisyysbonus :alihankintabonus]
+           (mapv :laji (:bonus-lajit vastaus))))
+    (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
+            "Bonus alihankintasopimusten maksuehdoista"]
+           (mapv :nimi (:bonus-lajit vastaus))))))
+
+(deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssin-id-23150 urakka-id)
+        integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
+        profiili-id (get-in (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
+                              (:db jarjestelma)
+                              +kayttaja-jvh+
+                              {:urakka-id urakka-id
+                               :hoitovuosi 1
+                               :toimenpideinstanssi-id toimenpideinstanssi-id})
+                      [:profiili :id])
+        profiili (first (q-map (format "SELECT urakkatyyppi, hoitovuosi_alku, hoitovuosi_loppu, alkupvm, loppupvm FROM bonus_profiili WHERE id = %s" profiili-id)))]
+    (try
+      (jdbc/insert! (:db jarjestelma) :bonus_profiili
+        {:nimi "iin-mhu-bonus-duplikaatti"
+         :urakkatyyppi (:urakkatyyppi profiili)
+         :hoitovuosi_alku (:hoitovuosi_alku profiili)
+         :hoitovuosi_loppu (:hoitovuosi_loppu profiili)
+         :alkupvm (:alkupvm profiili)
+         :loppupvm (:loppupvm profiili)
+         :aktiivinen true
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (is (thrown-with-msg? IllegalArgumentException
+            #"Useita aktiivisia bonus-profiileja"
+            (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
+              (:db jarjestelma)
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :hoitovuosi 1
+               :toimenpideinstanssi-id toimenpideinstanssi-id})))
+      (finally
+        (u "DELETE FROM bonus_profiili WHERE nimi = 'iin-mhu-bonus-duplikaatti'")))))
+
+(deftest hae-urakan-bonus-konfiguraatio-palauttaa-tyhjan-lajilistan-tuntemattomalla-toimenpideinstanssi-idlla
+  ;; Olematon toimenpideinstanssi-id → t2-konteksti puuttuu → t2-koodi-rivit eivät vastaa
+  ;; → tyhjä lajilista (ei poikkeus)
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        vastaus (ls-bonus-konfiguraatio/hae-urakan-bonus-konfiguraatio
+                  (:db jarjestelma)
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :hoitovuosi 1
+                   :toimenpideinstanssi-id 999999999})]
+    (is (= [] (:bonus-lajit vastaus))
+      "Tuntemattomalla toimenpideinstanssi-id:llä pitää palauttaa tyhjä lajilista")))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-riveja-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-riveja
+                                        :viesti "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-riveja}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivisessa profiilissa ei ole rivejä"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-riveja (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-riveja (:koodi bonus-kirjausvirhe)))
+      (is (= "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."
+             (:viesti (first virheet)))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-profiilia-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-profiilia
+                                        :viesti "Bonukselle ei löytynyt aktiivista bonusprofiilia annetussa kontekstissa."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-profiilia}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivista profiilia ei löydy"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-profiilia (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-profiilia (:koodi bonus-kirjausvirhe))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-yksiselitteinen-profiili-domain-virheen
+  (try+
+    (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                  (fn [_ _]
+                    (throw+ {:type :bonus-kirjausvirhe
+                             :virheet [{:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili
+                                        :viesti "Bonukselle löytyi useita aktiivisia bonusprofiileja annetussa kontekstissa."}]
+                             :bonus-kirjausvirhe {:koodi :bonus-kirjausvirhe/ei-yksiselitteinen-profiili}}))]
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil
+        {:urakka-id 36
+         :hoitovuosi 1
+         :toimenpideinstanssi-id 123
+         :bonuslaji :asiakastyytyvaisyysbonus})
+      (is false "Validaattorin pitäisi heittää domain-virhe, jos aktiivisia profiileja löytyy useita"))
+    (catch [:type :bonus-kirjausvirhe] {:keys [virheet bonus-kirjausvirhe]}
+      (is (= :bonus-kirjausvirhe/ei-yksiselitteinen-profiili (:koodi (first virheet))))
+      (is (= :bonus-kirjausvirhe/ei-yksiselitteinen-profiili (:koodi bonus-kirjausvirhe))))))
 
 (deftest bonus-profiilin-lajin-esitystiedot-eivat-salli-kahta-rivia-samalle-lajille
   (let [integraatio-id (ffirst (q "SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'"))
@@ -1141,9 +1644,9 @@
                       first
                       :id)]
     (try
-       (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpideinstanssi_rajauksen_tyyppi, toimenpideinstanssi_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
+      (u (str "INSERT INTO bonus_profiili_rivi (bonus_profiili_id, bonus_laji_id, toimenpiderajauksen_tyyppi, toimenpide_t2_koodi, jarjestys, aktiivinen, luoja, luotu, muokkaaja, muokattu) VALUES ("
            profiili-id ", "
-         bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
+           bonus-laji-id ", 't2-koodi', '23150', 1, TRUE, "
            integraatio-id ", CURRENT_TIMESTAMP, "
            integraatio-id ", CURRENT_TIMESTAMP)"))
       (u (str "INSERT INTO bonus_profiili_laji_esitystiedot (bonus_profiili_id, bonus_laji_id, nimi, luoja, luotu, muokkaaja, muokattu) VALUES ("
@@ -1217,7 +1720,7 @@
          :aktiivinen true
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
@@ -1245,7 +1748,7 @@
                       first
                       :id)]
     (try
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})]
@@ -1298,29 +1801,54 @@
                           first
                           :id)]
     (try
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 6000M
+         :ohjeteksti "alkavalta viikolta"
          :jarjestys 1
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 12000M
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "manuaalinen"
+         :summa_euroina nil
+         :ohjeteksti "tai sopimuksen mukaan"
+         :jarjestys 3
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
             rivi (-> vastaus :sisalto first :lajit first :rivit first)]
         (is (= true (:voi-puolittaa-omailmoituksella rivi))
           "Admin-palautuksen pitää näyttää profiilirivin 50 % -sääntö")
+        (is (= [{:maaritystapa :automaattinen
+                 :summa-euroina 6000M
+                 :ohjeteksti "alkavalta viikolta"
+                 :jarjestys 1}
+                {:maaritystapa :automaattinen
+                 :summa-euroina 12000M
+                 :ohjeteksti nil
+                 :jarjestys 2}
+                {:maaritystapa :manuaalinen
+                  :summa-euroina nil
+                 :ohjeteksti "tai sopimuksen mukaan"
+                 :jarjestys 3}]
+              (:summamaaritykset rivi))
+          "Admin-palautuksen pitää näyttää profiilirivin summamääritykset myös ohjetekstin kanssa")
         (is (= [6000M 12000M] (:lukitut-summat rivi))
           "Admin-palautuksen pitää näyttää profiiliriviin kytketyt lukitut summat"))
       (finally
-        (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili_rivi_summamaaritys WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
@@ -1354,19 +1882,29 @@
                           first
                           :id)]
     (try
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 6000M
          :jarjestys 1
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_lukittu_summa
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
         {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "automaattinen"
          :summa_euroina 12000M
          :jarjestys 2
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-urakan-sanktio-konfiguraatio
+      (jdbc/insert! (:db jarjestelma) :sanktio_profiili_rivi_summamaaritys
+        {:sanktio_profiili_rivi_id profiilirivi-id
+         :maaritystapa "manuaalinen"
+         :summa_euroina nil
+         :ohjeteksti "tai sopimuksen mukaan"
+         :jarjestys 3
+         :luoja integraatio-id
+         :muokkaaja integraatio-id})
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:urakka-id urakka-id
@@ -1375,17 +1913,31 @@
             sanktiotyyppi (-> vastaus :sanktio-lajit first :sanktiotyypit first)]
         (is (= true (:voi-puolittaa-omailmoituksella sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiilirivin 50 % -metadata sanktiotyypin yhteydessä")
+        (is (= [{:maaritystapa :automaattinen
+                 :summa-euroina 6000M
+                 :ohjeteksti nil
+                 :jarjestys 1}
+                {:maaritystapa :automaattinen
+                 :summa-euroina 12000M
+                 :ohjeteksti nil
+                 :jarjestys 2}
+                {:maaritystapa :manuaalinen
+                  :summa-euroina nil
+                 :ohjeteksti "tai sopimuksen mukaan"
+                 :jarjestys 3}]
+              (:summamaaritykset sanktiotyyppi))
+          "Konfiguraatiohaun pitää palauttaa summamääritykset myös sanktiotyypin yhteydessä")
         (is (= [6000M 12000M] (:lukitut-summat sanktiotyyppi))
           "Konfiguraatiohaun pitää palauttaa profiiliriviin sidotut lukitut summat sanktiotyypin yhteydessä"))
       (finally
-        (u (format "DELETE FROM sanktio_profiili_rivi_lukittu_summa WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
+        (u (format "DELETE FROM sanktio_profiili_rivi_summamaaritys WHERE sanktio_profiili_rivi_id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili_rivi WHERE id = %s" profiilirivi-id))
         (u (format "DELETE FROM sanktio_profiili WHERE id = %s" profiili-id))))))
 
 (deftest hae-sanktio-profiilin-tiedot-admin-palauttaa-seedatun-mhu2026-metadatan
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1407,7 +1959,7 @@
                                     " WHERE splet.sanktio_profiili_id = " profiili-id "\n"
                                     "   AND sl.koodi IN ('A', 'B', 'C')")))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1434,7 +1986,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-rajaa-mhu2026-laatupoikkeaman-vain-ryhmalajeihin
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2026'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1447,7 +1999,7 @@
 (deftest hae-sanktio-profiilin-tiedot-admin-kayttaa-vanhemmissa-profiileissa-masterdatan-nimia
   (let [profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
         vastaus (when profiili-id
-                  (ls/hae-sanktio-profiilin-detalji-admin
+                  (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                     (:db jarjestelma)
                     +kayttaja-jvh+
                     {:sanktio-profiili-id profiili-id}))
@@ -1490,7 +2042,7 @@
          :aktiivinen true
          :luoja integraatio-id
          :muokkaaja integraatio-id})
-      (let [vastaus (ls/hae-sanktio-profiilin-detalji-admin
+      (let [vastaus (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                       (:db jarjestelma)
                       +kayttaja-jvh+
                       {:sanktio-profiili-id profiili-id})
@@ -1555,20 +2107,20 @@
               (fn [lajit]
                 (let [lajit-ilman-testikeskiarvoa
                       (->> lajit
-                           (remove #(= :testikeskiarvo-sanktio (:laji %)))
-                           vec)]
+                        (remove #(= :testikeskiarvo-sanktio (:laji %)))
+                        vec)]
                   (conj lajit-ilman-testikeskiarvoa
                     {:laji :laskutus_yli_laskutusrajan
                      :sanktiotyyppi-koodit [0]})))))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
-                             (ls/hae-sanktio-profiilin-detalji-admin
+                             (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                                (:db jarjestelma)
                                +kayttaja-jvh+
                                {:sanktio-profiili-id mhu21-24-profiili-id}))
           mhu25-vastaus (when mhu25-profiili-id
-                          (ls/hae-sanktio-profiilin-detalji-admin
+                          (ls-sanktio-konfiguraatio/hae-sanktio-profiilin-detalji-admin
                             (:db jarjestelma)
                             +kayttaja-jvh+
                             {:sanktio-profiili-id mhu25-profiili-id}))
@@ -1642,43 +2194,32 @@
                                        +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm))
         "Sanktion tallennus ei onnistu"))))
 
-(deftest laatupoikkeama-talvisuolan-ylitys-testi
+(deftest suorasanktio-laskutusrajan-ylitys-toimii
   (let [urakka-id (hae-urakan-id-nimella "Kittilän MHU 2025-2030")
-        laatupoikkeama {:yllapitokohde nil
-                        :sijainti {:type :point
-                                   :coordinates [382554.0523636384 6675978.549765582]}
-                        :kuvaus "Kuvaus"
-                        :aika #inst "2030-09-15T09:00:01.000-00:00"
-                        :tr {:alkuosa 1
-                             :numero 1
-                             :alkuetaisyys 1
-                             :loppuetaisyys 2
-                             :loppuosa 2}
-                        :urakka urakka-id
-                        :sanktiot nil
-                        :tekija :tilaaja
-                        :kohde "Kohde"}
-
-        uusi-sanktio {:perintapvm #inst "2030-09-15T09:00:01.000-00:00"
-                      :laji :talvisuolan_ylitys
-                      :summa 100
-                      :indeksi "MAKU 2010"
-                      :suorasanktio false
-                      :toimenpideinstanssi 4
-                      :vakiofraasi nil}
-        paatos {:paatos :sanktio
-                :kasittelytapa :puhelin
-                :kasittelyaika #inst "2030-09-15T09:00:01.000-00:00"
-                :perustelu "Testi"}]
-
-    (testing "sanktiollisen-laatupoikkeaman-tallennus"
-      (let [_ (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)
-            vastaus (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+
-                      (assoc laatupoikkeama
-                        :paatos paatos
-                        :sanktiot [uusi-sanktio]))]
-        (is (number? (:id vastaus)) "Tallennus palauttaa uuden id:n")
-        (is (= 1 (count (:sanktiot vastaus))) "Uudella laatupoikkeamalla pitäisi olla yksi sanktio")))
-    
-    ;; Siivoa roskat
-    (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
+        perustelu "ylityksen-perustelu"
+        perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
+        laskutusrajan-ylitys 12345.60M
+        sanktio {:suorasanktio true
+                 :laji :laskutus_yli_laskutusrajan
+                 :laskutusrajan-ylitys laskutusrajan-ylitys
+                 :summa (* 0.2M laskutusrajan-ylitys)
+                 :perintapvm perintapvm}
+        laatupoikeama {:tekijanimi "testaus-tekija"
+                       :paatos {:paatos "sanktio"
+                                :kasittelyaika (pvm/->pvm-aika "2.6.2030 22:00:00")
+                                :kasittelytapa :kommentit
+                                :perustelu perustelu}
+                       :aika (pvm/->pvm-aika "2.6.2030 08:00:00")
+                       :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "01.10.2029")
+        hk-loppupvm (pvm/->pvm "30.09.2030")]
+    (testing "Laskutusrajan ylitys -sanktio saadaan tallennettua"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikeama hk-alkupvm hk-loppupvm)
+            sanktiot-ja-bonukset (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-urakan-sanktiot-ja-bonukset +kayttaja-jvh+ {:urakka-id urakka-id
+                                                                                    :alku hk-alkupvm
+                                                                                    :loppu hk-loppupvm})
+            lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
+        (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
+        (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))

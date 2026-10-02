@@ -54,7 +54,11 @@
                     havaintoja-sisaltavat? vain-laadunalitukset? tekija]}
     palauta-reitti? max-rivimaara]
    (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-   (let [urakoitsija? (roolit/urakoitsija? user)
+   (let [urakoitsija? (not (oikeudet/on-muu-oikeus?
+                             "nakee-tilaajan-tarkastukset"
+                             oikeudet/urakat-laadunseuranta-tarkastukset
+                             urakka-id
+                             user))
          tarkastukset-raakana (tarkastukset/hae-urakan-tarkastukset
                                 db
                                 {:urakka urakka-id
@@ -81,7 +85,11 @@
 (defn hae-tarkastus [db user urakka-id tarkastus-id]
   (log/info "hae-tarkastus id:llä " tarkastus-id)
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-tarkastukset user urakka-id)
-  (let [urakoitsija? (roolit/urakoitsija? user)
+  (let [urakoitsija? (not (oikeudet/on-muu-oikeus?
+                            "nakee-tilaajan-tarkastukset"
+                            oikeudet/urakat-laadunseuranta-tarkastukset
+                            urakka-id
+                            user))
         tarkastus (first (into [] tarkastus-xf (tarkastukset/hae-tarkastus
                                                  db
                                                  urakka-id
@@ -156,7 +164,11 @@
    :rajaa_tyypilla (some? tyyppi) :tyyppi (and tyyppi (name tyyppi))
    :havaintoja_sisaltavat havaintoja-sisaltavat?
    :vain_laadunalitukset vain-laadunalitukset?
-   :kayttaja_on_urakoitsija (roolit/urakoitsija? user)
+   :kayttaja_on_urakoitsija (not (oikeudet/on-muu-oikeus?
+                                   "nakee-tilaajan-tarkastukset"
+                                   oikeudet/urakat-laadunseuranta-tarkastukset
+                                   urakka-id
+                                   user))
    :tekija tekija})
 
 (defn hae-tarkastusreitit-kartalle [db user {:keys [extent parametrit]}]

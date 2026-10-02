@@ -69,6 +69,16 @@ WHERE
   ypk.urakka = :urakka
   AND ypk.poistettu IS NOT TRUE;
 
+-- name: hae-yllapitokohde-urakan-nimella
+-- Hakee ylläpitokohteen id:n urakan ja nimen perusteella
+SELECT ypk.id,
+       ypk.nimi
+  FROM yllapitokohde ypk
+ WHERE ypk.urakka = :urakka
+   AND ypk.nimi = :nimi
+   AND ypk.poistettu IS NOT TRUE
+ LIMIT 1;
+
 -- name: hae-urakkaan-liittyvat-tiemerkintakohteet
 -- Hakee ylläpitokohteet, joihin on merkitty suorittajaksi kyseinen urakka
 SELECT ypk.id

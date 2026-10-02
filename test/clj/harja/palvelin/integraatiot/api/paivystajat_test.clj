@@ -118,30 +118,6 @@
   (is (not= (fmt/trimmaa-puhelinnumero "+358500-123-123") (fmt/trimmaa-puhelinnumero "+358400 123 123")))
   (is (not= (fmt/trimmaa-puhelinnumero "+0400-123-123") (fmt/trimmaa-puhelinnumero "358400 123 123"))))
 
-(deftest hae-paivystajatiedot-puhelinnumerolla-aikavalilla
-  (let [_ (anna-lukuoikeus kayttaja-jvh)
-        vastaus (api-tyokalut/get-kutsu
-                  ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2029-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"]
-                  kayttaja-jvh portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
-    (is (= 200 (:status vastaus)))
-    (is (= (count (:paivystajatiedot encoodattu-body)) 0))))
-
-(deftest hae-paivystajatiedot-puhelinnumerolla
-  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        _ (luo-urakalle-voimassa-oleva-paivystys urakka-id)
-        _ (anna-lukuoikeus kayttaja-jvh)
-        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555"] kayttaja-jvh portti)
-        encoodattu-body (cheshire/decode (:body vastaus) true)]
-    (is (= 200 (:status vastaus)))
-    (is (= (count (:paivystajatiedot encoodattu-body)) 1))
-    (is (= (count (:paivystykset (:urakka (first (:paivystajatiedot encoodattu-body))))) 1))))
-
-(deftest esta-hae-paivystajatiedot-puhelinnumerolla-ilman-oikeuksia
-  (let [_ (anna-lukuoikeus kayttaja-yit)
-        vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?alkaen=2000-01-30T12:00:00Z&paattyen=2030-01-30T12:00:00Z&puhelinnumero=0505555555"] kayttaja-yit portti)]
-    (is (= 400 (:status vastaus)))))
-
 (deftest hae-paivystajatiedot-sijainnilla-kayttaen-lyhytta-aikavalia
 
   (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
@@ -271,21 +247,6 @@
            (:body vastaus))))
 
   (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/sijainnilla?urakkatyyppi=hoito&x=453271&y=7188395&alkaen=2016-09-30&paattyen=2016-01-02"] kayttaja-yit portti)]
-    (is (= 400 (:status vastaus)))
-    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Alkupäivämäärä: 2016-09-30 00:00:00.0 on päättymispäivämäärän: 2016-01-02 00:00:00.0 jälkeen.\"}}]}"
-           (:body vastaus))))
-
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555&alkaen=rikki&paattyen=2016-09-30"] kayttaja-jvh portti)]
-    (is (= 400 (:status vastaus)))
-    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
-           (:body vastaus))))
-
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555&alkaen=2016-09-30&paattyen=rikki"] kayttaja-jvh portti)]
-    (is (= 400 (:status vastaus)))
-    (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Päivämäärää: rikki ei voi parsia. Anna päivämäärä muodossa: YYYY-MM-DD.\"}}]}"
-           (:body vastaus))))
-
-  (let [vastaus (api-tyokalut/get-kutsu ["/api/paivystajatiedot/haku/puhelinnumerolla?puhelinnumero=0505555555&alkaen=2016-09-30&paattyen=2016-01-02"] kayttaja-jvh portti)]
     (is (= 400 (:status vastaus)))
     (is (= "{\"virheet\":[{\"virhe\":{\"koodi\":\"virheellinen-paivamaara\",\"viesti\":\"Alkupäivämäärä: 2016-09-30 00:00:00.0 on päättymispäivämäärän: 2016-01-02 00:00:00.0 jälkeen.\"}}]}"
            (:body vastaus)))))

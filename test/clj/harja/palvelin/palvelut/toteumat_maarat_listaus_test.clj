@@ -162,3 +162,27 @@
     ;; FIXME: edellisissä testeissä pitäisi tuo otsikko korvata jollain muulla hakutermillä, koska otsikot voi muuttua
     (is (= (count maarien-toteumat-21) (count oulun-mhu-urakan-maarien-toteuma-21)) "Määrien toteumien määrä")
     (is (= (count maarien-toteumat-muuta) (count oulun-mhu-urakan-maarien-toteuma-muuta)) "Määrien toteumien määrä")))
+
+
+;; Varmista ettei mukaan tule järjestelmäkirjauksia, kun tehtävän määrittely ei sitä salli.
+;; Varmista ettei käsinkirjaukset tulevat mukaan, vaikka järjestelmäkirjauksia ei oteta.
+;; Liittyy sarakkeeseen TEHTAVA."laske-api-maara-mukaan?"
+;; Testiaineistossa tehtävä Päällystettyjen teiden palteiden poisto, jonka järjestelmäkirjauksia ei kuulu palauttaa.
+(deftest tehtavan-maara-heijastelee-laske-api-maara-mukaan-asetusta
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        rajaus "2.7 LIIKENNEYMPÄRISTÖN HOITO / Päällystettyjen teiden sorapientareen kunnossapito"
+        maara-kasinkirjaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                             :hae-mhu-toteumatehtavat +kayttaja-jvh+
+                             {:urakka-id urakka-id
+                              :tehtavaryhma rajaus
+                              :hoitokauden-alkuvuosi 2024})
+        _ (u "UPDATE kayttaja SET jarjestelma = TRUE WHERE kayttajanimi = 'jvh'; ") ;; Päivitetään käyttäjä järjestelmäksi testiä varten.
+        maara-jarjestelmakirjaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                   :hae-mhu-toteumatehtavat +kayttaja-jvh+
+                                   {:urakka-id urakka-id
+                                    :tehtavaryhma rajaus
+                                    :hoitokauden-alkuvuosi 2024})
+        _ (u "UPDATE kayttaja SET jarjestelma = FALSE WHERE kayttajanimi = 'jvh'; ") ] ;; Palautetaan käyttäjä normaaliin tilaan.
+        (is (= 5M (reduce + (map #(or (:maara %) 0) maara-kasinkirjaus))) "Käsin kirjattu määrä palautuu tehtävälle Päällystettyjen teiden palteiden poisto.")
+        (is (= 0 (reduce + (map #(or (:maara %) 0) maara-jarjestelmakirjaus))) "Järjestelmän kirjaus ei palaudu tehtävälle Päällystettyjen teiden palteiden poisto.")))
+

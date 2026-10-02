@@ -18,7 +18,8 @@
         "tunniste": {
           "id": <ulkoinenid>
         },
-        "pvm": "2024-10-28",
+        "ajankohta": "2024-10-28T14:12:00Z",
+        "luokittelu": ["TPP", "Kiireellinen"],
         "sijainti": {
           "viivageometria": {
             "type": "LineString",
@@ -31,10 +32,7 @@
             ]
           }
         },
-        "tyomenetelma": "REPA",
-        "maara": 3000,
-        "yksikko": "t",
-        "kustannus": 45777.77
+        "tyomenetelma": "REPA"
       }
     }
   ]

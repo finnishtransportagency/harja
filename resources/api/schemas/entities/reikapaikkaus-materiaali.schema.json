@@ -1,0 +1,48 @@
+{
+  "$schema": "http://json-schema.org/draft-03/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "tunniste": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/tunniste",
+      "required": true,
+      "additionalProperties": false,
+      "description": "Materiaalin käytön tunniste urakoitsijajärjestelmässä. Tunniste yksilöi materiaalin käyttöä koskevan rivin urakkakohtaisesti, ja sitä voi käyttää tiedon päivittämiseen Harjassa.",
+      "type": "object",
+      "$ref": "file:resources/api/schemas/entities/tunniste.schema.json"
+    },
+    "ajankohta-alku": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/ajankohta-alku",
+      "required": true,
+      "description": "Sanomassa raportoidun toteutuneen materiaalinkäyttöaikavälin alku. Esim. 2026-07-13T06:00:00Z Voit raportoida käytetyn materiaalin esim. päivän, viikon tai kuukauden ajalta.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "ajankohta-loppu": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/ajankohta-loppu",
+      "required": true,
+      "description": "Sanomassa raportoidun toteutuneen materiaalinkäyttöaikavälin loppu. Esim. 2026-07-19T21:00:00Z Voit raportoida käytetyn materiaalin esim. päivän, viikon tai kuukauden ajalta.",
+      "type": "string",
+      "format": "date-time"
+    },
+    "materiaali": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali",
+      "required": true,
+      "description": "Paikkauksessa käytetyn materiaalin nimi.",
+      "type": "string"
+    },
+    "maara": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/maara",
+      "required": true,
+      "type": "number",
+      "description": "Paikkauksessa raportoituna aikavälinä käytetty ilmoitetun materiaalin määrä."
+    },
+    "yksikko": {
+      "id": "urn:harja/reikapaikkaukset/0/reikapaikkaus/materiaali/yksikko",
+      "required": true,
+      "type": "string",
+      "description": "Yksikkö jossa materiaalimäärä on ilmoitettu."
+    }
+  }
+}

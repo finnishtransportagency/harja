@@ -65,7 +65,7 @@
                  (q/hae-muu-tyo db {:urakka urakka
                                     :id id})))))
 
-(defn hae-laskentakohteet [db user {:keys [urakka] :as tiedot}]
+(defn hae-laskentakohteet [db user {:keys [urakka]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka)
   (log/debug "Hae laskentakohteet urakalle: " (pr-str urakka))
   (jdbc/with-db-transaction [db db]
@@ -76,7 +76,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-muutkustannukset user urakka-id)
 
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [id] :as toteuma} toteumat]
+    (doseq [{:keys [id]} toteumat]
       (vaadi-toteuma-kuuluu-urakkaan db id urakka-id))
 
     (doseq [toteuma toteumat]
@@ -132,14 +132,14 @@
   [db user {:keys [urakka-id vuosi toteumat]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteutus-yksikkohintaisettyot user urakka-id)
   (jdbc/with-db-transaction [db db]
-    (doseq [{:keys [id yllapitokohde-id] :as kohde} toteumat]
+    (doseq [{:keys [id yllapitokohde-id]} toteumat]
       (vaadi-yksikkohintainen-toteuma-kuuluu-urakkaan db id urakka-id)
       (when yllapitokohde-id (yy/vaadi-yllapitokohde-osoitettu-tiemerkintaurakkaan db urakka-id yllapitokohde-id)))
 
     (log/debug "Tallennetaan yksikköhintaiset työt tiemerkintäurakalle: " urakka-id)
 
     (doseq [{:keys [hinta hintatyyppi paivamaara id yllapitokohde-id poistettu
-                    selite tr-numero yllapitoluokka pituus hinta-kohteelle] :as kohde} toteumat]
+                    selite tr-numero yllapitoluokka pituus hinta-kohteelle]} toteumat]
       (let [sql-parametrit {:yllapitokohde yllapitokohde-id
                             :hinta hinta
                             :hintatyyppi (when hintatyyppi (name hintatyyppi))

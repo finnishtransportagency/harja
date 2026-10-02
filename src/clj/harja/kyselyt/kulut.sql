@@ -163,6 +163,7 @@ SELECT m.numero                  AS "maksuera-numero",
        kk.maksueratyyppi         AS "maksueratyyppi",
        kk.rahavaraus_id          AS rahavaraus,
        kk.tyyppi                 AS tyyppi,
+       kk.tavoitehintainen       AS tavoitehintainen,
        kk.tehtava                AS "tehtava_id",
        t.nimi                    AS "tehtava_nimi",
        kk."muu-tehtava-kaytossa" AS "muu-tehtava-kaytossa",
@@ -429,5 +430,6 @@ SELECT NULL                       AS "maksuera-numero",
 -- Tarvitaan Kulujen kohdistus -näkymän generoitujen kulujen tehtäväryhmien nimien näyttämistä varten,
 -- jotta saadaan myös Johto- ja hallintokorvaus -tehtäväryhmän nimi näkyviin
 SELECT tr.id                      AS "tehtavaryhma",
-       tr.nimi                    AS "tehtavaryhma_nimi"
+       tr.nimi                    AS "tehtavaryhma_nimi",
+       tr.toimenpide_id           AS "tehtavaryhma_toimenpide_id"
 FROM tehtavaryhma tr;

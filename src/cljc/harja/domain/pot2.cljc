@@ -4,7 +4,6 @@
             [specql.data-types]
             [harja.domain.muokkaustiedot :as m]
             [harja.fmt :as fmt]
-            [harja.validointi :as v]
             [clojure.set :as set]
             [clojure.spec.alpha :as s]
             [harja.domain.tierekisteri :as tr]
@@ -19,30 +18,55 @@
 (def +rem-toimenpide+ 31)
 (def +remo-toimenpide+ 33)
 (def +rem-tas-toimenpide+ 4)
+(def +massamenekin-maksimi+ 50)
+
+(s/def ::urakka-id pos-int?)
+(s/def ::paallystyskohde-id pos-int?)
+(s/def ::tr-numero nat-int?)
+(s/def ::tr-ajorata nat-int?)
+(s/def ::tr-kaista nat-int?)
+(s/def ::tr-alkuosa nat-int?)
+(s/def ::tr-alkuetaisyys nat-int?)
+(s/def ::tr-loppuosa nat-int?)
+(s/def ::tr-loppuetaisyys nat-int?)
+(s/def ::haku (s/and (s/keys :req-un [::tr-numero ::tr-alkuosa ::tr-loppuosa])
+                     #(<= (:tr-alkuosa %) (:tr-loppuosa %))))
+(s/def ::hae-tieosuudet-kysely
+  (s/keys :req-un [::urakka-id ::paallystyskohde-id]
+          :opt-un [::haku]))
+(s/def ::tieosuus
+  (s/keys :req-un [::tr-numero ::tr-ajorata ::tr-kaista
+                   ::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys]))
+(s/def ::tieosuudet (s/coll-of ::tieosuus :kind vector?))
+(s/def ::kohteen-ulkopuolelle-jatkuvat (s/coll-of ::tieosuus :kind vector?))
+(s/def ::hae-tieosuudet-vastaus
+  (s/keys :req-un [::tieosuudet ::kohteen-ulkopuolelle-jatkuvat]))
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true
-                     :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
-  ;; Alustatoimenpiteet näkyvät päällystysilmoituksessa koosteena Toimenpiteen tiedot-sarakkeessa.
-  ;; :lisatty-paksuus on poistettu koosteesta lokakuussa 2025
+                     }
+   ;; Alustatoimenpiteet näkyvät päällystysilmoituksessa koosteena Toimenpiteen tiedot-sarakkeessa.
+   ;; :lisatty-paksuus on poistettu koosteesta lokakuussa 2025
    :massamenekki {:nimi :massamenekki :otsikko "Massamenekki" :yksikko "kg/m²"
                   :tyyppi :positiivinen-numero :desimaalien-maara 1
-                  :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
+                  :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
+                  }
    :murske {:nimi :murske :otsikko "Murske"
             :tyyppi :valinta
             :valinta-arvo ::murske-id}
    :kasittelysyvyys {:nimi :kasittelysyvyys :otsikko "Käsittely\u00ADsyvyys" :yksikko "cm"
                      :validoi [[:rajattu-numero-tai-tyhja 1 500 "Arvon tulee olla välillä 1-500cm"]]
                      :tyyppi :positiivinen-numero :kokonaisluku? true
-                     :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 1 500 0))}
+                     }
    :leveys {:nimi :leveys :otsikko "Leveys" :yksikko "m"
             :tyyppi :positiivinen-numero :desimaalien-maara 2
-            :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
+            :validoi [[:rajattu-numero-tai-tyhja 0 20 "Arvon tulee olla välillä 0-20"]]
+            }
    :pinta-ala {:nimi :pinta_ala :tyyppi :positiivinen-numero :otsikko "Pinta-ala" :yksikko "m²"
                :pakollinen? (constantly false)
-               :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))
+               :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
                :muokattava? (fn [rivi]
                               ;; 2 = AB
                               ;; 21 = ABK
@@ -51,11 +75,11 @@
                                 (= (:toimenpide rivi) 2)
                                 (= (:toimenpide rivi) 21)
                                 (= (:toimenpide rivi) 22)))
-               :fmt #(fmt/desimaaliluku-opt % 1)
-               }
-   :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmäärä" :yksikko "t"
+               :fmt #(fmt/desimaaliluku-opt % 1)}
+  :kokonaismassamaara {:nimi :kokonaismassamaara :otsikko "Kokonais\u00ADmassa\u00ADmenekki" :yksikko "t"
                         :tyyppi :positiivinen-numero :desimaalien-maara 1
-                        :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
+                        :validoi [[:rajattu-numero-tai-tyhja 0 1000000 "Arvon tulee olla välillä 0-1000000"]]
+                        }
    :massa {:nimi :massa :otsikko "Massa"
            :tyyppi :valinta
            :valinta-arvo ::massa-id}
@@ -65,7 +89,8 @@
    :sideainepitoisuus {:nimi :sideainepitoisuus :otsikko "Sideaine\u00ADpitoisuus"
                        :tyyppi :positiivinen-numero :desimaalien-maara 1
                        :yksikko "%"
-                       :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 100 1))}
+                       :validoi [[:rajattu-numero-tai-tyhja 0 100 "Arvon tulee olla välillä 0-100"]]
+                       }
    :sideaine2 {:nimi :sideaine2 :otsikko "Sideaine"
                :tyyppi :valinta :valinnat-koodisto :sidotun-kantavan-kerroksen-sideaine
                :valinta-arvo ::koodi :valinta-nayta ::nimi}

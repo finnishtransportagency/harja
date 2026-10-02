@@ -118,6 +118,86 @@
     (is (= (count tarjoukset-tietokannasta) (count vuosittaiset-tarjoushinnat)))
     (is (= (count tietokantarahavaraukset) (* (count vuodet) (count rahavaraukset))) "Tietokannasta löytyy rahavaraukset jokaiselle vuodelle.")))
 
+(deftest hae-rahavarauksen-toimenpideinstanssi-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        toimenpideinstanssit (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi
+                               db
+                               {:urakka_id urakka-id
+                                :toimenpiteen_nimi "LIIKENNEYMPÄRISTÖN HOITO"})
+        toimenpideinstanssi-id (:id (first toimenpideinstanssit))
+        saman-urakan-toimenpideinstanssi (when toimenpideinstanssi-id
+                                          (q-map (format "SELECT id
+                                                            FROM toimenpideinstanssi
+                                                           WHERE id = %s
+                                                             AND urakka = %s"
+                                                   toimenpideinstanssi-id urakka-id)))]
+    (testing "palauttaa toimenpiteen instanssin nimen ja urakan perusteella"
+      (is (= 1 (count toimenpideinstanssit)))
+      (is (integer? toimenpideinstanssi-id)))
+    (testing "palautettu toimenpideinstanssi kuuluu pyydettyyn urakkaan"
+      (is (= 1 (count saman-urakan-toimenpideinstanssi))))
+    (testing "tuntemattomalla toimenpiteen nimellä ei palauteta rivejä"
+      (is (empty? (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi
+                    db
+                    {:urakka_id urakka-id
+                     :toimenpiteen_nimi "Tuntematon toimenpide"}))))))
+
+(deftest hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta-onnistuu
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
+        rahavaraus-id (:id (first (q-map (format "SELECT rv.id
+                                                     FROM rahavaraus rv
+                                                              JOIN rahavaraus_tehtava rvt ON rvt.rahavaraus_id = rv.id
+                                                              JOIN tehtava t ON t.id = rvt.tehtava_id
+                                                              JOIN toimenpideinstanssi tpi ON tpi.toimenpide = t.emo
+                                                                                         AND tpi.urakka = %s
+                                                    WHERE EXISTS (SELECT 1
+                                                                    FROM rahavaraus_urakka rvu
+                                                                   WHERE rvu.rahavaraus_id = rv.id
+                                                                     AND rvu.urakka_id = %s)
+                                                    ORDER BY rv.id
+                                                    LIMIT 1"
+                                                   urakka-id urakka-id))))
+        tulos (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta
+                db
+                {:urakkaid urakka-id
+                 :rahavarausid rahavaraus-id})
+        rivi (first tulos)
+        toimenpideinstanssi (first (q-map (format "SELECT id, urakka
+                                                    FROM toimenpideinstanssi
+                                                   WHERE id = %s
+                                                     AND urakka = %s"
+                                              (:toimenpideinstanssi rivi) urakka-id)))
+        tehtavaryhma (first (q-map (format "SELECT tr.id
+                                             FROM rahavaraus_tehtava rvt
+                                                      JOIN tehtava t ON t.id = rvt.tehtava_id
+                                                      JOIN tehtavaryhma tr ON tr.id = t.tehtavaryhma
+                                            WHERE rvt.rahavaraus_id = %s
+                                              AND tr.id = %s"
+                                       rahavaraus-id (:tehtavaryhma_id rivi))))]
+    (testing "palauttaa enintään yhden tehtäväryhmän toimenpideinstanssin"
+      (is (= 1 (count tulos)))
+      (is (integer? (:tehtavaryhma_id rivi)))
+      (is (integer? (:toimenpideinstanssi rivi))))
+    (testing "toimenpideinstanssi kuuluu pyydettyyn urakkaan"
+      (is (= urakka-id (:urakka toimenpideinstanssi))))
+    (testing "palautettu tehtäväryhmä kuuluu rahavaraukselle"
+      (is (= (:tehtavaryhma_id rivi) (:id tehtavaryhma))))))
+
+(deftest hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta-palauttaa-tyhjan
+  (let [db (:db jarjestelma)]
+    (testing "tuntemattomalla rahavarauksella"
+      (is (empty? (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta
+                    db
+                    {:urakkaid 999999999
+                     :rahavarausid 999999999}))))
+    (testing "tuntemattomalla urakalla"
+      (is (empty? (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi-tehtavaryhmien-listasta
+                    db
+                    {:urakkaid 999999999
+                     :rahavarausid 1}))))))
+
 (deftest tallenna-rahavaraukset-ja-hae-kustannukset-tarjoukselle-onnistuu
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")

@@ -16,11 +16,14 @@
             [harja.kyselyt.sopimukset :as sopimukset-q]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.palvelin.palvelut.tierekisteri-haku :as tr-q]
 
             [harja.palvelin.palvelut.materiaalit :as materiaalipalvelut]
+            [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as bonus-konfiguraatio]
             [harja.geo :as geo]
             [harja.domain.oikeudet :as oikeudet]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.toteuma :as toteuma]
             [harja.domain.sopimus :as sopimus]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
@@ -117,7 +120,8 @@
            :paattynyt  (konv/sql-date loppupvm)
            :tyyppi     (name tyyppi)
            :toimenpide toimenpide-id
-           :tehtava    tehtava-id})))
+           :tehtava    tehtava-id
+           :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))})))
 
 (defn hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla [db user {:keys [urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi]}]
   (log/debug "Haetaan urakan toteutuneet tehtävät tyypillä ja toimenpidekoodilla: " urakka-id sopimus-id alkupvm loppupvm tyyppi toimenpidekoodi)
@@ -134,12 +138,13 @@
               muunna-desimaaliluvut-xf)
         (toteumat-q/hae-urakan-toteutuneet-tehtavat-toimenpidekoodilla
           db
-          urakka-id
-          sopimus-id
-          (konv/sql-timestamp alkupvm)
-          (konv/sql-timestamp loppupvm)
-          (name tyyppi)
-          toimenpidekoodi)))
+          {:urakka urakka-id
+           :sopimus sopimus-id
+           :alkupvm (konv/sql-timestamp alkupvm)
+           :loppupvm (konv/sql-timestamp loppupvm)
+           :tyyppi (name tyyppi)
+           :toimenpidekoodi toimenpidekoodi
+           :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))})))
 
 (defn- kasittele-toteumatehtava [c user toteuma tehtava]
   (if (and (:tehtava-id tehtava) (pos? (:tehtava-id tehtava)))
@@ -325,7 +330,8 @@
                                                                                  :alkupvm         alkupvm
                                                                                  :loppupvm        loppupvm
                                                                                  :tyyppi          tyyppi
-                                                                                 :toimenpidekoodi (:toimenpidekoodi (first tehtavat))})
+                                                                                 :toimenpidekoodi (:toimenpidekoodi (first tehtavat))
+                                                                                 :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi alkupvm))})
         paivitetyt-summat (hae-urakan-toteumien-tehtavien-summat db user
                                                                  {:urakka-id     urakka-id
                                                                   :sopimus-id    sopimus-id
@@ -353,6 +359,12 @@
             (assoc % :indeksikorjattuna (:bonus-indeksikorjattuna %))
             %))))
 
+(defn- bonus-write-path-validoitava?
+  [tyyppi]
+  (let [bonuslaji (keyword tyyppi)]
+    (and (not= :yllapidon_bonus bonuslaji)
+      (boolean (sanktio-domain/bonuslaji->teksti bonuslaji)))))
+
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
@@ -375,6 +387,8 @@
       (let [{:keys [tyyppi urakka-id sopimus toimenpideinstanssi
                     pvm rahasumma indeksin_nimi lisatieto poistettu id
                     kasittelytapa laskutuskuukausi liitteet]} ek
+            bonuslaji (keyword tyyppi)
+            mhu-bonus? (bonus-write-path-validoitava? tyyppi)
             ;; Koska laskutuskuukausi voi olla antamatta, niin asetetaan se samaksi kuin pvm
             laskutuskuukausi (if (nil? laskutuskuukausi)
                                pvm
@@ -383,6 +397,15 @@
             sopimus (if (nil? sopimus)
                       (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
                       sopimus)
+            urakan-tiedot (when mhu-bonus?
+                            (first (urakat-q/hae-urakan-tiedot db urakka-id)))
+            _ (when mhu-bonus?
+                (bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+                  db
+                  {:urakka-id urakka-id
+                   :hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) pvm)
+                   :toimenpideinstanssi-id toimenpideinstanssi
+                   :bonuslaji bonuslaji}))
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus
@@ -873,23 +896,17 @@
 
                               ;; Hanskataan tässä epämieluisa kulmatapaus: toteuman pvm saattaa muuttua, ja tietokantacachet
                               ;; pitää laittaa jiiriin sekä vanhan että uuden pvm:n osalta joka toteumalle
-                              (when-not (= (:alkanut t) toteuman-alkuperainen-pvm)
+                              (when (and (not (= (:alkanut t) toteuman-alkuperainen-pvm)) (not (nil? toteuman-alkuperainen-pvm)))
                                 (doseq [sopimus-id urakan-sopimus-idt]
                                   (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
                                                                                           :alkupvm toteuman-alkuperainen-pvm
-                                                                                          :urakkaid urakka-id}))
-                                (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                                                    :alkupvm toteuman-alkuperainen-pvm
-                                                                                                    :loppupvm toteuman-alkuperainen-pvm}))
+                                                                                          :urakkaid urakka-id})))
 
                               ;; Tässä cachejen päivitys uuden pvm:n osalta
                               (doseq [sopimus-id urakan-sopimus-idt]
                                 (materiaalit-q/paivita-sopimuksen-materiaalin-kaytto c {:sopimus sopimus-id
                                                                                         :alkupvm (:alkanut t)
                                                                                         :urakkaid urakka-id}))
-                              (materiaalit-q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                                                  :alkupvm (:alkanut t)
-                                                                                                  :loppupvm (:alkanut t)})
 
                               ;; Jos saatiin parametrina hoitokausi, voidaan palauttaa urakassa käytetyt materiaalit
                               ;; Tämä ei ole ehkä paras mahdollinen tapa hoitaa tätä, mutta toteuma/materiaalit näkymässä

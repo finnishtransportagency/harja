@@ -35,6 +35,33 @@
     (is (= odotettu-raaka-tulos raaka-tulos) "Raaka tulos täytyy olla kuin odotettu")
     (is (= odotettu-tulos tulos) "Tulos täytyy olla kuin odotettu")))
 
+    (deftest hae-tieosuudet-leikkaa-tuloksen-hakuvalille
+      (luo-tr-osoitteet [[1 0 1500 1 11]
+             [1 1500 2500 1 11]])
+      (let [tulos (tieverkko/hae-tieosuudet
+            (:db jarjestelma)
+            {:tr-numero tienumero
+             :tr-alkuosa 1
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 1
+             :tr-loppuetaisyys 2200})]
+        (is (= [{:tr-numero tienumero
+         :tr-ajorata 1
+         :tr-kaista 11
+         :tr-alkuosa 1
+         :tr-alkuetaisyys 200
+         :tr-loppuosa 1
+         :tr-loppuetaisyys 2200}]
+          (:tieosuudet tulos)))
+        (is (= [{:tr-numero tienumero
+         :tr-ajorata 1
+         :tr-kaista 11
+         :tr-alkuosa 1
+         :tr-alkuetaisyys 0
+         :tr-loppuosa 1
+         :tr-loppuetaisyys 2500}]
+          (:kohteen-ulkopuolelle-jatkuvat tulos)))))
+
 (deftest eri-osat
   (luo-tr-osoitteet [[5 0 1500 1 11]
                      [2 1500 2500 1 11]

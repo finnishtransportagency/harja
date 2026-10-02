@@ -1,24 +1,25 @@
 (ns harja.views.urakka.pot2.paallystekerros
   "POT2-lomakkeen päällystekerros"
   (:require
-    [reagent.core :refer [atom] :as r]
-    [harja.domain.paallystysilmoitus :as pot]
-    [harja.domain.pot2 :as pot2-domain]
-    [harja.domain.tierekisteri :as tr]
-    [harja.domain.yllapitokohde :as yllapitokohteet-domain]
-    [harja.ui.grid.protokollat :as grid-protokollat]
-    [harja.domain.paikkaus :as paikaus]
-    [harja.ui.grid :as grid]
-    [harja.ui.ikonit :as ikonit]
-    [harja.ui.yleiset :refer [ajax-loader]]
-    [harja.tiedot.urakka.paallystys :as paallystys]
-    [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
-    [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
-    [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
-    [harja.ui.yleiset :as yleiset]
-    [harja.validointi :as v]
-    [harja.fmt :as fmt]
-    [harja.domain.paikkaus :as paikkaus]))
+   [reagent.core :refer [atom] :as r]
+   [harja.domain.paallystysilmoitus :as pot]
+   [harja.domain.pot2 :as pot2-domain]
+   [harja.domain.tierekisteri :as tr]
+   [harja.domain.yllapitokohde :as yllapitokohteet-domain]
+   [harja.ui.grid.protokollat :as grid-protokollat]
+   [harja.ui.grid :as grid]
+   [harja.ui.ikonit :as ikonit]
+   [harja.ui.napit :as napit]
+   [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+   [harja.tiedot.urakka.paallystys :as paallystys]
+   [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
+   [harja.views.urakka.pot2.tieosuushaku :as tieosuushaku]
+   [harja.tiedot.urakka.pot2.pot2-tiedot :as pot2-tiedot]
+   [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
+   [harja.tiedot.urakka.pot2.validoinnit :as pot2-validoinnit]
+   [harja.validointi :as v]
+   [harja.fmt :as fmt]
+   [harja.domain.paikkaus :as paikkaus]))
 
 (def maksimimaara-validoitaville-riveille 50)
 
@@ -74,7 +75,7 @@
 
 (defn paallystekerros
   "Alikohteiden päällystekerroksen rivien muokkaus"
-  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat kulutuskerros-muokattu?] :as app}
+  [e! {:keys [kirjoitusoikeus? perustiedot tr-osien-pituudet ohjauskahvat kulutuskerros-muokattu? tieosuushaku] :as app}
    {:keys [massat murskeet materiaalikoodistot validointi virheet-atom varoitukset-atom]} kohdeosat-atom]
   (let [hyppyjen-maara (get-in @kohdeosat-atom [1 :hyppyjen-maara])
         alkup-jarjestys (atom @kohdeosat-atom)
@@ -87,18 +88,22 @@
                             ""
                             :else
                             (str "Kulutuskerros ei ole yhtenäinen (" hyppyjen-maara " hyppy)")))
-        custom-yla-panel (if-not kulutuskerros-muokattu?
-                           (if (> hyppyjen-maara 0)
-                             [:div.kulutus-hyppy-info.vahvistamaton
-                              [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
-                              [:div hyppy-teksti]]
-
-                             (when (some? hyppyjen-maara)
-                               [:div.kulutus-hyppy-info
-                                [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
-                                [:div hyppy-teksti]]))
-                           nil)
         voi-muokata? (not= :lukittu (:tila perustiedot))
+        custom-yla-panel
+        (when (or tieosuushaku (some? hyppyjen-maara))
+          [:div.pot2-kulutuskerros-paneeli
+           [tieosuushaku/tieosuushaku e! {:tieosuushaku tieosuushaku} kohdeosat-atom
+            (and kirjoitusoikeus? voi-muokata?)]
+           (when-not kulutuskerros-muokattu?
+             (if (> hyppyjen-maara 0)
+               [:div.kulutus-hyppy-info.vahvistamaton
+                [:div.kulutus-hyppy-ikoni-alert (ikonit/alert-svg)]
+                [:div hyppy-teksti]]
+
+               (when (some? hyppyjen-maara)
+                 [:div.kulutus-hyppy-info
+                  [:div.kulutus-hyppy-ikoni-ok (ikonit/harja-icon-status-completed)]
+                  [:div hyppy-teksti]])))])
         ohjauskahva (:paallystekerros ohjauskahvat)
         kokpituus (reduce
                     (fn [acc data]
@@ -120,9 +125,11 @@
     [:div
      [grid/muokkaus-grid
       {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
+       :luokat ["pot2-kulutuskerros-grid"]
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
        :custom-yla-panel custom-yla-panel
+       :custom-yla-panel-otsikon-alla? true
        :muutos (fn [g]
                  ;; Koska tätä kutsutaan myös sorttauksen yhteydessä, täytyy tarkistaa erillisellä funktiolla onko rivjeä muokattu
                  (let [uusi-jarjestys (grid-protokollat/hae-muokkaustila g)
@@ -174,14 +181,22 @@
        ;;                         (select-keys rivi tr/paaluvali-avaimet)
        ;;                         tr-ajorata)))
        #_#_:on-rivi-blur on-rivi-blur
-       :custom-toiminto {:teksti "Lisää toimenpide"
-                         :toiminto #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
-                         :opts {:ikoni (ikonit/livicon-plus)
-                                :luokka "nappi-toissijainen"}}
+       :paneelikomponentit [(fn []
+                              [napit/nappi
+                               "Hae tieosuus"
+                               #(e! (pot2-tiedot/->AvaaTieosuushaku))
+                               {:ikoni (ikonit/livicon-search)
+                                :luokka "nappi-toissijainen"
+                                :data-cy "pot2-avaa-tieosuushaku"}])
+                            (fn []
+                              [napit/nappi
+                               "Lisää toimenpide"
+                               #(e! (pot2-tiedot/->LisaaPaallysterivi kohdeosat-atom))
+                               {:ikoni (ikonit/livicon-plus)
+                                :luokka "nappi-toissijainen"}])]
        :ohjaus ohjauskahva :validoi-alussa? true
        :virheet virheet-atom
        :varoitukset varoitukset-atom
-       :piilota-toiminnot? true
        :jarjesta-avaimen-mukaan identity
        :virheet-ylos? false
        ;; Varoitetaan validointivirheistä, mutta ei estetä tallentamista.
@@ -368,6 +383,12 @@
         :tayta-alas? pot2-tiedot/tayta-alas?-fn
         :desimaalien-maara 2
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
+        :varoita [pot2-validoinnit/varoita-rem-massamenekista]
+        :info-laatikko [yleiset/info-laatikko :vahva-ilmoitus
+                        "Massamenekki saa olla maksimissaan 50 kg/m2"
+                        [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
+                         [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
         :validoi [[:ei-tyhja "Anna arvo"]]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
 
@@ -377,9 +398,12 @@
         :tyyppi :positiivinen-numero
         :tasaa :oikea
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :validoi [[:ei-tyhja "Anna arvo"]]
-        :varoita [(fn [arvo rivi]
-                    (when (> (:massamenekki rivi) 200)
-                      "Massamenekki on yleensä välillä 10-150. Tarkistaisitko vielä massaan ja leveyden."))]
+        :varoita [pot2-validoinnit/varoita-rem-massamenekista]
+        :info-laatikko [yleiset/info-laatikko :vahva-ilmoitus
+                        "Massamenekki saa olla maksimissaan 50 kg/m2"
+                        [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
+                         [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
 
        {:otsikko "Pinta-ala (m²)"
@@ -410,6 +434,14 @@
                  (:kokonaismassamaara rivi)
                  (:pinta_ala rivi)))
         :tayta-alas? pot2-tiedot/tayta-alas?-fn
+        :solun-luokka-fn (fn [rivi]
+                           (when (pot2-validoinnit/varoita-rem-massamenekista
+                                   (paikkaus/massamaara-ja-pinta-ala->massamenekki
+                                     (:kokonaismassamaara rivi)
+                                     (:pinta_ala rivi))
+                                   rivi
+                                   nil)
+                             "massamenekki-varoitus"))
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)}
 
        {:otsikko "RC%"

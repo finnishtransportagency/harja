@@ -738,13 +738,13 @@
                                {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})
 
         tavoitehinta (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-tavoitehinta])
-        kattohinta (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-kattohinta])
+        kattohinta (bigdec (round2 2 (get-in kustannussuunnitelma [:kustannussuunnitelma :hoitovuoden-alun-kattohinta])))
 
         ;; Tarkistetaan että kattohinta on 1.1 x tavoitehinta 2021 alkavalla urakalla
         _ (is (false? (get-in kustannussuunnitelma [:kustannussuunnitelma :muokkaa-kattohinta-kasin])) "2024 urakoilla ei voi muokata kattohintaa käsin")
         _ (is (< 0 kattohinta) "Kattohinta pitäisi löytyä")
-        odotettu-kattohinta (* kattohintakerroin tavoitehinta)
-        _ (is (= (bigdec (round2 kattohinta 2)) (bigdec (round2 odotettu-kattohinta 2)))
+        odotettu-kattohinta (bigdec (round2 2 (* kattohintakerroin tavoitehinta)))
+        _ (is (= kattohinta odotettu-kattohinta)
             (str "Kattohinnan pitäisi olla " kattohintakerroin " x tavoitehinta. Tavoitehinta: " tavoitehinta ", odotettu kattohinta: " odotettu-kattohinta ", todellinen kattohinta: " kattohinta))]))
 
 
