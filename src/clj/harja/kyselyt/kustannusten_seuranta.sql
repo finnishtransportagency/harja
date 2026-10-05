@@ -469,11 +469,10 @@ WHERE m.urakka = :urakka
   AND m.poistettu IS NOT TRUE 
   AND m.tyyppi = 'pysyva'
   AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
-  -- Voimassa alkaen on valittu vuosi 
-  AND EXTRACT(YEAR FROM m.voimassa_alkaen) = :hoitokauden-alkuvuosi::INTEGER
-  -- Pysyvä muutos astunut voimaan tällä hoitokaudella 
-  AND EXTRACT(MONTH FROM m.voimassa_alkaen) >= 10
-
+  -- Voimassa_alkaen osuu valitulle hoitokaudelle (1.10.–30.9.)
+  AND m.voimassa_alkaen BETWEEN
+      (SELECT TO_DATE(:hoitokauden-alkuvuosi || '-10-01', 'YYYY-MM-DD')) AND
+      (SELECT TO_DATE(:hoitokauden-alkuvuosi + 1 || '-09-30', 'YYYY-MM-DD'))
 UNION ALL
 
 -- Toteutuneet erillishankinnat, hoidonjohdonpalkkio, johto- ja hallintokorvaukset

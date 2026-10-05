@@ -296,12 +296,10 @@
         erotus (-
                  tot-ilman-arvonvahennyksia
                  bud-indeksikorjattu
-                 muutokset-budjetoitu
-                 tavoitehinnanoikaisu-budjetoitu)
+                 muutokset-budjetoitu)
         vertailubudjetti (+
                            bud-indeksikorjattu
-                           muutokset-budjetoitu
-                           tavoitehinnanoikaisu-budjetoitu)
+                           muutokset-budjetoitu)
         prosentti (if (or (= 0M tot-ilman-arvonvahennyksia) (= 0M vertailubudjetti))
                     0
                     (laske-prosentti tot-ilman-arvonvahennyksia vertailubudjetti))
@@ -338,13 +336,13 @@
                                         :alkupvm alkupvm
                                         :loppupvm loppupvm
                                         :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})
-        urakan-sopimustyyppi (:sopimustyyppi (first (urakat-q/hae-urakan-tiedot db {:id urakka-id})))
+        urakan-sopimustyyppi (keyword (:sopimustyyppi (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
         muutosten-hallinta-kaytossa? (boolean (:muutosten_hallinta urakan-parametrit))
         kustannusdata (kustannusten-seuranta/jarjesta-tehtavat kustannukset-tehtavittain urakan-sopimustyyppi)
         hankintakustannusten-toimenpiteet (rivita-toimenpiteet
                                             (get-in kustannusdata [:taulukon-rivit :hankintakustannukset])
-                                            "Suunnitellut hankinnat")
+                                            "Kilpailutettavat hankinnat")
         rahavarausten-toimenpiteet (rivita-toimenpiteet
                                      (get-in kustannusdata [:taulukon-rivit :rahavaraukset])
                                      "Rahavaraukset")
@@ -379,10 +377,9 @@
                      (mapv #(luo-excel-rivi-toimenpiteelle % (if (= % (first rahavarausten-toimenpiteet))
                                                                true
                                                                false)) rahavarausten-toimenpiteet)
-                     (luo-excel-rivit kustannusdata "johto-ja-hallintokorvaus" "Johto- ja Hallintokorvaukset" false)
-                     (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio" false)
                      (luo-excel-rivit kustannusdata "erillishankinnat" "Erillishankinnat" false)
-                     (luo-excel-rivit kustannusdata "muukulu-tavoitehintainen" "Muut kulut" false)
+                     (luo-excel-rivit kustannusdata "johto-ja-hallintokorvaus" "Johto- ja Hallintokorvaus" false)
+                     (luo-excel-rivit kustannusdata "hoidonjohdonpalkkio" "Hoidonjohdonpalkkio" false)
                      (when muutosten-hallinta-kaytossa?
                        (mapv #(luo-excel-rivi-toimenpiteelle
                                 %
@@ -394,19 +391,20 @@
                                                                  true
                                                                  false)) arvonvahennysten-toimenpiteet)
                        (luo-excel-rivit kustannusdata "arvonvahennykset" "Arvonvahennykset" true))
-                     (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan oikaisut" false)
+                     (luo-excel-rivit kustannusdata "tavoitehinnanoikaisu" "Tavoitehinnan muutokset" false)
+                     (luo-excel-rivit kustannusdata "muukulu-tavoitehintainen" "Muut kulut" false)
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta" false)
                      (luo-excel-rivi-yhteensa kustannusdata muutosten-hallinta-kaytossa?)
                      (luo-excel-rivit kustannusdata "ulkopuoliset-rahavaraukset" "Tavoitehinnan ulkopuoliset rahavaraukset" false)
-                     (luo-excel-rivit kustannusdata "muukulu-eitavoitehintainen" "Muut kulut" false)
                      (luo-excel-rivit kustannusdata "bonukset" "Bonukset" false)
                      (luo-excel-rivit kustannusdata "sanktiot" "Sanktiot" false)
-                     (luo-excel-rivi-vuoden-paatos kustannusdata)
+                     (luo-excel-rivit kustannusdata "muukulu-eitavoitehintainen" "Muut kulut" false)
                      (mapv (fn [rivi]
                              (luo-excel-rivi-lisatyot rivi (if (= rivi (first lisatyot))
                                                              true
                                                              false)))
-                           lisatyot))]]
+                       lisatyot)
+                     (luo-excel-rivi-vuoden-paatos kustannusdata))]]
         taulukko (concat
                    [:raportti {:nimi (str urakka-nimi "_" alkupvm "-" loppupvm)
                                :raportin-yleiset-tiedot {:raportin-nimi "Kustannusten seuranta"

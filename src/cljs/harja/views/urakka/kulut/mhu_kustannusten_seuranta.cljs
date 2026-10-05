@@ -79,6 +79,7 @@
       (when-not (or
                   muutostyo?
                   arvonvahennys?
+                  tavoitehinnanoikaisu?
                   (= "0,00" indeksikorjattu))
         indeksikorjattu)]
      [:td.numero {:style {:width (:muutokset leveydet)}}
@@ -109,7 +110,9 @@
       (= (:maksutyyppi l) "tavoitehinnanoikaisu")
       nil
       (= paaryhma-avain :arvonvahennykset)
-      (:toteutunut_summa l))))
+      (if (= (:maksutyyppi l) "tavoitehinnanoikaisu")
+        (:budjetoitu_summa l)
+        (:toteutunut_summa l)))))
 
 
 (defn- tehtavatason-rivitys
@@ -457,30 +460,18 @@
         muutos-sarake-yhteensa (+ (or (:muutokset-budjetoitu rivit-paaryhmittain) 0)
                                  (or (:arvonvahennykset-toteutunut rivit-paaryhmittain) 0)
                                  (or (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0))
-        arvonvahennykset-toteutunut
-        (or (:arvonvahennykset-toteutunut rivit-paaryhmittain) 0)
-
-        toteutuma-yhteensa
-        (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
-
-        toteutuma-yhteensa-ilman-arvonvahennyksia
-        (- toteutuma-yhteensa arvonvahennykset-toteutunut)
-
-        yhteensa-indeksikorjattu
-        (or (:yht-budjetoitu-summa-indeksikorjattu
-              (get app :kustannukset-yhteensa))
-          0)
-
-        yhteensa-alitus-ylitys
-        (- toteutuma-yhteensa-ilman-arvonvahennyksia
-          yhteensa-indeksikorjattu)
-
-        yhteensa-prosentti
-        (muotoile-prosentti
-          (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia)
-          (big/->big yhteensa-indeksikorjattu)
-          (big/gt (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia)
-            (big/->big yhteensa-indeksikorjattu)))]
+        arvonvahennykset-toteutunut (or (:arvonvahennykset-toteutunut rivit-paaryhmittain) 0)
+        toteutuma-yhteensa (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
+        toteutuma-yhteensa-ilman-arvonvahennyksia (- toteutuma-yhteensa arvonvahennykset-toteutunut)
+        yhteensa-indeksikorjattu (or (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)) 0)
+        tavoitehinnanoikaisu-budjetoitu (or (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0)
+        yhteensa-alitus-ylitys (+
+                                 (- toteutuma-yhteensa-ilman-arvonvahennyksia yhteensa-indeksikorjattu)
+                                 tavoitehinnanoikaisu-budjetoitu)
+        yhteensa-prosentti (muotoile-prosentti (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia)
+                             (big/->big yhteensa-indeksikorjattu)
+                             (big/gt (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia)
+                               (big/->big yhteensa-indeksikorjattu)))]
     [:div.row.sivuelementti
      [:div.col-xs-12
       [:h4 "Hoitovuosi: " valittu-hoitovuosi-nro " (1.10." valittu-hoitokauden-alkuvuosi " - 09.30." (inc valittu-hoitokauden-alkuvuosi) ")"]
@@ -507,11 +498,11 @@
         [:tbody
          (paaryhman-rivitys e! app "Kilpailutettavat hankinnat" :hankintakustannukset hankintakustannusten-toimenpiteet rivit-paaryhmittain true true false)
          (paaryhman-rivitys e! app "Rahavaraukset" :rahavaraukset rahavaraukset-toimenpiteet rivit-paaryhmittain true true false)
-         (paaryhman-rivitys e! app "Johto- ja hallintokorvaukset" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true true false)
+         (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true true false)
+         (paaryhman-rivitys e! app "Johto- ja hallintokorvaus" :johto-ja-hallintokorvaus johto-ja-hallintokorvaukset rivit-paaryhmittain true true false)
          (paaryhman-rivitys e! app "Hoidonjohdonpalkkio" :hoidonjohdonpalkkio hoidonjohdonpalkkiot rivit-paaryhmittain true true false)
          (when muutosten-hallinta-kaytossa? (paaryhman-rivitys e! app "Muutokset" :muutokset muutokset-rivit rivit-paaryhmittain false false true))
          (paaryhman-rivitys e! app "Arvonvähennykset" :arvonvahennykset arvonvahennykset rivit-paaryhmittain false false true)
-         (paaryhman-rivitys e! app "Erillishankinnat" :erillishankinnat erillishankinnat rivit-paaryhmittain true true false)
          (paaryhman-rivitys e! app "Muut kulut" :muukulu-tavoitehintainen muukulut-tavoitehintainen rivit-paaryhmittain false true false)
          ;; Näytetään tavoitehinnanoikaisut vain, jos niitä on oikeasti lisätty ja käytetty
          (when (> (count (get-in rivit-paaryhmittain [:tavoitehinnanoikaisu :tehtavat])) 0)
