@@ -225,10 +225,6 @@ jobs:
       id-token: write
       contents: read
 
-    # migrated=true julkaistaan vasta, kun Lambda on palauttanut onnistuneen tuloksen
-    outputs:
-      migrated: ${{ steps.migration-result.outputs.migrated }}
-
     steps:
       - name: '[Test-envs] Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -281,12 +277,6 @@ jobs:
         with:
           commit-sha: ${{ github.sha }}
           function-name: HarjaTestMigrationRunner-${{ inputs.environment }}
-
-      # Ajetaan vain, jos edellinen migraatio-steppi onnistui
-      - name: '[Test-envs] Mark database as migrated'
-        id: migration-result
-        if: ${{ !inputs.skip-migrations }}
-        run: echo "migrated=true" >> "$GITHUB_OUTPUT"
 
   # Ajetaan lopuksi vain, kun image-, database- ja preflight- jobit ovat onnistuneet
   deploy:
