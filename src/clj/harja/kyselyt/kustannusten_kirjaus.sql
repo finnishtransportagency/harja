@@ -160,3 +160,78 @@ SET
     muut_kustannukset = :muut-kustannukset
 WHERE paikkauskohde = :id
 RETURNING id;
+
+-- name: analytiikalle-tiemerkintaurakat-kannasta
+-- Haetaan annetulle aikavälille kaikki tiemerkintäurakat, joilla on kustannuksia
+SELECT DISTINCT u.id as urakkaid, u.urakkanro
+  FROM urakka u
+        JOIN tiemerkinta_korjauskustannus ukk ON ukk.urakka = u.id
+ WHERE ukk.luotu BETWEEN :alkupvm AND :loppupvm
+   OR ukk.muokattu BETWEEN :alkupvm AND :loppupvm
+UNION
+SELECT DISTINCT u.id as urakkaid, u.urakkanro
+FROM urakka u
+    JOIN yllapitokohde ypk ON ypk.urakka = u.id
+    JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
+WHERE ypk.luotu BETWEEN :alkupvm AND :loppupvm
+   OR ypk.muokattu BETWEEN :alkupvm AND :loppupvm
+UNION
+SELECT DISTINCT u.id as urakkaid, u.urakkanro
+FROM urakka u
+    JOIN paikkauskohde pk ON pk."urakka-id" = u.id
+     JOIN tiemerkinta_paikkauskohteen_kustannus tpk ON pk.id = tpk.paikkauskohde
+WHERE tpk.luotu BETWEEN :alkupvm AND :loppupvm
+   OR tpk.muokattu BETWEEN :alkupvm AND :loppupvm;
+
+-- name: hae-analytiikalle-tiemerkinta-korjauskustannukset
+-- Hakee tiemerkintäurakan korjauskustannukset aikaväliltä
+SELECT ukk.kustannusvuosi         AS sopimusvuosi,
+       ukk.id                     AS "korjauskustannus-id",
+       COALESCE(ukk.kustannus, 0) AS "kustannus",
+       COALESCE(ukk.pk1, 0)       AS "pk1%",
+       COALESCE(ukk.pk2, 0)       AS "pk2%",
+       COALESCE(ukk.pk3, 0)       AS "pk3%",
+       ukk.luotu                  as "korjauskustannus-luotu",
+       ukk.muokattu               as "korjauskustannus-muokattu"
+FROM tiemerkinta_korjauskustannus ukk
+WHERE (COALESCE(ukk.muokattu, ukk.luotu) BETWEEN :alkupvm AND :loppupvm)
+  AND ukk.urakka = :urakkaid
+ORDER BY sopimusvuosi ASC;
+
+-- name: hae-analytiikalle-tiemerkinta-yllapitokohde-kustannukset
+-- Hakee ylläpitokohteiden tiemerkintäkustannukset aikaväliltä
+SELECT ypk.vuodet                         AS sopimusvuosi,
+       ypk.id                             AS "paallystyskohde-id",
+       ypk.kohdenumero,
+       ypk.nimi,
+       COALESCE(tyk.linjamerkinnat, 0)    AS "linjamerkinnat",
+       COALESCE(tyk.pienmerkinnat, 0)     AS "pienmerkinnat",
+       COALESCE(tyk.jyrsinnat, 0)         AS "jyrsinnat",
+       COALESCE(tyk.muut_kustannukset, 0) AS "muut-kustannukset",
+       ypk.poistettu                      AS "paallystyskohde-poistettu",
+       tyk.luotu                          as "paallystyskohde-kustannus-luotu",
+       tyk.muokattu                       as "paallystyskohde-kustannus-muokattu"
+FROM yllapitokohde ypk
+         JOIN tiemerkinta_yllapitokohteen_kustannus tyk ON ypk.id = tyk.yllapitokohde
+WHERE (COALESCE(ypk.muokattu, ypk.luotu) BETWEEN :alkupvm AND :loppupvm)
+  AND ypk.urakka = :urakkaid
+ORDER BY sopimusvuosi ASC;
+
+-- name: hae-analytiikalle-tiemerkinta-paikkauskohde-kustannukset
+-- Hakee paikkauskohteiden tiemerkintäkustannukset aikaväliltä
+SELECT extract(YEAR FROM pk.alkupvm)            AS sopimusvuosi,
+       pk.id                                    AS "paikkauskohde-id",
+       pk."ulkoinen-id"::TEXT                   AS "ulkoinen-id",
+       pk.nimi,
+       COALESCE(tpk.linjamerkinnat, 0)          AS "linjamerkinnat",
+       COALESCE(tpk.pienmerkinnat, 0)           AS "pienmerkinnat",
+       COALESCE(tpk.jyrsinnat, 0)               AS "jyrsinnat",
+       COALESCE(tpk.muut_kustannukset, 0)       AS "muut-kustannukset",
+       pk.poistettu                             AS "paikkauskohde-poistettu",
+       tpk.luotu                                as "paikkauskohde-kustannus-luotu",
+       tpk.muokattu                             as "paikkauskohde-kustannus-muokattu"
+FROM paikkauskohde pk
+     JOIN tiemerkinta_paikkauskohteen_kustannus tpk ON pk.id = tpk.paikkauskohde
+WHERE (COALESCE(tpk.muokattu, tpk.luotu) BETWEEN :alkupvm AND :loppupvm)
+  AND pk."urakka-id" = :urakkaid
+ORDER BY sopimusvuosi ASC;

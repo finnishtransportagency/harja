@@ -1,0 +1,49 @@
+{
+  "tiemerkinnan-kustannukset": [
+    {
+      "urakkaid": 98765,
+      "urakkatunnus": "PR00001705",
+      "korjauskustannukset": [
+        {
+          "sopimusvuosi": 2023,
+          "kustannus": 125000.50,
+          "pk1%": null,
+          "pk2%": null,
+          "pk3%": null,
+          "korjauskustannus-luotu": "2023-01-15T10:00:00Z",
+          "korjauskustannus-muokattu": "2023-06-20T15:30:00Z"
+        }
+      ],
+      "paallystyskohdekustannukset": [
+        {
+          "sopimusvuosi": 2023,
+          "nimi": "Esimerkkikohde 1",
+          "paallystyskohde-id": 1,
+          "kohdenumero": 123456,
+          "linjamerkinnat": 85000.00,
+          "pienmerkinnat": 40500.00,
+          "jyrsinnat": 17800.75,
+          "muut-kustannukset": 7000.00,
+          "paallystyskohde-poistettu": false,
+          "paallystyskohde-kustannus-luotu": "2023-01-15T10:00:00Z",
+          "paallystyskohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
+        }
+      ],
+      "paikkauskohdekustannukset": [
+        {
+          "sopimusvuosi": 2023,
+          "paikkauskohde-id": 1,
+          "nimi": "Esimerkkikohde 1",
+          "ulkoinen-id": 123456,
+          "linjamerkinnat": 85000.00,
+          "pienmerkinnat": 40500.00,
+          "jyrsinnat": 17800.75,
+          "muut-kustannukset": 7000.00,
+          "paikkauskohde-poistettu": false,
+          "paikkauskohde-kustannus-luotu": "2023-01-15T10:00:00Z",
+          "paikkauskohde-kustannus-muokattu": "2023-06-20T15:30:00Z"
+        }
+      ]
+    }
+  ]
+}
