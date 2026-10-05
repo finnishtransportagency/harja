@@ -27,6 +27,109 @@
   }
 }
 
+.pot2-tieosuushaku {
+  margin-bottom: @valistys-16;
+
+  .pot2-tieosuushaku-paneeli {
+    border-top: 1px solid @white-darker;
+    border-bottom: 1px solid @white-darker;
+    background-color: @white;
+    padding: @valistys-32;
+  }
+
+  .pot2-tieosuushaku-otsikko {
+    align-items: center;
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: @valistys-8;
+
+    h3 {
+      margin: 0;
+    }
+  }
+
+  .pot2-tieosuushaku-ehdot {
+    align-items: flex-end;
+    display: flex;
+    flex-wrap: wrap;
+    gap: @valistys-8;
+    padding-top: @valistys-16;
+
+    > .label-ja-kentta {
+      margin: 0;
+      min-width: 0;
+      width: 61px;
+
+      > .kentta {
+        min-width: 0;
+        width: 61px;
+      }
+    }
+  }
+
+  .pot2-tieosuushaku-ohje {
+    font-size: 14px;
+    font-weight: 400;
+    margin-top: 24px;
+  }
+
+  .pot2-tieosuushaku-tulosalue {
+    margin-top: @valistys-12;
+
+    .pot2-tieosuushaku-tulosmaara {
+      font-size: 12px;
+      font-weight: 400;
+      margin-top: 24px;
+      padding-bottom: 24px;
+    }
+
+    > .pot2-tieosuushaku-grid {
+      max-height: 24rem;
+      max-width: 800px;
+      overflow-y: auto;
+
+      .grid {
+        table-layout: auto;
+      }
+
+      th,
+      td {
+        padding: @valistys-8 @valistys-16;
+        white-space: nowrap;
+      }
+
+      th {
+        font-size: @fontin-koko-taulukko-pienempi;
+      }
+
+      td {
+        font-size: @fontin-koko-taulukko-pienempi;
+      }
+    }
+
+    > .info-laatikko,
+    > button {
+      margin-top: @valistys-24;
+    }
+
+    > .info-laatikko {
+      padding: @valistys-4 @valistys-20;
+
+      .infolaatikon-ikoni {
+        align-self: center;
+        display: flex;
+        flex: 0 0 24px;
+        justify-content: center;
+        padding: 0 @valistys-4 0 0;
+
+        svg path {
+          fill: @blue-dark;
+        }
+      }
+    }
+  }
+}
+
 .paallystysilmoitukset {
   hr {
     margin-top: 3rem;
@@ -462,7 +565,7 @@ div.yllapitokohteet {
 }
 
 .paallystyskustannusten-toiminnot-container {
-    height: @valistys-48;
+  height: @valistys-48;
 }
 
 .paallystyskustannusten-toiminnot {
@@ -490,6 +593,28 @@ div.yllapitokohteet {
   position: relative;
   top: -20px;
   font-size: 14px;
+}
+
+.pot2-kulutuskerros-grid {
+  > .panel-heading {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+
+    > .panel-title {
+      order: 1;
+    }
+
+    > .muokkaustoiminnot {
+      margin-left: auto;
+      order: 2;
+    }
+
+    > .kulutus-hyppy-info {
+      flex-basis: 100%;
+      order: 3;
+    }
+  }
 }
 
 .kulutus-hyppy-info {

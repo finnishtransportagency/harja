@@ -1143,8 +1143,9 @@ WHERE u.alkupvm + interval '12 hour' <= current_timestamp
 ORDER BY etaisyys ASC 
 LIMIT 50;
 
--- name: hae-kaynnissaoleva-urakka-urakkanumerolla
--- single? : true
+-- name: hae-urakka-urakkatunnisteella
+-- Urakkatunniste on yleisesti tunnettu ja eri järjestelmissä käytetty, Samposta saatu tunniste urakalle
+-- Ei palauta kanava- ja vesiväyläurakoita
 SELECT
     u.id,
     u.sampoid,
@@ -1152,50 +1153,32 @@ SELECT
     u.nimi,
     u.alkupvm,
     u.loppupvm,
-    e.nimi        AS "elynimi",
-    e.elynumero,
+    -- Palautetaan elinvoimakeskustiedot elynimi ja elynumero-nimisissä
+    -- kentissä, koska on sovittu, ettei SQL:ää käyttävää yhteystietorajapintaa muuteta.
+    CASE
+        WHEN e.nimi IS NOT NULL THEN
+            e.nimi
+        ELSE
+            ely.nimi
+        END     AS "elynimi",
+    CASE
+        WHEN e.elinvoimakeskusnumero IS NOT NULL THEN
+            e.elinvoimakeskusnumero
+        ELSE
+            ely.elynumero
+        END       AS "elynumero",
     o.nimi        AS "urakoitsija-nimi",
     o.ytunnus     AS "urakoitsija-ytunnus",
     o.katuosoite  AS "urakoitsija-katuosoite",
     o.postinumero AS "urakoitsija-postinumero"
 FROM urakka u
-         JOIN organisaatio e ON e.id = u.hallintayksikko
-         JOIN organisaatio o ON o.id = u.urakoitsija
-WHERE urakkanro = :urakka
-  AND alkupvm <= current_date
-  AND loppupvm >= current_date
-ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
-              WHEN u.tyyppi = 'teiden-hoito' THEN 2
-              WHEN u.tyyppi = 'paallystys' THEN 3
-              WHEN u.tyyppi = 'tiemerkinta' THEN 4
-              WHEN u.tyyppi = 'valaistus' THEN 5
-              WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
-              WHEN u.tyyppi = 'siltakorjaus' THEN 7
-              WHEN u.tyyppi = 'vesivayla-hoito' THEN 8
-              WHEN u.tyyppi = 'vesivayla-kanavien-hoito' THEN 9
-             END;
-
--- name: hae-tieurakka-urakkanumerolla
--- Tämä on vastaava, kuin yllä oleva haku, mutta tämä ei palauta mahdollisesti kanavaurakoita, koska urakkanumeorissa
--- on eri urakkatyyppien välillä ristiriitaisuutta.
-SELECT
-    u.id,
-    u.sampoid,
-    u.urakkanro,
-    u.nimi,
-    u.alkupvm,
-    u.loppupvm,
-    e.nimi        AS "elynimi",
-    e.elynumero,
-    o.nimi        AS "urakoitsija-nimi",
-    o.ytunnus     AS "urakoitsija-ytunnus",
-    o.katuosoite  AS "urakoitsija-katuosoite",
-    o.postinumero AS "urakoitsija-postinumero"
-FROM urakka u
-         JOIN organisaatio e ON e.id = u.hallintayksikko
+         LEFT JOIN organisaatio ely ON ely.id = u.hallintayksikko
+         LEFT JOIN organisaatio e ON e.id = u.elinvoimakeskus_id
          JOIN organisaatio o ON o.id = u.urakoitsija
 WHERE u.urakkanro = :urakka
-  AND u.loppupvm >= current_date
+  -- Palautetaan voimassa olevat ja tulevat urakat.
+  -- Palautetaan päättyneet urkakat kuukauden ajan päättymisen jälkeen.
+  AND loppupvm + interval '1 week' >= current_date
   AND u.tyyppi in ('hoito',
                  'teiden-hoito',
                  'paallystys',
@@ -1211,13 +1194,6 @@ ORDER BY CASE WHEN u.tyyppi = 'hoito' THEN 1
               WHEN u.tyyppi = 'tekniset-laitteet' THEN 6
               WHEN u.tyyppi = 'siltakorjaus' THEN 7
              END;
-
--- name: onko-kaynnissa-tai-tuleva-urakkanro?
--- single?: true
-SELECT exists(SELECT id
-              FROM urakka
-              WHERE urakkanro = :urakkanro
-                AND loppupvm >= current_date);
 
 -- name: tuhoa-tekniset-laitteet-urakkadata!
 DELETE

@@ -82,7 +82,8 @@
                       :tyokonetyyppi (:tyokonetyyppi tyokone)
                       :tyokonetunniste (:id tyokone)
                       :tyokoneen-lisatieto (:tunnus tyokone)
-                      :lahde (muunna-toteuma-lahde (:lahde toteuma) false)})
+                      :lahde (muunna-toteuma-lahde (:lahde toteuma) false)
+                      :reitti (:reitti toteuma)})
         toteuman-id (if paivitetty
                       (:id paivitetty)
                       (q-toteumat/toteuman-id-ulkoisella-idlla db {:ulkoinen_id (get-in toteuma [:tunniste :id])}))]
