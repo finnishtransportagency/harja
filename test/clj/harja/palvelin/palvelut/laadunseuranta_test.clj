@@ -634,6 +634,311 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
+(defn- mhu26-laskettavan-sanktion-testitiedot
+  "Sodankylän MHU 2026-2031 -urakan urakka-kontekstin sanktio ja laatupoikkeama laskettavien sanktioiden testeihin."
+  [{:keys [laji sanktiotyyppi-koodi perustelu] :as tiedot}]
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q (str "SELECT id FROM sanktiotyyppi WHERE koodi = " sanktiotyyppi-koodi)))]
+    {:urakka-id urakka-id
+     :sanktio (merge {:suorasanktio true
+                      :laji laji
+                      :toimenpideinstanssi tpi-id
+                      :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                      :tyyppi {:id sanktiotyyppi-id}
+                      :soveltuvuuskonteksti :urakka}
+                (dissoc tiedot :laji :sanktiotyyppi-koodi :perustelu))
+     :laatupoikkeama {:tekijanimi "Max Power"
+                      :tekija :tilaaja
+                      :paatos {:paatos "sanktio"
+                               :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                               :kasittelytapa :kommentit
+                               :perustelu perustelu}
+                      :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                      :urakka urakka-id}
+     :hk-alkupvm (pvm/->pvm "1.10.2026")
+     :hk-loppupvm (pvm/->pvm "30.9.2027")}))
+
+(defn- tallenna-mhu26-laskettava-sanktio
+  [{:keys [sanktio laatupoikkeama hk-alkupvm hk-loppupvm]} sanktion-muutokset]
+  (palvelukutsu-tallenna-suorasanktio
+    +kayttaja-jvh+ (merge sanktio sanktion-muutokset) laatupoikkeama hk-alkupvm hk-loppupvm))
+
+(defn- lue-laskettu-sanktio [sanktio-id]
+  (-> (first (q-map (str "SELECT maaritystapa, normaalimaara, omailmoitettu, maara, laskennan_syote "
+                      "FROM sanktio WHERE id = " sanktio-id)))
+    (update :laskennan_syote konv/jsonb->clojuremap)))
+
+(deftest tallenna-mhu26-tyon-tekematta-jattaminen-sohjo-oja-laskee-tiekm-kertaa-yksikkohinta
+  (let [perustelu "HARJA-2616 sohjo-ojan tiekm-laskenta"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 22
+                       :perustelu perustelu})
+        tallenna (partial tallenna-mhu26-laskettava-sanktio testitiedot)
+        laske-kirjaukset #(ffirst (q (str "SELECT COUNT(*) FROM sanktio s JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama "
+                                       "WHERE lp.perustelu = '" perustelu "'")))]
+    (try
+      (testing "Palvelin laskee summan itse eikä käytä selaimen lähettämää summaa"
+        (let [sanktio-id (tallenna {:laskettava-syote 12.5
+                                    :summa 1
+                                    :normaalimaara 1
+                                    :laskennan-syote {:syote 999}})
+              tallennettu (lue-laskettu-sanktio sanktio-id)]
+          (is (= "laskettu" (:maaritystapa tallennettu)))
+          (is (= 2500M (:maara tallennettu)) "maara on lopullinen palvelimen laskema summa")
+          (is (= 2500M (:normaalimaara tallennettu))
+            "normaalimaara on laskettu summa ennen oikaisuja, ei raakasyöte")
+          (is (false? (:omailmoitettu tallennettu)))
+          (is (= {:syoteavain "tiekm"
+                  :syote 12.5
+                  :yksikko "tiekm"
+                  :laskentatapa "tiekm_yksikkohinta"
+                  :laskentaparametrit {:syoteavain "tiekm"
+                                       :yksikko "tiekm"
+                                       :desimaalit 2
+                                       :yksikkohinta 200.0}}
+                 (:laskennan_syote tallennettu))
+            "Snapshot sisältää syötteen, laskentatavan ja profiiliparametrit")
+
+          (testing "Muokkaus laskee summan uudelleen uudesta syötteestä"
+            (tallenna {:id sanktio-id :laskettava-syote 20})
+            (is (= {:maara 4000M :normaalimaara 4000M}
+                   (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara]))))
+
+          (testing "Lukupolku palauttaa snapshotin lomakkeelle"
+            (let [rivi (first (filter #(= sanktio-id (:id %))
+                                (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-urakan-sanktiot-ja-bonukset
+                                  +kayttaja-jvh+
+                                  {:urakka-id (:urakka-id testitiedot)
+                                   :alku (:hk-alkupvm testitiedot)
+                                   :loppu (:hk-loppupvm testitiedot)})))]
+              (is (= 20 (get-in rivi [:laskennan-syote :syote])))
+              (is (= "tiekm_yksikkohinta" (get-in rivi [:laskennan-syote :laskentatapa])))))))
+
+      (testing "Virheellinen syöte hylätään ennen tallennusta ja nimeää kentän, odotetun muodon ja saadun tyypin"
+        (let [kirjauksia-ennen-hylkayksia (laske-kirjaukset)]
+          (doseq [[syote odotetut-osat] [[nil ["tiekm" "skalaarinen numero" "nil"]]
+                                         ["12" ["tiekm" "skalaarinen numero" "java.lang.String"]]
+                                         [{:arvo 1} ["tiekm" "skalaarinen numero" "PersistentArrayMap"]]
+                                         [0 ["tiekm" "nollaa suurempi"]]
+                                         [-1 ["tiekm" "nollaa suurempi"]]
+                                         [1.234 ["tiekm" "enintään 2 desimaalia"]]
+                                         [Double/NaN ["tiekm" "äärellinen"]]]]
+            (let [virhe (try (tallenna {:laskettava-syote syote})
+                          nil
+                          (catch IllegalArgumentException e (.getMessage e)))]
+              (is (some? virhe) (str "Syöte " (pr-str syote) " pitää hylätä"))
+              (doseq [osa odotetut-osat]
+                (is (str/includes? (str virhe) osa) (str "Virheessä pitää olla " osa ": " virhe)))))
+          (is (= kirjauksia-ennen-hylkayksia (laske-kirjaukset))
+            "Hylätty syöte ei saa jättää kirjausta kantaan")))
+
+      (testing "Laskettavassa polussa ei ole omailmoituspuolitusta"
+        (is (thrown-with-msg? IllegalArgumentException #"Omailmoituspuolitus ei ole sallittu"
+              (tallenna {:laskettava-syote 1 :omailmoitettu true}))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest hae-suorasanktion-tiedot-palauttaa-laskennan-snapshotin-samassa-rakenteessa-kuin-listapolku
+  (let [perustelu "HARJA-2616 yksittäisen sanktion snapshot"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 22
+                       :perustelu perustelu})]
+    (try
+      (let [sanktio-id (tallenna-mhu26-laskettava-sanktio testitiedot {:laskettava-syote 12.5})
+            yksittainen (first (sanktiot-q/hae-suorasanktion-tiedot (:db jarjestelma) {:id sanktio-id}))
+            listarivi (first (filter #(= sanktio-id (:id %))
+                               (kutsu-palvelua (:http-palvelin jarjestelma)
+                                 :hae-urakan-sanktiot-ja-bonukset
+                                 +kayttaja-jvh+
+                                 {:urakka-id (:urakka-id testitiedot)
+                                  :alku (:hk-alkupvm testitiedot)
+                                  :loppu (:hk-loppupvm testitiedot)})))]
+        (is (= {:syoteavain "tiekm"
+                :syote 12.5
+                :yksikko "tiekm"
+                :laskentatapa "tiekm_yksikkohinta"
+                :laskentaparametrit {:syoteavain "tiekm"
+                                     :yksikko "tiekm"
+                                     :desimaalit 2
+                                     :yksikkohinta 200.0}}
+               (:laskennan-syote yksittainen))
+          "Yksittäisen sanktion snapshot on keyword-rakenne, ei JSONB-objekti")
+        (is (= (:laskennan-syote listarivi) (:laskennan-syote yksittainen))
+          "Yksittäinen ja listapolku palauttavat saman snapshotin"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-laskettu-sanktio-sailyttaa-vanhan-laskennan-kun-syote-ei-muutu
+  (let [perustelu "HARJA-2616 vanhan laskennan säilytys"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 22
+                       :perustelu perustelu})
+        tallenna (partial tallenna-mhu26-laskettava-sanktio testitiedot)
+        aseta-yksikkohinta #(u (str "UPDATE sanktio_profiili_rivi_summamaaritys "
+                                 "SET laskentaparametrit = jsonb_set(laskentaparametrit, '{yksikkohinta}', '" % "') "
+                                 "WHERE sanktio_profiili_rivi_id = "
+                                 "(SELECT sanktio_profiili_rivi FROM sanktio WHERE id = " %2 ") "
+                                 "AND maaritystapa = 'laskettu'"))
+        yksikkohinta-snapshotissa #(get-in (lue-laskettu-sanktio %) [:laskennan_syote :laskentaparametrit :yksikkohinta])]
+    (try
+      (let [sanktio-id (tallenna {:laskettava-syote 12.5})]
+        (try
+          (is (= {:maara 2500M :normaalimaara 2500M} (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara])))
+          (aseta-yksikkohinta "300.0" sanktio-id)
+
+          (testing "Profiilin parametrien muutos ei muuta vanhaa tapahtumaa, kun syöte pysyy samana"
+            (tallenna {:id sanktio-id
+                       :laskettava-syote 12.50M
+                       :summa 1
+                       :normaalimaara 1
+                       :laskennan-syote {:syote 999 :laskentaparametrit {:yksikkohinta 1}}})
+            (is (= {:maara 2500M :normaalimaara 2500M} (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara])))
+            (is (= 200.0 (yksikkohinta-snapshotissa sanktio-id)) "Vanha snapshot säilyy"))
+
+          (testing "Syötteen muutos laskee uuden määrän ja snapshotin aktiivisella profiililla"
+            (tallenna {:id sanktio-id :laskettava-syote 20})
+            (is (= {:maara 6000M :normaalimaara 6000M} (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara])))
+            (is (= 300.0 (yksikkohinta-snapshotissa sanktio-id)))
+            (is (= 20 (:syote (:laskennan_syote (lue-laskettu-sanktio sanktio-id))))))
+          (finally
+            (aseta-yksikkohinta "200.0" sanktio-id))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-laskettu-sanktio-laskee-uudelleen-kun-snapshotin-laskentatapa-tai-syoteavain-ei-vastaa-profiilia
+  (let [perustelu "HARJA-2793 snapshotin laskentatavan vastaavuus"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 22
+                       :perustelu perustelu})
+        tallenna (partial tallenna-mhu26-laskettava-sanktio testitiedot)
+        maaritys-ehto #(str "sanktio_profiili_rivi_id = "
+                         "(SELECT sanktio_profiili_rivi FROM sanktio WHERE id = " % ") "
+                         "AND maaritystapa = 'laskettu'")
+        lue-maaritys #(first (q (str "SELECT laskentatapa, laskentaparametrit::TEXT "
+                                  "FROM sanktio_profiili_rivi_summamaaritys WHERE " (maaritys-ehto %))))
+        aseta-maaritys #(u (str "UPDATE sanktio_profiili_rivi_summamaaritys "
+                             "SET laskentatapa = '" %2 "', laskentaparametrit = '" %3 "'::JSONB "
+                             "WHERE " (maaritys-ehto %)))
+        lue-maara-ja-snapshot #(let [tallennettu (lue-laskettu-sanktio %)]
+                                 {:maara (:maara tallennettu)
+                                  :normaalimaara (:normaalimaara tallennettu)
+                                  :laskentatapa (get-in tallennettu [:laskennan_syote :laskentatapa])
+                                  :syoteavain (get-in tallennettu [:laskennan_syote :syoteavain])})]
+    (try
+      (let [sanktio-id (tallenna {:laskettava-syote 12.5})
+            [alkuperainen-tapa alkuperaiset-parametrit] (lue-maaritys sanktio-id)]
+        (try
+          (is (= {:maara 2500M :normaalimaara 2500M :laskentatapa "tiekm_yksikkohinta" :syoteavain "tiekm"}
+                 (lue-maara-ja-snapshot sanktio-id)))
+
+          (testing "Laskentatavan vaihtuminen samalla syöteavaimella ja raakasyötteellä laskee uuden määrän ja snapshotin"
+            (aseta-maaritys sanktio-id "prosenttiosuus_syotteesta"
+              "{\"syoteavain\": \"tiekm\", \"yksikko\": \"tiekm\", \"desimaalit\": 2, \"prosentti\": 10}")
+            (tallenna {:id sanktio-id
+                       :laskettava-syote 12.5
+                       :summa 1
+                       :normaalimaara 1
+                       :laskennan-syote {:syote 999}})
+            (is (= {:maara 1.25M :normaalimaara 1.25M :laskentatapa "prosenttiosuus_syotteesta" :syoteavain "tiekm"}
+                   (lue-maara-ja-snapshot sanktio-id))))
+
+          (testing "Syöteavaimen vaihtuminen samalla laskentatavalla ja raakasyötteellä laskee uuden snapshotin"
+            (aseta-maaritys sanktio-id "prosenttiosuus_syotteesta"
+              "{\"syoteavain\": \"muu_syote\", \"yksikko\": \"tiekm\", \"desimaalit\": 2, \"prosentti\": 20}")
+            (tallenna {:id sanktio-id :laskettava-syote 12.5})
+            (is (= {:maara 2.5M :normaalimaara 2.5M :laskentatapa "prosenttiosuus_syotteesta" :syoteavain "muu_syote"}
+                   (lue-maara-ja-snapshot sanktio-id))))
+          (finally
+            (aseta-maaritys sanktio-id alkuperainen-tapa alkuperaiset-parametrit))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-tyon-tekematta-jattaminen-muu-kayttaa-kayttajan-lopullista-maaraa
+  (let [perustelu "HARJA-2616 muu töiden tekemättä jättäminen"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 23
+                       :perustelu perustelu})]
+    (try
+      (let [sanktio-id (tallenna-mhu26-laskettava-sanktio testitiedot {:summa 321.5})
+            tallennettu (lue-laskettu-sanktio sanktio-id)]
+        (is (= 321.5M (:maara tallennettu)) "Käyttäjän syöttämä lopullinen euromäärä tallentuu sellaisenaan")
+        (is (nil? (:laskennan_syote tallennettu)) "Manuaalinen määrä ei tallenna laskennan syötettä")
+        (is (not= "laskettu" (:maaritystapa tallennettu))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-laskutus-ilman-laskutuskelpoisuutta-laskee-prosenttiosuuden-syotteesta
+  (let [perustelu "HARJA-2621 laskutus ilman laskutuskelpoisuutta"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :laskutus_ilman_laskutuskelpoisuutta
+                       :sanktiotyyppi-koodi 0
+                       :perustelu perustelu})
+        tallenna (partial tallenna-mhu26-laskettava-sanktio testitiedot)]
+    (try
+      (let [sanktio-id (tallenna {:laskettava-syote 1234.56 :summa 1})
+            tallennettu (lue-laskettu-sanktio sanktio-id)]
+        (is (= "laskettu" (:maaritystapa tallennettu)))
+        (is (= 246.91M (:maara tallennettu)) "20 % laskutuskelvottomana laskutetusta osuudesta, HALF_UP")
+        (is (= 246.91M (:normaalimaara tallennettu)))
+        (is (= {:syoteavain "laskutuskelvottomana_laskutettu_osuus"
+                :syote 1234.56
+                :yksikko "€"
+                :laskentatapa "prosenttiosuus_syotteesta"
+                :laskentaparametrit {:syoteavain "laskutuskelvottomana_laskutettu_osuus"
+                                     :yksikko "€"
+                                     :desimaalit 2
+                                     :prosentti 20}}
+               (:laskennan_syote tallennettu))))
+      (is (thrown-with-msg? IllegalArgumentException #"laskutuskelvottomana_laskutettu_osuus.*nollaa suurempi"
+            (tallenna {:laskettava-syote 0}))
+        "Nolla hylätään")
+      (is (thrown-with-msg? IllegalArgumentException #"laskutuskelvottomana_laskutettu_osuus.*enintään 2 desimaalia"
+            (tallenna {:laskettava-syote 10.001}))
+        "Kolmas desimaali hylätään")
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest hae-urakan-sanktio-konfiguraatio-palauttaa-mhu26-rakenteisen-laskentamaarityksen
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        vastaus (ls-sanktio-konfiguraatio/hae-urakan-sanktio-konfiguraatio
+                  (:db jarjestelma)
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :hoitovuosi 1
+                   :soveltuvuuskonteksti :urakka})
+        tyyppi (fn [laji koodi]
+                 (->> (sanktio-domain/sanktio-konfiguraation-sanktiotyypit vastaus laji)
+                   (filter #(= koodi (:koodi %)))
+                   first))]
+    (is (= [{:maaritystapa :laskettu
+             :summa-euroina nil
+             :ohjeteksti nil
+             :jarjestys 1
+             :laskentatapa :tiekm-yksikkohinta
+             :laskentaparametrit {:syoteavain "tiekm"
+                                  :yksikko "tiekm"
+                                  :desimaalit 2
+                                  :yksikkohinta 200.0}}]
+           (:summamaaritykset (tyyppi :tyon_tekematta_jattaminen 22)))
+      "Sohjo-ojan tyyppi kuvataan rakenteisena tiekm × yksikköhinta -määrityksenä")
+    (is (= [:laskettu] (mapv :maaritystapa (:summamaaritykset (tyyppi :laskutus_ilman_laskutuskelpoisuutta 0)))))
+    (is (= :prosenttiosuus-syotteesta
+           (:laskentatapa (first (:summamaaritykset (tyyppi :laskutus_ilman_laskutuskelpoisuutta 0))))))
+    (is (= 20 (get-in (first (:summamaaritykset (tyyppi :laskutus_ilman_laskutuskelpoisuutta 0)))
+                [:laskentaparametrit :prosentti])))
+    (is (empty? (:summamaaritykset (tyyppi :tyon_tekematta_jattaminen 23)))
+      "Muu töiden tekemättä jättäminen ei ole laskettava")
+    (is (empty? (:lukitut-summat (tyyppi :tyon_tekematta_jattaminen 22)))
+      "Laskettu määritys ei ole lukittu kiinteä summa")))
+
 (deftest tallenna-mhu26-asiakirjamerkinnan-sanktio-kayttaa-urakkaprofiilin-kiinteaa-summaa
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         perustelu "HARJA-2617 asiakirjamerkinnän sanktio"
