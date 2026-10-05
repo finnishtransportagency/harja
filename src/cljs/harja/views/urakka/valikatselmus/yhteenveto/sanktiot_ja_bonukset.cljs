@@ -43,7 +43,9 @@
 (defn osio-sanktiot [{:keys [paatokset urakan-parametrit hoitokauden-alkuvuosi]}
                      {:keys [yhteenvedon-tiedot]}]
   (let [lupauspaatos (valikatselmus-tiedot/ota-paatos paatokset :lupaukset)
-        lupaussanktio (or (luvut/arvo-paatoksesta lupauspaatos :lupaussanktio) 0)
+        lupaussanktio (or
+                        ;; Päätökseen ei tallenneta sanktiota negatiivisena, kuten sanktio tauluun.
+                        (* -1 (luvut/arvo-paatoksesta lupauspaatos :lupaussanktio)) 0)
 
         ;; Tulee omalle rivillensä
         laskutusrajan-ylitys-sanktiot (apply + (map (fn [sanktio]
