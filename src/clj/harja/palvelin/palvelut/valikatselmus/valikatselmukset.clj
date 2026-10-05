@@ -207,7 +207,7 @@
 
 (defn hae-paatokset [db kayttaja urakkaid valittu-hoitovuosi budjettitavoite-vuodelle
                      toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset urakan-parametrit urakan-tiedot
-                     tehtava-ja-maaramuutos-summa rahavarausmuutos-summa]
+                     tehtava-ja-maaramuutos-summa rahavarausmuutos-summa hoitovuoden-lopun-indeksikorjaus-summa]
   (let [;; Kootaan päätöksiä varten tarvittavat tiedot
         nyt-vuosi (pvm/vuosi (pvm/nyt))
         hoitovuosi-kesken? (pvm/valissa? (pvm/nyt) (pvm/hoitokauden-alkupvm valittu-hoitovuosi) (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi)))
@@ -264,7 +264,6 @@
                                                                                       :loppupvm (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi))})
         hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first hjpalkkio))
 
-        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
         hoitovuoden-lopun-indeksikorjattu-tavoitehinta (maarita-hv-lopun-indeksikorjattu-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
@@ -322,6 +321,7 @@
 (defn hae-valikatselmuksen-tiedot-hoitovuodelle [db kayttaja {:keys [urakkaid hoitovuosi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakkaid))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakkaid}))
         vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
         hoitokauden-alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
@@ -390,8 +390,17 @@
                                        0)
         toteumiin-perustuvat-muutokset-yht (+ rahavarausmuutos-summa tehtava-ja-maaramuutos-summa)
 
+        ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
+        alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid hoitovuosi 8))
+        hoitokauden-indeksikuukaudet (hae-hoitovuoden-indeksiluvut db urakkaid hoitovuosi)
+        ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
+        tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitovuosi})
+        tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
+        oikaistu-tavoitehinta (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
+        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+
         paatokset (hae-paatokset db kayttaja urakkaid hoitovuosi budjettitavoite-vuodelle toteutuneet-pisteet luvatut-pisteet
-                    toteutuneet-kustannukset urakan-parametrit urakan-tiedot tehtava-ja-maaramuutos-summa rahavarausmuutos-summa)
+                    toteutuneet-kustannukset urakan-parametrit urakan-tiedot tehtava-ja-maaramuutos-summa rahavarausmuutos-summa hoitovuoden-lopun-indeksikorjaus-summa)
         ;; Wrapataan paatoksen omien avainten alle, jotta käyttöliittymässä on mahdollista näyttää ne oikein
         paatokset (reduce (fn [v paatos]
                             ;; Täydennä viimeiset pakolliset tiedot
@@ -412,7 +421,8 @@
                               :sanktiot sanktiot
                               :tavoitehintaan-vaikuttavat-arvonvahennykset tavoitehintaan-vaikuttavat-arvonvahennykset
                               :budjettitavoite budjettitavoite-vuodelle
-                              :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht}
+                              :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
+                              :hoitovuoden-lopun-indeksikorjaus-summa hoitovuoden-lopun-indeksikorjaus-summa}
                  :paatokset paatokset
                  :tavoitehinnan-muutokset tavoitehinnan-muutokset
                  :kattohinnan-muutokset kattohinnan-muutokset}]
