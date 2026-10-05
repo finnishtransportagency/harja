@@ -223,7 +223,8 @@
 
           ;; Lisätään mahdolliset puuttuvat kuukaudet UI:n Pistelukujen keskiarvon laskenta listaukseen.
           puuttuvat-kuukaudet (filter #(not (some (fn [kuukausi] (= (:kuukausi kuukausi) (:kuukausi %))) hoitokauden-indeksikuukaudet))
-                                [{:kuukausi (str hoitokauden-alkuvuosi " Lokakuu") :indeksiluku 0}
+                                [{:kuukausi (str hoitokauden-alkuvuosi " Syyskuu") :indeksiluku 0}
+                                 {:kuukausi (str hoitokauden-alkuvuosi " Lokakuu") :indeksiluku 0}
                                  {:kuukausi (str hoitokauden-alkuvuosi " Marraskuu") :indeksiluku 0}
                                  {:kuukausi (str hoitokauden-alkuvuosi " Joulukuu") :indeksiluku 0}
                                  {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Tammikuu") :indeksiluku 0}
@@ -233,8 +234,7 @@
                                  {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Toukokuu") :indeksiluku 0}
                                  {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Kesäkuu") :indeksiluku 0}
                                  {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Heinäkuu") :indeksiluku 0}
-                                 {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Elokuu") :indeksiluku 0}
-                                 {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Syyskuu") :indeksiluku 0}])
+                                 {:kuukausi (str (+ hoitokauden-alkuvuosi 1) " Elokuu") :indeksiluku 0}])
           hv_lopun_tavoitehinta_ennen_indkorj (+ hv_alun_indkorj_tavoitehinta muutosten-summa) ;(+ oikaistu-tavoitehinta taman-vuoden-muutokset-summa)
           ;; Korvataan koneelta saatu päätös tässä valistellulta
           indeksipaatos (-> indeksipaatos
