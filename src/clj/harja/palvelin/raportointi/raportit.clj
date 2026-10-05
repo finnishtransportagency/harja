@@ -47,6 +47,7 @@
   [harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
+  [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu]
   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
   [harja.palvelin.raportointi.raportit.kanavien-toimenpiteet]
@@ -355,13 +356,20 @@
     :kuvaus       "Ylläpidon aikataulu"
     :urakkatyyppi #{:paallystys :tiemerkinta}}
 
-   {:nimi         :vastaanottotarkastusraportti
+   {:nimi         :vastaanottotarkastusraportti-paallystys
     :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
     :konteksti    #{"elinvoimakeskus" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
-    :kuvaus       "Vastaanottotarkastusraportti"
+    :kuvaus       "Vastaanottotarkastusraportti - Päällystys"
     :kuvaus-suuri-konteksti "Päällystysurakoiden yhteenveto"
     :urakkatyyppi #{:paallystys}}
+
+   {:nimi         :vastaanottotarkastusraportti-mhu
+    :parametrit []
+    :konteksti    #{"urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu/suorita
+    :kuvaus       "Vastaanottotarkastusraportti - MHU"
+    :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :vesivaylien-laskutusyhteenveto
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
