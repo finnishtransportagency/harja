@@ -2,7 +2,7 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, normaalimaara, omailmoitettu, maara, sanktio_profiili_rivi, maaritystapa,
+(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, normaalimaara, omailmoitettu, maara, sanktio_profiili_rivi, maaritystapa, laskennan_syote,
  laskutusrajan_ylitys, indeksi, laatupoikkeama, suorasanktio, tehtavaryhma, tehtava, luoja, luotu)
 VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman_kasittelytapa,
         :ryhma :: sanktiolaji, :tyyppi,
@@ -16,7 +16,8 @@ VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman
                       JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
              WHERE s.id = :tyyppi
                AND t.urakka = :urakka)),
-        :vakiofraasi, :normaalimaara, :omailmoitettu, :summa, :sanktio_profiili_rivi, :maaritystapa, :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
+        :vakiofraasi, :normaalimaara, :omailmoitettu, :summa, :sanktio_profiili_rivi, :maaritystapa, :laskennan_syote::JSONB,
+        :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
         :tehtavaryhma, :tehtava, :luoja, NOW());
 
 -- name: paivita-sanktio!
@@ -41,6 +42,7 @@ SET perintapvm           = :perintapvm,
     maara                = :summa,
     sanktio_profiili_rivi = :sanktio_profiili_rivi,
     maaritystapa         = :maaritystapa,
+    laskennan_syote      = :laskennan_syote::JSONB,
     laskutusrajan_ylitys = :laskutusrajan-ylitys,
     indeksi              = :indeksi,
     laatupoikkeama       = :laatupoikkeama,
@@ -71,6 +73,7 @@ SELECT s.id,
        s.maara                            AS summa,
        s.normaalimaara,
        s.omailmoitettu,
+       s.laskennan_syote                  AS "laskennan-syote",
        s.laskutusrajan_ylitys             AS "laskutusrajan-ylitys",
        s.sakkoryhma                       AS laji,
        s.toimenpideinstanssi,
@@ -89,6 +92,7 @@ WHERE laatupoikkeama = :laatupoikkeama
   AND s.poistettu IS NOT TRUE;
 
 -- name: hae-suorasanktion-tiedot
+-- row-fn: muunna-suorasanktion-tiedot
 -- Hae yksittäisen suora sanktion tiedot
 SELECT s.id,
        s.perintapvm,
@@ -98,8 +102,9 @@ SELECT s.id,
        s.maara                AS summa,
        s.normaalimaara,
        s.omailmoitettu,
-      s.sanktio_profiili_rivi,
-      s.maaritystapa,
+       s.sanktio_profiili_rivi,
+       s.maaritystapa,
+       s.laskennan_syote      AS "laskennan-syote",
        s.laskutusrajan_ylitys AS "laskutusrajan-ylitys",
        s.sakkoryhma           AS laji,
        s.suorasanktio,
@@ -138,6 +143,7 @@ SELECT s.id,
        s.maara                                      AS summa,
        s.normaalimaara,
        s.omailmoitettu,
+       s.laskennan_syote                            AS "laskennan-syote",
        s.laskutusrajan_ylitys                       AS "laskutusrajan-ylitys",
        s.sakkoryhma::text                           AS laji,
        s.indeksi,
