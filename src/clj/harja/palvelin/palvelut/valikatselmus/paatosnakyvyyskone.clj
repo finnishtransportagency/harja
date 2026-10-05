@@ -197,7 +197,7 @@
 
                     (and validoinnit-kaytossa? (:muutosten_hallinta urakan-parametrit)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
-                    (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
+                    (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
                     (and validoinnit-kaytossa? (not (seq hoitokauden-indeksikuukaudet)))
                     (conj "Hoitokauden indekseissä puutteita.")
@@ -277,7 +277,7 @@
 
                     (and validoinnit-kaytossa? (:muutosten_hallinta urakan-parametrit)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
-                    (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
+                    (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
                     (and validoinnit-kaytossa? (<= 2024 kuluva-hoitovuosi) (not tavoitehinta-vahvistettu?))
                     (conj "Kustannussuunnitelma on vahvistamatta.")
@@ -353,7 +353,7 @@
 
                     (and validoinnit-kaytossa? (:muutosten_hallinta urakan-parametrit)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
-                    (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
+                    (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
                     (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
@@ -422,7 +422,7 @@
 
                     (and validoinnit-kaytossa? (:muutosten_hallinta urakan-parametrit)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
-                    (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
+                    (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
                     (and validoinnit-kaytossa? (>= urakan-alkuvuosi 2021) (<= 2024 kuluva-hoitovuosi)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Hoitovuoden lopun tavoite- ja kattohinta")))
@@ -484,7 +484,7 @@
     (let [virheet (cond-> []
                     (and validoinnit-kaytossa? (:muutosten_hallinta urakan-parametrit)
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan pysyvät muutokset")))
-                    (conj "Tavoitehinnan pysyvät muutokset -päätös on vielä tekemättä.")
+                    (conj "Tavoitehinnan muutokset -päätös on vielä tekemättä.")
 
                     (and validoinnit-kaytossa? (false? (:muutosten_hallinta urakan-parametrit))
                       (not (apurit/paatos-tallennettu-tietokantaan? tietokanta-paatokset "Tavoitehinnan muutokset")))
