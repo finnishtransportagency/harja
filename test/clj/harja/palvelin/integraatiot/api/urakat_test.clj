@@ -34,6 +34,18 @@
 (defn- poista-paallytyspalvelusopimus [urakkanro]
   (u (str "DELETE FROM paallystyspalvelusopimus WHERE paallystyspalvelusopimusnro = '" urakkanro "';")))
 
+(defn- muuta-paallystyspalvelusopimukseksi-ja-voimassaolevaksi [urakkanro]
+  (u (str "UPDATE urakka
+              SET sopimustyyppi = 'palvelusopimus'::sopimustyyppi,
+                  loppupvm = CURRENT_DATE + INTERVAL '1 day'
+            WHERE urakkanro = '" urakkanro "';")))
+
+(defn- palauta-paallystyspalvelusopimuksen-tyyppi-ja-loppupvm [urakkanro loppupvm]
+  (u (str "UPDATE urakka
+              SET sopimustyyppi = NULL,
+                  loppupvm = '" loppupvm "'::DATE
+            WHERE urakkanro = '" urakkanro "';")))
+
 (deftest hae-jarjestelmakayttajan-urakat
   (let [_ (anna-lukuoikeus "yit-rakennus")
         vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/"] "yit-rakennus" portti)
@@ -140,23 +152,28 @@
             (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body))))))
 
   (testing "Urakkatyyppi: paallystys (sopimustyyppi = palvelusopimus)"
-    ;; Lisätään väliaikainen päällystyspalvelusopimus Porvoon päällystysurakalle (testisopimuksen geometria on Kouvolassa)
-    (lisaa-paallystyspalvelusopimus "por1")
+    ;; Lisätään väliaikainen päällystyspalvelusopimus alkuperäiselle testidatan urakalle.
+    ;; Urakka on voinut päättyä testin ajankohtaan mennessä, joten sen voimassaolo päivitetään tilapäisesti.
+    (let [urakkanro "por1"
+          alkuperainen-loppupvm (ffirst (q (str "SELECT loppupvm FROM urakka WHERE urakkanro = '" urakkanro "'")))]
+      (muuta-paallystyspalvelusopimukseksi-ja-voimassaolevaksi urakkanro)
+      (lisaa-paallystyspalvelusopimus urakkanro)
 
-    (let [urakkatyyppi "paallystys"
-          _ (anna-lukuoikeus (:kayttajanimi +kayttaja-paakayttaja-skanska+))
-          vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
-                    {"urakkatyyppi" urakkatyyppi
-                     ;; Kouvolan seutu (EPSG:3067)
-                     "x" 485685.087 "y" 6752597.811}
-                    portti)
-          enkoodattu-body (cheshire/decode (:body vastaus) true)]
-      (is (= 200 (:status vastaus)))
-      (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
-      (is (= "UUD Raasepori  MHU 2021- 2026, P" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi]))))
+      (let [urakkatyyppi "paallystys"
+            _ (anna-lukuoikeus (:kayttajanimi +kayttaja-paakayttaja-skanska+))
+            vastaus (api-tyokalut/get-kutsu ["/api/urakat/haku/sijainnilla"] (:kayttajanimi +kayttaja-paakayttaja-skanska+)
+                      {"urakkatyyppi" urakkatyyppi
+                       ;; Kouvolan seutu (EPSG:3067)
+                       "x" 485685.087 "y" 6752597.811}
+                      portti)
+            enkoodattu-body (cheshire/decode (:body vastaus) true)]
+        (is (= 200 (:status vastaus)))
+        (is (= 1 (count (map #(get-in % [:urakka :tiedot :nimi]) (:urakat enkoodattu-body)))))
+        (is (= "Porvoon päällystysurakka" (get-in (first (:urakat enkoodattu-body)) [:urakka :tiedot :nimi]))))
 
-    ;; Poistetaan väliaikainen päällystyspalvelusopimus
-    (poista-paallytyspalvelusopimus "por1"))
+      ;; Poistetaan väliaikainen päällystyspalvelusopimus ja palautetaan alkuperäinen urakka.
+      (poista-paallytyspalvelusopimus urakkanro)
+      (palauta-paallystyspalvelusopimuksen-tyyppi-ja-loppupvm urakkanro alkuperainen-loppupvm)))
 
     (testing "Urakkatyyppi: valaistus liikennepäivystjäjäoikeuksilla"
       (let [urakkatyyppi "valaistus"
