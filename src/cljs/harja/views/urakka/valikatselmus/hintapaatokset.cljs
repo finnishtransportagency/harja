@@ -195,7 +195,8 @@
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
          ;; Päätöksenteko napit
-         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken?
+          (and voi-muokata? (not (:virheet paatos)))
           ;; Vahvista
           #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
           ;; Peru päätös
