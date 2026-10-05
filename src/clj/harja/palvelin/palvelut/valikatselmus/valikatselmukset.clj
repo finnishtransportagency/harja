@@ -189,16 +189,21 @@
                                                      hintamuutos-oikaisut-summa taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
                                                      hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia hoitovuoden-lopun-indeksikorjaus-summa
                                                      urakan-parametrit]
-  (let [ ;; Lasketaan kattohinta -- Etsitään ensin indeksikorjauspäätös
-        indeksikorjauspaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset))
-        hintamuutos (laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan urakan-alkuvuosi kuluva-hoitovuosi hintamuutos-oikaisut-summa taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
-        hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
-       laskennallinen-hoitovuoden-lopun-kattohinta
-        (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
-          (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-          (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-          (* hintamuutos-oikaisut-summa (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
-    laskennallinen-hoitovuoden-lopun-kattohinta))
+  ;; -21 vuodesta eteenpäin käytössä on laskennalliset kattohinnat. Sitä ennen kattohinta on voitu syöttää jopa käsin tietokantaan.
+  (if (>= urakan-alkuvuosi 2021)
+    (let [;; Lasketaan kattohinta -- Etsitään ensin indeksikorjauspäätös
+          indeksikorjauspaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset))
+          hintamuutos (laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan urakan-alkuvuosi kuluva-hoitovuosi hintamuutos-oikaisut-summa taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
+          hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
+          laskennallinen-hoitovuoden-lopun-kattohinta
+          (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
+            (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa)
+              ;; Default kerroin on 1.1, jos urakan-parametreissa ei ole määritelty kerrointa
+              (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 1.1))
+            (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+            (* hintamuutos-oikaisut-summa (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
+      laskennallinen-hoitovuoden-lopun-kattohinta)
+    hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia))
 
 (defn hae-paatokset [db kayttaja urakkaid valittu-hoitovuosi budjettitavoite-vuodelle
                      toteutuneet-pisteet luvatut-pisteet toteutuneet-kustannukset urakan-parametrit urakan-tiedot

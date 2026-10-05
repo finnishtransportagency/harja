@@ -368,7 +368,7 @@
                                  (- kustannukset hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
                                  ;; Kustannukset on suurempi kuin kattohointa
-                                 (and  (> kustannukset lopullinen-hoitovuoden-lopun-kattohinta))
+                                 (and kustannukset lopullinen-hoitovuoden-lopun-kattohinta (> kustannukset lopullinen-hoitovuoden-lopun-kattohinta))
                                  (- lopullinen-hoitovuoden-lopun-kattohinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
                                  ;;Toivotaan, että tänne ei mennä koskaan.
@@ -436,6 +436,7 @@
                     (conj "Tavoitehinnan ylitys -päätös on vielä tekemättä."))
 
           kattohinnan-ylityspaatos (first (filter #(= (:nimi %) "Kattohinnan ylitys") paatokset))
+          lopullinen-hoitovuoden-lopun-kattohinta (or lopullinen-hoitovuoden-lopun-kattohinta 0)
           ylityksen-maara (- (or kustannukset 0) lopullinen-hoitovuoden-lopun-kattohinta)
           viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
           siirtorajoitus-prosentti (:kattohintaylityksen_siirron_prosenttirajoitus urakan-parametrit)
@@ -633,7 +634,8 @@
   merkitsee, että ne kuuluvat samaan luokkaan (lupauksiin) ja näin ollen niitä tarvitaan vain yksi."
   [paatokset toteutuneet-kustannukset hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta]
   (let [;; Jos toteuma ei ylitä kattohintaa, niin poistetaan kattohintapäätös
-        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-kattohinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-kattohinta))
+        paatokset (if (or (nil? toteutuneet-kustannukset) (nil? hoitovuoden-lopun-kattohinta)
+                        (nil? hoitovuoden-lopun-tavoitehinta) (<= toteutuneet-kustannukset hoitovuoden-lopun-kattohinta))
                     (remove (fn [rivi] (= (:nimi rivi) "Kattohinnan ylitys")) paatokset)
                     paatokset)
 

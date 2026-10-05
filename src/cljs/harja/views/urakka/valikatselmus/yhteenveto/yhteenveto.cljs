@@ -158,11 +158,6 @@
 
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
         ;; Lasketaan siis tavoitehinnan ylitys ja alitus olemassa olevista luvuista.
-        _ (js/console.log "toteuma-yht" toteuma-yht)
-        _ (js/console.log "hoitovuoden-lopun-tavoitehinta" hoitovuoden-lopun-tavoitehinta)
-        _ (js/console.log "hoitovuoden-lopun-kattohinta" hoitovuoden-lopun-kattohinta)
-        _ (js/console.log "(luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara)" (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara))
-
         tavoitehinnan-ylitys (cond
                                ;; Ei ole päätöstä, mutta toteuma on suurempi kuin tavoitehinta ja pienempi kuin kattohinta
                                (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta) (<= toteuma-yht hoitovuoden-lopun-kattohinta))
