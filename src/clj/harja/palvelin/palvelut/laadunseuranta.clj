@@ -19,6 +19,7 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
+            [cheshire.core :as cheshire]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
 
@@ -44,6 +45,7 @@
             [harja.domain.urakka :as domain-urakka]
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
@@ -257,7 +259,7 @@
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava
-                   omailmoitettu] :as sanktio}
+                   omailmoitettu laskettava-syote] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
@@ -292,7 +294,10 @@
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
         profiilin-summamaaritykset (:profiilirivi profiilirivi)
-        maaritystapa (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa)
+        laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys profiilin-summamaaritykset)
+        maaritystapa (if laskettu-maaritys
+                       :laskettu
+                       (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa))
         profiilin-manuaalinen-viitemaara
         (when (= :manuaalinen maaritystapa)
           (some (fn [{:keys [summa-euroina]}]
@@ -303,7 +308,9 @@
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
-        tilannekuvan-maaritystapa (some-> olemassa-oleva-sanktio :maaritystapa keyword)
+        tilannekuvan-maaritystapa (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
+                                    ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
+                                    (when-not (= :laskettu tallennettu) tallennettu))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
                             (if (= :C laji)
@@ -313,29 +320,53 @@
         _ (when-not (boolean? omailmoitettu)
             (throw (IllegalArgumentException.
                      "Omailmoitusvalinnan pitää olla totuusarvo.")))
+        _ (when (and laskettu-maaritys omailmoitettu)
+            (throw (IllegalArgumentException.
+                     "Omailmoituspuolitus ei ole sallittu lasketulle sanktiolle.")))
         _ (when (and omailmoitettu
                   (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
             (throw (IllegalArgumentException.
                      "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
-        normaalimaara (if (and tilannekuvan-automaattinen-maara?
-                            (number? (:normaalimaara olemassa-oleva-sanktio))
-                            (pos? (:normaalimaara olemassa-oleva-sanktio))
-                            (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
-                        (:normaalimaara olemassa-oleva-sanktio)
-                        (if (= :manuaalinen maaritystapa)
-                          (or profiilin-manuaalinen-viitemaara manuaalinen-maara)
-                          (if kiintea-automaattinen-summa?
-                            (if (and (number? automaattinen-summa-raakana)
-                                  (pos? automaattinen-summa-raakana)
-                                  (Double/isFinite (double automaattinen-summa-raakana)))
-                              (double automaattinen-summa-raakana)
-                              (throw (IllegalArgumentException.
-                                       (str "Sanktiolajin " (name laji)
-                                         " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
-                            pyynto-summa)))
-        summa (if (= :manuaalinen maaritystapa)
-                manuaalinen-maara
-                (if omailmoitettu (/ normaalimaara 2) normaalimaara))
+        ;; Palvelin laskee summan itse; pyynnön summa, normaalimäärä ja laskennan syöte ohitetaan.
+        ;; Muuttumattomalla raakasyötteellä vanha tapahtuma säilyttää tallennetun snapshotin ja määrät,
+        ;; jottei profiilin parametrien myöhempi muutos muuta sitä. Snapshotin laskentatavan ja
+        ;; syöteavaimen pitää silti vastata nykyistä määritystä, jottei toisen lajin laskenta säily.
+        vanha-laskenta (when (and laskettu-maaritys
+                               (= "laskettu" (:maaritystapa olemassa-oleva-sanktio))
+                               (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                                 (:laskennan-syote olemassa-oleva-sanktio) laskettu-maaritys)
+                               (sanktion-laskenta/syote-vastaa-snapshotia?
+                                 (:laskennan-syote olemassa-oleva-sanktio) laskettava-syote)
+                               (number? (:normaalimaara olemassa-oleva-sanktio))
+                               (number? (:summa olemassa-oleva-sanktio)))
+                         {:summa (:normaalimaara olemassa-oleva-sanktio)
+                          :laskennan-syote (:laskennan-syote olemassa-oleva-sanktio)})
+        laskenta (when laskettu-maaritys
+                   (or vanha-laskenta
+                     (sanktion-laskenta/laske-sanktion-summa laskettu-maaritys laskettava-syote)))
+        normaalimaara (if laskenta
+                        (:summa laskenta)
+                        (if (and tilannekuvan-automaattinen-maara?
+                              (number? (:normaalimaara olemassa-oleva-sanktio))
+                              (pos? (:normaalimaara olemassa-oleva-sanktio))
+                              (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
+                          (:normaalimaara olemassa-oleva-sanktio)
+                          (if (= :manuaalinen maaritystapa)
+                            (or profiilin-manuaalinen-viitemaara manuaalinen-maara)
+                            (if kiintea-automaattinen-summa?
+                              (if (and (number? automaattinen-summa-raakana)
+                                    (pos? automaattinen-summa-raakana)
+                                    (Double/isFinite (double automaattinen-summa-raakana)))
+                                (double automaattinen-summa-raakana)
+                                (throw (IllegalArgumentException.
+                                         (str "Sanktiolajin " (name laji)
+                                           " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
+                              pyynto-summa))))
+        summa (cond
+                (= :manuaalinen maaritystapa) manuaalinen-maara
+                vanha-laskenta (:summa olemassa-oleva-sanktio)
+                omailmoitettu (/ normaalimaara 2)
+                :else normaalimaara)
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -356,7 +387,8 @@
                 :omailmoitettu omailmoitettu
                 :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
                                          (get-in profiilirivi [:profiilirivi :id]))
-                :maaritystapa (some-> (or tilannekuvan-maaritystapa maaritystapa) name)
+                :maaritystapa (some-> (if laskenta :laskettu (or tilannekuvan-maaritystapa maaritystapa)) name)
+                :laskennan_syote (some-> laskenta :laskennan-syote cheshire/generate-string)
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)
                            (- (absoluuttinen-maara summa))
