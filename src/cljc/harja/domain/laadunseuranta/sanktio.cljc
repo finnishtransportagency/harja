@@ -1,3 +1,6 @@
+;; DEPRECATED: Tämä tiedosto on deprecated. Älä enää käytä uusissa ominaisuuksissa.
+;; Käytä sanktio_profiili- ja bonus_profiili-tauluja suoraan.
+
 (ns harja.domain.laadunseuranta.sanktio
   (:require [harja.pvm :as pvm]
             [harja.domain.urakka :as urakka-domain]))
@@ -345,10 +348,10 @@
     (arvonvahennys? rivi) :arvonvahennykset
     (sanktio? rivi) :sanktiot))
 
-(defn arvonvahennykset-kaytossa?
+(defn arvonvahennykset-vaikuttaa-tavoitehintaan?
   "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
   [valittu-urakka kuluva-hoitokausi]
-  (let [mhu25? (and (= :teiden-hoito (:tyyppi valittu-urakka))
+  (let [mhu25? (and (or (= :teiden-hoito (:tyyppi valittu-urakka)) (= "teiden-hoito" (:tyyppi valittu-urakka)))
                  (>= (pvm/vuosi (:alkupvm valittu-urakka)) 2025))
         kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
     (if (or mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) true false)))

@@ -31,7 +31,6 @@
   [harja.palvelin.raportointi.raportit.laatupoikkeama]
   [harja.palvelin.raportointi.raportit.siltatarkastus]
   [harja.palvelin.raportointi.raportit.sanktio]
-  [harja.palvelin.raportointi.raportit.sanktioraportti-yllapito]
   [harja.palvelin.raportointi.raportit.soratietarkastus]
   [harja.palvelin.raportointi.raportit.valitavoiteraportti]
   [harja.palvelin.raportointi.raportit.ymparisto]
@@ -48,6 +47,7 @@
   [harja.palvelin.raportointi.raportit.kanavien-hairiotilanteet]
   [harja.palvelin.raportointi.raportit.yllapidon-aikataulu]
   [harja.palvelin.raportointi.raportit.vastaanottotarkastus]
+  [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu]
   [harja.palvelin.raportointi.raportit.kanavien-muutos-ja-lisatyot]
   [harja.palvelin.raportointi.raportit.kanavien-liikennetapahtumat]
   [harja.palvelin.raportointi.raportit.kanavien-toimenpiteet]
@@ -57,6 +57,7 @@
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto]
   [harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu]
   [harja.palvelin.raportointi.raportit.tiemerkinta-kustannukset]
+  [harja.palvelin.raportointi.raportit.valikatselmusraportti]
   [harja.domain.urakka :as urakka-domain]
   [clojure.set :as set]))
 
@@ -67,13 +68,6 @@
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :kuvaus       "Ilmoitukset"
     :suorita      #'harja.palvelin.raportointi.raportit.ilmoitukset/suorita}
-
-   {:nimi         :sanktioraportti-yllapito
-    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
-    :konteksti    #{"elinvoimakeskus" "koko maa" "urakka" "hankinta-alue"}
-    :kuvaus       "Sakko- ja bonusraportti"
-    :suorita      #'harja.palvelin.raportointi.raportit.sanktioraportti-yllapito/suorita
-    :urakkatyyppi #{:paallystys :paikkaus :tiemerkinta}}
 
    {:nimi         :soratietarkastusraportti
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}
@@ -139,9 +133,10 @@
     :kuvaus-tarkenne "Sanktiot, bonukset ja arvonvähennykset"
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
     :konteksti    #{"elinvoimakeskus" "koko maa" "urakka" "hankinta-alue"}
+    :html-kontekstit #{"urakka"}
     :kuvaus       "Sanktioiden yhteenveto"
     :suorita      #'harja.palvelin.raportointi.raportit.sanktio/suorita
-    :urakkatyyppi #{:hoito :teiden-hoito}}
+    :urakkatyyppi #{:hoito :teiden-hoito :paallystys :paikkaus :tiemerkinta}}
 
    {:nimi         :kelitarkastusraportti
     :parametrit   [{:tyyppi "tienumero", :konteksti nil, :pakollinen false, :nimi "Tienumero"}
@@ -361,13 +356,20 @@
     :kuvaus       "Ylläpidon aikataulu"
     :urakkatyyppi #{:paallystys :tiemerkinta}}
 
-   {:nimi         :vastaanottotarkastusraportti
+   {:nimi         :vastaanottotarkastusraportti-paallystys
     :parametrit   [{:tyyppi "urakan-vuosi", :konteksti nil, :pakollinen true, :nimi "Vuosi"}]
     :konteksti    #{"elinvoimakeskus" "koko maa" "urakka"}
     :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus/suorita
-    :kuvaus       "Vastaanottotarkastusraportti"
+    :kuvaus       "Vastaanottotarkastusraportti - Päällystys"
     :kuvaus-suuri-konteksti "Päällystysurakoiden yhteenveto"
     :urakkatyyppi #{:paallystys}}
+
+   {:nimi         :vastaanottotarkastusraportti-mhu
+    :parametrit []
+    :konteksti    #{"urakka"}
+    :suorita      #'harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu/suorita
+    :kuvaus       "Vastaanottotarkastusraportti - MHU"
+    :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :vesivaylien-laskutusyhteenveto
     :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
@@ -448,6 +450,14 @@
     :suorita      #'harja.palvelin.raportointi.raportit.paikkausten-yhteenveto-mhu/suorita
     :kuvaus-tarkenne "Paikkausten yhteenveto MHU"
     :kuvaus       "MHUPaikkaustenyhteenveto"
+    :urakkatyyppi #{:teiden-hoito}}
+
+   {:nimi         :valikatselmusraportti
+    :parametrit   [{:tyyppi "aikavali", :konteksti nil, :pakollinen true, :nimi "Aikaväli"}]
+    :konteksti    #{"urakka"}
+    :kuvaus       "Välikatselmus"
+    :vain-pdfraportti? true
+    :suorita      #'harja.palvelin.raportointi.raportit.valikatselmusraportti/suorita
     :urakkatyyppi #{:teiden-hoito}}
 
    {:nimi         :ppu-paikkausten-yhteenveto

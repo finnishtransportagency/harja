@@ -15,7 +15,7 @@
             [harja.pvm :as pvm]
             [harja.ui.dom :as dom]
             [harja.ui.grid :as grid]
-            [harja.loki :refer [log]]
+            [harja.loki :refer [log warn error]]
             [harja.tiedot.urakka :as u]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.kentat :as kentat]
@@ -33,6 +33,36 @@
     (if (raportti-domain/raporttielementti? elementti)
       (first elementti)
       :vain-arvo)))
+
+(defn- validoi-raporttielementti! [indeksi elementti]
+  (if (and (vector? elementti)
+        (not (keyword? (first elementti))))
+    (do
+      (warn
+        (str "Raportin sisältöelementti ei ole raporttielementti indeksissä " indeksi
+          ". Odotettiin avainsanalla alkavaa vektoria, saatiin: " (pr-str elementti)
+          ". Elementti ohitetaan. Tarkista, ettei raporttirungossa ole ylimääräistä vektoria, "
+          "esimerkiksi [[[:taulukko ...]]]."))
+      nil)
+    elementti))
+
+(defn- avaimellinen-html [html avain]
+  (cond
+    (vector? html) (with-meta html (assoc (meta html) :key avain))
+    (seq? html) (map-indexed
+                  (fn [indeksi elementti]
+                    (avaimellinen-html elementti (str avain "-" indeksi)))
+                  html)
+    :else html))
+
+(defn- muodosta-raporttielementti [elementti avain]
+  (avaimellinen-html (muodosta-html elementti) avain))
+
+(defn- muodosta-avaimellinen-html [indeksi avain elementti]
+  (let [elementti (validoi-raporttielementti! indeksi elementti)]
+    (when (some? elementti)
+      (with-meta [muodosta-raporttielementti elementti avain]
+        {:key avain}))))
 
 (defmethod muodosta-html :vain-arvo [arvo] arvo)
 
@@ -168,6 +198,7 @@
             sivuttain-rullattava? ensimmainen-sarake-sticky?
             esta-tiivis-grid? avattavat-rivit
             ei-footer-muokkauspaneelia?
+            piilota-otsikot?
             sarakkeet data]
   (let [oikealle-tasattavat-kentat (or oikealle-tasattavat-kentat #{})]
     [grid/grid {:otsikko (or otsikko "")
@@ -183,6 +214,7 @@
                 :ensimmainen-sarake-sticky? ensimmainen-sarake-sticky?
                 :esta-tiivis-grid? esta-tiivis-grid?
                 :piilota-border? piilota-border?
+                :piilota-otsikot? piilota-otsikot?
                 :raportin-tunniste raportin-tunniste
                 :ei-footer-muokkauspaneelia? ei-footer-muokkauspaneelia?
                 :gridin-luokka gridin-luokka}
@@ -257,6 +289,7 @@
                                   korosta? (:korosta? optiot)
                                   korosta-hennosti? (:korosta-hennosti? optiot)
                                   korosta-harmaa? (:korosta-harmaa? optiot)
+                                  himmennetty? (:himmennetty? optiot)
                                   valkoinen? (:valkoinen? optiot)
                                   rivin-luokka (:rivin-luokka optiot)
                                   mappina (assoc
@@ -275,6 +308,9 @@
                                 korosta-harmaa?
                                 (assoc :korosta-harmaa true)
 
+                                himmennetty?
+                                (assoc :himmennetty true)
+
                                 valkoinen?
                                 (assoc :valkoinen true)
 
@@ -292,6 +328,7 @@
            data)))]))
 
 (defmethod muodosta-html :taulukko [[_ {:keys [otsikko
+                                               leveysprosentti
                                                gridin-luokka
                                                viimeinen-rivi-yhteenveto?
                                                rivi-ennen
@@ -301,18 +338,23 @@
                                                korosta-rivit korostustyyli
                                                oikealle-tasattavat-kentat vetolaatikot esta-tiivis-grid?
                                                avattavat-rivit sivuttain-rullattava? ensimmainen-sarake-sticky?
-                                               ei-footer-muokkauspaneelia?]}
+                                               ei-footer-muokkauspaneelia? piilota-otsikot?]}
                                      sarakkeet data]]
-  [grid otsikko gridin-luokka
-   viimeinen-rivi-yhteenveto?
-   rivi-ennen piilota-border?
-   raportin-tunniste tyhja
-   korosta-rivit korostustyyli
-   oikealle-tasattavat-kentat vetolaatikot
-   esta-tiivis-grid? avattavat-rivit
-   sivuttain-rullattava? ensimmainen-sarake-sticky?
-   ei-footer-muokkauspaneelia?
-   sarakkeet data])
+  (let [taulukko [grid otsikko gridin-luokka
+                  viimeinen-rivi-yhteenveto?
+                  rivi-ennen piilota-border?
+                  raportin-tunniste tyhja
+                  korosta-rivit korostustyyli
+                  oikealle-tasattavat-kentat vetolaatikot
+                  esta-tiivis-grid? avattavat-rivit
+                  sivuttain-rullattava? ensimmainen-sarake-sticky?
+                  ei-footer-muokkauspaneelia?
+                  piilota-otsikot?
+                  sarakkeet data]]
+    (if leveysprosentti
+      [:div {:style {:width (str leveysprosentti "%")}}
+       taulukko]
+      taulukko)))
 
 (defmethod muodosta-html :otsikko-title [[_ teksti]]
   [:h1.raportti-otsikko teksti])
@@ -341,8 +383,9 @@
 (defmethod muodosta-html :otsikko-kuin-pylvaissa [[_ teksti]]
   [:h3.raportti-otsikko teksti])
 
-(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali leveysprosentti]}]]
-  [:div {:style (merge
+(defmethod muodosta-html :teksti [[_ teksti {:keys [vari infopallura rivita? alamarginaali leveysprosentti luokka]}]]
+  [:div {:class luokka
+         :style (merge
                   {:color (when vari vari)}
                   (when leveysprosentti {:width (str leveysprosentti "%")})
                   (when rivita? {:white-space "pre-line"})
@@ -422,8 +465,12 @@
              ;; Kontentti
              [:div.flex-row
               (cond-> {} (:lihavoi? rivi) (assoc :style {:font-weight "bold"}))
-              [:div (:avain rivi)]
-              [:div.tasaa-oikealle
+              [:div {:class (str "sininen-laatikko-rivi-label"
+                              (when (:sisennetty? rivi) " sininen-laatikko-sisennetty"))}
+               (when (:luettelomerkki? rivi)
+                 [:span.sininen-laatikko-luettelomerkki "•"])
+               (:avain rivi)]
+              [:div.sininen-laatikko-rivi-arvo.tasaa-oikealle
                (if (= :raha (:fmt rivi)) (fmt/euro-opt (:arvo rivi)) (:arvo rivi))]]])
           data)))))
 
@@ -476,8 +523,8 @@
     [:div.display-flex.display-container]
     (map-indexed
       (fn [i d]
-        ^{:key (str "display-flex-" i)}
-        [muodosta-html d])
+        (let [avain (str "display-flex-" i)]
+          (muodosta-avaimellinen-html i avain d)))
       data)))
 
 (defmethod muodosta-html :yhteenveto [[_ otsikot-ja-arvot]]
@@ -507,8 +554,7 @@
 
    (keep-indexed (fn [i elementti]
                    (when elementti
-                     ^{:key i}
-                     [muodosta-html elementti]))
+                     (muodosta-avaimellinen-html i i elementti)))
      (mapcat (fn [sisalto]
                (if (list? sisalto)
                  sisalto
@@ -527,5 +573,9 @@
                            :arvo arvo})])
 
 (defmethod muodosta-html :default [elementti]
-  (log "HTML-raportti ei tue elementtiä: " elementti)
-  nil)
+  (let [kuvaus (pr-str elementti)
+        kuvaus (subs kuvaus 0 (min 200 (count kuvaus)))]
+    (error "HTML-raportti ei tue elementtiä:" kuvaus)
+    ;; Näkyvä merkki, ettei tuettu elementti kadota raportilta äänettömästi
+    [:div {:style {:color "#dd0000" :border "1px solid #dd0000" :margin "0.5rem 0" :padding "0.5rem" :font-family "monospace" :font-size "12px"}}
+     (str "Virhe: HTML-raportti ei tue elementtiä: " kuvaus)]))

@@ -10,7 +10,8 @@
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus.sql")
 
-(declare pkluokkien-yotyot-hallintayksikoittain)
+(declare pkluokkien-yotyot-hallintayksikoittain hae-muut-kustannukset hae-yllapitokohteet
+  hae-yllapitourakan-sanktiot pkluokkien-kustannukset-urakoittain)
 
 (defn yllapitokohteet-taulukko [yllapitokohteet taulukkotyyppi vuosi urakka-tai-hallintayksikko?]
   (let [nimi (case taulukkotyyppi

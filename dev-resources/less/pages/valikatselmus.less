@@ -239,13 +239,15 @@
 }
 
 /* Välikatselmussivun yhteenvetolaatikko */
+div.valikatselmus-yhteenveto-wrapper {
+  max-width: 532px;
+}
 div.valikatselmus-yhteenveto {
   
   &.osio {
     margin-bottom: @valistys-16;
   }
 
-  max-width: 532px;
   border: 1px solid @harmaa-vaalea;
   border-radius: 0.5rem;
   padding: @valistys-24;
@@ -681,6 +683,11 @@ div.valikatselmus-yhteenveto {
     font-size: 0.875rem;
     padding: @valistys-8 @valistys-12;
     border-color: @black-lighter;
+
+    
+    &.input-error-default {
+      border-color: @red-default;
+    }
   }
   label {
     display: block;

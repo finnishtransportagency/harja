@@ -200,7 +200,8 @@
     (hoitoluokat/talvihoitoluokan-nimi luokka)
     (hoitoluokat/soratieluokan-nimi luokka)))
 
-(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa? nayta-suunnittelu? urakkanumero?] :as taulukon-tiedot}]
+(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa?
+                               nayta-suunnittelu? urakkanumero?] :as taulukon-tiedot} kasittelija]
   (let [isantarivi-indeksi (atom -1)
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
@@ -345,7 +346,15 @@
                              [(str (:nimi urakka) (when urakkanumero? (str " (" (:nro urakka) ")")))])
 
                            ;; Materiaalin nimi
-                           [[:arvo-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))]]
+                           (let [nimi-ja-selite (materiaalin-nimi-ja-selite (:nimi materiaali))
+                                 lisaa-yksikko? (and
+                                                  (= kasittelija :excel)
+                                                  (:yksikko materiaali)
+                                                  (not (:yht-rivi materiaali)))]
+                             [[:arvo-ja-selite
+                               (cond-> nimi-ja-selite
+                                 lisaa-yksikko?
+                                 (update :selite #(str % (when % ", ") (:yksikko materiaali))))]])
 
                            ;; Kuukausittaiset määrät, viiva jos tyhjä.
                            (map #(or (kk-arvot %) "–") kuukaudet)
@@ -488,7 +497,7 @@
 
 (defn suorita [db user {:keys [alkupvm loppupvm
                                urakka-id elinvoimakeskus-id
-                               urakoittain? urakkatyyppi urakkanumero? tyomaakokousraportti?] :as parametrit}]
+                               urakoittain? urakkatyyppi urakkanumero? tyomaakokousraportti? kasittelija] :as parametrit}]
   (let [urakoittain? (if urakka-id false urakoittain?)
         ;;tyomaakokousraportissa näytetään aina koko hoitovuoden tiedot, vaikka on kuukausi valittuna
         alkupvm (if tyomaakokousraportti? (first (pvm/paivamaaran-hoitokausi alkupvm)) alkupvm)
@@ -609,26 +618,26 @@
 
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Talvisuolat")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "talvisuola"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "talvisuola"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Formiaatit")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "formiaatti"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "formiaatti"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Kesäsuola")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "kesasuola"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "kesasuola"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Hiekoitushiekka")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "hiekoitushiekka"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "hiekoitushiekka"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Murskeet")
-                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))))
+                        (assoc :osamateriaalit (materiaalit-tyypin-mukaan "murske"))) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Paikkausmateriaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "paikkausmateriaali"))
                         (assoc :yksikot-soluissa? false)
-                        (assoc :nayta-suunnittelu? true)))
+                        (assoc :nayta-suunnittelu? true)) kasittelija)
      (koosta-taulukko (-> taulukon-tiedot
                         (assoc :otsikko "Muut materiaalit")
                         (assoc :osamateriaalit (materiaalit-tyypin-mukaan "muu"))
                         (assoc :yksikot-soluissa? true)
-                        (assoc :nayta-suunnittelu? false)))]))
+                        (assoc :nayta-suunnittelu? false)) kasittelija)]))
