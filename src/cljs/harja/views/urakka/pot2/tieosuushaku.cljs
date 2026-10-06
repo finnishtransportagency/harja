@@ -101,9 +101,12 @@
            (when tieosuuksia-rajattu?
              [yleiset/info-laatikko
               :neutraali
-                (str "Hakutuloksia on yli " pot2-domain/+tieosuushaun-rajoitus+
-                 ", joten näytössä ovat vain ensimmäiset " pot2-domain/+tieosuushaun-rajoitus+
-                 " tieosuutta. Pienennä hakuehtoja nähdäksesi kaikki tulokset.")])
+                (str "Hakutuloksia on yli " (fmt/formatoi-numero-tuhansittain pot2-domain/+tieosuushaun-rajoitus+)
+                 ", joten näytössä ovat vain ensimmäiset " (fmt/formatoi-numero-tuhansittain pot2-domain/+tieosuushaun-rajoitus+)
+                 " tieosuutta. Pienennä hakuehtoja nähdäksesi kaikki tulokset.")
+              nil
+              nil
+              {:luokka "tieosuushaku-infolaatikko"}])
            [tulostaulukko e! tieosuudet voi-lisata?]
            (when (seq kohteen-ulkopuolelle-jatkuvat)
              [yleiset/info-laatikko
