@@ -3,10 +3,11 @@
 ## -> tarkistaa deployment-kohteen ennen buildia
 ## -> buildaa uberjarin ilman AWS-tunnuksia
 ## -> ajaa tietokantamigraatiot rinnakkain buildin kanssa (nopeuttaa prosessia)
-## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa uniikilla build-<run_id>-<run_attempt>-tagilla
-## -> deployaa imagen <test-env> ECS konttiin build-tagilla ja tagaa sen ympäristötagilla (env-tag)
-##    (<env>-<build-mode>-<sha12>-<branch>), jonka perusteella ECR lifecycle säilyttää yhden imagen per ympäristö
-## -> raportoi, jos kanta migroitiin mutta sovellusta ei deployattu
+## -> buildaa imagen testi ECR:rään (erillään prodista), pushaa uniikilla build-tagilla:
+##    build-<build-mode>-<sha12>-<run_id>-<run_attempt>-<branch>
+## -> deployaa imagen <test-env> ECS konttiin build-tagilla ja siirtää pysyvän env-tagin (<env>) sille.
+##    Infran ECR lifecycle policy suojaa env-tagatun imagen ja siivoaa yli 3 pv vanhat suojaamattomat imaget.
+## Jos tulee ongelmia, yleensä riittää ajaa workflow alusta uudestaan kohdeympäristöön..
 ##
 ##  Kuvaus jobien välisistä riippuvuuksista:
 ##   preflight ─┬─ build ── image ─┬─ deploy
@@ -53,7 +54,7 @@ concurrency:
 
 # Aseta least-privilege default permissionit workflowille
 # Job-kohtaiset oikeudet määritellään jobeissa erikseen
-permissions: {}
+permissions: { }
 
 jobs:
 
@@ -136,10 +137,11 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
-  # Image-job buildaa imagen ja pushaa sen uniikilla `build-<run_id>-<run_attempt>`-tagilla.
+  # Image-job pushaa uniikilla `build-<build-mode>-<sha12>-<run_id>-<run_attempt>-<branch>`-tagilla,
+  # esim. build-preview-c4cd6ad7bb12-12343-1-feature-x. Vain branchin nimi katkaistaan tarvittaessa lopusta.
   # Env-tagia ei aseteta vielä tässä, koska migraatio voi olla vielä kesken ja deploy voi epäonnistua.
-  # ECR lifecycle säilyttää env-tagatuista imageista vain uusimman, joten tagataan image env-tagilla vasta deploy-vaiheessa.
-  # Epäonnistuneen ajon build-tagattu image siivotaan pois ECR lifecyclen toimesta erikseen.
+  # Pysyvä env-tag suojaa viimeksi ympäristökohtaista imagea infran ECR lifecycle policyssä.
+  # Ilman env-tagia jääneet imaget siivotaan pois, kun push-ikä ylittää 3 päivää.
   # Image buildataan ja pushataan erillään, koska app build-jobissa ei saa käyttää AWS-tunnuksia (tietoturva).
   image:
     name: "Build and push image for ${{ inputs.environment }}"
@@ -159,9 +161,30 @@ jobs:
 
     # Tagi on uniikki per ajoyritys. Deploy-jobin uudelleenajo käyttää tämän jobin aiempaa outputtia.
     outputs:
-      build_tag: build-${{ github.run_id }}-${{ github.run_attempt }}
+      build-tag: ${{ steps.build-tag.outputs.build-tag }}
 
     steps:
+      # Sanitointi on locale-riippumaton (LC_ALL=C).
+      # Branch on viimeisenä, jotta se on helppo katkaista max pituuden rajoihin (Docker max tag koko on 128 merkkiä).
+      - name: '[Test-envs] Muodosta build-tag'
+        id: build-tag
+        shell: bash
+        env:
+          LC_ALL: C
+          RAW_REF: ${{ github.ref_name }}
+          BUILD_MODE: ${{ inputs.build-mode }}
+          COMMIT_SHA: ${{ github.sha }}
+          RUN_ID: ${{ github.run_id }}
+          RUN_ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          BRANCH=$(printf '%s' "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
+          PREFIX="build-${BUILD_MODE}-${COMMIT_SHA:0:12}-${RUN_ID}-${RUN_ATTEMPT}-"
+          MAX_BRANCH_NAME_LENGTH=$((128 - ${#PREFIX}))
+          BUILD_TAG="${PREFIX}${BRANCH:0:$MAX_BRANCH_NAME_LENGTH}"
+
+          echo "Build-tag: $BUILD_TAG"
+          echo "build-tag=$BUILD_TAG" >> "$GITHUB_OUTPUT"
+
       - name: '[Test-envs] Checkout code'
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -196,7 +219,7 @@ jobs:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
           # Uusi ajoyritys saa oman tagin eikä siirrä edellisen deploymentin imageviittausta.
-          BUILD_TAG: build-${{ github.run_id }}-${{ github.run_attempt }}
+          BUILD_TAG: ${{ steps.build-tag.outputs.build-tag }}
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
         run: |
           docker build --provenance=false \
@@ -299,26 +322,6 @@ jobs:
         with:
           persist-credentials: false
 
-      # Env-tag kertoo ECR:ssä yhdellä silmäyksellä, mitä imagea yksittäinen ympäristö ajaa:
-      #   <env>-<build-mode>-<sha12>-<branch>, esim. test-qa1-preview-c4cd6ad7bb12-feature-x
-      # Ympäristötunniste on aina tagin alussa, koska ECR lifecycle -säännöt suodattavat tagin prefixin perusteella.
-      # Branchin nimi on viimeisenä, jotta ainoastaan se katkaistaan Docker-tagien 128 merkin rajan ylittyessä.
-      - name: '[Test-envs] Resolve env-tag'
-        id: env-tag
-        env:
-          RAW_REF: ${{ github.ref_name }}
-          ENVIRONMENT: ${{ inputs.environment }}
-          BUILD_MODE: ${{ inputs.build-mode }}
-          COMMIT_SHA: ${{ github.sha }}
-        run: |
-          BRANCH=$(printf '%s' "$RAW_REF" | sed 's/[^a-zA-Z0-9]/-/g')
-          PREFIX="${ENVIRONMENT}-${BUILD_MODE}-${COMMIT_SHA:0:12}-"
-          MAX_BRANCH_NAME_LENGTH=$((128 - ${#PREFIX}))
-          ENV_TAG="${PREFIX}${BRANCH:0:$MAX_BRANCH_NAME_LENGTH}"
-
-          echo "Ympäristötagi: $ENV_TAG"
-          echo "env_tag=$ENV_TAG" >> "$GITHUB_OUTPUT"
-
       - name: Assume role with OIDC
         uses: aws-actions/configure-aws-credentials@e1253824e5c10ff9df46874f81ed3ec929e19cfd # v6.3.0
         with:
@@ -352,7 +355,7 @@ jobs:
         with:
           task-definition: harja-task-definition.json
           container-name: ${{ vars.ECS_CONTAINER_NAME }}
-          image: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}:${{ needs.image.outputs.build_tag }}
+          image: ${{ steps.login-ecr.outputs.registry }}/${{ vars.ECR_REPOSITORY_NAME }}:${{ needs.image.outputs.build-tag }}
 
       # Aseta autostop ennen ECS-deployta, jotta valinta säilyy myös käynnistyksen epäonnistuessa.
       - name: '[Test-envs] Configure automatic stop'
@@ -389,14 +392,16 @@ jobs:
           wait-for-service-stability: false
 
       # Env-tagi asetetaan vasta, kun ECS-service on päivitetty uuteen task definitioniin.
-      # ECR Lifecycle säilyttää ympäristön prefixillä vain uusimman imagen, joten aiemmin asetettu tagi
-      # voisi epäonnistuneessa deployssa siivota ympäristössä yhä ajossa olevan imagen.
-      - name: '[Test-envs] Tag deployed image with environment tag'
+      # Pysyvä tagi (<env>, esim. test-qa1) asetetaan imagelle, ja  lifecycle-sääntö suojaa tagin.
+      # Vanhalle imagelle jää build-tag, ellei sillä ole muun ympäristön env-tagia.
+      # Workflown concurrency-limit estää saman ympäristön rinnakkaiset deployt, joten env-tag ei voi siirtyä vahingossa
+      # väärään imageen.
+      - name: '[Test-envs] Siirrä pysyvä env-tag tavoiteimagelle'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}
-          ENV_TAG: ${{ steps.env-tag.outputs.env_tag }}
-          BUILD_TAG: ${{ needs.image.outputs.build_tag }}
+          ENV_TAG: ${{ inputs.environment }}
+          BUILD_TAG: ${{ needs.image.outputs.build-tag }}
         run: |
           docker buildx imagetools create --prefer-index=false \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$ENV_TAG" \
