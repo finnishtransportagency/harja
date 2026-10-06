@@ -1,9 +1,18 @@
 {:main harja.asiakas.main
- :optimizations :none
+ :optimizations :whitespace
  :output-to "resources/public/js/harja.js"
- :output-dir "resources/public/js/out"
- :asset-path "js/out"
- :source-map true
+ :output-dir "resources/public/js/"
+ :asset-path "js/"
+
+ ;; Ota käyttöön, jos on tarve debugata
+ ;;:source-map "resources/public/js/harja.js.map"
+
+ ;; Hiljennä turhat varoitukset
+ :closure-warnings {:non-standard-jsdoc :off}
+
  :closure-output-charset "US-ASCII"
  :recompile-dependents true
- :parallel-build true}
+ :parallel-build true
+
+ ;; frontti kaatuu ilman prefixiä
+ :rename-prefix "h"}
