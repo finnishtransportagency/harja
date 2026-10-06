@@ -330,7 +330,7 @@
         ;; Palvelin laskee summan itse; pyynnön summa, normaalimäärä ja laskennan syöte ohitetaan.
         ;; Muuttumattomalla raakasyötteellä vanha tapahtuma säilyttää tallennetun snapshotin ja määrät,
         ;; jos aktiivisen profiilin parametrit vastaavat snapshotia. Aktiivisen profiilin parametrimismatch
-        ;; aiheuttaa uudelleenlaskennan. Snapshotin laskentatavan ja syöteavaimen pitää myös vastata
+        ;; aiheuttaa uudelleenlaskennan. Snapshotin laskentatavan, version ja syöteavaimen pitää myös vastata
         ;; nykyistä määritystä, jottei toisen lajin laskenta säily.
         vanha-laskenta (when (and laskettu-maaritys
                                (= "laskettu" (:maaritystapa olemassa-oleva-sanktio))

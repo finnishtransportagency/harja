@@ -190,6 +190,7 @@
 
 (def ^:private tiekm-maaritys
   {:maaritystapa :laskettu
+   :laskentaversio 1
    :laskentatapa :tiekm-yksikkohinta
    :laskentaparametrit {:syoteavain "tiekm"
                         :yksikko "tiekm"
@@ -200,6 +201,7 @@
 
 (def ^:private prosenttiosuus-maaritys
   {:maaritystapa :laskettu
+   :laskentaversio 1
    :laskentatapa :prosenttiosuus-syotteesta
    :laskentaparametrit {:syoteavain "laskutuskelvottomana_laskutettu_osuus"
                         :yksikko "€"
@@ -207,6 +209,23 @@
                         :prosentti 20}
    :ohjeteksti nil
    :jarjestys 1})
+
+(deftest laskentaversio-kuuluu-snapshotin-vastaavuuteen
+  (let [maaritys (assoc tiekm-maaritys :laskentaversio 2)
+        snapshot {:laskentaversio 1
+                  :laskentatapa "tiekm_yksikkohinta"
+                  :laskentaparametrit (:laskentaparametrit maaritys)}]
+    (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta? snapshot maaritys)))
+    (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                  (assoc snapshot :laskentaversio nil)
+                  (assoc maaritys :laskentaversio nil)))
+      "Puuttuva laskentaversio ei saa hyväksyä snapshotia yhteensopivaksi")
+    (doseq [virheellinen-versio [0 -1 "1"]]
+      (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                    (assoc snapshot :laskentaversio virheellinen-versio)
+                    (assoc maaritys :laskentaversio virheellinen-versio)))
+        (str "Virheellinen laskentaversio " (pr-str virheellinen-versio)
+          " ei saa hyväksyä snapshotia yhteensopivaksi")))))
 
 (deftest laskettu-summamaaritys-luetaan-vain-rakenteisesta-maarityksesta
   (let [laskettu-tyyppi {:summamaaritykset [tiekm-maaritys]}
@@ -226,6 +245,7 @@
     (is (= {:syoteavain "tiekm"
             :syote 12.5M
             :yksikko "tiekm"
+            :laskentaversio 1
             :laskentatapa "tiekm_yksikkohinta"
             :laskentaparametrit (:laskentaparametrit tiekm-maaritys)}
            (:laskennan-syote tulos))
@@ -246,6 +266,7 @@
   (let [laskennan-syote {:syoteavain "tiekm"
                          :syote 12.5M
                          :yksikko "tiekm"
+                         :laskentaversio 1
                          :laskentatapa "tiekm_yksikkohinta"
                          :laskentaparametrit (:laskentaparametrit tiekm-maaritys)}]
     (is (true? (sanktion-laskenta/syote-vastaa-snapshotia? laskennan-syote 12.50M)))

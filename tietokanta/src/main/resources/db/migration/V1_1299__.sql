@@ -102,3 +102,36 @@ WHERE sprsm.sanktio_profiili_rivi_id = spr.id
   AND sp.nimi = 'teiden-hoito-mhu2026'
   AND sl.koodi = 'laskutus_ilman_laskutuskelpoisuutta'
   AND st.koodi = 0;
+
+ALTER TABLE sanktio_profiili_rivi_summamaaritys
+    ADD COLUMN laskentaversio INTEGER;
+
+UPDATE sanktio_profiili_rivi_summamaaritys
+SET laskentaversio = 1
+WHERE maaritystapa = 'laskettu';
+
+ALTER TABLE sanktio_profiili_rivi_summamaaritys
+    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_laskentaversio_check
+        CHECK (laskentaversio IS NULL OR laskentaversio > 0),
+    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_laskentaversio_sisalto
+        CHECK ((maaritystapa = 'laskettu' AND laskentaversio IS NOT NULL)
+            OR (maaritystapa <> 'laskettu' AND laskentaversio IS NULL));
+
+UPDATE sanktio
+SET laskennan_syote = jsonb_set(laskennan_syote, '{laskentaversio}', '1'::JSONB, true)
+WHERE maaritystapa = 'laskettu'
+  AND laskennan_syote IS NOT NULL
+  AND NOT (laskennan_syote ? 'laskentaversio');
+
+ALTER TABLE sanktio
+    ADD CONSTRAINT sanktio_laskennan_syote_laskentaversio_check
+        CHECK (maaritystapa <> 'laskettu'
+            OR (laskennan_syote ? 'laskentaversio'
+                AND jsonb_typeof(laskennan_syote -> 'laskentaversio') = 'number'
+                AND (laskennan_syote ->> 'laskentaversio') ~ '^[1-9][0-9]*$'
+                AND (length(laskennan_syote ->> 'laskentaversio') < 10
+                    OR (length(laskennan_syote ->> 'laskentaversio') = 10
+                        AND (laskennan_syote ->> 'laskentaversio') <= '2147483647'))));
+
+COMMENT ON COLUMN sanktio_profiili_rivi_summamaaritys.laskentaversio IS
+    'Laskentakaavan semanttinen versio. Eri asia kuin Flyway-migraation versio.';

@@ -103,6 +103,7 @@ SELECT sp.id                    AS profiili_id,
                                                      'summa_euroina', sprsm.summa_euroina,
                                                      'ohjeteksti', sprsm.ohjeteksti,
                                                      'laskentatapa', sprsm.laskentatapa,
+                                                     'laskentaversio', sprsm.laskentaversio,
                                                      'laskentaparametrit', sprsm.laskentaparametrit,
                                                      'jarjestys', sprsm.jarjestys)
                                  ORDER BY sprsm.jarjestys)
@@ -161,6 +162,7 @@ SELECT sp.id                    AS profiili_id,
                                                      'summa_euroina', sprsm.summa_euroina,
                                                      'ohjeteksti', sprsm.ohjeteksti,
                                                      'laskentatapa', sprsm.laskentatapa,
+                                                     'laskentaversio', sprsm.laskentaversio,
                                                      'laskentaparametrit', sprsm.laskentaparametrit,
                                                      'jarjestys', sprsm.jarjestys)
                                  ORDER BY sprsm.jarjestys)

@@ -57,7 +57,7 @@
 
 (defn- vaadi-laskettu-summamaaritys
   "Validoi tietokannasta luetun laskettu-määrityksen muodon ennen sen käyttöä. Heittää virheen kentän nimellä."
-  [{:keys [laskentatapa laskentaparametrit]} raaka-laskentatapa]
+  [{:keys [laskentatapa laskentaversio laskentaparametrit]} raaka-laskentatapa]
   (when-not (contains? sanktion-laskenta/laskentatavat laskentatapa)
     (throw (IllegalStateException.
              (str "Kenttä laskentatapa on virheellinen: odotettu jokin arvoista "
@@ -67,10 +67,14 @@
     (throw (IllegalStateException.
              (str "Kenttä laskentaparametrit on virheellinen: odotettu laskentatavan " (name laskentatapa)
                " mukainen parametrimap, saatu " (pr-str laskentaparametrit)
-               " (tyyppi " (tyyppi-tekstina laskentaparametrit) ").")))))
+               " (tyyppi " (tyyppi-tekstina laskentaparametrit) ")."))))
+  (when-not (s/valid? ::sanktion-laskenta/laskentaversio laskentaversio)
+    (throw (IllegalStateException.
+             (str "Kenttä laskentaversio on virheellinen: odotettu positiivinen kokonaisluku, saatu "
+               (pr-str laskentaversio) " (tyyppi " (tyyppi-tekstina laskentaversio) ").")))))
 
 (defn- normalisoi-summamaaritys
-  [{:keys [laskentaparametrit] :as summamaaritys}]
+  [{:keys [laskentaversio laskentaparametrit] :as summamaaritys}]
   (let [maaritystapa (normalisoi-maaritystapa (:maaritystapa summamaaritys))
         perusrivi {:maaritystapa maaritystapa
                    :summa-euroina (normalisoi-euromaara (:summa_euroina summamaaritys))
@@ -79,6 +83,7 @@
     (if (= :laskettu maaritystapa)
       (let [laskentatapa (laskentatapa-avaimeksi (:laskentatapa summamaaritys))
             laskettu {:laskentatapa laskentatapa
+                      :laskentaversio laskentaversio
                       :laskentaparametrit laskentaparametrit}]
         (vaadi-laskettu-summamaaritys laskettu (:laskentatapa summamaaritys))
         (merge perusrivi laskettu))

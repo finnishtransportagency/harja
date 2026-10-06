@@ -6,6 +6,7 @@
   #?(:clj (:import (java.math RoundingMode))))
 
 (def laskentatavat #{:tiekm-yksikkohinta :prosenttiosuus-syotteesta})
+(def nykyinen-laskentaversio 1)
 
 (def palvelimen-tukema-desimaalimaara 2)
 
@@ -16,6 +17,7 @@
 (s/def ::maksimi number?)
 (s/def ::yksikkohinta (s/and number? pos?))
 (s/def ::prosentti (s/and number? pos? #(<= % 100)))
+(s/def ::laskentaversio (s/and int? pos?))
 
 (s/def ::tiekm-yksikkohinta-parametrit
   (s/keys :req-un [::syoteavain ::yksikko ::desimaalit ::yksikkohinta]
@@ -124,6 +126,10 @@
                   (str "Kenttä laskentatapa on virheellinen: odotettu jokin arvoista " (sort laskentatavat)
                     ", saatu " (pr-str laskentatapa) " (tyyppi " (tyyppi-tekstina laskentatapa) ").")))))
 
+     (defn- vaadi-laskentaversio [laskentaversio]
+       (when-not (s/valid? ::laskentaversio laskentaversio)
+         (heita-virhe! "laskentaversio" "positiivinen kokonaisluku" laskentaversio)))
+
      (defn- vaadi-laskentaparametrit [laskentatapa laskentaparametrit]
        (let [spec (laskentatavan-parametrit-spec laskentatapa)]
          (when-not (s/valid? spec laskentaparametrit)
@@ -166,23 +172,28 @@
              (zero? (compare (bigdec (str syote)) (bigdec (str tallennettu))))))))
 
      (defn snapshot-vastaa-maaritysta?
-       "Tosi, kun tallennetun snapshotin laskentatapa ja parametrit täsmäävät profiilin nykyiseen laskettu-määritykseen."
-       [snapshot {:keys [laskentatapa laskentaparametrit]}]
+       "Tosi, kun tallennetun snapshotin laskentatapa, versio ja parametrit täsmäävät profiilin määritykseen."
+       [snapshot {:keys [laskentatapa laskentaversio laskentaparametrit]}]
        (boolean
          (and (keyword? laskentatapa)
+           (s/valid? ::laskentaversio laskentaversio)
+           (s/valid? ::laskentaversio (:laskentaversio snapshot))
+           (= laskentaversio (:laskentaversio snapshot))
            (= (str/replace (name laskentatapa) "-" "_") (:laskentatapa snapshot))
            (= laskentaparametrit (:laskentaparametrit snapshot)))))
 
      (defn laske-sanktion-summa
        "Validoi syötteen profiilin laskettu-määritystä vasten ja laskee summan.
        Palauttaa {:summa BigDecimal :laskennan-syote snapshot}. Heittää IllegalArgumentException virheellisestä syötteestä."
-       [{:keys [laskentatapa laskentaparametrit]} syote]
+       [{:keys [laskentatapa laskentaversio laskentaparametrit]} syote]
        (vaadi-tunnettu-laskentatapa laskentatapa)
+       (vaadi-laskentaversio laskentaversio)
        (vaadi-laskentaparametrit laskentatapa laskentaparametrit)
        (let [arvo (vaadi-syote laskentaparametrit syote)]
          {:summa (laske-summa {:laskentatapa laskentatapa :laskentaparametrit laskentaparametrit} arvo)
           :laskennan-syote {:syoteavain (:syoteavain laskentaparametrit)
                             :syote arvo
                             :yksikko (:yksikko laskentaparametrit)
+                            :laskentaversio laskentaversio
                             :laskentatapa (str/replace (name laskentatapa) "-" "_")
                             :laskentaparametrit laskentaparametrit}}))))

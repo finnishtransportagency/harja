@@ -694,6 +694,7 @@
           (is (= {:syoteavain "tiekm"
                   :syote 12.5
                   :yksikko "tiekm"
+                  :laskentaversio 1
                   :laskentatapa "tiekm_yksikkohinta"
                   :laskentaparametrit {:syoteavain "tiekm"
                                        :yksikko "tiekm"
@@ -770,6 +771,7 @@
         (is (= {:syoteavain "tiekm"
                 :syote 20
                 :yksikko "tiekm"
+                :laskentaversio 1
                 :laskentatapa "tiekm_yksikkohinta"
                 :laskentaparametrit {:syoteavain "tiekm"
                                      :yksikko "tiekm"
@@ -798,6 +800,7 @@
         (is (= {:syoteavain "tiekm"
                 :syote 12.5
                 :yksikko "tiekm"
+                :laskentaversio 1
                 :laskentatapa "tiekm_yksikkohinta"
                 :laskentaparametrit {:syoteavain "tiekm"
                                      :yksikko "tiekm"
@@ -882,6 +885,10 @@
                          "AND maaritystapa = 'laskettu'")
         lue-maaritys #(first (q (str "SELECT laskentatapa, laskentaparametrit::TEXT "
                                   "FROM sanktio_profiili_rivi_summamaaritys WHERE " (maaritys-ehto %))))
+        lue-laskentaversio #(ffirst (q (str "SELECT laskentaversio "
+                                         "FROM sanktio_profiili_rivi_summamaaritys WHERE " (maaritys-ehto %))))
+        aseta-laskentaversio #(u (str "UPDATE sanktio_profiili_rivi_summamaaritys "
+                                   "SET laskentaversio = " %2 " WHERE " (maaritys-ehto %)))
         aseta-maaritys #(u (str "UPDATE sanktio_profiili_rivi_summamaaritys "
                              "SET laskentatapa = '" %2 "', laskentaparametrit = '" %3 "'::JSONB "
                              "WHERE " (maaritys-ehto %)))
@@ -896,6 +903,17 @@
         (try
           (is (= {:maara 2500M :normaalimaara 2500M :laskentatapa "tiekm_yksikkohinta" :syoteavain "tiekm"}
                  (lue-maara-ja-snapshot sanktio-id)))
+
+          (testing "Laskentaversion vaihtuminen laskee snapshotin uudelleen"
+            (aseta-laskentaversio sanktio-id 2)
+            (tallenna {:id sanktio-id
+                       :laskettava-syote 12.5
+                       :summa 1
+                       :normaalimaara 1
+                       :laskennan-syote {:syote 999}})
+            (is (= {:maara 2500M :normaalimaara 2500M :laskentatapa "tiekm_yksikkohinta" :syoteavain "tiekm"}
+                   (lue-maara-ja-snapshot sanktio-id)))
+            (is (= 2 (lue-laskentaversio sanktio-id))))
 
           (testing "Laskentatavan vaihtuminen samalla syöteavaimella ja raakasyötteellä laskee uuden määrän ja snapshotin"
             (aseta-maaritys sanktio-id "prosenttiosuus_syotteesta"
@@ -915,7 +933,7 @@
             (is (= {:maara 2.5M :normaalimaara 2.5M :laskentatapa "prosenttiosuus_syotteesta" :syoteavain "muu_syote"}
                    (lue-maara-ja-snapshot sanktio-id))))
 
-          (testing "Laskentaparametrin vaihtuminen samalla laskentatavalla ja syöteavaimella laskee uuden snapshotin"
+          (testing "Laskentaparametrin vaihtuminen samalla laskentatavalla ja syöteavaimella laskee uuden määrän ja snapshotin"
             (aseta-maaritys sanktio-id "prosenttiosuus_syotteesta"
               "{\"syoteavain\": \"muu_syote\", \"yksikko\": \"tiekm\", \"desimaalit\": 2, \"prosentti\": 30}")
             (tallenna {:id sanktio-id
@@ -928,6 +946,7 @@
             (is (= 30 (get-in (lue-laskettu-sanktio sanktio-id)
                         [:laskennan_syote :laskentaparametrit :prosentti]))))
           (finally
+            (aseta-laskentaversio sanktio-id 1)
             (aseta-maaritys sanktio-id alkuperainen-tapa alkuperaiset-parametrit))))
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
@@ -963,6 +982,7 @@
         (is (= {:syoteavain "laskutuskelvottomana_laskutettu_osuus"
                 :syote 1234.56
                 :yksikko "€"
+                :laskentaversio 1
                 :laskentatapa "prosenttiosuus_syotteesta"
                 :laskentaparametrit {:syoteavain "laskutuskelvottomana_laskutettu_osuus"
                                      :yksikko "€"
@@ -997,6 +1017,7 @@
              :ohjeteksti nil
              :jarjestys 1
              :laskentatapa :tiekm-yksikkohinta
+             :laskentaversio 1
              :laskentaparametrit {:syoteavain "tiekm"
                                   :yksikko "tiekm"
                                   :desimaalit 2
