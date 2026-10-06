@@ -395,7 +395,7 @@
                      (luo-excel-rivit kustannusdata "muukulu-tavoitehintainen" "Muut kulut" false)
                      (luo-excel-rivit kustannusdata "siirto" "Siirto edelliseltä vuodelta" false)
                      (luo-excel-rivi-yhteensa kustannusdata muutosten-hallinta-kaytossa?)
-                     (luo-excel-rivit kustannusdata "ulkopuoliset-rahavaraukset" "Tavoitehinnan ulkopuoliset rahavaraukset" false)
+                     [{:rivi [nil nil nil nil nil nil nil nil]}]
                      (luo-excel-rivit kustannusdata "bonukset" "Bonukset" false)
                      (luo-excel-rivit kustannusdata "sanktiot" "Sanktiot" false)
                      (luo-excel-rivit kustannusdata "muukulu-eitavoitehintainen" "Muut kulut" false)
