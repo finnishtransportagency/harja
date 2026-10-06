@@ -125,9 +125,16 @@
   (let [paatos-avain :kattohinnan-ylitys
         paatos-tehty? (some? (:id paatos))
         siirra? (:siirra? paatos)
+        paatos-tallennukseen (dissoc paatos :virhe)         ;; Virhettä ei virheen tapahtumisen jälkeen tarvita enää tallennusnapeissa.
         on-oikeudet? (valikatselmus-yhteiset/onko-oikeudet-tehda-paatos? (-> @tila/yleiset :urakka :id))
         siirrettava (atom (if (:siirrettava_maara paatos) (:siirrettava_maara paatos) 0))
-        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)]
+        siirtorajoitus? (when (:siirtorajoitus_prosentti paatos) true)
+        siirron-rajoitus-virhe? (or (and (string? (:virhe paatos))
+                                         (str/includes? (:virhe paatos) "Siirron rajoitus ylitetty."))
+                                    (and siirtorajoitus?
+                                         (number? @siirrettava)
+                                         (number? (:maksimi_siirrettava_maara paatos))
+                                         (> @siirrettava (:maksimi_siirrettava_maara paatos))))]
     ^{:key (str "paatos-" (name paatos-avain))}
     [:div.paatos-komponentti-reunuksella
 
@@ -173,7 +180,10 @@
                                                                 :veda-oikealle? true
                                                                 :pakollinen? true
                                                                 :vayla-tyyli? true
+                                                                :virhe? siirron-rajoitus-virhe?
+                                                                :muokattu? true
                                                                 :elementin-id "kattohinta-ylitys-siirto"
+                                                                :toiminta-f #(e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara %))
                                                                 :on-blur #(e! (valikatselmus-tiedot/->PaivitaKattohinnanSiirtoMaara @siirrettava))
                                                                 :disabled? (or paatos-tehty? false)}
                                                 :arvo-atom siirrettava}])]]
@@ -195,10 +205,10 @@
            [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu" (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}])
 
          ;; Päätöksenteko napit
-         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken?
+         [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos-tallennukseen tallennus-kesken?
           (and voi-muokata? (not (:virheet paatos)))
           ;; Vahvista
-          #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos))
+          #(e! (valikatselmus-tiedot/->TallennaKattohinnanYlitysPaatos paatos-tallennukseen))
           ;; Peru päätös
           #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                  paatos
