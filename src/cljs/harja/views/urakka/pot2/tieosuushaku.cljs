@@ -96,7 +96,7 @@
           [:div.pot2-tieosuushaku-tulosalue
            [:div.pot2-tieosuushaku-tulosmaara
             (if tieosuuksia-rajattu?
-              (str "Näytetään " (count tieosuudet) " tieosuutta")
+              (str "Näytetään " pot2-domain/+tieosuushaun-rajoitus+ " tieosuutta")
               (str "Tieosuuksia yhteensä " (count tieosuudet) " kpl"))]
            (when tieosuuksia-rajattu?
              [yleiset/info-laatikko
