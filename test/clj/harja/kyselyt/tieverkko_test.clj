@@ -44,7 +44,8 @@
              :tr-alkuosa 1
              :tr-alkuetaisyys 200
              :tr-loppuosa 1
-             :tr-loppuetaisyys 2200})]
+             :tr-loppuetaisyys 2200
+             :rajoita-tieosuuksien-maara 100})]
         (is (= [{:tr-numero tienumero
          :tr-ajorata 1
          :tr-kaista 11
