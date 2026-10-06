@@ -166,7 +166,7 @@ jobs:
     steps:
       # Sanitointi on locale-riippumaton (LC_ALL=C).
       # Branch on viimeisenä, jotta se on helppo katkaista max pituuden rajoihin (Docker max tag koko on 128 merkkiä).
-      - name: '[Test-envs] Muodosta build-tag'
+      - name: '[Test-envs] Create build-tag'
         id: build-tag
         shell: bash
         env:
@@ -270,7 +270,7 @@ jobs:
           ENVIRONMENT: ${{ inputs.environment }}
         run: |
           DB_CLUSTER="harja-test-db-${ENVIRONMENT#test-}"
-          echo "Tarkistetaan RDS-klusteri: $DB_CLUSTER"
+          echo "Checking RDS cluster: $DB_CLUSTER"
 
           STATUS=$(aws rds describe-db-clusters \
             --region eu-west-1 \
@@ -278,21 +278,21 @@ jobs:
             --query 'DBClusters[0].Status' \
             --output text)
 
-          echo "RDS-klusterin tila: $STATUS"
+          echo "RDS cluster status: $STATUS"
 
           if [ "$STATUS" = "stopped" ]; then
-            echo "Käynnistetään $DB_CLUSTER..."
+            echo "Starting $DB_CLUSTER..."
             aws rds start-db-cluster \
               --region eu-west-1 \
               --db-cluster-identifier "$DB_CLUSTER" \
               --no-cli-pager > /dev/null
           fi
 
-          echo "Odotetaan, että $DB_CLUSTER on käytettävissä..."
+          echo "Waiting until $DB_CLUSTER is available..."
           aws rds wait db-cluster-available \
             --region eu-west-1 \
             --db-cluster-identifier "$DB_CLUSTER"
-          echo "$DB_CLUSTER on käytettävissä"
+          echo "$DB_CLUSTER is available!"
 
       - name: '[Test-envs] Run migrations'
         if: ${{ !inputs.skip-migrations }}
@@ -396,7 +396,7 @@ jobs:
       # Vanhalle imagelle jää build-tag, ellei sillä ole muun ympäristön env-tagia.
       # Workflown concurrency-limit estää saman ympäristön rinnakkaiset deployt, joten env-tag ei voi siirtyä vahingossa
       # väärään imageen.
-      - name: '[Test-envs] Siirrä pysyvä env-tag tavoiteimagelle'
+      - name: '[Test-envs] Tag deployed image with env-tag'
         env:
           ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
           ECR_REPOSITORY: ${{ vars.ECR_REPOSITORY_NAME }}

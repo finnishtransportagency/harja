@@ -43,19 +43,19 @@ runs:
           preview) FRONTEND_ALIAS=compile-preview ;;
           production) FRONTEND_ALIAS=compile-prod ;;
           *)
-            echo "Virhe: tuntematon build-mode '$BUILD_MODE' (sallitut arvot: preview, production)." >&2
+            echo "Error: Unknown build-mode '$BUILD_MODE' (allowed values: preview, production)." >&2
             exit 1
             ;;
         esac
 
-        echo "Käännetään frontend ($BUILD_MODE)..."
+        echo "Building frontend ($BUILD_MODE)..."
         
         echo "Building less styles..."
         npx lessc dev-resources/less/application.less resources/public/css/application.css
         npx lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css
         echo "Done."
         
-        echo "Käännetään ClojureScript (lein +ci,+prod-cljs, $FRONTEND_ALIAS)..."
+        echo "Building ClojureScript (lein +ci,+prod-cljs, $FRONTEND_ALIAS)..."
         lein with-profile +ci,+prod-cljs "$FRONTEND_ALIAS"
         echo "Done."
       shell: bash
