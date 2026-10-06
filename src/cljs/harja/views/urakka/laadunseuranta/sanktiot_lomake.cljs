@@ -468,7 +468,6 @@
                               :nimi :laskettava-syote
                               :tyyppi :numero
                               :max-desimaalit (:desimaalit laskentaparametrit)
-                              :vaadi-ei-negatiivinen? true
                               :data-cy "sanktio-laskettava-syote"
                               ::lomake/col-luokka "col-xs-6"
                               :hae sanktion-laskenta/laskettava-syote
