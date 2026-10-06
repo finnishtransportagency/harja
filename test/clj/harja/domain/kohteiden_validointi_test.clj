@@ -403,6 +403,82 @@
     (is (nil? (yllapitokohteet/validoi-alikohde oikea-tr-paaluvali oikea-tr-vali toiset-alikohteet tr-tieto)))))
 
 
+(deftest pot2-paikkavaroitusten-tekstit
+  (let [validoitu-paikka {:kohde {:tr-numero 815 :tr-ajorata 2 :tr-kaista 21
+                                :tr-alkuosa 2 :tr-alkuetaisyys 4598
+                                :tr-loppuosa 3 :tr-loppuetaisyys 4747}
+                         :kohteen-tiedot [{:tr-numero 815 :tr-osa 2 :tr-alkuosa 2 :pituudet {:ajoradat []}}
+                                         {:tr-numero 815 :tr-osa 3 :tr-alkuosa 3 :pituudet {:ajoradat []}}]}
+        ohje "Tarkista tieosuuden tiedot. Voit tarkastella tieosoitteen sisällä olevien kohteiden tietoja “Hae tieosuus”-toiminnossa."]
+    (is (= ["Tien 815 osalla 2 ei ole ajorataa 2" "Tien 815 osalla 3 ei ole ajorataa 2"]
+          (yllapitokohteet/validoidun-paikan-teksti validoitu-paikka false)))
+    (doseq [paakohde? [true false]]
+      (is (= [ohje] (yllapitokohteet/validoidun-paikan-teksti validoitu-paikka paakohde? {:pot2? true}))))
+    (is (= [] (yllapitokohteet/validoidun-paikan-teksti {:kohteen-tiedot []} false {:pot2? true})))
+    (is (= {} (yllapitokohteet/validoitu-kohde-tekstit nil false {:pot2? true})))
+    (let [validoitu {:validoitu-paikka validoitu-paikka}
+          vanhat (yllapitokohteet/validoitu-kohde-tekstit validoitu false)
+          uudet (yllapitokohteet/validoitu-kohde-tekstit validoitu false {:pot2? true})]
+      (is (= (set (keys vanhat)) (set (keys uudet))))
+      (doseq [sarake (keys vanhat)]
+        (is (= [ohje] (get uudet sarake)))))))
+
+(deftest pot2-muiden-varoitusten-tekstit
+  (doseq [[validoitu sarake teksti]
+          [[{:alikohde-paallekkyys [{:rivi-indeksi 4}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen riville 4 jo lisätyn toisen osan kanssa."]
+           [{:alikohde-paallekkyys [{}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen toisen osan kanssa."]
+           [{:alikohde-paallekkyys [{:paakohteen-nimi "Vt 815 Maikkula"}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin kohteen Vt 815 Maikkula osan kanssa."]
+           [{:alikohde-paallekkyys [{:paakohteen-nimi ""}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin toisen kohteen osan kanssa."]
+           [{:alikohde-paallekkyys [{:urakka 1}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin toisen urakan kohdeosan kanssa."]
+           [{:paallekkyys [{:nimi "Vt 815 Maikkula-Lentokentäntie"}]} :tr-alkuosa
+            "Kohde on päällekkäin kohteen Vt 815 Maikkula-Lentokentäntie kanssa."]
+           [{:paallekkyys [{}]} :tr-alkuosa "Kohde on päällekkäin toisen kohteen kanssa."]
+           [{:muukohde-paallekkyys [{:rivi-indeksi 4}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen riville 4 jo lisätyn toisen osan kanssa."]
+           [{:alustatoimenpide-paallekkyys [{:rivi-indeksi 7}]} :tr-alkuosa
+            "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen riville 7 jo lisätyn toisen osan kanssa."]
+           [{:alikohde-paakohteen-ulkopuolella? true} :tr-alkuosa
+            "Alikohde ei voi olla pääkohteen ulkopuolella"]
+           [{:muukohde-paakohteen-ulkopuolella? false} :tr-alkuosa
+            "Muukohde ei voi olla pääkohteen kanssa samalla tiellä"]
+           [{:alustatoimenpide-alustan-tie-ei-alikohteissa {:tr-numero 815}} :tr-numero
+            "Alustatoimenpiteen täytyy olla samalla tiellä kuin jokin alikohteista. Tienumero 815 ei ole."]]]
+    (is (= [teksti] (flatten (get (yllapitokohteet/validoitu-kohde-tekstit validoitu false {:pot2? true}) sarake))))
+    (is (= (yllapitokohteet/validoitu-kohde-tekstit validoitu false)
+          (yllapitokohteet/validoitu-kohde-tekstit validoitu false {:pot2? false}))))
+  (let [validoitu {:alustatoimenpide-paallekkyys [{:rivi-indeksi 7}]}]
+    (is (= ["Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen riville 7 jo lisätyn toisen osan kanssa."]
+          (distinct (:tr-alkuosa (yllapitokohteet/validoi-alustatoimenpide-teksti validoitu {:pot2? true})))))
+    (is (= ["Alustatoimenpide on päällekkäin rivin 7 kanssa"]
+          (distinct (:tr-alkuosa (yllapitokohteet/validoi-alustatoimenpide-teksti validoitu)))))))
+
+(deftest pot2-jarjestysvirheiden-tekstit
+  (doseq [[kohde sarake teksti]
+          [[(assoc oikea-tr-vali :tr-alkuosa 6 :tr-loppuosa 5) :tr-alkuosa
+            "Alkuosa ei voi olla loppuosan jälkeen."]
+           [(assoc oikea-tr-vali :tr-alkuosa 6 :tr-loppuosa 5) :tr-loppuosa
+            "Loppuosa ei voi olla ennen alkuosaa."]
+           [(assoc oikea-tr-vali :tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 625 :tr-loppuetaisyys 0) :tr-alkuetaisyys
+            "Alkuetäisyys ei voi olla loppuosan etäisyyden jälkeen."]
+           [(assoc oikea-tr-vali :tr-alkuosa 1 :tr-loppuosa 1 :tr-alkuetaisyys 625 :tr-loppuetaisyys 0) :tr-loppuetaisyys
+            "Loppuetäisyys ei voi olla ennen alkuetäisyyttä."]]]
+    (let [muoto (yllapitokohteet/oikean-muotoinen-tr kohde ::yllapitokohteet/tr-vali)]
+      (is (= [teksti] (yllapitokohteet/validoidun-muodon-teksti muoto sarake {:pot2? true})))
+      (is (= [(get-in yllapitokohteet/muoto-virhetekstit [sarake :vaarin-pain])]
+            (yllapitokohteet/validoidun-muodon-teksti muoto sarake))))))
+
+(deftest puuttuvien-arvojen-tekstit-ovat-kaytossa
+  (doseq [sarake [:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]]
+    (let [muoto (yllapitokohteet/oikean-muotoinen-tr (dissoc oikea-tr-vali sarake) ::yllapitokohteet/tr-vali)
+          teksti (get-in yllapitokohteet/muoto-virhetekstit [sarake :ei-arvoa])]
+      (is (= [teksti] (yllapitokohteet/validoidun-muodon-teksti muoto sarake)))
+      (is (= [teksti] (yllapitokohteet/validoidun-muodon-teksti muoto sarake {:pot2? true}))))))
+
 (deftest loyda-kaikki-kaistat
   (testing "ei löydä mitään jos ei ole täysin sisällä"
     (is (= [] (yllapitokohteet/kaikki-kaistat {:tr-numero 22 :tr-ajorata 1

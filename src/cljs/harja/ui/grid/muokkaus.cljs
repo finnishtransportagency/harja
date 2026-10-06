@@ -180,6 +180,8 @@
                arvo (hae-fn rivi)
                tasaus-luokka (y/tasaus-luokka tasaa)
                tayta-alas (:tayta-alas? sarake)
+               validointi-otsikko (when-let [otsikko-fn (:validointi-otsikko-fn sarake)]
+                                    (otsikko-fn rivi))
                elementin-id (str rivi-index elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
                  voi-muokata?)
@@ -198,10 +200,12 @@
                       :aina true)
                 (cond
                   (not (empty? kentan-virheet)) [virheen-ohje kentan-virheet :virhe {:virheet-ulos? true
+                                                                                     :otsikko validointi-otsikko
                                                                                      :max-width @virhelaatikon-max-koko}]
                   (not (empty? kentan-varoitukset)) (if-let [info-laatikko (:info-laatikko sarake)]
                                                       [:div.varoitukset info-laatikko]
                                                       [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
+                                                                                                  :otsikko validointi-otsikko
                                                                                                   :max-width @virhelaatikon-max-koko}])
                   (not (empty? kentan-huomautukset)) [virheen-ohje kentan-huomautukset :huomautus {:virheet-ulos? true
                                                                                                    :max-width @virhelaatikon-max-koko}]))

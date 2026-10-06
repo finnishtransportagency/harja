@@ -33,7 +33,7 @@
         validoitu (if (= (:tr-numero paakohde) (:tr-numero rivi))
                     (yllapitokohteet-domain/validoi-alikohde paakohde rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi)
                     (yllapitokohteet-domain/validoi-muukohde paakohde rivi [] (get tr-osien-tiedot (:tr-numero rivi)) vuosi))]
-    (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys :muukohde-paallekkyys) false)))
+    (yllapitokohteet-domain/validoitu-kohde-tekstit (dissoc validoitu :alikohde-paallekkyys :muukohde-paallekkyys) false {:pot2? true})))
 
 
 (defn kohde-toisten-kanssa-paallekkain-validointi
@@ -51,7 +51,7 @@
                         toiset-alikohteet)]
     (yllapitokohteet-domain/validoitu-kohde-tekstit {:alikohde-paallekkyys
                                                      paallekkyydet}
-      (not alikohde?))))
+      (not alikohde?) {:pot2? true})))
 
 (defn paallystekerros-rc-prosentti [{:keys [toimenpide massamenekki] :as rivi} massat]
   (let [rem-tai-remo-toimenpide? (#{pot2-domain/+rem-toimenpide+ pot2-domain/+remo-toimenpide+} toimenpide)
@@ -125,6 +125,7 @@
     [:div
      [grid/muokkaus-grid
       {:otsikko "Kulutuskerros" :tunniste :kohdeosa-id :rivinumerot? true
+        :data-cy "pot2-kulutuskerros"
        :luokat ["pot2-kulutuskerros-grid"]
        :voi-muokata? voi-muokata? :voi-lisata? false
        :voi-kumota? false
@@ -240,6 +241,7 @@
         :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :nimi :tr-numero
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :validoi (:tr-numero validointi)
         :sarake-sort {:fn (fn []
                             (reset! pot2-tiedot/valittu-paallystekerros-sort :tieosoite)
@@ -258,6 +260,7 @@
        {:otsikko "Ajor."
         :elementin-id #(uniikki-id %)
         :nimi :tr-ajorata
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :tyyppi :valinta
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :alasveto-luokka "kavenna-jos-kapea"
@@ -270,6 +273,7 @@
        {:otsikko "Kaista"
         :elementin-id #(uniikki-id %)
         :nimi :tr-kaista
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :tyyppi :valinta
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :alasveto-luokka "kavenna-jos-kapea"
@@ -302,6 +306,7 @@
         :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :nimi :tr-alkuosa
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :validoi (:tr-alkuosa validointi)}
 
        {:otsikko "Aet"
@@ -311,6 +316,7 @@
         :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :nimi :tr-alkuetaisyys
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :validoi (:tr-alkuetaisyys validointi)
         :solun-luokka-fn #(when (and (not kulutuskerros-muokattu?) (:aet-hyppy? %)) "korostettu-sarake")}
 
@@ -321,6 +327,7 @@
         :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :nimi :tr-loppuosa
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :validoi (:tr-loppuosa validointi)}
 
        {:otsikko "Let"
@@ -330,6 +337,7 @@
         :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet)
         :nimi :tr-loppuetaisyys
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :validoi (:tr-loppuetaisyys validointi)
         :solun-luokka-fn #(when (and (not kulutuskerros-muokattu?) (:let-hyppy? %)) "korostettu-sarake")}
 
