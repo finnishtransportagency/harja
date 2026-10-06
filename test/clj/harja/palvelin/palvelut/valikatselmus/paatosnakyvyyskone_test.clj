@@ -44,6 +44,11 @@
     (is (= "MHU" (apurit/urakan-hoitotyyppi vaativa-hoitourakka-f)))
     (is (= "MHU+" (apurit/urakan-hoitotyyppi vaativa-hoitourakka-t)))))
 
+(deftest nimi->avain-test
+  (testing "Ääkköset muunnetaan avaimeksi kirjainkoosta riippumatta"
+    (is (= :aakkoset-ja-oljy (kone/nimi->avain "Ääkköset ja Öljy")))
+    (is (= :aakkoset-ja-oljy (kone/nimi->avain "ääkköset ja öljy")))))
+
 ;; 2023 ei ole MHU+ urakoita käynnissä ja mitään ei löydy
 (deftest mhu+-vuodelle-2023-palautaa-oikein
   (let [mhu-tyyppi "MHU+"
@@ -509,7 +514,7 @@
           (is (= 1 (count valmistellut-paatokset)) "Vain yksi päätös palautetaan")
           (is (= "Lupaukset" (:nimi lupauspaatos)) "Päätöksen nimi on Lupaukset")
           (is (some? (:virheet lupauspaatos)) "Päätöksessä on virhe")
-          (is (str/includes? (:virheet lupauspaatos) "prosentit")
+          (is (some #(str/includes? % "prosentit") (:virheet lupauspaatos))
             "Virheviesti mainitsee puuttuvat prosentit"))))))
 
 (deftest valmistele-tavoitehinnan-pysyva-muutospaatos
@@ -697,7 +702,7 @@
 
         hoitovuoden-lopun-tavoitehinta 2098970.34
         hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-lopun-tavoitehinta 1.2)
-        ylityksen-maara 100
+        ylityksen-maara 100000
         toteutuneet-kustannukset (+ hoitovuoden-lopun-tavoitehinta ylityksen-maara)
         tavoitehinta-vahvistettu? false
 

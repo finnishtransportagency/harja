@@ -621,11 +621,12 @@
     paatokset))
 
 (defn nimi->avain [nimi]
-  (keyword (str/lower-case (-> nimi
-                             (str/replace #"ö" "o")
-                             (str/replace #"ä" "a")
-                             (str/replace #" " "-")
-                             (str/replace #"--" "-")))))
+  (keyword (-> nimi
+             str/lower-case
+             (str/replace #"ö" "o")
+             (str/replace #"ä" "a")
+             (str/replace #" " "-")
+             (str/replace #"--" "-"))))
 
 
 (defn filtteroi-mahdolliset-paatokset
