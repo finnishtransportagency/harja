@@ -53,7 +53,7 @@ SELECT toi.id
      , toi.summa  AS tavoitehinnan_muutos
 FROM tavoitehinnan_oikaisu toi
 WHERE toi."urakka-id" = :urakka-id
-  AND toi."hoitokauden-alkuvuosi" = EXTRACT(YEAR FROM :alkupvm::DATE)
+  AND toi."hoitokauden-alkuvuosi" = :hoitovuosi
   AND toi.poistettu IS NOT TRUE
 ORDER BY toi.id;
 
