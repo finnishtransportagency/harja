@@ -78,6 +78,7 @@
    ["soratietarkastusraportti" "Soratietarkastusraportti"]
    ["vesivaylien-laskutusyhteenveto" "Vesiväylien laskutusyhteenveto"]
    ["vastaanottotarkastusraportti" "Vastaanottotarkastusraportti"]
+   ["vastaanottotarkastusraportti-mhu" "MHU-vastaanottotarkastusraportti"]
    ["kanavien-muutos-ja-lisatyot" "Kanavien muutos-ja lisätyöt"]
    ["kanavien-laskutusyhteenveto" "Kanavien laskutusyhteenveto"]
    ["kanavien-liikennetapahtumat" "Kanavien liikennetapahtumat"]
