@@ -702,6 +702,15 @@
                  (:laskennan_syote tallennettu))
             "Snapshot sisältää syötteen, laskentatavan ja profiiliparametrit")
 
+          (testing "Virheellinen syöte ei muuta olemassa olevan tapahtuman määrää tai snapshotia"
+            (is (thrown-with-msg? IllegalArgumentException #"tiekm.*nollaa suurempi"
+                  (tallenna {:id sanktio-id
+                             :laskettava-syote -1
+                             :summa 1
+                             :normaalimaara 1
+                             :laskennan-syote {:syote 999}})))
+            (is (= tallennettu (lue-laskettu-sanktio sanktio-id))))
+
           (testing "Muokkaus laskee summan uudelleen uudesta syötteestä"
             (tallenna {:id sanktio-id :laskettava-syote 20})
             (is (= {:maara 4000M :normaalimaara 4000M}
@@ -742,6 +751,34 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
+(deftest tallenna-mhu26-laskettava-sanktio-tallentaa-tiekm-syotteen-palvelimen-laskemana
+  (let [perustelu "HARJA-2793 tiekm-syötteen itsenäinen hyväksytty lasku"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 22
+                       :perustelu perustelu})]
+    (try
+      (let [sanktio-id (tallenna-mhu26-laskettava-sanktio
+                         testitiedot
+                         {:laskettava-syote 20
+                          :summa 1
+                          :normaalimaara 1
+                          :laskennan-syote {:syote 999}})
+            tallennettu (lue-laskettu-sanktio sanktio-id)]
+        (is (= {:maara 4000M :normaalimaara 4000M}
+               (select-keys tallennettu [:maara :normaalimaara])))
+        (is (= {:syoteavain "tiekm"
+                :syote 20
+                :yksikko "tiekm"
+                :laskentatapa "tiekm_yksikkohinta"
+                :laskentaparametrit {:syoteavain "tiekm"
+                                     :yksikko "tiekm"
+                                     :desimaalit 2
+                                     :yksikkohinta 200.0}}
+               (:laskennan_syote tallennettu))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest hae-suorasanktion-tiedot-palauttaa-laskennan-snapshotin-samassa-rakenteessa-kuin-listapolku
   (let [perustelu "HARJA-2616 yksittäisen sanktion snapshot"
         testitiedot (mhu26-laskettavan-sanktion-testitiedot
@@ -773,7 +810,7 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
-(deftest tallenna-mhu26-laskettu-sanktio-sailyttaa-vanhan-laskennan-kun-syote-ei-muutu
+(deftest tallenna-mhu26-laskettu-sanktio-laskee-uudelleen-kun-profiilin-parametrit-muuttuvat
   (let [perustelu "HARJA-2616 vanhan laskennan säilytys"
         testitiedot (mhu26-laskettavan-sanktion-testitiedot
                       {:laji :tyon_tekematta_jattaminen
@@ -792,14 +829,15 @@
           (is (= {:maara 2500M :normaalimaara 2500M} (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara])))
           (aseta-yksikkohinta "300.0" sanktio-id)
 
-          (testing "Profiilin parametrien muutos ei muuta vanhaa tapahtumaa, kun syöte pysyy samana"
+          (testing "Profiilin parametrien muutos laskee tapahtuman uudelleen, kun syöte pysyy samana"
             (tallenna {:id sanktio-id
                        :laskettava-syote 12.50M
                        :summa 1
                        :normaalimaara 1
                        :laskennan-syote {:syote 999 :laskentaparametrit {:yksikkohinta 1}}})
-            (is (= {:maara 2500M :normaalimaara 2500M} (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara])))
-            (is (= 200.0 (yksikkohinta-snapshotissa sanktio-id)) "Vanha snapshot säilyy"))
+            (is (= {:maara 3750.00M :normaalimaara 3750.00M}
+                   (select-keys (lue-laskettu-sanktio sanktio-id) [:maara :normaalimaara])))
+            (is (= 300.0 (yksikkohinta-snapshotissa sanktio-id)) "Aktiivisen profiilin snapshot tallentuu"))
 
           (testing "Syötteen muutos laskee uuden määrän ja snapshotin aktiivisella profiililla"
             (tallenna {:id sanktio-id :laskettava-syote 20})
@@ -808,6 +846,27 @@
             (is (= 20 (:syote (:laskennan_syote (lue-laskettu-sanktio sanktio-id))))))
           (finally
             (aseta-yksikkohinta "200.0" sanktio-id))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-laskettu-sanktio-sailyttaa-yhteensopivan-snapshotin
+  (let [perustelu "HARJA-2793 yhteensopivan snapshotin säilytys"
+        testitiedot (mhu26-laskettavan-sanktion-testitiedot
+                      {:laji :tyon_tekematta_jattaminen
+                       :sanktiotyyppi-koodi 22
+                       :perustelu perustelu})
+        tallenna (partial tallenna-mhu26-laskettava-sanktio testitiedot)]
+    (try
+      (let [sanktio-id (tallenna {:laskettava-syote 12.5})
+            ennen (lue-laskettu-sanktio sanktio-id)]
+        (tallenna {:id sanktio-id
+                   :laskettava-syote 12.50M
+                   :summa 1
+                   :normaalimaara 1
+                   :laskennan-syote {:syote 999
+                                     :laskentaparametrit {:yksikkohinta 1}}})
+        (is (= ennen (lue-laskettu-sanktio sanktio-id))
+          "Sama raakasyöte ja yhteensopiva snapshot säilyttävät laskennan ja snapshotin"))
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
@@ -855,6 +914,19 @@
             (tallenna {:id sanktio-id :laskettava-syote 12.5})
             (is (= {:maara 2.5M :normaalimaara 2.5M :laskentatapa "prosenttiosuus_syotteesta" :syoteavain "muu_syote"}
                    (lue-maara-ja-snapshot sanktio-id))))
+
+          (testing "Laskentaparametrin vaihtuminen samalla laskentatavalla ja syöteavaimella laskee uuden snapshotin"
+            (aseta-maaritys sanktio-id "prosenttiosuus_syotteesta"
+              "{\"syoteavain\": \"muu_syote\", \"yksikko\": \"tiekm\", \"desimaalit\": 2, \"prosentti\": 30}")
+            (tallenna {:id sanktio-id
+                       :laskettava-syote 12.5
+                       :summa 1
+                       :normaalimaara 1
+                       :laskennan-syote {:syote 999}})
+            (is (= {:maara 3.75M :normaalimaara 3.75M :laskentatapa "prosenttiosuus_syotteesta" :syoteavain "muu_syote"}
+                   (lue-maara-ja-snapshot sanktio-id)))
+            (is (= 30 (get-in (lue-laskettu-sanktio sanktio-id)
+                        [:laskennan_syote :laskentaparametrit :prosentti]))))
           (finally
             (aseta-maaritys sanktio-id alkuperainen-tapa alkuperaiset-parametrit))))
       (finally
@@ -896,13 +968,15 @@
                                      :yksikko "€"
                                      :desimaalit 2
                                      :prosentti 20}}
-               (:laskennan_syote tallennettu))))
-      (is (thrown-with-msg? IllegalArgumentException #"laskutuskelvottomana_laskutettu_osuus.*nollaa suurempi"
-            (tallenna {:laskettava-syote 0}))
-        "Nolla hylätään")
-      (is (thrown-with-msg? IllegalArgumentException #"laskutuskelvottomana_laskutettu_osuus.*enintään 2 desimaalia"
-            (tallenna {:laskettava-syote 10.001}))
-        "Kolmas desimaali hylätään")
+               (:laskennan_syote tallennettu)))
+        (testing "Negatiivinen syöte ei muuta olemassa olevan tapahtuman määrää tai snapshotia"
+          (is (thrown-with-msg? IllegalArgumentException #"laskutuskelvottomana_laskutettu_osuus.*nollaa suurempi"
+                (tallenna {:id sanktio-id
+                           :laskettava-syote -1
+                           :summa 1
+                           :normaalimaara 1
+                           :laskennan-syote {:syote 999}})))
+          (is (= tallennettu (lue-laskettu-sanktio sanktio-id)))))
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 

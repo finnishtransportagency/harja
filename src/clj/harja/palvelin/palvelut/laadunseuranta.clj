@@ -329,8 +329,9 @@
                      "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
         ;; Palvelin laskee summan itse; pyynnön summa, normaalimäärä ja laskennan syöte ohitetaan.
         ;; Muuttumattomalla raakasyötteellä vanha tapahtuma säilyttää tallennetun snapshotin ja määrät,
-        ;; jottei profiilin parametrien myöhempi muutos muuta sitä. Snapshotin laskentatavan ja
-        ;; syöteavaimen pitää silti vastata nykyistä määritystä, jottei toisen lajin laskenta säily.
+        ;; jos aktiivisen profiilin parametrit vastaavat snapshotia. Aktiivisen profiilin parametrimismatch
+        ;; aiheuttaa uudelleenlaskennan. Snapshotin laskentatavan ja syöteavaimen pitää myös vastata
+        ;; nykyistä määritystä, jottei toisen lajin laskenta säily.
         vanha-laskenta (when (and laskettu-maaritys
                                (= "laskettu" (:maaritystapa olemassa-oleva-sanktio))
                                (sanktion-laskenta/snapshot-vastaa-maaritysta?

@@ -166,13 +166,12 @@
              (zero? (compare (bigdec (str syote)) (bigdec (str tallennettu))))))))
 
      (defn snapshot-vastaa-maaritysta?
-       "Tosi, kun tallennetun snapshotin laskentatapa ja syöteavain täsmäävät profiilin nykyiseen laskettu-määritykseen."
+       "Tosi, kun tallennetun snapshotin laskentatapa ja parametrit täsmäävät profiilin nykyiseen laskettu-määritykseen."
        [snapshot {:keys [laskentatapa laskentaparametrit]}]
        (boolean
          (and (keyword? laskentatapa)
            (= (str/replace (name laskentatapa) "-" "_") (:laskentatapa snapshot))
-           (string? (:syoteavain laskentaparametrit))
-           (= (:syoteavain laskentaparametrit) (:syoteavain snapshot)))))
+           (= laskentaparametrit (:laskentaparametrit snapshot)))))
 
      (defn laske-sanktion-summa
        "Validoi syötteen profiilin laskettu-määritystä vasten ja laskee summan.

@@ -242,6 +242,18 @@
     (is (= 200.00M (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys 1000))))
     (is (= 200.00M (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys 1000.00M))))))
 
+(deftest snapshot-vastaa-maaritysta-ja-syotetta
+  (let [laskennan-syote {:syoteavain "tiekm"
+                         :syote 12.5M
+                         :yksikko "tiekm"
+                         :laskentatapa "tiekm_yksikkohinta"
+                         :laskentaparametrit (:laskentaparametrit tiekm-maaritys)}]
+    (is (true? (sanktion-laskenta/syote-vastaa-snapshotia? laskennan-syote 12.50M)))
+    (is (true? (sanktion-laskenta/snapshot-vastaa-maaritysta? laskennan-syote tiekm-maaritys)))
+    (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                  laskennan-syote
+                  (assoc-in tiekm-maaritys [:laskentaparametrit :yksikkohinta] 300.0))))))
+
 (deftest laske-sanktion-summa-hylkaa-virheellisen-syotteen-kentan-nimella
   (let [hylkaa (fn [maaritys syote osat]
                  (let [virhe (try (sanktion-laskenta/laske-sanktion-summa maaritys syote)
