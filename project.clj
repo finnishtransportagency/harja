@@ -61,7 +61,7 @@
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
-                 [org.clojure/core.cache "1.2.263"]
+                 [org.clojure/core.cache "1.2.999"]
                  [org.clojure/core.memoize "1.2.281"]
 
                  ;; Pattern match kirjasto
@@ -174,8 +174,8 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.2"]
-                         [com.fasterxml.jackson.core/jackson-core "2.22.2"]
+                         [tools.jackson.core/jackson-core "3.2.3"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.3"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.14.0"]]
 
