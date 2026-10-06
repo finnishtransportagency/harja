@@ -184,7 +184,7 @@
         kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
                              (- toteuma-yht hoitovuoden-lopun-kattohinta)
                              (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara))
-        kattohinnan-ylitys-siirto (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara)
+        kattohinnan-ylitys-siirto (:siirrettava_maara kattohinnan-ylityspaatos)
 
         tavoitehinnan-ylitys? (or
                                 (:id tavoitehinnan-ylityspaatos)
