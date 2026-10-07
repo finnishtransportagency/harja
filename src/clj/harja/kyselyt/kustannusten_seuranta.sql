@@ -347,64 +347,149 @@ GROUP BY tr.nimi, tk.nimi, lk.tyyppi, mm.syy, mmk.summa,
          lk.maksueratyyppi, l.urakka, tk.koodi, tr.jarjestys, tr.yksiloiva_tunniste,
          lk.rahavaraus_id, COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi),  lk.tavoitehintainen
 UNION ALL
--- 
--- Erillisrahoitetut muutostyöt 
--- Voi kirjata kuluja, ja lasketaan erotus 
--- 
-SELECT COALESCE(mmk.summa, 0)           AS budjetoitu_summa,
-       -- Design kommentit: Muutoksissa, suunniteltu == indeksikorjattu 
-       -- koska muutokset tulevat olemaan vahvistetun 
-       -- kustannussuunnitelman lukujen sisällä eli kilpailutettavissa hankinnoissa
-       COALESCE(mmk.summa, 0)           AS budjetoitu_summa_indeksikorjattu,
-       COALESCE(SUM(lk.summa), 0)       AS toteutunut_summa,
-       MIN(lk.maksueratyyppi)::TEXT     AS maksutyyppi,
-       'hankinta'                       AS toimenpideryhma,
-       MIN(COALESCE(tr.nimi, tk.nimi))  AS tehtava_nimi,
-       MIN(CASE
-           WHEN (tk.koodi = '23104' AND lk.rahavaraus_id IS NULL) THEN 'Talvihoito'
-           WHEN (tk.koodi = '23116' AND lk.rahavaraus_id IS NULL) THEN 'Liikenneympäristön hoito'
-           WHEN (tk.koodi = '23124' AND lk.rahavaraus_id IS NULL) THEN 'Sorateiden hoito'
-           WHEN (tk.koodi = '20107' AND lk.rahavaraus_id IS NULL) THEN 'Päällystepaikkaukset'
-           WHEN (tk.koodi = '20191' AND lk.rahavaraus_id IS NULL) THEN 'MHU Ylläpito'
-           WHEN (tk.koodi = '14301' AND lk.rahavaraus_id IS NULL) THEN 'MHU Korvausinvestointi'
-           WHEN lk.rahavaraus_id IS NOT NULL THEN COALESCE(NULLIF(ru.urakkakohtainen_nimi,''), r.nimi)
-       END)                              AS toimenpide,
-       MIN(l.erapaiva)::TEXT             AS ajankohta,
-       'toteutunut'                      AS toteutunut,
-       MIN(tr.jarjestys)                 AS jarjestys,
-       'muutokset'                       AS paaryhma,
-       NOW()                             AS indeksikorjaus_vahvistettu,
-       'erillisrahoitettu-muutos'        AS kulu_tyyppi,
-       mm.syy                            AS muutostyo_syy
-FROM mhu_muutos mm
-         LEFT JOIN kulu_kohdistus lk 
-                ON mm.id = lk.muutos
-               AND lk.poistettu IS NOT TRUE
-         LEFT JOIN kulu l 
-                ON lk.kulu = l.id 
-               AND l.urakka = :urakka
-               AND l.erapaiva BETWEEN :alkupvm::DATE AND :loppupvm::DATE
-               AND l.poistettu IS NOT TRUE
-               AND lk.poistettu IS NOT TRUE 
-         LEFT JOIN mhu_muutos_kustannusvaikutus mmk 
-                ON mmk.muutos = mm.id 
-         LEFT JOIN tehtavaryhma tr 
-                ON tr.id = lk.tehtavaryhma
-         LEFT JOIN rahavaraus_urakka ru 
-                ON lk.rahavaraus_id = ru.rahavaraus_id
-               AND ru.urakka_id = :urakka
-         LEFT JOIN rahavaraus r 
-                ON lk.rahavaraus_id = r.id
-         LEFT JOIN toimenpideinstanssi tpi 
-                ON lk.toimenpideinstanssi = tpi.id 
-         LEFT JOIN toimenpide tk 
-                ON tpi.toimenpide = tk.id 
-               AND tk.koodi IN ('23104','23116','20107','20191','14301')
-WHERE mm.urakka = :urakka 
-  AND mm.poistettu IS NOT TRUE 
-  AND mm.alityyppi::TEXT = 'erillisrahoitus' 
-  AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
-GROUP BY mm.id, mm.syy, mmk.summa, mm.alityyppi
+
+--
+-- Erillisrahoitetut muutostyöt
+--
+-- Yksi tulosrivi jokaista muutostyötä kohden.
+--
+-- Kustannusvaikutukset ja kulut aggregoidaan ennen niiden yhdistämistä.
+-- Tällä estetään kustannusvaikutusten ja kulujen ristiinkertaistuminen.
+--
+-- Muutostyöhön liittyvä kulu voi viitata muutostyöhön joko:
+--   1. kulu_kohdistus.muutos-sarakkeen kautta
+--   2. mhu_muutos_kulu.muutos-sarakkeen kautta
+-- Jälkimmäisessä tapauksessa yhteys kulkee kulu_kohdistus.kulu-sarakkeen kautta.
+--
+SELECT
+    budjetit.budjetoitu_summa                         AS budjetoitu_summa,
+    budjetit.budjetoitu_summa                         AS budjetoitu_summa_indeksikorjattu,
+    COALESCE(kulut.toteutunut_summa, 0)               AS toteutunut_summa,
+    kulut.maksutyyppi                                AS maksutyyppi,
+    'hankinta'                                       AS toimenpideryhma,
+    kulut.tehtava_nimi                               AS tehtava_nimi,
+    kulut.toimenpide                                 AS toimenpide,
+    kulut.ajankohta                                  AS ajankohta,
+    'toteutunut'                                     AS toteutunut,
+    kulut.jarjestys                                  AS jarjestys,
+    'muutokset'                                      AS paaryhma,
+    NOW()                                            AS indeksikorjaus_vahvistettu,
+    'erillisrahoitettu-muutos'                       AS kulu_tyyppi,
+    muutostyo.syy                                    AS muutostyo_syy
+FROM mhu_muutos muutostyo
+
+-- Yksi budjettirivi jokaista muutostyötä ja hoitokautta kohden
+JOIN (
+    SELECT
+        mmk.muutos,
+        SUM(mmk.summa) AS budjetoitu_summa
+    FROM mhu_muutos_kustannusvaikutus mmk
+    WHERE mmk.hoitokauden_alkuvuosi =
+          :hoitokauden-alkuvuosi::INTEGER
+    GROUP BY mmk.muutos
+) budjetit
+    ON budjetit.muutos = muutostyo.id
+
+-- Yksi kulurivi jokaista muutostyötä kohden
+         LEFT JOIN (
+    SELECT
+        kulut.muutos,
+        SUM(kulut.summa)                         AS toteutunut_summa,
+        MIN(kulut.maksueratyyppi)::TEXT          AS maksutyyppi,
+        MIN(kulut.tehtava_nimi)                  AS tehtava_nimi,
+        MIN(kulut.toimenpide)                    AS toimenpide,
+        MIN(kulut.erapaiva)::TEXT                AS ajankohta,
+        MIN(kulut.jarjestys)                     AS jarjestys
+    FROM (
+             SELECT
+                 COALESCE(lk.muutos, mkulu.muutos) AS muutos,
+                 lk.summa,
+                 lk.maksueratyyppi,
+                 l.erapaiva,
+
+                 COALESCE(tr.nimi, tk.nimi) AS tehtava_nimi,
+
+                 CASE
+                     WHEN tk.koodi = '23104'
+                         AND lk.rahavaraus_id IS NULL
+                         THEN 'Talvihoito'
+
+                     WHEN tk.koodi = '23116'
+                         AND lk.rahavaraus_id IS NULL
+                         THEN 'Liikenneympäristön hoito'
+
+                     WHEN tk.koodi = '23124'
+                         AND lk.rahavaraus_id IS NULL
+                         THEN 'Sorateiden hoito'
+
+                     WHEN tk.koodi = '20107'
+                         AND lk.rahavaraus_id IS NULL
+                         THEN 'Päällystepaikkaukset'
+
+                     WHEN tk.koodi = '20191'
+                         AND lk.rahavaraus_id IS NULL
+                         THEN 'MHU Ylläpito'
+
+                     WHEN tk.koodi = '14301'
+                         AND lk.rahavaraus_id IS NULL
+                         THEN 'MHU Korvausinvestointi'
+
+                     WHEN lk.rahavaraus_id IS NOT NULL
+                         THEN COALESCE(
+                         NULLIF(ru.urakkakohtainen_nimi, ''),
+                         r.nimi)
+                     END AS toimenpide,
+
+                 tr.jarjestys
+
+             FROM kulu_kohdistus lk
+
+                      JOIN kulu l
+                           ON l.id = lk.kulu
+                               AND l.urakka = :urakka
+                               AND l.erapaiva BETWEEN :alkupvm::DATE
+                               AND :loppupvm::DATE
+           AND l.poistettu IS NOT TRUE
+
+        -- Tämän liitoksen kautta löytyvät kulut, joiden muutostyö
+        -- on tallennettu mhu_muutos_kulu-tauluun.
+        LEFT JOIN mhu_muutos_kulu mkulu
+             ON mkulu.kulu = lk.kulu
+
+                 LEFT JOIN tehtavaryhma tr
+                 ON tr.id = lk.tehtavaryhma
+
+                 LEFT JOIN rahavaraus_urakka ru
+                 ON ru.rahavaraus_id = lk.rahavaraus_id
+                 AND ru.urakka_id = :urakka
+
+                 LEFT JOIN rahavaraus r
+                 ON r.id = lk.rahavaraus_id
+
+                 LEFT JOIN toimenpideinstanssi tpi
+                 ON tpi.id = lk.toimenpideinstanssi
+
+                 LEFT JOIN toimenpide tk
+                 ON tk.id = tpi.toimenpide
+                 AND tk.koodi IN (
+                 '23104',
+                 '23116',
+                 '23124',
+                 '20107',
+                 '20191',
+                 '14301')
+
+             WHERE lk.poistettu IS NOT TRUE
+               AND COALESCE(lk.muutos, mkulu.muutos) IS NOT NULL
+         ) kulut
+    GROUP BY kulut.muutos
+) kulut
+    ON kulut.muutos = muutostyo.id
+
+WHERE muutostyo.urakka = :urakka
+  AND muutostyo.poistettu IS NOT TRUE
+  AND muutostyo.alityyppi::TEXT = 'erillisrahoitus'
+
 UNION ALL
 -- Pysyvät muutokset
 -- Aikaisempien hoitokausien muutokset, jotka lasketaan hankintakustannuksiin
