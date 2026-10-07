@@ -323,13 +323,21 @@ describe("POT2", function() {
         solu(0, 'Let').find('input').clear().type('625');
 
         solu(0, 'Tie').find('input').invoke('val').then(tie => {
-            solu(0, 'Aosa').find('strong').should('have.text', `Kohteessa tie: ${tie}, 2/0 - 1/625 on virhe`);
+            solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:first-child')
+                .should('have.text', `Kohteessa tie: ${tie}, 2/0 - 1/625 on virhe`);
         });
-        solu(0, 'Aosa').find('.varoitus > span').should('contain.text', 'Alkuosa ei voi olla loppuosan jälkeen.');
-        solu(0, 'Losa').find('.varoitus > span').should('contain.text', 'Loppuosa ei voi olla ennen alkuosaa.');
+        solu(0, 'Aosa').find('.info-laatikko')
+            .should('have.class', 'vahva-ilmoitus')
+            .and('have.css', 'border-color', 'rgb(148, 113, 0)')
+            .and('have.css', 'border-width', '2px');
+        solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
+            .should('contain.text', 'Alkuosa ei voi olla loppuosan jälkeen.');
+        solu(0, 'Losa').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
+            .should('contain.text', 'Loppuosa ei voi olla ennen alkuosaa.');
 
         solu(0, 'Let').find('input').clear().type('624');
-        solu(0, 'Aosa').find('strong').should('contain.text', '2/0 - 1/624 on virhe');
+        solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:first-child')
+            .should('contain.text', '2/0 - 1/624 on virhe');
         cy.contains('Rivi 1:').should('exist');
     });
 
@@ -341,9 +349,10 @@ describe("POT2", function() {
         solu(0, 'Let').find('input').clear().type('1000000');
 
         solu(0, 'Tie').find('input').invoke('val').then(tie => {
-            solu(0, 'Let').find('strong').should('have.text', `Kohteessa tie: ${tie}, 1/0 - 1/1000000 on virhe`);
+            solu(0, 'Let').find('.info-laatikko .infolaatikon-teksti > div:first-child')
+                .should('have.text', `Kohteessa tie: ${tie}, 1/0 - 1/1000000 on virhe`);
         });
-        solu(0, 'Let').find('.varoitus > span')
+        solu(0, 'Let').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
             .should('contain.text', 'Tarkista tieosuuden tiedot. Voit tarkastella tieosoitteen sisällä olevien kohteiden tietoja “Hae tieosuus”-toiminnossa.')
             .and('not.contain.text', 'Tarkista kaista ja paaluväli');
         cy.get('[data-cy=pot2-avaa-tieosuushaku]').should('be.visible');

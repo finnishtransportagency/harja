@@ -256,13 +256,17 @@
        sarakkeet rivit]
 
       "Vain otsikkoasetuksen saanut sarake näyttää otsikon"
-      (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe" (u/text (u/grid-solu "otsikko-grid" 0 0 "strong"))))
+      (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe"
+        (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:first-child"))))
+      (is (= varoitus
+        (str/trim (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:nth-child(2)")))))
       (is (nil? (u/grid-solu "otsikko-grid" 0 1 "strong")))
 
       "Otsikko päivittyy nykyisen rivin mukaan"
       (swap! rivit assoc-in [1 :tr-loppuetaisyys] 624)
       --
-      (is (= "Kohteessa tie: 815, 1/0 - 1/624 on virhe" (u/text (u/grid-solu "otsikko-grid" 0 0 "strong")))))))
+      (is (= "Kohteessa tie: 815, 1/0 - 1/624 on virhe"
+        (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:first-child")))))))
 
 (deftest rivi-piilotetun-otsikon-alla
   (let [testirivit [(grid/otsikko "A" {:id :A}) 1 2 3 4
