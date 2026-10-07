@@ -20,7 +20,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus_mhu.sql"
   {:positional? true})
 
-(declare hae-viranomaistehtavamaarat hae-bonukset-vastaanottotarkastusraportille)
+(declare hae-viranomaistehtavamaarat hae-bonukset-vastaanottotarkastusraportille hae-sanktiot-vastaanottotarkastusraportille)
 
 
 (defn- summa [rivit avain]
@@ -144,18 +144,18 @@
         tavoitehinnan-muutokset-yhteensa (reduce + 0 (map last rivit))
         yhteensarivi [{:lihavoi? true
                        :korosta-hennosti? true
-                       :rivi ["Yhteensä"
-                              (:suunniteltu akilliset-hoitotyot-yhteensa)
-                              (:toteutunut akilliset-hoitotyot-yhteensa)
-                              (:suunniteltu vahinkojen-korjaukset-yhteensa)
-                              (:toteutunut vahinkojen-korjaukset-yhteensa)
-                              (:suunniteltu kannustinjarjestelma-yhteensa)
-                              (:toteutunut kannustinjarjestelma-yhteensa)
-                              (when (seq muut-rahavaraukset)
-                                (:suunniteltu loput-yhteensa))
-                              (when (seq muut-rahavaraukset)
-                                (:toteutunut loput-yhteensa))
-                              tavoitehinnan-muutokset-yhteensa]}]
+                       :rivi (into ["Yhteensä"
+                                    (:suunniteltu akilliset-hoitotyot-yhteensa)
+                                    (:toteutunut akilliset-hoitotyot-yhteensa)
+                                    (:suunniteltu vahinkojen-korjaukset-yhteensa)
+                                    (:toteutunut vahinkojen-korjaukset-yhteensa)
+                                    (:suunniteltu kannustinjarjestelma-yhteensa)
+                                    (:toteutunut kannustinjarjestelma-yhteensa)]
+                               (concat
+                                 (when (seq muut-rahavaraukset)
+                                   [(:suunniteltu loput-yhteensa)
+                                    (:toteutunut loput-yhteensa)])
+                                 [tavoitehinnan-muutokset-yhteensa]))}]
         otsikot (into [{:otsikko "Hoitokausi" :leveys 5}]
                   (concat (mapcat (fn [_]
                                     [{:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
@@ -303,10 +303,10 @@
   (let [otsikko "Kirjalliset muistutukset, sanktiot, arvonvähennykset ja poikkeamaraportit"
         rivit (mapv (fn [{:keys [alkupvm loppupvm]}]
                       (let [hoitovuosi (pvm/vuosi alkupvm)
-                            sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
-                                                                       :alkupvm alkupvm
-                                                                       :loppupvm loppupvm
-                                                                       :hoitokauden-alkuvuosi hoitovuosi})
+
+                            sanktiot (hae-sanktiot-vastaanottotarkastusraportille db {:urakka-id urakka-id
+                                                                                      :alkupvm alkupvm
+                                                                                      :loppupvm loppupvm})
                             muut-sanktiot (remove #(or (= "muistutus" (some-> (:sakkoryhma %) name))
                                                      (= "arvonvahennyssanktio" (some-> (:sakkoryhma %) name)))
                                             sanktiot)
