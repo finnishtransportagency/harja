@@ -109,7 +109,8 @@
 
   HaeUrakanParametrit
   (process-event [{urakkaid :urakkaid} app]
-    (tuck-apurit/post! :hae-urakan-parametrit {:urakkaid urakkaid}
+    (tuck-apurit/post! :hae-urakan-kustannusten-seurannan-parametrit
+      {:urakka-id urakkaid}
       {:onnistui ->HaeUrakanParametritOnnistui
        :epaonnistui ->HaeUrakanParametritEpaonnistui
        :paasta-virhe-lapi? true})

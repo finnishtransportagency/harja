@@ -457,7 +457,7 @@
         kaikki-vahvistettu? (onko-kaikki-vahvistettu? #{:hankintakustannukset :hoidonjohdonpalkkio
                                                         :erillishankinnat :johto-ja-hallintokorvaus
                                                         :rahavaraukset} rivit-paaryhmittain)
-        muutos-sarake-yhteensa (+ (or (:muutokset-budjetoitu rivit-paaryhmittain) 0)
+        muutos-sarake-yhteensa (+ (or (when muutosten-hallinta-kaytossa? (:muutokset-budjetoitu rivit-paaryhmittain)) 0)
                                  (or (:arvonvahennykset-toteutunut rivit-paaryhmittain) 0)
                                  (or (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0))
         arvonvahennykset-toteutunut (or (:arvonvahennykset-toteutunut rivit-paaryhmittain) 0)

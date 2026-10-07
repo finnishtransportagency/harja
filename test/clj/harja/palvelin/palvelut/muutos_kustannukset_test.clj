@@ -321,6 +321,24 @@
     (is (= [100M 150M] toteutuneet-summat)
       "Kummankin muutostyön kulun pitää pysyä omalla rivillään")))
 
+(deftest kustannusten-seurannan-parametrit-haetaan-oikein
+  (let [vastaus
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :hae-urakan-kustannusten-seurannan-parametrit
+          +kayttaja-jvh+
+          {:urakka-id +urakka+})]
+
+    (is (contains? vastaus :muutosten_hallinta))
+    (is (boolean? (:muutosten_hallinta vastaus)))))
+
+(deftest kustannusten-seurannan-parametrit-vaativat-kustannusten-seurannan-oikeuden
+  (is (thrown? Exception
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :hae-urakan-kustannusten-seurannan-parametrit
+          +kayttaja-seppo+
+          {:urakka-id +urakka+}))))
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
   (let [erillisrahoitettu-muutostyo (hae-muutostyot)

@@ -7,6 +7,7 @@
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -22,6 +23,16 @@
                                                                              :loppupvm loppupvm
                                                                              :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
       res)))
+
+(defn hae-urakan-kustannusten-seurannan-parametrit
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus
+    oikeudet/urakat-toteumat-kokonaishintaisettyot
+    user
+    urakka-id)
+  (some-> (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id})
+    first
+    (select-keys [:muutosten_hallinta])))
 
 (defn hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -41,6 +52,11 @@
         :urakan-kustannusten-seuranta-paaryhmittain
         (fn [user tiedot]
           (hae-urakan-kustannusten-seuranta-paaryhmittain db-replica user tiedot)))
+      (julkaise-palvelu
+        http
+        :hae-urakan-kustannusten-seurannan-parametrit
+        (fn [user tiedot]
+          (hae-urakan-kustannusten-seurannan-parametrit db user tiedot)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :kustannukset (partial #'kustannusten-seuranta-excel/kustannukset-excel db)))
       this))
@@ -48,7 +64,8 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-kustannusten-seuranta-paaryhmittain)
+      :urakan-kustannusten-seuranta-paaryhmittain
+      :hae-urakan-kustannusten-seurannan-parametrit)
     (when (:excel-vienti this)
       (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :kustannukset))
     this))
