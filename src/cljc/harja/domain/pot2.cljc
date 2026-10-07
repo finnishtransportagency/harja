@@ -45,16 +45,11 @@
   (s/keys :req-un [::tieosuudet ::kohteen-ulkopuolelle-jatkuvat]
           :opt-un [::tieosuuksia-rajattu?]))
 
-(defn- tieosuushaun-vali-kasvava? [{:keys [tr-alkuosa tr-alkuetaisyys tr-loppuosa tr-loppuetaisyys]}]
-  (neg? (compare [(or tr-alkuosa 0) (or tr-alkuetaisyys 0)]
-                 [(or tr-loppuosa ##Inf) (or tr-loppuetaisyys ##Inf)])))
-
 (s/def ::hae-tr-tieosuudet-kysely
-  (s/and (s/keys :req-un [::tr-numero]
+  (s/and (s/keys :req-un [::urakka-id ::tr-numero]
                  :opt-un [::tr-alkuosa ::tr-alkuetaisyys ::tr-loppuosa ::tr-loppuetaisyys])
          #(or (nil? (:tr-alkuetaisyys %)) (some? (:tr-alkuosa %)))
-         #(or (nil? (:tr-loppuetaisyys %)) (some? (:tr-loppuosa %)))
-         tieosuushaun-vali-kasvava?))
+         #(or (nil? (:tr-loppuetaisyys %)) (some? (:tr-loppuosa %)))))
 
 (def alusta-toimenpide-kaikki-lisaavaimet
   {:lisatty-paksuus {:nimi :lisatty-paksuus :otsikko "Lisätty paksuus" :yksikko "cm"

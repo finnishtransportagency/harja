@@ -229,9 +229,10 @@
                                  (oikeudet/ei-oikeustarkistusta!)
                                  (hae-tienumerot-kartalle db params)))
     (julkaise-palvelu http-palvelin :hae-tr-tieosuudet
-                     (fn [_ params]
-                       (oikeudet/ei-oikeustarkistusta!)
-                       (hae-tr-tieosuudet db params))
+                     (fn [user {:keys [urakka-id] :as params}]
+                       (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset
+                                                  user urakka-id)
+                       (hae-tr-tieosuudet db (dissoc params :urakka-id)))
                      {:kysely-spec ::pot2-domain/hae-tr-tieosuudet-kysely
                       :vastaus-spec ::pot2-domain/tieosuudet})
     this)

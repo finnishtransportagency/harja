@@ -6,8 +6,7 @@
             [harja.palvelin.palvelut.tienakyma :as tienakyma]
             [slingshot.slingshot :refer [try+]]
             [harja.paneeliapurit :as paneeli]
-            [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku])
-  (:import [harja.domain.roolit EiOikeutta]))
+            [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -25,6 +24,7 @@
 (use-fixtures :once jarjestelma-fixture)
 
 (def tienumero 6666)
+(def paallystysurakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka"))
 
 (defn luo-tr-osoite [[osa a-et l-et kaista]]
   (u (str
@@ -41,7 +41,10 @@
 (defn- kutsu
   ([kayttaja payload] (kutsu :hae-tr-tiedot kayttaja payload))
   ([palvelu kayttaja payload]
-   (kutsu-palvelua (:http-palvelin jarjestelma) palvelu kayttaja payload)))
+   (kutsu-palvelua (:http-palvelin jarjestelma) palvelu kayttaja
+                   (if (= palvelu :hae-tr-tieosuudet)
+                     (merge {:urakka-id paallystysurakka-id} payload)
+                     payload))))
 
 (defn parametrit
   [a b c]
@@ -59,6 +62,16 @@
            :tr-loppuosa 1
            :tr-loppuetaisyys 500}]
          (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {:tr-numero tienumero}))))
+
+(deftest hae-tr-tieosuudet-vaatii-lukuoikeuden
+  (is (thrown-with-msg? Exception #"EiOikeutta"
+               (kutsu :hae-tr-tieosuudet +kayttaja-uuno+
+                      {:tr-numero tienumero}))))
+
+(deftest hae-tr-tieosuudet-vaatii-urakka-idn
+  (is (thrown? Exception
+               (kutsu-palvelua (:http-palvelin jarjestelma) :hae-tr-tieosuudet
+                               +kayttaja-jvh+ {:tr-numero tienumero}))))
 
 (deftest hae-tr-tieosuudet-rajauksella
   (luo-tr-osoitteet [[1 100 500 11]
@@ -110,18 +123,24 @@
 (deftest hae-tr-tieosuudet-virheelliset-rajat
   (doseq [rajaus [{:tr-alkuetaisyys 1}
                  {:tr-loppuetaisyys 1}
-                 {:tr-alkuosa 3 :tr-loppuosa 2}
-                 {:tr-alkuosa 1 :tr-alkuetaisyys 20
-                  :tr-loppuosa 1 :tr-loppuetaisyys 10}
-                 {:tr-alkuosa 1 :tr-alkuetaisyys 100
-                  :tr-loppuosa 1 :tr-loppuetaisyys 100}
-                 {:tr-alkuosa 1 :tr-loppuosa 1 :tr-loppuetaisyys 0}
                  {:tr-alkuosa -1}]]
     (is (thrown? Exception
                  (kutsu :hae-tr-tieosuudet +kayttaja-jvh+
                         (assoc rajaus :tr-numero tienumero)))))
   (is (thrown? Exception
                (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {}))))
+
+(deftest hae-tr-tieosuudet-kaanteisilla-rajoilla-palauttaa-tyhjan
+  (luo-tr-osoitteet [[1 0 500 11]
+                     [2 0 500 11]])
+  (doseq [rajaus [{:tr-alkuosa 2 :tr-loppuosa 1}
+                  {:tr-alkuosa 1 :tr-alkuetaisyys 300
+                   :tr-loppuosa 1 :tr-loppuetaisyys 200}
+                  {:tr-alkuosa 1 :tr-alkuetaisyys 100
+                   :tr-loppuosa 1 :tr-loppuetaisyys 100}
+                  {:tr-alkuosa 1 :tr-loppuosa 1 :tr-loppuetaisyys 0}]]
+    (is (= [] (kutsu :hae-tr-tieosuudet +kayttaja-jvh+
+                     (assoc rajaus :tr-numero tienumero))))))
 
 (deftest hae-osien-tiedot-suoraan
   (luo-tr-osoitteet [[1 0 100 11]

@@ -188,6 +188,11 @@ SELECT "tr-numero"       AS "tr-numero",
      AND (:tr-loppuosa::INT IS NULL OR :tr-loppuosa > "tr-osa"
        OR (:tr-loppuosa = "tr-osa" AND (:tr-loppuetaisyys::INT IS NULL
                    OR :tr-loppuetaisyys > "tr-alkuetaisyys")))
+     AND (:tr-alkuosa::INT IS NULL OR :tr-loppuosa::INT IS NULL
+       OR :tr-alkuosa < :tr-loppuosa
+       OR (:tr-alkuosa = :tr-loppuosa
+         AND (:tr-loppuetaisyys::INT IS NULL
+           OR COALESCE(:tr-alkuetaisyys, 0) < :tr-loppuetaisyys)))
  ORDER BY "tr-ajorata", "tr-kaista", "tr-osa", "tr-alkuetaisyys"
  LIMIT :rajoita-tieosuuksien-maara;
 
