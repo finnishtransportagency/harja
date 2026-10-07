@@ -5,6 +5,7 @@
     [cheshire.core :as cheshire]
     [com.stuartsierra.component :as component]
     [harja.domain.kulut :as domain-kulut]
+    [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
     [harja.kyselyt.urakat :as urakat-kyselyt]
     [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
     [harja.pvm :as pvm]
@@ -403,7 +404,8 @@
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         urakan-alkupvm (:alkupvm urakan-tiedot)
         hoitokauden-alkuvuosi 2019
-        kattohinta 275000M
+        tavoitehinta 250000M
+        kattohinta (* tavoitehinta 1.1)
         ylityksen-maara 10000M
         toteutuneet-kustannukset (+ kattohinta ylityksen-maara)
         urakoitsija-maksaa ylityksen-maara
@@ -428,7 +430,14 @@
         db-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
 
         ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        vastaus (with-redefs [budjettisuunnittelu-kyselyt/hae-budjettitavoite
+                              (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                        :tavoitehinta-oikaistu tavoitehinta
+                                                        :kattohinta-oikaistu kattohinta
+                                                        :hoitovuoden-lopun-tavoitehinta tavoitehinta
+                                                        :hoitovuoden-lopun-kattohinta kattohinta}])]
+                  (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti))
+
         encoodattu-body (cheshire/decode (:body vastaus) true)
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
                                                          (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))
@@ -450,7 +459,8 @@
         urakan-tiedot (first (urakat-kyselyt/hae-urakka (:db jarjestelma) {:id urakka-id}))
         urakan-alkupvm (:alkupvm urakan-tiedot)
         hoitokauden-alkuvuosi 2019
-        kattohinta 275000M
+        tavoitehinta 250000M
+        kattohinta (* tavoitehinta 1.1)
         ylityksen-maara 10000M
         toteutuneet-kustannukset (+ kattohinta ylityksen-maara)
         urakoitsija-maksaa 0M
@@ -474,11 +484,15 @@
                                     ylityksen-maara urakoitsija-maksaa siirrettava-maara kulu-id viimeinen_hoitokausi maksimi-siirrettava-maara siirtorajoitus-prosentti kayttajaid)
         db-paatos (paatos-kyselyt/tee-kattohinnan-ylityspaatos (:db jarjestelma) kattohinnan-ylitys-paatos)
 
-        ;; Hae päätöksen tiedot
-        paatos-tiedot (q-map (format "SELECT * FROM paatos_kattohinta WHERE urakkaid = %s AND hoitokauden_alkuvuosi = %s" urakka-id hoitokauden-alkuvuosi))
-
         ;; Varmista, että vastauksesta löytyy juuri luotu oikaisu
-        vastaus (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti)
+        vastaus (with-redefs [budjettisuunnittelu-kyselyt/hae-budjettitavoite
+                      (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+                                                :tavoitehinta-oikaistu tavoitehinta
+                                                :kattohinta-oikaistu kattohinta
+                                                :hoitovuoden-lopun-tavoitehinta tavoitehinta
+                                                :hoitovuoden-lopun-kattohinta kattohinta}])]
+                  (api-tyokalut/get-kutsu [(str "/api/analytiikka/toteutuneet-kustannukset/" urakka-id)] kayttaja-analytiikka portti))
+
         encoodattu-body (cheshire/decode (:body vastaus) true)
         juuri-luotu-paatos-rajapinnasta (first (filter (fn [k]
                                                          (= (get-in k [:hoitovuoden-paatos :paatostyyppi]) "kattohinnan-ylitys"))

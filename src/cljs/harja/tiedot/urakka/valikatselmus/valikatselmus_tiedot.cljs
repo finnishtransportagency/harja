@@ -9,6 +9,7 @@
             [harja.domain.urakka :as urakka]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.istunto :as istunto]
+            [harja.tiedot.urakka :as urakan-tiedot]
             [harja.ui.nakymasiirrin :as siirrin]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tyokalut.tuck :as tuck-apurit]
@@ -120,6 +121,8 @@
 
     (reset! tavoitehinnan-muutokset muutokset)
     (-> app
+      (assoc :hoitokauden-alkuvuosi (:hoitokauden-alkuvuosi vastaus))
+      (assoc :urakan-alkuvuosi (:urakan-alkuvuosi vastaus))
       (assoc :paatokset (:paatokset vastaus))
       (assoc :avatut-paatokset avatut-paatokset)
       (assoc :tavoitehinnan-muutokset (:tavoitehinnan-muutokset vastaus))
@@ -293,12 +296,14 @@
 
   ValitseHoitokausi
   (process-event [{urakkaid :urakkaid vuosi :vuosi} app]
-    (let [app (-> app
-                (assoc :valittu-kuukausi nil)
+    (let [hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
+                      (pvm/paivan-lopussa
+                        (pvm/hoitokauden-loppupvm (inc vuosi)))]
+          _ (urakan-tiedot/valitse-hoitokausi! hoitokausi)
+          app (-> app
                 (assoc :avatut-paatokset #{}) ; Resetoidaan avaustilanne
                 ;; Lupaukset on kiinteässä linkissä kustannusten seurannan kanssa joten tarvitaan hoitokaudellekin sama avain
-                (assoc :valittu-hoitokausi [(pvm/hoitokauden-alkupvm vuosi)
-                                            (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                (assoc :valittu-hoitokausi hoitokausi)
                 (assoc :nykyhetki (pvm/nyt))
                 (assoc :haku-kaynnissa? true)
                 (assoc :hoitokauden-alkuvuosi vuosi))]
