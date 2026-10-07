@@ -16,7 +16,7 @@
         ;; Yhteenvedot kokonaissummat ja tavoitehinnan muodostuminen
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :tavoitehinta-indeksikorjattu]) 0)
         ;; Tavoitehinnan muutokset saadaan oikaisuista -24 ja sitä vanhemmille urakoille
-        tavoitehinnan-muutokset (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu]) 0)
+        tavoitehinnan-oikaisut-24-urakoille (or (get-in yhteenvedon-tiedot [:kustannukset :tavoitehinnanoikaisu-budjetoitu]) 0)
         kirjallisesti-sovitut-muutokset (when (:muutosten_hallinta urakan-parametrit)
                                        (get-in yhteenvedon-tiedot [:budjettitavoite :kirjallisesti-sovitut-muutokset]))
         menneet-pysyvat-muutokset (when (:muutosten_hallinta urakan-parametrit)
@@ -26,9 +26,9 @@
         thv-arvonvahennykset-yht (apply + (map #(or (:maara %) 0) (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenvedon-tiedot)))
         pysyvat-muutokset-toteuma-muutokset-yht (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset-yht 0))
 
-        ;; Hoitovuoden lopun indeksikorjaus -päätös vaikuttaa myös hoitovuoden lopun tavoitehintaan.
+        ;; Hoitovuoden lopun indeksikorjaus summa vaikuttaa vaikuttaa kattohintaan, oli siitä tehty päätös tai ei
         hv-lopun-indkorjaus-paatos (valikatselmus-tiedot/ota-paatos paatokset :hoitovuoden-lopun-indeksikorjaus)
-        hoitokauden_lopun_indeksikorjaus (or (:hoitokauden_lopun_indeksikorjaus hv-lopun-indkorjaus-paatos) 0)
+        hoitokauden_lopun_indeksikorjaus (or (:hoitovuoden-lopun-indeksikorjaus-summa yhteenvedon-tiedot) 0)
 
         ;; Hoitovuoden lopun tavoitehinta tulee budjettitavoite -hausta, jossa on mukana vain tietokantaan suoraan tallennettu hoitokauden lopun tavoitehinta.
         ;; Se ei siis ota huomioon muutoksia tai arvonvähennyksiä.
@@ -43,13 +43,16 @@
         hoitovuoden-lopun-kattohinta (or (get-in yhteenvedon-tiedot [:budjettitavoite :hoitovuoden-lopun-kattohinta]) 0)
         ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
         ;; Sekä arvonvähennykset
+
         hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
+                                       ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
                                        (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
                                        (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                       (* thv-arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
+                                       (* thv-arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
+                                       (* tavoitehinnan-oikaisut-24-urakoille (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
     {:yhteenvedon-tiedot yhteenvedon-tiedot
      :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
-     :tavoitehinnan-muutokset tavoitehinnan-muutokset
+     :tavoitehinnan-oikaisut-24-urakoille tavoitehinnan-oikaisut-24-urakoille
      :kirjallisesti-sovitut-muutokset kirjallisesti-sovitut-muutokset
      :menneet-pysyvat-muutokset menneet-pysyvat-muutokset
      :toteumiin-perustuvat-muutokset-yht toteumiin-perustuvat-muutokset-yht
