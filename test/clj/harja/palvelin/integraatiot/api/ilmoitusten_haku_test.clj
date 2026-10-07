@@ -1,22 +1,14 @@
 (ns harja.palvelin.integraatiot.api.ilmoitusten-haku-test
   (:require [clojure.test :refer [deftest is use-fixtures testing]]
-            [clojure.core.async :refer [<!! timeout]]
-            [clj-time
-             [core :as t]
-             [format :as df]]
-            [harja.kyselyt.konversio :as konv]
+            [clj-time.format :as df]
             [com.stuartsierra.component :as component]
             [harja.testi :refer :all]
             [harja.jms-test :refer [feikki-jms]]
             [harja.palvelin.integraatiot.tloik.tyokalut :refer :all]
-            [harja.palvelin.integraatiot.tloik.tloik-komponentti :refer [->Tloik]]
             [harja.palvelin.integraatiot.api.tyokalut :as api-tyokalut]
             [cheshire.core :as cheshire]
             [clojure.string :as str]
-            [harja.palvelin.integraatiot.jms :as jms]
             [harja.palvelin.integraatiot.api.ilmoitukset :as api-ilmoitukset]
-            [harja.tyokalut.xml :as xml]
-            [clojure.data.zip.xml :as z]
             [harja.pvm :as pvm])
   (:import (java.net URLEncoder)
            (java.text SimpleDateFormat)
@@ -189,7 +181,7 @@
 (deftest hae-ilmoitukset-urakka-idlla-onnistuu
   (let [kuukausi-sitten (nykyhetki-iso8061-formaatissa-menneisyyteen 30)
         huomenna (nykyhetki-iso8061-formaatissa-tulevaisuuteen 1)
-        ilmoitusid (rand-int 92333123)
+        ilmoitusid (ffirst (q "SELECT COALESCE(MAX(ilmoitusid), 0) + 1 FROM ilmoitus"))
         db-timestamp (nykyhetki-psql-timestamp-formaatissa-menneisyyteen-minuutteja 1)
         _ (luo-ilmoitus ilmoitusid 4 db-timestamp)
         _ (anna-lukuoikeus kayttaja)

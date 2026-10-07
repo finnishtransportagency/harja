@@ -22,8 +22,7 @@
             [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.tloik.tloik-komponentti :as tloik]
             [harja.pvm :as pvm])
-  (:import (java.text SimpleDateFormat))
-  (:use [slingshot.slingshot :only [throw+]]))
+  (:import (java.text SimpleDateFormat)))
 
 (defn hae-ilmoituksen-id [db ilmoitusid]
   (if-let [id (:id (first (tieliikenneilmoitukset-kyselyt/hae-id-ilmoitus-idlla db ilmoitusid)))]
@@ -216,6 +215,17 @@
              (fn [rivit]
                (keep muunna-kuittausrivi rivit))))))
 
+(defn- muunna-urakka-id-haun-kuittausrivi [r]
+  (when (:kuitattu r)
+    (update r :kuitattu sql-timestamp-str->utc-timestr)))
+
+(defn- normalisoi-urakka-id-haun-kuittaukset [ilmoitukset]
+  (->> ilmoitukset
+    (map #(update % :kuittaukset konversio/jsonb->clojuremap))
+    (map #(update % :kuittaukset
+             (fn [rivit]
+               (keep muunna-urakka-id-haun-kuittausrivi rivit))))))
+
 (defn- muodosta-ilmoitusten-vastaus [ilmoitukset]
   {:ilmoitukset
    (map (fn [ilmoitus]
@@ -247,7 +257,7 @@
                        :alkuaika alkuaika
                        :loppuaika loppuaika})]
     (-> ilmoitukset
-      normalisoi-ilmoitusten-kuittaukset
+      normalisoi-urakka-id-haun-kuittaukset
       muodosta-ilmoitusten-vastaus)))
 
 (defn hae-ilmoitukset-urakka-idlla
@@ -268,7 +278,7 @@
                        :alkuaika alkuaika
                        :loppuaika loppuaika})]
     (-> ilmoitukset
-      normalisoi-ilmoitusten-kuittaukset
+      normalisoi-urakka-id-haun-kuittaukset
       muodosta-ilmoitusten-vastaus)))
 
 (defrecord Ilmoitukset []
