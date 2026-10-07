@@ -17,8 +17,8 @@ import {
 // Arvonvähennysten E2E-testit (Sanktiot ja bonukset -näkymä)
 //
 // Testataan arvonvähennyslomakkeen toiminta kolmella eri urakkatyypillä:
-//  1) MHU25-urakka (Rovaniemi): "Vaikuttaa tavoitehintaan" + tehtäväryhmä & tehtävä
-//  2) MHU25-urakka (Rovaniemi): "Ei vaikuta tavoitehintaan" + Kulun kohdistus
+//  1) MHU25-urakka (Kajaani): "Vaikuttaa tavoitehintaan" + tehtäväryhmä & tehtävä
+//  2) MHU25-urakka (Kajaani): "Ei vaikuta tavoitehintaan" + Kulun kohdistus
 //  3) MHU24-urakka (Suomussalmi): tavoitehinta-radioiden näyttäminen 2026 hoitovuodesta alkaen
 //     ei tehtäväryhmä/tehtävä-valikoita, aina Kulun kohdistus + Laskutuskuukausi
 //
@@ -35,27 +35,35 @@ let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
 
-let testiurakka1 = "Rovaniemen MHU testiurakka (1. hoitovuosi)"; // mhu25 urakka
+let testiurakka1 = "POP MHU Kajaani 2025-2030"; // mhu25 urakka
 let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
 let testiurakka3 = "Oulun MHU 2019-2024";              // mhu19 urakka
-let evk = "Lappi";
+let evk = "Pohjois-Suomi";
 let evk2 = "Pohjois-Suomi";
 
 // Havaittu- ja Määrätty/Käsitelty-päivämäärät.
-// Sekä Rovaniemen (käynnissä 2025-10-01–2030-10-01) että Raahen
+// Sekä Kajaanin (käynnissä 2025-10-01–2030-09-30) että Raahen
 // (käynnissä 2024-10-01–2029-09-30) urakat ovat kuluvana vuonna (2026) käynnissä,
 // joten käytetään kuluvan hoitokauden (1.10.2025–30.9.2026) sisällä olevia päiviä.
 // HUOM: päivämäärän on oltava urakan voimassaolon sisällä, muuten pvm-valitsin hylkää sen.
 let havaittuPvm = "01.03.2026";
 let maarattyPvm = "15.03.2026";
 let havaittuPvmRaahe = "01.03.2027";
-let maarattyPvmRaahe = "15.03.2027";
+let maarattyPvmRaahe = "5.03.2027";
 let havaittuPvmOulu = "01.03.2021";
 let maarattyPvmOulu = "15.03.2021";
 
-// --- Testit: MHU25-urakka (Rovaniemi) ---
+function valitseHoitovuosi(hoitovuosi) {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+    });
+    cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+}
 
-describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
+// --- Testit: MHU25-urakka (Kajaani) ---
+
+describe('Arvonvähennykset - MHU25-urakka (Kajaani)', () => {
 
     before(() => {
         siivoaTietokannastaSanktiot(testiArvonvahennysKuvaus1);
@@ -64,6 +72,7 @@ describe('Arvonvähennykset - MHU25-urakka (Rovaniemi)', () => {
 
     it('Arvonvähennys mhu25 urakalle', () => {
         avaaSanktiotJaBonukset(testiurakka1, evk);
+        valitseHoitovuosi(1);
         avaaUusiArvonvahennys();
 
         // Perustiedot
@@ -263,6 +272,7 @@ describe('Arvonvähennykset - MHU24-urakka - ennen 2026 hoitovuotta', () => {
 
     it('Vanha lomake käytössä - varmistetaan toiminta', () => {
         avaaSanktiotJaBonukset(testiurakka2, evk2);
+        valitseHoitovuosi(3);
 
         cy.contains('.lisaa-nappi', 'Lisää uusi').click();
         cy.get(SP, {timeout: clickTimeout}).should('be.visible');

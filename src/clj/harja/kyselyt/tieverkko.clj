@@ -53,8 +53,9 @@
           []
           tieosuudet))
 
-(defn hae-tieosuudet [db params]
+(defn hae-tieosuudet [db {:keys [rajoita-tieosuuksien-maara] :as params}]
   (let [raakatieosuudet (hae-tieosuudet-raakana db params)
+        tieosuuksia-rajattu? (>= (count raakatieosuudet) rajoita-tieosuuksien-maara)
         osoiteavaimet [:tr-numero :tr-ajorata :tr-kaista
                        :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]
         alkuperaiset-avaimet {:alkuperainen-tr-alkuosa :tr-alkuosa
@@ -73,7 +74,8 @@
                                                   (select-keys % (keys alkuperaiset-avaimet))
                                                   alkuperaiset-avaimet))))]
     {:tieosuudet (yhdista-yhtenaiset-tieosuudet rajatut)
-     :kohteen-ulkopuolelle-jatkuvat (yhdista-yhtenaiset-tieosuudet ulkopuolelle-jatkuvat)}))
+      :kohteen-ulkopuolelle-jatkuvat (yhdista-yhtenaiset-tieosuudet ulkopuolelle-jatkuvat)
+      :tieosuuksia-rajattu? tieosuuksia-rajattu?}))
 
 (defn laske-max-loppuetaisyys [osoitteet]
   (let [laske-loppuetaisyys (fn [{:keys [pituus tr-alkuetaisyys]}]

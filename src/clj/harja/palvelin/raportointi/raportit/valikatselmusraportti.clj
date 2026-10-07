@@ -61,7 +61,9 @@
         lupausbonus (or (arvopaatoksesta lupauspaatos :lupausbonus) 0)
         asiakastyytyvaisyysbonus (reduce + 0 (keep #(when (= (:tyyppi %) "asiakastyytyvaisyysbonus") (:rahasumma %)) (:bonukset yhteenveto)))
         muut-bonukset (reduce + 0 (keep #(when (not (contains? #{"asiakastyytyvaisyysbonus" "lupausbonus"} (:tyyppi %))) (:rahasumma %)) (:bonukset yhteenveto)))
-        lupaussanktio (or (arvopaatoksesta lupauspaatos :lupaussanktio) 0)
+        ;; Päätökseen tallennetaan sanktio positiivisena.
+        lupaussanktio (if (arvopaatoksesta lupauspaatos :lupaussanktio)
+                        (* -1 (arvopaatoksesta lupauspaatos :lupaussanktio)) 0)
         laskutusrajan-ylitys-sanktiot (reduce + 0 (keep #(when (= "laskutus_yli_laskutusrajan" (:sakkoryhma %))
                                                            (+ (or (:maara %) 0) (:indeksikorjaus %))) (:sanktiot yhteenveto)))
         muut-sanktiot (reduce + 0 (map #(if (not (contains? #{"lupaussanktio" "arvonvahennyssanktio" "laskutus_yli_laskutusrajan"} (:sakkoryhma %)))
