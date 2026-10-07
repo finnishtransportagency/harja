@@ -404,7 +404,7 @@ WHERE mm.urakka = :urakka
   AND mm.poistettu IS NOT TRUE 
   AND mm.alityyppi::TEXT = 'erillisrahoitus' 
   AND mmk.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi::INTEGER 
-GROUP BY mm.syy, mmk.summa, mm.alityyppi
+GROUP BY mm.id, mm.syy, mmk.summa, mm.alityyppi
 UNION ALL
 -- Pysyvät muutokset
 -- Aikaisempien hoitokausien muutokset, jotka lasketaan hankintakustannuksiin
