@@ -326,7 +326,7 @@
             (update tiekm-maaritys :laskentaparametrit assoc :desimaalit 3) 1)))))
 
 (deftest syotteen-otsikko-muodostuu-profiilin-laskentaparametreista
-  (is (= "Tiekilometrit (tiekm)"
+  (is (= "Tiekm"
          (sanktion-laskenta/syotteen-otsikko (:laskentaparametrit tiekm-maaritys))))
   (is (= "Laskutuskelvottomana laskutettu osuus (€)"
          (sanktion-laskenta/syotteen-otsikko (:laskentaparametrit prosenttiosuus-maaritys)))))

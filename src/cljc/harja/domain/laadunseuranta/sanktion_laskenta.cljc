@@ -53,7 +53,7 @@
 
 ;; Lomakkeen apufunktiot. Selaimen tulos on vain esikatselu; palvelin laskee tallennettavan summan.
 
-(def ^:private syoteavainten-otsikot {"tiekm" "Tiekilometrit"})
+(def ^:private syoteavainten-otsikot {"tiekm" "Tiekm"})
 
 (defn syotteen-otsikko
   "Syötekentän otsikko profiilin laskentaparametreista muodossa 'Nimi (yksikkö)'."
@@ -61,7 +61,9 @@
   (let [teksti (str/replace syoteavain "_" " ")
         nimi (or (get syoteavainten-otsikot syoteavain)
                (str (str/upper-case (subs teksti 0 1)) (subs teksti 1)))]
-    (str nimi " (" yksikko ")")))
+    (str nimi
+      (when-not (contains? syoteavainten-otsikot syoteavain)
+        (str " (" yksikko ")")))))
 
 (defn syotteen-virhe
   "Selaimen esitarkistus, joka peilaa palvelimen syötesääntöjä. Palauttaa virheviestin tai nil.
