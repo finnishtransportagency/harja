@@ -389,6 +389,8 @@ jobs:
           task-definition: ${{ steps.task-def.outputs.task-definition }}
           service: ${{ vars.ECS_SERVICE_NAME }}
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
+          # Käynnistä task suoraan deploymentin yhteydessä
+          desired-count: 1
           wait-for-service-stability: false
 
       # Env-tagi asetetaan vasta, kun ECS-service on päivitetty uuteen task definitioniin.
@@ -406,12 +408,3 @@ jobs:
           docker buildx imagetools create --prefer-index=false \
             -t "$ECR_REGISTRY/$ECR_REPOSITORY:$ENV_TAG" \
             "$ECR_REGISTRY/$ECR_REPOSITORY:$BUILD_TAG"
-
-      - name: '[Test-envs] Start ECS Fargate tasks'
-        uses: ./.github/actions/start-fargate-tasks
-        timeout-minutes: 10
-        with:
-          cluster: ${{ vars.ECS_CLUSTER_NAME }}
-          service: ${{ vars.ECS_SERVICE_NAME }}
-          # Ohita ECS service-stability check
-          check-stability: 'false'
