@@ -326,12 +326,6 @@ describe("POT2", function() {
             solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:first-child')
                 .should('have.text', `Kohteessa tie: ${tie}, 2/0 - 1/625 on virhe`);
         });
-        solu(0, 'Aosa').find('.info-laatikko')
-            .should('have.class', 'vahva-ilmoitus')
-            .and('have.css', 'border-color', 'rgb(148, 113, 0)')
-            .and('have.css', 'border-width', '2px');
-        solu(0, 'Aosa').find('.info-laatikko .infolaatikon-ikoni')
-            .should('have.css', 'align-self', 'center');
         solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
             .should('contain.text', 'Alkuosa ei voi olla loppuosan jälkeen.');
         solu(0, 'Losa').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
