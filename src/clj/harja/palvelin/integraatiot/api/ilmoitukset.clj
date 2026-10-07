@@ -203,41 +203,6 @@
    :f8 :kuittaaja_organisaatio_ytunnus
    :f9 :kanava})
 
-(defn- muunna-kuittausrivi [r]
-  (when (not (nil? (:f1 r)))
-    (let [r (-> r (set/rename-keys db-kuittaus->avaimet))]
-      (assoc r :kuitattu (sql-timestamp-str->utc-timestr (:kuitattu r))))))
-
-(defn- normalisoi-ilmoitusten-kuittaukset [ilmoitukset]
-  (->> ilmoitukset
-    (map #(update % :kuittaukset konversio/jsonb->clojuremap))
-    (map #(update % :kuittaukset
-             (fn [rivit]
-               (keep muunna-kuittausrivi rivit))))))
-
-(defn- muunna-urakka-id-haun-kuittausrivi [r]
-  (when (:kuitattu r)
-    (update r :kuitattu sql-timestamp-str->utc-timestr)))
-
-(defn- normalisoi-urakka-id-haun-kuittaukset [ilmoitukset]
-  (->> ilmoitukset
-    (map #(update % :kuittaukset konversio/jsonb->clojuremap))
-    (map #(update % :kuittaukset
-             (fn [rivit]
-               (keep muunna-urakka-id-haun-kuittausrivi rivit))))))
-
-(defn- muodosta-ilmoitusten-vastaus [ilmoitukset]
-  {:ilmoitukset
-   (map (fn [ilmoitus]
-          (sanomat/rakenna-ilmoitus
-            (konversio/alaviiva->rakenne ilmoitus)))
-     ilmoitukset)})
-
-(defn- ilmoitus-haun-loppuaika [loppuaika]
-  (if loppuaika
-    (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
-    (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti))))
-
 (defn hae-ilmoitukset-ytunnuksella
   "Haetaan ilmoitukset y-tunnuksella ja valitetty-harjaan ajan perusteella. Lisätään alueurakkanumero, jotta urakka
   on mahdollista eritellä."
@@ -250,15 +215,34 @@
   (validointi/tarkista-onko-kayttaja-organisaatiossa db ytunnus kayttaja)
   (let [;; Ilmoitukset "valitettu-urakkaan" Timestamp tallennetaan UTC ajassa. Muokataan siitä syystä myös loppuaika ja alkuaika utc aikaan
         alkuaika (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-        loppuaika (ilmoitus-haun-loppuaika loppuaika)
+        loppuaika (if loppuaika
+                    (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                    (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-ytunnuksella
                       db
                       {:ytunnus ytunnus
                        :alkuaika alkuaika
-                       :loppuaika loppuaika})]
-    (-> ilmoitukset
-      normalisoi-urakka-id-haun-kuittaukset
-      muodosta-ilmoitusten-vastaus)))
+                       :loppuaika loppuaika})
+        ilmoitukset
+        (->> ilmoitukset
+          (map #(update % :kuittaukset konversio/jsonb->clojuremap))
+          (map #(update % :kuittaukset
+                   (fn [rivit]
+                     (let [tulos (keep
+                                   (fn [r]
+                                     ;; Haussa käytetään left joinia, joten on mahdollista, että löytyy nil id
+                                     (when (not (nil? (:f1 r)))
+                                       (let [r (-> r (clojure.set/rename-keys db-kuittaus->avaimet))
+                                             r (assoc r :kuitattu (sql-timestamp-str->utc-timestr (:kuitattu r)))]
+                                         r)))
+                                   rivit)]
+                       tulos)))))
+        vastaus {:ilmoitukset
+                 (map (fn [ilmoitus]
+                         (sanomat/rakenna-ilmoitus
+                           (konversio/alaviiva->rakenne ilmoitus)))
+                   ilmoitukset)}]
+    vastaus))
 
 (defn hae-ilmoitukset-urakka-idlla
   "Haetaan ilmoitukset urakka-id:llä ja aikavälillä. Kuittaukset aggregoidaan SQL:ssä ja normalisoidaan Clojure-puolella."
@@ -271,15 +255,28 @@
   (let [urakka-id (Integer/parseInt id)
         _ (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
         alkuaika (pvm/rajapinta-str-aika->sql-timestamp alkuaika)
-        loppuaika (ilmoitus-haun-loppuaika loppuaika)
+        loppuaika (if loppuaika
+                    (pvm/rajapinta-str-aika->sql-timestamp loppuaika)
+                    (c/to-sql-time (pvm/ajan-muokkaus (pvm/joda-timeksi (pvm/nyt)) true 1 :tunti)))
         ilmoitukset (tieliikenneilmoitukset-kyselyt/hae-ilmoitukset-urakka-idlla
                       db
                       {:urakka-id urakka-id
                        :alkuaika alkuaika
-                       :loppuaika loppuaika})]
-    (-> ilmoitukset
-      normalisoi-urakka-id-haun-kuittaukset
-      muodosta-ilmoitusten-vastaus)))
+                       :loppuaika loppuaika})
+        ilmoitukset (->> ilmoitukset
+                       (map #(update % :kuittaukset konversio/jsonb->clojuremap))
+                       (map #(update % :kuittaukset
+                                (fn [rivit]
+                                  (keep (fn [r]
+                                          (when (not (nil? (:kuitattu r)))
+                                            (assoc r :kuitattu (sql-timestamp-str->utc-timestr (:kuitattu r)))))
+                                        rivit)))))
+        vastaus {:ilmoitukset
+                 (map (fn [ilmoitus]
+                        (sanomat/rakenna-ilmoitus
+                          (konversio/alaviiva->rakenne ilmoitus)))
+                      ilmoitukset)}]
+    vastaus))
 
 (defrecord Ilmoitukset []
   component/Lifecycle
