@@ -695,3 +695,28 @@ $$
 -- Funktio päättyy
     END
 $$ LANGUAGE plpgsql;
+
+-- Lisätään iin21 urakalle viranomaistehtäviä, jotta voidaan testata viranomaistoteumien raportointia
+DO
+$$
+    DECLARE
+        urakkaid   INT := (SELECT id FROM urakka WHERE nimi = 'Iin MHU 2021-2026');
+        kayttajaid INT := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
+        sopimusid  INT := (SELECT id FROM sopimus WHERE urakka = urakkaid AND paasopimus IS null);
+        toteumaid  INT;
+        tehtavaid  INT := (SELECT id FROM tehtava WHERE nimi = 'Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon');
+
+    BEGIN
+        INSERT INTO toteuma (lahde, urakka, sopimus, luotu, alkanut, paattynyt, tyyppi, suorittajan_nimi,
+                             suorittajan_ytunnus, lisatieto, luoja)
+        VALUES ('harja-ui'::lahde, urakkaid, sopimusid, NOW(), '2023-01-01 00:12:00+02', '2023-01-01 00:15:00+02',
+                'kokonaishintainen'::toteumatyyppi, 'Seppo Suorittaja', '4153724-6',
+                'Iin viranomaistehtava', kayttajaid);
+
+        toteumaid := (SELECT id FROM toteuma WHERE lisatieto = 'Iin viranomaistehtava' AND urakka = urakkaid);
+
+
+        INSERT INTO toteuma_tehtava (toteuma, luotu, toimenpidekoodi, maara, urakka_id, hoitokauden_alkuvuosi)
+        VALUES (toteumaid, NOW(), tehtavaid, 9, urakkaid, 2022);
+    END
+$$ LANGUAGE plpgsql;

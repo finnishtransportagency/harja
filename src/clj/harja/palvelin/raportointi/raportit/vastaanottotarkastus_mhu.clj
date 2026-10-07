@@ -21,7 +21,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus_mhu.sql"
   {:positional? true})
 
-(declare hae-viranomaistehtavamaarat hae-bonukset-vastaanottotarkastusraportille)
+(declare hae-viranomaistehtavamaarat hae-bonukset-vastaanottotarkastusraportille hae-sanktiot-vastaanottotarkastusraportille)
 
 
 (defn- summa [rivit avain]
@@ -56,16 +56,25 @@
      (hae-bonus-sanktiot db urakka-id hoitokausi hoitovuosi)]))
 
 (defn lupaukset-taulukko [db urakka-id urakan-tiedot hoitokaudet]
-  (let [vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)]
+  (let [vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
+        rivit (mapv #(lupausrivi db urakka-id vanha-urakka? %) hoitokaudet)
+        bonus-sanktiot-yhteensa (apply + 0 (map #(nth % 3) rivit))
+        yhteensarivi [{:lihavoi? true
+                       :korosta-hennosti? true
+                       :rivi ["Yhteensä"
+                              ""
+                              ""
+                              bonus-sanktiot-yhteensa]}]]
     [:taulukko {:otsikko "Lupaukset"
                 :tyhja (when (empty? hoitokaudet) "Ei hoitovuosia.")
                 :sheet-nimi "Lupaukset"
-                :samalle-sheetille? false}
+                :samalle-sheetille? false
+                :viimeinen-rivi-yhteenveto? true}
      [{:otsikko "Hoitovuosi" :leveys 5}
       {:otsikko "Tarjouksen lupauspisteet" :leveys 5}
       {:otsikko "Toteutuneet lupauspisteet" :leveys 5}
       {:otsikko "Bonus/Sanktiot (€)" :leveys 5 :fmt :raha}]
-     (mapv #(lupausrivi db urakka-id vanha-urakka? %) hoitokaudet)]))
+     (concat rivit yhteensarivi)]))
 
 (defn- talvisuolan-erittely
   "Talvisuolan kokonaiskäyttömäärä osion sisään tulee yhteenveto ja hoitovuosikotainen erittely."
@@ -136,18 +145,18 @@
         tavoitehinnan-muutokset-yhteensa (reduce + 0 (map last rivit))
         yhteensarivi [{:lihavoi? true
                        :korosta-hennosti? true
-                       :rivi ["Yhteensä"
-                              (:suunniteltu akilliset-hoitotyot-yhteensa)
-                              (:toteutunut akilliset-hoitotyot-yhteensa)
-                              (:suunniteltu vahinkojen-korjaukset-yhteensa)
-                              (:toteutunut vahinkojen-korjaukset-yhteensa)
-                              (:suunniteltu kannustinjarjestelma-yhteensa)
-                              (:toteutunut kannustinjarjestelma-yhteensa)
-                              (when (seq muut-rahavaraukset)
-                                (:suunniteltu loput-yhteensa))
-                              (when (seq muut-rahavaraukset)
-                                (:toteutunut loput-yhteensa))
-                              tavoitehinnan-muutokset-yhteensa]}]
+                       :rivi (into ["Yhteensä"
+                                    (:suunniteltu akilliset-hoitotyot-yhteensa)
+                                    (:toteutunut akilliset-hoitotyot-yhteensa)
+                                    (:suunniteltu vahinkojen-korjaukset-yhteensa)
+                                    (:toteutunut vahinkojen-korjaukset-yhteensa)
+                                    (:suunniteltu kannustinjarjestelma-yhteensa)
+                                    (:toteutunut kannustinjarjestelma-yhteensa)]
+                               (concat
+                                 (when (seq muut-rahavaraukset)
+                                   [(:suunniteltu loput-yhteensa)
+                                    (:toteutunut loput-yhteensa)])
+                                 [tavoitehinnan-muutokset-yhteensa]))}]
         otsikot (into [{:otsikko "Hoitokausi" :leveys 5}]
                   (concat (mapcat (fn [_]
                                     [{:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
@@ -183,6 +192,14 @@
                             kirjallisesti-sovitut-yht (reduce + 0 (map
                                                                     muutos-ja-lisatyoraportti/muutoksen-tavoitehinnan-muutos
                                                                     kirjallisesti-sovitut-muutokset))
+
+                            ;; Haetaan arvonvähennykset, jotka kuuluu tavoitehintaan. (eli ne ei aina kuulu)
+                            arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                                  :alkupvm alkupvm
+                                                                                                                  :loppupvm loppupvm
+                                                                                                                  :hoitokauden-alkuvuosi vuosi})
+                            thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+
                             maaramuutokset (when urakka-id
                                              (muutos-palvelu/hae-tehtava-maaramuutokset db user {:urakka-id urakka-id
                                                                                                  :valittu-hoitokausi [alkupvm loppupvm]
@@ -201,7 +218,8 @@
 
                             ;; Yhteensä
                             yhteensa (+ kirjallisesti-sovitut-yht
-                                       toteumiin-perustuvat-yht)]
+                                       toteumiin-perustuvat-yht
+                                       thv-arvonvahennykset-yht)]
                         [(str vuosi "-" (pvm/vuosi loppupvm))
                          yhteensa]))
                 hoitokaudet)
@@ -229,9 +247,16 @@
                             vuosi (pvm/vuosi alkupvm)
                             oikaisut (muutos-ja-lisatyoraportti/hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
                                                                                                :hoitovuosi vuosi})
-                            tavoitehinnan-muutos (reduce + 0 (map #(or (:tavoitehinnan_muutos %) 0) oikaisut))]
+                            tavoitehinnan-muutos (reduce + 0 (map #(or (:tavoitehinnan_muutos %) 0) oikaisut))
+
+                            ;; Haetaan arvonvähennykset, jotka kuuluu tavoitehintaan. (eli ne ei aina kuulu)
+                            arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakka-id
+                                                                                                                  :alkupvm alkupvm
+                                                                                                                  :loppupvm loppupvm
+                                                                                                                  :hoitokauden-alkuvuosi vuosi})
+                            thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))]
                         [(str vuosi "-" (pvm/vuosi loppupvm))
-                         tavoitehinnan-muutos]))
+                         (+ tavoitehinnan-muutos thv-arvonvahennykset-yht)]))
                 hoitokaudet)
 
         oikaisut-yhteensa (reduce + 0 (map #(or (second %) 0) rivit))
@@ -279,10 +304,10 @@
   (let [otsikko "Kirjalliset muistutukset, sanktiot, arvonvähennykset ja poikkeamaraportit"
         rivit (mapv (fn [{:keys [alkupvm loppupvm]}]
                       (let [hoitovuosi (pvm/vuosi alkupvm)
-                            sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
-                                                                       :alkupvm alkupvm
-                                                                       :loppupvm loppupvm
-                                                                       :hoitokauden-alkuvuosi hoitovuosi})
+
+                            sanktiot (hae-sanktiot-vastaanottotarkastusraportille db {:urakka-id urakka-id
+                                                                                      :alkupvm alkupvm
+                                                                                      :loppupvm loppupvm})
                             muut-sanktiot (remove #(or (= "muistutus" (some-> (:sakkoryhma %) name))
                                                      (= "arvonvahennyssanktio" (some-> (:sakkoryhma %) name)))
                                             sanktiot)
@@ -601,5 +626,3 @@
         (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)
 
         (muodosta-urakan-tavoitehinnat-taulukko db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija)))))
-
-

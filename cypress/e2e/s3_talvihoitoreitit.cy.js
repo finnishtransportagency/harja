@@ -24,8 +24,16 @@ describe('Talvihoitoreitit näkymä aukeaa', function ()
         // Valitaan urakkatyyppi
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
 
+        // Iin urakka on päättynyt, joten varmistetaan päättyneiden urakoiden näkyminen.
+        cy.contains('label', 'Näytä päättyneet', {timeout: loaderTimeout})
+            .should('be.visible')
+            .parent()
+            .find('input[type="checkbox"]')
+            .check()
+            .should('be.checked');
+
         // Valitse oikea urakka
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout: clickTimeout}).click();
+        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout: loaderTimeout}).click();
 
         // Avaa Laadunseuranta
         cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click();
