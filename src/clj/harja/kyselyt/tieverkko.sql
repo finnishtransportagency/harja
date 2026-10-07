@@ -168,22 +168,26 @@ SELECT "tr-numero"       AS "tr-numero",
     "tr-kaista"       AS "tr-kaista",
     "tr-osa"          AS "tr-alkuosa",
     CASE WHEN "tr-osa" = :tr-alkuosa
-      THEN GREATEST("tr-alkuetaisyys", :tr-alkuetaisyys)
+      THEN GREATEST("tr-alkuetaisyys", COALESCE(:tr-alkuetaisyys, 0))
       ELSE "tr-alkuetaisyys" END AS "tr-alkuetaisyys",
     "tr-osa"          AS "tr-loppuosa",
-    LEAST("tr-loppuetaisyys",
-       CASE WHEN "tr-osa" = :tr-loppuosa
-         THEN :tr-loppuetaisyys
-         ELSE "tr-loppuetaisyys" END)   AS "tr-loppuetaisyys",
+    CASE WHEN "tr-osa" = :tr-loppuosa
+           AND :tr-loppuetaisyys::INT IS NOT NULL
+      THEN LEAST("tr-loppuetaisyys", :tr-loppuetaisyys)
+      ELSE "tr-loppuetaisyys" END AS "tr-loppuetaisyys",
     "tr-osa"          AS "alkuperainen-tr-alkuosa",
     "tr-alkuetaisyys" AS "alkuperainen-tr-alkuetaisyys",
     "tr-osa"          AS "alkuperainen-tr-loppuosa",
     "tr-loppuetaisyys" AS "alkuperainen-tr-loppuetaisyys"
   FROM tr_osoitteet
  WHERE "tr-numero" = :tr-numero
-   AND "tr-osa" BETWEEN :tr-alkuosa AND :tr-loppuosa
-   AND (:tr-alkuosa < "tr-osa" OR (:tr-alkuosa = "tr-osa" AND :tr-alkuetaisyys < "tr-loppuetaisyys"))
-   AND (:tr-loppuosa > "tr-osa" OR (:tr-loppuosa = "tr-osa" AND :tr-loppuetaisyys > "tr-alkuetaisyys"))
+     AND (:tr-alkuosa::INT IS NULL OR "tr-osa" >= :tr-alkuosa)
+     AND (:tr-loppuosa::INT IS NULL OR "tr-osa" <= :tr-loppuosa)
+     AND (:tr-alkuosa::INT IS NULL OR :tr-alkuosa < "tr-osa"
+       OR (:tr-alkuosa = "tr-osa" AND COALESCE(:tr-alkuetaisyys, 0) < "tr-loppuetaisyys"))
+     AND (:tr-loppuosa::INT IS NULL OR :tr-loppuosa > "tr-osa"
+       OR (:tr-loppuosa = "tr-osa" AND (:tr-loppuetaisyys::INT IS NULL
+                   OR :tr-loppuetaisyys > "tr-alkuetaisyys")))
  ORDER BY "tr-ajorata", "tr-kaista", "tr-osa", "tr-alkuetaisyys"
  LIMIT :rajoita-tieosuuksien-maara;
 

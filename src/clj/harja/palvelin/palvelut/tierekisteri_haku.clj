@@ -165,21 +165,19 @@
   {:pre (s/valid? ::yllapitokohde/tr-paalupiste params)}
   (tv/hae-trpisteiden-valinen-tieto-yhdistaa db params))
 
-(def ^:private tieosuushaun-oletusrajat
-  {:tr-alkuosa 0
-   :tr-alkuetaisyys 0
-   :tr-loppuosa Integer/MAX_VALUE
-   :tr-loppuetaisyys Integer/MAX_VALUE})
-
 (defn hae-tr-tieosuudet
   "Hakee tien kaistakohtaiset tieosuudet tieosoitejärjestyksessä. Puuttuvat rajat laajentavat hakua tien alkuun tai loppuun."
   [db params]
-  (->> (merge tieosuushaun-oletusrajat params)
-       (tv/hae-tieosuudet db)
-       :tieosuudet
-       (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
-                      :tr-loppuosa :tr-loppuetaisyys))
-       vec))
+  (let [params (merge {:tr-alkuosa nil
+                       :tr-alkuetaisyys nil
+                       :tr-loppuosa nil
+                       :tr-loppuetaisyys nil}
+                      params)]
+    (->> (tv/hae-tieosuudet db params)
+         :tieosuudet
+         (sort-by (juxt :tr-alkuosa :tr-alkuetaisyys :tr-ajorata :tr-kaista
+                        :tr-loppuosa :tr-loppuetaisyys))
+         vec)))
 
 (defn hae-tienumerot-kartalle [db params]
   (tv/hae-tiet-alueella db params))
