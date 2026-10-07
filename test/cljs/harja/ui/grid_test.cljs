@@ -247,15 +247,12 @@
     (komponenttitesti
       [g/muokkaus-grid {:id "otsikko-grid" :tunniste :id :voi-muokata? true
                        :voi-lisata? false :voi-poistaa? (constantly false)
-                       :validoi-alussa? true :nayta-virheet? :aina
-                       :virheet (r/atom nil) :varoitukset (r/atom nil)
-                       :rivi-varoitus [{:fn (fn [_ _] {:tr-loppuetaisyys [varoitus]
-                                                     :tr-alkuetaisyys [varoitus]})
-                                       :sarakkeet {:tr-loppuetaisyys :tr-loppuetaisyys
-                                                   :tr-alkuetaisyys :tr-alkuetaisyys}}]}
+                       :nayta-virheet? :aina
+                       :virheet (r/atom {})
+                       :varoitukset (r/atom {1 {:tr-loppuetaisyys [varoitus]
+                                                :tr-alkuetaisyys [varoitus]}})}
        sarakkeet rivit]
 
-      --
       "Vain otsikkoasetuksen saanut sarake näyttää otsikon"
       (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe"
         (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:first-child"))))
