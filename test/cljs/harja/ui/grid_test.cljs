@@ -255,6 +255,7 @@
                                                    :tr-alkuetaisyys :tr-alkuetaisyys}}]}
        sarakkeet rivit]
 
+      --
       "Vain otsikkoasetuksen saanut sarake näyttää otsikon"
       (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe"
         (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:first-child"))))
