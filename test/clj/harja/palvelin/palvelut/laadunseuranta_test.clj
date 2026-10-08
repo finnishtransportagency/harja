@@ -646,7 +646,8 @@
                       :laji laji
                       :toimenpideinstanssi tpi-id
                       :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
-                      :tyyppi {:id sanktiotyyppi-id}
+                      :tyyppi {:id sanktiotyyppi-id
+                               :koodi sanktiotyyppi-koodi}
                       :soveltuvuuskonteksti :urakka}
                 (dissoc tiedot :laji :sanktiotyyppi-koodi :perustelu))
      :laatupoikkeama {:tekijanimi "Max Power"
@@ -671,11 +672,10 @@
     (update :laskennan_syote konv/jsonb->clojuremap)))
 
 (deftest tallenna-mhu26-tyon-tekematta-jattaminen-sohjo-oja-laskee-tiekm-kertaa-yksikkohinta
-  (let [perustelu "HARJA-2616 sohjo-ojan tiekm-laskenta"
+  (let [perustelu "Laskettava sanktio"
         testitiedot (mhu26-laskettavan-sanktion-testitiedot
                       {:laji :tyon_tekematta_jattaminen
-                       :sanktiotyyppi-koodi 22
-                       :perustelu perustelu})
+                       :sanktiotyyppi-koodi 22})
         tallenna (partial tallenna-mhu26-laskettava-sanktio testitiedot)
         laske-kirjaukset #(ffirst (q (str "SELECT COUNT(*) FROM sanktio s JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama "
                                        "WHERE lp.perustelu = '" perustelu "'")))]
@@ -691,6 +691,8 @@
           (is (= 2500M (:normaalimaara tallennettu))
             "normaalimaara on laskettu summa ennen oikaisuja, ei raakasyöte")
           (is (false? (:omailmoitettu tallennettu)))
+          (is (= perustelu
+                 (ffirst (q (str "SELECT perustelu FROM laatupoikkeama WHERE id = (SELECT laatupoikkeama FROM sanktio WHERE id = " sanktio-id ")")))))
           (is (= {:syoteavain "tiekm"
                   :syote 12.5
                   :yksikko "tiekm"

@@ -552,7 +552,12 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka (:yllapitokohde laatupoikkeama)))
-  (let [olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
+  (let [laatupoikkeama (if (and (= 22 (get-in sanktio [:tyyppi :koodi]))
+                               (contains? #{:sanktio "sanktio"} (get-in laatupoikkeama [:paatos :paatos]))
+                               (nil? (get-in laatupoikkeama [:paatos :perustelu])))
+                        (assoc-in laatupoikkeama [:paatos :perustelu] "Laskettava sanktio")
+                        laatupoikkeama)
+        olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))
         laatupoikkeaman-sanktion-muokkaus? (boolean (and olemassa-oleva-sanktio
                                                       (not (:suorasanktio olemassa-oleva-sanktio))))]
