@@ -510,7 +510,7 @@ SELECT m.id                               AS materiaali_id,
 SELECT nimi as materiaaliluokka, yksikko as materiaaliluokka_yksikko, materiaalityyppi as materiaaliluokka_tyyppi
   FROM materiaaliluokka where nimi = 'Talvisuola';
 
--- name: hae-talvisuolan-hoitovuoden-kokonaismaara
+-- name: hae-talvisuolan-kokonaismaara
 SELECT SUM(kokonaismaara) as kokonaismaara
   FROM raportti_toteutuneet_materiaalit rtm
        JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id

@@ -80,8 +80,8 @@ SELECT indeksilaskennan_perusluku(:urakka-id::INTEGER) AS perusluku;
 SELECT vuosi, kuukausi, arvo as indeksiluku
 FROM indeksi
 WHERE (
-    (vuosi = :vuosi AND kuukausi between 10 and 12)
+    (vuosi = :vuosi AND kuukausi between 9 and 12)
         OR
-    (vuosi - 1 = :vuosi AND kuukausi between 1 and 9))
+    (vuosi - 1 = :vuosi AND kuukausi between 1 and 8))
   AND nimi = (SELECT indeksi FROM urakka WHERE id = :urakkaid)
 ORDER BY vuosi, kuukausi;
