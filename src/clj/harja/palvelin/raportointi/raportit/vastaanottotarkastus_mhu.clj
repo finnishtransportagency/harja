@@ -235,6 +235,7 @@
                  :leveysprosentti 50
                  :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
                  :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :samalle-sheetille? false
                  :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
@@ -270,6 +271,7 @@
                  :leveysprosentti 50
                  :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
                  :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :samalle-sheetille? false
                  :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
@@ -578,8 +580,26 @@
                                                      :urakka-id urakka-id
                                                      :urakoittain? false
                                                      :urakkatyyppi :teiden-hoito
-                                                     :koko-urakkaaika? true})]
-    [ymparistoraportti]))
+                                                     :koko-urakkaaika? true})
+        ;; Poistetaan :raportti ja parametrit,  jätetään tekstit ja taulukot
+        ymparistoraportti (subvec ymparistoraportti 2)
+        ;; Poistetaan kaikki :tekstit
+        ymparistoraportti (vec (remove #(or (= :teksti (first %)) (= :teksti-paksu (first %))) ymparistoraportti))
+        ensimmaisen-taulukon-indeksi (first (keep-indexed (fn [indeksi osa]
+                                                            (when (and (vector? osa)
+                                                                    (= :taulukko (first osa)))
+                                                              indeksi))
+                                                  ymparistoraportti))
+        ;; Aloita ensimmäinen taulukko omalle sheetilleen, vaikka sitä edeltäisi tekstiä.
+        ymparistoraportti (if (some? ensimmaisen-taulukon-indeksi)
+                            (update-in ymparistoraportti [ensimmaisen-taulukon-indeksi 1]
+                              assoc :samalle-sheetille? false :leveysprosentti 100)
+                            ymparistoraportti)
+
+        ymparistoraportti (into
+                            [[:otsikko-heading "Ympäristöraportti"]]
+                            ymparistoraportti)]
+    ymparistoraportti))
 
 (defn suorita [db user {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))

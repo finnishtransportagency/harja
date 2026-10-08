@@ -340,7 +340,9 @@
                 (first @kutsutut-parametrit))))
         (testing "ympäristöraportti sisältää kaikki päätaulukot"
           (is (= taulukoiden-otsikot
-                (mapv #(get-in % [1 :otsikko]) taulukot))))))))
+                (mapv #(get-in % [1 :otsikko]) taulukot))))
+        (testing "ympäristöraportin ensimmäinen taulukko aloittaa oman sheetin"
+          (is (false? (get-in (first taulukot) [1 :samalle-sheetille?])))))))
 
 (deftest MHU25-urakan-tavoitehinnan-muutokset-muodostuvat-kaikille-hoitovuosille
   (let [urakka-id testi-mhu25-urakka-id

@@ -408,8 +408,7 @@
                                                                            :desimaalien-maara 2
                                                                            :ryhmitelty? true}]
                                                         (:maara %))))
-                                              rivit)
-                                   _ (println "kk-arvot" kk-arvot)]
+                                              rivit)]
                                {:lihavoi? false
                                 ;; Ja täällä haetaan isanta-rivin-id avattavat-rivit-vektorista isäntärivin indeksillä.
                                 :isanta-rivin-id (nth avattavat-rivit @isantarivi-indeksi)
