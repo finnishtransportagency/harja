@@ -922,7 +922,7 @@ VALUES
                                                          :urakoittain? urakoittain?
                                                          :osamateriaalit yhteenveto
                                                          :nayta-suunnittelu? true
-                                                         :koko-urakkaaika? true}))))
+                                                         :koko-urakkaaika? true} :html))))
         suunniteltu-summa (fn [{:keys [rivi]}]
                             (:arvo (second (nth rivi (- (count rivi) 2)))))
         urakkakohtaiset-maarat (into {}
@@ -967,7 +967,7 @@ VALUES
                                                          :urakoittain? urakoittain?
                                                          :osamateriaalit yhteenveto
                                                          :nayta-suunnittelu? true
-                                                         :koko-urakkaaika? true}))))
+                                                         :koko-urakkaaika? true} :html))))
         suunniteltu-summa (fn [{:keys [rivi]}]
                             (:arvo (second (nth rivi (- (count rivi) 2)))))
         urakkakohtaiset-maarat (into {}

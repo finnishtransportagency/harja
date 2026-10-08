@@ -19,6 +19,7 @@
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.palvelin.raportointi.raportit :as raportit]
             [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
+            [harja.palvelin.raportointi.testiapurit :as apurit]
             [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu :as vastaanottotarkastus-mhu]))
 
 (defn jarjestelma-fixture [testit]
@@ -310,9 +311,8 @@
           taulukko))))
 
 (deftest vastaanottotarkastusraportti-sisaltaa-ymparistoraportin
-  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
-        db (:db jarjestelma)
-        hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))
+  (let [urakka-id testi-mhu25-urakka-id
+        hoitokaudet testi-mhu25-hoitokaudet
         ymparistoraportin-suorita ymparisto/suorita
         kutsutut-parametrit (atom [])
         taulukoiden-otsikot ["Talvisuolat"
@@ -889,6 +889,86 @@
                          (last (nth taulukko 3))))
         vuosilabelit (fn [taulukko]
                        (mapv first (vuosirivit taulukko)))]
+    (testing "Ympäristöraportti Oulu19 urakalle"
+      (let [;; Käytetään vanhaa urakkaa, koska sillä on dataa olemassa
+            hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db oulu19-urakka-id))
+            vuodet (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet)
+            alkupvm (:alkupvm (first hoitokaudet))
+            loppupvm (:loppupvm (last hoitokaudet))
+            ;; Haetaan tietokannasta kaikki raportin tiedot, jotta voidaan verrata raportin sisältöä tietokannan sisältöön.
+            tietokantarivit (ymparisto/hae-raportti db alkupvm loppupvm oulu19-urakka-id nil :teiden-hoito false)
+            tietokanta-suolarivit (->> tietokantarivit
+                                    (filter #(= "talvisuola" (get-in (first %) [:materiaali :tyyppi])))
+                                    (mapcat second))
+            tietokanta-toteumat (filter #(and (= "toteuma" (:maarantyyppi %))
+                                           (nil? (:talvitieluokka %))
+                                           (nil? (:soratieluokka %)))
+                                  tietokanta-suolarivit)
+            tietokanta-suunnitelmat (filter #(and (= "suunnitelma" (:maarantyyppi %))
+                                               (nil? (:talvitieluokka %))
+                                               (nil? (:soratieluokka %)))
+                                      (mapcat second tietokantarivit))
+            tietokanta-hoitoluokkatoteumat (filter #(and (= "toteuma" (:maarantyyppi %))
+                                                      (:talvitieluokka %))
+                                             tietokanta-suolarivit)
+            tietokanta-suunnitelman-summa (fn [tyyppi]
+                                 (reduce + 0 (map :maara (filter #(= tyyppi (get-in % [:materiaali :tyyppi])) tietokanta-suunnitelmat))))
+            tietokanta-summat-vuosittain (into {}
+                                (map (fn [[vuosi rivit]]
+                                       [vuosi (reduce + (map :maara rivit))]))
+                                (group-by :hoitokauden-alkuvuosi tietokanta-toteumat))
+            tietokanta-hoitoluokkien-summat-vuosittain (into {}
+                                              (map (fn [[vuosi rivit]]
+                                                     [vuosi (reduce + (map :maara rivit))]))
+                                              (group-by :hoitokauden-alkuvuosi tietokanta-hoitoluokkatoteumat))
+
+            raportti (ymparisto/suorita db nil {:alkupvm alkupvm
+                                                :loppupvm loppupvm
+                                                :urakka-id oulu19-urakka-id
+                                                :urakoittain? false
+                                                :urakkatyyppi :teiden-hoito
+                                                :koko-urakkaaika? true})
+            talvisuolataulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Talvisuolat")
+            formiaattitaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Formiaatit")
+            mursketaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Murskeet")
+            talvisuola-sarakevuodet (mapv :otsikko (take (count vuodet) (drop 2 (nth talvisuolataulukko 2))))
+            talvisuola-datarivit (nth talvisuolataulukko 3)
+            riviotsikko (fn [rivi]
+                          (apurit/raporttisolun-arvo (second (:rivi rivi))))
+            suunniteltu-summa (fn [taulukko nimi]
+                                (let [rivi (some #(when (= nimi (riviotsikko %)) %) (nth taulukko 3))
+                                      summa (apurit/raporttisolun-arvo (nth (:rivi rivi) (+ 3 (count vuodet))))]
+                                  ;; Taulukon arvot on nil - jos arvoa ei ole, mutta pyöristetään se nollaksi.
+                                  (or summa 0)))
+            yhteenvetorivi (some #(when (= "Talvisuolat yhteensä" (riviotsikko %)) %) talvisuola-datarivit)
+            talvisuola-hoitoluokkarivit (filter #(and (:isanta-rivin-id %)
+                                                   (not= "Poikkeama (+/-)" (riviotsikko %)))
+                                          talvisuola-datarivit)
+            raportoidut-hoitoluokkien-summat
+            (reduce (fn [summat rivi]
+                      (reduce (fn [summat [indeksi vuosi]]
+                                (let [maara (apurit/raporttisolun-arvo (nth (:rivi rivi) (+ 2 indeksi)))]
+                                  (if (number? maara)
+                                    (update summat vuosi (fnil + 0) maara)
+                                    summat)))
+                        summat
+                        (map-indexed vector vuodet)))
+              {}
+              talvisuola-hoitoluokkarivit)]
+        (is (= (mapv #(str % "-" (inc %)) vuodet) talvisuola-sarakevuodet))
+        (is (seq tietokanta-hoitoluokkatoteumat) "Testiurakalla on hoitoluokittaisia talvisuolatoteumia tietokantahaussa")
+        (is (some? yhteenvetorivi) "Talvisuolojen yhteenvetorivi löytyy ympäristöraportista")
+        (is (= (mapv #(get tietokanta-summat-vuosittain % "–") vuodet)
+              (mapv #(apurit/raporttisolun-arvo
+                       (nth (:rivi yhteenvetorivi) (+ 2 %)))
+                (range (count vuodet)))))
+        (is (= (tietokanta-suunnitelman-summa "formiaatti")
+              (suunniteltu-summa formiaattitaulukko "Formiaatit raportista täsmää formiaatteihin tietokannasta")))
+        (is (= (tietokanta-suunnitelman-summa "murske")
+              (suunniteltu-summa mursketaulukko "Murskeet raportista täsmää murskeisiin tietokannasta")))
+        (is (= (select-keys tietokanta-hoitoluokkien-summat-vuosittain vuodet)
+              (select-keys raportoidut-hoitoluokkien-summat vuodet)) "Raportin hoitoluokkien summat vastaavat tietokantahakua")))
+
     (testing "Lupaukset taulukko"
       (let [taulukko (hae-taulukko kajaanin-raportti "Lupaukset")]
         (is (some? taulukko))

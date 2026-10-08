@@ -305,7 +305,7 @@
                                                   :desimaalien-maara 2
                                                   :ryhmitelty? true
                                                   :varoitus? (< poikkeama-varoitus-raja (Math/abs (float prosentti)))}]}))
-                                     (group-by :kk rivit)))
+                                     (group-by (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk) rivit)))
                yhteensa-kentta (fn [arvot nayta-aina?]
                                  (let [yht (yhteensa-arvo arvot)]
                                    (when (or (> yht 0) nayta-aina?)
@@ -386,20 +386,30 @@
              ;; Mahdolliset hoitoluokkakohtaiset rivit - Hoitoluokat ovat valmiina vain talvisuolalle ja formiaateille
              ;; Jätetään soratieluokat myöhempää aikaa varten
              (concat (mapv (fn [[luokka rivit]]
-                             (let [rivit (if (or urakoittain? (= konteksti :urakka))
+                             (let [rivit (cond
+                                           koko-urakkaaika?
+                                           (map (fn [[_ rivit]]
+                                                  (assoc (first rivit) :maara (reduce + 0 (keep :maara rivit))))
+                                             (group-by :hoitokauden-alkuvuosi rivit))
+
+                                           (or urakoittain? (= konteksti :urakka))
                                            rivit
+
                                            ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
+                                           :else
                                            (map
                                              #(assoc (first (val %)) :maara (reduce + 0 (keep :maara (val %))))
-                                             (group-by :kk rivit)))
+                                             (group-by (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk) rivit)))
                                    kk-arvot (into {}
-                                              (map (juxt :kk #(if yksikot-soluissa?
-                                                                [:arvo-ja-yksikko {:arvo (:maara %)
-                                                                                   :yksikko (:yksikko materiaali)
-                                                                                   :desimaalien-maara 2
-                                                                                   :ryhmitelty? true}]
-                                                                (:maara %))))
-                                              rivit)]
+                                              (map (juxt (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk)
+                                                     #(if yksikot-soluissa?
+                                                        [:arvo-ja-yksikko {:arvo (:maara %)
+                                                                           :yksikko (:yksikko materiaali)
+                                                                           :desimaalien-maara 2
+                                                                           :ryhmitelty? true}]
+                                                        (:maara %))))
+                                              rivit)
+                                   _ (println "kk-arvot" kk-arvot)]
                                {:lihavoi? false
                                 ;; Ja täällä haetaan isanta-rivin-id avattavat-rivit-vektorista isäntärivin indeksillä.
                                 :isanta-rivin-id (nth avattavat-rivit @isantarivi-indeksi)
