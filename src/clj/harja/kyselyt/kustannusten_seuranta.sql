@@ -376,7 +376,7 @@ SELECT
     NOW()                                            AS indeksikorjaus_vahvistettu,
     'erillisrahoitettu-muutos'                       AS kulu_tyyppi,
     muutostyo.syy                                    AS muutostyo_syy
-FROM mhu_muutos muutostyo
+FROM ONLY mhu_muutos muutostyo
 
 -- Yksi budjettirivi jokaista muutostyötä ja hoitokautta kohden
 JOIN (
@@ -395,7 +395,7 @@ JOIN (
     SELECT
         kulut.muutos,
         SUM(kulut.summa)                         AS toteutunut_summa,
-        MIN(kulut.maksueratyyppi)::TEXT          AS maksutyyppi,
+        MIN(kulut.maksutyyppi)::TEXT             AS maksutyyppi,
         MIN(kulut.tehtava_nimi)                  AS tehtava_nimi,
         MIN(kulut.toimenpide)                    AS toimenpide,
         MIN(kulut.erapaiva)::TEXT                AS ajankohta,
@@ -404,7 +404,7 @@ JOIN (
              SELECT
                  COALESCE(lk.muutos, mkulu.muutos) AS muutos,
                  lk.summa,
-                 lk.maksueratyyppi,
+                 lk.maksueratyyppi AS maksutyyppi,
                  l.erapaiva,
 
                  COALESCE(tr.nimi, tk.nimi) AS tehtava_nimi,
