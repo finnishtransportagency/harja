@@ -277,23 +277,24 @@
 
 (defrecord Tarkastukset []
   component/Lifecycle
-  (start [{:keys [http-palvelin db karttakuvat] :as this}]
+  (start [{:keys [http-palvelin db db-replica karttakuvat] :as this}]
+    (assert (some? db-replica))
 
     (karttakuvat/rekisteroi-karttakuvan-lahde!
       karttakuvat :tarkastusreitit
-      (partial #'hae-tarkastusreitit-kartalle db)
-      (partial #'hae-tarkastusreittien-asiat-kartalle db)
+      (partial #'hae-tarkastusreitit-kartalle db-replica)
+      (partial #'hae-tarkastusreittien-asiat-kartalle db-replica)
       "tr")
 
     (julkaise-palvelut
       http-palvelin
       :hae-urakan-tarkastukset
       (fn [user tiedot]
-        (hae-urakan-tarkastukset db user tiedot))
+        (hae-urakan-tarkastukset db-replica user tiedot))
 
       :hae-tarkastuspisteet-heatmapille
       (fn [user tiedot]
-        (hae-tarkastuspisteet-heatmapille db user tiedot))
+        (hae-tarkastuspisteet-heatmapille db-replica user tiedot))
 
       :tallenna-tarkastus
       (fn [user {:keys [urakka-id tarkastus]}]
@@ -305,7 +306,7 @@
 
       :hae-tarkastus
       (fn [user {:keys [urakka-id tarkastus-id]}]
-        (hae-tarkastus db user urakka-id tarkastus-id))
+        (hae-tarkastus db-replica user urakka-id tarkastus-id))
 
       :lisaa-tarkastukselle-laatupoikkeama
       (fn [user {:keys [urakka-id tarkastus-id]}]
@@ -313,15 +314,15 @@
 
       :hae-tarkastusajon-reittipisteet
       (fn [user {:keys [tarkastusajon-id]}]
-        (hae-tarkastusajon-reittipisteet db user tarkastusajon-id))
+        (hae-tarkastusajon-reittipisteet db-replica user tarkastusajon-id))
 
       :hae-urakan-tieturvallisuusverkko
       (fn [user {:keys [urakka-id]}]
-        (hae-urakan-tieturvallisuusverkko-kartalle db user urakka-id))
+        (hae-urakan-tieturvallisuusverkko-kartalle db-replica user urakka-id))
 
       :hae-tarkastamattomat-tiet
       (fn [user tiedot]
-        (hae-tarkastamattomat-tiet db user tiedot)))
+        (hae-tarkastamattomat-tiet db-replica user tiedot)))
     this)
 
   (stop [{:keys [http-palvelin] :as this}]
