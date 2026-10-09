@@ -80,13 +80,13 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER $USERNAME
 WORKDIR /app
 
-# Kopioi uberjar pipelinesta
-# Tässä oletetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
-COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
-
 # Harja-app tarkastaa tällä hetkellä jotkin asetetut ENV muuttujat .harja_env tiedoston mukaisesti
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
 COPY ./aws/fargate/.harja_env .harja_env
+
+# Kopioi uberjar pipelinesta
+# Tässä oletetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
+COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
 
 # Aseta volume
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/bind-mounts.html

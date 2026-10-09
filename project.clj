@@ -252,6 +252,7 @@
             "compile-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "compile"]
             "repl-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "repl"]
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/prod"]
+            "compile-preview" ["run" "-m" "figwheel.main" "-O" "none" "-fw" "false" "-bo" "figwheel_conf/preview"]
             "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-prod"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
