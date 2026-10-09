@@ -808,7 +808,8 @@
                 :hoitokauden_alkuvuosi hk-alkuvuosi
                 :tyyppi (:tyyppi muutos)
                 :kayttaja (:id kayttaja)
-                :alityyppi alityyppi}]
+                :alityyppi alityyppi}
+        ]
 
     ;; Validoi voimassa_alkaen päivämäärä
     (cond
@@ -836,14 +837,22 @@
 
           tyyppi-pysyva?
           ;; Estä tallennus, mikäli yritetään muokata lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
-          (when (and
-                  ;; Huom, vain muokkaustilanteessa tarkistus
-                  paivitetaan?
-                  (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
-                  (not= (:voimassa_alkaen muutos) (:voimassa_alkaen vanha-muutos)))
+          (cond
+            (and
+              ;; Huom, vain muokkaustilanteessa tarkistus
+              paivitetaan?
+              (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
+              (not= (:voimassa_alkaen muutos) (:voimassa_alkaen vanha-muutos)))
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
-                                :viesti "Pysyvän muutoksen voimassa alkaen -päivämäärää ei voi muuttaa, koska se on lukittu."}]})))
+                                :viesti "Pysyvän muutoksen voimassa alkaen -päivämäärää ei voi muuttaa, koska se on lukittu."}]})
+
+            (and
+              (not paivitetaan?)
+              (muutos-domain/pysyva-muutos-poisto-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi (:voimassa_alkaen muutos)))
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                                :viesti "Pysyvää muutosta ei voi luoda, koska sen vaikutukset kohdistuvat vahvistettuun tavoitehintaan."}]})))
 
         ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
         ;; Nämä tiedot saadaan muutos-paluurivistä

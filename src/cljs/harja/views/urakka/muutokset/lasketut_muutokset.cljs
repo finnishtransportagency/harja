@@ -145,16 +145,6 @@
             :muokattava? (constantly false)
             :leveys 13}
 
-           {:otsikko "Muutoksen syy / lisätieto"
-            :nimi :syy
-            :tyyppi :text
-            :solun-luokka solun-luokka-fn
-            :muokattava? #(and
-                            (not haku-kaynnissa?)
-                            ;; Älä anna muokata väliotsikkoja 
-                            (nil? (:valiotsikko %)))
-            :leveys 25}
-
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
             :tyyppi :numero
@@ -213,6 +203,16 @@
                             (not haku-kaynnissa?)
                             (true? (:anna-kirjata-tavoitehinta? %)))
             :leveys 22}
+
+           {:otsikko "Muutoksen syy / lisätieto"
+            :nimi :syy
+            :tyyppi :text
+            :solun-luokka solun-luokka-fn
+            :muokattava? #(and
+                            (not haku-kaynnissa?)
+                            ;; Älä anna muokata väliotsikkoja 
+                            (nil? (:valiotsikko %)))
+            :leveys 25}
 
            ;; Aseta yksikköhinta
            {:otsikko ""
