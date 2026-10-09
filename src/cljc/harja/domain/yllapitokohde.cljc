@@ -782,7 +782,45 @@ yllapitoluokkanimi->numero
                                                           (str "rivin " rivi-indeksi)
                                                           " kanssa"))}})
 
-(defn validoidun-paikan-teksti [validoitu-paikka paakohde?]
+(defn- pot2-rivien-paallekkaisyysteksti [rivi-indeksi]
+  (str "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen "
+    (when (some? rivi-indeksi) (str "riville " rivi-indeksi " jo lisätyn "))
+    "toisen osan kanssa."))
+
+(def pot2-paallekkaisyys-virhetekstit
+  (-> paallekkaisyys-virhetekstit
+    (assoc-in [:alikohde :alikohteet-paallekkain] pot2-rivien-paallekkaisyysteksti)
+    (assoc-in [:alikohde :toisen-kohteen-alikohteen-kanssa-paallekkain]
+      (fn [_ paallekkainen-kohde]
+        (str "Tämä tieosuus tai osa siitä on päällekkäin "
+          (if (empty? (:paakohteen-nimi paallekkainen-kohde))
+            "toisen kohteen"
+            (str "kohteen " (:paakohteen-nimi paallekkainen-kohde)))
+          " osan kanssa.")))
+    (assoc-in [:alikohde :toisen-urakan-alikohteen-kanssa-paallekkain]
+      (fn [_ _] "Tämä tieosuus tai osa siitä on päällekkäin toisen urakan kohdeosan kanssa."))
+    (assoc-in [:paakohde :paakohteet-paallekkain]
+      (fn [nimi]
+        (str "Kohde on päällekkäin "
+          (if (empty? nimi) "toisen kohteen" (str "kohteen " nimi))
+          " kanssa.")))
+    (assoc-in [:alustatoimenpide :alustatoimenpiteet-paallekkain] pot2-rivien-paallekkaisyysteksti)))
+
+(def pot2-muoto-virhetekstit
+  (-> muoto-virhetekstit
+    (assoc-in [:tr-alkuosa :vaarin-pain] "Alkuosa ei voi olla loppuosan jälkeen.")
+    (assoc-in [:tr-loppuosa :vaarin-pain] "Loppuosa ei voi olla ennen alkuosaa.")
+    (assoc-in [:tr-alkuetaisyys :vaarin-pain] "Alkuetäisyys ei voi olla loppuosan etäisyyden jälkeen.")
+    (assoc-in [:tr-loppuetaisyys :vaarin-pain] "Loppuetäisyys ei voi olla ennen alkuetäisyyttä.")))
+
+(defn validoidun-paikan-teksti
+  ([validoitu-paikka paakohde? {:keys [pot2?]}]
+   (if pot2?
+     (if (seq (:kohteen-tiedot validoitu-paikka))
+       ["Tarkista tieosuuden tiedot. Voit tarkastella tieosoitteen sisällä olevien kohteiden tietoja “Hae tieosuus”-toiminnossa."]
+       [])
+     (validoidun-paikan-teksti validoitu-paikka paakohde?)))
+  ([validoitu-paikka paakohde?]
   ;; TODO Olisi hyvä, jos validointifunktio tallentaisi kohteen tietoihin havaitsemansa ongelman nimen ja tässä vain mäpättäisiin ongelman nimi ja kohteen tiedot virheilmoitukseen.
   (mapv (fn [kohteen-tieto]
           ;; (:kohde validoitu-paikka) on käyttäjän syöttämä
@@ -889,7 +927,7 @@ yllapitoluokkanimi->numero
                   ;; Jos ajorataa ei löydy
                   ((-> paikka-virhetekstit :tr-numero :tr-osa :ei-tr-ajorataa)
                    (:tr-numero kohteen-tieto) (:tr-osa kohteen-tieto) kohteen-ajorata))))))
-        (:kohteen-tiedot validoitu-paikka)))
+        (:kohteen-tiedot validoitu-paikka))))
 
 (defn ongelma? [virheet f]
   (->> virheet
@@ -899,10 +937,13 @@ yllapitoluokkanimi->numero
        first
        map?))
 
-(defn validoidun-muodon-teksti [validoitu-muoto tr-avain]
+(defn validoidun-muodon-teksti
+  ([validoitu-muoto tr-avain] (validoidun-muodon-teksti validoitu-muoto tr-avain {}))
+  ([validoitu-muoto tr-avain {:keys [pot2?]}]
   ;; s/explain-data ei valitettavasti palauta epäonnistuneen funktion nimeä vaan se nimi pitää kaivaa
   ;; oudolla tavalla tuon :pred avaimen alta, niinkuin muoto-vaarin funktiossa tehdään.
-  (let [tyhja-fn (fn [avain]
+    (let [muoto-virhetekstit (if pot2? pot2-muoto-virhetekstit muoto-virhetekstit)
+      tyhja-fn (fn [avain]
                    (ongelma? validoitu-muoto (fn [virhe-map]
                                                (= #?(:clj  (or (try (-> virhe-map :pred last last)
                                                                     ;; last funktion kutsuminen symbolille aiheuttaa virheen
@@ -932,10 +973,13 @@ yllapitoluokkanimi->numero
     (cond-> []
             tyhja? (conj (-> muoto-virhetekstit tr-avain :ei-arvoa))
             pitaisi-olla-tyhja? (conj (-> muoto-virhetekstit tr-avain :ei-saa-olla-arvoa))
-            muoto-vaarin? (conj (-> muoto-virhetekstit tr-avain :vaarin-pain)))))
+            muoto-vaarin? (conj (-> muoto-virhetekstit tr-avain :vaarin-pain))))))
 
-(defn validoitu-kohde-tekstit [validoitu-kohde paakohde?]
-  (let [{:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
+(defn validoitu-kohde-tekstit
+  ([validoitu-kohde paakohde?] (validoitu-kohde-tekstit validoitu-kohde paakohde? {}))
+  ([validoitu-kohde paakohde? {:keys [pot2?] :as asetukset}]
+  (let [paallekkaisyys-virhetekstit (if pot2? pot2-paallekkaisyys-virhetekstit paallekkaisyys-virhetekstit)
+        {:keys [muoto alikohde-paakohteen-ulkopuolella? alikohde-paallekkyys muukohde-paallekkyys
                 muukohde-paakohteen-ulkopuolella? validoitu-paikka paallekkyys
                 alustatoimenpide-paallekkyys
                 alustatoimenpide-alustan-tie-ei-alikohteissa]} validoitu-kohde
@@ -943,21 +987,21 @@ yllapitoluokkanimi->numero
                              [((get-in muoto-virhetekstit [:tr-numero :tienumero-ei-alikohteissa])
                                     (:tr-numero alustatoimenpide-alustan-tie-ei-alikohteissa))])
         paikka-vaarin (when validoitu-paikka
-                        (validoidun-paikan-teksti validoitu-paikka paakohde?))
+                  (validoidun-paikan-teksti validoitu-paikka paakohde? asetukset))
         tr-numero-vaarin (when muoto
-                           (validoidun-muodon-teksti muoto :tr-numero))
+                  (validoidun-muodon-teksti muoto :tr-numero asetukset))
         tr-ajorata-vaarin (when muoto
-                            (validoidun-muodon-teksti muoto :tr-ajorata))
+                   (validoidun-muodon-teksti muoto :tr-ajorata asetukset))
         tr-kaista-vaarin (when muoto
-                           (validoidun-muodon-teksti muoto :tr-kaista))
+                  (validoidun-muodon-teksti muoto :tr-kaista asetukset))
         tr-alkuosa-vaarin (when muoto
-                            (validoidun-muodon-teksti muoto :tr-alkuosa))
+                   (validoidun-muodon-teksti muoto :tr-alkuosa asetukset))
         tr-alkuetaisyys-vaarin (when muoto
-                                 (validoidun-muodon-teksti muoto :tr-alkuetaisyys))
+                     (validoidun-muodon-teksti muoto :tr-alkuetaisyys asetukset))
         tr-loppuosa-vaarin (when muoto
-                             (validoidun-muodon-teksti muoto :tr-loppuosa))
+                    (validoidun-muodon-teksti muoto :tr-loppuosa asetukset))
         tr-loppuetaisyys-vaarin (when muoto
-                                  (validoidun-muodon-teksti muoto :tr-loppuetaisyys))
+                      (validoidun-muodon-teksti muoto :tr-loppuetaisyys asetukset))
         alikohde-ulkopuolella (when alikohde-paakohteen-ulkopuolella?
                                 [(get-in paallekkaisyys-virhetekstit [:alikohde :paakohteen-ulkopuolella])])
         muukohde-sisapuolella (when (false? muukohde-paakohteen-ulkopuolella?)
@@ -1031,10 +1075,13 @@ yllapitoluokkanimi->numero
                                      alikohteet-paallekkain
                                      muutkohteet-paallekkain
                                      alustatoimenpiteet-paallekkain
-                                     paakohde-paallekkain)})))
+                                     paakohde-paallekkain)}))))
 
-(defn validoi-alustatoimenpide-teksti [validoitu-alustatoimenpide]
-  (let [kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false)
+(defn validoi-alustatoimenpide-teksti
+  ([validoitu-alustatoimenpide] (validoi-alustatoimenpide-teksti validoitu-alustatoimenpide {}))
+  ([validoitu-alustatoimenpide {:keys [pot2?] :as asetukset}]
+  (let [paallekkaisyys-virhetekstit (if pot2? pot2-paallekkaisyys-virhetekstit paallekkaisyys-virhetekstit)
+        kohdetekstit (validoitu-kohde-tekstit validoitu-alustatoimenpide false asetukset)
         {:keys [alustatoimenpide-paallekkyys]} validoitu-alustatoimenpide
         alustatoimenpiteet-paallekkain (when alustatoimenpide-paallekkyys
                                          (mapv #((get-in paallekkaisyys-virhetekstit [:alustatoimenpide :alustatoimenpiteet-paallekkain]) (:rivi-indeksi %))
@@ -1049,7 +1096,7 @@ yllapitoluokkanimi->numero
           (lisaa-paallekkaisyysteksti :tr-alkuetaisyys)
           (lisaa-paallekkaisyysteksti :tr-loppuosa)
           (lisaa-paallekkaisyysteksti :tr-loppuetaisyys))
-      kohdetekstit)))
+      kohdetekstit))))
 
 (defn validoi-muut-kohteet
   "Validoi muut kohteet"

@@ -15,10 +15,20 @@
       justify-content: flex-end;
       gap: @valistys-4;
 
+      .tooltip.top {
+        transform: translate(-100%, -100%);
+      }
+
+      .tooltip.top .tooltip-arrow {
+        left: auto;
+        right: 0;
+        margin-left: 0;
+      }
+
       .tooltip-inner {
         padding: @valistys-8 @valistys-24 @valistys-16 @valistys-24;
         width: 40rem;
-        max-width: 40rem;
+        max-width: calc(100vw - 2rem);
       }
     }
 

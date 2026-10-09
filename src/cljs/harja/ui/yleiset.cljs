@@ -119,7 +119,7 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
   "Virheen ohje. Tyyppi on :virhe (oletus jos ei annettu), :varoitus, tai :huomautus."
   ([virheet] (virheen-ohje virheet :virhe))
   ([virheet tyyppi] (virheen-ohje virheet tyyppi {}))
-  ([virheet tyyppi {:keys [virheet-ulos? max-width]}]
+  ([virheet tyyppi {:keys [virheet-ulos? max-width otsikko]}]
    [:div {:class (case tyyppi
                    :varoitus "varoitukset"
                    :virhe "virheet"
@@ -130,6 +130,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
                            :huomautus "huomautus")}
             (when max-width
               {:style {:max-width max-width}}))
+     (when otsikko
+       [:strong {:style {:display "block"}} otsikko])
      (doall (for* [v (distinct virheet)]
               [:span (when virheet-ulos?
                        {:style {:display "block"}})
@@ -873,7 +875,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    (let [sulje-nappi-id (keyword sulje-nappi-id)]
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
              (get @infolaatikko-nakyvissa? sulje-nappi-id))
-       [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka]))
+        [:div {:class (str/join " " (keep identity ["info-laatikko" (name tyyppi) luokka]))
               :style {:max-width leveys :white-space "pre-line"}}
         [:div.infolaatikon-ikoni
          (case tyyppi
@@ -911,7 +913,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    (assert
      (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
-   [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi)]))
+    [:div {:class (str/join " " (keep identity ["info-laatikko" (name tyyppi)]))
           :style {:white-space "pre-line"}}
     [:div.infolaatikon-ikoni
      (case tyyppi
