@@ -116,7 +116,10 @@ SELECT bp.id                    AS profiili_id,
        bpr.id                   AS profiilirivi_id,
        bpr.jarjestys            AS profiilirivi_jarjestys,
        bpr.toimenpiderajauksen_tyyppi AS profiilirivi_toimenpiderajauksen_tyyppi,
-       bpr.toimenpide_t2_koodi AS profiilirivi_toimenpide_t2_koodi
+       bpr.toimenpide_t2_koodi AS profiilirivi_toimenpide_t2_koodi,
+       bprsm.summa_euroina      AS profiilirivi_sm_summa,
+       bprsm.maaritystapa       AS profiilirivi_sm_tapa,
+       bprsm.ohjeteksti         AS profiilirivi_sm_ohje
   FROM bonus_profiili bp
        JOIN bonus_profiili_rivi bpr
          ON bpr.bonus_profiili_id = bp.id
@@ -127,6 +130,8 @@ SELECT bp.id                    AS profiili_id,
        LEFT JOIN bonus_profiili_laji_esitystiedot bplet
          ON bplet.bonus_profiili_id = bp.id
         AND bplet.bonus_laji_id = bl.id
+       LEFT JOIN bonus_profiili_rivi_summamaaritys bprsm
+         ON bprsm.bonus_profiili_rivi_id = bpr.id
        LEFT JOIN toimenpideinstanssi tpi
          ON tpi.id = :toimenpideinstanssi_id
         AND tpi.urakka = :urakka_id
