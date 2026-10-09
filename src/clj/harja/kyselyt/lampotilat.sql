@@ -26,7 +26,7 @@ SELECT ss.urakka as urakka_id,
   FROM suolasakko ss
     JOIN urakka u ON ss.urakka = u.id
  WHERE ss.urakka in (:urakka_idt)
-       AND ss.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+       AND ss.hoitokauden_alkuvuosi IN (:hoitokauden_alkuvuodet)
        AND ss.kaytossa IS TRUE
 GROUP BY ss.urakka, u.nimi, ss.talvisuolaraja;
 

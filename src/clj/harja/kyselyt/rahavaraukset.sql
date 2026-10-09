@@ -1,3 +1,12 @@
+-- name: hae-urakan-perusnimiset-rahavaraukset
+-- Haetaan yksittäisen urakan rahavarausten perusnimet, koska urakkakohtaiset nimet voivat vaihtua.
+SELECT rv.id,
+       rv.nimi AS nimi,
+       rv.jarjestys
+FROM rahavaraus rv
+         JOIN rahavaraus_urakka rvu ON rvu.rahavaraus_id = rv.id AND rvu.urakka_id = :urakka_id
+ORDER BY rv.jarjestys ASC;
+
 -- name: hae-urakan-rahavaraukset
 -- Haetaan yksittäisen urakan rahavarausten perustiedot
 SELECT rv.id,

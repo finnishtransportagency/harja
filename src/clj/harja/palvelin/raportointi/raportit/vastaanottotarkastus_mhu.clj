@@ -4,6 +4,7 @@
   Lisätöistä, Kirjallisista muistutuksista, sanktioista, arvonvähennyksistä ja poikkeamaraporteista, Tehtävämääristä,
   ja Laskutusyhteenvedosta."
   (:require [jeesql.core :refer [defqueries]]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
@@ -12,6 +13,7 @@
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.pvm :as pvm]))
@@ -19,7 +21,7 @@
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus_mhu.sql"
   {:positional? true})
 
-(declare hae-viranomaistehtavamaarat)
+(declare hae-viranomaistehtavamaarat hae-bonukset-vastaanottotarkastusraportille hae-sanktiot-vastaanottotarkastusraportille)
 
 
 (defn- summa [rivit avain]
@@ -94,7 +96,7 @@
       taulukko)))
 
 (defn rahavarausten-tavoitehinnan-muutokset-taulukko [db urakka-id hoitokaudet]
-  (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+  (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-perusnimiset-rahavaraukset db {:urakka_id urakka-id})
         raportoitavat-rahavaraukset ["Äkilliset hoitotyöt" "Vahinkojen korjaukset" "Tilaajan rahavaraus kannustinjärjestelmään"]
         ;; Säilytetään haluttu järjestys ja poimitaan vain urakalta löytyvät
         nimetyt-rahavaraukset (vec (keep (fn [nimi]
@@ -130,7 +132,7 @@
                                         [tavoitehinnan-muutos])))]
                         rivit))
                 hoitokaudet)
-        yhteenveto-fn (fn [rivi i1 i2]
+        yhteenveto-fn (fn [_rivi i1 i2]
                         (reduce (fn [a rivi]
                                   (let [a (assoc a :suunniteltu (+ (:suunniteltu a) (or (nth rivi i1) 0)))
                                         a (assoc a :toteutunut (+ (:toteutunut a) (or (nth rivi i2) 0)))]
@@ -143,18 +145,18 @@
         tavoitehinnan-muutokset-yhteensa (reduce + 0 (map last rivit))
         yhteensarivi [{:lihavoi? true
                        :korosta-hennosti? true
-                       :rivi ["Yhteensä"
-                              (:suunniteltu akilliset-hoitotyot-yhteensa)
-                              (:toteutunut akilliset-hoitotyot-yhteensa)
-                              (:suunniteltu vahinkojen-korjaukset-yhteensa)
-                              (:toteutunut vahinkojen-korjaukset-yhteensa)
-                              (:suunniteltu kannustinjarjestelma-yhteensa)
-                              (:toteutunut kannustinjarjestelma-yhteensa)
-                              (when (seq muut-rahavaraukset)
-                                (:suunniteltu loput-yhteensa))
-                              (when (seq muut-rahavaraukset)
-                                (:toteutunut loput-yhteensa))
-                              tavoitehinnan-muutokset-yhteensa]}]
+                       :rivi (into ["Yhteensä"
+                                    (:suunniteltu akilliset-hoitotyot-yhteensa)
+                                    (:toteutunut akilliset-hoitotyot-yhteensa)
+                                    (:suunniteltu vahinkojen-korjaukset-yhteensa)
+                                    (:toteutunut vahinkojen-korjaukset-yhteensa)
+                                    (:suunniteltu kannustinjarjestelma-yhteensa)
+                                    (:toteutunut kannustinjarjestelma-yhteensa)]
+                               (concat
+                                 (when (seq muut-rahavaraukset)
+                                   [(:suunniteltu loput-yhteensa)
+                                    (:toteutunut loput-yhteensa)])
+                                 [tavoitehinnan-muutokset-yhteensa]))}]
         otsikot (into [{:otsikko "Hoitokausi" :leveys 5}]
                   (concat (mapcat (fn [_]
                                     [{:otsikko "Suunniteltu määrä (€)" :leveys 5 :fmt :raha}
@@ -233,6 +235,7 @@
                  :leveysprosentti 50
                  :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
                  :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :samalle-sheetille? false
                  :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
@@ -268,6 +271,7 @@
                  :leveysprosentti 50
                  :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
                  :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :samalle-sheetille? false
                  :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
@@ -297,6 +301,90 @@
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Lisätyöt (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) lisatyot-yhteensarivi)))]]))
+
+(defn muodosta-sanktiot-taulukko [db urakka-id hoitokaudet kasittelija]
+  (let [otsikko "Kirjalliset muistutukset, sanktiot, arvonvähennykset ja poikkeamaraportit"
+        rivit (mapv (fn [{:keys [alkupvm loppupvm]}]
+                      (let [hoitovuosi (pvm/vuosi alkupvm)
+
+                            sanktiot (hae-sanktiot-vastaanottotarkastusraportille db {:urakka-id urakka-id
+                                                                                      :alkupvm alkupvm
+                                                                                      :loppupvm loppupvm})
+                            muut-sanktiot (remove #(or (= "muistutus" (some-> (:sakkoryhma %) name))
+                                                     (= "arvonvahennyssanktio" (some-> (:sakkoryhma %) name)))
+                                            sanktiot)
+                            arvonvahennykset (filter #(= "arvonvahennyssanktio" (some-> (:sakkoryhma %) name)) sanktiot)
+                            poikkeamaraportit (laatupoikkeamat-q/hae-poikkeamaraportilliset-laatupoikkeamat
+                                                db {:urakka urakka-id
+                                                    :alku alkupvm
+                                                    :loppu loppupvm})
+                            muistutukset (filter #(= "muistutus" (some-> (:sakkoryhma %) name)) sanktiot)]
+                        [(str hoitovuosi "-" (pvm/vuosi loppupvm))
+                         (count muistutukset)
+                         (count poikkeamaraportit)
+                         (summa muut-sanktiot :maara)
+                         (summa arvonvahennykset :maara)]))
+                hoitokaudet)
+        yhteensa (fn [indeksi]
+                   (reduce + 0 (map #(or (nth % indeksi) 0) rivit)))
+        yhteensarivi [{:lihavoi? true
+                       :korosta-hennosti? true
+                       :rivi ["Yhteensä"
+                              (yhteensa 1)
+                              (yhteensa 2)
+                              (yhteensa 3)
+                              (yhteensa 4)]}]
+        otsikko-title [:otsikko-title otsikko]]
+    [[:taulukko {:otsikko otsikko
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi otsikko
+                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
+      [{:leveys 5 :otsikko "Hoitovuosi"}
+       {:leveys 5 :otsikko "Muistutuksia (kpl)" :fmt :kokonaisluku}
+       {:leveys 5 :otsikko "Poikkeamaraportit, jotka eivät johtaneet sakkoihin (kpl)" :fmt :kokonaisluku}
+       {:leveys 5 :otsikko "Sanktiot (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Arvonvähennykset (€)" :fmt :raha}]
+      (into [] (concat rivit (when (seq rivit) yhteensarivi)))]]))
+
+(defn muodosta-bonukset-taulukko [db urakka-id hoitokaudet kasittelija]
+  (let [otsikko "Bonukset"
+        rivit (mapv (fn [{:keys [alkupvm loppupvm]}]
+                      (let [hoitovuosi (pvm/vuosi alkupvm)
+                            bonukset (hae-bonukset-vastaanottotarkastusraportille db {:urakka-id urakka-id
+                                                                                      :alkupvm alkupvm
+                                                                                      :loppupvm loppupvm
+                                                                                      })
+                            asiakastyytyvaisyysbonukset (filter #(= "asiakastyytyvaisyysbonus" (some-> (:tyyppi %) name)) bonukset)
+                            lupausbonukset (filter #(= "lupausbonus" (some-> (:tyyppi %) name)) bonukset)
+                            muut-bonukset (remove #(or (= "asiakastyytyvaisyysbonus" (some-> (:tyyppi %) name))
+                                                     (= "lupausbonus" (some-> (:tyyppi %) name)))
+                                            bonukset)]
+                        [(str hoitovuosi "-" (pvm/vuosi loppupvm))
+                         (summa lupausbonukset :rahasumma)
+                         (summa asiakastyytyvaisyysbonukset :rahasumma)
+                         (summa muut-bonukset :rahasumma)
+                         (summa bonukset :rahasumma)]))
+                hoitokaudet)
+        yhteensa (fn [indeksi]
+                   (reduce + 0 (map #(or (nth % indeksi) 0) rivit)))
+        yhteensarivi [{:lihavoi? true
+                       :korosta-hennosti? true
+                       :rivi ["Yhteensä"
+                              (yhteensa 1)
+                              (yhteensa 2)
+                              (yhteensa 3)
+                              (yhteensa 4)]}]
+        otsikko-title [:otsikko-title otsikko]]
+    [[:taulukko {:otsikko otsikko
+                 :viimeinen-rivi-yhteenveto? true
+                 :sheet-nimi otsikko
+                 :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
+      [{:leveys 5 :otsikko "Hoitovuosi"}
+       {:leveys 5 :otsikko "Lupausbonus (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Asiakastyytyväisyysbonus (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Muut bonukset (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
+      (into [] (concat rivit (when (seq rivit) yhteensarivi)))]]))
 
 (defn muodosta-virhanomaistehtavat-taulukko
   "Tehtävän nimi on muuttunut aikojen saatosa. -22 vuoteen asti kerättiin dataa toiseen ja lennosta vaihdettiin toiseen.
@@ -401,7 +489,7 @@
        {:leveys 5 :otsikko "Erillishankinnat (€)" :fmt :raha}
        {:leveys 5 :otsikko "Johto- ja hallintokorvaus (€)" :fmt :raha}
        {:leveys 5 :otsikko "Hoidonjohtopalkkio (€)" :fmt :raha}
-       {:leveys 5 :otsikko "Arvonvahennykset (€)" :fmt :raha}
+       {:leveys 5 :otsikko "Arvonvähennykset (€)" :fmt :raha}
        {:leveys 5 :otsikko "Muut kulut (€)" :fmt :raha}
        {:leveys 5 :otsikko "Yhteensä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) kustannukset-yhteensarivi)))]]))
@@ -438,9 +526,9 @@
                             ;; Hoitovuoden lopun tavoitehintaan vaikuttavat myös mahdolliset kirjallisesti sovitut muutokset ja toteumiin perustuvat muutokset
                             ;; Sekä arvonvähennykset
                             hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta
-                                                           (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                                           (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                                           (* thv-arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+                                                           (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 1.1))
+                                                           (* pysyvat-muutokset-toteuma-muutokset-yht (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 1.1))
+                                                           (* thv-arvonvahennykset-yht (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 1.1)))
 
                             tavoitehinnan-ylityspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :tavoitehinnan-ylitys)
                             tavoitehinnan-alituspaatos (ota-paatos (:paatokset hoitovuoden-tiedot) :tavoitehinnan-alitus)
@@ -486,6 +574,33 @@
        {:leveys 5 :otsikko "Urakoitsija maksaa kattohinnan ylityksestä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) hinnat-yhteensarivi)))]]))
 
+(defn muodosta-ymparistoraportti [db urakka-id hoitokaudet kasittelija]
+  (let [ymparistoraportti (ymparisto/suorita db nil {:alkupvm (:alkupvm (first hoitokaudet))
+                                                     :loppupvm (:loppupvm (last hoitokaudet))
+                                                     :urakka-id urakka-id
+                                                     :urakoittain? false
+                                                     :urakkatyyppi :teiden-hoito
+                                                     :koko-urakkaaika? true})
+        ;; Poistetaan :raportti ja parametrit,  jätetään tekstit ja taulukot
+        ymparistoraportti (subvec ymparistoraportti 2)
+        ;; Poistetaan kaikki :tekstit
+        ymparistoraportti (vec (remove #(or (= :teksti (first %)) (= :teksti-paksu (first %))) ymparistoraportti))
+        ensimmaisen-taulukon-indeksi (first (keep-indexed (fn [indeksi osa]
+                                                            (when (and (vector? osa)
+                                                                    (= :taulukko (first osa)))
+                                                              indeksi))
+                                                  ymparistoraportti))
+        ;; Aloita ensimmäinen taulukko omalle sheetilleen, vaikka sitä edeltäisi tekstiä.
+        ymparistoraportti (if (some? ensimmaisen-taulukon-indeksi)
+                            (update-in ymparistoraportti [ensimmaisen-taulukon-indeksi 1]
+                              assoc :samalle-sheetille? false :leveysprosentti 100)
+                            ymparistoraportti)
+
+        ymparistoraportti (into
+                            [[:otsikko-heading "Ympäristöraportti"]]
+                            ymparistoraportti)]
+    ymparistoraportti))
+
 (defn suorita [db user {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
@@ -518,14 +633,16 @@
           ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
           (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
 
+        (muodosta-ymparistoraportti db urakka-id hoitokaudet kasittelija)
+
         (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
+
+        (muodosta-sanktiot-taulukko db urakka-id hoitokaudet kasittelija)
+
+        (muodosta-bonukset-taulukko db urakka-id hoitokaudet kasittelija)
 
         (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)
 
         (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)
 
         (muodosta-urakan-tavoitehinnat-taulukko db user urakan-tiedot urakan-parametrit hoitokaudet kasittelija)))))
-
-
-
-

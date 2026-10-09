@@ -38,7 +38,10 @@
                         ('siirra_toteumat_analytiikalle', '%s', '%s', true, null, NOW())" alkupaiva alkupaiva))
         _ (analytiikan-toteumat/siirra-toteumat testitietokanta)
         maarat-lopussa (hae-maarat)
-        siirretty (first (q "SELECT luotu, toteumatehtavat, toteumamateriaalit FROM analytiikka_toteumat WHERE toteuma_tunniste_id = '1112'"))
+        siirretty (first (q "SELECT luotu, toteumatehtavat, toteumamateriaalit FROM analytiikka_toteumat
+                               WHERE toteuma_alueurakkanumero = '131'
+                                 AND toteuma_toteumatyyppi = 'kokonaishintainen'
+                                 AND toteuma_lisatieto = 'VAN-LYV-toteuma'"))
         siirron-luotu-aikaleima (first siirretty)
         toteumatehtavat (first (konversio/jsonb->clojuremap (second siirretty)))
         toteumamateriaalit (first (konversio/jsonb->clojuremap (last siirretty)))
