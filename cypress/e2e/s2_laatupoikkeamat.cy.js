@@ -3,9 +3,9 @@ let clickTimeout = 12000;
 let pageloadTimeout = 30000;
 let testiKohdeNimi = "CY-laatupoikkeama-testi";
 let testiKohdeNimi2 = "CY-laatupoikkeama-testi2";
-let testiurakka1 = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
+let testiurakka1 = "POP MHU Kajaani 2025-2030";
 let testiurakka2 = "POP MHU Suomussalmi 2024-2029";
-let evk1 = "Lappi";
+let evk1 = "Pohjois-Suomi";
 let evk2 = "Pohjois-Suomi";
 
 // Helper: siivoa testidatan laatupoikkeamat kannasta
@@ -38,6 +38,15 @@ let avaaLaatupoikkeamat = function (urakkaNimi, evk) {
     cy.wait(1000);
 }
 
+function valitseHoitovuosi(hoitovuosi) {
+    cy.get('label.alasvedon-otsikko').first().parent().within(() => {
+        cy.get('button').click({force: true});
+    });
+    cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
+    cy.wait('@laatupoikkeamat', {timeout: clickTimeout});
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+}
+
 describe('Laatupoikkeamat latautuu oikein', function () {
     before(function () {
         siivoaKanta(testiKohdeNimi);
@@ -55,6 +64,7 @@ describe('Laatupoikkeamat latautuu oikein', function () {
     it('Lisää uusi laatupoikkeama MHU25 urakalle', function () {
         cy.viewport(1100, 2000)
         avaaLaatupoikkeamat(testiurakka1, evk1)
+        valitseHoitovuosi(1)
 
         cy.intercept('POST', '_/tallenna-laatupoikkeama').as('tallenna')
 
@@ -83,6 +93,7 @@ describe('Laatupoikkeamat latautuu oikein', function () {
     it('Avaa laatupoikkeama listasta - MHU25 urakalle', function () {
         cy.viewport(1100, 2000)
         avaaLaatupoikkeamat(testiurakka1, evk1)
+        valitseHoitovuosi(1)
         let perustelu = "Joku perustelu"
 
         cy.contains('Havaittu').should('be.visible')
@@ -116,7 +127,7 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         // Varmistetaan, että Indeksi-kenttä ei näy
         cy.contains('label', 'Indeksi').should('not.exist')
         // Sivupaneelista laji
-        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä'});
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä (tehtäväkohtainen sanktio)'});
         // Sivupaaneelista tyyppi
         cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
         // Sivupaneelista sanktion suuruus
@@ -141,6 +152,7 @@ describe('Laatupoikkeamat latautuu oikein', function () {
     it('Lisää uusi laatupoikkeama MHU24 urakalle', function () {
         cy.viewport(1100, 2000)
         avaaLaatupoikkeamat(testiurakka2, evk2)
+        valitseHoitovuosi(2)
 
         cy.intercept('POST', '_/tallenna-laatupoikkeama').as('tallenna')
 
@@ -169,6 +181,7 @@ describe('Laatupoikkeamat latautuu oikein', function () {
     it('Avaa laatupoikkeama listasta - MHU24 urakalle', function () {
         cy.viewport(1100, 2000)
         avaaLaatupoikkeamat(testiurakka2, evk2)
+        valitseHoitovuosi(2)
         let perustelu = "Joku perustelu"
 
         // Klikataan luotua laatupoikkeamaa gridissä
@@ -230,8 +243,10 @@ describe('Siivotaan lopuksi', function () {
     it('Tarkista, että kanta on siivottu', function () {
         cy.viewport(1100, 2000)
         avaaLaatupoikkeamat(testiurakka1, evk1);
+        valitseHoitovuosi(1)
         cy.contains(testiKohdeNimi).should('not.exist')
         avaaLaatupoikkeamat(testiurakka2, evk2);
+        valitseHoitovuosi(2)
         cy.contains(testiKohdeNimi2).should('not.exist')
     })
 })

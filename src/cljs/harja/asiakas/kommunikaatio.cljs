@@ -35,25 +35,49 @@
   (or (#{"localhost"} host)
     (gstr/startsWith host "localhost:")))
 
+(def aws-kehitysymparistot
+  #{"harjakoulutus.testivaylapilvi.fi"
+    "harjademo.testivaylapilvi.fi"
+    "harjaqa1.testivaylapilvi.fi"
+    "harjaqa2.testivaylapilvi.fi"
+    "harjaqa3.testivaylapilvi.fi"})
+
+(defn kehitysymparisto-nav-tagi
+  "Palauttaa navigaatioon 'TESTI' tekstin, 
+  AWS ympäristöille tulee oma lyhyt teksti perään"
+  []
+  (let [host (.-host js/location)]
+    (str "TESTI"
+      (when (aws-kehitysymparistot host)
+        (str " "
+          (case host
+            "harjakoulutus.testivaylapilvi.fi" "Koulutus"
+            "harjademo.testivaylapilvi.fi" "Demo"
+            "harjaqa1.testivaylapilvi.fi" "Qa1"
+            "harjaqa2.testivaylapilvi.fi" "Qa2"
+            "harjaqa3.testivaylapilvi.fi" "Qa3"))))))
+
+(defn kehitysymparistossa-aws?
+  []
+  (aws-kehitysymparistot (.-host js/location)))
+
 (defn kehitysymparistossa-yhteiset?
   [host]
-  (or (gstr/startsWith host "10.")
+  (or
+    (gstr/startsWith host "10.")
     (gstr/contains host "googleusercontent")
     (gstr/contains host "harja-gc")
     (kehitysymparistossa-localhost?* host)
-    (#{"harja-test.solitaservices.fi"} host)
-
-    ;; AWS ympäristöt
-    ;; TODO: Onko ok myös lisätä aws stg-ympäristö (harjatest).
-    ;;       Kehiteysymparistossa-yhteiset? ja kehitysymparistossa? käyttötarkoitukset ovat hiukan hämääviä
-    (#{"harjadev.testivaylapilvi.fi" "harjatest.testivaylapilvi.fi"} host)))
+    (#{"harja-test.solitaservices.fi"
+       "testiextranet.vayla.fi"
+       "harjadev.testivaylapilvi.fi"
+       "harjatest.testivaylapilvi.fi"} host)
+    (aws-kehitysymparistot host)))
 
 (defn kehitysymparistossa?
   "Tarkistaa ollaanko kehitysympäristössä"
   []
-  (let [host (.-host js/location)]
-    (or (kehitysymparistossa-yhteiset? host)
-      (#{{"harja-c7-dev.lxd:8000" "testiextranet.vayla.fi"}} host))))
+  (kehitysymparistossa-yhteiset? (.-host js/location)))
 
 (defn kehitysymparistossa-localhost?
   "Tarkistaa ollaanko localhost-kehitysympäristössä"

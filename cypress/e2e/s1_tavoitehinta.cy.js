@@ -3,7 +3,8 @@ import {avaaHarjaTimeoutilla, muokkaaTarjousRiviaArvo} from "../support/apurit.j
 
 const clickTimeout = 6000;
 const visibleTimeout = 30000;
-const urakanNimi = 'Rovaniemen MHU testiurakka (1. hoitovuosi)';
+const urakanNimi = 'POP MHU Kajaani 2025-2030';
+const urakanAlue = 'Pohjois-Suomi';
 let indeksikorjattuTavoitehinta, indeksikorjattuKattohinta, kattohinta, tavoitehinta;
 
 // Alustetaan yllänimetty urakka Kustannussuunnittelua varten
@@ -24,7 +25,7 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
 
     before(function () {
         // Alustetaan urakka kustannussuunnittelua varten ennen testejä
-        alustaUrakkaKustannussuunnitteluun('Rovaniemen MHU testiurakka (1. hoitovuosi)');
+        alustaUrakkaKustannussuunnitteluun(urakanNimi);
 
         cy.viewport(1100, 2000)
         avaaHarjaTimeoutilla();
@@ -40,11 +41,11 @@ describe('Varmista Hoitovuoden alun tavoitehinta', function () {
         cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
         cy.intercept('POST', '_/vahvista-tavoite-ja-kattohinta').as('vahvista-tavoite-ja-kattohinta');
 
-        cy.contains('.haku-lista-item', 'Lappi').click()
+        cy.contains('.haku-lista-item', urakanAlue).click()
         cy.get('.ajax-loader', {timeout: visibleTimeout}).should('not.exist')
         cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
         // Asetettu urakka, joka varmasti menee joskus vanhaksi
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Rovaniemen MHU testiurakka (1. hoitovuosi)', {timeout: clickTimeout}).click()
+        cy.contains('[data-cy=urakat-valitse-urakka] li', urakanNimi, {timeout: clickTimeout}).click()
 
         cy.get('[data-cy=tabs-taso1-Suunnittelu]').click();
 

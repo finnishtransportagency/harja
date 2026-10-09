@@ -158,9 +158,20 @@
 
         ;; Jos validoinnit on käytössä ja hoitovuosi on kesken, niin päätöksiä ei anneta frontille.
         ;; Lasketaan siis tavoitehinnan ylitys ja alitus olemassa olevista luvuista.
-        tavoitehinnan-ylitys (if (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta))
+        tavoitehinnan-ylitys (cond
+                               ;; Ei ole päätöstä, mutta toteuma on suurempi kuin tavoitehinta ja pienempi kuin kattohinta
+                               (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-tavoitehinta) (<= toteuma-yht hoitovuoden-lopun-kattohinta))
                                (- toteuma-yht hoitovuoden-lopun-tavoitehinta)
-                               (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara))
+
+                               ;; Ei ole päätöstä ja toteuma on suurempi kuin kattohointa
+                               (and (not (:id tavoitehinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
+                               (- hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)
+
+                               ;; Jos päätös on, niin käytetään sitä
+                               (:id tavoitehinnan-ylityspaatos)
+                               (luvut/arvo-paatoksesta tavoitehinnan-ylityspaatos :ylityksen_maara)
+                               ;;Toivotaan, että tänne ei mennä koskaan.
+                               :else 0)
 
         tavoitehinnan-alitus (if (and (not tavoitehinnan-alituspaatos) (< toteuma-yht hoitovuoden-lopun-tavoitehinta))
                                (- hoitovuoden-lopun-tavoitehinta toteuma-yht)
@@ -173,7 +184,7 @@
         kattohinnan-ylitys (if (and (not (:id kattohinnan-ylityspaatos)) (> toteuma-yht hoitovuoden-lopun-kattohinta))
                              (- toteuma-yht hoitovuoden-lopun-kattohinta)
                              (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :ylityksen_maara))
-        kattohinnan-ylitys-siirto (luvut/arvo-paatoksesta kattohinnan-ylityspaatos :siirrettava_maara)
+        kattohinnan-ylitys-siirto (:siirrettava_maara kattohinnan-ylityspaatos)
 
         tavoitehinnan-ylitys? (or
                                 (:id tavoitehinnan-ylityspaatos)

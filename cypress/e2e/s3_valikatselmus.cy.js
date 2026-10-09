@@ -16,6 +16,15 @@ function siivoaKanta() {
         })
 }
 
+    function naytaPaattyneetUrakat() {
+        cy.contains('label', 'Näytä päättyneet', {timeout})
+        .should('be.visible')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
+    }
+
 describe('Välikatselmus aukeaa', () => {
 
     before(siivoaKanta);
@@ -26,6 +35,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        naytaPaattyneetUrakat()
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
@@ -49,6 +59,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
+        naytaPaattyneetUrakat()
         cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
         cy.wait('@hae-valikatselmuksen-tiedot')

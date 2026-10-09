@@ -116,13 +116,16 @@
             [:div.big-text.lihavoitu (fmt/euro-opt false (:hoitokauden_lopun_indeksikorjaus paatos))]]
            [:hr.paatos-hr]
 
-           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken? voi-muokata?
+           (when (:virheet paatos)
+             [:div
+              [yleiset/info-laatikko :vahva-ilmoitus "Et voi vahvistaa päätöstä, sillä osa pohjatiedoista puuttuu"
+               (:virheet paatos) nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])
+
+           [valikatselmus-yhteiset/paatosnapit paatos-tehty? on-oikeudet? paatos tallennus-kesken?
+            (or (not voi-muokata?) (not (:virheet paatos)))
             ;; Vahvista
             #(e! (valikatselmus-tiedot/->TallennaHoitovuodenlopunIndeksikorjauspaatos paatos))
             ;; Peru päätös
             #(e! (valikatselmus-tiedot/->HaeKetjutetustiKumoutuvatPaatokset
                    paatos
-                   (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]]
-
-          [:div.muokkaustoiminnot
-           [yleiset/info-laatikko :neutraali (:virhe paatos) nil nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]])])]))
+                   (fn [] (e! (valikatselmus-tiedot/->PeruValikatselmusPaatos paatos)))))]])])]))
