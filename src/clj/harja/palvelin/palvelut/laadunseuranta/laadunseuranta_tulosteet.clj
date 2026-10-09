@@ -57,7 +57,7 @@
 (defn- muodosta-taulukon-rivi [r yllapitourakka?]
   (cond-> []
     true (conj (pvm/pvm-opt (:kasittelyaika r)))
-    true (conj (domain-sanktio/sanktiolaji->teksti (:laji r)))
+    true (conj (or (:laji-nimi r) (domain-sanktio/sanktiolaji->teksti (:laji r))))
     yllapitourakka? (conj (if (get-in r [:yllapitokohde :id])
                             (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in r [:yllapitokohde :numero])
                                                                           :nimi (get-in r [:yllapitokohde :nimi])})
