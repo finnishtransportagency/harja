@@ -1,0 +1,5 @@
+{:lein {:profile "+shadow-cljs-testit"}
+ :builds {:fronttitestit
+          {:target :node-test
+           :output-to "target/shadow-cljs/fronttitestit.js"
+           :ns-regexp "^harja\\.(ui|views)\\..*-test$|^harja\\.(pvm|fmt)-test$"}}}

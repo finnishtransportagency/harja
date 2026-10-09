@@ -91,6 +91,17 @@
                        #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
                        #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}
 
+ :shadow-cljs-testit {:dependencies [[org.clojure/clojure "1.11.1"]
+                                    [org.clojure/clojurescript "1.11.132"]
+                                    [com.google.javascript/closure-compiler-unshaded "v20240317"]
+                                    [org.clojure/google-closure-library "0.0-20230227-c7c0a541"]
+                                    [thheller/shadow-cljs "2.28.23"]
+                                    [org.clojars.olecve/react-testing-library-cljs "0.0.20"]]
+                     :source-paths ^:replace ["src/clj" "src/cljs" "src/cljc" "src/cljs-dev"
+                                              "src/shared-cljc" "test/shadow"]
+                     :resource-paths ^:replace ["dev-resources/js" "dev-resources/tmp"
+                                                "resources/public/css" "resources"]}
+
  ;; TODO: Hankkiudu eroon PhantomJS:stä
  ;; Phantomjs testejä varten tarvitaan erillinen profiili, koska se ei tue enää uudempia kirjastoversioita ja JavaScriptin
  ;; uudemmat ominaisuudet eivät toimi siinä.

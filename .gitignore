@@ -3,6 +3,7 @@ resources/public/css
 resources/public/js
 resources/~$roolit.xlsx
 target
+/.shadow-cljs/
 .lein-repl-history
 .nrepl-port
 .repl/

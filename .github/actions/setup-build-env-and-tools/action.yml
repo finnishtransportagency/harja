@@ -18,6 +18,9 @@ inputs:
   install-node-deps:
     description: 'Asennetaanko nodejs dependencyt? (less.js ym.)'
     default: 'false'
+  clojure-deps-profile:
+    description: 'Leiningen-profiilit, joiden riippuvuudet asennetaan'
+    default: '+test,+phantomjs'
 
 runs:
   using: "composite"
@@ -51,19 +54,29 @@ runs:
         lein version
       shell: bash
 
+    - name: Muodosta Clojure-riippuvuuksien välimuistiavain
+      id: clojure-riippuvuuksien-valimuistiavain
+      if: ${{ inputs.install-clojure-deps == 'true' }}
+      env:
+        CLOJURE_DEPS_PROFILE: ${{ inputs.clojure-deps-profile }}
+      run: |
+        turvallinen_profiili="$(printf '%s' "$CLOJURE_DEPS_PROFILE" | tr ',' '-')"
+        printf 'profiili=%s\n' "$turvallinen_profiili" >> "$GITHUB_OUTPUT"
+      shell: bash
+
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
-        key: ${{ runner.os }}-leiningen-deps-${{ hashFiles('**/project.clj', '**/profiles.clj') }}
+        key: ${{ runner.os }}-leiningen-deps-${{ steps.clojure-riippuvuuksien-valimuistiavain.outputs.profiili }}-${{ hashFiles('**/project.clj', '**/profiles.clj') }}
 
     - name: Download Clojure dependencies
       if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
       run: |
         lein deps
-        lein with-profile +test,+phantomjs deps
+        lein with-profile "${{ inputs.clojure-deps-profile }}" deps
       shell: bash
 
     # FIXME: delaguardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 is not allowed to be used in finnishtransportagency/harja.
