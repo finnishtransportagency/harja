@@ -2,6 +2,7 @@
   "Sanktiolomake"
   (:require [clojure.string :as str]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -108,18 +109,26 @@
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
         aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
+        asiakirjamerkinta? (= :asiakirjamerkintojen_paikkansa_pitamattomyys (:laji @muokattu))
+        laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
+        tyon-tekematta-jattamisen-tyyppi-22? (and (= :tyon_tekematta_jattaminen (:laji @muokattu))
+                       (= 22 (:koodi aktiivinen-tyyppi)))
         c-ryhman-maaritys (when (= :C (:laji @muokattu))
-                (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
-                  (when (and (= :manuaalinen maaritystapa)
-                       (some? summa-euroina)
-                       (not (str/blank? ohjeteksti)))
-                    {:summa-euroina summa-euroina
-                     :ohjeteksti ohjeteksti}))
-                  (:summamaaritykset aktiivinen-tyyppi)))
+                            (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
+                                    (when (and (= :manuaalinen maaritystapa)
+                                            (some? summa-euroina)
+                                            (not (str/blank? ohjeteksti)))
+                                      {:summa-euroina summa-euroina
+                                       :ohjeteksti ohjeteksti}))
+                              (:summamaaritykset aktiivinen-tyyppi)))
         kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
                                  aktiivinen-tyyppi)
         automaattinen-summa (when kiintea-profiilisumma?
                               (tiedot/sanktiotyypin-automaattinen-summa aktiivinen-tyyppi))
+        laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
+        laskentaparametrit (:laskentaparametrit laskettu-maaritys)
+        manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
+                                               aktiivinen-tyyppi tyyppi-valinnat)
         omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
         omailmoitettu (boolean (and omailmoitus-sallittu? (:omailmoitettu @muokattu)))
         normaalimaara (if kiintea-profiilisumma?
@@ -133,7 +142,13 @@
                                 kiintea-profiilisumma?
                                 (assoc :normaalimaara normaalimaara
                                   :omailmoitettu omailmoitettu
-                                  :summa lopullinen-maara))
+                                  :summa lopullinen-maara)
+
+                                ;; Lähetetään vain raakasyöte; palvelin laskee summan itse.
+                                laskettu-maaritys
+                                (-> (dissoc :summa :normaalimaara :laskennan-syote)
+                                  (assoc :omailmoitettu false
+                                    :laskettava-syote (sanktion-laskenta/laskettava-syote @muokattu))))
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
@@ -239,7 +254,7 @@
                            vanha-tyyppi-id (get-in rivi [:tyyppi :id])
                            rivi (-> rivi
                                   (assoc :laji arvo)
-                                  (dissoc :tyyppi)
+                                  (dissoc :tyyppi :laskettava-syote :laskennan-syote)
                                   (assoc :tyyppi nil))
                            s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
                            vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id)
@@ -278,7 +293,11 @@
                            [yleiset/info-laatikko :neutraali
                             [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
 
-         (when-not (or yllapitourakka? vesivaylaurakka? (= :laskutus_yli_laskutusrajan (:laji @muokattu)))
+         (when-not (or yllapitourakka?
+                       vesivaylaurakka?
+                       asiakirjamerkinta?
+                       laskutus-ilman-laskutuskelpoisuutta?
+                       (= :laskutus_yli_laskutusrajan (:laji @muokattu)))
            (if (not lukutila?)
              {:otsikko "Tyyppi" :tyyppi :valinta
               :pakollinen? true
@@ -286,7 +305,8 @@
               ::lomake/col-luokka "col-xs-12"
               :nimi :tyyppi
               :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                       (let [sanktio (if (<= urakan-alkuvuosi 2024)
+                       (let [tyyppi-vaihtui? (not= (:id tyyppi) (get-in sanktio [:tyyppi :id]))
+                             sanktio (if (<= urakan-alkuvuosi 2024)
                                        (let [kohdistukset (tiedot/valittavat-kulun-kohdistukset
                                                             @tiedot-urakka/urakan-toimenpideinstanssit
                                                             (:nimi tyyppi))
@@ -306,6 +326,10 @@
                              omailmoitettu (boolean (and (:voi-puolittaa-omailmoituksella tyyppi)
                                                       (:omailmoitettu sanktio)))]
                          (cond-> (assoc sanktio :omailmoitettu omailmoitettu)
+                           ;; Edellisen tyypin syöte ei kuulu uudelle tyypille.
+                           tyyppi-vaihtui?
+                           (dissoc :laskettava-syote :laskennan-syote)
+
                            kiintea-profiilisumma?
                            (assoc :normaalimaara automaattinen-summa
                              :summa (when automaattinen-summa
@@ -356,7 +380,10 @@
                                    "Ei liity kohteeseen"
                                    ""))))})
 
-         (when (and (not yllapitokohdeurakka?) (not vesivaylaurakka?) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
+         (when (and (not yllapitokohdeurakka?)
+                    (not vesivaylaurakka?)
+                    (not laskutus-ilman-laskutuskelpoisuutta?)
+                    (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
            {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
             :uusi-rivi? true
             :hae (comp :kohde :laatupoikkeama)
@@ -378,16 +405,17 @@
             :valinta-nayta second
             :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})
 
-         {:otsikko "Perustelu"
-          :uusi-rivi? true
-          :nimi :perustelu
-          :pakollinen? true
-          ::lomake/col-luokka "col-xs-12"
-          :muokattava? (constantly voi-muokata?)
-          :hae (comp :perustelu :paatos :laatupoikkeama)
-          :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
-          :tyyppi :text :koko [80 3]
-          :validoi [[:ei-tyhja "Anna perustelu"]]}
+         (when-not tyon-tekematta-jattamisen-tyyppi-22?
+           {:otsikko "Perustelu"
+            :uusi-rivi? true
+            :nimi :perustelu
+            :pakollinen? true
+            ::lomake/col-luokka "col-xs-12"
+            :muokattava? (constantly voi-muokata?)
+            :hae (comp :perustelu :paatos :laatupoikkeama)
+            :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
+            :tyyppi :text :koko [80 3]
+            :validoi [[:ei-tyhja "Anna perustelu"]]})
 
          ;; Kun sanktiolajina on "Laskutusrajan ylitys" niin näytetään "Ylityksen määrä" -kenttä
          (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
@@ -409,7 +437,6 @@
            {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
             :nimi :summa
             :tyyppi :euro
-            :kentan-arvon-luokka "fontti-20-kevyempi"
             :muokattava? (constantly false)
             :vaadi-positiivinen-numero? true
             ::lomake/col-luokka "col-xs-8"
@@ -446,9 +473,44 @@
               ::lomake/col-luokka "col-xs-12"
               :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
 
-         (apply lomake/ryhma {:rivi? true}
-           (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
-                             {:otsikko "Sanktion suuruus" :nimi :summa :tyyppi :euro
+         (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
+           (keep identity [(when laskettu-maaritys
+                             {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
+                                         "Laskutettu summa"
+                                         (sanktion-laskenta/syotteen-otsikko laskentaparametrit))
+                              :nimi :laskettava-syote
+                              :tyyppi (if laskutus-ilman-laskutuskelpoisuutta?
+                                        :euro
+                                        :numero)
+                              :max-desimaalit (:desimaalit laskentaparametrit)
+                              :data-cy "sanktio-laskettava-syote"
+                              ::lomake/col-luokka "col-xs-3"
+                              :hae sanktion-laskenta/laskettava-syote
+                              :aseta (fn [rivi arvo] (assoc rivi :laskettava-syote arvo))
+                              :pakollinen? true :uusi-rivi? true
+                              :validoi [(fn [arvo _rivi _taulukko]
+                                          (sanktion-laskenta/syotteen-virhe laskentaparametrit arvo))]})
+
+                           ;; Tulos on esikatselu; palvelin laskee tallennettavan summan uudelleen.
+                           (when laskettu-maaritys
+                             {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
+                                         "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"
+                                         "Sanktion suuruus")
+                              :nimi :laskettu-sanktion-maara
+                              :tyyppi :euro
+                              :kentan-arvon-luokka "fontti-14"
+                              :muokattava? (constantly false)
+                              :uusi-rivi? true
+                              ::lomake/col-luokka "col-xs-12"
+                              :hae #(sanktion-laskenta/laskettu-tulos laskettu-maaritys %)})
+
+                           (when (and (sanktio-domain/muu-kuin-muistutus? @muokattu)
+                                   (not laskettu-maaritys)
+                                   (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
+                             {:otsikko (if manuaalinen-laskettavan-sisartyyppi?
+                                         "Sanktion määrä (€)"
+                                         "Sanktion suuruus")
+                              :nimi :summa :tyyppi :euro
                               :muokattava? (constantly (not kiintea-profiilisumma?))
                               :vaadi-positiivinen-numero? true
                               ::lomake/col-luokka "col-xs-4"
@@ -487,13 +549,14 @@
                               :valinta-nayta #(or % "Ei indeksiä")})]))
 
          (lomake/ryhma {:rivi? true}
-           {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
-            :pakollinen? true
-            ::lomake/col-luokka "col-xs-3"
-            :hae (comp :aika :laatupoikkeama)
-            :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
-            :fmt pvm/pvm-opt :tyyppi :pvm
-            :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+           (when-not laskutus-ilman-laskutuskelpoisuutta?
+             {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
+              :pakollinen? true
+              ::lomake/col-luokka "col-xs-3"
+              :hae (comp :aika :laatupoikkeama)
+              :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :aika] arvo))
+              :fmt pvm/pvm-opt :tyyppi :pvm
+              :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
            ;; MHU25 urakoilla ei ole käsittelyaikaa enää, vaan sen korvaa Määrätty pvm
            (if (not mhu25?)
@@ -622,7 +685,7 @@
                        :valikatselmus "Välikatselmus"
                        arvo))}))
 
-         {:otsikko (if mhu25? "Käsittely ja laskutus" "Käsittelytapa")
+         {:otsikko "Käsittelytapa"
           :nimi :kasittelytapa
           :tyyppi :valinta
           :muokattava? (if (not mhu25?) (constantly voi-muokata?) (constantly false))

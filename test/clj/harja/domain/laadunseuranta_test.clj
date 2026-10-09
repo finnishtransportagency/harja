@@ -1,8 +1,10 @@
 (ns harja.domain.laadunseuranta_test
-  (:require [clojure.test :refer [deftest testing is use-fixtures]]
+  (:require [clojure.string :as str]
+            [clojure.test :refer [deftest testing is use-fixtures]]
             [harja.testi :refer :all]
             [slingshot.test]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.pvm :as pvm]))
 
@@ -185,3 +187,208 @@
          (sanktio-domain/rivin-tyyppi
            {:laji :liikennevahinkojen_aiheuttajien_selvitysbonus
             :bonus? true}))))
+
+(def ^:private tiekm-maaritys
+  {:maaritystapa :laskettu
+   :laskentaversio 1
+   :laskentatapa :tiekm-yksikkohinta
+   :laskentaparametrit {:syoteavain "tiekm"
+                        :yksikko "tiekm"
+                        :desimaalit 2
+                        :yksikkohinta 200.0}
+   :ohjeteksti nil
+   :jarjestys 1})
+
+(def ^:private prosenttiosuus-maaritys
+  {:maaritystapa :laskettu
+   :laskentaversio 1
+   :laskentatapa :prosenttiosuus-syotteesta
+   :laskentaparametrit {:syoteavain "laskutuskelvottomana_laskutettu_osuus"
+                        :yksikko "€"
+                        :desimaalit 2
+                        :prosentti 20}
+   :ohjeteksti nil
+   :jarjestys 1})
+
+(deftest laskentaversio-kuuluu-snapshotin-vastaavuuteen
+  (let [maaritys (assoc tiekm-maaritys :laskentaversio 2)
+        snapshot {:laskentaversio 1
+                  :laskentatapa "tiekm_yksikkohinta"
+                  :laskentaparametrit (:laskentaparametrit maaritys)}]
+    (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta? snapshot maaritys)))
+    (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                  (assoc snapshot :laskentaversio nil)
+                  (assoc maaritys :laskentaversio nil)))
+      "Puuttuva laskentaversio ei saa hyväksyä snapshotia yhteensopivaksi")
+    (doseq [virheellinen-versio [0 -1 "1"]]
+      (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                    (assoc snapshot :laskentaversio virheellinen-versio)
+                    (assoc maaritys :laskentaversio virheellinen-versio)))
+        (str "Virheellinen laskentaversio " (pr-str virheellinen-versio)
+          " ei saa hyväksyä snapshotia yhteensopivaksi")))))
+
+(deftest laskettu-summamaaritys-luetaan-vain-rakenteisesta-maarityksesta
+  (let [laskettu-tyyppi {:summamaaritykset [tiekm-maaritys]}
+        ohjetekstillinen-manuaalinen {:summamaaritykset [{:maaritystapa :manuaalinen
+                                                          :ohjeteksti "200,00 € / tiekm."}]}]
+    (is (= tiekm-maaritys (sanktion-laskenta/laskettu-summamaaritys laskettu-tyyppi)))
+    (is (nil? (sanktion-laskenta/laskettu-summamaaritys ohjetekstillinen-manuaalinen))
+      "Ohjetekstiä ei saa tulkita laskentakaavana")
+    (is (nil? (sanktion-laskenta/laskettu-summamaaritys nil)))
+    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? laskettu-tyyppi))
+      "Laskettu määritys ei ole kiinteä automaattinen summa")))
+
+(deftest laske-sanktion-summa-tiekm-kertaa-yksikkohinta
+  (let [tulos (sanktion-laskenta/laske-sanktion-summa tiekm-maaritys 12.5)]
+    (is (= 2500.00M (:summa tulos)))
+    (is (= 2 (.scale ^BigDecimal (:summa tulos))) "Tulos pyöristetään kahteen desimaaliin")
+    (is (= {:syoteavain "tiekm"
+            :syote 12.5M
+            :yksikko "tiekm"
+            :laskentaversio 1
+            :laskentatapa "tiekm_yksikkohinta"
+            :laskentaparametrit (:laskentaparametrit tiekm-maaritys)}
+           (:laskennan-syote tulos))
+      "Snapshot sisältää syötteen, laskentatavan ja profiiliparametrit")))
+
+(deftest laske-sanktion-summa-prosenttiosuus-syotteesta
+  (testing "Kaksi desimaalia"
+    (is (= 246.91M (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys 1234.56)))))
+  (testing "HALF_UP pyöristää tasatilanteen ylöspäin"
+    (let [maaritys (assoc-in prosenttiosuus-maaritys [:laskentaparametrit :prosentti] 15)]
+      (is (= 0.02M (:summa (sanktion-laskenta/laske-sanktion-summa maaritys 0.10)))
+        "0,10 × 15 % = 0,015 -> 0,02")))
+  (testing "Kokonaisluku ja BigDecimal kelpaavat"
+    (is (= 200.00M (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys 1000))))
+    (is (= 200.00M (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys 1000.00M))))))
+
+(deftest snapshot-vastaa-maaritysta-ja-syotetta
+  (let [laskennan-syote {:syoteavain "tiekm"
+                         :syote 12.5M
+                         :yksikko "tiekm"
+                         :laskentaversio 1
+                         :laskentatapa "tiekm_yksikkohinta"
+                         :laskentaparametrit (:laskentaparametrit tiekm-maaritys)}]
+    (is (true? (sanktion-laskenta/syote-vastaa-snapshotia? laskennan-syote 12.50M)))
+    (is (true? (sanktion-laskenta/snapshot-vastaa-maaritysta? laskennan-syote tiekm-maaritys)))
+    (is (false? (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                  laskennan-syote
+                  (assoc-in tiekm-maaritys [:laskentaparametrit :yksikkohinta] 300.0))))))
+
+(deftest laske-sanktion-summa-hylkaa-virheellisen-syotteen-kentan-nimella
+  (let [hylkaa (fn [maaritys syote osat]
+                 (let [virhe (try (sanktion-laskenta/laske-sanktion-summa maaritys syote)
+                               nil
+                               (catch IllegalArgumentException e (.getMessage e)))]
+                   (is (some? virhe) (str "Syöte " (pr-str syote) " pitää hylätä"))
+                   (doseq [osa osat]
+                     (is (str/includes? (str virhe) osa) (str "Virheessä pitää olla " osa ": " virhe)))))]
+    (testing "Puuttuva syöte"
+      (hylkaa tiekm-maaritys nil ["tiekm" "skalaarinen numero" "nil"]))
+    (testing "Merkkijono ei ole numero"
+      (hylkaa tiekm-maaritys "12" ["tiekm" "skalaarinen numero" "java.lang.String"]))
+    (testing "Kokoelma ei ole skalaarinen"
+      (hylkaa tiekm-maaritys {:arvo 12} ["tiekm" "skalaarinen numero" "PersistentArrayMap"])
+      (hylkaa tiekm-maaritys [12] ["tiekm" "skalaarinen numero" "PersistentVector"]))
+    (testing "Suhdeluku ei ole skalaarinen desimaaliluku"
+      (hylkaa tiekm-maaritys 1/3 ["tiekm" "skalaarinen numero" "Ratio"]))
+    (testing "Ei-äärelliset arvot"
+      (hylkaa tiekm-maaritys Double/NaN ["tiekm" "äärellinen"])
+      (hylkaa tiekm-maaritys Double/POSITIVE_INFINITY ["tiekm" "äärellinen"]))
+    (testing "Nolla ja negatiivinen"
+      (hylkaa tiekm-maaritys 0 ["tiekm" "nollaa suurempi" "java.lang.Long"])
+      (hylkaa tiekm-maaritys -1.5 ["tiekm" "nollaa suurempi" "java.lang.Double"]))
+    (testing "Liian monta desimaalia"
+      (hylkaa tiekm-maaritys 1.234 ["tiekm" "enintään 2 desimaalia"])
+      (hylkaa prosenttiosuus-maaritys 10.001M ["laskutuskelvottomana_laskutettu_osuus" "enintään 2 desimaalia"]))
+    (testing "Profiilin minimi- ja maksimiraja"
+      (let [rajattu (update tiekm-maaritys :laskentaparametrit assoc :minimi 0.5 :maksimi 100)]
+        (hylkaa rajattu 0.25 ["tiekm" "vähintään 0.5"])
+        (hylkaa rajattu 100.01 ["tiekm" "enintään 100"])
+        (is (= 100.00M (:summa (sanktion-laskenta/laske-sanktion-summa
+                                 (update tiekm-maaritys :laskentaparametrit assoc :yksikkohinta 1.0 :maksimi 100)
+                                 100))))))
+    (testing "Profiilin desimaalitarkkuus rajaa syötettä"
+      (hylkaa (update tiekm-maaritys :laskentaparametrit assoc :desimaalit 0) 1.5
+        ["tiekm" "enintään 0 desimaalia"]))))
+
+(deftest laske-sanktion-summa-hylkaa-virheellisen-laskentamaarityksen
+  (testing "Tuntematon laskentatapa"
+    (is (thrown-with-msg? IllegalArgumentException #"laskentatapa.*:kaava-ohjetekstista"
+          (sanktion-laskenta/laske-sanktion-summa (assoc tiekm-maaritys :laskentatapa :kaava-ohjetekstista) 1))))
+  (testing "Puuttuva yksikköhinta"
+    (is (thrown-with-msg? IllegalArgumentException #"laskentaparametrit.*yksikkohinta"
+          (sanktion-laskenta/laske-sanktion-summa
+            (update tiekm-maaritys :laskentaparametrit dissoc :yksikkohinta) 1))))
+  (testing "Palvelimen tukemaa tarkkuutta suurempi profiilitarkkuus"
+    (is (thrown-with-msg? IllegalArgumentException #"laskentaparametrit.*desimaalit"
+          (sanktion-laskenta/laske-sanktion-summa
+            (update tiekm-maaritys :laskentaparametrit assoc :desimaalit 3) 1)))))
+
+(deftest syotteen-otsikko-muodostuu-profiilin-laskentaparametreista
+  (is (= "Tiekm"
+         (sanktion-laskenta/syotteen-otsikko (:laskentaparametrit tiekm-maaritys))))
+  (is (= "Laskutuskelvottomana laskutettu osuus (€)"
+         (sanktion-laskenta/syotteen-otsikko (:laskentaparametrit prosenttiosuus-maaritys)))))
+
+(deftest syotteen-virhe-esitarkistaa-syotteen-profiilin-saannoilla
+  (let [parametrit (:laskentaparametrit tiekm-maaritys)
+        rajattu (assoc parametrit :minimi 0.5 :maksimi 100)]
+    (testing "Kelvolliset syötteet"
+      (doseq [syote [12.5 20 0.01 1.15 100.00]]
+        (is (nil? (sanktion-laskenta/syotteen-virhe parametrit syote)) (str "Syöte " syote))))
+    (testing "Puuttuva ja ei-numeerinen syöte"
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit nil)))
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit "12"))))
+    (testing "Nolla, negatiivinen ja ei-äärellinen"
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit 0)))
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit -1.5)))
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit Double/NaN)))
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit Double/POSITIVE_INFINITY))))
+    (testing "Liian monta desimaalia"
+      (is (some? (sanktion-laskenta/syotteen-virhe parametrit 1.234)))
+      (is (some? (sanktion-laskenta/syotteen-virhe (assoc parametrit :desimaalit 0) 1.5))))
+    (testing "Profiilin minimi ja maksimi"
+      (is (some? (sanktion-laskenta/syotteen-virhe rajattu 0.25)))
+      (is (some? (sanktion-laskenta/syotteen-virhe rajattu 100.01)))
+      (is (nil? (sanktion-laskenta/syotteen-virhe rajattu 100))))))
+
+(deftest laskettava-syote-palautuu-lomakkeelle-palvelimen-snapshotista
+  (let [luettu-rivi {:id 1 :summa -2500.0 :laskennan-syote {:syote 12.5 :syoteavain "tiekm"}}]
+    (is (= 12.5 (sanktion-laskenta/laskettava-syote luettu-rivi)))
+    (is (= 20 (sanktion-laskenta/laskettava-syote (assoc luettu-rivi :laskettava-syote 20)))
+      "Käyttäjän muokkaus voittaa snapshotin")
+    (is (nil? (sanktion-laskenta/laskettava-syote (assoc luettu-rivi :laskettava-syote nil)))
+      "Tyhjennetty kenttä ei palaa snapshotin arvoon")
+    (is (nil? (sanktion-laskenta/laskettava-syote {})))))
+
+(deftest laskettu-tulos-on-esikatselu-muokatusta-syotteesta-tai-palvelimen-summa
+  (let [luettu-rivi {:id 1 :summa -2500.0 :laskennan-syote {:syote 12.5}}]
+    (testing "Muokkaamaton luettu rivi näyttää palvelimen tallentaman summan"
+      (is (== 2500 (sanktion-laskenta/laskettu-tulos tiekm-maaritys luettu-rivi))))
+    (testing "Muokattu syöte esikatsellaan profiilin laskentatavalla"
+      (is (== 4000 (sanktion-laskenta/laskettu-tulos tiekm-maaritys (assoc luettu-rivi :laskettava-syote 20))))
+      (is (== 246.91 (sanktion-laskenta/laskettu-tulos prosenttiosuus-maaritys {:laskettava-syote 1234.56}))))
+    (testing "Virheellisestä tai puuttuvasta syötteestä ei näytetä tulosta"
+      (is (nil? (sanktion-laskenta/laskettu-tulos tiekm-maaritys (assoc luettu-rivi :laskettava-syote 1.234))))
+      (is (nil? (sanktion-laskenta/laskettu-tulos tiekm-maaritys (assoc luettu-rivi :laskettava-syote nil)))))
+    (testing "Uusi rivi ilman syötettä ei näytä tulosta"
+      (is (nil? (sanktion-laskenta/laskettu-tulos tiekm-maaritys {:summa 500}))
+        "Vanha käsin syötetty summa ei ole laskettu tulos"))))
+
+(deftest manuaalinen-laskettavan-sisartyyppi-tunnistetaan-profiilin-rakenteesta
+  (let [laskettava {:id 22 :summamaaritykset [tiekm-maaritys]}
+        muu-manuaalinen {:id 23 :summamaaritykset []}
+        c-manuaalinen-ohjetekstilla {:id 30 :summamaaritykset [{:maaritystapa :manuaalinen
+                                                                :summa-euroina 200M
+                                                                :ohjeteksti "200,00 € / tiekm."}]}
+        lajin-tyypit [laskettava muu-manuaalinen]]
+    (is (true? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi? muu-manuaalinen lajin-tyypit)))
+    (is (false? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi? laskettava lajin-tyypit))
+      "Laskettava tyyppi ei ole manuaalinen")
+    (is (false? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi? muu-manuaalinen [muu-manuaalinen]))
+      "Ilman laskettavaa sisartyyppiä käytös ei muutu")
+    (is (false? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi? c-manuaalinen-ohjetekstilla
+                  [laskettava c-manuaalinen-ohjetekstilla]))
+      "Profiilin manuaalinen määritys säilyttää nykyisen käytöksen")
+    (is (false? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi? nil lajin-tyypit)))))
