@@ -32,6 +32,7 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
+            [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.kyselyt.sanktiot :as sanktiot-q]
@@ -265,6 +266,7 @@
         (is (= :yllapidon_sakko (:laji lisatty-sakko)) "Päällystysurakan bonuksen oikea sanktiolaji")
         (is (= "Ylläpidon sakko" (:nimi (:tyyppi lisatty-sakko))) "Päällystysurakan sakon oikea sanktiotyyppi")
         (is (= :yllapidon_bonus (:laji lisatty-bonus)) "Päällystysurakan bonuksen oikea bonuslaji")
+        (is (nil? (:laji-nimi lisatty-bonus)) "Legacy-ylläpitobonukselle ei liitetä bonusprofiilin nimeä")
         (is (= "Ylläpidon muistutus" (:nimi (:tyyppi lisatty-muistutus))) "Päällystysurakan muistutuksen oikea sanktiotyyppi")
         (is (= -1234.0 (:summa lisatty-sakko)) "Päällystysurakan sakon oikea summa")
         (is (= 4321.0 (:summa lisatty-bonus)) "Päällystysurakan bonuksen oikea summa")
@@ -2241,7 +2243,91 @@
            (mapv :laji (:bonus-lajit vastaus))))
     (is (= ["Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta"
             "Bonus alihankintasopimusten maksuehdoista"]
-           (mapv :nimi (:bonus-lajit vastaus))))))
+          (mapv :nimi (:bonus-lajit vastaus))))
+    (is (= [nil nil]
+          (mapv #(get-in % [:summamaaritys :summa-euroina])
+            (:bonus-lajit vastaus))))))
+
+(deftest hae-urakan-sanktiot-ja-bonukset-palauttaa-mhu26-bonuksen-aktiivisen-profiilin-nimen
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                  :hae-urakan-sanktiot-ja-bonukset
+                  +kayttaja-jvh+
+                  {:urakka-id urakka-id
+                   :alku (pvm/->pvm "01.10.2026")
+                   :loppu (pvm/->pvm "30.09.2027")})
+        bonus (first (filter #(= :alihankkijatyytyvaisyyskyselybonus (:laji %)) vastaus))]
+    (is (= "Bonus alihankkijatyytyväisyyden kyselytutkimuksen tuloksesta"
+           (:laji-nimi bonus)))))
+
+(deftest hae-urakan-sanktiot-ja-bonukset-ratkaisee-bonusprofiilin-hoitovuoden-rivikohtaisesti
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
+        lajin-koodi :alihankkijatyytyvaisyyskyselybonus
+        haetut-hoitovuodet (atom [])]
+    (try
+      (u "UPDATE erilliskustannus SET pvm = DATE '2027-10-01' WHERE lisatieto = 'Sanktioraportin Sodankylän MHU2026-testibonus' AND tyyppi = 'alihankkijatyytyvaisyyskyselybonus'")
+      (with-redefs [ls-bonus-konfiguraatio/hae-urakan-bonus-lajien-nimet
+                    (fn [_ {:keys [hoitovuosi]}]
+                      (swap! haetut-hoitovuodet conj hoitovuosi)
+                      {lajin-koodi (str "Profiilin nimi hoitovuodelle " hoitovuosi)})]
+        (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-urakan-sanktiot-ja-bonukset
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :alku (pvm/->pvm "01.10.2026")
+                         :loppu (pvm/->pvm "30.09.2027")})
+              bonus (first (filter #(= lajin-koodi (:laji %)) vastaus))]
+          (is (= #{1 2} (set @haetut-hoitovuodet)))
+          (is (= "Profiilin nimi hoitovuodelle 2" (:laji-nimi bonus)))))
+      (finally
+        (u "UPDATE erilliskustannus SET pvm = DATE '2026-10-15' WHERE lisatieto = 'Sanktioraportin Sodankylän MHU2026-testibonus' AND tyyppi = 'alihankkijatyytyvaisyyskyselybonus'")))))
+
+(deftest hae-urakan-sanktiot-ja-bonukset-nayttaa-puuttuvan-profiilin-nimen
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
+        lajin-koodi :alihankkijatyytyvaisyyskyselybonus]
+    (with-redefs [ls-bonus-konfiguraatio/hae-urakan-bonus-lajien-nimet (fn [_ _] {})]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :hae-urakan-sanktiot-ja-bonukset
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :alku (pvm/->pvm "01.10.2026")
+                       :loppu (pvm/->pvm "30.09.2027")})
+            bonus (first (filter #(= lajin-koodi (:laji %)) vastaus))]
+        (is (= "Bonuksen nimi puuttuu aktiivisesta bonusprofiilista" (:laji-nimi bonus)))))))
+
+(deftest hae-urakan-sanktiot-ja-bonukset-nayttaa-puuttuvan-profiilinimen
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
+        lajin-koodi :alihankkijatyytyvaisyyskyselybonus]
+    (with-redefs [ls-bonus-konfiguraatio/hae-urakan-bonus-lajien-nimet
+                  (fn [_ _] {lajin-koodi nil})]
+      (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                      :hae-urakan-sanktiot-ja-bonukset
+                      +kayttaja-jvh+
+                      {:urakka-id urakka-id
+                       :alku (pvm/->pvm "01.10.2026")
+                       :loppu (pvm/->pvm "30.09.2027")})
+            bonus (first (filter #(= lajin-koodi (:laji %)) vastaus))]
+        (is (= "Bonuksen nimi puuttuu aktiivisesta bonusprofiilista" (:laji-nimi bonus)))))))
+
+(deftest bonusraportti-kayttaa-profiilinimea-ja-sailyttaa-yllapidon-bonuksen-nimen
+  (let [raportti (laadunseuranta-tulosteet/sanktiot-ja-bonukset-raportti
+                   (pvm/->pvm "01.10.2026")
+                   (pvm/->pvm "30.09.2027")
+                   "Sodankylän MHU 2026-2031"
+                   false
+                   #{:bonukset}
+                   #{:bonukset}
+                   [{:kasittelyaika (pvm/->pvm "15.10.2026")
+                     :laji :alihankkijatyytyvaisyyskyselybonus
+                     :laji-nimi "Profiilin bonusnimi"
+                     :bonus true
+                     :summa 1200.0}
+                    {:kasittelyaika (pvm/->pvm "15.10.2026")
+                     :laji :yllapidon_bonus
+                     :bonus true
+                     :summa 100.0}])
+        lajien-nimet (mapv second (take 2 (get-in raportti [4 3])))]
+      (is (= ["Profiilin bonusnimi" "Bonus"] lajien-nimet))))
 
 (deftest hae-urakan-bonus-konfiguraatio-epaonnistuu-jos-profiileja-on-useita
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -2310,6 +2396,26 @@
       (is (= :bonus-kirjausvirhe/ei-riveja (:koodi bonus-kirjausvirhe)))
       (is (= "Bonukselle ei löytynyt aktiivisesta bonusprofiilista rivejä valittuun toimenpideinstanssiin."
              (:viesti (first virheet)))))))
+
+(deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-hylkaa-manipuloidun-automaattisumman
+  (with-redefs [ls-bonus-konfiguraatio/hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
+                (fn [_ _]
+                  {:profiili {:id 7}
+                   :rivit (vector
+                            {:laji {:koodi :alihankkijatyytyvaisyyskyselybonus}
+                             :profiilirivi {:summamaaritys {:summa-euroina 5000.00M
+                                                            :maaritystapa "automaattinen"}}})})]
+    (try+
+      (ls-bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
+        nil {:urakka-id 36
+             :hoitovuosi 1
+             :toimenpideinstanssi-id 123
+             :bonuslaji :alihankkijatyytyvaisyyskyselybonus
+             :rahasumma 4321.0})
+      (is false "Manipuloitu automaattisumma pitää hylätä")
+      (catch [:type :bonus-kirjausvirhe] {:keys [bonus-kirjausvirhe]}
+        (is (= :bonus-kirjausvirhe/profiilin-automaattinen-summa
+               (:koodi bonus-kirjausvirhe)))))))
 
 (deftest vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa-heittaa-paikallisen-ei-profiilia-domain-virheen
   (try+
