@@ -1,7 +1,6 @@
 (ns harja.palvelin.palvelut.kulut.kustannusten-seuranta
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
             [slingshot.slingshot :refer [throw+ try+]]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
@@ -24,19 +23,21 @@
                                                                              :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
       res)))
 
-(defn hae-urakan-kustannusten-seurannan-parametrit
-  [db user {:keys [urakka-id]}]
+(defn hae-urakan-kustannusten-seuranta-paaryhmittain
+  [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus
     oikeudet/urakat-toteumat-kokonaishintaisettyot
     user
     urakka-id)
-  (some-> (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id})
-    first
-    (select-keys [:muutosten_hallinta])))
+  {:kustannukset
+   (hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia
+     db
+     tiedot)
 
-(defn hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia db tiedot))
+   :urakan-parametrit
+   (some-> (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id})
+     first
+     (select-keys [:muutosten_hallinta]))})
 
 (defrecord KustannustenSeuranta []
   component/Lifecycle
@@ -52,11 +53,6 @@
         :urakan-kustannusten-seuranta-paaryhmittain
         (fn [user tiedot]
           (hae-urakan-kustannusten-seuranta-paaryhmittain db-replica user tiedot)))
-      (julkaise-palvelu
-        http
-        :hae-urakan-kustannusten-seurannan-parametrit
-        (fn [user tiedot]
-          (hae-urakan-kustannusten-seurannan-parametrit db user tiedot)))
       (when excel
         (excel-vienti/rekisteroi-excel-kasittelija! excel :kustannukset (partial #'kustannusten-seuranta-excel/kustannukset-excel db)))
       this))
@@ -64,8 +60,7 @@
   (stop [this]
     (poista-palvelut
       (:http-palvelin this)
-      :urakan-kustannusten-seuranta-paaryhmittain
-      :hae-urakan-kustannusten-seurannan-parametrit)
+      :urakan-kustannusten-seuranta-paaryhmittain)
     (when (:excel-vienti this)
       (excel-vienti/poista-excel-kasittelija! (:excel-vienti this) :kustannukset))
     this))

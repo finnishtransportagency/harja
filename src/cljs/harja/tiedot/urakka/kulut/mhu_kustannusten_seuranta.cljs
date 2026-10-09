@@ -27,9 +27,6 @@
 (defrecord HaeBudjettitavoite [])
 (defrecord HaeBudjettitavoiteHakuOnnistui [vastaus])
 (defrecord HaeBudjettitavoiteHakuEpaonnistui [vastaus])
-(defrecord HaeUrakanParametrit [urakkaid])
-(defrecord HaeUrakanParametritOnnistui [vastaus])
-(defrecord HaeUrakanParametritEpaonnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisut [urakka])
 (defrecord HaeTavoitehintojenOikaisutOnnistui [vastaus])
 (defrecord HaeTavoitehintojenOikaisutEpaonnistui [vastaus])
@@ -75,11 +72,15 @@
 
   KustannustenHakuOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [sopimustyyppi (-> @tila/yleiset :urakka :sopimustyyppi)
-          data (kustannusten-seuranta/jarjesta-tehtavat vastaus sopimustyyppi)]
+    (let [{:keys [kustannukset urakan-parametrit]} vastaus
+          sopimustyyppi (-> @tila/yleiset :urakka :sopimustyyppi)
+          data (kustannusten-seuranta/jarjesta-tehtavat
+                 kustannukset
+                 sopimustyyppi)]
       (-> app
         (assoc-in [:kustannukset-yhteensa] (:yhteensa data))
         (assoc-in [:kustannukset] (:taulukon-rivit data))
+        (assoc :urakan-parametrit urakan-parametrit)
         (assoc :haku-kaynnissa? false))))
 
   KustannustenHakuEpaonnistui
@@ -105,24 +106,6 @@
   HaeBudjettitavoiteHakuEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (viesti/nayta! "Kattohinnan ja tavoitteen haku epäonnistui!" :danger)
-    app)
-
-  HaeUrakanParametrit
-  (process-event [{urakkaid :urakkaid} app]
-    (tuck-apurit/post! :hae-urakan-kustannusten-seurannan-parametrit
-      {:urakka-id urakkaid}
-      {:onnistui ->HaeUrakanParametritOnnistui
-       :epaonnistui ->HaeUrakanParametritEpaonnistui
-       :paasta-virhe-lapi? true})
-    app)
-
-  HaeUrakanParametritOnnistui
-  (process-event [{vastaus :vastaus} app]
-    (assoc app :urakan-parametrit vastaus))
-
-  HaeUrakanParametritEpaonnistui
-  (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! "Urakan parametrien haku epäonnistui!" :danger)
     app)
 
   HaeOnkoPaatoksiaTekematta

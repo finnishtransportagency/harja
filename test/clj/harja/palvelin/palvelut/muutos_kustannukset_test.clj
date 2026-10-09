@@ -58,13 +58,15 @@
 
 
 (defn- hae-kustannusten-seuranta [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
-  (kutsu-palvelua
-    (:http-palvelin jarjestelma) :urakan-kustannusten-seuranta-paaryhmittain
-    +kayttaja-jvh+
-    {:urakka-id urakka
-     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-     :alkupvm alkupvm
-     :loppupvm loppupvm}))
+  (-> (kutsu-palvelua
+        (:http-palvelin jarjestelma)
+        :urakan-kustannusten-seuranta-paaryhmittain
+        +kayttaja-jvh+
+        {:urakka-id urakka
+         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+         :alkupvm alkupvm
+         :loppupvm loppupvm})
+    :kustannukset))
 
 
 (defn- tarkista-muutos-kulu-on-validi "Tarkistaa että vastaus on validi, ja kulu tallennettiin"
@@ -325,20 +327,32 @@
   (let [vastaus
         (kutsu-palvelua
           (:http-palvelin jarjestelma)
-          :hae-urakan-kustannusten-seurannan-parametrit
+          :urakan-kustannusten-seuranta-paaryhmittain
           +kayttaja-jvh+
-          {:urakka-id +urakka+})]
+          {:urakka-id +urakka+
+           :hoitokauden-alkuvuosi 2025
+           :alkupvm "2025-10-01"
+           :loppupvm "2026-09-30"})
+        parametrit (:urakan-parametrit vastaus)]
 
-    (is (contains? vastaus :muutosten_hallinta))
-    (is (boolean? (:muutosten_hallinta vastaus)))))
+    (is (map? vastaus))
+    (is (contains? vastaus :kustannukset))
+    (is (sequential? (:kustannukset vastaus)))
+
+    (is (map? parametrit))
+    (is (contains? parametrit :muutosten_hallinta))
+    (is (boolean? (:muutosten_hallinta parametrit)))))
 
 (deftest kustannusten-seurannan-parametrit-vaativat-kustannusten-seurannan-oikeuden
   (is (thrown? Exception
         (kutsu-palvelua
           (:http-palvelin jarjestelma)
-          :hae-urakan-kustannusten-seurannan-parametrit
+          :urakan-kustannusten-seuranta-paaryhmittain
           +kayttaja-seppo+
-          {:urakka-id +urakka+}))))
+          {:urakka-id +urakka+
+           :hoitokauden-alkuvuosi 2025
+           :alkupvm "2025-10-01"
+           :loppupvm "2026-09-30"}))))
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
   (let [erillisrahoitettu-muutostyo (hae-muutostyot)

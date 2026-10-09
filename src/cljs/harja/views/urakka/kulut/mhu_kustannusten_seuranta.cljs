@@ -463,15 +463,15 @@
         arvonvahennykset-toteutunut (or (:arvonvahennykset-toteutunut rivit-paaryhmittain) 0)
         toteutuma-yhteensa (or (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]) 0)
         toteutuma-yhteensa-ilman-arvonvahennyksia (- toteutuma-yhteensa arvonvahennykset-toteutunut)
-        yhteensa-indeksikorjattu (or (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)) 0)
+        yhteensa-indeksikorjattu-alitus-ylitys (or (:yht-budjetoitu-summa-indeksikorjattu (get app :kustannukset-yhteensa)) 0)
         tavoitehinnanoikaisu-budjetoitu (or (:tavoitehinnanoikaisu-budjetoitu rivit-paaryhmittain) 0)
         yhteensa-alitus-ylitys (+
-                                 (- toteutuma-yhteensa-ilman-arvonvahennyksia yhteensa-indeksikorjattu)
+                                 (- toteutuma-yhteensa-ilman-arvonvahennyksia yhteensa-indeksikorjattu-alitus-ylitys)
                                  tavoitehinnanoikaisu-budjetoitu)
         yhteensa-prosentti (muotoile-prosentti (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia)
-                             (big/->big yhteensa-indeksikorjattu)
+                             (big/->big yhteensa-indeksikorjattu-alitus-ylitys)
                              (big/gt (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia)
-                               (big/->big yhteensa-indeksikorjattu)))]
+                               (big/->big yhteensa-indeksikorjattu-alitus-ylitys)))]
     [:div.row.sivuelementti
      [:div.col-xs-12
       [:h4 "Hoitovuosi: " valittu-hoitovuosi-nro " (1.10." valittu-hoitokauden-alkuvuosi " - 09.30." (inc valittu-hoitokauden-alkuvuosi) ")"]
@@ -539,7 +539,7 @@
           [:td.numero {:style {:width (:toteuma leveydet)}} (fmt->big (get-in app [:kustannukset-yhteensa :yht-toteutunut-summa]))]
           [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
                 :style {:width (:erotus leveydet)}}
-           (str (when (big/gt (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia) (big/->big yhteensa-indeksikorjattu))
+           (str (when (big/gt (big/->big toteutuma-yhteensa-ilman-arvonvahennyksia) (big/->big yhteensa-indeksikorjattu-alitus-ylitys))
                   "+ ")
              (fmt->big yhteensa-alitus-ylitys))]
           [:td {:class (if yht-negatiivinen? "negatiivinen-numero" "numero")
@@ -680,7 +680,6 @@
                                                 kuluva-hoitokausi)
                             kuluva-vuosi (pvm/vuosi (first kuluva-hoitokausi))]
                         (e! (kustannusten-seuranta-tiedot/->HaeBudjettitavoite))
-                        (e! (kustannusten-seuranta-tiedot/->HaeUrakanParametrit valittu-urakka-id))
                         (e! (kustannusten-seuranta-tiedot/->HaeKustannukset hoitokauden-alkuvuosi
                               (if (= "Kaikki" valittu-kuukausi)
                                 nil

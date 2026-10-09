@@ -228,9 +228,15 @@
             :lihavoi? false}))))
 
 (defn- luo-excel-rivit [kustannusdata avain excel-nimi budjetti-muutoksiin?]
-  (let [bud (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-budjetoitu"))])
-        bud-indeksikorjattu (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-budjetoitu-indeksikorjattu"))])
-        tot (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-toteutunut"))])
+  (let [bud (or
+              (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-budjetoitu"))])
+              0M)
+        bud-indeksikorjattu (or
+                              (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-budjetoitu-indeksikorjattu"))])
+                              0M)
+        tot (or
+              (get-in kustannusdata [:taulukon-rivit (keyword (str avain "-toteutunut"))])
+              0M)
         erotus (- tot bud-indeksikorjattu)
         prosentti (if (or (= 0M tot) (= 0M bud-indeksikorjattu))
                     0
@@ -280,19 +286,22 @@
                            (when nayta-erotus? (:prosentti rivi))]}]) tehtavat)))))
 
 (defn- luo-excel-rivi-yhteensa [kustannusdata muutosten-hallinta-kaytossa?]
-  (let [bud (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa-ilman-muutoksia])
-        bud-indeksikorjattu (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa-indeksikorjattu-ilman-muutoksia])
+  (let [bud (or
+              (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa-ilman-muutoksia])
+              0M)
+        bud-indeksikorjattu (or
+                              (get-in kustannusdata [:yhteensa :yht-budjetoitu-summa-indeksikorjattu-ilman-muutoksia])
+                              0M)
         arvonvahennykset-toteutunut (or
                                       (get-in kustannusdata [:taulukon-rivit :arvonvahennykset-toteutunut])
-                                      0)
-        tot (get-in kustannusdata [:yhteensa :yht-toteutunut-summa])
+                                      0M)
+        tot (or
+              (get-in kustannusdata [:yhteensa :yht-toteutunut-summa])
+              0M)
         tot-ilman-arvonvahennyksia (- tot arvonvahennykset-toteutunut)
         muutokset-budjetoitu (or
                                (get-in kustannusdata [:taulukon-rivit :muutokset-budjetoitu])
                                0)
-        tavoitehinnanoikaisu-budjetoitu (or
-                                          (get-in kustannusdata [:taulukon-rivit :tavoitehinnanoikaisu-budjetoitu])
-                                          0)
         erotus (-
                  tot-ilman-arvonvahennyksia
                  bud-indeksikorjattu

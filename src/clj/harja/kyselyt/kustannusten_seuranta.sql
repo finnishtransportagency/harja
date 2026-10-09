@@ -391,20 +391,20 @@ JOIN (
     ON budjetit.muutos = muutostyo.id
 
 -- Yksi kulurivi jokaista muutostyötä kohden
-         LEFT JOIN (
+LEFT JOIN (
     SELECT
         kulut.muutos,
-        SUM(kulut.summa)                         AS toteutunut_summa,
-        MIN(kulut.maksutyyppi)::TEXT             AS maksutyyppi,
-        MIN(kulut.tehtava_nimi)                  AS tehtava_nimi,
-        MIN(kulut.toimenpide)                    AS toimenpide,
-        MIN(kulut.erapaiva)::TEXT                AS ajankohta,
-        MIN(kulut.jarjestys)                     AS jarjestys
+        SUM(kulut.summa)                                                            AS toteutunut_summa,
+        STRING_AGG(DISTINCT kulut.maksutyyppi, ', ' ORDER BY kulut.maksutyyppi)     AS maksutyyppi,
+        STRING_AGG(DISTINCT kulut.tehtava_nimi, ', ' ORDER BY kulut.tehtava_nimi)   AS tehtava_nimi,
+        STRING_AGG(DISTINCT kulut.toimenpide, ', ' ORDER BY kulut.toimenpide)       AS toimenpide,
+        MIN(kulut.erapaiva)::TEXT                                                   AS ajankohta,
+        MIN(kulut.jarjestys)                                                        AS jarjestys
     FROM (
              SELECT
                  COALESCE(lk.muutos, mkulu.muutos) AS muutos,
                  lk.summa,
-                 lk.maksueratyyppi AS maksutyyppi,
+                 lk.maksueratyyppi::TEXT AS maksutyyppi,
                  l.erapaiva,
 
                  COALESCE(tr.nimi, tk.nimi) AS tehtava_nimi,
