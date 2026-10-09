@@ -190,6 +190,20 @@
     (hoitoluokat/talvihoitoluokan-nimi luokka)
     (hoitoluokat/soratieluokan-nimi luokka)))
 
+(defn arvo-sarakkeen-leveys [koko-urakkaaika? urakoittain?]
+  (cond
+    (and urakoittain? (not koko-urakkaaika?)) "4.83%"
+    (and (not urakoittain?) (not koko-urakkaaika?))"5%"
+    koko-urakkaaika? "10%"
+    :else "5%"))
+
+(defn yhteensa-sarakkeen-leveys [urakoittain? koko-urakkaaika?]
+  (cond
+    (and urakoittain? (not koko-urakkaaika?)) "7%"
+    (and (not urakoittain?) (not koko-urakkaaika?)) "8%"
+    koko-urakkaaika? "12%"
+    :else "8%"))
+
 (defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet hoitokaudet urakoittain? osamateriaalit yksikot-soluissa?
                                nayta-suunnittelu? urakkanumero? koko-urakkaaika?] :as _taulukon-tiedot} kasittelija]
   (let [isantarivi-indeksi (atom -1)
@@ -264,13 +278,13 @@
          ;; Kaikki kuukaudet
          (map (fn [arvo]
                 {:otsikko (if koko-urakkaaika? (str arvo "-" (inc arvo)) arvo)
-                 :leveys (if urakoittain? "4.83%" "5%") ;; Prosentti pitää laskea hoitokausissa eri tavalla
+                 :leveys (arvo-sarakkeen-leveys koko-urakkaaika? urakoittain?) ;; Prosentti pitää laskea hoitokausissa eri tavalla
                  :fmt :numero}) arvosarakkeet)
          (if nayta-suunnittelu?
-           [{:otsikko (str "Yhteensä") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
-            {:otsikko "Suunniteltu" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
+           [{:otsikko (str "Yhteensä") :leveys (yhteensa-sarakkeen-leveys urakoittain? koko-urakkaaika?) :fmt :numero :jos-tyhja "-"}
+            {:otsikko "Suunniteltu" :leveys (yhteensa-sarakkeen-leveys urakoittain? koko-urakkaaika?) :fmt :numero :jos-tyhja "-"}
             {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]
-           [{:otsikko (str "Yhteensä") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}])))
+           [{:otsikko (str "Yhteensä") :leveys (yhteensa-sarakkeen-leveys urakoittain? koko-urakkaaika?) :fmt :numero :jos-tyhja "-"}])))
 
      (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
