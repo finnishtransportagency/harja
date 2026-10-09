@@ -27,7 +27,7 @@
             (let [[avain paatoksen-tiedot] (first paatos)]
               (when (:id paatoksen-tiedot)
                 avain)))
-          paatokset)))
+      paatokset)))
 
 (defn scrollaa-muutoksiin []
   ;; Kutsutaan kun käyttäjä tallentaa oikaisua 
@@ -45,13 +45,17 @@
         muutokset))))
 
 (defn kasittele-throw-virhe [vastaus]
-
-  (let [raaka-virhe (or (get-in vastaus [:parse-error :original-text]) (:response vastaus))
-        raaka-virhe (if (nil? raaka-virhe) "Palvelin palautti virheen!" raaka-virhe)
+  (let [raaka-virhe (or
+                      ;; Bäkäri voi throwaa erityyppisen virheen
+                      (get-in vastaus [:response :virheet :viesti])
+                      (get-in vastaus [:parse-error :original-text])
+                      (:response vastaus)
+                      ;; Fallback
+                      "Palvelin palautti virheen!")
+        raaka-virhe (str raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
-        raaka-virhe (str/replace raaka-virhe #"\"" "")
-        virheet (str/join " " (str/split raaka-virhe #" "))]
-    virheet))
+        raaka-virhe (str/replace raaka-virhe #"\"" "")]
+    (str/join " " (str/split raaka-virhe #" "))))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
