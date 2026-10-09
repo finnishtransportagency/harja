@@ -666,7 +666,7 @@
                             :toimenpideinstanssi toimenpideinstanssi-id
                             :versio 1})
 
-        _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) muutos kustannusvaikutus-payload false)
+        _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset (:db jarjestelma) (:id +kayttaja-jvh+) urakka-id muutos kustannusvaikutus-payload false)
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :hae-muutoksen-tiedot
                   +kayttaja-jvh+
@@ -727,7 +727,7 @@
                                 :versio 1})
 
             _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
-                (:db jarjestelma) muutos kustannusvaikutus-payload false)
+                (:db jarjestelma) (:id +kayttaja-jvh+) urakka-id muutos kustannusvaikutus-payload false)
 
             vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                       :hae-muutoksen-tiedot
@@ -743,7 +743,7 @@
                                         :tehtavamaaramuutos-kirjattu? false}]
 
             vastaus (try (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
-                           (:db jarjestelma) muutos kustannusvaikutus-payload false)
+                           (:id +kayttaja-jvh+) urakka-id (:db jarjestelma) muutos kustannusvaikutus-payload false)
                       (catch Exception e e))]
 
         (is
@@ -1681,8 +1681,8 @@
                         :tehtavat_ja_maarat [{:tehtava 1448, :maaramuutos 50, :hoitokauden_alkuvuosi 2025}
                                              {:tehtava 1448, :maaramuutos 50, :hoitokauden_alkuvuosi 2026}]
                         ;; Hox: Toimenpideinstanssit ovat urakkakohtaisia.
-                         :kustannusvaikutukset [{:toimenpideinstanssi toimenpideinstanssi-id, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2025}
-                                                {:toimenpideinstanssi toimenpideinstanssi-id, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2026}]}
+                        :kustannusvaikutukset [{:toimenpideinstanssi toimenpideinstanssi-id, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2025}
+                                               {:toimenpideinstanssi toimenpideinstanssi-id, :kustannuslaji "hankintakustannukset", :summa 100, :hoitokauden_alkuvuosi 2026}]}
 
         _ (kutsu-palvelua (:http-palvelin jarjestelma)
             :tallenna-muutos

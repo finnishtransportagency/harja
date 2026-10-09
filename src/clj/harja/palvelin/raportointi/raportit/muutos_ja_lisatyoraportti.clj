@@ -214,16 +214,21 @@
                                     :lihavoi? true
                                     :rivi (rivi (:valiotsikko r) "" "" "" "" "" "" "")}
                                    ;; Normaali datarivi
-                                   (rivi
-                                     (or (:tehtava r) "")
-                                     (or (:yksikko r) "")
-                                     (:suunniteltu_maara r)
-                                     (or (:maara r) 0)
-                                     (or (:maaramuutos r) 0)
-                                     (or (:kirjatut_kulut_summa r) 0)
-                                     (or (:yksikkohinta r) 0)
-                                     (laske-tavoitehinnan-muutos r)
-                                     (or (:syy r) ""))))
+                                   (let [tavoitehinnan-muutos (laske-tavoitehinnan-muutos r)]
+                                     (rivi
+                                       (or (:tehtava r) "")
+                                       (or (:yksikko r) "")
+                                       (:suunniteltu_maara r)
+                                       (or (:maara r) 0)
+                                       (or (:maaramuutos r) 0)
+                                       (or (:kirjatut_kulut_summa r) 0)
+                                       (or (:yksikkohinta r) 0)
+                                       (if (= (bigdec tavoitehinnan-muutos) 0.0M)
+                                         ;; Käyttäjän mielestä on epäloogista, että tekemättömän tehtävän tavoitehintamuutoksena näytetään oletuksena nollaa. 
+                                         ;; Tekemättömän tehtävän tavoitehintamuutos ei voi olla koskaan nolla euroa, vaan se on aina miinusta.
+                                         "-"
+                                         tavoitehinnan-muutos)
+                                       (or (:syy r) "")))))
                            maaramuutokset)
         maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
         maaramuutokset-yhteensarivi [{:lihavoi? true
