@@ -22,11 +22,9 @@ Autentikointiin käytetään KOKAa.
   * [GitHub Container Registry](#github-container-registry)
     * [Kehittäjän kirjautuminen Container Registryyn](#kehittäjän-kirjautuminen-container-registryyn)
   * [GitHub Actions & Docker](#github-actions--docker)
-* [Docker compose](#docker-compose)
   * [Kirjautuminen ja ModHeader](#kirjautuminen-ja-modheader)
   * [Docker - paikallinen kehitysympäristö](#docker---paikallinen-kehitysympäristö)
-  * [Docker compose - paikallinen kehitysympäristö](#docker-compose---paikallinen-kehitysympäristö)
-      * [Ongelmia](#ongelmia)
+  * [ActiveMQ Artemis](#activemq-artemis)
   * [Dokumentaatio](#dokumentaatio)
     * [Uuden kehittäjän ohjeet](#uuden-kehittäjän-ohjeet)
     * [Tietokanta](#tietokanta)
@@ -40,11 +38,8 @@ Autentikointiin käytetään KOKAa.
     * [End-to-end testit](#end-to-end-testit)
   * [Debug lokituksen näyttäminen](#debug-lokituksen-näyttäminen)
   * [Tietokanta](#tietokanta-1)
-  * [Staging tietokannan sisällön muokkaus](#staging-tietokannan-sisällön-muokkaus)
   * [Tieverkon tuonti kantaan](#tieverkon-tuonti-kantaan)
-  * [Väylän Harja-järjestelmän laadunseurantatyökalu](#väylän-harja-järjestelmän-laadunseurantatyökalu-)
   * [FIM](#fim)
-  * [ActiveMQ Artemis](#activemq-artemis)
 * [Harvoin tarvittavaa (jos koskaan)](#harvoin-tarvittavaa-jos-koskaan)
   * [Autogeneroi nuolikuvat SVG:nä](#autogeneroi-nuolikuvat-svgnä)
   * [Konvertoi SVG kuvia PNG:ksi](#konvertoi-svg-kuvia-pngksi)
@@ -163,15 +158,6 @@ Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scop
 Lue: [.github/docker/README.md](.github/docker/README.md)
 
 
-
-
-# Docker compose
-
-1. Asenna docker ja docker compose
-2. Jos olet linuxilla, niin lisää itsesi `docker` ryhmään, jos näin ei jo ole. Lisää tietoja
-   [täältä](https://docs.docker.com/engine/install/linux-postinstall/#manage-docker-as-a-non-root-user)
-3. Aja `bash sh/dc/aja-harja-dokkerissa.sh`
-
 ## Kirjautuminen ja ModHeader
 
 Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
@@ -224,37 +210,30 @@ ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteytt
 Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
 
 * Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
-* ActiveMQ: `docker run -p 127.0.0.1:61616:61616 -p 127.0.0.1:8161:8161 --name harja_activemq -dit solita/harja-activemq:5.15.9`
+* ActiveMQ: `cd .github/docker && docker-compose up -d --wait activemq-artemis-itmf`
 
-Kantaimagen päivitys: docker pull solita/harjadb
+Kantaimagen päivitys: docker pull ghcr.io/finnishtransportagency/harja_harjadb:latest
 
-Voit myös käynnistää Harjan kehityskannan ja ActiveMQ:n ajamalla docker-compose up. (käytä mieluummin ym. sh devdb_* skriptejä.)
+## ActiveMQ Artemis
 
-## Docker compose - paikallinen kehitysympäristö
+Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen JMS-jonoja.
+Brokerina käytetään ActiveMQ Artemista.  
+CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös paikallisesti yksikkötestien ajamista varten.
 
-Docker compose:n konfiguroimisessa on käytetty versiota kaksi kolmosen sijasta, koska kakkonen sopii paikalliseen devaukseen
-paremmin. 
+1. Navigoi ```.github/docker/``` kansioon
+2. Aja ```$ docker compose up --wait activemq-artemis-itmf```
+3. ActiveMQ Artemis on nyt käytettävissä osoitteessa ```tcp://localhost:61616```
+    * Web-konsoli on osoitteessa ```http://localhost:8161```
+    * Käyttäjätunnus: admin ja salasana: admin
+4. Ajaaksesi integraatiotestit paikallisesti, anna testejä varten oikeat ympäristömuuttujat:  
+   ```$ HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio```
+5. Sammuta ActiveMQ Artemis:  
+   ```$ cd .github/docker/ && docker compose down activemq-artemis-itmf```
 
-- https://github.com/docker/compose/issues/4513
-- https://goldmann.pl/blog/2014/09/11/resource-management-in-docker/#_cpu
+**Lisätietoja:**
+* [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
+* [.github/docker/README.md](.github/docker/README.md)
 
-MAC käyttäjillä saattaa olla hieman hankaluuksia Docker composen hitauden kanssa, koska datan siirtäminen hostin (Macin) ja
-konttien välillä on melkoisen hidasta, mutta tämä ongelma saatetaan korjata joskus
- 
-- https://www.amazee.io/blog/post/docker-on-mac-performance-docker-machine-vs-docker-for-mac
-- https://docs.docker.com/docker-for-mac/osxfs-caching/
-
-
-Docker composea ja leiningenin perffiä on yritetty parantaa joiltain osin MAC käyttäjille tämän hitauden takia.
-
-- Käytetään `delegated` voluumia docker composessa
-- Kakutetaan leiningenin trampoliinit käyttämällä `LEIN_FAST_TRAMPOLINE` env muuttujaa
-  - https://github.com/technomancy/leiningen/wiki/Faster
-
-#### Ongelmia
-
-- Uudet konfiguraatiot ei heijastu konteissa.
-  - Kokeile poistaa trampoliini cachet. Ovat kansiossa `target/trampolines`
 
 ## Dokumentaatio
 
@@ -389,39 +368,10 @@ Muokkaa asetukset.edn:aa ja muuta rivillä:
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
 
 
-## Staging tietokannan sisällön muokkaus
-
-* Lisää itsellesi tiedosto ~/.ssh/config johon sisällöksi:
-Host harja-*-test
-  ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
-
-Host harja-*-stg
-  ProxyCommand ssh harja-jenkins.solitaservices.fi -W %h:%p
-
-* Sourceta uusi config tai avaa uusi terminaali-ikkuna.
-
-* Avaa VPN putki.
-
-* Luo itsellesi SSH-avainpari ja pyydä tuttuja laittamaan julkinen avain palvelimelle.
-
-ssh -L7777:localhost:5432 harja-db1-stg
- * Luo yhteys esim. käyttämäsi IDE:n avulla,
-    * tietokanta: harja, username: flyway salasana: kysy tutuilta
-
-
 ## Tieverkon tuonti kantaan
 
 Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
 
-## Väylän Harja-järjestelmän laadunseurantatyökalu #
-
-Toisessa serverissä pyörii Harjan laadunseurantatyökalu, jonka avulla tieverkon kunnossapitoa voidaan valvoa ja raportoida tiestön kuntoon liittyviä havaintoja ja mittauksia.
-
-Käyttöliittymän kääntäminen ja ajaminen kansiosta /harja: ks. sh kaynnista_harja_front_dev.sh
-
-Avaa selain http://localhost:3000/laadunseuranta/
-
-Palvelin käynnistyy kun Harja käynnistetään.
 
 ## FIM
 
@@ -431,25 +381,6 @@ Oikean FIM:n testikäyttö:
 1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
 2. Avaa SSH-yhteys ssh -L6666:testioag.vayla.fi:443 harja-app1-stg
 
-## ActiveMQ Artemis
-
-Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen JMS-jonoja.
-Brokerina käytetään ActiveMQ Artemista.  
-CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös paikallisesti yksikkötestien ajamista varten.
-
-1. Navigoi ```.github/docker/``` kansioon
-2. Aja ```$ docker compose up --wait activemq-artemis-itmf```
-3. ActiveMQ Artemis on nyt käytettävissä osoitteessa ```tcp://localhost:61616```
-   * Web-konsoli on osoitteessa ```http://localhost:8161```
-   * Käyttäjätunnus: admin ja salasana: admin
-4. Ajaaksesi integraatiotestit paikallisesti, anna testejä varten oikeat ympäristömuuttujat:  
-   ```$ HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio```
-5. Sammuta ActiveMQ Artemis:  
-   ```$ cd .github/docker/ && docker compose down activemq-artemis-itmf```
-
-**Lisätietoja:** 
-* [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
-* [.github/docker/README.md](.github/docker/README.md)
 
 # Harvoin tarvittavaa (jos koskaan)
 

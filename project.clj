@@ -1,6 +1,3 @@
-(def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                    (.getHostName (java.net.InetAddress/getLocalHost))))
-
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
@@ -180,7 +177,7 @@
                          [com.google.code.gson/gson "2.14.0"]]
 
   :profiles {:uberjar {:aot :all}
-             :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+             :dev {:test2junit-run-ant true}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 

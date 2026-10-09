@@ -4,7 +4,7 @@
             [selaintestit.selain :refer [browser-up browser-down]]))
 
 
-                                        ; FIXME: voiko nämä ajaa jenkinsillä?
+                                        ; FIXME: voiko nämä ajaa jenkinsillä? - Ei voi.
 
 ;(deftest laskeutumissivun-lataus
 ;  (browser-up)

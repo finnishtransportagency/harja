@@ -65,12 +65,8 @@
   [host]
   (or
     (gstr/startsWith host "10.")
-    (gstr/contains host "googleusercontent")
-    (gstr/contains host "harja-gc")
     (kehitysymparistossa-localhost?* host)
-    (#{"harja-test.solitaservices.fi"
-       "testiextranet.vayla.fi"
-       "harjadev.testivaylapilvi.fi"
+    (#{"harjadev.testivaylapilvi.fi"
        "harjatest.testivaylapilvi.fi"} host)
     (aws-kehitysymparistot host)))
 
@@ -84,13 +80,6 @@
   []
   (let [host (.-host js/location)]
     (kehitysymparistossa-localhost?* host)))
-
-(defn kehitysymparistossa-gc?
-  "Tarkistaa ollaanko gc-kehitysympäristössä"
-  []
-  (let [host (.-host js/location)]
-    (or (gstr/contains host "googleusercontent")
-      (gstr/contains host "harja-gc"))))
 
 (defn vaylapilvi-ymparistossa?
   [host]
