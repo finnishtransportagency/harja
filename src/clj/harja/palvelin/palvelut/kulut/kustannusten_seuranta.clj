@@ -1,12 +1,12 @@
 (ns harja.palvelin.palvelut.kulut.kustannusten-seuranta
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
-            [taoensso.timbre :as log]
             [slingshot.slingshot :refer [throw+ try+]]
             [harja.domain.skeema :refer [Toteuma validoi]]
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.roolit :as roolit]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.kustannusten-seuranta :as kustannusten-seuranta-q]
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
@@ -23,9 +23,21 @@
                                                                              :hoitokauden-alkuvuosi (int hoitokauden-alkuvuosi)})]
       res)))
 
-(defn hae-urakan-kustannusten-seuranta-paaryhmittain [db user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia db tiedot))
+(defn hae-urakan-kustannusten-seuranta-paaryhmittain
+  [db user {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus
+    oikeudet/urakat-toteumat-kokonaishintaisettyot
+    user
+    urakka-id)
+  {:kustannukset
+   (hae-urakan-kustannusten-seuranta-paaryhmittain-ilman-validointia
+     db
+     tiedot)
+
+   :urakan-parametrit
+   (some-> (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id})
+     first
+     (select-keys [:muutosten_hallinta]))})
 
 (defrecord KustannustenSeuranta []
   component/Lifecycle

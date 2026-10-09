@@ -60,14 +60,15 @@
                       urakkatieto-fixture))
 
 (defn- hae-kustannukset [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
-  (kutsu-palvelua
-    (:http-palvelin jarjestelma)
-    :urakan-kustannusten-seuranta-paaryhmittain
-    +kayttaja-tero+
-    {:urakka-id urakka
-     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-     :alkupvm alkupvm
-     :loppupvm loppupvm}))
+  (-> (kutsu-palvelua
+        (:http-palvelin jarjestelma)
+        :urakan-kustannusten-seuranta-paaryhmittain
+        +kayttaja-tero+
+        {:urakka-id urakka
+         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+         :alkupvm alkupvm
+         :loppupvm loppupvm})
+    :kustannukset))
 
 (defn- lataa-excel [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
   (kutsu-palvelua
