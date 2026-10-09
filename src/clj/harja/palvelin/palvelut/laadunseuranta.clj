@@ -130,6 +130,11 @@
                     (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
 
+(defn- bonus-rivin-hoitovuosi
+  [urakan-alkupvm {:keys [kasittelyaika maarattypvm]}]
+  (when-let [paivamaara (or kasittelyaika maarattypvm)]
+    (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)))
+
 (defn hae-urakan-sanktiot-ja-bonukset
   "Hakee urakan sanktiot ja/tai bonukset perintäpvm:n ja urakka-id:n perusteella
   Oletusarvoisesti sekä sanktioden, että bonusten rivit molemmat haetaan ja palautetaan.
@@ -151,10 +156,35 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
+        urakan-tiedot (when (and (seq urakan-bonukset) alku)
+                        (first (urakat/hae-urakka db {:id urakka-id})))
+        teiden-hoito? (= :teiden-hoito (keyword (:tyyppi urakan-tiedot)))
+        bonusten-lajien-nimet (when teiden-hoito?
+                                (->> urakan-bonukset
+                                  (remove #(= :yllapidon_bonus (:laji %)))
+                                  (keep (fn [bonus]
+                                          (let [hoitovuosi (bonus-rivin-hoitovuosi (:alkupvm urakan-tiedot) bonus)]
+                                            (when (and hoitovuosi (:toimenpideinstanssi bonus))
+                                              [(:toimenpideinstanssi bonus) hoitovuosi]))))
+                                  distinct
+                                  (map (fn [[toimenpideinstanssi-id hoitovuosi]]
+                                         [[toimenpideinstanssi-id hoitovuosi]
+                                          (bonus-konfiguraatio/hae-urakan-bonus-lajien-nimet
+                                            db {:urakka-id urakka-id
+                                                :hoitovuosi hoitovuosi
+                                                :toimenpideinstanssi-id toimenpideinstanssi-id})]))
+                                  (into {})))
         bonukset (into []
                    ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
-                   (map #(assoc % :bonus? true))
-                   urakan-bonukset)
+                   (map (fn [bonus]
+                          (let [hoitovuosi (bonus-rivin-hoitovuosi (:alkupvm urakan-tiedot) bonus)
+                                profiilin-nimi (get-in bonusten-lajien-nimet
+                                                [[(:toimenpideinstanssi bonus) hoitovuosi] (:laji bonus)])]
+                            (cond-> (assoc bonus :bonus? true)
+                              (and teiden-hoito? (not= :yllapidon_bonus (:laji bonus)))
+                              (assoc :laji-nimi (or (not-empty profiilin-nimi)
+                                                  "Bonuksen nimi puuttuu aktiivisesta bonusprofiilista")))))
+                   urakan-bonukset))
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
                                (map konv/alaviiva->rakenne
