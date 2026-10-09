@@ -13,3 +13,18 @@ SELECT SUM(tt.maara) as tuntia
                              AND t.alkanut::DATE < (:loppupvm::DATE + INTERVAL '1 day')
                              AND t.poistettu IS FALSE
 WHERE teh.nimi = :nimi;
+
+-- name: hae-bonukset-vastaanottotarkastusraportille
+SELECT e.rahasumma, e.tyyppi
+FROM erilliskustannus e
+WHERE e.urakka = :urakka-id
+  AND e.poistettu IS NOT TRUE
+  AND e.laskutuskuukausi >= :alkupvm::DATE AND e.laskutuskuukausi < (:loppupvm::DATE + INTERVAL '1 day')
+
+-- name: hae-sanktiot-vastaanottotarkastusraportille
+SELECT s.maara * -1 AS maara, -- Sanktiot on negatiivisia uilla
+       s.sakkoryhma
+FROM sanktio s
+         JOIN toimenpideinstanssi tpi ON tpi.urakka = :urakka-id AND tpi.id = s.toimenpideinstanssi
+WHERE s.poistettu IS NOT TRUE
+  AND s.perintapvm BETWEEN :alkupvm::DATE AND :loppupvm::DATE;
