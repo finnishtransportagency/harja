@@ -171,7 +171,8 @@
   (let [params (merge {:tr-alkuosa nil
                        :tr-alkuetaisyys nil
                        :tr-loppuosa nil
-                       :tr-loppuetaisyys nil}
+                       :tr-loppuetaisyys nil
+                       :rajoita-tieosuuksien-maara pot2-domain/+tieosuushaun-rajoitus+}
                       params)]
     (->> (tv/hae-tieosuudet db params)
          :tieosuudet
