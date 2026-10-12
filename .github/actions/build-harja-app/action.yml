@@ -8,7 +8,7 @@ inputs:
     description: 'Build front-end'
     default: 'true'
   build-mode:
-    description: 'Build-asetus: preview (nopea, ei optimoitu) tai production (vastaa tuotantoa)'
+    description: 'Build-asetus: dev-bundle (nopea, ei optimoitu) tai production (vastaa tuotantoa)'
     default: 'production'
   build-laadunseuranta:
     description: 'Build laadunseuranta'
@@ -40,10 +40,10 @@ runs:
         BUILD_MODE: ${{ inputs.build-mode }}
       run: |
         case "$BUILD_MODE" in
-          preview) FRONTEND_ALIAS=compile-preview ;;
+          dev-bundle) FRONTEND_ALIAS=compile-dev-bundle ;;
           production) FRONTEND_ALIAS=compile-prod ;;
           *)
-            echo "Error: Unknown build-mode '$BUILD_MODE' (allowed values: preview, production)." >&2
+            echo "Error: Unknown build-mode '$BUILD_MODE' (allowed values: dev-bundle, production)." >&2
             exit 1
             ;;
         esac

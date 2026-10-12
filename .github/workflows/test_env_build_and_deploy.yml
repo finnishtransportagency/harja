@@ -32,9 +32,9 @@ on:
         required: true
         type: choice
         options:
-          - preview
+          - dev-bundle
           - production
-        default: preview
+        default: dev-bundle
       keep-running:
         description: "Pidä ympäristö käynnissä yön yli?"
         required: true
@@ -138,7 +138,7 @@ jobs:
           retention-days: 1
 
   # Image-job pushaa uniikilla `build-<build-mode>-<sha12>-<run_id>-<run_attempt>-<branch>`-tagilla,
-  # esim. build-preview-c4cd6ad7bb12-12343-1-feature-x. Vain branchin nimi katkaistaan tarvittaessa lopusta.
+  # esim. build-dev-bundle-c4cd6ad7bb12-12343-1-feature-x. Vain branchin nimi katkaistaan tarvittaessa lopusta.
   # Env-tagia ei aseteta vielä tässä, koska migraatio voi olla vielä kesken ja deploy voi epäonnistua.
   # Pysyvä env-tag suojaa viimeksi ympäristökohtaista imagea infran ECR lifecycle policyssä.
   # Ilman env-tagia jääneet imaget siivotaan pois, kun push-ikä ylittää 3 päivää.
