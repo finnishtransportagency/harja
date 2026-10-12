@@ -251,6 +251,8 @@
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/prod"]
             "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-prod"]
+            ;; Dev-bundle on nopea unoptimized bundle, jota hyödynnetään esimerkiksi testiympäristöjen CI/CD workflowssa
+            "compile-dev-bundle" ["run" "-m" "figwheel.main" "-fw" "false" "-bo" "figwheel_conf/dev-bundle"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         "with-profile" "+prod-cljs" "compile-prod,"
                         ;; Harja mobiili laadunseuranta fronttibuildi
