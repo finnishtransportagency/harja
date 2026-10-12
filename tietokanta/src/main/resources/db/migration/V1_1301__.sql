@@ -14,16 +14,6 @@ DECLARE
     vanha_kommentti TEXT;
     ddl TEXT;
 BEGIN
-    -- Katsotaan että partitioitu taulu on otettu käyttöön ennenkun tehdään muuta
-    IF NOT EXISTS (
-        SELECT 1
-        FROM pg_class
-        WHERE oid = 'public.toteuma_materiaali'::regclass
-          AND relkind = 'p'
-    ) THEN
-        RAISE EXCEPTION 'toteuma_materiaali ei ole partitioitu taulu; keskeytetään';
-    END IF;
-
     -- DROP poistaisi indeksit. Otetaan niiden luontilauseet talteen
     SELECT COALESCE(
                array_agg(indexdef ORDER BY indexname), ARRAY[]::TEXT[]
@@ -61,7 +51,9 @@ BEGIN
     -- Haetaan materialisoidun näkymän nykyiset käyttöoikeudet talteen
     INTO vanhat_oikeudet FROM pg_class c
         -- Puretaan käyttöoikeudet (ACL) yksittäisiksi riveiksi
-        CROSS JOIN LATERAL aclexplode(COALESCE(c.relacl, '{}'::aclitem[])) a
+        CROSS JOIN LATERAL aclexplode(
+            CASE WHEN cardinality(c.relacl) > 0 THEN c.relacl ELSE NULL::aclitem[] END
+        ) a
         -- käyttöoikeuden saaneen roolin nimi
         LEFT JOIN pg_roles g ON g.oid = a.grantee
     WHERE c.oid = 'public.raportti_toteutuneet_materiaalit'::regclass
