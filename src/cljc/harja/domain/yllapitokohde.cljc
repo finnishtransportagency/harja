@@ -784,7 +784,9 @@ yllapitoluokkanimi->numero
 
 (defn- pot2-rivien-paallekkaisyysteksti [rivi-indeksi]
   (str "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen "
-    (when (some? rivi-indeksi) (str "riville " rivi-indeksi " jo lisätyn "))
+    (if (some? rivi-indeksi)
+      (str "riville " rivi-indeksi " jo lisätyn ")
+      "lisätyn ")
     "toisen osan kanssa."))
 
 (def pot2-paallekkaisyys-virhetekstit

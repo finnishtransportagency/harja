@@ -428,7 +428,7 @@
           [[{:alikohde-paallekkyys [{:rivi-indeksi 4}]} :tr-alkuosa
             "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen riville 4 jo lisätyn toisen osan kanssa."]
            [{:alikohde-paallekkyys [{}]} :tr-alkuosa
-            "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen toisen osan kanssa."]
+            "Tämä tieosuus tai osa siitä on päällekkäin tähän kohteeseen lisätyn toisen osan kanssa."]
            [{:alikohde-paallekkyys [{:paakohteen-nimi "Vt 815 Maikkula"}]} :tr-alkuosa
             "Tämä tieosuus tai osa siitä on päällekkäin kohteen Vt 815 Maikkula osan kanssa."]
            [{:alikohde-paallekkyys [{:paakohteen-nimi ""}]} :tr-alkuosa
