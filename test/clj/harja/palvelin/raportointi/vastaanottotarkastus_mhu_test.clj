@@ -75,7 +75,7 @@
    {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
     :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}])
 
-(def ^:private testi-mhu25-urakka-id -1)
+(def ^:private testi-mhu25-urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id))
 
 (def ^:private testi-mhu25-hoitokaudet
   (mapv (fn [vuosi]
@@ -93,7 +93,7 @@
   {:muutosten_hallinta true
    :hoitokauden_lopun_kattohinta_kerroin 1.2M})
 
-(def ^:private testi-mhu21-urakka-id -2)
+(def ^:private testi-mhu21-urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id))
 
 (def ^:private testi-mhu21-hoitokaudet
   (mapv (fn [vuosi]
