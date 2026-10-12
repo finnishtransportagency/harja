@@ -103,8 +103,8 @@
     (nth taulukko 3)))
 
 (defn- laskutus-sisalto [vuosidata urakan-alkuvuosi]
-  (with-redefs [konversio/pgarray->vector identity
-                asetukset/ominaisuus-kaytossa? (constantly true)]
+  (with-redefs [;; Oikastaan vähän. PGArrayn matkiminen on vaikeaa muuten
+                konversio/pgarray->vector identity]
     (into [[:otsikko "Laskutusyhteenveto"]]
       (laskutusyhteenveto-taulukko-tyomaa/taulukot-tyomaakokous-vuosittain
         vuosidata urakan-alkuvuosi))))
@@ -182,7 +182,7 @@
           (raporttirivin-arvot taulukko "Yhteensä")))))
 
 (deftest laskutusyhteenveto-nayttaa-ehtojen-mukaiset-rivit
-  (let [ilman-muutoksia (with-redefs [konversio/pgarray->vector identity
+  (let [ilman-muutoksia (with-redefs [;; :mhu-muutokset käyttöön
                                       asetukset/ominaisuus-kaytossa? (constantly false)]
                           (laskutusyhteenveto-taulukko-tyomaa/taulukot-tyomaakokous-vuosittain
                             testi-laskutus-vuosidata 2025))
@@ -203,8 +203,6 @@
                        :loppupvm #inst "2026-09-30T00:00:00.000-00:00"}
         hoitokaudet (conj (vec testi-laskutus-hoitokaudet) keskenerainen)]
     (with-redefs [pvm/nyt (constantly nyt)
-                  konversio/pgarray->vector identity
-                  asetukset/ominaisuus-kaytossa? (constantly true)
                   laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
                   (fn [_ _ parametrit]
                     (swap! kutsut conj parametrit)
