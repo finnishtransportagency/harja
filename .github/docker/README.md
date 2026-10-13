@@ -5,8 +5,8 @@ GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
     * Tarvitaan Harjan buildaamisessa (Specql-kirjasto tarvitsee kantayhteyden) ja testien ajamisessa
     * Tämä on modernimpi versio kehittäjien käytössä olevasta Dockerhubiin julkaistusta harjadb-imagesta.
         *  **TODO**: Otetaan tämä käyttöön myös paikallisessa kehityksessä. Katso [tietokanta/devdeb_up_uusi.sh](../../tietokanta/devdb_up_uusi.sh)
-2. ActiveMQ: [.github/docker/activemq-artemis/Dockerfile](./activemq/Dockerfile)
-    * Tarvitaan Integraatiotestien ajamisessa
+2. ActiveMQ Artemis: [.github/docker/activemq-artemis/Dockerfile](./activemq-artemis/Dockerfile)
+    * Tarvitaan integraatiotestien ajamisessa
 3. Cypress: [.github/docker/cypress/Dockerfile](./cypress/Dockerfile)
     * Tarvitaan E2E-testien ajamisesssa
 
@@ -138,8 +138,8 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
 5. Aja scripti: ```./push-image.sh --update-latest```
 
 
-### ActiveMQ-imagen päivitys
-1. Navigoi polkuun: ```.github/docker/activemq/```
+### ActiveMQ Artemis -imagen päivitys
+1. Navigoi polkuun: ```.github/docker/activemq-artemis/```
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh```
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
