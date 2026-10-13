@@ -84,8 +84,6 @@
   {:pre [(not (nil? *lisattavat-kuuntelijat*))]}
   (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa))
 
-(defn circleci? []
-  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
 ;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
 ;; eikä tehdä traviksen logeista turhan pitkiä
