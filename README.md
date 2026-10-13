@@ -1,4 +1,3 @@
-
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/finnishtransportagency/harja)
 
 # Väylän Harja-järjestelmä #
@@ -12,8 +11,8 @@ Buildit, testaus ja julkaisu hoidetaan GitHub Actionsilla. Sovelluskontin toteut
 
 Autentikointiin käytetään KOKAa.
 
-
 ## Sisältö
+
 <!-- TOC -->
 * [Väylän Harja-järjestelmä](#väylän-harja-järjestelmä-)
   * [Sisältö](#sisältö)
@@ -41,7 +40,6 @@ Autentikointiin käytetään KOKAa.
   * [Debug lokituksen näyttäminen](#debug-lokituksen-näyttäminen)
   * [Tietokanta](#tietokanta-1)
   * [Tieverkon tuonti kantaan](#tieverkon-tuonti-kantaan)
-  * [Laadunseurannan paikalliskäyttö](#laadunseurannan-paikalliskäyttö)
   * [FIM](#fim)
 * [Harvoin tarvittavaa (jos koskaan)](#harvoin-tarvittavaa-jos-koskaan)
   * [Autogeneroi nuolikuvat SVG:nä](#autogeneroi-nuolikuvat-svgnä)
@@ -52,9 +50,11 @@ Autentikointiin käytetään KOKAa.
 
 ## Hakemistorakenne ##
 
-Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa sijaita sellaisen kansion alla, jonka nimessä on - -merkki. 
-Eli nimeä yläkansio, jonne harja ja muut repot kloonataan pelkillä kirjaimilla ja numeroilla ilman erotinmerkkejä. 
+Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa
+sijaita sellaisen kansion alla, jonka nimessä on - -merkki.
+Eli nimeä yläkansio, jonne harja ja muut repot kloonataan pelkillä kirjaimilla ja numeroilla ilman erotinmerkkejä.
 Esimerkiksi näin:
+
 ```
 ~/work ❯❯❯ tree -aL 1 harjaroot
 harjaroot
@@ -64,39 +64,65 @@ harjaroot
 └── harja-testidata
 ```
 
-Harja repon hakemistorakenne:
+Alla ovat kehitystyön tärkeimmät hakemistot ja niiden vastuut.  
+Linkkien polut ovat suhteessa repositorion juureen. Sisennetyt kohdat tarkentavat ylempää hakemistoa.
 
-- README                    (yleinen readme)
+**Sovelluksen lähdekoodi**
 
-- src/                      (kaikki lähdekoodit)
-  - cljc/                   (palvelimen ja asiakkaan jaettu koodi)
-  - cljs/                   (asiakaspuolen ClojureScript koodi)
-    - harja/asiakas/
-      - ui/                 (yleisiä UI komponentteja ja koodia)
-      - nakymat/            (UI näkymät)
-      - kommunikointi.cljs  (serverikutsujen pääpiste)
-      - main.cljs           (aloituspiste, jota sivun latauduttua kutsutaan)
-  - cljs-{dev|prod}/        (tuotanto/kehitysbuildeille spesifinen cljs source)
-      - harja/asiakas/
-        - lokitus.cljs      (lokitus, tuotantoversiossa no-op, kehitysversiossa console.log tms)
-  - clj/                    (palvelimen koodi)
-    - harja/palvelin/
-      - komponentit/        (Yleiset komponentit: tietokanta, todennus, HTTP-palvelin, jne)
-      - lokitus/            (Logitukseen liittyvää koodia)
-      - integraatiot/       (Integraatioiden toteutukset)
-      - api/                (Harja API endpointit ja tukikoodi)
-      - palvelut/           (Harja asiakkaalle palveluja tarjoavat EDN endpointit)
-      - main.cljs           (palvelimen aloituspiste)
+- [`src/clj/`](src/clj/) - palvelimen Clojure-koodi.
+    - [`harja/palvelin/`](src/clj/harja/palvelin/) - palvelimen toteutus; aloituspiste on [
+      `main.clj`](src/clj/harja/palvelin/main.clj).
+        - [`komponentit/`](src/clj/harja/palvelin/komponentit/) - esimerkiksi tietokanta, todennus ja HTTP-palvelin.
+        - [`palvelut/`](src/clj/harja/palvelin/palvelut/) - Harjan käyttöliittymää palvelevat palvelut.
+        - [`integraatiot/`](src/clj/harja/palvelin/integraatiot/) - yhteydet ulkoisiin järjestelmiin, tiedonsiirto ja
+          integraatiolokitus.
+            - [`api/`](src/clj/harja/palvelin/integraatiot/api/) - **Harjan urakoitsijoille tarjoama API**: endpointit,
+              sanomien käsittely ja validointi.
+- [`src/cljs/`](src/cljs/) - asiakkaan ClojureScript-koodi.
+    - [`harja/asiakas/`](src/cljs/harja/asiakas/) - käynnistys ([`main.cljs`](src/cljs/harja/asiakas/main.cljs)) ja
+      palvelinkutsut ([`kommunikaatio.cljs`](src/cljs/harja/asiakas/kommunikaatio.cljs)).
+    - [`harja/ui/`](src/cljs/harja/ui/) - yhteiset UI-komponentit.
+    - [`harja/views/`](src/cljs/harja/views/) - käyttöliittymän näkymät.
+    - [`harja/tiedot/`](src/cljs/harja/tiedot/) - käyttöliittymän tilan ja tietojen käsittely.
+- [`src/cljc/`](src/cljc/) - palvelimen ja asiakkaan jaettu koodi, kuten domain-mallit ja validointi.
+- [`src/cljs-dev/`](src/cljs-dev/) ja [`src/cljs-prod/`](src/cljs-prod/) - kehitys- ja tuotantobuildien omat
+  ClojureScript-toteutukset.
 
-- (dev-)resources/          (web-puolen resurssit)
-  - css/                    (ulkoiset css tiedostot)
-  - js/                     (ulkoiset javascript tiedostot)
+**Resurssit, tietokanta ja testit**
 
-- .github/                  (GitHub Actions ja Docker-työkalut)
-  - workflows/              (build-, testaus- ja julkaisu-workflow't)
-  - actions/                (workflow'iden käyttämät composite actionit)
-  - docker/                 (paikallis- ja CI-käytön [imaget ja ohjeet](.github/docker/README.md))
-- aws/fargate/              (AWS:ssä ajettavan sovelluskontin toteutus)
+- [`resources/`](resources/) - sovelluksen resurssit, kuten roolit, oikeudet ja `public/`-hakemiston selainresurssit.
+    - [`api/`](resources/api/) -
+      urakoitsija-APIn [RAML-kuvaus](resources/api/api.raml), [dokumentaatio](resources/api/documentation/), [JSON-schemat](resources/api/schemas/)
+      ja [esimerkit](resources/api/examples/).
+    - [`api-v2/legacy/`](resources/api-v2/legacy/) - API v2:n legacy-schemat.
+    - [`xsd/`](resources/xsd/) - integraatioiden XML-schemat.
+- [`dev-resources/`](dev-resources/) - kehitys- ja build-resurssit, kuten [LESS-tyylit](dev-resources/less/), kuvat ja
+  testiaineistot.
+- [`tietokanta/`](tietokanta/) - tietokannan alustus, testidata ja paikallisen kannan
+  hallintaskriptit; [tietokantaohje](tietokanta/README.md).
+    - [`src/main/resources/db/migration/`](tietokanta/src/main/resources/db/migration/) - Flyway-migraatiot.
+- [`test/`](test/) - palvelimen, asiakkaan ja jaetun koodin testit sekä testiresurssit; [testausohje](#testaus).
+    - [`clj/harja/palvelin/integraatiot/`](test/clj/harja/palvelin/integraatiot/) - integraatioiden testit, mukaan
+      lukien [urakoitsija-APIn testit](test/clj/harja/palvelin/integraatiot/api/).
+    - [`resurssit/api/`](test/resurssit/api/) - API-testien aineistot.
+- [`cypress/`](cypress/) - [E2E-testit](cypress/e2e/), tukikoodi ja fixtures; [E2E-ohje](#end-to-end-testit).
+
+**Build, julkaisu ja kehitystyökalut**
+
+- [`figwheel_conf/`](figwheel_conf/) - Figwheel-mainin ClojureScript-buildien määritykset.
+- [`.github/`](.github/) - GitHub Actions ja Docker-työkalut.
+    - [`workflows/`](.github/workflows/) - build-, testaus- ja julkaisu-workflow't.
+    - [`actions/`](.github/actions/) - workflow'iden käyttämät composite actionit.
+    - [`docker/`](.github/docker/) - paikallis- ja CI-käytön imaget ja
+      Compose-määritykset; [Docker-ohje](.github/docker/README.md).
+- [`aws/fargate/`](aws/fargate/) - AWS:ssä ajettavan sovelluskontin toteutus.
+- [`sh/`](sh/) - kehityksen ja testauksen apuskriptit sekä API-dokumentaation [muodostaminen](sh/muodosta-apidoc.sh)
+  ja [julkaiseminen](sh/julkaise-apidoc.sh).
+- [`script/`](script/) - REPL-käytön apukoodi.
+
+Juurihakemiston keskeiset asetustiedostot ovat [`project.clj`](project.clj) ja [`profiles.clj`](profiles.clj)
+(Leiningen), [`package.json`](package.json) ja [`package-lock.json`](package-lock.json) (npm)
+sekä [`asetukset.edn`](asetukset.edn) (sovelluksen asetukset).
 
 ## Kehitysympäristön pystyttäminen
 
@@ -105,28 +131,31 @@ Harja repon hakemistorakenne:
 1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
 2. Asenna Docker ja Docker Compose: https://www.docker.com/
 3. Käynnistä Docker ja aja projektin juuresta:
-  `(cd tietokanta && ./devdb_up.sh)`
-  Skripti alustaa tietokannan migraatioilla ja testidatalla. Tietokannan pitää olla päällä ja alustettu ennen paikallisen buildin tekemistä.
+   `(cd tietokanta && ./devdb_up.sh)`
+   Skripti alustaa tietokannan migraatioilla ja testidatalla. Tietokannan pitää olla päällä ja alustettu ennen
+   paikallisen buildin tekemistä.
 
 4. Asenna tarvittavat työkalut projektin juuressa: `npm ci`
-   * Huom: `.npmrc`-tiedosto sisältää `ignore-scripts=true`, joka estää npm lifecycle -skriptien automaattisen ajon (supply chain -suojaus).
-   * `npm ci` asentaa package-lock.json tiedostoon jäädytetyt paketit.
-   * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
+    * Huom: `.npmrc`-tiedosto sisältää `ignore-scripts=true`, joka estää npm lifecycle -skriptien automaattisen ajon
+      (supply chain -suojaus).
+    * `npm ci` asentaa package-lock.json tiedostoon jäädytetyt paketit.
+    * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
 5. Hae `harja-testidata`-repositoriosta ([sisäinen repo *1](#*1)) `.harja`-kansio
    Harja-repositorion rinnalle hakemistorakenteen esimerkin mukaisesti. Katso myös
    [`.harja`-hakemiston ylläpito-ohje](#harja-hakemiston-ylläpito).
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
-    `lein do clean, compile, repl`
+   `lein do clean, compile, repl`
 
 7. Käännä frontend ja käynnistä Figwheel:
 
-    `bash kaynnista_harja_front_dev.sh`
+   `bash kaynnista_harja_front_dev.sh`
 
-    Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
-    Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
-    Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
-    ja restartoida backend `lein repl` kommennolla. 
+   Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
+   Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit.
+   Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan
+   `export HARJA_SALLI_OLETUSKAYTTAJA=true`
+   ja restartoida backend `lein repl` kommennolla.
 
 8. Salli paikallinen oletuskäyttäjä Cypress-testejä varten: aseta backendin terminaalissa
    `export HARJA_SALLI_OLETUSKAYTTAJA=true` ja käynnistä REPL uudelleen. Asetus on vain
@@ -135,43 +164,49 @@ Harja repon hakemistorakenne:
 9. Kun backend ja frontend ovat päällä vaiheiden 6–8 mukaisesti, käynnistä Cypressin
    interaktiivinen e2e-ympäristö projektin juuresta:
 
-    `bash kaynnista_cypress.sh`
+   `bash kaynnista_cypress.sh`
 
-    Skripti asentaa tarvittaessa npm-riippuvuudet ja Cypressin binäärin automaattisesti.
-    Testit ovat [`cypress/e2e/`](cypress/e2e)-hakemistossa.
-
+   Skripti asentaa tarvittaessa npm-riippuvuudet ja Cypressin binäärin automaattisesti.
+   Testit ovat [`cypress/e2e/`](cypress/e2e)-hakemistossa.
 
 # Docker
+
 ## GitHub Container Registry
 
 ### Kehittäjän kirjautuminen Container Registryyn
+
 Harjassa käytetään Harjan GitHub repositorioon julkaistuja Docker imageita.
 Imaget on varastoitu GitHub Packagesiin, johon pääsee käsiksi riittävillä oikeuksilla.
 
 GitHub Packages (eli käytännössä Container Registry) tukee kirjautumista ainoastaan classic personal access tokenilla.  
 Lue alla olevat ohjeet tarkoin. Kehittäjä tarvitsee read/write/delete oikeudet Packages scopeen.  
-Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scopea, jotta tokenilla ei ole liian laajat oikeudet.
->Note: By default, when you select the write:packages scope for your personal access token (classic) in the user interface, the repo scope will also be selected.
->The repo scope offers unnecessary and broad access, which we recommend you avoid using for GitHub Actions workflows in particular.
->For more information, see "Security hardening for GitHub Actions."
->As a workaround, you can select just the write:packages scope for your personal access token (classic) in the user interface with this url: https://github.com/settings/tokens/new?scopes=write:packages.
+Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scopea, jotta tokenilla ei ole liian laajat
+oikeudet.
+> Note: By default, when you select the write:packages scope for your personal access token (classic) in the user
+> interface, the repo scope will also be selected.
+> The repo scope offers unnecessary and broad access, which we recommend you avoid using for GitHub Actions workflows in
+> particular.
+> For more information, see "Security hardening for GitHub Actions."
+> As a workaround, you can select just the write:packages scope for your personal access token (classic) in the user
+> interface with this url: https://github.com/settings/tokens/new?scopes=write:packages.
 
-* **Ohjeet tokenin luomiseen ja kirjautumiseen:**  
-  * https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
+* **Ohjeet tokenin luomiseen ja kirjautumiseen:**
+    * https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic
 
 * **Tokenin käyttöönotto (tärkeä)**
-  * Lopuksi, luotu token täytyy vielä auktorisoida Väyläviraston GitHub-organisaatiolle, jotta sitä voi käyttää.
-  * Navigoi: https://github.com/settings/tokens
-    * Paina tokenin kohdalla "Configure SSO" ja luvita tokenin käyttö finnistransportagency-organisaatiolle.
+    * Lopuksi, luotu token täytyy vielä auktorisoida Väyläviraston GitHub-organisaatiolle, jotta sitä voi käyttää.
+    * Navigoi: https://github.com/settings/tokens
+        * Paina tokenin kohdalla "Configure SSO" ja luvita tokenin käyttö finnistransportagency-organisaatiolle.
 
 ## GitHub Actions & Docker
-Lue: [.github/docker/README.md](.github/docker/README.md)
 
+Lue: [.github/docker/README.md](.github/docker/README.md)
 
 ## Kirjautuminen ja ModHeader
 
 Harja käyttää Väylän extranetista tulevia headereita kirjautumiseen.
-Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä, pyydä apua tiimiläiseltä pikaviestimen kautta miten homma tehdään.
+Käytä ModHeader tai vastaavaa asettaaksesi itselle oikeudet paikallisessa ympäristössä, pyydä apua tiimiläiseltä
+pikaviestimen kautta miten homma tehdään.
 
 Oikeudet on määritelty tiedostossa resources/roolit.xslx: 1. välilehti kertoo oikeudet, 2. välilehti roolit
 Harjan harja.domain.oikeudet.makrot luo Excelin pohjalta roolit käytettäväksi koodista.
@@ -179,7 +214,8 @@ Käyttäjällä voi olla useita rooleja. Oikeustarkistuksia tehdään sekä fron
 piilotetaan tai disabloidaan kontrollit joihin ei ole oikeutta. Tämän lisäksi backissä vaaditaan
 luku- ja/tai kirjoitusoikeus tietyn tiedon käsittelyyn.
 
-Lisätietoa käyttäjärooleista ohjelmistokehittäjän näkökulmasta löytyy Knowledgesta otsikolla Autentikointi ja autorisointi
+Lisätietoa käyttäjärooleista ohjelmistokehittäjän näkökulmasta löytyy Knowledgesta otsikolla Autentikointi ja
+autorisointi
 
 Seuraavat headerit tuettuna:
 
@@ -216,7 +252,7 @@ Kanta alas projektin juuresta (poistaa paikallisen tietokantakontin):
 
 Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
 Tietokanta tarvitaan aina. ActiveMQ ei ole pakollinen, jos ei testaa integraatioita. Jos ActiveMQ
-ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK. 
+ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteyttä, mutta se on OK.
 
 Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
 
@@ -229,7 +265,8 @@ Kantaimagen päivitys: docker pull ghcr.io/finnishtransportagency/harja_harjadb:
 
 Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen JMS-jonoja.
 Brokerina käytetään ActiveMQ Artemista.  
-CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös paikallisesti yksikkötestien ajamista varten.
+CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös
+paikallisesti yksikkötestien ajamista varten.
 
 1. Aja seuraavat komennot Harja-projektin juuressa.
 2. Käynnistä broker: `(cd .github/docker && docker compose up -d --wait activemq-artemis-itmf)`
@@ -242,46 +279,57 @@ CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palve
    `(cd .github/docker && docker compose down activemq-artemis-itmf)`
 
 **Lisätietoja:**
+
 * [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
 * [.github/docker/README.md](.github/docker/README.md)
-
 
 ## Dokumentaatio
 
 ### Uuden kehittäjän ohjeet
 
- - Uuden harja-tiimiläisen ohjeet löytyy knowledgestä otsikolla "Uudelle tiimiläiselle".
- - Täältä löytyy tarvittavaa perehdytystä domainista, kehityskäytänteistä ja muusta.
+- Uuden harja-tiimiläisen ohjeet löytyy knowledgestä otsikolla "Uudelle tiimiläiselle".
+- Täältä löytyy tarvittavaa perehdytystä domainista, kehityskäytänteistä ja muusta.
 
 ### Tietokanta
 
-Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään seuraavat asiat:
+Tietokantataulut dokumentoimaan antamalla niille kommentti migraatiossa luonnin yhteydessä. Kommenttiin lisätään
+seuraavat asiat:
+
 - Mikä on taulun konsepti?
 - Miten asiaks ymmärtää nämä käsitteet?
 - Mikä on taulun olemassaolon syy?
-- Viittaukset käsitteellisellä tasolla muihin konsepteihin. Ei siis viitteiden kuvausta, vaan käsitteellisesti miksi viitteet ovat olemassa.
+- Viittaukset käsitteellisellä tasolla muihin konsepteihin. Ei siis viitteiden kuvausta, vaan käsitteellisesti miksi
+  viitteet ovat olemassa.
 - Mikäli tarpeen voi kuvata, mistä data syntyy.
 
 Tässä dokumentaatiossa käytetään domainkieltä eikä teknistä kuvausta.
 
-Dokumentaatio tauluille lisätään repeatable migraatiossa: R__Dokumentaatio.sql. Tähän migraatioon lisätään kaikki uudet kommentit tauluille.
+Dokumentaatio tauluille lisätään repeatable migraatiossa: R__Dokumentaatio.sql. Tähän migraatioon lisätään kaikki uudet
+kommentit tauluille.
 
 Dokumentaatio voidaan lisätä kyselyllä: `COMMENT ON TABLE [TAULU] IS E'Rivi 1 \n Rivi 2'`
 
 Dokumentaation saa näkyviin esim. kyselyllä: `SELECT obj_description('public.[TAULU]' :: REGCLASS);`
 
 #### Tietokantataulujen nimeäminen
-Sovittiin tiimin kesken, että uusien isompien kokonaisuuksien osalta nimetään osa-alueen taulut yhteisellä etuliitteellä. Esimerkiksi pot2_, pot2_mk_ sekä lupaus_. Näin on helppo löytää kaikki tiettyyn osa-alueeseen liittyvät taulut.
+
+Sovittiin tiimin kesken, että uusien isompien kokonaisuuksien osalta nimetään osa-alueen taulut yhteisellä
+etuliitteellä. Esimerkiksi pot2_, pot2_mk_ sekä lupaus_. Näin on helppo löytää kaikki tiettyyn osa-alueeseen liittyvät
+taulut.
 
 ### Namespacet
+
 Jokaisen namespacen alkuun kirjataan seuraavat asiat:
+
 - Olemassa olon syy?
 - Listaus minkä domain-käsitteiden kanssa toimitaan tässä nimiavaruudessa.
 - Mitkä ovat pääpalvelut, jotka tämä nimiavaruus tarjoaa? Mistä kannattaa lähteä liikenteeseen?
 - Toistuvat käsitteet koodin kannalta, tärkeät keywordit.
 
 ### Tiedostojen nimeäminen
+
 Tiimin päätös 9/2021:
+
 - Alkuosa: ominaisuuden nimi, mielellään yksikössä
 - Loppuosa: kerroksen nimi
 
@@ -311,12 +359,14 @@ valikatselmus_palvelu.clj
 Uniikit nimet helpottavat tiedostojen etsimistä.
 
 Nimeä voi käyttää sellaisenaan require-aliaksena ilman törmäyksiä:
+
 ```
 (:require
   [harja.tiedot.urakka.lupaus-tiedot :as lupaus-tiedot]
   [harja.domain.lupaus-domain :as lupaus-domain]
   [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
 ```
+
 Ehdotan, että uudet ominaisuudet nimetään tällä tavalla.
 Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan toiminnallisuuteen.
 
@@ -324,14 +374,15 @@ Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan 
 
 Harjassa on kolme eritasoista test-suitea: fronttitestit (PhantomJS/doo),
 palvelutestit (backend) ja e2e-testit (Cypress). Cypress-testit ovat tämän repositorion
-[`cypress/e2e/`](cypress/e2e)-hakemistossa. PhantomJS/doo on edelleen käytössä fronttitesteissä, mutta se tullaan poistamaan.
+[`cypress/e2e/`](cypress/e2e)-hakemistossa. PhantomJS/doo on edelleen käytössä fronttitesteissä, mutta se tullaan
+poistamaan.
 
 ### Fronttitestit
 
 Fronttitestit ajetaan komennolla: `lein with-profile +phantomjs doo phantom test once`
 
-Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada 
-phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs` 
+Varmista että phantomjs on asennettu, katso https://github.com/bensu/doo ja ohjeet mistä voi saada
+phantomjs komennon. Asenna phantomjs esim komennolla (mac): `brew install phantomjs`
 
 Laadunseurantatyökalun testit ajetaan komennolla: `lein with-profile +phantomjs doo phantom laadunseuranta-test`
 
@@ -376,17 +427,17 @@ sivun rakenteesta.
 
 ## Debug lokituksen näyttäminen
 
-Muokkaa asetukset.edn:aa ja muuta rivillä: 
-
+Muokkaa asetukset.edn:aa ja muuta rivillä:
 
 ## Tietokanta
 
 Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harja-repositorion kansiossa tietokanta
 
-
 ## Tieverkon tuonti kantaan
 
-Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
+Replissä: (harja.palvelin.main/with-db db
+(harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:
+/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
 
 ## FIM
 
@@ -395,44 +446,46 @@ Paikallisessa kehityksessä käytetään FIMDEV:iä: pidä `asetukset.edn`-tiedo
 `:tiedosto "dev-resources/fim.edn"`. FIMDEV palauttaa aina tämän tiedoston testikäyttäjätiedot,
 eikä paikalliskäyttö tarvitse SSH-tunnelia.
 
-
 # Harvoin tarvittavaa (jos koskaan)
 
 ## Autogeneroi nuolikuvat SVG:nä
+
 Meillä on nyt Mapen tekemät ikonit myös nuolille, joten tälle ei pitäisi olla tarvetta.
 Jos nyt kuitenkin joku käyttää, niin kannattaa myös varmistaa että alla määritellyt värit osuu
 puhtaat -namespacessa määriteltyihin.
 
-(def varit {"punainen" "rgb(255,0,0)"
-            "oranssi" "rgb(255,128,0)"
-            "keltainen" "rgb(255,255,0)"
-            "lime" "rgb(128,255,0)"
-	    "vihrea" "rgb(0,255,0)"
- 	    "turkoosi" "rgb(0,255,128)"
- 	    "syaani" "rgb(0,255,255)"
- 	    "sininen" "rgb(0,128,255)"
- 	    "tummansininen" "rgb(0,0,255)"
- 	    "violetti" "rgb(128,0,255)"
- 	    "magenta" "rgb(255,0,255)"
- 	    "pinkki" "rgb(255,0,128)"})
+(def varit {"punainen" "rgb (255,0,0)"
+"oranssi" "rgb (255,128,0)"
+"keltainen" "rgb (255,255,0)"
+"lime" "rgb (128,255,0)"
+"vihrea" "rgb (0,255,0)"
+"turkoosi" "rgb (0,255,128)"
+"syaani" "rgb (0,255,255)"
+"sininen" "rgb (0,128,255)"
+"tummansininen" "rgb (0,0,255)"
+"violetti" "rgb (128,0,255)"
+"magenta" "rgb (255,0,255)"
+"pinkki" "rgb (255,0,128)"})
 
 (for [[vari rgb] varit]
-  (spit (str "resources/public/images/nuoli-" vari ".svg")
-  	(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
+(spit (str "resources/public/images/nuoli-" vari ".svg")
+(str "<?xml version=\"1.0\" encoding=\"utf-8\"?>
 <svg xmlns=\"http://www.w3.org/2000/svg\" viewBox=\"0 0 6 9\" width=\"20px\" height=\"20px\">
-   <polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
+<polygon points=\"5.5,5 0,9 0,7 3,5 0,2 0,0 5.5,5\" style=\"fill:" rgb ";\" />
 </svg>")))
 
 ## Konvertoi SVG kuvia PNG:ksi
 
 Käytä inkscape sovellusta ilman UI:ta. Muista käyttää täysiä tiedostopolkuja:
-> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png /Users/minä/kuva/jossain/image.svg
+> /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=/Users/minä/kuva/jossain/image.png
+> /Users/minä/kuva/jossain/image.svg
 
 Fish shellissä koko hakemiston kaikkien kuvien konvertointi:
 
 kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
-> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
+> for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png= (pwd)/
+> (echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
 
 ## `.harja`-hakemiston ylläpito
 
@@ -453,4 +506,5 @@ Siellä säilytetään esimerkiksi integraatioiden paikallisia asetustiedostoja 
 palveluja ja työkaluja, kuten AWS Secrets manageria.
 
 ## Lisenssi
+
 https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
