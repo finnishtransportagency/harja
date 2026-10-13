@@ -242,7 +242,7 @@
   :main ^:skip-aot harja.palvelin.main
   :auto-clean false ;; for uberjar
 
-  ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
+  ;; Kootaan yleisesti käytetyt kehitys- ja build-komennot Leiningen-aliaksiksi
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
             "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
             "build-dev-no-env" ["run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]

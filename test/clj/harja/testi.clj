@@ -85,8 +85,7 @@
   (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa))
 
 
-;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
-;; eikä tehdä traviksen logeista turhan pitkiä
+;; Testilokit tulostetaan oletuksena info-tasolla; HARJA_NOLOG=true hiljentää tulostusta fatal-tasolle.
 (log/merge-config!
   {:appenders
    {:println
@@ -1783,7 +1782,7 @@
                     Käytännössä, jos kyselyn voi ajaa samoilla parametreilla monta kertaa,
                     anna tämä luku. Jos joudut antamaan monta kyselyä eri parametreilla,
                     tätä ei ole tarpeen antaa.
-  - :aja-raportti?  Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
+  Raportointia ohjataan HARJA_AJA_GATLING_RAPORTTI-ympäristömuuttujalla.
 
   Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
 
