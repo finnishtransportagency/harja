@@ -25,6 +25,36 @@ vielä muokata, jos sitä ei ole ehditty vielä deployata johonkin kohdeympäris
 `R__...`-migraatiot ovat toistettavia migraatioita, ja niitä voi päivittää jälkikäteen. Flyway havaitsee muutoksen
 R-migraatiossa ja ajaa sen uudelleen.
 
+## Migraatioiden automaattinen tarkistus
+
+PR-testeissä ajetaan check `Validoi Flyway-migraatiot`, joka vertaa PR:n migraatiomuutoksia base-branchiin
+(`.github/scripts/tarkista-migraatiot.js`, Node.js ilman riippuvuuksia).  
+Jos migraatioihin ei ole muutoksia, tarkistus menee suoraan läpi. 
+
+**Tarkistus estää:**
+- virheelliset tiedostonimet. Sallitut muodot: `V1_<numero>__[kuvaus].sql` (numero on pakollinen, ei etunollia; kuvaus
+  vapaaehtoinen, merkit `A-Z a-z 0-9 _ -`), `R__<kuvaus>.sql` ja `afterMigrate.sql`
+- versionumeron, joka on jo käytössä (myös eri kuvauksella)
+- numeroinnin, joka ei jatka base-branchin suurinta numeroa aukottomasti
+- base-branchissa jo olevan `V1_...`-migraation muokkauksen, poiston tai uudelleennimeämisen
+
+Jos olemassa olevaa `V1_...`-migraatiota on tarkoituksella muutettava (esim. sitä ei ole vielä deployattu), lisää PR:ään
+label `salli-v1-migraation-muutos` ja pushaa sen jälkeen uusi commit. Label luetaan PR-eventistä, joten pelkkä
+uudelleenajo ei huomaa sitä.
+
+Tarkistuksen voi ajaa paikallisesti ennen PR:n avaamista (vain commitoidut muutokset):
+
+```bash
+git fetch origin develop
+node .github/scripts/tarkista-migraatiot.js origin/develop
+```
+
+Skriptin omat testit: `node --test .github/scripts/tarkista-migraatiot.test.js`.
+
+Tarkistus ei estä kahden rinnakkaisen PR:n kilpailutilannetta. 
+Se ajetaan PR:n ja sen hetkisen base-branchin merge-commitille, joten develop-haaran muututtua PR on päivitettävä, 
+jotta tarkistus ajetaan uudelleen.
+
 ## Tietokantojen salasanat
 
 Kyselepä tiimiläisiltä.
