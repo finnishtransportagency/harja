@@ -21,17 +21,17 @@
 
 (defn- luo-dash-array [[piirto vali]]
   (float-array
-   [(px piirto) (px vali)]))
+    [(px piirto) (px vali)]))
 
 (defn- aseta-viiva-tyyli [g {:keys [color width dash cap join miter]}]
-  (.setColor g  color)
+  (.setColor g color)
   (.setStroke g (BasicStroke. (px width)
-                              BasicStroke/CAP_ROUND
-                              BasicStroke/JOIN_MITER
-                              10
-                              (when dash
-                                (luo-dash-array dash))
-                              0)))
+                  BasicStroke/CAP_ROUND
+                  BasicStroke/JOIN_MITER
+                  10
+                  (when dash
+                    (luo-dash-array dash))
+                  0)))
 
 (defn- piirra-viiva [g {points :points} viiva]
   (aseta-viiva-tyyli g viiva)
@@ -50,24 +50,24 @@
 
 (defmacro with-rotation [g anchor-x anchor-y rad & body]
   `(save-transform
-    ~g
-    (.rotate ~g ~rad ~anchor-x ~anchor-y)
-    ~@body))
+     ~g
+     (.rotate ~g ~rad ~anchor-x ~anchor-y)
+     ~@body))
 
 ;; Yksinkertainen kuvien cache
 (def kuvat (atom {}))
 (defn hae-kuva [tiedosto]
   (swap! kuvat
-         (fn [kuvat]
-           (if (contains? kuvat tiedosto)
-             kuvat
-             (if-let [kuva (try
-                             (ImageIO/read
-                              (ClassLoader/getSystemResourceAsStream tiedosto))
-                             (catch Exception e
-                               (log/warn e (str "Kuvaa \"" tiedosto "\" ei voitu lukea."))))]
-               (assoc kuvat tiedosto kuva)
-               kuvat))))
+    (fn [kuvat]
+      (if (contains? kuvat tiedosto)
+        kuvat
+        (if-let [kuva (try
+                        (ImageIO/read
+                          (ClassLoader/getSystemResourceAsStream tiedosto))
+                        (catch Exception e
+                          (log/warn e (str "Kuvaa \"" tiedosto "\" ei voitu lukea."))))]
+          (assoc kuvat tiedosto kuva)
+          kuvat))))
   (get @kuvat tiedosto))
 
 (def ^:private
@@ -85,7 +85,7 @@ Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
 ihan jokaiseen käännökseen ei laiteta nuolta. Kasvata arvoa, jos haluat tiheämmin näkyvät ikonit."
        :private true
        :const true}
-minimi-etaisyys 40)
+  minimi-etaisyys 40)
 
 (def ^{:doc "Raja, jota suuremmalla näkyvällä alueella ei enää piirretä ikoneita"
        :private true}
@@ -109,16 +109,16 @@ minimi-etaisyys 40)
    (piirra-kuva g kuva skaala x y 0.5 0.5))
   ([g kuva skaala x y x-anchor y-anchor]
    (.drawImage g kuva
-               (doto (AffineTransform.)
-                 ;; Keskitetään kuva
-                 (.translate  (px (- (* (* skaala (.getWidth kuva)) x-anchor)))
-                              (px (- (* (* skaala (.getHeight kuva)) y-anchor))))
-                 ;; Siirretään kuvan kohtaan
-                 (.translate x y)
+     (doto (AffineTransform.)
+       ;; Keskitetään kuva
+       (.translate (px (- (* (* skaala (.getWidth kuva)) x-anchor)))
+         (px (- (* (* skaala (.getHeight kuva)) y-anchor))))
+       ;; Siirretään kuvan kohtaan
+       (.translate x y)
 
-                 ;; Skaalataan pikselit karttakoordinaateiksi
-                 (.scale (px skaala) (px skaala)))
-               nil-image-observer)))
+       ;; Skaalataan pikselit karttakoordinaateiksi
+       (.scale (px skaala) (px skaala)))
+     nil-image-observer)))
 
 (defn- piirra-ikonit [g {points :points ikonit :ikonit} ruudukko]
   (let [hypotenuusa (geo/extent-hypotenuusa *extent*)
@@ -129,7 +129,7 @@ minimi-etaisyys 40)
     (when (< hypotenuusa ikonien-piirtoraja-m)
       (doseq [{:keys [img scale paikka]} ikonit
               :let [paikat (mapcat (partial nuolten-paikat min-et max-et taitokset)
-                                   paikka)
+                             paikka)
                     kuva (and img (hae-kuva img))
                     skaala (ikonin-skaala scale)]]
         (when kuva
@@ -149,7 +149,7 @@ minimi-etaisyys 40)
 (defmethod piirra :viiva [g toteuma {:keys [viivat points ikonit] :as alue} ruudukko]
   (let [viivat (reverse (sort-by :width viivat))]
     (doseq [viiva viivat]
-      (piirra-viiva g  alue viiva))
+      (piirra-viiva g alue viiva))
     (piirra-ikonit g alue ruudukko)))
 
 (defmethod piirra :moniviiva [g toteuma {:keys [lines viivat ikonit] :as alue} ruudukko]
@@ -177,21 +177,21 @@ minimi-etaisyys 40)
 
 (defn piirra-varoitus [g [w h] teksti]
   (save-transform
-   g
-   (.setTransform g (java.awt.geom.AffineTransform.))
-   (.setFont g (Font. "Dialog" Font/PLAIN 13))
-   (let [fm (.getFontMetrics g)
-         width (.stringWidth fm teksti)]
-     (let [x (float (- (/ w 2) (/ width 2)))
-           y (float (- h 10))]
-       (.setColor g Color/WHITE)
-       (.fillRect g (int (- x 32)) (int (- y 18))
-                  (+ width 36) 24)
-       (.drawImage g (hae-kuva varoituskuva)
-                   (int (- x 30)) (int (- y 18))
-                   nil-image-observer)
-       (.setColor g Color/BLACK)
-       (.drawString g teksti x y)))))
+    g
+    (.setTransform g (java.awt.geom.AffineTransform.))
+    (.setFont g (Font. "Dialog" Font/PLAIN 13))
+    (let [fm (.getFontMetrics g)
+          width (.stringWidth fm teksti)]
+      (let [x (float (- (/ w 2) (/ width 2)))
+            y (float (- h 10))]
+        (.setColor g Color/WHITE)
+        (.fillRect g (int (- x 32)) (int (- y 18))
+          (+ width 36) 24)
+        (.drawImage g (hae-kuva varoituskuva)
+          (int (- x 30)) (int (- y 18))
+          nil-image-observer)
+        (.setColor g Color/BLACK)
+        (.drawString g teksti x y)))))
 
 ;; Etäyhteydellä tietokantahaku voi kestää kauan — asetetaan riittävän pitkä timeout
 (def piirron-aikakatkaisu-ms 60000)
@@ -201,8 +201,8 @@ minimi-etaisyys 40)
   [g extent]
   (let [[x1 y1 x2 y2] extent]
     (piirra-viiva g {:points [[x1 y1] [x2 y1] [x2 y2] [x1 y2] [x1 y1]]}
-                  {:color java.awt.Color/BLACK
-                   :width 5})))
+      {:color java.awt.Color/BLACK
+       :width 5})))
 
 (defn piirra-karttakuvaan [extent koko px-scale g asiat]
   (binding [*px-scale* px-scale
@@ -218,7 +218,7 @@ minimi-etaisyys 40)
       (go-loop-timeout
         {:timeout piirron-aikakatkaisu-ms
          :on-timed-out (do (reset! timed-out? true)
-                           (log/warn "piirra-karttakuvaan: TIMEOUT! Piirrettiin" @piirretty "asiaa ennen timeoutia."))}
+                         (log/warn "piirra-karttakuvaan: TIMEOUT! Piirrettiin" @piirretty "asiaa ennen timeoutia."))}
         [{alue :alue :as asia} ch]
         (swap! piirretty inc)
         (let [t0 (System/currentTimeMillis)]
@@ -228,5 +228,5 @@ minimi-etaisyys 40)
         (if (zero? @piirretty)
           (log/info (format "TILE-PIIRTO: TYHJÄ tile, 0 asiaa piirretty (%d ms)" kokonais-ms))
           (log/info (format "TILE-PIIRTO: %d asiaa piirretty, piirtoaika %d ms, kokonaisaika %d ms%s"
-                            @piirretty @piirto-ms kokonais-ms
-                            (if @timed-out? " TIMEOUT!" ""))))))))
+                      @piirretty @piirto-ms kokonais-ms
+                      (if @timed-out? " TIMEOUT!" ""))))))))

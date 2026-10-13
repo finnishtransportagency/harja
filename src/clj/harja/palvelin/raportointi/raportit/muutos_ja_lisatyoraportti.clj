@@ -36,7 +36,7 @@
     (or (:jjh-muutosten-summa muutos) 0)
     (or (:kustannusvaikutusten-summa muutos) 0)))
 
-(defn- laske-tavoitehinnan-muutos
+(defn laske-tavoitehinnan-muutos
   "Laskee tehtävän tavoitehinnan muutoksen. Soveltaa talvisuola-kerrointa tarvittaessa."
   [{:keys [tavoitehinnan_muutos talvisuola talvisuola_kerroin maara suunniteltu_maara] :as _rivi}]
   (let [tav-muutos (or tavoitehinnan_muutos 0)
@@ -370,7 +370,7 @@
 
 (defn muodosta-tavoitehinnan-oikaisut [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [oikaisut (hae-tavoitehinnan-oikaisut db {:urakka-id urakka-id
-                                                 :alkupvm alkupvm})
+                                                 :hoitovuosi (pvm/vuosi alkupvm)})
         oikaisurivit (mapv (fn [r]
                              (rivi
                                (or (:otsikko r) "")
@@ -435,7 +435,7 @@
          {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
         (into [] (concat lisatyorivit (when-not (empty? lisatyot) lisatyot-yhteensarivi)))]])))
 
-(defn suorita [db _user {:keys [urakka-id alkupvm loppupvm kasittelija] :as parametrit}]
+(defn suorita [db user {:keys [urakka-id alkupvm loppupvm kasittelija] :as parametrit}]
   (log/info "Suoritetaan muutos- ja lisätyöraportti parametreilla: " (pr-str parametrit))
   (let [urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
@@ -449,7 +449,7 @@
         loppupvm (second (pvm/paivamaaran-hoitokausi loppupvm))
         aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         maaramuutokset (when urakka-id
-                         (muutos-palvelu/hae-tehtava-maaramuutokset db _user {:urakka-id urakka-id
+                         (muutos-palvelu/hae-tehtava-maaramuutokset db user {:urakka-id urakka-id
                                                                               :valittu-hoitokausi [alkupvm loppupvm]
                                                                               :hoitokaudet urakan-hoitokaudet
                                                                               :laskenta-automatiikka? true}))

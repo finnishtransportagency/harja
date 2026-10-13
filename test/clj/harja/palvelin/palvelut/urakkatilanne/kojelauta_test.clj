@@ -335,11 +335,14 @@
                                                             :evk-idt #{}}))
 
         urakka-jossa-ei-tavoitepisteita (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
+        urakka-jossa-ei-tavoitepisteita-tiedot (first (urakka-kyselyt/hae-urakka (:db jarjestelma)
+                                                        {:id urakka-jossa-ei-tavoitepisteita}))
+        hoitokauden-alkuvuosi (pvm/vuosi (:alkupvm urakka-jossa-ei-tavoitepisteita-tiedot))
         vastaus-jossa-tei-avoitepisteita
         (first
           (kutsu-palvelua (:http-palvelin jarjestelma)
             :hae-urakat-kojelautaan +kayttaja-jvh+ {:urakkatyyppi :hoito
-                                                    :hoitokauden-alkuvuosi 2025
+                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                     :urakka-idt [urakka-jossa-ei-tavoitepisteita]
                                                     :evk-idt #{}}))]
     (is (= urakka-id (get-in vastaus [:id])) "Urakka")

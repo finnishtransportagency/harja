@@ -47,7 +47,6 @@
      [:div.navigation-ikoni
       {:on-click (fn [event]
                    (.preventDefault event)
-                   (.stopPropagation event)
                    (avaa-tai-sulje-haitari-fn event paatos-avain))}
       ;; Kun päätosavainta ei löydy setistä, niin pidetään päätös avattuna (defaulttina kaikki on auki)
       (if (not (contains? avatut-paatokset paatos-avain))

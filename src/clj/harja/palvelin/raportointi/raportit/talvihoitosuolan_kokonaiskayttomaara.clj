@@ -136,12 +136,12 @@
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu " (pvm/pvm (:alkupvm urakan-tiedot)) " - " (str "30.09." (inc (last hoitovuodet))))
     (str "Talvihoitosuolan kokonaiskäyttömäärä ja lämpötilatarkastelu - Ei valmistuneita hoitovuosia")))
 
-(defn yhteenvetolaatikko [kasittelija yhteevetodata]
+(defn yhteenvetolaatikko [kasittelija yhteevetodata samalle-sheetille?]
   (if (= kasittelija :excel)
     [:taulukko {:otsikko "Koko urakka-ajan yhteenveto (kuivatonneina)"
                 :viimeinen-rivi-yhteenveto? false
                 :sheet-nimi "Talvihoitosuolat"
-                :samalle-sheetille? true}
+                :samalle-sheetille? samalle-sheetille?}
      [{:leveys 20 :otsikko ""}
       {:leveys 5 :otsikko "" :fmt :numero :tasaa :oikea}]
      [["Tehtävä- ja määräluettelon mukainen käyttöraja"
@@ -198,8 +198,9 @@
                "Ei ylitystä")
        :lihavoi? true}]]))
 
-(defn suorita [db _ {:keys [urakka-id elinvoimakeskus-id kasittelija] :as parametrit}]
-  (let [konteksti (cond urakka-id :urakka
+(defn suorita [db _ {:keys [urakka-id elinvoimakeskus-id kasittelija] :as parametrit} & samalle-sheetille?]
+  (let [samalle-sheetille? (if (empty? samalle-sheetille?) false (first samalle-sheetille?))
+        konteksti (cond urakka-id :urakka
                     elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
 
@@ -232,7 +233,7 @@
                                suolarajoitukset (first (suolarajoitus-kyselyt/hae-talvisuolan-kokonaiskayttoraja db
                                                          {:urakka-id urakka-id
                                                           :hoitokauden-alkuvuosi vuosi}))
-                               suolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-hoitovuoden-kokonaismaara db
+                               suolan-kokonaismaara (first (materiaalit-kyselyt/hae-talvisuolan-kokonaismaara db
                                                              {:urakka-id urakka-id
                                                               :alkupvm (pvm/hoitokauden-alkupvm vuosi)
                                                               :loppupvm (pvm/hoitokauden-loppupvm (inc vuosi))}))
@@ -318,11 +319,11 @@
        :leveys 800
        :rivita? false}]
 
-     (yhteenvetolaatikko kasittelija yhteevetodata)
+     (yhteenvetolaatikko kasittelija yhteevetodata samalle-sheetille?)
 
      [:taulukko {:otsikko "Erittely hoitovuosittain"
                  :tyhja (when (empty? data) "Ei raportoitavia tietoja.")
                  :sheet-nimi "Talvihoitosuolat"
                  :samalle-sheetille? true}
       otsikkorivit
-      datarivit]]))
+       datarivit]]))
