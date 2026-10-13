@@ -10,9 +10,6 @@ IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:latest
 
 # Alla saatavilla olevia versioita kokeiluja varten
 # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb
-#image: harja_harjadb:15.4-3.3.3 (uusin vakaa, Flyway v10 yhteensopiva)
-#image: ghcr.io/finnishtransportagency/harja_harjadb:13.13-3.3.3 (PR-testiversio, Flyway v10 yhteensopiva)
-
 
 devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)
 if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen numeroa, siksi *1 glob
