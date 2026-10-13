@@ -1,6 +1,6 @@
 [![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/finnishtransportagency/harja)
 
-# Väylän Harja-järjestelmä #
+# Väylän Harja-järjestelmä
 
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
@@ -14,11 +14,20 @@ Autentikointiin käytetään KOKAa.
 ## Sisältö
 
 <!-- TOC -->
-* [Väylän Harja-järjestelmä](#väylän-harja-järjestelmä-)
+* [Väylän Harja-järjestelmä](#väylän-harja-järjestelmä)
   * [Sisältö](#sisältö)
-  * [Hakemistorakenne](#hakemistorakenne-)
+  * [Hakemistorakenne](#hakemistorakenne)
+    * [Sovelluksen lähdekoodi](#sovelluksen-lähdekoodi)
+    * [Integraatiot ja API](#integraatiot-ja-api)
+      * [Urakoitsija-API](#urakoitsija-api)
+      * [Integraatiot muihin järjestelmiin](#integraatiot-muihin-järjestelmiin)
+      * [Integraatioiden yhteinen infra](#integraatioiden-yhteinen-infra)
+    * [Resurssit, tietokanta ja testit](#resurssit-tietokanta-ja-testit)
+    * [Build, julkaisu ja kehitystyökalut](#build-julkaisu-ja-kehitystyökalut)
+    * [Juuren asetustiedostot](#juuren-asetustiedostot)
   * [Kehitysympäristön pystyttäminen](#kehitysympäristön-pystyttäminen)
-      * [Paikallisesti](#paikallisesti)
+    * [Työkansion sijainti](#työkansion-sijainti)
+    * [Paikallisesti](#paikallisesti)
 * [Docker](#docker)
   * [GitHub Container Registry](#github-container-registry)
     * [Kehittäjän kirjautuminen Container Registryyn](#kehittäjän-kirjautuminen-container-registryyn)
@@ -48,85 +57,167 @@ Autentikointiin käytetään KOKAa.
   * [Lisenssi](#lisenssi)
 <!-- TOC -->
 
-## Hakemistorakenne ##
+## Hakemistorakenne
 
-Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa
-sijaita sellaisen kansion alla, jonka nimessä on - -merkki.
-Eli nimeä yläkansio, jonne harja ja muut repot kloonataan pelkillä kirjaimilla ja numeroilla ilman erotinmerkkejä.
-Esimerkiksi näin:
+Repositorion ylätason hakemistot:
 
+```text
+harja/
+├── src/             Sovelluksen lähdekoodi: palvelin (clj), käyttöliittymä (cljs) ja jaettu koodi (cljc)
+├── resources/       Ajonaikaiset resurssit: API-kuvaukset, schemat, roolit ja selainresurssit
+├── dev-resources/   LESS-tyylit, kuvat ja testiaineistot
+├── tietokanta/      Flyway-migraatiot, testidata ja paikallisen kannan skriptit
+├── test/            Palvelimen, käyttöliittymän ja jaetun koodin testit
+├── cypress/         End-to-end-testit
+├── figwheel_conf/   ClojureScript-buildien määritykset
+├── .github/         GitHub Actions -workflow't ja Docker-ympäristöt
+├── aws/fargate/     AWS:ssä ajettava sovelluskontti
+├── sh/              Kehityksen ja testauksen apuskriptit
+└── script/          REPL-käytön apukoodi
 ```
-~/work ❯❯❯ tree -aL 1 harjaroot
-harjaroot
-├── .harja
-├── harja
-├── harja-infra
-└── harja-testidata
-```
 
-Alla ovat kehitystyön tärkeimmät hakemistot ja niiden vastuut.  
-Linkkien polut ovat suhteessa repositorion juureen. Sisennetyt kohdat tarkentavat ylempää hakemistoa.
+Alla tarkemmin kehitystyön kannalta keskeiset hakemistot.
 
-**Sovelluksen lähdekoodi**
+### Sovelluksen lähdekoodi
 
-- [`src/clj/`](src/clj/) - palvelimen Clojure-koodi.
-    - [`harja/palvelin/`](src/clj/harja/palvelin/) - palvelimen toteutus; aloituspiste on [
-      `main.clj`](src/clj/harja/palvelin/main.clj).
-        - [`komponentit/`](src/clj/harja/palvelin/komponentit/) - esimerkiksi tietokanta, todennus ja HTTP-palvelin.
-        - [`palvelut/`](src/clj/harja/palvelin/palvelut/) - Harjan käyttöliittymää palvelevat palvelut.
-        - [`integraatiot/`](src/clj/harja/palvelin/integraatiot/) - yhteydet ulkoisiin järjestelmiin, tiedonsiirto ja
-          integraatiolokitus.
-            - [`api/`](src/clj/harja/palvelin/integraatiot/api/) - **Harjan urakoitsijoille tarjoama API**: endpointit,
-              sanomien käsittely ja validointi.
-- [`src/cljs/`](src/cljs/) - asiakkaan ClojureScript-koodi.
-    - [`harja/asiakas/`](src/cljs/harja/asiakas/) - käynnistys ([`main.cljs`](src/cljs/harja/asiakas/main.cljs)) ja
-      palvelinkutsut ([`kommunikaatio.cljs`](src/cljs/harja/asiakas/kommunikaatio.cljs)).
-    - [`harja/ui/`](src/cljs/harja/ui/) - yhteiset UI-komponentit.
-    - [`harja/views/`](src/cljs/harja/views/) - käyttöliittymän näkymät.
-    - [`harja/tiedot/`](src/cljs/harja/tiedot/) - käyttöliittymän tilan ja tietojen käsittely.
-- [`src/cljc/`](src/cljc/) - palvelimen ja asiakkaan jaettu koodi, kuten domain-mallit ja validointi.
+**Palvelin**
+
+- [`src/clj/harja/palvelin/main.clj`](src/clj/harja/palvelin/main.clj) - **aloituspiste**: komponenttien ja
+  palvelujen kytkentä.
+- [`src/clj/harja/palvelin/komponentit/`](src/clj/harja/palvelin/komponentit/) - infrastruktuuri, kuten tietokanta,
+  todennus ja HTTP-palvelin.
+- [`src/clj/harja/palvelin/palvelut/`](src/clj/harja/palvelin/palvelut/) - käyttöliittymää palvelevat palvelut.
+- [`src/clj/harja/palvelin/integraatiot/`](src/clj/harja/palvelin/integraatiot/) - urakoitsija-API ja integraatiot,
+  ks. [Integraatiot ja API](#integraatiot-ja-api).
+- [`src/clj/harja/palvelin/ajastetut_tehtavat/`](src/clj/harja/palvelin/ajastetut_tehtavat/) - ajastetut
+  taustatehtävät.
+- [`src/clj/harja/palvelin/raportointi/`](src/clj/harja/palvelin/raportointi/) - raporttien muodostus.
+- [`src/clj/harja/kyselyt/`](src/clj/harja/kyselyt/) - tietokantakyselyt (`.sql`) ja niiden Clojure-rajapinnat.
+
+**Käyttöliittymä**
+
+- [`src/cljs/harja/asiakas/`](src/cljs/harja/asiakas/) - **aloituspiste**
+  [`main.cljs`](src/cljs/harja/asiakas/main.cljs) ja palvelinkutsut
+  [`kommunikaatio.cljs`](src/cljs/harja/asiakas/kommunikaatio.cljs).
+- [`src/cljs/harja/views/`](src/cljs/harja/views/) - näkymät.
+- [`src/cljs/harja/tiedot/`](src/cljs/harja/tiedot/) - näkymien tila ja tietojen käsittely.
+- [`src/cljs/harja/ui/`](src/cljs/harja/ui/) - yhteiset UI-komponentit.
+
+**Jaettu ja ympäristökohtainen koodi**
+
+- [`src/cljc/`](src/cljc/) - palvelimen ja käyttöliittymän jaettu koodi, kuten domain-mallit ja validointi.
+- [`src/shared-cljc/`](src/shared-cljc/) - yleiset apufunktiot, kuten tierekisteri- ja laskentafunktiot.
+- [`src/clj-dev/`](src/clj-dev/) - vain kehityskäytön REPL-työkalut.
 - [`src/cljs-dev/`](src/cljs-dev/) ja [`src/cljs-prod/`](src/cljs-prod/) - kehitys- ja tuotantobuildien omat
-  ClojureScript-toteutukset.
+  toteutukset samoista nimiavaruuksista, esim. lokitus ja debug-näkymät.
 
-**Resurssit, tietokanta ja testit**
+### Integraatiot ja API
 
-- [`resources/`](resources/) - sovelluksen resurssit, kuten roolit, oikeudet ja `public/`-hakemiston selainresurssit.
-    - [`api/`](resources/api/) -
-      urakoitsija-APIn [RAML-kuvaus](resources/api/api.raml), [dokumentaatio](resources/api/documentation/), [JSON-schemat](resources/api/schemas/)
-      ja [esimerkit](resources/api/examples/).
-    - [`api-v2/legacy/`](resources/api-v2/legacy/) - API v2:n legacy-schemat.
-    - [`xsd/`](resources/xsd/) - integraatioiden XML-schemat.
+Harja vaihtaa dataa useiden järjestelmien kanssa. Kun selvität ongelmaa, joka liittyy Harjaan tulevaan tai sieltä
+lähtevään dataan, aloita [integraatiolokista](#integraatioiden-yhteinen-infra): sinne kirjataan integraatioiden
+viestit.
+
+Alla olevat polut ovat hakemistossa [`src/clj/harja/palvelin/integraatiot/`](src/clj/harja/palvelin/integraatiot/),
+ellei toisin mainita.
+
+#### Urakoitsija-API
+
+Harja tarjoaa urakoitsijoiden järjestelmille rajapinnan tiedonvaihtoon, esimerkiksi toteumille, tarkastuksille ja
+ilmoituksille.
+
+| Sisältö                         | Sijainti                                                                                                                                                                                          |
+|---------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| Endpointit                      | [`api/`](src/clj/harja/palvelin/integraatiot/api/)                                                                                                                                                |
+| Kutsujen käsittely ja virheet   | [`api/tyokalut/`](src/clj/harja/palvelin/integraatiot/api/tyokalut/), esim. `kutsukasittely.clj` ja `virheet.clj`                                                                                 |
+| Sanomien muodostus              | [`api/sanomat/`](src/clj/harja/palvelin/integraatiot/api/sanomat/)                                                                                                                                |
+| Validointi                      | [`api/validointi/`](src/clj/harja/palvelin/integraatiot/api/validointi/)                                                                                                                          |
+| Rajapintakuvaus ja JSON-schemat | [`resources/api/`](resources/api/): [RAML-kuvaus](resources/api/api.raml), [dokumentaatio](resources/api/documentation/), [schemat](resources/api/schemas/), [esimerkit](resources/api/examples/) |
+| API v2:n legacy-schemat         | [`resources/api-v2/legacy/`](resources/api-v2/legacy/)                                                                                                                                            |
+| Testit ja testiaineistot        | [`test/clj/harja/palvelin/integraatiot/api/`](test/clj/harja/palvelin/integraatiot/api/), [`test/resurssit/api/`](test/resurssit/api/)                                                            |
+| Dokumentaation julkaisu         | [`sh/muodosta-apidoc.sh`](sh/muodosta-apidoc.sh), [`sh/julkaise-apidoc.sh`](sh/julkaise-apidoc.sh)                                                                                                |
+
+#### Integraatiot muihin järjestelmiin
+
+| Järjestelmä                 | Sijainti                                                                                                                                                                                       | Data                                                                  |
+|-----------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------|
+| T-LOIK                      | [`tloik/`](src/clj/harja/palvelin/integraatiot/tloik/)                                                                                                                                         | Tieliikennekeskuksen ilmoitukset ja toimenpidekuittaukset (JMS)       |
+| YHA                         | [`yha/`](src/clj/harja/palvelin/integraatiot/yha/)                                                                                                                                             | Ylläpitokohteet sekä päällystys- ja paikkauskohteiden lähetys         |
+| Velho                       | [`velho/`](src/clj/harja/palvelin/integraatiot/velho/)                                                                                                                                         | Varusteet ja urakkatiedot                                             |
+| Sampo                       | [`sampo/`](src/clj/harja/palvelin/integraatiot/sampo/), [`vayla_rest/`](src/clj/harja/palvelin/integraatiot/vayla_rest/)                                                                       | Hankkeet, urakat, organisaatiot, maksuerät ja kustannussuunnitelmat   |
+| Digiroad                    | [`digiroad/`](src/clj/harja/palvelin/integraatiot/digiroad/)                                                                                                                                   | Kaistatiedot                                                          |
+| VKM                         | [`vkm/`](src/clj/harja/palvelin/integraatiot/vkm/)                                                                                                                                             | Tieosoitteiden muunnos tieverkon versiosta toiseen                    |
+| Palauteväylä                | [`palautevayla/`](src/clj/harja/palvelin/integraatiot/palautevayla/)                                                                                                                           | Palautteiden aiheet ja tarkenteet                                     |
+| Paikkatietojärjestelmä      | [`paikkatietojarjestelma/`](src/clj/harja/palvelin/integraatiot/paikkatietojarjestelma/)                                                                                                       | Shapefile-tuonnit, esim. tieverkko, sillat, alueurakat ja hoitoluokat |
+| Ilmatieteenlaitos           | [`ilmatieteenlaitos.clj`](src/clj/harja/palvelin/integraatiot/ilmatieteenlaitos.clj)                                                                                                           | Talvikauden lämpötilat                                                |
+| Sähköposti ja tekstiviestit | [`sahkoposti.clj`](src/clj/harja/palvelin/integraatiot/sahkoposti.clj), [`vayla_rest/`](src/clj/harja/palvelin/integraatiot/vayla_rest/), [`sms/`](src/clj/harja/palvelin/integraatiot/sms/) | Viestien lähetys                                                      |
+
+Integraatioiden testit ovat järjestelmittäin hakemistossa
+[`test/clj/harja/palvelin/integraatiot/`](test/clj/harja/palvelin/integraatiot/).
+
+#### Integraatioiden yhteinen infra
+
+- [`integraatioloki.clj`](src/clj/harja/palvelin/integraatiot/integraatioloki.clj) ja
+  [`src/clj/harja/kyselyt/integraatioloki.sql`](src/clj/harja/kyselyt/integraatioloki.sql) - **integraatioloki**:
+  integraatioiden tapahtumat ja viestit tietokannassa.
+- [`integraatiotapahtuma.clj`](src/clj/harja/palvelin/integraatiot/integraatiotapahtuma.clj) - integraatiokutsujen
+  yhteinen kääre, joka kirjaa tapahtumat integraatiolokiin.
+- [`integraatiopisteet/`](src/clj/harja/palvelin/integraatiot/integraatiopisteet/) - HTTP-, JMS- ja
+  tiedostointegraatioiden lokittavat kutsupisteet.
+- [`jms.clj`](src/clj/harja/palvelin/integraatiot/jms.clj) ja
+  [`jms_clientit/`](src/clj/harja/palvelin/integraatiot/jms_clientit/) - JMS-jonojen käsittely,
+  ks. [ActiveMQ Artemis](#activemq-artemis).
+- [`resources/xsd/`](resources/xsd/) - integraatioiden XML-schemat.
+
+### Resurssit, tietokanta ja testit
+
+- [`resources/`](resources/) - ajonaikaiset resurssit, kuten [`roolit.xlsx`](resources/roolit.xlsx),
+  [`oikeudet.edn`](resources/oikeudet.edn) ja selainresurssit (`public/`).
 - [`dev-resources/`](dev-resources/) - kehitys- ja build-resurssit, kuten [LESS-tyylit](dev-resources/less/), kuvat ja
   testiaineistot.
-- [`tietokanta/`](tietokanta/) - tietokannan alustus, testidata ja paikallisen kannan
-  hallintaskriptit; [tietokantaohje](tietokanta/README.md).
-    - [`src/main/resources/db/migration/`](tietokanta/src/main/resources/db/migration/) - Flyway-migraatiot.
-- [`test/`](test/) - palvelimen, asiakkaan ja jaetun koodin testit sekä testiresurssit; [testausohje](#testaus).
-    - [`clj/harja/palvelin/integraatiot/`](test/clj/harja/palvelin/integraatiot/) - integraatioiden testit, mukaan
-      lukien [urakoitsija-APIn testit](test/clj/harja/palvelin/integraatiot/api/).
-    - [`resurssit/api/`](test/resurssit/api/) - API-testien aineistot.
-- [`cypress/`](cypress/) - [E2E-testit](cypress/e2e/), tukikoodi ja fixtures; [E2E-ohje](#end-to-end-testit).
+- [`tietokanta/`](tietokanta/) - tietokannan alustus, testidata ja paikallisen kannan hallintaskriptit;
+  [tietokantaohje](tietokanta/README.md).
+- [`tietokanta/src/main/resources/db/migration/`](tietokanta/src/main/resources/db/migration/) - Flyway-migraatiot.
+- [`test/`](test/) - palvelimen (`clj/`), käyttöliittymän (`cljs/`) ja jaetun koodin (`cljc/`) testit sekä
+  testiaineistot (`resurssit/`); [testausohje](#testaus).
+- [`cypress/e2e/`](cypress/e2e/) - end-to-end-testit; [E2E-ohje](#end-to-end-testit).
 
-**Build, julkaisu ja kehitystyökalut**
+### Build, julkaisu ja kehitystyökalut
 
 - [`figwheel_conf/`](figwheel_conf/) - Figwheel-mainin ClojureScript-buildien määritykset.
-- [`.github/`](.github/) - GitHub Actions ja Docker-työkalut.
-    - [`workflows/`](.github/workflows/) - build-, testaus- ja julkaisu-workflow't.
-    - [`actions/`](.github/actions/) - workflow'iden käyttämät composite actionit.
-    - [`docker/`](.github/docker/) - paikallis- ja CI-käytön imaget ja
-      Compose-määritykset; [Docker-ohje](.github/docker/README.md).
+- [`.github/workflows/`](.github/workflows/) - build-, testaus- ja julkaisu-workflow't.
+- [`.github/actions/`](.github/actions/) - workflowien käyttämät composite actionit.
+- [`.github/docker/`](.github/docker/) - paikallis- ja CI-käytön Docker-imaget ja Docker Compose-määritykset;
+  [Docker-ohje](.github/docker/README.md).
 - [`aws/fargate/`](aws/fargate/) - AWS:ssä ajettavan sovelluskontin toteutus.
-- [`sh/`](sh/) - kehityksen ja testauksen apuskriptit sekä API-dokumentaation [muodostaminen](sh/muodosta-apidoc.sh)
-  ja [julkaiseminen](sh/julkaise-apidoc.sh).
+- [`sh/`](sh/) - kehityksen ja testauksen apuskriptit.
 - [`script/`](script/) - REPL-käytön apukoodi.
 
-Juurihakemiston keskeiset asetustiedostot ovat [`project.clj`](project.clj) ja [`profiles.clj`](profiles.clj)
-(Leiningen), [`package.json`](package.json) ja [`package-lock.json`](package-lock.json) (npm)
-sekä [`asetukset.edn`](asetukset.edn) (sovelluksen asetukset).
+### Juuren asetustiedostot
+
+| Tiedosto                                                                 | Tarkoitus                                    |
+|--------------------------------------------------------------------------|----------------------------------------------|
+| [`project.clj`](project.clj), [`profiles.clj`](profiles.clj)             | Leiningen: Clojure-riippuvuudet ja profiilit |
+| [`package.json`](package.json), [`package-lock.json`](package-lock.json) | npm: JavaScript-riippuvuudet                 |
+| [`asetukset.edn`](asetukset.edn)                                         | Sovelluksen asetukset paikallisessa ajossa   |
+| [`cypress.config.js`](cypress.config.js)                                 | Cypressin asetukset                          |
 
 ## Kehitysympäristön pystyttäminen
 
-#### Paikallisesti
+### Työkansion sijainti
+
+Kehitystyökaluissa olevan [virheen](https://github.com/emezeske/lein-cljsbuild/issues/490) vuoksi työkansio ei saa
+sijaita kansiossa, jonka nimessä on väliviiva (`-`). Nimeä yläkansio, johon Harja ja muut repositoriot kloonataan,
+pelkillä kirjaimilla ja numeroilla. Esimerkiksi:
+
+```text
+harjaroot/
+├── .harja/
+├── harja/
+├── harja-infra/
+└── harja-testidata/
+```
+
+### Paikallisesti
 
 1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
 2. Asenna Docker ja Docker Compose: https://www.docker.com/
@@ -141,7 +232,7 @@ sekä [`asetukset.edn`](asetukset.edn) (sovelluksen asetukset).
     * `npm ci` asentaa package-lock.json tiedostoon jäädytetyt paketit.
     * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
 5. Hae `harja-testidata`-repositoriosta ([sisäinen repo *1](#*1)) `.harja`-kansio
-   Harja-repositorion rinnalle hakemistorakenteen esimerkin mukaisesti. Katso myös
+   Harja-repositorion rinnalle [työkansion esimerkin](#työkansion-sijainti) mukaisesti. Katso myös
    [`.harja`-hakemiston ylläpito-ohje](#harja-hakemiston-ylläpito).
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
