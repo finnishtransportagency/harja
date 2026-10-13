@@ -54,6 +54,16 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('Tavoitehinnan muutokset')
         cy.contains('Yhteenveto')
 
+        let hoitovuodenAlunIndeksikorjattuTavoitehinta;
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi-ylin', 'Hoitovuoden alun indeksikorjattu tavoitehinta')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((summa) => {
+                const tavoitehinta = Number(summa.replace(/\s/g, '').replace(',', '.'));
+                expect(Number.isFinite(tavoitehinta)).to.be.true;
+                hoitovuodenAlunIndeksikorjattuTavoitehinta = tavoitehinta;
+            });
+
         // Lisätään yksi tavoitehinnan oikaisu
         cy.contains('Muutos')
         cy.contains('Perustelu')
@@ -64,12 +74,38 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('Lisää rivi').click();
         cy.get('[data-cy="luokka-1"]').valinnatValitse({valinta: 'Tiestömuutokset'})
         cy.get('#0selite-1').type('{selectall}seliseli');
-        cy.get('#0summa-1').type('{selectall}100000');
+        var oikaisu = 100000;
+        cy.get('#0summa-1').type('{selectall}'+oikaisu);
         cy.contains('Tallenna muutokset').click();
         cy.wait('@tavoitehinnan-oikaisu')
 
         // Tarkista oikaisun tiedot
         cy.get('[data-cy="luokka-1"]').contains('Tiestömuutokset');
         cy.get('#0selite-1').should('have.value', 'seliseli')
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Tavoitehinnan muutokset')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((teksti) => {
+                expect(teksti.replace(/\s/g, '')).to.equal(`+${oikaisu.toFixed(2).replace('.', ',')}`);
+            });
+
+        // Tarkista muuttunut tavoitehinta
+        let odotettuTavoitehinta;
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Hoitovuoden lopun tavoitehinta')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((summa) => {
+                odotettuTavoitehinta = hoitovuodenAlunIndeksikorjattuTavoitehinta + oikaisu;
+                expect(summa.replace(/\s/g, '')).to.equal(odotettuTavoitehinta.toFixed(2).replace('.', ','));
+            });
+
+        // Tarkista yhteenvedon kattohinta - Käytä 1.1 kerrointa, koska urakka on alkanut -21 vuonna
+        const odotettuKattohinta = odotettuTavoitehinta * 1.1;
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Kattohinta')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((summa) => {
+                expect(summa.replace(/\s/g, '')).to.equal(odotettuKattohinta.toFixed(2).replace('.', ','));
+            });
     })
 })
