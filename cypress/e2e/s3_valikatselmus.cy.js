@@ -1,4 +1,5 @@
 let timeout = 60000; // Minuutin timeout hitaan ci putken takia
+let clickTimeout = 10000;
 const testiaika = new Date(2021, 9, 15, 12).getTime() // Urakan 1. vuoden loppu
 
 // Helper funkkareita
@@ -78,6 +79,8 @@ describe('Välikatselmus aukeaa', () => {
         cy.get('#0summa-1').type('{selectall}'+oikaisu);
         cy.contains('Tallenna muutokset').click();
         cy.wait('@tavoitehinnan-oikaisu')
+        // Viesti onnistumisesta pitäisi näkyä
+        cy.contains('Oikaisu tallennettu', {timeout: clickTimeout}).should('be.visible');
 
         // Tarkista oikaisun tiedot
         cy.get('[data-cy="luokka-1"]').contains('Tiestömuutokset');
@@ -90,22 +93,21 @@ describe('Välikatselmus aukeaa', () => {
             });
 
         // Tarkista muuttunut tavoitehinta
-        let odotettuTavoitehinta;
         cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Hoitovuoden lopun tavoitehinta')
             .find('span').eq(1)
             .invoke('text')
             .then((summa) => {
-                odotettuTavoitehinta = hoitovuodenAlunIndeksikorjattuTavoitehinta + oikaisu;
+                const odotettuTavoitehinta = hoitovuodenAlunIndeksikorjattuTavoitehinta + oikaisu;
                 expect(summa.replace(/\s/g, '')).to.equal(odotettuTavoitehinta.toFixed(2).replace('.', ','));
-            });
 
-        // Tarkista yhteenvedon kattohinta - Käytä 1.1 kerrointa, koska urakka on alkanut -21 vuonna
-        const odotettuKattohinta = odotettuTavoitehinta * 1.1;
-        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Kattohinta')
-            .find('span').eq(1)
-            .invoke('text')
-            .then((summa) => {
-                expect(summa.replace(/\s/g, '')).to.equal(odotettuKattohinta.toFixed(2).replace('.', ','));
+                // Tarkista yhteenvedon kattohinta - Käytä 1.1 kerrointa, koska urakka on alkanut -21 vuonna
+                const odotettuKattohinta = odotettuTavoitehinta * 1.1;
+                return cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Hoitovuoden lopun kattohinta')
+                    .find('span').eq(1)
+                    .invoke('text')
+                    .then((kattohinta) => {
+                        expect(kattohinta.replace(/\s/g, '')).to.equal(odotettuKattohinta.toFixed(2).replace('.', ','));
+                    });
             });
     })
 })
