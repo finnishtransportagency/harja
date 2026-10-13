@@ -4,7 +4,8 @@
             [harja.tyokalut.env :as env]))
 
 (defmacro define-tables [& tables]
+  ;; SpecQL lukee taulumetatiedot käännösaikana; migroitu harja-kanta riittää ilman testidataa.
   `(specql/define-tables
-     {:connection-uri ~(str "jdbc:postgresql://" (env/env "HARJA_TIETOKANTA_HOST_KAANNOS" "localhost") "/harjatest_template?user=postgres")}
+     {:connection-uri ~(str "jdbc:postgresql://" (env/env "HARJA_TIETOKANTA_HOST_KAANNOS" "localhost") "/harja?user=postgres")}
      ~@tables))
 

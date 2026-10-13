@@ -146,6 +146,8 @@ jobs:
           # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
           # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
           service-name: harjadb-latest
+          # Build ei tarvitse testidataa
+          skip-testdata: 'true'
 
       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
       - name: Build Harja Uberjar
