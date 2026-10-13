@@ -200,8 +200,7 @@
           laskennallinen-hoitovuoden-lopun-kattohinta
           (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
             (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa) kattohointakerroin)
-            (* hintamuutos kattohointakerroin)
-            (* hintamuutos-oikaisut-summa kattohointakerroin))]
+            (* hintamuutos kattohointakerroin))]
       laskennallinen-hoitovuoden-lopun-kattohinta)
     hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia))
 

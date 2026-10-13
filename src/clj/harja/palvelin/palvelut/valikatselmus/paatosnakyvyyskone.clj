@@ -527,8 +527,7 @@
 
           hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
                                          (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                         (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                         (* hintamuutos-oikaisut (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+                                         (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
