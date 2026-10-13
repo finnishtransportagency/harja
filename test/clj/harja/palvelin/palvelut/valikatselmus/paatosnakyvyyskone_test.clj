@@ -569,12 +569,8 @@
         thv-arvonvahennykset-yht -3400M
         hintamuutos (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
         tavoitehinnan-muutokset (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
-        hoitokauden-lopun-indeksikorjaus 0 #_  33466.62M          ;; Jos indeksikorjausta ei ole tehty, niin tätä ei lisätä, koska se on jo tietokannasta löytyvässä summassa
+        hoitokauden-lopun-indeksikorjaus 0 ;; Jos indeksikorjausta ei ole tehty, niin tätä ei lisätä, koska se on jo tietokannasta löytyvässä summassa
         hoitovuoden-lopun-tavoitehinta (+ (or hoitovuoden-alun-indeksikorjattu-tavoitehinta 0) (or hintamuutos 0) (or hoitokauden-lopun-indeksikorjaus 0))
-        _ (println "hoitovuoden-alun-indeksikorjattu-tavoitehinta" hoitovuoden-alun-indeksikorjattu-tavoitehinta)
-        _ (println "hintamuutos" hintamuutos)
-        _ (println "hoitokauden-lopun-indeksikorjaus" hoitokauden-lopun-indeksikorjaus)
-        _ (println "hoitovuoden-lopun-tavoitehinta" hoitovuoden-lopun-tavoitehinta)
         kattohintakerroin 1.2
         hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-alun-indeksikorjattu-tavoitehinta kattohintakerroin)
         hoitovuoden-lopun-kattohinta (* (+ hoitovuoden-alun-indeksikorjattu-tavoitehinta hintamuutos hoitokauden-lopun-indeksikorjaus) kattohintakerroin)
@@ -599,11 +595,10 @@
         paatos (first (filter #(= (:nimi %) paatos-nimi)
                         (kone/valmistele-hv-lopun-tavoite-ja-kattohinta
                           true urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset hoitovuoden-alun-indeksikorjattu-tavoitehinta
-                          tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
+                          taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
                           hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitokauden-lopun-indeksikorjaus
                           lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset
-                          tavoitehinta-vahvistettu? urakan-parametrit)))
-        _ (println "paatos :: :tavoitehinta_jalkeen" (:tavoitehinta_jalkeen paatos) "erotus" (- hoitovuoden-lopun-tavoitehinta (:tavoitehinta_jalkeen paatos)))]
+                          tavoitehinta-vahvistettu? urakan-parametrit)))]
     (is (= paatos-nimi (:nimi paatos)) )
     (is (= hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta_ennen paatos)) )
     (is (= hoitovuoden-lopun-tavoitehinta (:tavoitehinta_jalkeen paatos)) )
@@ -649,7 +644,7 @@
         paatos (first (filter #(= (:nimi %) paatos-nimi)
                         (kone/valmistele-hv-lopun-tavoite-ja-kattohinta
                           true urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset hoitovuoden-alun-indeksikorjattu-tavoitehinta
-                          tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
+                          taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
                           hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitokauden-lopun-indeksikorjaus
                           lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset
                           tavoitehinta-vahvistettu? urakan-parametrit)))]

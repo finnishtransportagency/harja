@@ -469,7 +469,7 @@
 
 ;; Hoitovuoden lopun tavoite- ja kattohinta
 (defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu
-                                                 tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
+                                                 taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
                                                  hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitovuoden-lopun-indeksikorjaus-summa
                                                  lisaa-hoitokauden-lopun-indeksikorjaus
                                                  tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit]
@@ -509,14 +509,10 @@
                     (conj "Hoitovuosi on kesken."))
 
           hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") mahdolliset-paatokset))
-          ;; Tavoitehinnan oikaisut on -24 asti käytössä.
-          hintamuutos-oikaisut (if tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut)) 0)
           ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset sekä arvonvähennykset
           hintamuutos (if (<= urakan-alkuvuosi 2024)
                         ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset
-                        (if (>= 2026  valittu-hoitovuosi)
-                          (+ hintamuutos-oikaisut thv-arvonvahennykset-yht)
-                          hintamuutos-oikaisut)
+                        (if (>= 2026  valittu-hoitovuosi) thv-arvonvahennykset-yht 0)
                         (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht))
           hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
 
