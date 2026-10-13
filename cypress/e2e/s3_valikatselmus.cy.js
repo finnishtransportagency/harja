@@ -38,7 +38,7 @@ describe('Välikatselmus aukeaa', () => {
         cy.intercept('POST', 'tallenna-tavoitehinnan-oikaisu' ).as('tavoitehinnan-oikaisu')
         cy.intercept('POST', 'poista-tavoitehinnan-oikaisu' ).as('poista-tavoitehinnan-oikaisu')
 
-        cy.viewport(1400, 1400)
+        cy.viewport(1000, 1400)
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
@@ -85,6 +85,10 @@ describe('Välikatselmus aukeaa', () => {
         // Tarkista oikaisun tiedot
         cy.get('[data-cy="luokka-1"]').contains('Tiestömuutokset');
         cy.get('#0selite-1').should('have.value', 'seliseli')
+
+        cy.wait(1000);
+
+        // Tarkista oikaisun tiedot yhteenvedosta
         cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Tavoitehinnan muutokset')
             .find('span').eq(1)
             .invoke('text')
