@@ -18,22 +18,11 @@ const BASE_TIEDOSTOT = ['V1__Perustiedot.sql', 'V1_1__.sql', 'V1_2__kuvaus.sql',
 const lisatty = (nimi) => ({ tila: 'A', polku: `${H}/${nimi}` });
 const muokattu = (nimi) => ({ tila: 'M', polku: `${H}/${nimi}` });
 const poistettu = (nimi) => ({ tila: 'D', polku: `${H}/${nimi}` });
-const nimetty = (vanha, uusi) => ({ tila: 'R100', polku: `${H}/${vanha}`, uusiPolku: `${H}/${uusi}` });
+// git diff --no-renames näyttää uudelleennimeämisen poistona ja lisäyksenä
+const nimetty = (vanha, uusi) => [poistettu(vanha), lisatty(uusi)];
 
-/** Johtaa HEADin tiedostot basesta ja muutoksista ja ajaa analyysin. */
-function aja(muutokset, { base = BASE_TIEDOSTOT, salliV1Muutokset = false } = {}) {
-    const basenTiedostot = base.map((nimi) => `${H}/${nimi}`);
-    const head = new Set(basenTiedostot);
-    for (const { tila, polku, uusiPolku } of muutokset) {
-        if (tila === 'A') head.add(polku);
-        if (tila === 'D') head.delete(polku);
-        if (tila.startsWith('R')) {
-            head.delete(polku);
-            head.add(uusiPolku);
-        }
-    }
-    return analysoi({ muutokset, basenTiedostot, headinTiedostot: [...head], salliV1Muutokset });
-}
+const aja = (muutokset, { base = BASE_TIEDOSTOT, salliV1Muutokset = false } = {}) =>
+    analysoi({ muutokset, basenTiedostot: base.map((nimi) => `${H}/${nimi}`), salliV1Muutokset });
 
 const oletaOk = (tulos) => assert.deepEqual(tulos.virheet, []);
 const oletaVirhe = (tulos, osa) => assert.ok(tulos.virheet.some((v) => v.includes(osa)), JSON.stringify(tulos.virheet));
@@ -74,16 +63,16 @@ describe('analysoi', () => {
     test('basen V1-migraation poisto', () => oletaVirhe(aja([poistettu('V1_2__kuvaus.sql')]), 'poistettu'));
 
     test('basen V1-migraation uudelleennimeäminen', () =>
-        oletaVirhe(aja([nimetty('V1_2__kuvaus.sql', 'V1_2__korjattu.sql')]), 'nimetty uudelleen'));
+        oletaVirhe(aja(nimetty('V1_2__kuvaus.sql', 'V1_2__korjattu.sql')), 'poistettu'));
 
     test('basen V1-migraation uudelleennimeäminen ohituksella', () =>
-        oletaOk(aja([nimetty('V1_2__kuvaus.sql', 'V1_2__korjattu.sql')], { salliV1Muutokset: true })));
+        oletaOk(aja(nimetty('V1_2__kuvaus.sql', 'V1_2__korjattu.sql'), { salliV1Muutokset: true })));
 
     test('basen V1-migraatio siirretty uudeksi versioksi ohituksella', () =>
-        oletaOk(aja([nimetty('V1_2__kuvaus.sql', 'V1_4__siirretty.sql')], { salliV1Muutokset: true })));
+        oletaOk(aja(nimetty('V1_2__kuvaus.sql', 'V1_4__siirretty.sql'), { salliV1Muutokset: true })));
 
     test('basen V1-migraatio siirretty basessa jo olevaan versioon ohituksella', () =>
-        oletaVirhe(aja([nimetty('V1_2__kuvaus.sql', 'V1_3__siirretty.sql')], { salliV1Muutokset: true }), 'Versio 3'));
+        oletaVirhe(aja(nimetty('V1_2__kuvaus.sql', 'V1_3__siirretty.sql'), { salliV1Muutokset: true }), 'Versio 3'));
 
     test('R__-migraation muokkaus, lisäys ja poisto sekä afterMigrate-muokkaus', () =>
         oletaOk(aja([muokattu('R__Toistettava.sql'), lisatty('R__Uusi.sql'), muokattu('afterMigrate.sql')])));
@@ -91,10 +80,10 @@ describe('analysoi', () => {
     test('R__-migraation poisto', () => oletaOk(aja([poistettu('R__Toistettava.sql')])));
 
     test('R__-migraatio nimetty seuraavaksi V1-versioksi', () =>
-        oletaOk(aja([nimetty('R__Toistettava.sql', 'V1_4__vakioitu.sql')])));
+        oletaOk(aja(nimetty('R__Toistettava.sql', 'V1_4__vakioitu.sql'))));
 
     test('R__-migraatio nimetty virheelliseksi', () =>
-        oletaVirhe(aja([nimetty('R__Toistettava.sql', 'V1_04__.sql')]), 'Virheellinen migraatiotiedoston nimi'));
+        oletaVirhe(aja(nimetty('R__Toistettava.sql', 'V1_04__.sql')), 'Virheellinen migraatiotiedoston nimi'));
 
     test('uusi versio alihakemistossa', () => oletaOk(aja([lisatty('alihakemisto/V1_4__.sql')])));
 
@@ -202,11 +191,13 @@ describe('skripti git-repossa', () => {
         assert.match(tuloste, /seuraava vapaa versio on 4/);
     });
 
-    test('uudelleennimeäminen luetaan oikein, ohitus labelilla', (t) => {
+    test('uudelleennimeäminen luetaan poistona ja lisäyksenä, ohitus labelilla', (t) => {
         const repo = alustaRepo(t);
         gitT(repo, 'mv', `${H}/V1_2__kuvaus.sql`, `${H}/V1_2__korjattu.sql`);
         commitoi(repo);
-        assert.equal(ajaSkripti(repo).koodi, 1);
+        const { koodi, tuloste } = ajaSkripti(repo);
+        assert.equal(koodi, 1, tuloste);
+        assert.match(tuloste, /\(poistettu\): '.*V1_2__kuvaus\.sql'/);
         assert.equal(ajaSkripti(repo, { env: { SALLI_V1_MUUTOKSET: 'true' } }).koodi, 0);
     });
 
@@ -222,6 +213,21 @@ describe('skripti git-repossa', () => {
         const { koodi, tuloste } = ajaSkripti(repo);
         assert.equal(koodi, 1, tuloste);
         assert.match(tuloste, /Versio 4/);
+    });
+
+    test('develop edennyt, haaraa ei mergetty (paikallinen ajo)', (t) => {
+        const repo = alustaRepo(t);
+        gitT(repo, 'checkout', '-q', 'develop');
+        lisaa(repo, 'V1_4__developissa.sql');
+        commitoi(repo);
+        gitT(repo, 'checkout', '-q', 'pr');
+        lisaa(repo, 'V1_4__haarassa.sql');
+        commitoi(repo);
+        const { koodi, tuloste } = ajaSkripti(repo);
+        assert.equal(koodi, 1, tuloste);
+        assert.match(tuloste, /Versio 4 on jo käytössä basessa/);
+        // Developissa lisätty tiedosto ei saa näkyä haaran poistona
+        assert.doesNotMatch(tuloste, /poistettu/);
     });
 
     test('basea ei löydy', (t) => {
