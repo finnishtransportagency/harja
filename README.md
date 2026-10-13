@@ -6,7 +6,9 @@
 Projekti on client/server, jossa serveri on Clojure sovellus (http-kit) ja
 client on ClojureScript sovellus, joka käyttää Reagentia, OpenLayersiä ja Bootstrap CSSää.
 
-Tietokantana PostgreSQL PostGIS laajennoksella. Hostaus Solitan infrassa.
+Tietokantana on PostgreSQL PostGIS-laajennoksella. Sovellus ajetaan AWS:n ECS/Fargatessa.
+Buildit, testaus ja julkaisu hoidetaan GitHub Actionsilla. Sovelluskontin toteutus on
+[`aws/fargate/`](aws/fargate)-hakemistossa ja workflow't [`.github/workflows/`](.github/workflows)-hakemistossa.
 
 Autentikointiin käytetään KOKAa.
 
@@ -39,11 +41,12 @@ Autentikointiin käytetään KOKAa.
   * [Debug lokituksen näyttäminen](#debug-lokituksen-näyttäminen)
   * [Tietokanta](#tietokanta-1)
   * [Tieverkon tuonti kantaan](#tieverkon-tuonti-kantaan)
+  * [Laadunseurannan paikalliskäyttö](#laadunseurannan-paikalliskäyttö)
   * [FIM](#fim)
 * [Harvoin tarvittavaa (jos koskaan)](#harvoin-tarvittavaa-jos-koskaan)
   * [Autogeneroi nuolikuvat SVG:nä](#autogeneroi-nuolikuvat-svgnä)
   * [Konvertoi SVG kuvia PNG:ksi](#konvertoi-svg-kuvia-pngksi)
-  * [Lisääminen `.harja` hakemistoon](#lisääminen-harja-hakemistoon-)
+  * [`.harja`-hakemiston ylläpito](#harja-hakemiston-ylläpito)
   * [Lisenssi](#lisenssi)
 <!-- TOC -->
 
@@ -58,7 +61,6 @@ harjaroot
 ├── .harja
 ├── harja
 ├── harja-infra
-├── harja-jenkins
 └── harja-testidata
 ```
 
@@ -90,45 +92,53 @@ Harja repon hakemistorakenne:
   - css/                    (ulkoiset css tiedostot)
   - js/                     (ulkoiset javascript tiedostot)
 
-- .circleci/                (CircleCi konfiguraatio, mm. docker [imaget](.circleci/README.md) käytössä CircleCi ymperistössä)
+- .github/                  (GitHub Actions ja Docker-työkalut)
+  - workflows/              (build-, testaus- ja julkaisu-workflow't)
+  - actions/                (workflow'iden käyttämät composite actionit)
+  - docker/                 (paikallis- ja CI-käytön [imaget ja ohjeet](.github/docker/README.md))
+- aws/fargate/              (AWS:ssä ajettavan sovelluskontin toteutus)
 
 ## Kehitysympäristön pystyttäminen
 
 #### Paikallisesti
 
 1. Asenna Leiningen: http://leiningen.org/ tai `brew install leiningen`
-2. Asenna Docker: www.docker.com/
-3. Laita docker käyntiin sanomalla /harja/tietokanta kansiossa
+2. Asenna Docker ja Docker Compose: https://www.docker.com/
+3. Käynnistä Docker ja aja projektin juuresta:
+  `(cd tietokanta && ./devdb_up.sh)`
+  Skripti alustaa tietokannan migraatioilla ja testidatalla. Tietokannan pitää olla päällä ja alustettu ennen paikallisen buildin tekemistä.
 
-    `sh devdb_up.sh`
-
-4. Asenna tarvittavat työkalut `npm ci`
+4. Asenna tarvittavat työkalut projektin juuressa: `npm ci`
    * Huom: `.npmrc`-tiedosto sisältää `ignore-scripts=true`, joka estää npm lifecycle -skriptien automaattisen ajon (supply chain -suojaus).
    * `npm ci` asentaa package-lock.json tiedostoon jäädytetyt paketit.
    * Mikäli päivität paketin package.jsoniin, aja ```npm install```, ja committoi päivitetty package-lock.json.
-5. Hae harja-testidata repositoriosta (Internal [*1](#*1)) .harja -kansio ja aseta se samaan hakemistoon harjan repositorion kanssa.
+5. Hae `harja-testidata`-repositoriosta ([sisäinen repo *1](#*1)) `.harja`-kansio
+   Harja-repositorion rinnalle hakemistorakenteen esimerkin mukaisesti. Katso myös
+   [`.harja`-hakemiston ylläpito-ohje](#harja-hakemiston-ylläpito).
 6. Siirry harja-projektin juureen. Käännä backend & käynnistä REPL:
 
     `lein do clean, compile, repl`
 
 7. Käännä frontend ja käynnistä Figwheel:
 
-    `sh kaynnista_harja_front_dev.sh`
+    `bash kaynnista_harja_front_dev.sh`
 
     Harjan pitäisi olla käynnissä ja vastata osoitteesta `localhost:3000`
     Jos saat "Ei käyttöoikeutta", tarvitset ModHeader-selainlaajennoksen johon määritellään Harja-käyttäjän roolit. 
     Jos haluat kokeilla ilman Modheaderia tai muuta vastaavaa plugaria, niin voit asettaa env muuttujan `export HARJA_SALLI_OLETUSKAYTTAJA=true`
     ja restartoida backend `lein repl` kommennolla. 
 
-8. Paikallisesti kun ajat Cypress testejä, on syytä asettaa asetukset.edn:ssä HARJA_SALLI_OLETUSKAYTTAJA" true
-Muista myös käynnistää REPL uudestaan, kun muutat asetukset.edn tiedostoa
+8. Salli paikallinen oletuskäyttäjä Cypress-testejä varten: aseta backendin terminaalissa
+   `export HARJA_SALLI_OLETUSKAYTTAJA=true` ja käynnistä REPL uudelleen. Asetus on vain
+   paikalliskäyttöön, ei julkaistaviin ympäristöihin.
 
-9. Kaynnista Cypress e2e testi ympäristö. Kun backend ja frontend ovat päällä, 6., 7. ja 8.
-   askeleiden mukaan, voit käynnistää cypress e2e interaktiivisen ympäristön:
+9. Kun backend ja frontend ovat päällä vaiheiden 6–8 mukaisesti, käynnistä Cypressin
+   interaktiivinen e2e-ympäristö projektin juuresta:
 
-   `sh kaynnista_cypress.sh`
+    `bash kaynnista_cypress.sh`
 
-   Skripti asentaa tarvittaessa npm-riippuvuudet ja Cypressin binäärin automaattisesti.
+    Skripti asentaa tarvittaessa npm-riippuvuudet ja Cypressin binäärin automaattisesti.
+    Testit ovat [`cypress/e2e/`](cypress/e2e)-hakemistossa.
 
 
 # Docker
@@ -191,16 +201,17 @@ jotka löytyvät toisesta Excelistä, mitä ei ole Harjan repossa (ei salasanoja
 
 ## Docker - paikallinen kehitysympäristö
 
-Kannan restart 
+Kannan uudelleenluonti (vanha paikallinen kanta poistetaan ja testidata alustetaan uudelleen).
+Aja projektin juuresta:
 
 ```bash
-sh devdb_restart.sh
+(cd tietokanta && ./devdb_restart.sh)
 ```
 
-Kanta alas 
+Kanta alas projektin juuresta (poistaa paikallisen tietokantakontin):
 
 ```bash
-sh devdb_down.sh
+(cd tietokanta && ./devdb_down.sh)
 ```
 
 Paikallisen kehitysympäristön tarvitsemat palvelut voi käynnistää Dockerilla.
@@ -210,7 +221,7 @@ ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteytt
 Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
 
 * Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
-* ActiveMQ: `cd .github/docker && docker-compose up -d --wait activemq-artemis-itmf`
+* ActiveMQ Artemis: `(cd .github/docker && docker compose up -d --wait activemq-artemis-itmf)` projektin juuresta
 
 Kantaimagen päivitys: docker pull ghcr.io/finnishtransportagency/harja_harjadb:latest
 
@@ -220,15 +231,15 @@ Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen J
 Brokerina käytetään ActiveMQ Artemista.  
 CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös paikallisesti yksikkötestien ajamista varten.
 
-1. Navigoi ```.github/docker/``` kansioon
-2. Aja ```$ docker compose up --wait activemq-artemis-itmf```
+1. Aja seuraavat komennot Harja-projektin juuressa.
+2. Käynnistä broker: `(cd .github/docker && docker compose up -d --wait activemq-artemis-itmf)`
 3. ActiveMQ Artemis on nyt käytettävissä osoitteessa ```tcp://localhost:61616```
     * Web-konsoli on osoitteessa ```http://localhost:8161```
     * Käyttäjätunnus: admin ja salasana: admin
 4. Ajaaksesi integraatiotestit paikallisesti, anna testejä varten oikeat ympäristömuuttujat:  
-   ```$ HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio```
+   `HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio`
 5. Sammuta ActiveMQ Artemis:  
-   ```$ cd .github/docker/ && docker compose down activemq-artemis-itmf```
+   `(cd .github/docker && docker compose down activemq-artemis-itmf)`
 
 **Lisätietoja:**
 * [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
@@ -311,8 +322,9 @@ Halutessaan voi myös nimetä tiedostoja uudelleen, jos koskee johonkin vanhaan 
 
 ## Testaus
 
-Harjassa on kolme eritasoista test-suitea: fronttitestit (phantom), palvelutestit (backend) ja
-e2e testit (erillisessä projektissa). Lisäksi nykyään on myös Cypress:illä tehtyjä e2e-testejä, joita on hyvä suosia. Uusia Selenium-testejä ei kannata enää kirjoitella.
+Harjassa on kolme eritasoista test-suitea: fronttitestit (PhantomJS/doo),
+palvelutestit (backend) ja e2e-testit (Cypress). Cypress-testit ovat tämän repositorion
+[`cypress/e2e/`](cypress/e2e)-hakemistossa. PhantomJS/doo on edelleen käytössä fronttitesteissä, mutta se tullaan poistamaan.
 
 ### Fronttitestit
 
@@ -351,9 +363,13 @@ joka ei pääse.
 
 ### End-to-end testit
 
-End-to-end testit ajetaan harjan testiympäristöä vasten Seleniumilla. Tämän test suiten
-tarkoituksena on tehdä perustason smoke test, joka varmistaa että kaikki osiot latautuvat
-oikein eikä harja räsähdä.
+End-to-end-testit tehdään Cypressillä ja ne sijaitsevat [`cypress/e2e/`](cypress/e2e)-hakemistossa.
+Käynnistä paikallinen tietokanta, backend ja frontend sekä salli oletuskäyttäjä
+[kehitysympäristön ohjeen](#paikallisesti) mukaisesti. Aja sitten projektin juuresta
+`bash kaynnista_cypress.sh` ja valitse ajettavat e2e-testit Cypressin käyttöliittymässä.
+Paikallinen kohdeosoite on `http://localhost:3000`.
+
+Testien tarkoituksena on varmistaa näkymien latautuminen ja keskeisten työnkulkujen toiminta.
 
 Uusille näkymille lisätään testi, jossa näkymään navigoidaan ja tarkistetaan jotain yksinkertaista
 sivun rakenteesta.
@@ -372,14 +388,12 @@ Tietokannan määrittely ja migraatio (SQL tiedostot ja flyway taskit) ovat harj
 
 Replissä: (harja.palvelin.main/with-db db (harja.palvelin.integraatiot.paikkatietojarjestelma.tuonnit.tieverkko/vie-tieverkko-kantaan db "file:/.../harja-testidata/shp/Tieosoiteverkko/PTK_tieosoiteverkko.shp"))
 
-
 ## FIM
 
-Harja käyttää FIM:iä käyttäjätietojen hakemiseen. FIM-komponentista on kaksi eri versiota: FIM ja FIMDEV. FIMDEV on käytössä vain lokaalissa kehitysympäristössä ja se palauttaa aina fim.edn-tiedoston sisällön.
-
-Oikean FIM:n testikäyttö:
-1. Määrittele asetukset.edn:n FIM:n URL:ksi https://localhost:6666/FIMDEV/SimpleREST4FIM/1/Group.svc/getGroupUsersFromEntitity sekä poista :tiedosto avain.
-2. Avaa SSH-yhteys ssh -L6666:testioag.vayla.fi:443 harja-app1-stg
+Harja käyttää FIM:iä käyttäjätietojen hakemiseen. FIM-komponentista on kaksi eri versiota: FIM ja FIMDEV.
+Paikallisessa kehityksessä käytetään FIMDEV:iä: pidä `asetukset.edn`-tiedoston `:fim`-asetuksissa
+`:tiedosto "dev-resources/fim.edn"`. FIMDEV palauttaa aina tämän tiedoston testikäyttäjätiedot,
+eikä paikalliskäyttö tarvitse SSH-tunnelia.
 
 
 # Harvoin tarvittavaa (jos koskaan)
@@ -420,18 +434,23 @@ kun olet hakemistossa, jonka svg kuvat haluat muuntaa:
 
 > for i in *.svg; /Applications/Inkscape.app/Contents/Resources/script --without-gui --export-png=(pwd)/(echo $i | sed 's/\.[^.]*$//').png (pwd)/$i; end
 
-## Lisääminen `.harja` hakemistoon 
+## `.harja`-hakemiston ylläpito
 
-Mahdollinen use case on ulkoisen palvelun lisääminen. Hetkellä `.harja` hakemistossa pidetään esim. palveluiden 
-salasanat. Jos tarvitse lisätä palvelua, ehkä täytyy lisätä myös salasana tiedosto `.harja` hakemistoon. Askeleet: 
-* Tee muutoksia `.harja` hakemistoon, `harja-testidata` Internal [*1](#*1) repossa
-* Päivitä `harja-app` hakemisto, `harja-docker` OnPrem [*1](#*1) repossa. Sieltä löytyvät ohjeet. Muista buildata
-  "harja-app" docker imagen ja pushata `hub.docker.com`:iin.
-* Katso `.circleci` hakemisto `harja` repossa, ja siellä [config.yml](.circleci/config.yml) tiedosto jossa lukee 
-  mitä buildi ja testaukset tekevät. Löydä paikat missä tehdään "dummy" `.harja` hakemisto ja sen sisältö. Sinne 
-  ehkä tarvitse lisätä ne tiedostot mitä haluamme. 
+Paikallinen `asetukset.edn` viittaa Harja-repositorion rinnalla olevaan `.harja`-hakemistoon.
+Siellä säilytetään esimerkiksi integraatioiden paikallisia asetustiedostoja ja placeholder-salasanoja.
 
-<a name="*1">*1</a> Solita-intenal/OnPrem repo - etsi projektin sisäisestä [wikistä](https://knowledge.solita.fi/pages/viewpage.action?pageId=136218429)
+* Hae paikalliskäytön `.harja`-kansio `harja-testidata`-repositoriosta ([sisäinen repo *1](#*1)).
+  Kun lisäät uuden tiedoston, päivitä myös sitä käyttävä paikallinen asetus ja sisäisen repon ohje.
+* GitHub Actionsin testit luovat erillisen `.harja`-hakemiston testiarvoilla ja tyhjillä tiedostoilla.
+  Päivitä tarvittaessa [testi-workflow'n](.github/workflows/reusable_run_app_tests.yml)
+  Cypress-vaiheen tiedostojen luonti. Älä käytä oikeita salasanoja näissä testitiedostoissa.
+* AWS/Fargatessa asetukset ja kaista-aineisto ladataan S3:sta
+  [`entrypoint.sh`](aws/fargate/entrypoint.sh)-skriptillä. Ympäristökohtaiset arvot välitetään
+  ympäristömuuttujilla; paikallista `.harja`-hakemistoa ei julkaista sovelluskontin mukana.
+  Uuden integraation AWS-asetukset pitää päivittää ympäristön konfiguraatioon erikseen.
+
+Älä lisää salaisuuksia mihinkään repositorioon. Salaisuuksien hallintaan käytetään ainoastaan turvallisia
+palveluja ja työkaluja, kuten AWS Secrets manageria.
 
 ## Lisenssi
 https://github.com/finnishtransportagency/harja/blob/develop/LICENSE.txt
