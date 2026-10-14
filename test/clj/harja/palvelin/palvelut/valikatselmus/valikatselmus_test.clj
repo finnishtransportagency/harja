@@ -651,4 +651,11 @@
     ;; Päätös vuodelle 2024 tehty, ei saa muokata
     (is (= false (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2024 :tarjous)))
     ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
-    (is (= true (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2025 :tarjous)))))
+    (is (= true (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2025 :tarjous)))
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2024 :uusi-kustannussuunnitelma)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2025 :uusi-kustannussuunnitelma)))
+
+
+    ))

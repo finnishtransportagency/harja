@@ -1373,9 +1373,10 @@
 
     ;; Jos ominaisuus alkaa olla riippuvainen myös jostain toisesta päätöksestä, niin lisää tuohon settiin lisää avaimia
     (case ominaisuus
-      :tarjous (if (empty? urakan-tehdyt-paatoset)
-                 true
-                 (every? (fn [k] (some #(false? (get % k)) urakan-tehdyt-paatoset)) #{:tavoitehinnan-muutokset}))
+      (:tarjous :uusi-kustannussuunnitelma)
+      (if (empty? urakan-tehdyt-paatoset)
+        true
+        (every? (fn [k] (some #(false? (get % k)) urakan-tehdyt-paatoset)) #{:tavoitehinnan-muutokset}))
       :else true)))
 
 (defn hae-ketjutetusti-kumoutuvat-paatokset
