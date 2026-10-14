@@ -6,13 +6,15 @@
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
+            [harja.palvelin.palvelut.valikatselmus.lukitus :as valikatselmus-lukitus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.pvm :as pvm]))
 
-(defn hae-tarjouksen-tiedot [db user {:keys [urakka-id] :as tiedot}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
-  (apurit/koosta-tarjouksen-tiedot db urakka-id))
+(defn hae-tarjouksen-tiedot [db kayttaja {:keys [urakka-id] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
+  (apurit/koosta-tarjouksen-tiedot db kayttaja urakka-id))
 
 (defn hae-tyhjat-tarjouksen-tiedot
   "Käyttöliittymässä voidaan tyhjätä tarjouslomake, jolloin halutaan
@@ -33,27 +35,35 @@
           urakan-vuodet (map (fn [vuosi]
                                {:vuosi vuosi})
                           (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))) ;; Haetaan kaikki urakan vuodet
-
           ;; Varmistetaan, että ei yritetä tallentaa sellaisen vuoden tietoja, jotka on jo vahvistettu
           vahvistukset (apurit/kustannussuunnitelman-vahvistukset db urakka-id)
           vahvistetut-vuodet (set (map :vuosi (filter :vahvistettu? vahvistukset)))
+          lukitut-vuodet (set (keep
+                                (fn [vuosi]
+                                  (let [lukittu? (not (valikatselmus-palvelu/ominaisuuden-muokkaus-sallittu? db kayttaja urakka-id (:vuosi vuosi) :tarjous))]
+                                    (when lukittu? (:vuosi vuosi))))
+                                urakan-vuodet))
+          lukitut-vuodet (set (map :vuosi (filter true? lukitut-vuodet)))
           kaikki-vahvistettu? (= (count vahvistetut-vuodet) (count urakan-vuodet))
+          kaikki-lukittu? (= (count lukitut-vuodet) (count urakan-vuodet))
 
           ;; Poistetaan sellaiset hoitovuosittaiset arvot, jotka on jo vahvistettu
           tarjous-rivit (reduce (fn [uudet-rivit rivi]
                                   (let [sallitut-hoitovuosittaiset-arvot (filter
-                                                                           #(not (contains? vahvistetut-vuodet (:vuosi %)))
+                                                                           #(and
+                                                                              (not (contains? vahvistetut-vuodet (:vuosi %)))
+                                                                              (not (contains? lukitut-vuodet (:vuosi %))))
                                                                            (:hoitovuosittaiset-arvot rivi))]
                                     (conj uudet-rivit (assoc rivi :hoitovuosittaiset-arvot sallitut-hoitovuosittaiset-arvot))))
                           [] ;; Annetaan tyhjä lista, joka koostetaan sallituista tiedoista
                           (:tarjous tiedot) ;; Otetaan kaikki tarjouksen rivit tarkastettavaksi
                           )
           tiedot (assoc tiedot :tarjous tarjous-rivit) ;; Korvataan tarjouksen rivit sallituilla riveillä
-          _ (when kaikki-vahvistettu?
-              (throw (IllegalArgumentException. (str "Tarjousta ei voi enää muokata, koska kustannussuunitelmat on jo vahvistettu."))))
+          _ (when (or kaikki-vahvistettu? kaikki-lukittu?)
+              (throw (IllegalArgumentException. (str "Tarjousta ei voi enää muokata, koska kaikkien hoitovuosien kustannussuunnitelmat on vahvistettu tai lukittu Välikatselmuksen päätöksellä."))))
           urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
           _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan db urakka-id (:id kayttaja) tiedot vahvistetut-vuodet)]
-      (apurit/koosta-tarjouksen-tiedot db urakka-id))))
+      (apurit/koosta-tarjouksen-tiedot db kayttaja urakka-id))))
 
 (defrecord Tarjous []
   component/Lifecycle
