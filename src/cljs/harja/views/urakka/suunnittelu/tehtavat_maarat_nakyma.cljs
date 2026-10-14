@@ -23,7 +23,7 @@
 
             [harja.views.urakka.valinnat :as urakka-valinnat]))
 
-(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
+(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? lukittu? viimeisin-muokkaus viimeisin-muokkaaja
                              tehtavat-ja-maarat kopioi-tuleville-vuosille? onko-muutoksia?]
   [:div.flex-row {:style {:justify-content "right"}}
    [:div.painikkeet.text-right
@@ -54,7 +54,7 @@
         [:span {:style {:margin-left "1rem"}}
          [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
           #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat true))
-          {:disabled (or tallennus-kesken? false)
+          {:disabled (or tallennus-kesken? lukittu?)
            :luokka "ikoni-16"
            :vayla-tyyli? false
            :ikoni (ikonit/action-copy)
@@ -71,7 +71,7 @@
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
         #(e! (tiedot/->TallennaTehtavat tehtavat-ja-maarat false))
-        {:disabled (or tallennus-kesken? false)}]]
+        {:disabled (or tallennus-kesken? lukittu?)}]]
       [:span
        [napit/yleinen-toissijainen "Peruuta"
         #(e! (tiedot/->PeruutaTallennus))
@@ -82,7 +82,8 @@
        [napit/muokkaa
          "Muokkaa alkuperäisen sopimuksen määriä"
         #(e! (tiedot/->ToggleTallennusTila))
-        {:data-cy "btn-muokkaa-sopimuksen-maaria"}]]])])
+        {:data-cy "btn-muokkaa-sopimuksen-maaria"
+         :disabled lukittu?}]]])])
 
 (defn- avaa-tai-sulje-haitari [event e! valiotsikko]
   (when (dom/enter-nappain? event)
@@ -227,13 +228,20 @@
        tehtavat-ja-maarat])))
 
 (defn nakyma [e! {:keys [haku-kaynnissa? tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-                         tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
+                         tehtavat-ja-maarat avatut-tehtavaryhmat tallentamattomia-muutoksia? haku lukittu?] :as app}]
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
     [:div#vayla
      [:div.row
       [:h1 "Tehtävä ja määräluettelo"]]
+
+     ;; Esimerkki, miten lukituksesta voisi kommunikoida
+     #_ (when lukittu?
+      [yleiset/info-laatikko :varoitus
+       (str "Hoitovuosi " valitun-hoitokauden-alkuvuosi
+         " on lukittu Välikatselmuksen tavoitehinnan muutospäätöksellä.")
+       nil nil {:sulje-nappi-id (gensym)}])
 
      [:div.flex-row {:style {:justify-content "space-between"}}
       [:div.filtteri
@@ -261,13 +269,13 @@
             :taso3 nil})
         {:luokka "klikattava alleviivaa"}]]]
 
-     [tallennus-painikkeet e! tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
+     [tallennus-painikkeet e! tallennus-kesken? tallennustila? lukittu? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
 
      (when tallennustila?
        [:span "Syötä alle urakan tehtävä- ja määräluettelon mukaiset hoitoluokkatiedot ja tehtävämäärät."])
 
-     [tehtava-taulukko e! haku-kaynnissa? tallennustila? tehtavat-ja-maarat avatut-tehtavaryhmat]
+     [tehtava-taulukko e! haku-kaynnissa? (and tallennustila? (not lukittu?)) tehtavat-ja-maarat avatut-tehtavaryhmat]
      [debug/debug app]]))
 
 (defn tehtavat-maarat* [e! _]
