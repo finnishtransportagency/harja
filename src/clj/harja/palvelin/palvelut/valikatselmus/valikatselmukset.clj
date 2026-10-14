@@ -1373,7 +1373,7 @@
 
     ;; Jos ominaisuus alkaa olla riippuvainen myös jostain toisesta päätöksestä, niin lisää tuohon settiin lisää avaimia
     (case ominaisuus
-      (:tarjous :uusi-kustannussuunnitelma)
+      (:tarjous :uusi-kustannussuunnitelma :tehtavat-ja-maarat)
       (if (empty? urakan-tehdyt-paatoset)
         true
         (every? (fn [k] (some #(false? (get % k)) urakan-tehdyt-paatoset)) #{:tavoitehinnan-muutokset}))
