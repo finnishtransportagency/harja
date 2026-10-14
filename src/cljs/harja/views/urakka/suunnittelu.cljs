@@ -35,7 +35,8 @@
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
     :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))) ;; => 2025 alkaen sekä yli 5-vuotisilla
     :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
-    :tarjous (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))))) ;; => 2025 alkaen sekä yli 5-vuotisilla
+    ;; tarjous-välilehti mhu-urakoille: => 2025 alkaen sekä yli 5-vuotisilla, lisäksi vesiväylä-hoito-urakoille
+    :tarjous (or (= tyyppi :vesivayla-hoito) (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
