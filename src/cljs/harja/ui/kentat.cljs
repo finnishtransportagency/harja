@@ -1673,14 +1673,16 @@
                   (and (false? lataa-piirrettaessa-koordinaatit?) (not= @vanha-osoite-atom @uusi-osoite-atom))
                   ;; Lataa koordinaatit, jos koordinaatit puuttuvat
                   (and lataa-piirrettaessa-koordinaatit? (nil? (:coordinates @uusi-osoite-atom))))
-            (tee-tr-haku @uusi-osoite-atom))))
+            (js/setTimeout #(tee-tr-haku @uusi-osoite-atom) 0))))
       (komp/kun-muuttuu
         (fn [{sijainti :sijainti} _]
-          (if-not sijainti
-            (tasot/poista-geometria! :tr-valittu-osoite)
-            (do (reset! alkuperainen-sijainti @sijainti)
-              (vreset! sijainti-atom sijainti)
-              (nayta-kartalla @sijainti)))))
+          (js/setTimeout
+            #(if-not sijainti
+               (tasot/poista-geometria! :tr-valittu-osoite)
+               (do (reset! alkuperainen-sijainti @sijainti)
+                 (vreset! sijainti-atom sijainti)
+                 (nayta-kartalla @sijainti))) 
+            0)))
       (when voi-valita-kartalta?
         (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
                                                    (keskita-kartta! @sijainti-atom))))
