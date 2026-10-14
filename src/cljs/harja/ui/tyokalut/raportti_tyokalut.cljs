@@ -66,7 +66,8 @@
            avattavat-rivit :avattavat-rivit
            sivuttain-rullattava? :sivuttain-rullattava?
            ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?
-           ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?} optiot-vasen]
+           ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?
+           piilota-otsikot? :piilota-otsikot?} optiot-vasen]
       [raportointi/grid
        otsikko
        gridin-luokka
@@ -84,7 +85,9 @@
        sivuttain-rullattava?
        ensimmainen-sarake-sticky?
        ei-footer-muokkauspaneelia?
-       otsikot-vasen rivit-vasen])]
+       piilota-otsikot?
+       otsikot-vasen
+       rivit-vasen])]
    ;; Ei piirretä oikeaa elementtiä, jos sitä ei ole annettu.
    (if otsikko-oikea
      [:div.width-half
@@ -104,9 +107,10 @@
              avattavat-rivit :avattavat-rivit
              sivuttain-rullattava? :sivuttain-rullattava?
              ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?
-             ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?} optiot-oikea]
+             ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?
+             piilota-otsikot? :piilota-otsikot?} optiot-oikea]
         [raportointi/grid
-         otsikko 
+         otsikko
          gridin-luokka
          viimeinen-rivi-yhteenveto?
          rivi-ennen
@@ -122,7 +126,9 @@
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
          ei-footer-muokkauspaneelia?
-         otsikot-oikea rivit-oikea])]
+         piilota-otsikot?
+         otsikot-oikea
+         rivit-oikea])]
      [:div.width-half])])
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_ _]]
