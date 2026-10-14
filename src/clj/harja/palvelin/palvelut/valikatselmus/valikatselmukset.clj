@@ -1355,6 +1355,28 @@
         vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
     vastaus))
 
+(defn ominaisuuden-muokkaus-sallittu?
+  "Sisältää säännöstön ominaisuuksittain, onko ominaisuuden muokkaus sallittu vai ei. Jos ominaisuus on lukittu, palautetaan false.
+  Tukee ominaisuuksia: :tarjous
+  Jos ei tue ominaisuutta, palauttaa aina true."
+  [db kayttaja urakka-id kuluva-hoitovuosi ominaisuus]
+  (let [parametrit {:urakkaid urakka-id :kuluva-hoitovuosi kuluva-hoitovuosi}
+        mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja parametrit)
+        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
+        urakan-tehdyt-paatoset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakka-id kuluva-hoitovuosi)
+        ;; Muokataan tietokannasta haetut päätökset muotoon, jossa on vain päätösavain ja tieto siitä, onko päätös tehty
+        ;; Palauttaa päätösavaimen ja tiedon, onko päätös tehty. Tyyliin -> [{:tavoitehinnan-muutokset true}]
+        urakan-tehdyt-paatoset (map (fn [paatos] {(if (= :tavoitehinnan-pysyvat-muutokset (paatoskone/nimi->avain (:nimi paatos)))
+                                                    :tavoitehinnan-muutokset
+                                                    (paatoskone/nimi->avain (:nimi paatos)))
+                                                  (boolean (:id paatos))}) urakan-tehdyt-paatoset)]
+
+    ;; Jos ominaisuus alkaa olla riippuvainen myös jostain toisesta päätöksestä, niin lisää tuohon settiin lisää avaimia
+    (case ominaisuus
+      :tarjous (if (empty? urakan-tehdyt-paatoset)
+                 true
+                 (every? (fn [k] (some #(false? (get % k)) urakan-tehdyt-paatoset)) #{:tavoitehinnan-muutokset}))
+      :else true)))
 
 (defn hae-ketjutetusti-kumoutuvat-paatokset
   "Syötetään päätös, joka halutaan kumota.

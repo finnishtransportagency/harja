@@ -3,7 +3,8 @@
   (:require [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
-            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]))
+            [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]))
 
 
 (defn jasenna-tallennettavat-vuodet
@@ -47,11 +48,23 @@
     vahvistukset))
 
 
-(defn koosta-tarjouksen-tiedot [db urakka-id]
+(defn koosta-tarjouksen-tiedot [db kayttaja urakka-id]
   (let [urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
+        urakan-tiedot (first (urakat-kyselyt/hae-urakan-tiedot db urakka-id))
+        urakan-vuodet (map (fn [vuosi]
+                             {:vuosi vuosi})
+                        (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot)))) ;; Haetaan kaikki urakan vuodet
         tarjous (luo-oletusrivit-puuttuviin-osioihin (tarjous-kyselyt/hae-tarjous db urakka-id))
-        vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)]
+        vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)
+        lukitut-vuodet (set (keep
+                              (fn [vuosi]
+                                (let [lukittu? (not (valikatselmus-palvelu/ominaisuuden-muokkaus-sallittu? db kayttaja urakka-id (:vuosi vuosi) :tarjous))]
+                                  (when lukittu? (:vuosi vuosi))))
+                              urakan-vuodet))
+        lukitut-vuodet (set (map :vuosi (filter true? lukitut-vuodet)))
+        vahvistetut-vuodet (into #{} (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset))))]
     (-> tarjous
       (assoc :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit))
-      (assoc :vahvistetut-vuodet (into #{}
-                                   (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset))))))))
+      (assoc :vahvistetut-vuodet (clojure.set/union
+                                   lukitut-vuodet
+                                   vahvistetut-vuodet)))))

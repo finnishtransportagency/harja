@@ -635,3 +635,20 @@
               "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
           (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
               "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
+
+(deftest ominaisuuden-muokkaus-sallittu?-toimii
+  (let [db (:db jarjestelma)
+        urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        kayttaja-id (:id +kayttaja-tero+)
+        vanhan-paatoksen-luonti (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
+                                  db {:urakkaid urakka-id
+                                      :hoitokauden_alkuvuosi 2024
+                                      :tavoitehinta 1
+                                      :kattohinta 1
+                                      :muokkaa_kattohinta false
+                                      :luoja kayttaja-id}
+                                  kayttaja-id)]
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2024 :tarjous)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmukset/ominaisuuden-muokkaus-sallittu? db +kayttaja-tero+ urakka-id 2025 :tarjous)))))
