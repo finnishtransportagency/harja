@@ -102,6 +102,9 @@ SELECT sp.id                    AS profiili_id,
        COALESCE((SELECT JSONB_AGG(JSONB_BUILD_OBJECT('maaritystapa', sprsm.maaritystapa,
                                                      'summa_euroina', sprsm.summa_euroina,
                                                      'ohjeteksti', sprsm.ohjeteksti,
+                                                     'laskentatapa', sprsm.laskentatapa,
+                                                     'laskentaversio', sprsm.laskentaversio,
+                                                     'laskentaparametrit', sprsm.laskentaparametrit,
                                                      'jarjestys', sprsm.jarjestys)
                                  ORDER BY sprsm.jarjestys)
                    FROM sanktio_profiili_rivi_summamaaritys sprsm
@@ -158,6 +161,9 @@ SELECT sp.id                    AS profiili_id,
        COALESCE((SELECT JSONB_AGG(JSONB_BUILD_OBJECT('maaritystapa', sprsm.maaritystapa,
                                                      'summa_euroina', sprsm.summa_euroina,
                                                      'ohjeteksti', sprsm.ohjeteksti,
+                                                     'laskentatapa', sprsm.laskentatapa,
+                                                     'laskentaversio', sprsm.laskentaversio,
+                                                     'laskentaparametrit', sprsm.laskentaparametrit,
                                                      'jarjestys', sprsm.jarjestys)
                                  ORDER BY sprsm.jarjestys)
                    FROM sanktio_profiili_rivi_summamaaritys sprsm

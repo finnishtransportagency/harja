@@ -1,5 +1,7 @@
 (ns harja.kyselyt.sanktio-konfiguraatio
-  (:require [clojure.string :as str]
+  (:require [clojure.spec.alpha :as s]
+            [clojure.string :as str]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.kyselyt.konversio :as konv]
             [jeesql.core :refer [defqueries]]))
 
@@ -44,12 +46,48 @@
       (str/replace "_" "-")
       keyword)))
 
+(defn- tyyppi-tekstina
+  [arvo]
+  (if (nil? arvo) "nil" (.getName (class arvo))))
+
+(defn- laskentatapa-avaimeksi
+  [arvo]
+  (when (string? arvo)
+    (normalisoi-maaritystapa arvo)))
+
+(defn- vaadi-laskettu-summamaaritys
+  "Validoi tietokannasta luetun laskettu-määrityksen muodon ennen sen käyttöä. Heittää virheen kentän nimellä."
+  [{:keys [laskentatapa laskentaversio laskentaparametrit]} raaka-laskentatapa]
+  (when-not (contains? sanktion-laskenta/laskentatavat laskentatapa)
+    (throw (IllegalStateException.
+             (str "Kenttä laskentatapa on virheellinen: odotettu jokin arvoista "
+               (sort sanktion-laskenta/laskentatavat) ", saatu " (pr-str raaka-laskentatapa)
+               " (tyyppi " (tyyppi-tekstina raaka-laskentatapa) ")."))))
+  (when-not (s/valid? (sanktion-laskenta/laskentatavan-parametrit-spec laskentatapa) laskentaparametrit)
+    (throw (IllegalStateException.
+             (str "Kenttä laskentaparametrit on virheellinen: odotettu laskentatavan " (name laskentatapa)
+               " mukainen parametrimap, saatu " (pr-str laskentaparametrit)
+               " (tyyppi " (tyyppi-tekstina laskentaparametrit) ")."))))
+  (when-not (s/valid? ::sanktion-laskenta/laskentaversio laskentaversio)
+    (throw (IllegalStateException.
+             (str "Kenttä laskentaversio on virheellinen: odotettu positiivinen kokonaisluku, saatu "
+               (pr-str laskentaversio) " (tyyppi " (tyyppi-tekstina laskentaversio) ").")))))
+
 (defn- normalisoi-summamaaritys
-  [summamaaritys]
-  {:maaritystapa (normalisoi-maaritystapa (:maaritystapa summamaaritys))
-   :summa-euroina (normalisoi-euromaara (:summa_euroina summamaaritys))
-   :ohjeteksti (:ohjeteksti summamaaritys)
-   :jarjestys (:jarjestys summamaaritys)})
+  [{:keys [laskentaversio laskentaparametrit] :as summamaaritys}]
+  (let [maaritystapa (normalisoi-maaritystapa (:maaritystapa summamaaritys))
+        perusrivi {:maaritystapa maaritystapa
+                   :summa-euroina (normalisoi-euromaara (:summa_euroina summamaaritys))
+                   :ohjeteksti (:ohjeteksti summamaaritys)
+                   :jarjestys (:jarjestys summamaaritys)}]
+    (if (= :laskettu maaritystapa)
+      (let [laskentatapa (laskentatapa-avaimeksi (:laskentatapa summamaaritys))
+            laskettu {:laskentatapa laskentatapa
+                      :laskentaversio laskentaversio
+                      :laskentaparametrit laskentaparametrit}]
+        (vaadi-laskettu-summamaaritys laskettu (:laskentatapa summamaaritys))
+        (merge perusrivi laskettu))
+      perusrivi)))
 
 (defn- normalisoi-summamaaritykset
   [summamaaritykset]

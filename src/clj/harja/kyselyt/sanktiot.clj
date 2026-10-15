@@ -9,6 +9,14 @@
   paivita-sanktio! hae-suorasanktion-tiedot poista-sanktio!)
 
 ;; Käytössä jeesql:ssä
+(defn muunna-suorasanktion-tiedot
+  "Muuntaa laskennan snapshotin JSONB:stä clojuremapiksi. Vain laskettavilla sanktioilla on snapshot;
+  muiden rivien muoto säilyy ennallaan."
+  [rivi]
+  (let [rivi (konv/muunna rivi [:laskennan-syote] konv/jsonb->clojuremap)]
+    (if (nil? (:laskennan-syote rivi)) (dissoc rivi :laskennan-syote) rivi)))
+
+;; Käytössä jeesql:ssä
 (defn muunna-urakan-sanktio
   "Muuntaa hae-urakan-sanktiot rivien tyypit"
   [rivi]
@@ -24,6 +32,7 @@
       :maaraystapa
       :vakiofraasi)
     (konv/decimal->double :summa :indeksikorjaus)
+    muunna-suorasanktion-tiedot
     ;; Muunna timestampit java-date:ksi
     (konv/muunna [:kasittelyaika :maarattypvm :laatupoikkeama_aika :laatupoikkeama_paatos_kasittelyaika] konv/java-date)
     (update :laatupoikkeama_sijainti #(when % (geo/pg->clj %)))))

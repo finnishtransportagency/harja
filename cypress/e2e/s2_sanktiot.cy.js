@@ -193,6 +193,54 @@ describe('Sanktion summa näkyy tallennuksen jälkeen MHU26:ssa', function () {
     })
 })
 
+describe('MHU26 laskettava sanktio', function () {
+    const testiSanktioKuvausMhu26Laskettu = "CY-MHU26-laskettava-sanktio";
+
+    before(function () {
+        siivoaSanktiotKannasta(testiSanktioKuvausMhu26Laskettu);
+    });
+
+    after(function () {
+        siivoaSanktiotKannasta(testiSanktioKuvausMhu26Laskettu);
+    });
+
+    it('laskee tiekilometreistä lukitun sanktion ja tallentaa sen', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu26, evkLappi)
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26Laskettu')
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Työn tekemättä jättäminen'})
+        cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Tekematon sohjo-ojan ja lumivallin madallus'})
+
+        cy.contains('label', 'Tapahtumapaikka/kuvaus').closest('.form-group').find('input').first()
+            .clear().type(testiSanktioKuvausMhu26Laskettu)
+        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first()
+            .clear().type('02.10.2026')
+        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first()
+            .clear().type('02.10.2026')
+        cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default')
+            .valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
+
+        cy.get('[data-cy="sanktio-laskettava-syote"]')
+            .clear().type('12,5')
+        cy.get('label').contains('Sanktion suuruus').closest('.form-group').within(() => {
+            cy.get('input').should('not.exist')
+            cy.get('.lomake-arvo').invoke('text').should('match', /2\s?500/)
+        })
+
+        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.wait('@tallennaMhu26Laskettu', {timeout: clickTimeout}).then(({response}) => {
+            expect(response && response.statusCode, JSON.stringify(response && response.body)).to.be.within(200, 299)
+        })
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout})
+            .should('be.visible').and('contain.text', 'Sanktion tallennus onnistui')
+    })
+})
+
 describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', function () {
     const testiSanktioKuvausMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi";
     const testiSanktioPerusteluMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi-perustelu";
