@@ -2,13 +2,13 @@
 -- Tallentaa uuden liitteen. Liitteen pitää olla tallennettuna jo ja s3 hash annettava.
 INSERT
   INTO liite
-       (nimi, tyyppi, koko, liite_oid, s3hash, pikkukuva, luoja, luotu, urakka, kuvaus, lahde, "virustarkastettu?")
+       (nimi, tyyppi, koko, liite_oid, s3hash, pikkukuva, luoja, luotu, urakka, kuvaus, lahde, "virustarkastettu?", ulkoinen_id)
 VALUES (:nimi, :tyyppi, :koko, :liite_oid, :s3hash, :pikkukuva, :luoja, current_timestamp, :urakka,
-        :kuvaus, :lahdejarjestelma::lahde, :virustarkastettu?);
+        :kuvaus, :lahdejarjestelma::lahde, :virustarkastettu?, :ulkoinen_id);
 
 -- name: hae-liite-lataukseen
 -- Hakee liitteen tiedot sen latausta varten.
-SELECT liite_oid, s3hash, tyyppi, koko, urakka, "virustarkastettu?" FROM liite WHERE id = :id;
+SELECT liite_oid, s3hash, tyyppi, koko, urakka, "virustarkastettu?" FROM liite WHERE id = :id AND poistettu IS NOT TRUE;
 
 -- name: hae-siltatarkastusliite-lataukseen
 -- Siltatarkastuksen liitteet pitää pystyä lataamaan, jos käyttäjällä on oikeus yhteenkään sillan urakoihin.
@@ -17,18 +17,31 @@ FROM liite l
          JOIN siltatarkastus_kohde_liite stkl ON l.id = stkl.liite
          JOIN siltatarkastus st ON stkl.siltatarkastus = st.id
          JOIN silta s ON st.silta = s.id
-WHERE l.id = :id;
+WHERE l.id = :id
+  AND l.poistettu IS NOT TRUE;
 
 -- name: hae-pikkukuva-lataukseen
 -- Hakee liitteen pikkukuvan sen latausta varten.
-SELECT pikkukuva, urakka, "virustarkastettu?" FROM liite WHERE id = :id;
+SELECT pikkukuva, urakka, "virustarkastettu?" FROM liite WHERE id = :id AND poistettu IS NOT TRUE;
 
 
 -- name: hae-urakan-liite-id
 -- Hakee liitteen id:llä ja urakalla liitteen. Tätä on tarkoitus käyttää
 -- varmistamaan, että käyttäjän antama liitteen id kuuluu oikeaan urakkaan
 -- eikä liite id:tä manipuloimalla pääse käsiksi väärän urakan tietoihin.
-SELECT id FROM liite WHERE urakka = :urakka AND id = :id;
+SELECT id FROM liite WHERE urakka = :urakka AND id = :id AND poistettu IS NOT TRUE;
+
+-- name: merkitse-liite-poistetuksi!
+-- Merkitsee API:n kautta vastaanotetun liitteen poistetuksi.
+UPDATE liite
+SET poistettu = TRUE,
+    poistaja = :kayttaja,
+    muokkaaja = :kayttaja,
+    muokattu = CURRENT_TIMESTAMP
+WHERE urakka = :urakka
+  AND lahde = :lahdejarjestelma::lahde
+  AND ulkoinen_id = :ulkoinen_id
+  AND poistettu IS NOT TRUE;
 
 -- name: poista-laatupoikkeaman-kommentin-liite!
 UPDATE kommentti
@@ -58,7 +71,8 @@ WHERE id IN (
 SELECT nimi, koko FROM liite l
  WHERE l.nimi = :nimi
    AND l.urakka = :urakka-id
-   AND l.koko = :koko;
+   AND l.koko = :koko
+   AND l.poistettu IS NOT TRUE;
 
 -- name: merkitse-liite-virustarkistetuksi!
 -- Merkitsee annetulle s3hash arvolle liitteen virustarkistetuksi.

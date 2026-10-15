@@ -10,6 +10,8 @@
 
 (def +liitteen-lahetys+ "api/schemas/liitteen-lahetys-request.schema.json")
 (def liitteen-lahetys (tee-validaattori +liitteen-lahetys+))
+(def +liitteen-poisto+ "api/schemas/liitteen-poisto-request.schema.json")
+(def liitteen-poisto (tee-validaattori +liitteen-poisto+))
 
 (def +urakan-haku-vastaus+ "api/schemas/urakan-haku-response.schema.json")
 (def urakan-haku-vastaus (tee-validaattori "api/schemas/urakan-haku-response.schema.json"))

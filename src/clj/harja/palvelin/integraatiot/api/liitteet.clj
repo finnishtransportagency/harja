@@ -1,12 +1,13 @@
 (ns harja.palvelin.integraatiot.api.liitteet
   (:require [com.stuartsierra.component :as component]
-            [compojure.core :refer [POST]]
+            [compojure.core :refer [POST DELETE]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :as liite-tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.kyselyt.liitteet :as liitteet-q]
             [harja.kyselyt.siltatarkastukset :as silta-q]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as siltatarkastukset]
             [clojure.java.jdbc :as jdbc]
@@ -18,12 +19,12 @@
                       :viesti viesti}]}))
 
 (defn- tallenna-siltatarkastuskohteen-liitteet
-  [{id :id} {:keys [liite-taydennys]} kayttaja db liitteiden-hallinta]
+  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
   (let [urakka-id (Integer/parseInt id)
-        ulkoinen-id (str (get-in liite-taydennys [:kategoria-tunniste :id]))
-        kohde (get liite-taydennys :siltatarkastuskohde)
+        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
+        kohde (get liite-lahetys :siltatarkastuskohde)
         kohde-id (get siltatarkastukset/api-kohde->numero kohde)
-        liite (:liite liite-taydennys)]
+        liite (:liite liite-lahetys)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (when-not kohde
       (heita-liitevirhe "Siltatarkastuksen kohde puuttuu"))
@@ -44,12 +45,22 @@
           [{:liite liite}]))
       (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
 
+(defn- poista-liite [parametrit data kayttaja db]
+  (let [urakka-id (Integer/parseInt (:id parametrit))
+        ulkoinen-id (str (get-in data [:liite-poisto :tunniste :id]))]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (liitteet-q/merkitse-liite-poistetuksi! db {:urakka urakka-id
+                                                :ulkoinen-id ulkoinen-id
+                                                :lahdejarjestelma "harja-api"
+                                       :kayttaja (:id kayttaja)})
+    (tee-kirjausvastauksen-body {:ilmoitukset "Liite poistettu onnistuneesti"})))
+
 (defn vastaanota-liite [parametrit data kayttaja db liitteiden-hallinta]
-  (let [kategoria (get-in data [:liite-taydennys :kategoria])]
-    (if (= "siltatarkastuskohde" kategoria)
+  (let [kohdeluokka (get-in data [:liite-lahetys :kohdeluokka])]
+    (if (= "siltatarkastuskohde" kohdeluokka)
       (tallenna-siltatarkastuskohteen-liitteet
         parametrit data kayttaja db liitteiden-hallinta)
-      (heita-liitevirhe (format "Liitteen kategoriaa ei vielä tueta: %s" kategoria)))))
+      (heita-liitevirhe (format "Liitteen kohdeluokkaa ei vielä tueta: %s" kohdeluokka)))))
 
 (defrecord Liitteet []
   component/Lifecycle
@@ -62,8 +73,16 @@
           (fn [parametrit data kayttaja db]
             (vastaanota-liite parametrit data kayttaja db liitteiden-hallinta))
           :kirjoitus)))
+    (julkaise-reitti
+      http :api-poista-liite
+      (DELETE "/api/urakat/:id/liite" request
+        (kasittele-kutsu db integraatioloki :poista-liite request
+          json-skeemat/liitteen-poisto json-skeemat/kirjausvastaus
+          (fn [parametrit data kayttaja db]
+            (poista-liite parametrit data kayttaja db))
+          :kirjoitus)))
     this)
 
   (stop [{http :http-palvelin :as this}]
-    (poista-palvelut http :api-vastaanota-liite)
+    (poista-palvelut http :api-vastaanota-liite :api-poista-liite)
     this))

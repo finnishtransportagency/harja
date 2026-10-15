@@ -51,7 +51,8 @@
             data (dekoodaa-base64 (:sisalto liite))
             koko (alength data)
             kuvaus (:kuvaus liite)
-            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data kuvaus "harja-api"))]
+            ulkoinen-id (some-> liite :tunniste :id str)
+            liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data kuvaus "harja-api" ulkoinen-id))]
         (liite-luotu-fn liite-id)))))
 
 (defn tallenna-liitteet-laatupoikkeamalle [db liitteiden-hallinta urakan-id laatupoikkeama-id kirjaaja liitteet]
