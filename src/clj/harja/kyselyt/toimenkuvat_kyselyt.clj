@@ -16,7 +16,9 @@
   [toimenkuva-nimike]
   (case (str/lower-case toimenkuva-nimike)
     "valmistelukausi ennen urakka-ajan alkua" 0
+    "sopimusvastaava (ennen urakka-ajan alkua)" 0
     "sopimusvastaava" 1
+    "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" 1
     "vastuunalainen työnjohtaja" 2
     "2. työnjohtaja" 3
     "3. työnjohtaja" 4
@@ -28,5 +30,6 @@
     "apulainen/työnjohtaja (kesäkausi)" 8
     "viherhoidosta vastaava henkilö" 9
     "hankintavastaava" 10
+    "työnjohtoharjoittelija" 11
     "harjoittelija" 11
     99)) ;; Muu toimenkuva, joka ei ole listassa

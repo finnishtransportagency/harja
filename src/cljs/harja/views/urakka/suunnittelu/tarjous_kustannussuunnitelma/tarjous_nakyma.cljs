@@ -89,14 +89,29 @@
                                              (merge rivi
                                                {:muokattava? (fn [rivi _]
                                                                (let [rivi-vuosi (if (> (count urakan-vuodet) index) (nth urakan-vuodet index) (first urakan-vuodet))
+                                                                     rajoitetusti-muokattavat-toimenkuvat #{"Valmistelukausi ennen urakka-ajan alkua"
+                                                                                                            "Sopimusvastaava (ennen urakka-ajan alkua)"
+                                                                                                            "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)"}
                                                                      salli-muokkaus? (cond
-                                                                                       ;; Valmistelukausi ennen urakka-ajan alkua on sallittu muokata vain, jos se on ensimmäinen vuosi ja kyseistä vuotta ei ole vahvistettu
-                                                                                       (and (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua") (= 0 index)) (if (not (contains? vahvistetut-vuodet rivi-vuosi)) true false)
-                                                                                       ;; Valmistelukautta ei saa muokata muulloin
-                                                                                       (and (>= index 1) (= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua")) false
-                                                                                       ;; Kaikissa muissa tapauksissa saa muokata, jos vuotta ei ole vahvistettu
-                                                                                       (not= (:nimi rivi) "Valmistelukausi ennen urakka-ajan alkua") (if (not (contains? vahvistetut-vuodet rivi-vuosi)) true false)
-                                                                                       :else false)]
+                                                                                       ;; Rajoitetusti muokattavat toimenkuvat ovat muokattavissa
+                                                                                       ;; vain ensimmäisenä vuotena, jos vuotta ei ole vahvistettu.
+                                                                                       (and (contains? rajoitetusti-muokattavat-toimenkuvat (:nimi rivi))
+                                                                                         (= 0 index))
+                                                                                       (not (contains? vahvistetut-vuodet rivi-vuosi))
+
+                                                                                       ;; Rajoitetusti muokattavia toimenkuvia ei voi muokata
+                                                                                       ;; ensimmäisen vuoden jälkeen.
+                                                                                       (and (>= index 1)
+                                                                                         (contains? rajoitetusti-muokattavat-toimenkuvat (:nimi rivi)))
+                                                                                       false
+
+                                                                                       ;; Muut toimenkuvat ovat muokattavissa,
+                                                                                       ;; jos kyseistä vuotta ei ole vahvistettu.
+                                                                                       (not (contains? rajoitetusti-muokattavat-toimenkuvat (:nimi rivi)))
+                                                                                       (not (contains? vahvistetut-vuodet rivi-vuosi))
+
+                                                                                       :else
+                                                                                       false)]
                                                                  salli-muokkaus?))}))
                                 vuositaulukon-otsikot)
 
@@ -187,7 +202,12 @@
                             vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
-                 :muokattava? (fn [rivi arvo] (if (and (= -1 (:id rivi)) (seq muut-toimenkuvat)) true false))}
+                 :muokattava? (fn [rivi arvo] (if (or (and (not= "Sopimusvastaava (ennen urakka-ajan alkua)" (:nimi rivi))
+                                                        (not= "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:nimi rivi))
+                                                        (seq muut-toimenkuvat))
+                                                      (and (= -1 (:id rivi))
+                                                        (seq muut-toimenkuvat)))
+                                                true false))}
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
@@ -211,10 +231,12 @@
                  :muokattava? (fn [rivi]
                                 (if (and
                                       (not= "Valmistelukausi ennen urakka-ajan alkua" (:nimi rivi))
+                                      (not= "Sopimusvastaava (ennen urakka-ajan alkua)" (:nimi rivi))
+                                      (not= "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:nimi rivi))
                                       (seq muut-toimenkuvat))
                                   true false))})]
-       [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa
-        (if (>= urakan-alkuvuosi 2025)
+       [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa sekä vesiväylä-hoito-tyyppisissä urakoissa.
+        (if (or (>= urakan-alkuvuosi 2025) vesivayla-hoito?)
           {:otsikko ""
            :tyyppi :komponentti
            :komponentti (fn [rivi]
@@ -456,11 +478,13 @@
         vuosi-leveys (if (> hoitokausien-maara 0)
                        (/ (- 100 nimi-leveys yhteensa-leveys) hoitokausien-maara)
                        10)
+        vesivayla-hoito? (= :vesivayla-hoito
+                           (-> @tila/yleiset :urakka :tyyppi))
 
         ;; Muodostetaan otsikot hoitovuosittaiset-arvot perusteella
         vuositaulukon-otsikot (map-indexed
                                 (fn [index vuosi-rivi]
-                                  {:otsikko (str (inc index) ". Hoitovuosi " (:vuosi vuosi-rivi) " - " (inc (:vuosi vuosi-rivi)) " (€)")
+                                  {:otsikko (str (inc index) (if vesivayla-hoito? ". urakkavuosi " ". Hoitovuosi ") (:vuosi vuosi-rivi) " - " (inc (:vuosi vuosi-rivi)) " (€)")
                                    :nimi (keyword (str "vuosi-" (:vuosi vuosi-rivi)))
                                    :tyyppi :euro
                                    :fmt (partial fmt/euro-opt false)
@@ -469,9 +493,7 @@
                                    :muokattava? (if (contains? vahvistetut-vuodet (:vuosi vuosi-rivi))
                                                   (constantly false)
                                                   (constantly true))})
-                                hoitovuosittaiset-arvot)
-        vesivayla-hoito? (= :vesivayla-hoito
-                           (-> @tila/yleiset :urakka :tyyppi))]
+                                hoitovuosittaiset-arvot)]
     [:div
      [:hr]
      ;; Custom toteutus - Tallennusnapit on taulukon yläpuolella

@@ -103,7 +103,9 @@
                                 :toimenkuva-id (:id toimenkuva)
                                 :osio "johto-ja-hallintokorvaus"
                                 ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
-                                :hoitovuosittaiset-arvot (if (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                :hoitovuosittaiset-arvot (if (or (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                                               (= "sopimusvastaava (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))
+                                                               (= "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))) #_(= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
                                                            [(first hoitovuosittaiset-arvot)] hoitovuosittaiset-arvot))))
                       toimenkuvat)
         toimenkuvat (sort-by :jarjestys toimenkuvat)]
