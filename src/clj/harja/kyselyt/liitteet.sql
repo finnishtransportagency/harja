@@ -38,7 +38,7 @@ SET poistettu = TRUE,
     muokkaaja = :kayttaja,
     muokattu = CURRENT_TIMESTAMP
 WHERE urakka = :urakka
-  AND lahde = :lahdejarjestelma::lahde
+  AND luoja = :kayttaja
   AND ulkoinen_id = :ulkoinen_id
   AND poistettu IS NOT TRUE;
 

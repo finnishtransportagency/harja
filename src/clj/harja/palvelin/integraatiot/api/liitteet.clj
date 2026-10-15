@@ -51,8 +51,7 @@
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (liitteet-q/merkitse-liite-poistetuksi! db {:urakka urakka-id
                                                 :ulkoinen-id ulkoinen-id
-                                                :lahdejarjestelma "harja-api"
-                                       :kayttaja (:id kayttaja)})
+                                                :kayttaja (:id kayttaja)})
     (tee-kirjausvastauksen-body {:ilmoitukset "Liite poistettu onnistuneesti"})))
 
 (defn vastaanota-liite [parametrit data kayttaja db liitteiden-hallinta]

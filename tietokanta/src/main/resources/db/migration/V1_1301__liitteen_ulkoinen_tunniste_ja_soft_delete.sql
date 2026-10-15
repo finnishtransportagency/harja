@@ -4,6 +4,6 @@ ALTER TABLE liite
     ADD COLUMN muokkaaja INTEGER REFERENCES kayttaja (id),
     ADD COLUMN muokattu TIMESTAMP;
 
-CREATE INDEX liite_urakka_ulkoinen_id_idx
-    ON liite (urakka, lahde, ulkoinen_id)
+CREATE UNIQUE INDEX liite_urakka_luoja_ulkoinen_id_idx
+    ON liite (urakka, luoja, ulkoinen_id)
     WHERE poistettu IS NOT TRUE;
