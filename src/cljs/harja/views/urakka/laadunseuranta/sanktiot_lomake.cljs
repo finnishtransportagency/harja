@@ -417,6 +417,17 @@
             :tyyppi :text :koko [80 3]
             :validoi [[:ei-tyhja "Anna perustelu"]]})
 
+         (when omailmoitus-sallittu?
+           {:otsikko ""
+            :nimi :omailmoitettu
+            :tyyppi :checkbox
+            :uusi-rivi? true
+            :label-luokka "fontti-12"
+            ::lomake/col-luokka "col-xs-12"
+            :hae :omailmoitettu
+            :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
+            :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"})
+
          ;; Kun sanktiolajina on "Laskutusrajan ylitys" niin näytetään "Ylityksen määrä" -kenttä
          (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
            {:otsikko "Ylityksen määrä (€)"
@@ -442,36 +453,6 @@
             ::lomake/col-luokka "col-xs-8"
             :hae #(when (:summa %) (Math/abs (:summa %)))
             :pakollinen? true :uusi-rivi? true})
-
-         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
-         (when (or
-                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
-                 (and (sanktio-domain/muistutus? @muokattu)
-                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
-                                "Liikenneympäristön hoito"
-                                "Sorateiden hoito ja ylläpito"
-                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
-           (if (and (not mhu25?) (not lukutila?))
-             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
-              :pakollinen? true
-              :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
-                           (and (> urakan-alkuvuosi 2024)
-                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
-              ::lomake/col-luokka "col-xs-12"
-              :nimi :toimenpideinstanssi
-              :tyyppi :valinta
-              :valinta-arvo :tpi_id
-              :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-              :valinnat mahdolliset-kulun-kohdistukset
-              :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
-
-             ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])))
-              :tyyppi :string
-              :nimi :toimenpideinstanssi
-              :muokattava? (constantly false)
-              ::lomake/col-luokka "col-xs-12"
-              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
 
          (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
            (keep identity [(when laskettu-maaritys
@@ -526,15 +507,6 @@
                               :validoi [[:ei-tyhja "Anna summa"]
                                         [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
-                           (when omailmoitus-sallittu?
-                             {:otsikko "Urakoitsijan omailmoitus"
-                              :nimi :omailmoitettu
-                              :tyyppi :checkbox
-                              :uusi-rivi? true
-                              :hae :omailmoitettu
-                              :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
-                              :selite "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"})
-
                            ;; MHU21-> urakoille ei näytetä indeksiä
                            (when (and (<= urakan-alkuvuosi 2020) (sanktio-domain/muu-kuin-muistutus? @muokattu))
                              {:otsikko (str "Indeksi") :nimi :indeksi
@@ -547,6 +519,36 @@
                                           [(:indeksi @nav/valittu-urakka) nil]
                                           [nil])
                               :valinta-nayta #(or % "Ei indeksiä")})]))
+
+         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
+         (when (or
+                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
+                 (and (sanktio-domain/muistutus? @muokattu)
+                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
+                                "Liikenneympäristön hoito"
+                                "Sorateiden hoito ja ylläpito"
+                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
+           (if (and (not mhu25?) (not lukutila?))
+             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
+              :pakollinen? true
+              :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
+                           (and (> urakan-alkuvuosi 2024)
+                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
+              ::lomake/col-luokka "col-xs-12"
+              :nimi :toimenpideinstanssi
+              :tyyppi :valinta
+              :valinta-arvo :tpi_id
+              :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+              :valinnat mahdolliset-kulun-kohdistukset
+              :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+
+             ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
+             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])))
+              :tyyppi :string
+              :nimi :toimenpideinstanssi
+              :muokattava? (constantly false)
+              ::lomake/col-luokka "col-xs-12"
+              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
 
          (lomake/ryhma {:rivi? true}
            (when-not laskutus-ilman-laskutuskelpoisuutta?
