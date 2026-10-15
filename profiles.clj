@@ -85,11 +85,7 @@
                        :timeout 120000
                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
  ;; Test-dependencyt, joita ei tarvita dev-profiilissa
- :test {:dependencies [
-                       ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
-                       #_[clj-webdriver "0.7.2"]
-                       #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}
+ :test {:dependencies []}
 
  ;; TODO: Hankkiudu eroon PhantomJS:stä
  ;; Phantomjs testejä varten tarvitaan erillinen profiili, koska se ei tue enää uudempia kirjastoversioita ja JavaScriptin
