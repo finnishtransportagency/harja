@@ -35,7 +35,6 @@ SELECT id FROM liite WHERE urakka = :urakka AND id = :id AND poistettu IS NOT TR
 -- Merkitsee API:n kautta vastaanotetun liitteen poistetuksi.
 UPDATE liite
 SET poistettu = TRUE,
-    poistaja = :kayttaja,
     muokkaaja = :kayttaja,
     muokattu = CURRENT_TIMESTAMP
 WHERE urakka = :urakka

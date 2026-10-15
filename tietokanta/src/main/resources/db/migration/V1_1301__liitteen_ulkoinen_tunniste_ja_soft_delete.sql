@@ -1,7 +1,6 @@
 ALTER TABLE liite
     ADD COLUMN ulkoinen_id TEXT,
     ADD COLUMN poistettu BOOLEAN NOT NULL DEFAULT FALSE,
-    ADD COLUMN poistaja INTEGER REFERENCES kayttaja (id),
     ADD COLUMN muokkaaja INTEGER REFERENCES kayttaja (id),
     ADD COLUMN muokattu TIMESTAMP;
 
