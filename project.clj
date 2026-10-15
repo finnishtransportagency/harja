@@ -1,6 +1,3 @@
-(def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                    (.getHostName (java.net.InetAddress/getLocalHost))))
-
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
@@ -180,7 +177,7 @@
                          [com.google.code.gson/gson "2.14.0"]]
 
   :profiles {:uberjar {:aot :all}
-             :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+             :dev {:test2junit-run-ant true}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -245,7 +242,7 @@
   :main ^:skip-aot harja.palvelin.main
   :auto-clean false ;; for uberjar
 
-  ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
+  ;; Kootaan yleisesti käytetyt kehitys- ja build-komennot Leiningen-aliaksiksi
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
             "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
             "build-dev-no-env" ["run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
