@@ -545,7 +545,7 @@
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
-                      [:http-palvelin :db :karttakuvat])
+                      [:http-palvelin :db :db-replica :karttakuvat])
 
       :talvihoitoreitit (component/using
                           (talvihoitoreitit/->Talvihoitoreitit)

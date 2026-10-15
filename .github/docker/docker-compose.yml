@@ -38,6 +38,9 @@ services:
       interval: 10s
       retries: 5
       start_period: 20s
+      # Tarkista start_periodin aikana sekunnin välein, jotta 'docker compose up --wait' ei odota turhaan.
+      # Vaatii Docker Engine >= 25 ja Compose >= 2.20.2.
+      start_interval: 1s
       timeout: 10s
 
   # Vanhempia testattavia imagen versiota varten on tehty tähän omia compose konfiguraatioita, koska
@@ -67,6 +70,7 @@ services:
       interval: 10s
       retries: 5
       start_period: 20s
+      start_interval: 1s
       timeout: 10s
 
   harjadb-13.13-3.3.3:
@@ -90,6 +94,7 @@ services:
       interval: 10s
       retries: 5
       start_period: 20s
+      start_interval: 1s
       timeout: 10s
 
 
