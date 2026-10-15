@@ -180,31 +180,42 @@
          (let [kv-valittuna-hoitovuonna (filter #(= valittu-hoitovuoden-alkuvuosi (:hoitokauden_alkuvuosi %))
                                           (:kustannusvaikutukset rivi))
 
+               ;; kv = kustannusvaikutuksia
                kv-valittuna-hoitovuonna (when (some? kv-valittuna-hoitovuonna)
                                           (first kv-valittuna-hoitovuonna))
+
+               maaramuutoksia-valittuna-hoitovuonna? (boolean (some #(and
+                                                                       (= (:hoitokauden_alkuvuosi %) valittu-hoitovuoden-alkuvuosi)
+                                                                       (some? (:maaramuutos %)))
+                                                                (:tehtavat_ja_maarat rivi)))
 
                tehtavamaaramuutos-kirjattu? (-> kv-valittuna-hoitovuonna :tehtavamaaramuutos-kirjattu?)
                ei-tehtavamuutoksia-syy (-> kv-valittuna-hoitovuonna :syy)]
 
-           [:div.tehtava-vaikutus-valinta.padding-top-16
-            [kentat/tee-kentta {:tyyppi :checkbox
-                                :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
-                                :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi valittu-hoitovuoden-alkuvuosi))}
-             (if (some? tehtavamaaramuutos-kirjattu?)
-               (not tehtavamaaramuutos-kirjattu?)
-               false)]
+           (when (or
+                   ;; Ei näytetä, jos määrämuutoksia on kirjattu jo
+                   (false? tehtavamaaramuutos-kirjattu?)
+                   (false? maaramuutoksia-valittuna-hoitovuonna?))
 
-            (when
-              (false? tehtavamaaramuutos-kirjattu?)
-              [:div.padding-top-16
-               [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu, mutta tehtävämäärät eivät muutu"
-                                                :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
-                                                :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
-                                                             #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
-                                                                    (:toimenpideinstanssi rivi)
-                                                                    %
-                                                                    valittu-hoitovuoden-alkuvuosi)))
-                                                :luokka ""}]])])
+             [:div.tehtava-vaikutus-valinta.padding-top-16
+              [kentat/tee-kentta {:tyyppi :checkbox
+                                  :teksti "Pysyvä muutos ei vaikuta tehtävä- ja määräluettelon määriin"
+                                  :valitse! #(e! (t-kirjatut/->PaivitaTehtavavaikutus rivi valittu-hoitovuoden-alkuvuosi))}
+               (if (some? tehtavamaaramuutos-kirjattu?)
+                 (not tehtavamaaramuutos-kirjattu?)
+                 false)]
+
+              (when
+                (false? tehtavamaaramuutos-kirjattu?)
+                [:div.padding-top-16
+                 [kentat/tee-otsikollinen-kentta {:otsikko "Kerro miksi tavoitehinta muuttuu, mutta tehtävämäärät eivät muutu"
+                                                  :kentta-params {:tyyppi :text :validoi [#(when (nil? (seq %)) "Syötä muutoksen syy")]}
+                                                  :arvo-atom (r/wrap ei-tehtavamuutoksia-syy
+                                                               #(e! (t-kirjatut/->PaivitaTehtavavaikutusSyy
+                                                                      (:toimenpideinstanssi rivi)
+                                                                      %
+                                                                      valittu-hoitovuoden-alkuvuosi)))
+                                                  :luokka ""}]])]))
 
          [:h3.padding-top-24 "Vaikutus tavoitehintaan"]
          [:p.body-strong (str (:toimenpide rivi) ", "
@@ -450,7 +461,7 @@
            (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
            (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi))
 
-         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767
+         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767 / HARJA-2791
          ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
          {:uusi-rivi? true
           :tyyppi :komponentti
