@@ -50,6 +50,11 @@ on:
         default: 'true'
         type: string
         required: false
+      validate-migrations:
+        description: 'Enabloi validate-migrations job (ajetaan vain pull_request-eventissä)'
+        default: 'true'
+        type: string
+        required: false
       backend-tests:
         description: 'Enabloi back-tests job'
         default: 'true'
@@ -186,6 +191,38 @@ jobs:
             exit 1
           fi
           echo "✅ EDN-tiedostot ovat ajan tasalla"
+
+  # Validoi PR:n Flyway-migraatioiden versionumerot ja nimet suhteessa PR:n base-branchiin
+  # Job ajetaan aina PR:ssä (ei paths-filtteriä), jotta sen voi asettaa required checkiksi.
+  # Skripti päättyy heti onnistuneesti, jos migraatioihin ei ole muutoksia.
+  validate-migrations:
+    if: ${{ inputs.validate-migrations == 'true' && github.event_name == 'pull_request' }}
+    name: "Validoi Flyway-migraatiot"
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read # Tarvitaan checkout actionissa
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
+          # PR:n checkout on merge-commit, jonka ensimmäinen parent (HEAD^1) on base-branchin kärki.
+          # Syvyys 2 riittää vertailuun.
+          fetch-depth: 2
+
+      # Runnerin valmiiksi asennettu Node riittää, skriptillä ei ole riippuvuuksia
+      - name: Testaa tarkistusskripti
+        run: node --test .github/scripts/tarkista-migraatiot.test.js
+
+      - name: Tarkista migraatiot
+        env:
+          # Ohitus jo olemassa olevan V1-migraation muuttamiselle PR-labelilla.
+          # Huom: label luetaan event-payloadista, joten labelin lisäämisen jälkeen tarvitaan uusi push.
+          SALLI_V1_MUUTOKSET: ${{ contains(github.event.pull_request.labels.*.name, 'salli-v1-migraation-muutos') }}
+        run: node .github/scripts/tarkista-migraatiot.js HEAD^1
 
   # Build job
   build-harja:
