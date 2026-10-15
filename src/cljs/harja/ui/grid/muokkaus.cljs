@@ -20,6 +20,21 @@
             [harja.fmt :as fmt])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
+(defn- validointi-ilmoitus [virheet tyyppi otsikko max-width]
+  (if otsikko
+    (let [laatikon-optiot {:luokka "pot2-tieosoite-validointi"
+                           :ikoni-fn #(ikonit/harja-icon-status-alert)}]
+      [:div {:class (case tyyppi
+                      :virhe "virheet"
+                      :varoitus "varoitukset")}
+       [yleiset/info-laatikko
+        :vahva-ilmoitus
+        otsikko
+        (str/join "\n" (distinct virheet))
+        max-width
+        laatikon-optiot]])
+    [virheen-ohje virheet tyyppi {:virheet-ulos? true :max-width max-width}]))
+
 (defn- muokkauspaneeli [{:keys [otsikko otsikko-tyyli voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
                                 virhe-viesti custom-toiminto custom-yla-panel
@@ -180,6 +195,8 @@
                arvo (hae-fn rivi)
                tasaus-luokka (y/tasaus-luokka tasaa)
                tayta-alas (:tayta-alas? sarake)
+               validointi-otsikko (when-let [otsikko-fn (:validointi-otsikko-fn sarake)]
+                                    (otsikko-fn rivi))
                elementin-id (str rivi-index elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
                  voi-muokata?)
@@ -197,12 +214,14 @@
                       :fokus @fokus?
                       :aina true)
                 (cond
-                  (not (empty? kentan-virheet)) [virheen-ohje kentan-virheet :virhe {:virheet-ulos? true
-                                                                                     :max-width @virhelaatikon-max-koko}]
+                  (not (empty? kentan-virheet)) (validointi-ilmoitus kentan-virheet :virhe
+                                                                      validointi-otsikko
+                                                                      @virhelaatikon-max-koko)
                   (not (empty? kentan-varoitukset)) (if-let [info-laatikko (:info-laatikko sarake)]
                                                       [:div.varoitukset info-laatikko]
-                                                      [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
-                                                                                                  :max-width @virhelaatikon-max-koko}])
+                                                      (validointi-ilmoitus kentan-varoitukset :varoitus
+                                                                           validointi-otsikko
+                                                                           @virhelaatikon-max-koko))
                   (not (empty? kentan-huomautukset)) [virheen-ohje kentan-huomautukset :huomautus {:virheet-ulos? true
                                                                                                    :max-width @virhelaatikon-max-koko}]))
 
