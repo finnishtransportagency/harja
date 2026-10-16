@@ -51,7 +51,7 @@
 (defn- tallenna-tarkastuksen-liite
   [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
   (let [urakka-id (Integer/parseInt id)
-        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
+        ulkoinen-id (get-in liite-lahetys [:kohdetunniste :id])
         liite (:liite liite-lahetys)]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (let [tarkastus (first (tarkastukset-q/hae-tarkastus-ulkoisella-idlla-ja-urakalla
@@ -130,10 +130,10 @@
 
 (defn- poista-liite [parametrit data kayttaja db]
   (let [urakka-id (Integer/parseInt (:id parametrit))
-        ulkoinen-id (str (get-in data [:liite-poisto :tunniste :id]))]
+        ulkoinen-id (get-in data [:liite-poisto :tunniste :id])]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
     (liitteet-q/merkitse-liite-poistetuksi! db {:urakka urakka-id
-                                                :ulkoinen-id ulkoinen-id
+                                                :ulkoinen_id ulkoinen-id
                                                 :kayttaja (:id kayttaja)})
     (tee-kirjausvastauksen-body {:ilmoitukset "Liite poistettu onnistuneesti"})))
 
