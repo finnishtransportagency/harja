@@ -374,7 +374,7 @@
           [ennuste e! app]
           ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
           (let [valittu-hoitokausi-alkaa (first (:valittu-hoitokausi app))
-                nyt (pvm/nyt)
+                nyt (or (:nykyhetki app) (pvm/nyt))
                 hoitovuosi-tuleva? (pvm/jalkeen? valittu-hoitokausi-alkaa nyt)
                 paivia-valissa (if valittu-hoitokausi-alkaa (pvm/paivia-valissa valittu-hoitokausi-alkaa nyt) 10000) ;; Valittu hoitokausi voi olla hetken null
                 lupausryhmat-naytetaan? (or
