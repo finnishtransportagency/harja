@@ -17,6 +17,7 @@
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
+            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstiviesti]
             [harja.kyselyt.tieliikenneilmoitukset :as q-ilmoitukset]
             [clj-time
              [coerce :as tc]
@@ -437,8 +438,8 @@
                        :loppu (t/now)
                        :vastuuhenkilo true
                        :varahenkilo true}))
-                  harja.palvelin.integraatiot.sms.sms-komponentti/laheta
-                  (fn [_ numero _ _ _] (swap! sms-numerot conj numero))]
+                  tloik-tekstiviesti/laheta-ilmoitus-tekstiviestilla
+                  (fn [_ _ _ paivystaja] (swap! sms-numerot conj (:matkapuhelin paivystaja)))]
       (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja portti))
