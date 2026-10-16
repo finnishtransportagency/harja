@@ -51,7 +51,7 @@
             data (dekoodaa-base64 (:sisalto liite))
             koko (alength data)
             kuvaus (:kuvaus liite)
-            ulkoinen-id (some-> liite :tunniste :id str)
+            ulkoinen-id (get-in liite [:tunniste :id])
             liite-id (:id (liitteet/luo-liite liitteiden-hallinta (:id kirjaaja) urakan-id tiedostonimi tyyppi koko data kuvaus "harja-api" ulkoinen-id))]
         (liite-luotu-fn liite-id)))))
 
