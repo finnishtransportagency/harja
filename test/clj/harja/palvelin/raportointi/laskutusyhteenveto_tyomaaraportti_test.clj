@@ -522,7 +522,7 @@
             (- bonukset-yht sanktio_summa)
             (:muut_kulut_ei_tavoite_hoitokausi_yht purettu)) "Sanktiot & bonukset näytetään MHU19 raportilla (hk yht)")))
 
-  (testing "Bonuksia & sanktioita ei näytetä MHU25 laskutuksessa"
+  (testing "Bonuksia & sanktioita näkyy myös MHU25 laskutuksessa" ;; Tämä muuttui -26 vuoden aikana takaisin
     (let [hk_alkupvm "2025-10-01"
           hk_loppupvm "2026-09-30"
           aikavali_alkupvm "2025-10-01"
@@ -563,12 +563,10 @@
       (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)) "Kirjattu sanktio MHU25 täsmää tulosta (val aika)")
 
       ;; Mutta niitä ei lasketa toteutuneisiin, eivätkä näy raportilla 
-      (is (=
-            0.0M
-            (:muut_kustannukset_hoitokausi_yht purettu)) "Sanktioita & bonuksia ei näytetä MHU25 raportilla (val aika)")
-      (is (=
-            0.0M
-            (:muut_kulut_ei_tavoite_hoitokausi_yht purettu)) "Sanktioita & bonuksia ei näytetä MHU25 raportilla (hk yht)"))))
+      (is (= (+ bonus_summa (* -1 sanktio_summa) alihankintabonus_summa)
+            (:muut_kustannukset_hoitokausi_yht purettu)) "Sanktioit & bonukset näytetään MHU25 raportilla (val aika)")
+      (is (= (+ bonus_summa (* -1 sanktio_summa) alihankintabonus_summa)
+            (:muut_kulut_ei_tavoite_hoitokausi_yht purettu)) "Sanktioit & bonukset näytetään MHU25 raportilla (hk yht)"))))
 
 
 (deftest tyomaaraportti-bonukset-ja-sanktiot-toimii-jalkeen-2022
