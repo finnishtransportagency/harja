@@ -132,15 +132,15 @@
                 hoitokaudet)
         yhteenveto-fn (fn [rivi i1 i2]
                         (reduce (fn [a rivi]
-                                  (let [a (assoc a :suunniteltu (+ (:suunniteltu a) (or (nth rivi i1) 0)))
-                                        a (assoc a :toteutunut (+ (:toteutunut a) (or (nth rivi i2) 0)))]
+                                  (let [a (assoc a :suunniteltu (+ (:suunniteltu a) (or (nth rivi i1 0) 0)))
+                                        a (assoc a :toteutunut (+ (:toteutunut a) (or (nth rivi i2 0) 0)))]
                                     a))
                           {:suunniteltu 0 :toteutunut 0} rivit))
         akilliset-hoitotyot-yhteensa (yhteenveto-fn rivit 1 2)
         vahinkojen-korjaukset-yhteensa (yhteenveto-fn rivit 3 4)
         kannustinjarjestelma-yhteensa (yhteenveto-fn rivit 5 6)
         loput-yhteensa (when (seq muut-rahavaraukset) (yhteenveto-fn rivit 7 8))
-        tavoitehinnan-muutokset-yhteensa (reduce + 0 (map last rivit))
+        tavoitehinnan-muutokset-yhteensa (reduce + 0 (map #(or (last %) 0) rivit))
         yhteensarivi [{:lihavoi? true
                        :korosta-hennosti? true
                        :rivi ["Yhteensä"
@@ -196,7 +196,9 @@
                                                                                                                   :alkupvm alkupvm
                                                                                                                   :loppupvm loppupvm
                                                                                                                   :hoitokauden-alkuvuosi vuosi})
-                            thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+                            thv-arvonvahennykset-yht (reduce + 0 (map #(or (:maara %) 0) arvonvahennykset))
+
+
 
                             maaramuutokset (when urakka-id
                                              (muutos-palvelu/hae-tehtava-maaramuutokset db user {:urakka-id urakka-id
@@ -252,7 +254,7 @@
                                                                                                                   :alkupvm alkupvm
                                                                                                                   :loppupvm loppupvm
                                                                                                                   :hoitokauden-alkuvuosi vuosi})
-                            thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))]
+                            thv-arvonvahennykset-yht (reduce + 0 (map #(or (:maara %) 0) arvonvahennykset))]
                         [(str vuosi "-" (pvm/vuosi loppupvm))
                          (+ tavoitehinnan-muutos thv-arvonvahennykset-yht)]))
                 hoitokaudet)
