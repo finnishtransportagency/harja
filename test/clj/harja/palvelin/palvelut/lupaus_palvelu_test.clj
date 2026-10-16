@@ -462,6 +462,17 @@
     (is (thrown? Exception (vastaa-lupaukseen lupaus-vastaus))
       "Samalle lupaus-urakka-kuukaus-vuosi -yhdistelmälle ei voi lisätä toista vastausta.")))
 
+(deftest lisaa-lupaus-vastaus-tulevaisuuteen-ei-onnistu
+  (let [lupaus-vastaus {:lupaus-id 6
+                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                        :kuukausi 12
+                        :vuosi (inc (pvm/vuosi (pvm/nyt)))
+                        :paatos false
+                        :vastaus true
+                        :lupaus-vaihtoehto-id nil}
+        _ (is (thrown? AssertionError (vastaa-lupaukseen lupaus-vastaus))
+          "Tulevaisuuteen ei voi vastata lupaukseen.") ]))
+
 (deftest paivita-lupaus-vastaus
   (let [lupaus-vastaus {:id 2
                         :vastaus false
