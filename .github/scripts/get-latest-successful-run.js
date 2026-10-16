@@ -32,23 +32,61 @@ module.exports = async ({ github, context, core }) => {
         return;
     }
 
-    // Palauttaa viimeisimmän määrätyssä branchissa onnistuneen workflow-runin tiedot
-    const { data: runs } = await github.rest.actions.listWorkflowRuns({
-        owner: context.repo.owner,
-        repo: context.repo.repo,
-        workflow_id: workflow.id,
-        branch: BRANCH_NAME,
-        status: 'success',
-        per_page: 1,
-    });
+    // Haetaan viimeisin onnistunut run tiukalla aikarajauksella, jotta ei kuormiteta turhaan GitHub APIa.
+    // Seitsemän vuorokautta kattaa viikonloput ja vastaa harja-uberjar-artifactin säilytysaikaa.
+    const cutoffTimestamp = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    const createdSince = new Date(cutoffTimestamp).toISOString();
+    let latestRun;
 
-    if (runs.total_count === 0) {
-        core.setFailed(`No runs found for the WORKFLOW_ID: ${workflow.id} and BRANCH_NAME: ${BRANCH_NAME}`);
+    for (let attempt = 1; attempt <= 2; attempt++) {
+        const { data: runs } = await github.rest.actions.listWorkflowRuns({
+            owner,
+            repo,
+            workflow_id: workflow.id,
+            branch: BRANCH_NAME,
+            status: 'success',
+            // Haetaan pieni tulosjoukko, josta sortataan ja poimitaan uusin
+            per_page: 5,
+            created: `>=${createdSince}`,
+            // Ohita cache tuoreuden varmistamiseksi
+            // https://github.com/octokit/octokit.js/issues/890
+            headers: {
+                'cache-control': 'no-cache, no-store',
+                'if-none-match': '',
+            },
+        });
 
-        return;
+        // Katsotaan hakutulosjoukosta, löytyykö uusin onnistunut run.
+        // Tässä varmistetaan, että run on luotu aikarajauksen sisällä siltä varalta että GitHub API:ssa on häiriö
+        // ja tulosjoukkoon eksyy vanhempia runeja tai muuten virheellisiä tuloksia.
+        const currentTimestamp = Date.now();
+        const latestRunsSorted = runs.workflow_runs
+            .filter(run => {
+                const createdAt = Date.parse(run.created_at);
+                return createdAt >= cutoffTimestamp && createdAt <= currentTimestamp
+                    && run.workflow_id === workflow.id && run.head_branch === BRANCH_NAME
+                    && run.status === 'completed' && run.conclusion === 'success';
+            })
+            .sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+        latestRun = latestRunsSorted[0];
+
+        if (latestRun) break;
+
+        if (attempt === 1) {
+            core.warning(`No valid successful run found since ${createdSince}. Retrying once after two seconds.`);
+            // HTTP-virheiden retryt hoitaa kutsuva actions/github-script.
+            await new Promise(resolveDelay => setTimeout(resolveDelay, 2000));
+        }
     }
 
-    const latestRun = runs.workflow_runs[0];
+    if (!latestRun) {
+        throw new Error(
+            `No valid successful run found after two attempts: WORKFLOW_FILENAME: ${WORKFLOW_FILENAME}, `
+            + `WORKFLOW_ID: ${workflow.id}, BRANCH_NAME: ${BRANCH_NAME}, created >= ${createdSince}. `
+            + 'Deployment aborted.'
+        );
+    }
+
     const commitSha = latestRun.head_commit.id;
     const runId = latestRun.id;
 
