@@ -442,6 +442,14 @@ SELECT exists(
     FROM laatupoikkeama
     WHERE ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
 
+-- name: hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
+-- Hakee aktiivisen laatupoikkeaman ulkoisella id:lla ja urakalla.
+SELECT id
+FROM laatupoikkeama
+WHERE ulkoinen_id = :ulkoinen-id
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
+
 -- name: paivita-laatupoikkeama-ulkoisella-idlla<!
 -- Päivittää laatupoikkeaman annetuille perustiedoille.
 UPDATE laatupoikkeama

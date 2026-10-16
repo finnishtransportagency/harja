@@ -9,6 +9,9 @@
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.kyselyt.liitteet :as liitteet-q]
             [harja.kyselyt.siltatarkastukset :as silta-q]
+            [harja.kyselyt.tarkastukset :as tarkastukset-q]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
+            [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
             [harja.palvelin.integraatiot.api.siltatarkastukset :as siltatarkastukset]
             [clojure.java.jdbc :as jdbc]
             [slingshot.slingshot :refer [throw+]]))
@@ -45,6 +48,86 @@
           [{:liite liite}]))
       (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
 
+(defn- tallenna-tarkastuksen-liite
+  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
+        liite (:liite liite-lahetys)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [tarkastus (first (tarkastukset-q/hae-tarkastus-ulkoisella-idlla-ja-urakalla
+                              db ulkoinen-id urakka-id))]
+      (when-not tarkastus
+        (heita-liitevirhe (format "Tarkastusta ei löydy tunnisteella: %s" ulkoinen-id)))
+      (jdbc/with-db-transaction [db db]
+        (liite-tyokalut/tallenna-liitteet-tarkastukselle
+          db
+          liitteiden-hallinta
+          urakka-id
+          (:id tarkastus)
+          kayttaja
+          [{:liite liite}]))
+      (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
+
+(defn- tallenna-tarkastushavainnon-liite
+  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
+        liite (:liite liite-lahetys)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [laatupoikkeama (first (laatupoikkeamat-q/hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
+                                  db ulkoinen-id urakka-id))]
+      (when-not laatupoikkeama
+        (heita-liitevirhe (format "Tarkastushavaintoa ei löydy tunnisteella: %s" ulkoinen-id)))
+      (jdbc/with-db-transaction [db db]
+        (liite-tyokalut/tallenna-liitteet-laatupoikkeamalle
+          db
+          liitteiden-hallinta
+          urakka-id
+          (:id laatupoikkeama)
+          kayttaja
+          [{:liite liite}]))
+      (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
+
+(defn- tallenna-laatupoikkeaman-liite
+  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
+        liite (:liite liite-lahetys)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [laatupoikkeama (first (laatupoikkeamat-q/hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
+                                  db ulkoinen-id urakka-id))]
+      (when-not laatupoikkeama
+        (heita-liitevirhe (format "Laatupoikkeamaa ei löydy tunnisteella: %s" ulkoinen-id)))
+      (jdbc/with-db-transaction [db db]
+        (liite-tyokalut/tallenna-liitteet-laatupoikkeamalle
+          db
+          liitteiden-hallinta
+          urakka-id
+          (:id laatupoikkeama)
+          kayttaja
+          [{:liite liite}]))
+      (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
+
+(defn- tallenna-turvallisuuspoikkeaman-liite
+  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
+  (let [urakka-id (Integer/parseInt id)
+        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
+        liite (:liite liite-lahetys)]
+    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
+    (let [turvallisuuspoikkeama (first (turvallisuuspoikkeamat-q/hae-turvallisuuspoikkeama-ulkoisella-idlla-ja-urakalla
+                                          db ulkoinen-id urakka-id))]
+      (when-not turvallisuuspoikkeama
+        (heita-liitevirhe (format "Turvallisuuspoikkeamaa ei löydy tunnisteella: %s" ulkoinen-id)))
+      (jdbc/with-db-transaction [db db]
+        (liite-tyokalut/tallenna-liitteet-turvallisuuspoikkeamalle
+          db
+          liitteiden-hallinta
+          urakka-id
+          (:id turvallisuuspoikkeama)
+          kayttaja
+          [{:liite liite}]))
+      (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
+
 (defn- poista-liite [parametrit data kayttaja db]
   (let [urakka-id (Integer/parseInt (:id parametrit))
         ulkoinen-id (str (get-in data [:liite-poisto :tunniste :id]))]
@@ -56,10 +139,19 @@
 
 (defn vastaanota-liite [parametrit data kayttaja db liitteiden-hallinta]
   (let [kohdeluokka (get-in data [:liite-lahetys :kohdeluokka])]
-    (if (= "siltatarkastuskohde" kohdeluokka)
-      (tallenna-siltatarkastuskohteen-liitteet
-        parametrit data kayttaja db liitteiden-hallinta)
+    (case kohdeluokka
+      "siltatarkastuskohde" (tallenna-siltatarkastuskohteen-liitteet
+                               parametrit data kayttaja db liitteiden-hallinta)
+      "tarkastus" (tallenna-tarkastuksen-liite
+                     parametrit data kayttaja db liitteiden-hallinta)
+      "tarkastushavainto" (tallenna-tarkastushavainnon-liite
+                             parametrit data kayttaja db liitteiden-hallinta)
+      "laatupoikkeama" (tallenna-laatupoikkeaman-liite
+                          parametrit data kayttaja db liitteiden-hallinta)
+      "turvallisuuspoikkeama" (tallenna-turvallisuuspoikkeaman-liite
+                                parametrit data kayttaja db liitteiden-hallinta)
       (heita-liitevirhe (format "Liitteen kohdeluokkaa ei vielä tueta: %s" kohdeluokka)))))
+
 
 (defrecord Liitteet []
   component/Lifecycle

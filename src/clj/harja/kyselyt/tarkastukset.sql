@@ -417,6 +417,14 @@ WHERE ulkoinen_id = :id
       AND tyyppi = :tyyppi :: tarkastustyyppi
       AND urakka = :urakka-id;
 
+-- name: hae-tarkastus-ulkoisella-idlla-ja-urakalla
+-- Hakee tarkastuksen ulkoisella id:lla ja urakalla.
+SELECT id
+FROM tarkastus
+WHERE ulkoinen_id = :id
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
+
 -- name: luo-liite<!
 -- Luo tarkastukselle liite
 INSERT INTO tarkastus_liite (tarkastus, liite) VALUES (:tarkastus, :liite);
