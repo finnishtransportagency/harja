@@ -1673,9 +1673,11 @@
                   (and (false? lataa-piirrettaessa-koordinaatit?) (not= @vanha-osoite-atom @uusi-osoite-atom))
                   ;; Lataa koordinaatit, jos koordinaatit puuttuvat
                   (and lataa-piirrettaessa-koordinaatit? (nil? (:coordinates @uusi-osoite-atom))))
+            ;; Renderaa nykyinen frame ennen TR-haun tekemistä, estää stack-overflow
             (js/setTimeout #(tee-tr-haku @uusi-osoite-atom) 0))))
       (komp/kun-muuttuu
         (fn [{sijainti :sijainti} _]
+          ;; Renderaa nykyinen frame ennen sijainnin päivittämistä, estää stack-overflow
           (js/setTimeout
             #(if-not sijainti
                (tasot/poista-geometria! :tr-valittu-osoite)
