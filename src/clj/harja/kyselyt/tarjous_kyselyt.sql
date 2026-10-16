@@ -25,7 +25,9 @@ VALUES (:tarjous_id, :urakka_id, :hoitokauden_alkuvuosi, :summa, :maksukausi, :o
 SELECT t.id as "tarjous-id", t.hoitokauden_alkuvuosi, t.urakka_id, t.tarjous_tavoitehinta, t.tarjous_kattohinta,
        (SELECT array_agg(row(tk.id,
            CASE WHEN tk.osio = 'tavoitehintaiset-rahavaraukset'::suunnittelu_osio THEN COALESCE(NULLIF(rvu.urakkakohtainen_nimi, ''), r.nimi)
-                WHEN tk.osio = 'hankintakustannukset'::suunnittelu_osio THEN 'Kilpailutettavat hankinnat'
+                WHEN tk.osio = 'hankintakustannukset'::suunnittelu_osio THEN CASE WHEN (SELECT tyyppi FROM urakka WHERE id = t.urakka_id) = 'vesivayla-hoito'::urakkatyyppi
+                                                                                    THEN 'Urakan hankinnat'
+                                                                                    ELSE 'Kilpailutettavat hankinnat' END
                 WHEN tk.osio = 'erillishankinnat'::suunnittelu_osio THEN 'Erillishankinnat'
                 WHEN tk.osio = 'hoidonjohtopalkkio'::suunnittelu_osio THEN 'Hoidonjohtopalkkio'
                 ELSE tk.osio::text END,
