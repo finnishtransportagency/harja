@@ -397,8 +397,9 @@
 
 (deftest testaa-toimenpidepyynto-paivystajien-duplikaatti-sahkopostilla
   "Testataan, että saman ilmoituksen sähköpostien lähettäminen deduplikoidaan per sähköpostiosoite,
-  vaikka sama osoite olisi usealla aktiivisella päivystäjärivillä."
-  (let [viestit (atom [])]
+  vaikka sama osoite olisi usealla aktiivisella päivystäjärivillä. SMS lähetetään silti jokaiselle päivystäjälle."
+  (let [viestit (atom [])
+        sms-numerot (atom [])]
     (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
 
     ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
@@ -407,8 +408,8 @@
                     (list {:id 1
                            :etunimi "Pekka"
                            :sukunimi "Päivystäjä"
-                           ;; Testi olettaa, että SMS-integraatiota ei ole mockattu eikä käynnistetty, joten puhelinnumerot on jätetty tyhjäksi
-                           :matkapuhelin nil
+                           ;; Puhelinnumero aktivoi SMS-haaran, lähetys mockataan alla
+                           :matkapuhelin "0401111111"
                            :tyopuhelin nil
                            :sahkoposti "email.email@example.com"
                            :alku (t/now)
@@ -419,7 +420,7 @@
                        :etunimi "Toinen"
                        :sukunimi "Päivystäjä"
                        ;; Sama vastaanottaja eri kirjainkoolla ja whitespace-merkeillä
-                       :matkapuhelin nil
+                       :matkapuhelin "0402222222"
                        :tyopuhelin nil
                        :sahkoposti "  EMAIL.EMAIL@EXAMPLE.COM  "
                        :alku (t/now)
@@ -429,13 +430,15 @@
                       {:id 3
                        :etunimi "Kolmas"
                        :sukunimi "Päivystäjä"
-                       :matkapuhelin nil
+                       :matkapuhelin "0403333333"
                        :tyopuhelin nil
                        :sahkoposti "toinen.email@example.com"
                        :alku (t/now)
                        :loppu (t/now)
                        :vastuuhenkilo true
-                       :varahenkilo true}))]
+                       :varahenkilo true}))
+                  harja.palvelin.integraatiot.sms.sms-komponentti/laheta
+                  (fn [_ numero _ _ _] (swap! sms-numerot conj numero))]
       (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
             ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
                                    kayttaja portti))
@@ -463,6 +466,9 @@
           (is (= ["email.email@example.com" "toinen.email@example.com"]
                 (sort (map :kuittaaja_henkilo_sahkoposti sahkopostit)))
             "Sama sähköpostiosoite tuottaa yhden viestin ja eri osoite oman viestinsä."))
+
+        (is (= ["0401111111" "0402222222" "0403333333"] (sort @sms-numerot))
+          "Jokainen päivystäjä saa SMS:n, vaikka sähköpostit deduplikoidaan.")
 
         (poista-ilmoitus ilmoitus-id)))))
 
