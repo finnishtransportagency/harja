@@ -508,53 +508,59 @@
 
 
 (defn paivita-tavoite-ja-kattohinta
-  "Lasketaan tarjouksen, sekä muutosten perusteella.
-  = tarjous + aiempien vuosien pysyvät muutokset
-  Hankintakustannukset eivät vaikuta tähän laskentaan."
-  [db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset]
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
-        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
-        urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
-        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+  "Urakoissa ja hoitovuosina, jolloin muutosten hallinta on käytössä, lasketaan tavoite- ja kattohinta tarjouksen ja pysyvien muutosten perusteella.
+   Tällöin Tavoitehinta = Tarjous + Aiempien vuosien pysyvät muutokset.
+   Jos muutostenhallinta ei ole käytössä, tavoitehinta lasketaan kustannussuunnitelmaan kirjattujen tietojen pohjalta.
+   Tällöin funktiolle täytyy antaa parametreissa yhteenlaskettu tavoitehinta (= kustannussuunnitelman luvut yhteenlaskettuna hoitovuodelta)"
+  ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset]
+   (paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset nil))
+  ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset yhteenlaskettu-tavoitehinta]
+   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+         hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
+         muutoshallinta-kaytossa? (:muutosten_hallinta urakan-parametrit) ;; TODO: Huomoi tässä myöhemmin tarve urakan hoitovuosikohtaiseen muutoshallintamäärittelyyn
+         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
 
-        ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
-        pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
+         ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
+         pysyvat-muutokset-maara (if muutoshallinta-kaytossa?
+                                   (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset)) 0)
 
-        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+         kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
 
-        tarjous-data (hae-urakan-hoitovuoden-tarjous db
-                       {:urakka_id urakka-id
-                        :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi})
+         tarjous-data (hae-urakan-hoitovuoden-tarjous db
+                        {:urakka_id urakka-id
+                         :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi})
 
-        tarjous (-> tarjous-data first :tarjous_tavoitehinta)
+         tarjous (-> tarjous-data first :tarjous_tavoitehinta)
 
-        hoitovuoden-alun-tavoitehinta (+ (or tarjous 0M) (or pysyvat-muutokset-maara 0M))
+         hoitovuoden-alun-tavoitehinta (if muutoshallinta-kaytossa?
+                                         (+ (or tarjous 0M) (or pysyvat-muutokset-maara 0M))
+                                         (or (:yhteenlaskettu-tavoitehinta yhteenlaskettu-tavoitehinta) 0M))
 
-        hoitovuoden-alun-kattohinta (or (when kattohintakerroin
-                                          (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
+         hoitovuoden-alun-kattohinta (or (when kattohintakerroin
+                                           (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
 
-        tavoitetiedot (first (hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitokausinumero
-                                                                       :urakka-id urakka-id}))
-
-        ;; Päivitä tai lisää tavoite ja kattohinta tietokantaan
-        tiedot (if (:id tavoitetiedot)
-                 (paivita-tavoite-ja-kattohinta<! db
-                   {:urakka-id urakka-id
-                    :hoitokausinumero hoitokausinumero
-                    :tavoitehinta hoitovuoden-alun-tavoitehinta
-                    :tavoitehinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-tavoitehinta urakan-indeksit hoitokausinumero)
-                    :kattohinta hoitovuoden-alun-kattohinta
-                    :kattohinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-kattohinta urakan-indeksit hoitokausinumero)
-                    :muokkaaja kayttaja-id})
-                 (lisaa-tavoite-ja-kattohinta<! db
-                   {:urakka-id urakka-id
-                    :hoitokausinumero hoitokausinumero
-                    :tavoitehinta hoitovuoden-alun-tavoitehinta
-                    :tavoitehinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-tavoitehinta urakan-indeksit hoitokausinumero)
-                    :kattohinta hoitovuoden-alun-kattohinta
-                    :kattohinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-kattohinta urakan-indeksit hoitokausinumero)
-                    :luoja kayttaja-id}))]
-    tiedot))
+         tavoitetiedot (first (hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitokausinumero
+                                                                        :urakka-id urakka-id}))
+         ;; Päivitä tai lisää tavoite ja kattohinta tietokantaan
+         tiedot (if (:id tavoitetiedot)
+                  (paivita-tavoite-ja-kattohinta<! db
+                    {:urakka-id urakka-id
+                     :hoitokausinumero hoitokausinumero
+                     :tavoitehinta hoitovuoden-alun-tavoitehinta
+                     :tavoitehinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-tavoitehinta urakan-indeksit hoitokausinumero)
+                     :kattohinta hoitovuoden-alun-kattohinta
+                     :kattohinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-kattohinta urakan-indeksit hoitokausinumero)
+                     :muokkaaja kayttaja-id})
+                  (lisaa-tavoite-ja-kattohinta<! db
+                    {:urakka-id urakka-id
+                     :hoitokausinumero hoitokausinumero
+                     :tavoitehinta hoitovuoden-alun-tavoitehinta
+                     :tavoitehinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-tavoitehinta urakan-indeksit hoitokausinumero)
+                     :kattohinta hoitovuoden-alun-kattohinta
+                     :kattohinta_indeksikorjattu (laske-indeksikorjattu-summa hoitovuoden-alun-kattohinta urakan-indeksit hoitokausinumero)
+                     :luoja kayttaja-id}))]
+     tiedot)))
 
 (defn tallenna-hankintojen-kuukausittainen-summa [db kk-jakso alkujakso? viimeinen-summa summa hoitovuoden-alkuvuosi sopimus-id
                                                   toimenpideinstanssi-id kayttaja-id urakan-indeksit hoitovuosi-nro]
