@@ -246,7 +246,9 @@
 
 (deftest piste-ennuste
   (let [paivitys-tulos (vastaa-lupaukseen {:id 2
-                                           :vastaus false})
+                                           :vastaus false
+                                           :vuosi (pvm/vuosi (pvm/nyt))
+                                           :kuukausi 1})
         vastaus (hae-urakan-lupaustiedot
                   +kayttaja-jvh+
                   {:urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
@@ -437,7 +439,7 @@
                                                                  #inst "2022-09-30T20:59:59.000-00:00"]})))]))
 
 (deftest urakan-lupauspisteita-ei-saa-muokata-valikatselmuksen-jalkeen
-  (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true) 2021]
+  (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]
     (is (thrown? AssertionError (kutsu-palvelua (:http-palvelin jarjestelma)
                                   :tallenna-luvatut-pisteet +kayttaja-jvh+
                                   {:id (hae-iin-maanteiden-hoitourakan-lupaussitoutumisen-id)
@@ -459,6 +461,17 @@
       "Tallennetut arvot ovat palautetaan")
     (is (thrown? Exception (vastaa-lupaukseen lupaus-vastaus))
       "Samalle lupaus-urakka-kuukaus-vuosi -yhdistelmälle ei voi lisätä toista vastausta.")))
+
+(deftest lisaa-lupaus-vastaus-tulevaisuuteen-ei-onnistu
+  (let [lupaus-vastaus {:lupaus-id 6
+                        :urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+                        :kuukausi 12
+                        :vuosi (inc (pvm/vuosi (pvm/nyt)))
+                        :paatos false
+                        :vastaus true
+                        :lupaus-vaihtoehto-id nil}
+        _ (is (thrown? AssertionError (vastaa-lupaukseen lupaus-vastaus))
+          "Tulevaisuuteen ei voi vastata lupaukseen.") ]))
 
 (deftest paivita-lupaus-vastaus
   (let [lupaus-vastaus {:id 2
@@ -507,7 +520,9 @@
 (deftest ei-saa-paivittaa-vastausta-valikatselmuksen-jalkeen
   (let [vastaus {:id 2
                  :vastaus false
-                 :lupaus-vaihtoehto-id nil}]
+                 :lupaus-vaihtoehto-id nil
+                 :vuosi (pvm/vuosi (pvm/nyt))
+                 :kuukausi 1}]
     (with-redefs [lupaus-palvelu/valikatselmus-tehty-urakalle? (constantly true)]
       (is (thrown? AssertionError (vastaa-lupaukseen vastaus)) "Ei saa vastata välikatselmuksen jälkeen"))
     (is (vastaa-lupaukseen vastaus) "Saa vastata")))
