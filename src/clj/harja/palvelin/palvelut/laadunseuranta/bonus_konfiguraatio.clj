@@ -121,7 +121,8 @@
      :jarjestys (get-in eka-rivi [:laji :jarjestys])
      :rivin-tyyppi (laji->rivin-tyyppi (get-in eka-rivi [:laji :koodi]))
      :kirjaustapa (get-in eka-rivi [:laji :kirjaustapa])
-     :automaattinen (boolean (get-in eka-rivi [:laji :automaattinen]))}))
+     :automaattinen (boolean (get-in eka-rivi [:laji :automaattinen]))
+     :summamaaritys (get-in eka-rivi [:profiilirivi :summamaaritys])}))
 
 (defn- muodosta-bonus-lajit
   [rivit]
@@ -212,8 +213,28 @@
      :toimenpideinstanssi-id toimenpideinstanssi-id
      :bonus-lajit (muodosta-bonus-lajit rivit)}))
 
+(defn hae-urakan-bonus-lajien-nimet
+  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id]}]
+  (let [konteksti {:urakka-id urakka-id
+                   :hoitovuosi hoitovuosi}
+        profiilit (q/hae-urakan-bonus-profiilit db
+                    {:urakka_id urakka-id
+                     :hoitovuosi hoitovuosi})
+        profiili (when (seq profiilit)
+                   (vaadi-yksiselitteinen-bonus-profiili profiilit konteksti))
+        rivit (when profiili
+                (q/hae-bonus-profiilin-rivit db
+                  {:bonus_profiili_id (:id profiili)
+                   :urakka_id urakka-id
+                   :toimenpideinstanssi_id toimenpideinstanssi-id}))]
+    (->> rivit
+      (group-by #(get-in % [:laji :koodi]))
+      (reduce-kv (fn [nimet laji lajin-rivit]
+                   (assoc nimet laji (bonus-lajin-tehokas-nimi lajin-rivit)))
+        {}))))
+
 (defn vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
-  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id bonuslaji]}]
+  [db {:keys [urakka-id hoitovuosi toimenpideinstanssi-id bonuslaji rahasumma]}]
   (let [{:keys [profiili rivit]} (hae-bonus-profiilin-rivit-kontekstissa-write-pathiin
                                    db
                                    {:urakka-id urakka-id
@@ -229,7 +250,20 @@
          :toimenpideinstanssi-id toimenpideinstanssi-id
          :bonuslaji bonuslaji
          :bonusprofiili-id (:id profiili)}))
-    (first lajin-rivit)))
+    (let [rivi (first lajin-rivit)
+          summamaaritys (get-in rivi [:profiilirivi :summamaaritys])
+          automaattinen-summa (:summa-euroina summamaaritys)]
+      (when (and (= "automaattinen" (:maaritystapa summamaaritys))
+                 (some? automaattinen-summa)
+                 (or (nil? rahasumma)
+                   (not= (bigdec automaattinen-summa) (bigdec rahasumma))))
+        (heita-bonus-kirjausvirhe!
+          :bonus-kirjausvirhe/profiilin-automaattinen-summa
+          "Bonus ei vastaa profiilin automaattista summaa."
+          {:bonuslaji bonuslaji
+           :profiilin-summa automaattinen-summa
+           :rahasumma rahasumma}))
+      rivi)))
 
 (defn- muodosta-bonus-profiilirivit
   [rivit]

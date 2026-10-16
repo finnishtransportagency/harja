@@ -402,7 +402,8 @@
                   {:urakka-id urakka-id
                    :hoitovuosi (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) pvm)
                    :toimenpideinstanssi-id toimenpideinstanssi
-                   :bonuslaji bonuslaji}))
+                   :bonuslaji bonuslaji
+                   :rahasumma rahasumma}))
             parametrit {:tyyppi tyyppi
                         :urakka urakka-id
                         :sopimus sopimus
