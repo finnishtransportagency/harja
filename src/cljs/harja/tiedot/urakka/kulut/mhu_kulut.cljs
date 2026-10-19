@@ -658,7 +658,8 @@
   KuluhakuOnnistui
   (process-event [{tulos :tulos} app]
     (-> app
-      (assoc :kulut tulos)
+      (assoc :kulut (:kulut tulos))
+      (assoc :tehtavat-lukittu? (:tehtavat-lukittu? tulos))
       (assoc-in [:parametrit :haku-menossa] false)
       (update-in [:parametrit :haetaan] dec)))
 
