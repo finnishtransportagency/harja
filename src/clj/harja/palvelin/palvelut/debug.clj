@@ -194,7 +194,7 @@
     (when-not (integer? ilmoitus-id)
       (throw (ex-info "Ilmoitus-id:n pitää olla kokonaisluku" {:kentta :ilmoitus-id})))
     (when-not (and (vector? vastaanottajat) (seq vastaanottajat))
-      (throw (ex-info "Vastaanottajien pitää olla epätyhjä lista" {:kentta :vastaanottajat})))
+      (throw (ex-info "Vastaanottajia pitää olla vähintään yksi" {:kentta :vastaanottajat})))
     (doseq [vastaanottaja vastaanottajat]
       (when-not (map? vastaanottaja)
         (throw (ex-info "Vastaanottajan pitää olla map" {:kentta :vastaanottajat})))
