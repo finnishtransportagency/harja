@@ -134,7 +134,10 @@
                       true false)
         vuosiavaimet (flatten (map :nimi vuositaulukon-otsikot))
         vuosi-map (zipmap vuosiavaimet (repeat 0))
-        ohjauskahva (grid/grid-ohjaus)]
+        ohjauskahva (grid/grid-ohjaus)
+        suojatut-toimenkuvat #{"valmistelukausi ennen urakka-ajan alkua"
+                               "sopimusvastaava (ennen urakka-ajan alkua)"
+                               "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)"}]
     [grid/grid
      {:otsikko ""
       :data-cy "tarjous-toimenkuvat-grid"
@@ -240,10 +243,17 @@
           {:otsikko ""
            :tyyppi :komponentti
            :komponentti (fn [rivi]
-                          (napit/yleinen "Poista rivi"
-                            :toissijainen
-                            #(e! (tarjous-tiedot/->PoistaToimenkuva rivi))
-                            {:ikoni (ikonit/livicon-trash) :luokka "btn-xs"}))
+                         (let [toimenkuvan-nimi (-> (:nimi rivi)
+                                                  (or "")
+                                                  str/trim
+                                                  str/lower-case)]
+                           (if (contains? suojatut-toimenkuvat toimenkuvan-nimi)
+                             [:span]
+                             (napit/yleinen "Poista rivi"
+                               :toissijainen
+                               #(e! (tarjous-tiedot/->PoistaToimenkuva rivi))
+                               {:ikoni (ikonit/livicon-trash)
+                                :luokka "btn-xs"}))))
            :leveys (str vuosi-leveys "%")}
           {:otsikko ""
            :tyyppi :komponentti
