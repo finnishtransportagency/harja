@@ -117,11 +117,11 @@ SELECT ut.id,
        COALESCE(ko."uusi-kattohinta", -- Oikaistu kattohinta
                 (ut.kattohinta_indeksikorjattu + -- Indeksikorjattu kattohinta
                  (COALESCE(t.summa,0) -- Mahdolliset oikaisut
-                     * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+                     * up.hoitokauden_lopun_kattohinta_kerroin))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                                               AS "kattohinta-oikaistu",
        COALESCE(ko."uusi-kattohinta",
-                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * 1.1)
-                    + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * 1.1))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
+                (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * up.hoitokauden_lopun_kattohinta_kerroin)
+                    + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * up.hoitokauden_lopun_kattohinta_kerroin))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
                                                                                               AS "hoitovuoden-lopun-kattohinta",
        x.hk_alkuvuosi                                                                         AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",
@@ -163,7 +163,8 @@ FROM urakka_tavoite ut
          LEFT JOIN mhu_jjh_muutokset jmuutokset ON jmuutokset.urakka = u.id AND jmuutokset.hoitokauden_alkuvuosi = x.hk_alkuvuosi
          LEFT JOIN urakka_parametrit up ON up.urakkaid = u.id
 WHERE ut.urakka = :urakka
-GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi, x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm, up.laskutusraja_kaytossa
+GROUP BY ut.id, ut.hoitokausi, u.id, ko."uusi-kattohinta", t.summa, hli.hoitokauden_lopun_indeksikorjaus, x.hk_alkuvuosi,
+         x.hk_alkupvm, x.hk_loppuvuosi, x.hk_loppupvm, up.laskutusraja_kaytossa, up.hoitokauden_lopun_kattohinta_kerroin
 ORDER BY ut.hoitokausi;
 
 -- name: hae-valikatselmus-siirrot-ed-vuodelta

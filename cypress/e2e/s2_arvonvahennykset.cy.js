@@ -1,6 +1,6 @@
 // Arvonvähennysten E2E-testit
 //
-// Testataan arvonvähennysten lisäämistä MHU25-urakalle (Rovaniemi) ja sen
+// Testataan arvonvähennysten lisäämistä MHU25-urakalle (Kajaani) ja sen
 // näyttämistä eri näkymissä:
 // 1. Välikatselmuksen yhteenveto
 // 2. Laskutusyhteenveto (Työmaakokous ja Tuote-versiot)
@@ -8,7 +8,6 @@
 
 import {
     clickTimeout,
-    pageloadTimeout,
     siivoaTietokannastaSanktiot,
     avaaSanktiotJaBonukset,
     avaaUusiArvonvahennys,
@@ -25,12 +24,29 @@ import {
 let testiArvonvahennysKuvaus = "CY-arvonvahennys-talvihoidolle-1000";
 let testiArvonvahennysPerustelu = "CY-arvonvähennys-talvihoidolle-testi";
 
-let testiurakka = "Rovaniemen MHU testiurakka (1. hoitovuosi)"; // mhu25 urakka
-let evk = "Lappi";
+let testiurakka = "POP MHU Kajaani 2025-2030"; // mhu25 urakka
+let evk = "Pohjois-Suomi";
 
-// Päivämäärät - Rovaniemen urakan (2025-10-01–2030-10-01) sisällä
+// Päivämäärät - Kajaanin urakan ensimmäisen hoitovuoden sisällä
 let havaittuPvm = "01.03.2026";
 let maarattyPvm = "15.03.2026";
+
+// Kajaanin testidatassa on ennestään 3400 euron arvonvähennykset.
+let odotettuArvonvahennystenSumma = "-4 400,00";
+
+function valitseHoitovuosi(hoitovuosi) {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+    });
+    cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+}
+
+function valitseRaportinHoitovuosi() {
+    cy.get('[data-cy=hoitokausi-valinta]').click();
+    cy.contains('li', '1. hoitovuosi').click();
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+}
 
 
 // --- Testit ---
@@ -47,6 +63,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
 
     it('Lisää arvonvähennys 1000€ talvihoitoon MHU25-urakalle', () => {
         avaaSanktiotJaBonukset(testiurakka, evk);
+        valitseHoitovuosi(1);
         avaaUusiArvonvahennys();
 
         // Perustiedot
@@ -82,21 +99,15 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
     });
 
     it('Varmista, että arvonvähennys näkyy välikatselmuksen yhteevedossa', () => {
-        cy.viewport(1400, 1400)
-        cy.visit("/")
-
-        cy.contains('.haku-lista-item', evk).click()
-        cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
-        cy.contains('Näytä päättyneet').click();
-        cy.wait(250);
-        cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
+        avaaSanktiotJaBonukset(testiurakka, evk);
+        valitseHoitovuosi(1);
 
         // Avaa Välikatselmus
         cy.intercept('POST', 'hae-valikatselmuksen-tiedot-hoitovuodelle').as('hae-valikatselmus')
         cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
         cy.wait('@hae-valikatselmus', {timeout: clickTimeout})
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+        valitseRaportinHoitovuosi();
 
         // Tarkista että arvonvähennys näkyy yhteevedossa
         // Yhteenveto sisältää sanktiot/arvonvähennykset summassa.
@@ -110,20 +121,13 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
                 let normalisoitu = teksti
                     .replace(/\u00a0/g, ' ')
                     .replace(/\u2212/g, '-');
-                expect(normalisoitu).to.match(/-\s*1\s*000,00/);
+                expect(normalisoitu).to.contain(odotettuArvonvahennystenSumma);
             });
     });
 
     it('Varmista, että arvonvähennys näkyy laskutusyhteevedossa (Työmaakokous-versio)', () => {
-        cy.viewport(1400, 1400)
-        cy.visit("/")
-
-        cy.contains('.haku-lista-item', evk).click()
-        cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
-        cy.contains('Näytä päättyneet').click();
-        cy.wait(250);
-        cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
+        avaaSanktiotJaBonukset(testiurakka, evk);
+        valitseHoitovuosi(1);
 
         // Avaa Laskutus -> Laskutusyhteenveto
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
@@ -151,20 +155,13 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
                 let normalisoitu = teksti
                     .replace(/\u00a0/g, ' ')
                     .replace(/\u2212/g, '-');
-                expect(normalisoitu).to.match(/-\s*1\s*000,00/);
+                expect(normalisoitu).to.contain(odotettuArvonvahennystenSumma);
             });
     });
 
     it('Varmista, että arvonvähennys näkyy laskutusyhteevedossa (Tuote-versio)', () => {
-        cy.viewport(1400, 1400)
-        cy.visit("/")
-
-        cy.contains('.haku-lista-item', evk).click()
-        cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
-        cy.contains('Näytä päättyneet').click();
-        cy.wait(250);
-        cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
+        avaaSanktiotJaBonukset(testiurakka, evk);
+        valitseHoitovuosi(1);
 
         // Avaa Laskutus -> Laskutusyhteenveto
         cy.get('[data-cy=tabs-taso1-Kulut]').click()
@@ -192,20 +189,13 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
                 let normalisoitu = teksti
                     .replace(/\u00a0/g, ' ')
                     .replace(/\u2212/g, '-');
-                expect(normalisoitu).to.match(/-\s*1\s*000,00/);
+                expect(normalisoitu).to.contain(odotettuArvonvahennystenSumma);
             });
     });
 
     it('Varmista, että arvonvähennys näkyy Kustannusten Seuranta -sivulla', () => {
-        cy.viewport(1400, 1400)
-        cy.visit("/")
-
-        cy.contains('.haku-lista-item', evk).click()
-        cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
-        cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'});
-        cy.contains('Näytä päättyneet').click();
-        cy.wait(250);
-        cy.contains('[data-cy=urakat-valitse-urakka] li', testiurakka, {timeout: pageloadTimeout}).click()
+        avaaSanktiotJaBonukset(testiurakka, evk);
+        valitseHoitovuosi(1);
 
         // Avaa Kulut -> Kustannusten seuranta
         cy.intercept('POST', 'urakan-kustannusten-seuranta-paaryhmittain').as('hae-kustannukset')
@@ -213,6 +203,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
         cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
         cy.wait('@hae-kustannukset', {timeout: clickTimeout})
         cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+        valitseRaportinHoitovuosi();
 
         // Tarkista että arvonvähennys näkyy (voi näkyä sanktiot-taulukossa tai yhtevedossa)
         cy.contains('tr', 'Arvonvähennykset')
@@ -222,7 +213,7 @@ describe('Arvonvähennysten näyttäminen eri näkymissä', () => {
                 let normalisoitu = teksti
                     .replace(/\u00a0/g, ' ')
                     .replace(/\u2212/g, '-');
-                expect(normalisoitu).to.match(/-\s*1\s*000,00/);
+                expect(normalisoitu).to.contain(odotettuArvonvahennystenSumma);
             });
     });
 });

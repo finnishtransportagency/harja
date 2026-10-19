@@ -19,13 +19,13 @@ function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
 
         // Poista muutamalta tehtävältä tarjoustieto
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ise ohituskaistat') " +
+            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ise 2-ajorat.') " +
             ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
                 console.log("Poista tarjoussumma tehtavalta:", tulos)
             });
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Pysäkkikatosten puhdistus') " +
+            "\"DELETE FROM sopimus_tehtavamaara where tehtava = (select id from tehtava where nimi = 'Ise 1-ajorat.') " +
             ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
                 console.log("Poista tarjoussumma tehtavalta:", tulos)
@@ -35,6 +35,13 @@ function alustaKantaanTehtavatJaMaarat(urakkaNimi) {
             ` AND urakka = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}');\"`)
             .then((tulos) => {
                 console.log("Poista tarjoussumma tehtavalta:", tulos)
+            });
+
+        // Luo tarjousmäärät poistojen jälkeen, jotta testissä käytettävät tehtävät näkyvät.
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            `"SELECT luo_kaikille_tehtaville_testitarjousmaarat('${urakkaNimi}', 1100);"`)
+            .then((tulos) => {
+                console.log("Luo urakalle tehtävien testitarjousmäärät:", tulos)
             });
     });
 }
@@ -63,13 +70,13 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     it('Tarjousmäärän voi syöttää', () => {
         cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sop1')
         cy.get('h3').contains('Syötä tarjouksen määrät').should('be.visible');
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('123').blur()
-        cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('123').blur()
-        cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('123').blur()
+        cy.get('table.grid').contains('Ise 2-ajorat.').parent().find('td.muokattava').find('input').clear().type('123').blur()
+        cy.get('table.grid').contains('Ise 1-ajorat.').parent().find('td.muokattava').find('input').clear().type('123').blur()
+        cy.get('table.grid').contains('Ise 1-ajorat.').parent().find('td.muokattava').find('input').clear().type('123').blur()
     })
 
     it('Ei voi tallentaa keskeneräisenä', () => {
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('0').clear().blur()
+        cy.get('table.grid').contains('Ise 2-ajorat.').parent().find('td.muokattava').find('input').clear().type('0').clear().blur()
         cy.contains('Tallenna').should('be.disabled')
         cy.contains('Jotta voit tallentaa, syötä kaikkiin tehtäviin ensin määrät.').should('be.visible')
     })
@@ -109,10 +116,10 @@ describe('Tehtävämäärien syöttö ja käpistely', () => {
     it('Voi tallentaa kun kaikki syötetty', () => {
         cy.intercept('POST', '_/tallenna-sopimuksen-tehtavamaara').as('sopimusmaara')
         cy.intercept('POST', '_/tallenna-sopimuksen-tila').as('tila')
-        cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').clear().type('555').blur()
+        cy.get('table.grid').contains('Ise 2-ajorat.').parent().find('td.muokattava').find('input').clear().type('555').blur()
         cy.wait('@sopimusmaara')
         //cy.get('table.grid').contains('Ise ohituskaistat').parent().find('td.muokattava').find('input').should('have.value');
-        cy.get('table.grid').contains('Pysäkkikatosten puhdistus').parent().find('td.muokattava').find('input').clear().type('555').blur()
+        cy.get('table.grid').contains('Ise 1-ajorat.').parent().find('td.muokattava').find('input').clear().type('555').blur()
         cy.wait('@sopimusmaara')
         cy.contains('Tallenna').click()
         cy.wait('@tila')

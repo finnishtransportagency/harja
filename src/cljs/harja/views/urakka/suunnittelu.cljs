@@ -90,7 +90,7 @@
                   (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
                   (some-> alkupvm pvm/vuosi (>= 2025)))
             ^{:key "tehtavat-maarat"}
-            [tehtavat-maarat-nakyma/tehtavat-maarat]) 
+            [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -131,7 +131,7 @@
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
             [kiintiot/kiintiot])
-          
+
           "Kalustoresurssit"
           :kalustoresurssit
           (when (and
