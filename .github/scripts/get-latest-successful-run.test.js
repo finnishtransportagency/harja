@@ -53,7 +53,7 @@ function setup(t, responses = [{ total_count: 1, workflow_runs: [run()] }]) {
         }),
         listWorkflowRunArtifacts: t.mock.fn(async () => ({
             data: {
-                artifacts: [{ name: 'harja-uberjar', expired: false }],
+                artifacts: [{ id: 456, name: 'harja-uberjar', expired: false }],
             },
         })),
     };
@@ -66,7 +66,10 @@ function setup(t, responses = [{ total_count: 1, workflow_runs: [run()] }]) {
         delay,
         execute: () => getLatestSuccessfulRun({
             github: { rest: { actions } },
-            context: { repo: { owner: 'omistaja', repo: 'projekti' } },
+            context: {
+                repo: { owner: 'omistaja', repo: 'projekti' },
+                serverUrl: 'https://github.com',
+            },
             core,
         }),
     };
@@ -75,7 +78,7 @@ function setup(t, responses = [{ total_count: 1, workflow_runs: [run()] }]) {
 test('rajaa haun seitsemään vuorokauteen', async (t) => {
     const { execute, actions, delay } = setup(t);
 
-    assert.deepEqual(await execute(), { commitSha: 'testi-commit', runId: 123 });
+    assert.deepEqual(await execute(), { commitSha: 'testi-commit', runId: 123, artifactUrl: undefined });
     assert.deepEqual(actions.listWorkflowRuns.mock.calls[0].arguments[0], {
         owner: 'omistaja',
         repo: 'projekti',
@@ -212,7 +215,9 @@ test('API-virhe välittyy kutsujalle ilman uutta omaa HTTP-retry-kerrosta', asyn
 test('tarkistaa edelleen valitun runin artifactin', async (t) => {
     const { execute, actions, core } = setup(t);
     process.env.CHECK_ARTIFACT_WITH_NAME = 'harja-uberjar';
-    assert.equal((await execute()).runId, 123);
+    const result = await execute();
+    assert.equal(result.runId, 123);
+    assert.equal(result.artifactUrl, 'https://github.com/omistaja/projekti/actions/runs/123/artifacts/456');
     assert.equal(core.setFailed.mock.callCount(), 0);
     assert.equal(actions.listWorkflowRunArtifacts.mock.calls[0].arguments[0].run_id, 123);
 });
