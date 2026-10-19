@@ -475,6 +475,8 @@
 
 (deftest paivita-lupaus-vastaus
   (let [lupaus-vastaus {:id 2
+                        :kuukausi 10
+                        :vuosi 2021
                         :vastaus false
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
@@ -484,11 +486,15 @@
 
   (is (thrown? AssertionError (vastaa-lupaukseen
                                 {:id 9873456387435
+                                 :kuukausi 12
+                                 :vuosi 2021
                                  :vastaus false
                                  :lupaus-vaihtoehto-id nil}))
     "Olematon lupaus-vastaus-id heittää poikkeuksen.")
 
   (let [lupaus-vastaus {:id 2
+                        :kuukausi 10
+                        :vuosi 2021
                         :vastaus nil
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
@@ -497,6 +503,8 @@
       "Boolean-vastauksen voi asettaa takaisin nil-arvoon."))
 
   (let [lupaus-vastaus {:id 3
+                        :kuukausi 10
+                        :vuosi 2021
                         :vastaus nil
                         :lupaus-vaihtoehto-id nil}
         tulos (vastaa-lupaukseen lupaus-vastaus)]
