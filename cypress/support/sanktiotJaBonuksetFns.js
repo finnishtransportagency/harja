@@ -12,6 +12,7 @@ export const pageloadTimeout = 30000;
 export const testiurakkaMhu25 = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
 export const testiurakkaMhu24 = "POP MHU Suomussalmi 2024-2029";
 export const testiurakkaMhu19 = "Oulun MHU 2019-2024";
+export const testiurakkaMhu26 = "Sodankylän MHU 2026-2031";
 export const testiurakkaMhu23 = "Raahen MHU 2023-2028";
 export const evkLappi = "Lappi";
 export const evkPohjoisSuomi = "Pohjois-Suomi";
@@ -37,18 +38,26 @@ export function siivoaBonuksetKannasta(lisatieto) {
 // Navigoi urakan Laadunseuranta > Sanktiot ja bonukset -näkymään
 export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
     cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot')
+    cy.intercept('POST', '_/hae-urakan-sanktio-konfiguraatio').as('sanktiokonfiguraatio')
 
     cy.visit("/")
 
-    cy.contains('.haku-lista-item', urakkaEvk).click()
-    cy.get('.ajax-loader', {timeout: pageloadTimeout}).should('not.exist')
+    cy.get('.ladataan-harjaa', {timeout: pageloadTimeout}).should('not.exist')
+    cy.contains('.haku-lista-item', urakkaEvk, {timeout: pageloadTimeout}).click()
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
-    cy.contains('Näytä päättyneet').click();
-    cy.wait(250); // Toimii varmemmin, kun ei ole niin kiire
+    cy.contains('label', 'Näytä päättyneet')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
     cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
     cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
     cy.wait('@sanktiot', {timeout: clickTimeout})
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist')
+    cy.wait('@sanktiokonfiguraatio', {timeout: clickTimeout})
+        .its('response.statusCode').should('be.within', 200, 299)
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
 }
 
