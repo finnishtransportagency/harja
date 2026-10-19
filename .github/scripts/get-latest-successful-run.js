@@ -89,6 +89,7 @@ module.exports = async ({ github, context, core }) => {
 
     const commitSha = latestRun.head_commit.id;
     const runId = latestRun.id;
+    let artifactUrl;
 
     // Tarkasta onko runissa haluttua artifactia ja että se ei ole vanhentunut
     if (!!ARTIFACT_NAME) {
@@ -105,11 +106,14 @@ module.exports = async ({ github, context, core }) => {
 
             return;
         }
+
+        artifactUrl = `${context.serverUrl}/${owner}/${repo}/actions/runs/${runId}/artifacts/${artifact.id}`;
     }
 
-    // Palautetaan onnistuneeseen runiin liittyvä commit SHA ja run ID
+    // Palautetaan onnistuneeseen runiin liittyvä commit SHA, run ID ja artifactin URL
     return {
         commitSha,
         runId,
+        artifactUrl,
     }
 }
