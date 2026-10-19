@@ -636,6 +636,93 @@
           (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
               "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
 
+(deftest laske-lopullinen-hoitovuoden-lopun-kattohinta-test
+  (let [vuoden-2024-urakan_alkuvuosi 2024
+        vuoden-2025-urakan-alkuvuosi 2025
+        vuoden-2020-urakan-alkuvuosi 2020
+        hoitovuoden-alkuvuosi-2024 2024
+        hoitovuoden-alkuvuosi-2025 2025
+        kuluvan-vuoden-muutosten-summa-25 200M ;; Alkaa 25 urakoilta
+        kuluvan-vuoden-muutosten-summa-24 0M ;; Alkaa 25 urakoilta
+        tvh-arvonvahennysten-summa-24 0M  ;; Arvonvähennykset ei vaikuta tavoitehintaan -24 urakoissa (ennen vuotta 26)
+        tvh-arvonvahennysten-summa-25 50M
+        kattohinta-ennen-indeksia-ja-muutoksia 1000M
+        hoitovuoden-lopun-indeksikorjaus-summa 80M
+        kattohintakerroin-24 1.1M
+        kattohintakerroin-25 1.2M
+        indeksikorjauspaatoksen-id 1
+        kattohinnassa-mukana-indeksipaatos-24 (+ kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-lopun-indeksikorjaus-summa kattohintakerroin-24))
+        odotettu-kattohinta-vuonna-2024 (+ kattohinta-ennen-indeksia-ja-muutoksia
+                                          (* kattohintakerroin-24 (+ tvh-arvonvahennysten-summa-24  kuluvan-vuoden-muutosten-summa-24 hoitovuoden-lopun-indeksikorjaus-summa)))
+        odotettu-kattohinta-vuonna-2025 (+ kattohinta-ennen-indeksia-ja-muutoksia
+                                          (* kattohintakerroin-25 (+ tvh-arvonvahennysten-summa-25 kuluvan-vuoden-muutosten-summa-25 hoitovuoden-lopun-indeksikorjaus-summa)))
+        odotettu-kattohinta-indeksikorjauspaatoksella-24 (+ kattohinta-ennen-indeksia-ja-muutoksia
+                                                           (* kattohintakerroin-24 (+ tvh-arvonvahennysten-summa-24 hoitovuoden-lopun-indeksikorjaus-summa)))
+        odotettu-vanhan-urakan-kattohinta 1000M
+        urakan-parametrit-24 {:hoitokauden_lopun_kattohinta_kerroin kattohintakerroin-24}
+        urakan-parametrit-25 {:hoitokauden_lopun_kattohinta_kerroin kattohintakerroin-25}]
+
+    (testing "vuoden 2021 ja uudempien urakoiden tavoitehinnan oikaisut lasketaan mukaan vain kerran"
+      (is (= odotettu-kattohinta-vuonna-2024
+            (valikatselmukset/laske-lopullinen-hoitovuoden-lopun-kattohinta
+              [] vuoden-2024-urakan_alkuvuosi hoitovuoden-alkuvuosi-2024
+              kuluvan-vuoden-muutosten-summa-24 tvh-arvonvahennysten-summa-24
+              kattohinta-ennen-indeksia-ja-muutoksia hoitovuoden-lopun-indeksikorjaus-summa urakan-parametrit-24))))
+
+    (testing "vuodesta 2025 alkavissa urakoissa käytetään kuluvan vuoden muutoksia"
+      (is (= odotettu-kattohinta-vuonna-2025
+            (valikatselmukset/laske-lopullinen-hoitovuoden-lopun-kattohinta
+              [] vuoden-2025-urakan-alkuvuosi hoitovuoden-alkuvuosi-2025
+              kuluvan-vuoden-muutosten-summa-25 tvh-arvonvahennysten-summa-25
+              kattohinta-ennen-indeksia-ja-muutoksia hoitovuoden-lopun-indeksikorjaus-summa urakan-parametrit-25))))
+
+    (testing "aiemmin tallennettua indeksikorjauspäätöstä ei lasketa toistamiseen"
+      (is (= odotettu-kattohinta-indeksikorjauspaatoksella-24
+            (valikatselmukset/laske-lopullinen-hoitovuoden-lopun-kattohinta
+              [{:nimi "Hoitovuoden lopun indeksikorjaus" :id indeksikorjauspaatoksen-id}]
+              vuoden-2024-urakan_alkuvuosi hoitovuoden-alkuvuosi-2024
+              kuluvan-vuoden-muutosten-summa-24 tvh-arvonvahennysten-summa-24
+              kattohinnassa-mukana-indeksipaatos-24 hoitovuoden-lopun-indeksikorjaus-summa urakan-parametrit-24))))
+    (testing "ennen vuotta 2021 alkaneiden urakoiden kattohintaa ei lasketa uudelleen"
+      (is (= odotettu-vanhan-urakan-kattohinta
+            (valikatselmukset/laske-lopullinen-hoitovuoden-lopun-kattohinta
+              [] vuoden-2020-urakan-alkuvuosi hoitovuoden-alkuvuosi-2024
+              kuluvan-vuoden-muutosten-summa-24 tvh-arvonvahennysten-summa-24
+              kattohinta-ennen-indeksia-ja-muutoksia hoitovuoden-lopun-indeksikorjaus-summa urakan-parametrit-24))))))
+
+(deftest laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan-test
+  (let [urakan-alkuvuosi-2024 2024
+        urakan-alkuvuosi-2025 2025
+        valittu-hoitovuosi-24 2024
+        valittu-hoitovuosi-25 2025
+        valittu-hoitovuosi-26 2026
+        muutosten-summa-24 0M  ;; -24 urakoilla ei ole muutoksia
+        muutosten-summa-25 200M
+        hoitovuoden-arvonvahennysten-summa-24-2024 0M ;; -24 urakoilla ei ole arvonvähennykset eivät vaikuta tavoitehintaan - ennenkuin vuonna 26
+        hoitovuoden-arvonvahennysten-summa-24-2026 50M ;; -24 urakoilla ei ole arvonvähennykset eivät vaikuta tavoitehintaan - ennenkuin vuonna 26
+        hoitovuoden-arvonvahennysten-summa-25 50M
+        odotettu-tavoitehinta-24-2024 (+ muutosten-summa-24 hoitovuoden-arvonvahennysten-summa-24-2024)
+        odotettu-tavoitehinta-24-2026 (+ muutosten-summa-24 hoitovuoden-arvonvahennysten-summa-24-2026)
+        odotettu-tavoitehinta-25 (+ muutosten-summa-25 hoitovuoden-arvonvahennysten-summa-25)]
+
+    (testing "vuoteen 2026 asti vanhoissa urakoissa huomioidaan vain oikaisut, arvonvähennykset ei vaikuta tavoitehintaan"
+      (is (= odotettu-tavoitehinta-24-2024
+            (valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan
+              urakan-alkuvuosi-2024 valittu-hoitovuosi-24
+              muutosten-summa-24 hoitovuoden-arvonvahennysten-summa-24-2024))))
+
+    (testing "vuoden 2026 jälkeen vanhoissa urakoissa arvonvähennyksiä ei huomioida"
+      (is (= odotettu-tavoitehinta-24-2026
+            (valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan
+              urakan-alkuvuosi-2024 valittu-hoitovuosi-26
+              muutosten-summa-24 hoitovuoden-arvonvahennysten-summa-24-2026))))
+
+    (testing "vuoden 2024 jälkeen alkaneissa urakoissa huomioidaan kuluvan vuoden muutokset ja arvonvähennykset"
+      (is (= odotettu-tavoitehinta-25
+            (valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan
+              urakan-alkuvuosi-2025 valittu-hoitovuosi-25
+              muutosten-summa-25 hoitovuoden-arvonvahennysten-summa-25))))))
+
 (deftest ominaisuuden-muokkaus-sallittu?-toimii
   (let [db (:db jarjestelma)
         urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
