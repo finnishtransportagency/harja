@@ -30,6 +30,8 @@
 (defrecord HaeKaikkiTehtavaryhmatOnnistui [vastaus])
 (defrecord HaeTehtavaryhmanTehtavat [id])
 (defrecord HaeTehtavaryhmanTehtavatOnnistui [vastaus])
+(defrecord HaeLukitustiedot [])
+(defrecord HaeLukitustiedotOnnistui [vastaus])
 (defrecord KutsuEpaonnistui [viesti])
 
 (extend-protocol tuck/Event
@@ -66,6 +68,22 @@
     (-> app
       (assoc :tehtavat vastaus)
       (assoc :tehtavaryhma-haku-menossa? false)))
+
+  HaeLukitustiedot
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-lukitustiedot
+      {:urakka-id @nav/valittu-urakka-id}
+      {:onnistui ->HaeLukitustiedotOnnistui
+       :epaonnistui ->KutsuEpaonnistui
+       :epaonnistui-parametrit [{:viesti "Lukitustietojen haku epäonnistui"}]
+       :paasta-virhe-lapi? true})
+    (assoc app :lukitushaku-menossa? true))
+
+  HaeLukitustiedotOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (-> app
+      (assoc :lukitustiedot vastaus)
+      (assoc :lukitushaku-menossa? false)))
 
   KutsuEpaonnistui
   (process-event [{{:keys [viesti]} :parametrit :as tulos} app]
