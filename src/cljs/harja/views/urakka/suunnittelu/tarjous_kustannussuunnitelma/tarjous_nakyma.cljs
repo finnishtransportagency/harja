@@ -510,23 +510,18 @@
      [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]
 
      ;;Hankinnat
-     [:h2 "Hankinnat"]
      [hankinnat-grid e! vuositaulukon-otsikot nimi-leveys yhteensa-leveys hankinnat vesivayla-hoito?]
 
      ;;Erillishankinnat
-     [:h2 "Erillishankinnat"]
      [erillishankinnat-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys erillishankinnat vesivayla-hoito?]
 
      ;;Johto-ja-hallintokorvaus
-     [:h2 "Johto- ja hallintokorvaus"]
      [johto-ja-hallintokorvaukset e! vahvistetut-vuodet (:uusi-toimenkuva-valittavana app) (:kaikki-toimenkuvat app) vuositaulukon-otsikot vuosi-leveys toimenkuvat vesivayla-hoito?]
 
      ;;Hoidonjohtopalkkio
-     [:h2 "Hoidonjohtopalkkio"]
      [hoidonjohtopalkkio-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys vuosi-leveys yhteensa-leveys hoidonjohtopalkkiot vesivayla-hoito?]
 
      ;;Tavoite-ja-kattohinta
-     [:h2 "Tavoite- ja kattohinta"]
      [tavoite-ja-kattohinta-grid e! vahvistetut-vuodet vuositaulukon-otsikot nimi-leveys yhteensa-leveys app]
 
      ;; Custom-toteutus. Tallennusnapit on taulukon jälkeen
@@ -539,7 +534,9 @@
   (let [{:keys [sisaan ulos]} (nav/luo-muutosten-hallinta
                                 :tarjous-nakyma/muutokset
                                 #(get @tila/tarjous-kustannussuunnitelma :tallentamattomia-muutoksia?)
-                                :beforeunload-viesti "Tarjouslomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+                                :beforeunload-viesti "Tarjouslomakkeella on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")
+        vesivayla-hoito? (= :vesivayla-hoito
+                           (-> @tila/yleiset :urakka :tyyppi))]
     (komp/luo
       (komp/sisaan
         #(do
@@ -558,14 +555,15 @@
             [:div.row
              [:div.col-xs-12.col-md-6
               [:h1 "Tarjouksen tiedot"]]]
-            [:div.row
-             [yleiset/info-laatikko :neutraali
-              [:span
-               "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen "
-               [yleiset/linkki "Hoitovuoden alun tavoitehinta -näkymästä"
-                #(nav/aseta-valittu-valilehti! :suunnittelu :uusi-kustannussuunnitelma)]
-               "."]
-              nil nil {:sulje-nappi-id (gensym)}]]
+            (when-not vesivayla-hoito?
+              [:div.row
+               [yleiset/info-laatikko :neutraali
+                [:span
+                 "Tarkempi kustannusten suunnittelu tehdään tarjouksen tietojen tallentamisen jälkeen "
+                 [yleiset/linkki "Hoitovuoden alun tavoitehinta -näkymästä"
+                  #(nav/aseta-valittu-valilehti! :suunnittelu :uusi-kustannussuunnitelma)]
+                 "."]
+                nil nil {:sulje-nappi-id (gensym)}]])
             [tarjous-nakyma e! app]
             [debug/debug app]])]))))
 
