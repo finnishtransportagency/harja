@@ -134,6 +134,34 @@
                             "Ei liity kohteeseen"
                             ""))))}))
 
+(defn- tapahtumapaikka-kentta
+  [yllapitokohdeurakka? vesivaylaurakka? laskutus-ilman-laskutuskelpoisuutta? sanktio voi-muokata?]
+  (when (and (not yllapitokohdeurakka?)
+             (not vesivaylaurakka?)
+             (not laskutus-ilman-laskutuskelpoisuutta?)
+             (not (= :laskutus_yli_laskutusrajan (:laji sanktio))))
+    {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
+     :uusi-rivi? true
+     :hae (comp :kohde :laatupoikkeama)
+     ::lomake/col-luokka "col-xs-12"
+     :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
+     :pakollinen? true
+     :muokattava? (constantly voi-muokata?)
+     :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]}))
+
+(defn- puute-tai-laiminlyonti-kentta
+  [yllapitourakka?]
+  (when yllapitourakka?
+    {:otsikko "Puute tai laiminlyönti"
+     :uusi-rivi? true
+     :nimi :vakiofraasi
+     :tyyppi :valinta
+     :pitka-teksti? true
+     ::lomake/col-luokka "col-xs-12"
+     :valinta-arvo first
+     :valinta-nayta second
+     :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -319,30 +347,13 @@
           [
          (yllapitokohde-kentta yllapitokohdeurakka? yllapitokohteet voi-muokata?)
 
-         (when (and (not yllapitokohdeurakka?)
-                    (not vesivaylaurakka?)
-                    (not laskutus-ilman-laskutuskelpoisuutta?)
-                    (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
-           {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
-            :uusi-rivi? true
-            :hae (comp :kohde :laatupoikkeama)
-            ::lomake/col-luokka "col-xs-12"
-            :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :kohde] arvo))
-            :pakollinen? true
-            :muokattava? (constantly voi-muokata?)
-            :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]})
+          (tapahtumapaikka-kentta yllapitokohdeurakka?
+                          vesivaylaurakka?
+                          laskutus-ilman-laskutuskelpoisuutta?
+                          @muokattu
+                          voi-muokata?)
 
-
-         (when yllapitourakka?
-           {:otsikko "Puute tai laiminlyönti"
-            :uusi-rivi? true
-            :nimi :vakiofraasi
-            :tyyppi :valinta
-            :pitka-teksti? true
-            ::lomake/col-luokka "col-xs-12"
-            :valinta-arvo first
-            :valinta-nayta second
-            :valinnat sanktio-domain/+yllapidon-sanktiofraasit+})
+          (puute-tai-laiminlyonti-kentta yllapitourakka?)
 
          (when-not tyon-tekematta-jattamisen-tyyppi-22?
            {:otsikko "Perustelu"
