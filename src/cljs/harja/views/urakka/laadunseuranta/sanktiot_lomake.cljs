@@ -113,9 +113,7 @@
                         automaattinen-summa
                         (:normaalimaara @muokattu))
         lopullinen-maara (when normaalimaara
-                           (if omailmoitettu
-                             (/ normaalimaara 2)
-                             normaalimaara))
+                           (sanktio-domain/kiintea-sanktiosumma normaalimaara omailmoitettu))
         tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
                                 kiintea-profiilisumma?
                                 (assoc :normaalimaara normaalimaara
@@ -309,9 +307,7 @@
                            kiintea-profiilisumma?
                            (assoc :normaalimaara automaattinen-summa
                              :summa (when automaattinen-summa
-                                      (if omailmoitettu
-                                        (/ automaattinen-summa 2)
-                                        automaattinen-summa)))
+                                      (sanktio-domain/kiintea-sanktiosumma automaattinen-summa omailmoitettu)))
                            (not kiintea-profiilisumma?)
                            (assoc :normaalimaara nil :summa nil))))
               :valinta-arvo identity
