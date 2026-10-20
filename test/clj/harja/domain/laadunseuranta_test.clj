@@ -68,6 +68,77 @@
              (sanktio-domain/urakan-sanktiolajit {:tyyppi :vesivayla-hoito} 2025))
         "Muille urakkatyypeille ei tarjota sanktiolajeja"))))
 
+(deftest sanktiolajin-vaihto-sailyttaa-uuteen-lajiin-kuuluvan-tyypin
+  (let [vanha-tyyppi {:id 1 :koodi 13 :toimenpidekoodi "H1"}
+    toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H2"}
+        rivi {:laji :A
+              :tyyppi vanha-tyyppi
+              :toimenpideinstanssi 101
+              :summa 250
+              :normaalimaara 500
+              :laskettava-syote {:maara 2}
+              :laskennan-syote {:maara 2}}]
+    (is (= (assoc rivi :laji :B :toimenpideinstanssi "H1")
+           (sanktio-domain/vaihda-sanktiolajia
+             rivi :B [vanha-tyyppi toinen-tyyppi] [])))))
+
+(deftest sanktiolajin-vaihto-esivalitsee-yhden-tyypin-ja-paattelee-toimenpideinstanssin
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
+        toimenpideinstanssit [{:tpi_id 202 :toimenpidekoodi "H2"}
+                  {:tpi_id 203 :toimenpidekoodi "H3"}]
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :toimenpideinstanssi nil}]
+    (is (= (assoc rivi
+             :laji :muistutus
+             :tyyppi tyyppi
+             :toimenpideinstanssi 202)
+           (sanktio-domain/vaihda-sanktiolajia
+             rivi :muistutus [tyyppi] toimenpideinstanssit)))))
+
+(deftest sanktiolajin-vaihto-nollaa-muistutuksen-summan-ja-kohdistuksen
+  (let [rivi {:laji :A
+              :tyyppi {:id 1}
+              :summa 250
+              :omailmoitettu true
+              :toimenpideinstanssi 101
+              :indeksi 3}]
+    (is (= (assoc rivi
+             :laji :muistutus
+             :tyyppi nil
+             :summa nil
+             :omailmoitettu false
+             :toimenpideinstanssi nil
+             :indeksi nil)
+           (sanktio-domain/vaihda-sanktiolajia
+             rivi :muistutus [] [])))))
+
+(deftest sanktiolajin-vaihto-sailyttaa-summa-ja-poistaa-laskennan-syotteet
+  (let [rivi {:laji :A
+              :tyyppi {:id 1}
+              :summa 250
+              :normaalimaara 500
+              :laskettava-syote {:maara 2}
+              :laskennan-syote {:maara 2}}]
+    (is (= (-> rivi
+             (assoc :laji :B :tyyppi nil)
+             (dissoc :laskettava-syote :laskennan-syote))
+           (sanktio-domain/vaihda-sanktiolajia
+             rivi :B [] [])))))
+
+(deftest sanktiolajin-vaihto-dokumentoi-h6n-vanhan-toimenpidekoodin
+  (let [vanha-tyyppi {:id 1 :koodi 13 :toimenpidekoodi "H6"}
+  toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H7"}
+        rivi {:laji :A
+              :tyyppi vanha-tyyppi
+              :toimenpideinstanssi 606}]
+    ;; H6 on nykyinen käyttäytyminen: lajin vaihto käyttää vanhan tyypin
+    ;; :toimenpidekoodi-arvoa :toimenpideinstanssi-kentässä. Tätä ei korjata T04:ssä.
+    (is (= "H6"
+           (:toimenpideinstanssi
+             (sanktio-domain/vaihda-sanktiolajia
+               rivi :B [vanha-tyyppi toinen-tyyppi] []))))))
+
       (deftest aikakausikonteksti-kokoaa-urakkakohtaiset-ehdot
         (let [yleinen {:nayta-indeksi? false
              :perinta-tapa :laskutuskuukausi

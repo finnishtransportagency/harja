@@ -240,6 +240,40 @@
     (not= :yllapidon_muistutus (:laji sanktio))
     (not= :vesivayla_muistutus (:laji sanktio))))
 
+(defn vaihda-sanktiolajia
+  [rivi uusi-laji sanktiotyypit toimenpideinstanssit]
+  (let [vanha-tyyppi-id (get-in rivi [:tyyppi :id])
+        rivi (assoc rivi :laji uusi-laji :tyyppi nil)
+        vanha-tyyppi (some #(when (= vanha-tyyppi-id (:id %)) %) sanktiotyypit)
+        yksi-tyyppi (first sanktiotyypit)
+        rivi (cond
+               (and (= 1 (count sanktiotyypit))
+                 yksi-tyyppi
+                 (not= 1 (count toimenpideinstanssit)))
+               (assoc rivi
+                 :tyyppi yksi-tyyppi
+                 :toimenpideinstanssi
+                 (some #(when (= (:toimenpidekoodi yksi-tyyppi)
+                                  (:toimenpidekoodi %))
+                        (:tpi_id %))
+                   toimenpideinstanssit))
+
+               (and (> (count sanktiotyypit) 1)
+                 vanha-tyyppi)
+               (assoc rivi
+                 :tyyppi vanha-tyyppi
+                 :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+
+               :else (dissoc rivi :laskettava-syote :laskennan-syote))]
+    (if (and (not (muu-kuin-muistutus? rivi))
+          (nil? (:tyyppi rivi)))
+      (assoc rivi
+        :summa nil
+        :omailmoitettu false
+        :toimenpideinstanssi nil
+        :indeksi nil)
+      rivi)))
+
 (defn sakkoryhmasta-sakko? [sanktio]
   (and (not= :muistutus (:sakkoryhma sanktio))
     (not= :yllapidon_muistutus (:sakkoryhma sanktio))))
