@@ -145,7 +145,7 @@
              (and arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
              [:<>
               (when arvonvahennys-paatoksella-lukittu?
-                [yleiset/vihje "Hoitovuoden tavoitehinnan muutos- tai pysyvien muutosten päätös lukitsee tavoitehintaa alentavat arvonvähennykset." nil 18])
+                [yleiset/vihje "Välikatselmuksessa päätös lukitsee tavoitehintaa alentavat arvonvähennykset." nil 18])
               [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?]]
 
              :else
