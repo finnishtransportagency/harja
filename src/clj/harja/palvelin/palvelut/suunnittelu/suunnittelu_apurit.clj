@@ -4,7 +4,7 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
-            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]))
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]))
 
 
 (defn jasenna-tallennettavat-vuodet
@@ -58,10 +58,9 @@
         vahvistukset (kustannussuunnitelman-vahvistukset db urakka-id)
         lukitut-vuodet (set (keep
                               (fn [vuosi]
-                                (let [lukittu? (not (valikatselmus-palvelu/ominaisuuden-muokkaus-sallittu? db kayttaja urakka-id (:vuosi vuosi) :tarjous))]
+                                (let [lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id (:vuosi vuosi) :tarjous))]
                                   (when lukittu? (:vuosi vuosi))))
                               urakan-vuodet))
-        lukitut-vuodet (set (map :vuosi (filter true? lukitut-vuodet)))
         vahvistetut-vuodet (into #{} (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset))))]
     (-> tarjous
       (assoc :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit))

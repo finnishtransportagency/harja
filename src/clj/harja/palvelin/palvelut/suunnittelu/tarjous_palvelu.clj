@@ -6,10 +6,9 @@
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut transit-vastaus]]
-            [harja.palvelin.palvelut.valikatselmus.lukitus :as valikatselmus-lukitus]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
-            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.pvm :as pvm]))
 
 (defn hae-tarjouksen-tiedot [db kayttaja {:keys [urakka-id] :as tiedot}]
@@ -40,10 +39,9 @@
           vahvistetut-vuodet (set (map :vuosi (filter :vahvistettu? vahvistukset)))
           lukitut-vuodet (set (keep
                                 (fn [vuosi]
-                                  (let [lukittu? (not (valikatselmus-palvelu/ominaisuuden-muokkaus-sallittu? db kayttaja urakka-id (:vuosi vuosi) :tarjous))]
+                                  (let [lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id (:vuosi vuosi) :tarjous))]
                                     (when lukittu? (:vuosi vuosi))))
                                 urakan-vuodet))
-          lukitut-vuodet (set (map :vuosi (filter true? lukitut-vuodet)))
           kaikki-vahvistettu? (= (count vahvistetut-vuodet) (count urakan-vuodet))
           kaikki-lukittu? (= (count lukitut-vuodet) (count urakan-vuodet))
 
