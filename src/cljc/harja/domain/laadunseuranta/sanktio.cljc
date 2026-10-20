@@ -210,6 +210,12 @@
             summa-euroina))
     summamaaritykset))
 
+(defn kiintea-sanktiosumma
+  [normaali-summa itse-ilmoitettu?]
+  (if itse-ilmoitettu?
+    (/ normaali-summa 2)
+    normaali-summa))
+
 
 
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])

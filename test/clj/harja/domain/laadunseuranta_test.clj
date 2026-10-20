@@ -185,6 +185,18 @@
         :ohjeteksti "Kirjaa summa"}
          (first (:summamaaritykset manuaalinen))))))
 
+(deftest kiintea-normaali-summa-perustuu-aina-alkuperaiseen-summaan
+  (testing "Normaali kiinteä summa"
+    (is (= 4000M
+           (sanktio-domain/kiintea-sanktiosumma 4000M false))))
+  (testing "Itse ilmoitettu kiinteä summa"
+    (is (= 2000M
+           (sanktio-domain/kiintea-sanktiosumma 4000M true))))
+  (testing "Itse ilmoitetun summan uudelleen laskeminen ei puolita jo johdettua summaa"
+    (is (= 2000M
+           (sanktio-domain/kiintea-sanktiosumma 4000M true)
+           (sanktio-domain/kiintea-sanktiosumma 4000M true)))))
+
 (deftest liikennevahinkobonus-ja-alihankintabonus-palauttavat-kanoniset-nimet
   (is (= "Bonus alihankintasopimusten maksuehdoista"
          (sanktio-domain/sanktiolaji->teksti :alihankintabonus)))
