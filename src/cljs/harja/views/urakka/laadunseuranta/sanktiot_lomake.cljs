@@ -189,6 +189,22 @@
      :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
+(defn- laskutusrajan-ylitys-kentta
+  [sanktio]
+  (when (= :laskutus_yli_laskutusrajan (:laji sanktio))
+    {:otsikko "Ylityksen määrä (€)"
+     :nimi :laskutusrajan-ylitys
+     :tyyppi :euro
+     :vaadi-positiivinen-numero? true
+     ::lomake/col-luokka "col-xs-4"
+     :hae #(when (:laskutusrajan-ylitys %) (Math/abs (:laskutusrajan-ylitys %)))
+     :aseta (fn [rivi arvo] (-> rivi
+                              (assoc :laskutusrajan-ylitys arvo)
+                              (assoc :summa (* 0.2 arvo))))
+     :pakollinen? true :uusi-rivi? true
+     :validoi [[:ei-tyhja "Anna ylityksen määrä"]
+               [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -386,20 +402,7 @@
 
          (omailmoitus-kentta omailmoitus-sallittu?)
 
-         ;; Kun sanktiolajina on "Laskutusrajan ylitys" niin näytetään "Ylityksen määrä" -kenttä
-         (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
-           {:otsikko "Ylityksen määrä (€)"
-            :nimi :laskutusrajan-ylitys
-            :tyyppi :euro
-            :vaadi-positiivinen-numero? true
-            ::lomake/col-luokka "col-xs-4"
-            :hae #(when (:laskutusrajan-ylitys %) (Math/abs (:laskutusrajan-ylitys %)))
-            :aseta (fn [rivi arvo] (-> rivi
-                                     (assoc :laskutusrajan-ylitys arvo)
-                                     (assoc :summa (* 0.2 arvo))))
-            :pakollinen? true :uusi-rivi? true
-            :validoi [[:ei-tyhja "Anna ylityksen määrä"]
-                      [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+         (laskutusrajan-ylitys-kentta @muokattu)
 
          ;; Kun sanktiolajina on "laskutusrajan ylitys" niin näytetään summa eri nimisenä ja eri kohdassa
          (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
