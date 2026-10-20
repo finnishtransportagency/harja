@@ -217,6 +217,70 @@
      :hae #(when (:summa %) (Math/abs (:summa %)))
      :pakollinen? true :uusi-rivi? true}))
 
+(defn- summan-maarityksen-kentat
+  [laskutus-ilman-laskutuskelpoisuutta? laskettu-maaritys laskentaparametrit
+   manuaalinen-laskettavan-sisartyyppi? c-ryhman-maaritys kiintea-profiilisumma?
+   lopullinen-maara aikakausikonteksti sanktio lukutila? indeksi-kaytossa? urakan-indeksi]
+  (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
+    (keep identity [(when laskettu-maaritys
+                      {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
+                                  "Laskutettu summa"
+                                  (sanktion-laskenta/syotteen-otsikko laskentaparametrit))
+                       :nimi :laskettava-syote
+                       :tyyppi (if laskutus-ilman-laskutuskelpoisuutta? :euro :numero)
+                       :max-desimaalit (:desimaalit laskentaparametrit)
+                       :data-cy "sanktio-laskettava-syote"
+                       ::lomake/col-luokka "col-xs-3"
+                       :hae sanktion-laskenta/laskettava-syote
+                       :aseta (fn [rivi arvo] (assoc rivi :laskettava-syote arvo))
+                       :pakollinen? true :uusi-rivi? true
+                       :validoi [(fn [arvo _rivi _taulukko]
+                                   (sanktion-laskenta/syotteen-virhe laskentaparametrit arvo))]})
+                    (when laskettu-maaritys
+                      {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
+                                  "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"
+                                  "Sanktion suuruus")
+                       :nimi :laskettu-sanktion-maara
+                       :tyyppi :euro
+                       :kentan-arvon-luokka "fontti-14"
+                       :muokattava? (constantly false)
+                       :uusi-rivi? true
+                       ::lomake/col-luokka "col-xs-12"
+                       :hae #(sanktion-laskenta/laskettu-tulos laskettu-maaritys %)})
+                    (when (and (sanktio-domain/muu-kuin-muistutus? sanktio)
+                               (not laskettu-maaritys)
+                               (not (= :laskutus_yli_laskutusrajan (:laji sanktio))))
+                      {:otsikko (if manuaalinen-laskettavan-sisartyyppi?
+                                  "Sanktion määrä (€)"
+                                  "Sanktion suuruus")
+                       :nimi :summa :tyyppi :euro
+                       :muokattava? (constantly (not kiintea-profiilisumma?))
+                       :vaadi-positiivinen-numero? true
+                       ::lomake/col-luokka "col-xs-4"
+                       :hae #(if kiintea-profiilisumma?
+                               (when-let [summa lopullinen-maara]
+                                 (Math/abs summa))
+                               (when (:summa %)
+                                 (Math/abs (:summa %))))
+                       :vihje (when c-ryhman-maaritys
+                                (str "-" (fmt/euro-opt false (:summa-euroina c-ryhman-maaritys))
+                                  " " (:ohjeteksti c-ryhman-maaritys)))
+                       :pakollinen? true :uusi-rivi? true
+                       :validoi [[:ei-tyhja "Anna summa"]
+                                 [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
+                    (when (and (:nayta-indeksi? aikakausikonteksti)
+                               (sanktio-domain/muu-kuin-muistutus? sanktio))
+                      {:otsikko (str "Indeksi") :nimi :indeksi
+                       :tyyppi :valinta
+                       ::lomake/col-luokka "col-xs-4"
+                       :muokattava? (constantly (not lukutila?))
+                       :hae (if indeksi-kaytossa? :indeksi (constantly nil))
+                       :disabled? (not indeksi-kaytossa?)
+                       :valinnat (if (and indeksi-kaytossa? (not (nil? urakan-indeksi)))
+                                   [urakan-indeksi nil]
+                                   [nil])
+                       :valinta-nayta #(or % "Ei indeksiä")})])))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -418,72 +482,19 @@
 
          (laskutusrajan-summa-kentta @muokattu)
 
-         (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
-           (keep identity [(when laskettu-maaritys
-                             {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
-                                         "Laskutettu summa"
-                                         (sanktion-laskenta/syotteen-otsikko laskentaparametrit))
-                              :nimi :laskettava-syote
-                              :tyyppi (if laskutus-ilman-laskutuskelpoisuutta?
-                                        :euro
-                                        :numero)
-                              :max-desimaalit (:desimaalit laskentaparametrit)
-                              :data-cy "sanktio-laskettava-syote"
-                              ::lomake/col-luokka "col-xs-3"
-                              :hae sanktion-laskenta/laskettava-syote
-                              :aseta (fn [rivi arvo] (assoc rivi :laskettava-syote arvo))
-                              :pakollinen? true :uusi-rivi? true
-                              :validoi [(fn [arvo _rivi _taulukko]
-                                          (sanktion-laskenta/syotteen-virhe laskentaparametrit arvo))]})
-
-                           ;; Tulos on esikatselu; palvelin laskee tallennettavan summan uudelleen.
-                           (when laskettu-maaritys
-                             {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
-                                         "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"
-                                         "Sanktion suuruus")
-                              :nimi :laskettu-sanktion-maara
-                              :tyyppi :euro
-                              :kentan-arvon-luokka "fontti-14"
-                              :muokattava? (constantly false)
-                              :uusi-rivi? true
-                              ::lomake/col-luokka "col-xs-12"
-                              :hae #(sanktion-laskenta/laskettu-tulos laskettu-maaritys %)})
-
-                           (when (and (sanktio-domain/muu-kuin-muistutus? @muokattu)
-                                   (not laskettu-maaritys)
-                                   (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
-                             {:otsikko (if manuaalinen-laskettavan-sisartyyppi?
-                                         "Sanktion määrä (€)"
-                                         "Sanktion suuruus")
-                              :nimi :summa :tyyppi :euro
-                              :muokattava? (constantly (not kiintea-profiilisumma?))
-                              :vaadi-positiivinen-numero? true
-                              ::lomake/col-luokka "col-xs-4"
-                              :hae #(if kiintea-profiilisumma?
-                                      (when-let [summa lopullinen-maara]
-                                        (Math/abs summa))
-                                      (when (:summa %)
-                                        (Math/abs (:summa %))))
-                              :vihje (when c-ryhman-maaritys
-                                       (str "-" (fmt/euro-opt false (:summa-euroina c-ryhman-maaritys))
-                                         " " (:ohjeteksti c-ryhman-maaritys)))
-                              :pakollinen? true :uusi-rivi? true
-                              :validoi [[:ei-tyhja "Anna summa"]
-                                        [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
-
-                           ;; MHU21-> urakoille ei näytetä indeksiä
-                             (when (and (:nayta-indeksi? aikakausikonteksti)
-                               (sanktio-domain/muu-kuin-muistutus? @muokattu))
-                             {:otsikko (str "Indeksi") :nimi :indeksi
-                              :tyyppi :valinta
-                              ::lomake/col-luokka "col-xs-4"
-                              :muokattava? (constantly (not lukutila?))
-                              :hae (if (tiedot-urakka/indeksi-kaytossa-sakoissa?) :indeksi (constantly nil))
-                              :disabled? (not (tiedot-urakka/indeksi-kaytossa-sakoissa?))
-                              :valinnat (if (and (tiedot-urakka/indeksi-kaytossa-sakoissa?) (not (nil? (:indeksi @nav/valittu-urakka))))
-                                          [(:indeksi @nav/valittu-urakka) nil]
-                                          [nil])
-                              :valinta-nayta #(or % "Ei indeksiä")})]))
+         (summan-maarityksen-kentat
+           laskutus-ilman-laskutuskelpoisuutta?
+           laskettu-maaritys
+           laskentaparametrit
+           manuaalinen-laskettavan-sisartyyppi?
+           c-ryhman-maaritys
+           kiintea-profiilisumma?
+           lopullinen-maara
+           aikakausikonteksti
+           @muokattu
+           lukutila?
+           (tiedot-urakka/indeksi-kaytossa-sakoissa?)
+           (:indeksi @nav/valittu-urakka))
 
          ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
          (when (or
