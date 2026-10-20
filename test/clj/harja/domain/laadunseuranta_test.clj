@@ -8,6 +8,53 @@
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.pvm :as pvm]))
 
+(deftest sanktion-paivamaarien-asetus
+  (let [kasittelypvm (pvm/->pvm "15.11.2025")
+        maarattypvm (pvm/->pvm "20.11.2025")
+        olemassa-oleva-perintapvm (pvm/->pvm "31.12.2025")
+           komponenttirivi {:laji :A
+                :sanktioarvo 123
+                         :perintapvm nil
+                :laskutuskuukausi-komp-tiedot {:vuosi 2025 :kuukausi 11}
+                :laatupoikkeama {:paatos {}}}
+           perusrivi {:laatupoikkeama {:paatos {}}}]
+    (testing "käsittelyajan asetus asettaa määräyspäivän ja puuttuvan perintäpäivän"
+      (is (= {:laatupoikkeama {:paatos {:kasittelyaika kasittelypvm}}
+              :maarattypvm kasittelypvm
+              :perintapvm kasittelypvm}
+             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+                 perusrivi kasittelypvm :kasittelyaika))))
+    (testing "määräyspäivän asetus asettaa käsittelyajan ja puuttuvan perintäpäivän hoitokauden loppuun"
+      (is (= {:laatupoikkeama {:paatos {:kasittelyaika maarattypvm}}
+              :maarattypvm maarattypvm
+              :perintapvm (pvm/hoitokauden-loppupvm 2026)}
+             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+                 perusrivi maarattypvm :maarattypvm))))
+    (testing "olemassa oleva perintäpäivä säilyy, kun laskutuskuukausi on valittu"
+      (is (= {:laatupoikkeama {:paatos {:kasittelyaika kasittelypvm}}
+              :maarattypvm kasittelypvm
+              :perintapvm olemassa-oleva-perintapvm
+              :laskutuskuukausi-komp-tiedot {:vuosi 2025 :kuukausi 11}}
+             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+               (assoc perusrivi
+                 :perintapvm olemassa-oleva-perintapvm
+                 :laskutuskuukausi-komp-tiedot {:vuosi 2025 :kuukausi 11})
+               kasittelypvm :kasittelyaika))))
+    (testing "käsittelyajan asetus ei aseta perintäpäivää, kun komponenttitiedot ovat olemassa"
+      (is (= (assoc komponenttirivi
+               :maarattypvm kasittelypvm
+               :perintapvm nil
+               :laatupoikkeama {:paatos {:kasittelyaika kasittelypvm}})
+             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+               komponenttirivi kasittelypvm :kasittelyaika))))
+    (testing "määräyspäivän asetus ei aseta perintäpäivää, kun komponenttitiedot ovat olemassa"
+      (is (= (assoc komponenttirivi
+               :maarattypvm maarattypvm
+               :perintapvm nil
+               :laatupoikkeama {:paatos {:kasittelyaika maarattypvm}})
+             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+               komponenttirivi maarattypvm :maarattypvm))))))
+
 (deftest urakan-mahdolliset-sanktiolajit
   (let [hoidon-lajit-ilman-arvonvahennysta [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys
                                             :tenttikeskiarvo-sanktio :testikeskiarvo-sanktio :vaihtosanktio]

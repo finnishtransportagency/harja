@@ -235,6 +235,22 @@
      :salli-arvonvahennys? (and (not mhu25?)
                               (< hoitokauden-alkuvuosi 2026))}))
 
+(defn aseta-kasittely-tai-maarattypvm
+  [sanktio arvo perinta-tapa]
+  (let [maarattypvm? (= :maarattypvm perinta-tapa)
+        perintapvm (when-not (:laskutuskuukausi-komp-tiedot sanktio)
+                     (if maarattypvm?
+                       (pvm/hoitokauden-loppupvm
+                         (pvm/vuosi
+                           (second (pvm/paivamaaran-hoitokausi arvo))))
+                       arvo))]
+    (assoc-in
+      (cond-> (assoc sanktio :maarattypvm arvo)
+        (nil? (:laskutuskuukausi-komp-tiedot sanktio))
+        (assoc :perintapvm perintapvm))
+      [:laatupoikkeama :paatos :kasittelyaika]
+      arvo)))
+
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
     (not= :yllapidon_muistutus (:laji sanktio))

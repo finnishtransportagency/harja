@@ -32,11 +32,6 @@
     "Hallinnolliset laiminlyönnit" "Toimenpide"
     "Kulun kohdistus"))
 
-(defn- kopioi-maarattypvm-ja-kasittelyaika [rivi arvo]
-  (-> rivi
-    (assoc :maarattypvm arvo)
-    (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
-
 (defn- viimeinen-hoitokausi-nykyhetkella?
   [urakan-tiedot pvm]
   (when (and urakan-tiedot pvm)
@@ -492,12 +487,8 @@
               ::lomake/col-luokka "col-xs-3"
               :hae (comp :kasittelyaika :paatos :laatupoikkeama)
               :aseta (fn [rivi arvo]
-                       (let [rivi (cond-> rivi
-                                   ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
-                                   ;; esivalintana laskutuskuukaudelle valittu käsittelypvm
-                                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                    (assoc-in [:perintapvm] arvo))]
-                         (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
+                       (sanktio-domain/aseta-kasittely-tai-maarattypvm
+                         rivi arvo :kasittelyaika))
               :fmt pvm/pvm-opt :tyyppi :pvm
               :validoi [[:ei-tyhja "Valitse päivämäärä"]
                         (partial talvisuolan-validointi-fn)]}
@@ -506,12 +497,8 @@
               :pakollinen? true
               ::lomake/col-luokka "col-xs-3"
               :aseta (fn [rivi arvo]
-                       (let [rivi (cond-> rivi
-                                    ;; Jos laskutuskuukautta (:perintpvm) ei ole vielä valittu, niin asetetaan
-                                    ;; hoitokauden syyskuun 15. päivä
-                                    (nil? (:laskutuskuukausi-komp-tiedot rivi))
-                                    (assoc-in [:perintapvm] (pvm/hoitokauden-loppupvm (pvm/vuosi (second (pvm/paivamaaran-hoitokausi arvo))))))]
-                         (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
+                       (sanktio-domain/aseta-kasittely-tai-maarattypvm
+                         rivi arvo :maarattypvm))
               :fmt pvm/pvm-opt :tyyppi :pvm
               :validoi [[:ei-tyhja "Valitse päivämäärä"]
                         (partial talvisuolan-validointi-fn)]})
