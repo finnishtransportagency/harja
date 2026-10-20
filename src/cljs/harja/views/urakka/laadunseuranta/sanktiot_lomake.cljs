@@ -19,7 +19,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
-            [reagent.core :refer [atom] :as r]))
+            [reagent.core :as r]))
 
 (defn- toimenpide-valikon-nimi
   "Sanktion tyyppi vaikuttaa siihen näytetäänkö Kulun kohdistus alasvetovalikkoa ja siihen miten se nimetään, kun se näytetään.
@@ -37,26 +37,6 @@
   (-> rivi
     (assoc :maarattypvm arvo)
     (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
-
-(defn- valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
-  (case sanktion-tyyppi
-    "Muut hoitourakan tehtäväkokonaisuudet" (remove
-                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
-                                              toimenpideinstanssit)
-    "Talvihoito, päätiet" (filter
-                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
-                            toimenpideinstanssit)
-    "Talvihoito, muut tiet" (filter
-                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
-                              toimenpideinstanssit)
-    "Sorateiden hoito ja ylläpito" (filter
-                                     #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
-                                        (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
-                                     toimenpideinstanssit)
-    "Liikenneympäristön hoito" (filter
-                                 #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
-                                 toimenpideinstanssit)
-    toimenpideinstanssit))
 
 (defn- viimeinen-hoitokausi-nykyhetkella?
   [urakan-tiedot pvm]
@@ -84,7 +64,6 @@
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
-        tallennus-kaynnissa (atom false)
         urakka-id (:id @nav/valittu-urakka)
         yllapitourakka? @tiedot-urakka/yllapitourakka?
         yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
@@ -102,9 +81,8 @@
         ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin.
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
         ;;mhu -25 alkaen, sanktio kohdistuu tehtäväryhmään "G - Hoindonjohtopalkkio" - Kaivetaan siis oikea tehtäväryhmä listasta
-        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %)) @tiedot/valitun-urakan-tehtavaryhmat)
-        ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
-        tehtavaryhmat (map #(assoc % :nimi (:tehtavaryhma_nimi %)) tehtavaryhmat)
+        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %))
+              @tiedot/valitun-urakan-tehtavaryhmat)
         ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
@@ -158,7 +136,6 @@
                                             (= :talvisuolan_ylitys (:laji sanktio))
                                             (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
                                       (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))
-        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
         urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
         urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
         viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)
@@ -223,8 +200,7 @@
                                          (not (lomake/voi-tallentaa? sanktio)))}]))
                        (when (and voi-muokata? saa-poistaa? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
                          [:button.nappi-kielteinen.oikealle
-                          {:class (when @tallennus-kaynnissa "disabled")
-                           :on-click
+                          {:on-click
                            (fn [e]
                              (.preventDefault e)
                              (varmista-kayttajalta/varmista-kayttajalta
