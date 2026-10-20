@@ -274,6 +274,56 @@
         :indeksi nil)
       rivi)))
 
+(defn vaihda-sanktiotyyppia
+  [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit]
+  (let [tyyppi-vaihtui? (not= (get-in rivi [:tyyppi :id]) (:id uusi-tyyppi))
+        rivi (if (<= urakan-alkuvuosi 2024)
+               (let [toimenpidekoodi (:toimenpidekoodi uusi-tyyppi)
+                     toimenpideinstanssi (cond
+                                           toimenpidekoodi
+                                           (:tpi_id (some #(when (= toimenpidekoodi (:toimenpidekoodi %)) %)
+                                                         toimenpideinstanssit))
+
+                                           (= 1 (count toimenpideinstanssit))
+                                           (:tpi_id (first toimenpideinstanssit))
+
+                                           :else (:toimenpideinstanssi rivi))]
+                 (assoc rivi
+                   :tyyppi uusi-tyyppi
+                   :toimenpideinstanssi toimenpideinstanssi))
+               (assoc rivi :tyyppi uusi-tyyppi))
+        kiintea-summa (sanktiotyypin-kiintea-automaattinen-summa uusi-tyyppi)
+        manuaalinen-c? (and (= :C (:laji rivi))
+                (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
+                  (and (= :manuaalinen maaritystapa)
+                 (some? summa-euroina)
+                 (not (str/blank? ohjeteksti))))
+                  (:summamaaritykset uusi-tyyppi)))
+        omailmoitettu (if kiintea-summa
+                        (:omailmoitettu rivi)
+                        false)
+        rivi (if (or (not tyyppi-vaihtui?)
+                   (contains? rivi :omailmoitettu)
+                   kiintea-summa)
+               (assoc rivi :omailmoitettu omailmoitettu)
+               rivi)]
+    (cond-> rivi
+      tyyppi-vaihtui?
+      (dissoc :laskettava-syote :laskennan-syote)
+
+      (and tyyppi-vaihtui? kiintea-summa)
+      (assoc :normaalimaara kiintea-summa
+             :summa (kiintea-sanktiosumma kiintea-summa omailmoitettu))
+
+      (and tyyppi-vaihtui? manuaalinen-c?)
+      (dissoc :normaalimaara :summa)
+
+      (and tyyppi-vaihtui? (nil? kiintea-summa) (not manuaalinen-c?))
+      (as-> rivi
+        (cond-> rivi
+          (contains? rivi :normaalimaara) (assoc :normaalimaara nil)
+          (contains? rivi :summa) (assoc :summa nil))))))
+
 (defn sakkoryhmasta-sakko? [sanktio]
   (and (not= :muistutus (:sakkoryhma sanktio))
     (not= :yllapidon_muistutus (:sakkoryhma sanktio))))

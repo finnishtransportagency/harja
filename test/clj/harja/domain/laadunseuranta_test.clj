@@ -139,6 +139,96 @@
              (sanktio-domain/vaihda-sanktiolajia
                rivi :B [vanha-tyyppi toinen-tyyppi] []))))))
 
+(deftest sanktiotyypin-vaihto-vaihtaa-tyypin-ja-johtaa-toimenpideinstanssin
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :toimenpideinstanssi 101}]
+    (is (= (assoc rivi
+             :tyyppi tyyppi
+             :toimenpideinstanssi 202)
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2024 [{:tpi_id 202 :toimenpidekoodi "H2"}])))))
+
+(deftest sanktiotyypin-vaihto-sailyttaa-toimenpideinstanssin-uudemmassa-urakassa
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :toimenpideinstanssi 101}]
+    (is (= (assoc rivi :tyyppi tyyppi)
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2025 [{:tpi_id 202 :toimenpidekoodi "H2"}])))))
+
+(deftest sanktiotyypin-vaihto-laskee-kiintean-profiilisumman-omailmoitus-tilassa
+  (let [tyyppi {:id 2
+                :summamaaritykset [{:maaritystapa :automaattinen
+                                    :summa-euroina 4000M
+                                    :ohjeteksti nil}]}
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :normaalimaara 999M
+              :summa 999M
+              :omailmoitettu true
+              :laskettava-syote {:maara 2}
+              :laskennan-syote {:maara 2}}]
+    (is (= (-> rivi
+             (assoc :tyyppi tyyppi
+               :normaalimaara 4000M
+               :summa 2000M
+               :omailmoitettu true)
+             (dissoc :laskettava-syote :laskennan-syote))
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2025 [])))))
+
+(deftest sanktiotyypin-vaihto-ei-kirjoita-manuaalista-c-ryhman-summaa
+  (let [tyyppi {:id 2
+                :summamaaritykset [{:maaritystapa :manuaalinen
+                                    :summa-euroina 1250M
+                                    :ohjeteksti "C-ryhmän manuaalinen summa"}]}
+        rivi {:laji :C
+              :tyyppi {:id 1}
+              :normaalimaara 700M
+              :summa 700M
+              :omailmoitettu true}]
+    (is (= (-> rivi
+             (assoc :tyyppi tyyppi
+               :omailmoitettu false)
+             (dissoc :normaalimaara :summa))
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2025 [])))))
+
+(deftest sanktiotyypin-vaihto-poistaa-vanhan-laskennan-ja-nollaa-ei-kiintean-summan
+  (let [tyyppi {:id 2 :summamaaritykset []}
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :normaalimaara 500M
+              :summa 250M
+              :omailmoitettu true
+              :laskettava-syote {:maara 2}
+              :laskennan-syote {:maara 2}}]
+    (is (= (-> rivi
+             (assoc :tyyppi tyyppi
+               :normaalimaara nil
+               :summa nil
+               :omailmoitettu false)
+             (dissoc :laskettava-syote :laskennan-syote))
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2025 [])))))
+
+(deftest sanktiotyypin-uudelleenvalinta-sailyttaa-laskennan-syotteet
+  (let [tyyppi {:id 2 :summamaaritykset []}
+        laskettava-syote {:maara 2}
+        laskennan-syote {:maara 2}
+        rivi {:laji :A
+              :tyyppi tyyppi
+              :normaalimaara 500M
+              :summa 250M
+              :laskettava-syote laskettava-syote
+              :laskennan-syote laskennan-syote}]
+    (is (= (assoc rivi :omailmoitettu false)
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2025 [])))))
+
       (deftest aikakausikonteksti-kokoaa-urakkakohtaiset-ehdot
         (let [yleinen {:nayta-indeksi? false
              :perinta-tapa :laskutuskuukausi
