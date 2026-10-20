@@ -86,7 +86,7 @@
   1. Lisätään niitä tarvittaessa, koska tietokannasta ei löydy vanhoille urakoille kaikkia toimenkuvia (lisäämällä kesä ja talvikausille omat).
   2. Päivitetään toimenkuvalle hoitovuosittaiset arvot frontilla käsittelyä helpottamaan.
   3. Järjestetään toimenkuvat järkevään järjestykseen."
-  [db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot vesivaylaurakka?]
+  [db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot]
   (let [toimenkuvat (toimenkuva-kyselyt/hae-urakan-toimenkuvat-alkuvuoden-perusteella db {:urakka-id urakka-id
                                                                                           :urakan-alkuvuosi urakan-alkuvuosi})
         toimenkuvat (jasenna-toimenkuvat-maksukausittain toimenkuvat urakan-alkuvuosi)
@@ -105,7 +105,7 @@
                                 ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
                                 :hoitovuosittaiset-arvot (if (or (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
                                                                (= "sopimusvastaava (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))
-                                                               (= "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))) #_(= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                                               (= "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva)))
                                                            [(first hoitovuosittaiset-arvot)] hoitovuosittaiset-arvot))))
                       toimenkuvat)
         toimenkuvat (sort-by :jarjestys toimenkuvat)]
@@ -157,7 +157,7 @@
         rahavaraus-rivit (map-indexed (fn [indeksi rivi] (assoc rivi :jarjestys (+ 1 (inc indeksi)))) rahavaraus-rivit)
         ;; Yhdistetään tarjous ja rahavaraukset
         tarjousrivit (vec (concat tarjousrivit rahavaraus-rivit))
-        toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot vesivaylaurakka?)
+        toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
         tarjousrivit (vec (concat tarjousrivit toimenkuvat))
         jarjestetyt-tarjousrivit (sort-by (fn [rivi] (get osiojarjestys (:osio rivi)))
                                    tarjousrivit)]
@@ -696,7 +696,7 @@
 
         ;; Tarjouksen mukana ei välttämättä tule kaikkia toimenkuvia, jos niitä on tarjouksen tallentamisen jälkeen lisätty urakkalle hallintapaneelista.
         ;; Varmistetaan siis, että kaikki urakan toimenkuvat ovat mukana, kun ne renderöidään frontilla
-        kaikki-urakan-toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot vesivaylaurakka?)
+        kaikki-urakan-toimenkuvat (hae-urakan-toimenkuvat db urakka-id urakan-alkuvuosi hoitovuosittaiset-arvot)
         ;; Vertaillaan toimenkuvat-rivit ja kaikki-urakan-toimenkuvat ja lisätään puuttuvat toimenkuvat nollasummilla
         puuttuvat-toimenkuvat (filter
                                 (fn [kt]
