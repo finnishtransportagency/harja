@@ -12,7 +12,6 @@
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot]
-            [harja.tiedot.urakka.urakka :as uu-tiedot]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.liitteet :as liitteet]
             [harja.ui.lomake :as lomake]
@@ -62,7 +61,10 @@
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
-        mhu25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
+        aikakausikonteksti (sanktio-domain/aikakausikonteksti
+                 urakan-alkuvuosi
+                 (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
+                 (:tyyppi @nav/valittu-urakka))
         muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
         urakka-id (:id @nav/valittu-urakka)
         yllapitourakka? @tiedot-urakka/yllapitourakka?
@@ -70,9 +72,8 @@
         vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
         laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
         yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        hoitokauden-alkuvuosi (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
         ;; Arvonvähennys kuuluu urakan sanktioihin, mutta ei tähän lomakkeelle, koska sille on oma lomakkeensa mhu25+ ja 2026 hoitovuodesta alkaen
-        mahdolliset-sanktiolajit (if (or mhu25? (>= hoitokauden-alkuvuosi 2026))
+        mahdolliset-sanktiolajit (if (not (:salli-arvonvahennys? aikakausikonteksti))
                                    (remove #(= :arvonvahennyssanktio %) @tiedot/valitun-urakan-sanktiolajit)
                                    @tiedot/valitun-urakan-sanktiolajit)
         sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
@@ -480,7 +481,8 @@
                                         [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
 
                            ;; MHU21-> urakoille ei näytetä indeksiä
-                           (when (and (<= urakan-alkuvuosi 2020) (sanktio-domain/muu-kuin-muistutus? @muokattu))
+                             (when (and (:nayta-indeksi? aikakausikonteksti)
+                               (sanktio-domain/muu-kuin-muistutus? @muokattu))
                              {:otsikko (str "Indeksi") :nimi :indeksi
                               :tyyppi :valinta
                               ::lomake/col-luokka "col-xs-4"
@@ -500,7 +502,7 @@
                                 "Liikenneympäristön hoito"
                                 "Sorateiden hoito ja ylläpito"
                                 "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
-           (if (and (not mhu25?) (not lukutila?))
+           (if (and (not (:maaraystapa? aikakausikonteksti)) (not lukutila?))
              {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
               :pakollinen? true
               :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
@@ -533,7 +535,7 @@
               :validoi [[:ei-tyhja "Valitse päivämäärä"]]})
 
            ;; MHU25 urakoilla ei ole käsittelyaikaa enää, vaan sen korvaa Määrätty pvm
-           (if (not mhu25?)
+           (if (not (:maaraystapa? aikakausikonteksti))
              {:otsikko "Käsitelty" :nimi :kasittelyaika
               :pakollinen? true
               :muokattava? (constantly voi-muokata?) ;; Laatupoikkeaman kautta käsittelyaika on aina sama, kuin laatupoikkeamalla.
@@ -565,7 +567,7 @@
                         (partial talvisuolan-validointi-fn)]})
 
            ;; MHU25 urakoille ei näytetä laskutuskuukautta
-           (if (<= urakan-alkuvuosi 2024)
+           (if (= :laskutuskuukausi (:perinta-tapa aikakausikonteksti))
              (if (and voi-muokata? (not lukutila?))
                {:otsikko "Laskutuskuukausi"
                 :label-for-id laskutuskuukausi-id
@@ -634,7 +636,7 @@
               ::lomake/col-luokka "col-xs-6"}))
 
           ;; MHU25 urakoille näytetään määräystapa valintana.
-         (when mhu25?
+         (when (:maaraystapa? aikakausikonteksti)
            (if (not lukutila?)
              {:otsikko "Määräystapa"
               :radio-luokka "maaraystapa-ei-marginia"
@@ -662,10 +664,10 @@
          {:otsikko "Käsittelytapa"
           :nimi :kasittelytapa
           :tyyppi :valinta
-          :muokattava? (if (not mhu25?) (constantly voi-muokata?) (constantly false))
+          :muokattava? (if (not (:maaraystapa? aikakausikonteksti)) (constantly voi-muokata?) (constantly false))
           :pakollinen? true
           ::lomake/col-luokka "col-xs-12"
-          :valinnat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
+          :valinnat (:kasittelytavat aikakausikonteksti)
           :valinta-nayta #(or (sanktio-domain/kasittelytapa->teksti %) "- valitse käsittelytapa -")}
 
          (when (= :muu (:kasittelytapa @muokattu))
