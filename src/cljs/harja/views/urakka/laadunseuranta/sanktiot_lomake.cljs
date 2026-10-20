@@ -281,6 +281,40 @@
                                    [nil])
                        :valinta-nayta #(or % "Ei indeksiä")})])))
 
+(defn- kulun-kohdistus-kentta
+  [sanktio aikakausikonteksti lukutila? urakan-alkuvuosi
+   mahdolliset-kulun-kohdistukset hoidonjohtopalkkio-tr
+   urakan-toimenpideinstanssit]
+  ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
+  (when (or
+          (sanktio-domain/muu-kuin-muistutus? sanktio)
+          (and (sanktio-domain/muistutus? sanktio)
+            (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
+                         "Liikenneympäristön hoito"
+                         "Sorateiden hoito ja ylläpito"
+                         "Hallinnolliset laiminlyönnit"} (get-in sanktio [:tyyppi :nimi]))))
+    (if (and (not (:maaraystapa? aikakausikonteksti)) (not lukutila?))
+      {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
+       :pakollinen? true
+       :disabled? (or (empty? @urakan-toimenpideinstanssit)
+                      (and (> urakan-alkuvuosi 2024)
+                        (<= (count mahdolliset-kulun-kohdistukset) 1)))
+       ::lomake/col-luokka "col-xs-12"
+       :nimi :toimenpideinstanssi
+       :tyyppi :valinta
+       :valinta-arvo :tpi_id
+       :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+       :valinnat mahdolliset-kulun-kohdistukset
+       :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+
+      ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
+      {:otsikko (str (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])))
+       :tyyppi :string
+       :nimi :toimenpideinstanssi
+       :muokattava? (constantly false)
+       ::lomake/col-luokka "col-xs-12"
+       :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)})))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -496,35 +530,14 @@
            (tiedot-urakka/indeksi-kaytossa-sakoissa?)
            (:indeksi @nav/valittu-urakka))
 
-         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
-         (when (or
-                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
-                 (and (sanktio-domain/muistutus? @muokattu)
-                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
-                                "Liikenneympäristön hoito"
-                                "Sorateiden hoito ja ylläpito"
-                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
-           (if (and (not (:maaraystapa? aikakausikonteksti)) (not lukutila?))
-             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
-              :pakollinen? true
-              :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
-                           (and (> urakan-alkuvuosi 2024)
-                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
-              ::lomake/col-luokka "col-xs-12"
-              :nimi :toimenpideinstanssi
-              :tyyppi :valinta
-              :valinta-arvo :tpi_id
-              :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-              :valinnat mahdolliset-kulun-kohdistukset
-              :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
-
-             ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])))
-              :tyyppi :string
-              :nimi :toimenpideinstanssi
-              :muokattava? (constantly false)
-              ::lomake/col-luokka "col-xs-12"
-              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
+         (kulun-kohdistus-kentta
+           @muokattu
+           aikakausikonteksti
+           lukutila?
+           urakan-alkuvuosi
+           mahdolliset-kulun-kohdistukset
+           hoidonjohtopalkkio-tr
+           tiedot-urakka/urakan-toimenpideinstanssit)
 
          (lomake/ryhma {:rivi? true}
            (when-not laskutus-ilman-laskutuskelpoisuutta?
