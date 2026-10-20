@@ -16,6 +16,7 @@
         yllapidon-lajit [:yllapidon_sakko :yllapidon_muistutus]
         mhu24-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2024)}
         mhu25-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2025)}
+        mhu26-urakka {:tyyppi :teiden-hoito :alkupvm (pvm/hoitokauden-alkupvm 2026)}
         alueurakka {:tyyppi :hoito :alkupvm (pvm/hoitokauden-alkupvm 2019)}]
 
     (testing "Hoidon urakat, kun arvonvähennys on vielä vanhassa sanktiolistassa"
@@ -32,7 +33,10 @@
         "MHU24-urakka hoitovuodesta 2026 alkaen -> ei arvonvähennyssanktiota (uusi lomake käytössä)")
       (is (= hoidon-lajit-ilman-arvonvahennysta
              (sanktio-domain/urakan-sanktiolajit mhu24-urakka 2027))
-        "MHU24-urakka hoitovuonna 2027 -> ei arvonvähennyssanktiota")
+        "MHU25-urakka hoitovuonna 2027 -> ei arvonvahennyssanktiota")
+      (is (= hoidon-lajit-ilman-arvonvahennysta
+             (sanktio-domain/urakan-sanktiolajit mhu26-urakka 2026))
+        "MHU26-urakka -> ei arvonvahennyssanktiota")
       (is (= hoidon-lajit-ilman-arvonvahennysta
              (sanktio-domain/urakan-sanktiolajit alueurakka 2026))
         "Alueurakka hoitovuodesta 2026 alkaen -> ei arvonvähennyssanktiota")
@@ -167,12 +171,19 @@
                                    :summa-euroina 2000M
                                    :ohjeteksti "alkavalta viikolta"}]}
         manuaalinen {:summamaaritykset [{:maaritystapa :manuaalinen
+                                         :summa-euroina 200M
                                          :ohjeteksti "Kirjaa summa"}]}]
     (is (true? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kiintea)))
     (is (= 4000M (sanktio-domain/sanktiotyypin-kiintea-automaattinen-summa kiintea)))
     (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kaava)))
     (is (nil? (sanktio-domain/sanktiotyypin-kiintea-automaattinen-summa kaava)))
-    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? manuaalinen)))))
+    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? manuaalinen)))
+    (is (nil? (sanktio-domain/sanktiotyypin-kiintea-automaattinen-summa manuaalinen)))
+    (is (nil? (sanktion-laskenta/laskettu-summamaaritys manuaalinen)))
+    (is (= {:maaritystapa :manuaalinen
+        :summa-euroina 200M
+        :ohjeteksti "Kirjaa summa"}
+         (first (:summamaaritykset manuaalinen))))))
 
 (deftest liikennevahinkobonus-ja-alihankintabonus-palauttavat-kanoniset-nimet
   (is (= "Bonus alihankintasopimusten maksuehdoista"
