@@ -111,6 +111,29 @@
                  (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
                  (:tyyppi rivi)))}))])
 
+(defn- yllapitokohde-kentta
+  [yllapitokohdeurakka? yllapitokohteet voi-muokata?]
+  (when yllapitokohdeurakka?
+    {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
+     :pakollinen? false :muokattava? (constantly voi-muokata?)
+     :uusi-rivi? true
+     ::lomake/col-luokka "col-xs-12"
+     :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
+     :valinta-nayta (fn [arvo voi-muokata?]
+                      (if (:id arvo)
+                        (yllapitokohde-domain/yllapitokohde-tekstina
+                          arvo
+                          {:osoite {:tr-numero (:tr-numero arvo)
+                                    :tr-alkuosa (:tr-alkuosa arvo)
+                                    :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
+                                    :tr-loppuosa (:tr-loppuosa arvo)
+                                    :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
+                        (if (and voi-muokata? (not arvo))
+                          "- Valitse kohde -"
+                          (if (and voi-muokata? (nil? (:id arvo)))
+                            "Ei liity kohteeseen"
+                            ""))))}))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -294,26 +317,7 @@
             urakan-alkuvuosi
             @tiedot-urakka/urakan-toimenpideinstanssit)
           [
-         (when yllapitokohdeurakka?
-           {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
-            :pakollinen? false :muokattava? (constantly voi-muokata?)
-            :uusi-rivi? true
-            ::lomake/col-luokka "col-xs-12"
-            :valinnat yllapitokohteet :jos-tyhja "Ei valittavia kohteita"
-            :valinta-nayta (fn [arvo voi-muokata?]
-                             (if (:id arvo)
-                               (yllapitokohde-domain/yllapitokohde-tekstina
-                                 arvo
-                                 {:osoite {:tr-numero (:tr-numero arvo)
-                                           :tr-alkuosa (:tr-alkuosa arvo)
-                                           :tr-alkuetaisyys (:tr-alkuetaisyys arvo)
-                                           :tr-loppuosa (:tr-loppuosa arvo)
-                                           :tr-loppuetaisyys (:tr-loppuetaisyys arvo)}})
-                               (if (and voi-muokata? (not arvo))
-                                 "- Valitse kohde -"
-                                 (if (and voi-muokata? (nil? (:id arvo)))
-                                   "Ei liity kohteeseen"
-                                   ""))))})
+         (yllapitokohde-kentta yllapitokohdeurakka? yllapitokohteet voi-muokata?)
 
          (when (and (not yllapitokohdeurakka?)
                     (not vesivaylaurakka?)
