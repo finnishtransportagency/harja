@@ -68,6 +68,42 @@
              (sanktio-domain/urakan-sanktiolajit {:tyyppi :vesivayla-hoito} 2025))
         "Muille urakkatyypeille ei tarjota sanktiolajeja"))))
 
+      (deftest aikakausikonteksti-kokoaa-urakkakohtaiset-ehdot
+        (let [yleinen {:nayta-indeksi? false
+             :perinta-tapa :laskutuskuukausi
+             :maaraystapa? false
+             :kasittelytavat sanktio-domain/kasittelytavat
+             :salli-arvonvahennys? true}
+         mhu25 {:nayta-indeksi? false
+           :perinta-tapa :hoitovuosi
+           :maaraystapa? true
+           :kasittelytavat sanktio-domain/kasittelytavat-mhu25
+           :salli-arvonvahennys? false}
+         mhu26-hoitokausi-2025 {:nayta-indeksi? false
+                 :perinta-tapa :hoitovuosi
+                 :maaraystapa? true
+                 :kasittelytavat sanktio-domain/kasittelytavat-mhu25
+                 :salli-arvonvahennys? false}
+         muu-urakkatyyppi {:nayta-indeksi? false
+                 :perinta-tapa :hoitovuosi
+                 :maaraystapa? false
+                 :kasittelytavat sanktio-domain/kasittelytavat
+                 :salli-arvonvahennys? true}]
+          (is (= (assoc yleinen :nayta-indeksi? true)
+            (sanktio-domain/aikakausikonteksti 2020 2025 :teiden-hoito)))
+          (is (= yleinen
+            (sanktio-domain/aikakausikonteksti 2023 2025 :teiden-hoito)))
+          (is (= mhu25
+            (sanktio-domain/aikakausikonteksti 2025 2025 :teiden-hoito)))
+          (is (= mhu26-hoitokausi-2025
+            (sanktio-domain/aikakausikonteksti 2026 2025 :teiden-hoito)))
+          (is (= muu-urakkatyyppi
+            (sanktio-domain/aikakausikonteksti 2025 2025 :hoito)))
+          (is (= (assoc muu-urakkatyyppi
+              :perinta-tapa :hoitovuosi
+              :salli-arvonvahennys? false)
+            (sanktio-domain/aikakausikonteksti 2026 2026 :hoito)))))
+
 (deftest laatupoikkeaman-mahdolliset-sanktiolajit
   (let [hoidon-lajit [:muistutus :A :B :C :arvonvahennyssanktio]
         yllapidon-lajit [:yllapidon_sakko :yllapidon_muistutus]

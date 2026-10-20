@@ -221,6 +221,20 @@
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
 (def kasittelytavat-mhu25 [:valikatselmus])
 
+(defn aikakausikonteksti
+  [urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi]
+  (let [mhu25? (and (= :teiden-hoito urakkatyyppi)
+                 (>= urakan-alkuvuosi 2025))]
+    {:nayta-indeksi? (and (= :teiden-hoito urakkatyyppi)
+                       (<= urakan-alkuvuosi 2020))
+     :perinta-tapa (if (<= urakan-alkuvuosi 2024)
+                     :laskutuskuukausi
+                     :hoitovuosi)
+     :maaraystapa? mhu25?
+     :kasittelytavat (if mhu25? kasittelytavat-mhu25 kasittelytavat)
+     :salli-arvonvahennys? (and (not mhu25?)
+                              (< hoitokauden-alkuvuosi 2026))}))
+
 (defn muu-kuin-muistutus? [sanktio]
   (and (not= :muistutus (:laji sanktio))
     (not= :yllapidon_muistutus (:laji sanktio))
