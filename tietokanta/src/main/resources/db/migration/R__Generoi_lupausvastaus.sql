@@ -90,7 +90,22 @@ BEGIN
                     LOOP
                         PERFORM lisaa_lupausvastaus(lupaus, paatoskk, urakka_id, hoitokauden_alkuvuosi, kayttaja_id);
                     END LOOP;
-            END IF;
+
+                -- Jos kyseessä on kustannusennuste, lisää myös kaikki kuukausi 10
+                IF lupaus.lupaustyyppi = 'kustannusennuste' THEN
+                    PERFORM lisaa_lupausvastaus(lupaus, 10, urakka_id, hoitokauden_alkuvuosi, kayttaja_id);
+
+                    --- Lisätään vielä lopputilanne kustannusennusteelle
+                    INSERT INTO lupaus_hoitovuosi_lopputilanne
+                    ("urakka-id", hoitovuosi_alkuvuosi, lopullinen_tavoitehinta,
+                     lopulliset_kustannukset, valikatselmus_pvm, vahvistaja, vahvistettu,
+                     kustannusennuste_keskiarvo_pisteet)
+                    VALUES (urakka_id, hoitokauden_alkuvuosi, 40,
+                            40, TO_DATE(CONCAT((hoitokauden_alkuvuosi + 1)::text, '10', '15'), 'YYYYMMDD'), kayttaja_id, NOW(),
+                            8);
+                END IF;
+
+                END IF;
         END LOOP;
 END;
 $$ LANGUAGE plpgsql;
