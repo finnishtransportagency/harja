@@ -225,35 +225,11 @@
             :uusi-rivi? true :nimi :laji
             :hae (comp keyword :laji)
             :aseta (fn [rivi arvo]
-                     (let [;; Ota vanhan tyypin id talteen, jotta valinta ei riipu mapin identiteetistä.
-                           vanha-tyyppi-id (get-in rivi [:tyyppi :id])
-                           rivi (-> rivi
-                                  (assoc :laji arvo)
-                                  (dissoc :tyyppi :laskettava-syote :laskennan-syote)
-                                  (assoc :tyyppi nil))
-                           s-tyypit (tiedot/valitun-urakan-sanktiotyypit arvo)
-                           vanha-tyyppi (hae-sanktiotyyppi-idlla s-tyypit vanha-tyyppi-id)
-                           yksi-tyyppi (first s-tyypit)
-                           toimenpideinstansseja (count @tiedot-urakka/urakan-toimenpideinstanssit)
-                           rivi (cond
-                                  ;; Ei saa resetoida toimenpideinsanssia nilliksi jos niitä on vain yksi
-                                  ;; Koska alasvetovalinat ei lähetä uudesta valinnasta enää eventtiä
-                                  (and (= 1 (count s-tyypit)) yksi-tyyppi (not= toimenpideinstansseja 1))
-                                  (assoc rivi
-                                    :tyyppi yksi-tyyppi
-                                    :toimenpideinstanssi
-                                    (when (:toimenpidekoodi yksi-tyyppi)
-                                      (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille (:toimenpidekoodi yksi-tyyppi)))))
-                                  ;; Jos vanha tyyppi, löytyy sanktiolajin tyyppilistasta
-                                  (and (> (count s-tyypit) 1)
-                                    vanha-tyyppi)
-                                  (assoc rivi :tyyppi vanha-tyyppi
-                                    :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
-                                  ;; Muussa tapauksessa, ei tehdä muutoksia
-                                  :else rivi)]
-                       (if-not (sanktio-domain/muu-kuin-muistutus? rivi)
-                         (assoc rivi :summa nil :omailmoitettu false :toimenpideinstanssi nil :indeksi nil)
-                         rivi)))
+                     (sanktio-domain/vaihda-sanktiolajia
+                       rivi
+                       arvo
+                       (tiedot/valitun-urakan-sanktiotyypit arvo)
+                       @tiedot-urakka/urakan-toimenpideinstanssit))
             :valinnat (vec mahdolliset-sanktiolajit)
             :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
             :validoi [[:ei-tyhja "Valitse laji"]]})
@@ -280,37 +256,11 @@
               ::lomake/col-luokka "col-xs-12"
               :nimi :tyyppi
               :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                       (let [tyyppi-vaihtui? (not= (:id tyyppi) (get-in sanktio [:tyyppi :id]))
-                             sanktio (if (<= urakan-alkuvuosi 2024)
-                                       (let [kohdistukset (tiedot/valittavat-kulun-kohdistukset
-                                                            @tiedot-urakka/urakan-toimenpideinstanssit
-                                                            (:nimi tyyppi))
-                                             tpi (cond
-                                                   ;; Jos toimenpidekoodi löytyy, käytä sitä
-                                                   tpk (:tpi_id (tiedot-urakka/urakan-toimenpideinstanssi-toimenpidekoodille tpk))
-                                                   ;; Jos vain yksi vaihtoehto, esivalitse se
-                                                   (= 1 (count kohdistukset)) (:tpi_id (first kohdistukset))
-                                                   ;; Muuten säilytä nykyinen arvo
-                                                   :else (:toimenpideinstanssi sanktio))]
-                                         (assoc sanktio :tyyppi tyyppi :toimenpideinstanssi tpi :tpi_id tpi))
-                                       (assoc sanktio :tyyppi tyyppi))
-                             kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
-                                                      tyyppi)
-                             automaattinen-summa (when kiintea-profiilisumma?
-                                                   (tiedot/sanktiotyypin-automaattinen-summa tyyppi))
-                             omailmoitettu (boolean (and (:voi-puolittaa-omailmoituksella tyyppi)
-                                                      (:omailmoitettu sanktio)))]
-                         (cond-> (assoc sanktio :omailmoitettu omailmoitettu)
-                           ;; Edellisen tyypin syöte ei kuulu uudelle tyypille.
-                           tyyppi-vaihtui?
-                           (dissoc :laskettava-syote :laskennan-syote)
-
-                           kiintea-profiilisumma?
-                           (assoc :normaalimaara automaattinen-summa
-                             :summa (when automaattinen-summa
-                                      (sanktio-domain/kiintea-sanktiosumma automaattinen-summa omailmoitettu)))
-                           (not kiintea-profiilisumma?)
-                           (assoc :normaalimaara nil :summa nil))))
+                       (sanktio-domain/vaihda-sanktiotyyppia
+                         sanktio
+                         tyyppi
+                         urakan-alkuvuosi
+                         @tiedot-urakka/urakan-toimenpideinstanssit))
               :valinta-arvo identity
               :aseta-vaikka-sama? true
               :valinnat tyyppi-valinnat
