@@ -44,6 +44,73 @@
   [sanktiotyypit tyyppi-id]
   (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
 
+(defn- sanktion-laji-ja-tyyppikentat
+  [sanktio lukutila? vesivaylaurakka? mahdolliset-sanktiolajit yllapitourakka?
+   asiakirjamerkinta? laskutus-ilman-laskutuskelpoisuutta? tyyppi-valinnat
+   urakan-alkuvuosi urakan-toimenpideinstanssit]
+  [(when-not vesivaylaurakka? ;; Vesiväylässä lajeina on vain sakko
+     {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
+      ::lomake/col-luokka "col-xs-12"
+      :uusi-rivi? true :nimi :laji
+      :hae (comp keyword :laji)
+      :aseta (fn [rivi arvo]
+               (sanktio-domain/vaihda-sanktiolajia
+                 rivi
+                 arvo
+                 (tiedot/valitun-urakan-sanktiotyypit arvo)
+                 urakan-toimenpideinstanssit))
+      :valinnat (vec mahdolliset-sanktiolajit)
+      :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
+      :validoi [[:ei-tyhja "Valitse laji"]]})
+
+   ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus
+   (when (and (not lukutila?) (= :talvisuolan_ylitys (:laji sanktio)))
+     {:otsikko ""
+      :nimi :talvisuolan-kokonaiskayton-ylitys
+      ::lomake/col-luokka "col-xs-12"
+      :tyyppi :komponentti
+      :komponentti (fn [_rivi]
+                     [yleiset/info-laatikko :neutraali
+                      [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
+
+   (when-not (or yllapitourakka?
+                 vesivaylaurakka?
+                 asiakirjamerkinta?
+                 laskutus-ilman-laskutuskelpoisuutta?
+                 (= :laskutus_yli_laskutusrajan (:laji sanktio)))
+     (if (not lukutila?)
+       {:otsikko "Tyyppi" :tyyppi :valinta
+        :pakollinen? true
+        :uusi-rivi? true
+        ::lomake/col-luokka "col-xs-12"
+        :nimi :tyyppi
+        :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                 (sanktio-domain/vaihda-sanktiotyyppia
+                   sanktio
+                   tyyppi
+                   urakan-alkuvuosi
+                   @tiedot-urakka/urakan-toimenpideinstanssit))
+        :valinta-arvo identity
+        :aseta-vaikka-sama? true
+        :valinnat tyyppi-valinnat
+        :valinta-nayta (fn [arvo]
+                         (if (or (nil? arvo) (nil? (:nimi arvo)))
+                           "Valitse sanktiotyyppi"
+                           (sanktiotyyppi-domain/sanktiotyypin-nimi
+                             (tiedot/valitun-urakan-sanktiolajin-nimi (:laji sanktio))
+                             arvo)))
+        :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
+
+       ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
+       ;; Vanhat poistetut sanktiotyypit eivät tule valintakomponenttiin vaihtoehdoiksi vanhoissa kirjauksissa,
+       ;; joten näytetään tyyppi pelkkänä tekstinä.
+       {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
+        ::lomake/col-luokka "col-xs-12"
+        :hae (fn [rivi]
+               (sanktiotyyppi-domain/sanktiotyypin-nimi
+                 (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
+                 (:tyyppi rivi)))}))])
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -214,69 +281,19 @@
                         #(do
                            (reset! sivupaneeli-auki?-atom false)
                            (reset! tiedot/valittu-sanktio nil))]])}
-        [(when-not vesivaylaurakka? ;; Vesiväylässä lajeina on vain sakko
-           {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
-            ::lomake/col-luokka "col-xs-12"
-            :uusi-rivi? true :nimi :laji
-            :hae (comp keyword :laji)
-            :aseta (fn [rivi arvo]
-                     (sanktio-domain/vaihda-sanktiolajia
-                       rivi
-                       arvo
-                       (tiedot/valitun-urakan-sanktiotyypit arvo)
-                       @tiedot-urakka/urakan-toimenpideinstanssit))
-            :valinnat (vec mahdolliset-sanktiolajit)
-            :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
-            :validoi [[:ei-tyhja "Valitse laji"]]})
-
-         ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus
-         (when (and (not lukutila?) (= :talvisuolan_ylitys (:laji @muokattu)))
-           {:otsikko ""
-            :nimi :talvisuolan-kokonaiskayton-ylitys
-            ::lomake/col-luokka "col-xs-12"
-            :tyyppi :komponentti
-            :komponentti (fn [rivi]
-                           [yleiset/info-laatikko :neutraali
-                            [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
-
-         (when-not (or yllapitourakka?
-                       vesivaylaurakka?
-                       asiakirjamerkinta?
-                       laskutus-ilman-laskutuskelpoisuutta?
-                       (= :laskutus_yli_laskutusrajan (:laji @muokattu)))
-           (if (not lukutila?)
-             {:otsikko "Tyyppi" :tyyppi :valinta
-              :pakollinen? true
-              :uusi-rivi? true
-              ::lomake/col-luokka "col-xs-12"
-              :nimi :tyyppi
-              :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                       (sanktio-domain/vaihda-sanktiotyyppia
-                         sanktio
-                         tyyppi
-                         urakan-alkuvuosi
-                         @tiedot-urakka/urakan-toimenpideinstanssit))
-              :valinta-arvo identity
-              :aseta-vaikka-sama? true
-              :valinnat tyyppi-valinnat
-              :valinta-nayta (fn [arvo]
-                               (if (or (nil? arvo) (nil? (:nimi arvo)))
-                                 "Valitse sanktiotyyppi"
-                                 (sanktiotyyppi-domain/sanktiotyypin-nimi
-                                   (tiedot/valitun-urakan-sanktiolajin-nimi (:laji @muokattu))
-                                   arvo)))
-              :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
-
-             ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             ;; Vanhat poistetut sanktiotyypit eivät tule valintakomponenttiin vaihtoehdoiksi vanhoissa kirjauksissa,
-             ;; joten näytetään tyyppi pelkkänä tekstinä.
-             {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
-              ::lomake/col-luokka "col-xs-12"
-              :hae (fn [rivi]
-                     (sanktiotyyppi-domain/sanktiotyypin-nimi
-                       (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
-                       (:tyyppi rivi)))}))
-
+        (into
+          (sanktion-laji-ja-tyyppikentat
+            @muokattu
+            lukutila?
+            vesivaylaurakka?
+            mahdolliset-sanktiolajit
+            yllapitourakka?
+            asiakirjamerkinta?
+            laskutus-ilman-laskutuskelpoisuutta?
+            tyyppi-valinnat
+            urakan-alkuvuosi
+            @tiedot-urakka/urakan-toimenpideinstanssit)
+          [
          (when yllapitokohdeurakka?
            {:otsikko "Kohde" :tyyppi :valinta :nimi :yllapitokohde
             :pakollinen? false :muokattava? (constantly voi-muokata?)
@@ -668,7 +685,7 @@
             :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :tekijanimi] arvo))
             :tyyppi :string
             ::lomake/col-luokka "col-xs-12"
-            :muokattava? (constantly false)})]
+            :muokattava? (constantly false)})])
         @muokattu]]
       (case sanktio-konfiguraation-tila
         :haku-kaynnissa [ajax-loader "Ladataan..."]
