@@ -146,8 +146,8 @@ Cypress.Commands.add("gridOtsikot", { prevSubject: 'element' }, (grid) => {
 });
 
 Cypress.Commands.add("terminaaliKomento", () => {
-    cy.exec('/usr/local/bin/docker ps', {failOnNonZeroExit: false}).then((tulos) => {
-        cy.exec('/usr/local/bin/docker ps | grep harjadb', {failOnNonZeroExit: false}).then((harjadbTulos) => {
+    return cy.exec('/usr/local/bin/docker ps', {failOnNonZeroExit: false}).then((tulos) => {
+        return cy.exec('/usr/local/bin/docker ps | grep harjadb', {failOnNonZeroExit: false}).then((harjadbTulos) => {
             let terminaaliKomento;
             if (tulos.code === 0) {
                 if (harjadbTulos.stdout !== '') {
