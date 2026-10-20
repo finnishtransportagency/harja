@@ -205,6 +205,18 @@
      :validoi [[:ei-tyhja "Anna ylityksen määrä"]
                [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}))
 
+(defn- laskutusrajan-summa-kentta
+  [sanktio]
+  (when (= :laskutus_yli_laskutusrajan (:laji sanktio))
+    {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
+     :nimi :summa
+     :tyyppi :euro
+     :muokattava? (constantly false)
+     :vaadi-positiivinen-numero? true
+     ::lomake/col-luokka "col-xs-8"
+     :hae #(when (:summa %) (Math/abs (:summa %)))
+     :pakollinen? true :uusi-rivi? true}))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -404,16 +416,7 @@
 
          (laskutusrajan-ylitys-kentta @muokattu)
 
-         ;; Kun sanktiolajina on "laskutusrajan ylitys" niin näytetään summa eri nimisenä ja eri kohdassa
-         (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
-           {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
-            :nimi :summa
-            :tyyppi :euro
-            :muokattava? (constantly false)
-            :vaadi-positiivinen-numero? true
-            ::lomake/col-luokka "col-xs-8"
-            :hae #(when (:summa %) (Math/abs (:summa %)))
-            :pakollinen? true :uusi-rivi? true})
+         (laskutusrajan-summa-kentta @muokattu)
 
          (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
            (keep identity [(when laskettu-maaritys
