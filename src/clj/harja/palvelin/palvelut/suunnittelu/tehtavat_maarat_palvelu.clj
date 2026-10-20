@@ -8,7 +8,7 @@
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tehtavat-maarat-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
-            [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]))
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]))
 
 (defn tallenna-tehtavat-ja-maarat
   "Tallennetaan sopimuksen tehtävät ja määrät.
@@ -20,7 +20,7 @@
           vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)
           lukitut-vuodet (set (keep
                                 (fn [vuosi]
-                                  (let [lukittu? (not (valikatselmus-palvelu/ominaisuuden-muokkaus-sallittu? db kayttaja urakka-id (:vuosi vuosi) :tehtavat-ja-maarat))]
+                                  (let [lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id (:vuosi vuosi) :tehtavat-ja-maarat))]
                                     (when lukittu? (:vuosi vuosi))))
                                 vuodet))
           lukitut-vuodet (set (map :vuosi (filter true? lukitut-vuodet)))
@@ -41,7 +41,7 @@
   (jdbc/with-db-transaction [db db]
     (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
           tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id vuosi)
-          lukittu? (not (valikatselmus-palvelu/ominaisuuden-muokkaus-sallittu? db kayttaja urakka-id vuosi :tehtavat-ja-maarat))]
+          lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :tehtavat-ja-maarat))]
       {:lukittu? lukittu?
        :tehtavat (:tehtavat tehtavat-ja-maarat)
        :viimeisin-muokkaus (:viimeisin_muokkaus tehtavat-ja-maarat)
