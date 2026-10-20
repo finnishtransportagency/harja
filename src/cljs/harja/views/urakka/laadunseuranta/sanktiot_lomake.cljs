@@ -162,6 +162,33 @@
      :valinta-nayta second
      :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}))
 
+(defn- perustelu-kentta
+  [tyon-tekematta-jattamisen-tyyppi-22? voi-muokata?]
+  (when-not tyon-tekematta-jattamisen-tyyppi-22?
+    {:otsikko "Perustelu"
+     :uusi-rivi? true
+     :nimi :perustelu
+     :pakollinen? true
+     ::lomake/col-luokka "col-xs-12"
+     :muokattava? (constantly voi-muokata?)
+     :hae (comp :perustelu :paatos :laatupoikkeama)
+     :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
+     :tyyppi :text :koko [80 3]
+     :validoi [[:ei-tyhja "Anna perustelu"]]}))
+
+(defn- omailmoitus-kentta
+  [omailmoitus-sallittu?]
+  (when omailmoitus-sallittu?
+    {:otsikko ""
+     :nimi :omailmoitettu
+     :tyyppi :checkbox
+     :uusi-rivi? true
+     :label-luokka "fontti-12"
+     ::lomake/col-luokka "col-xs-12"
+     :hae :omailmoitettu
+     :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
+     :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -355,28 +382,9 @@
 
           (puute-tai-laiminlyonti-kentta yllapitourakka?)
 
-         (when-not tyon-tekematta-jattamisen-tyyppi-22?
-           {:otsikko "Perustelu"
-            :uusi-rivi? true
-            :nimi :perustelu
-            :pakollinen? true
-            ::lomake/col-luokka "col-xs-12"
-            :muokattava? (constantly voi-muokata?)
-            :hae (comp :perustelu :paatos :laatupoikkeama)
-            :aseta (fn [rivi arvo] (assoc-in rivi [:laatupoikkeama :paatos :perustelu] arvo))
-            :tyyppi :text :koko [80 3]
-            :validoi [[:ei-tyhja "Anna perustelu"]]})
+         (perustelu-kentta tyon-tekematta-jattamisen-tyyppi-22? voi-muokata?)
 
-         (when omailmoitus-sallittu?
-           {:otsikko ""
-            :nimi :omailmoitettu
-            :tyyppi :checkbox
-            :uusi-rivi? true
-            :label-luokka "fontti-12"
-            ::lomake/col-luokka "col-xs-12"
-            :hae :omailmoitettu
-            :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
-            :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"})
+         (omailmoitus-kentta omailmoitus-sallittu?)
 
          ;; Kun sanktiolajina on "Laskutusrajan ylitys" niin näytetään "Ylityksen määrä" -kenttä
          (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
