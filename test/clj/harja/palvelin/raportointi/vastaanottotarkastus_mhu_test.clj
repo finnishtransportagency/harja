@@ -786,8 +786,8 @@
                       {:sakkoryhma "A" :maara -3M}]))]
     (with-redefs [vastaanottotarkastus-mhu/hae-sanktiot-vastaanottotarkastusraportille sanktiot
                   vastaanottotarkastus-mhu/hae-sakottomat-poikkeamaraportilliset-laatupoikkeamamaarat
-                  (fn [_ {:keys [alku]}]
-                    (if (= alku (-> hoitokaudet first :alkupvm))
+                  (fn [_ {:keys [alkupvm]}]
+                    (if (= alkupvm (-> hoitokaudet first :alkupvm))
                       [{:kpl 2}]
                       [{:kpl 1}]))]
       (is (= [:taulukko

@@ -316,9 +316,9 @@
                                             sanktiot)
                             arvonvahennykset (filter #(= "arvonvahennyssanktio" (some-> (:sakkoryhma %) name)) sanktiot)
                             poikkeamaraportit-kpl (or (:kpl (first (hae-sakottomat-poikkeamaraportilliset-laatupoikkeamamaarat
-                                                                     db {:urakka urakka-id
-                                                                         :alku alkupvm
-                                                                         :loppu loppupvm})))
+                                                                     db {:urakka-id urakka-id
+                                                                         :alkupvm alkupvm
+                                                                         :loppupvm loppupvm})))
                                                     0)
                             muistutukset (filter #(= "muistutus" (some-> (:sakkoryhma %) name)) sanktiot)]
                         [(str hoitovuosi "-" (pvm/vuosi loppupvm))
