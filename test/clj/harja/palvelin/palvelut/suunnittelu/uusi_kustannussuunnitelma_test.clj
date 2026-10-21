@@ -828,7 +828,7 @@
     (is (= kasin-paivitetty-kattohinta (get-in toimiva-vastaus [:kustannussuunnitelma :hoitovuoden-alun-kattohinta])) "Käsin asetettu kattohinta täsmää")))
 
 
-(deftest paivita-tavoite-ja-kattohinta-toimii
+(deftest paivita-tavoite-ja-kattohinta-toimii-muutoksilla-ja-ilman
   (let [db (:db jarjestelma)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         urakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) urakka-id))
@@ -860,29 +860,66 @@
         ;; Hankinnat - Päivitä toimenpideinstanssien id:t tietokannasta haetuilla id:illä
         h-tietomalli (urakkakohtaiset-toimenpideinstanssit-toimenpiteille apurit/hankinnat-tietomalli toimenpiteet)
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta h-tietomalli)
-        aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
-
-        ;; Tallenna hankinnat
-        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
         hankinnat-yhteensa (bigdec (apply + (map :yhteensa (:toimenpiteet h-tietomalli))))
         hankinnat-indeksikorjattu-yhteensa (bigdec (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitokausinumero) hankinnat-yhteensa))
 
-        ;; Tallenna tarjous, koska kattohinta lasketaan tarjouksen perusteella
+        ;; Valmistellaan testejä varten muutostiedot
+        ei-muutosta nil
+        muutos '({:tavoitehinnan-muutos 1200 :tyyppi "pysyva"} {:tavoitehinnan-muutos 1300 :tyyppi "pysyva"})
+        muutos-yhteensa 2500
+        muutos-yhteensa-indeksikorjattu (bigdec (indeksi-kyselyt/indeksikorjaa (indeksi-kyselyt/indeksikerroin urakan-indeksit hoitokausinumero) muutos-yhteensa))
+
+        ;; Tallenna hankinnat
+        _ (uusi-kust-kyselyt/tallenna-kilpailutettavat-hankinnat db +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi (:toimenpiteet h-tietomalli))
+
+        ;; Tallenna tarjous
         tarjous (apurit/generoi-tarjous-tasmaa-kustannuksia
                   urakka-id
-                  ;; Passataan vaikka hankintojen summa
-                  ;; Hankintoja ei välttämättä tähän tarvi, sillä tavoitehinta on tarjous + pysyvät.
                   hankinnat-yhteensa
                   0
                   0)
-        _ (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous #{})
+        tallennettu-tarjous (tarjous-kyselyt/tallenna-tarjous-tietokantaan (:db jarjestelma) urakka-id (:id +kayttaja-jvh+) tarjous #{})
 
-        ;; Nyt pitäisi tavoitehinta mennä kantaan 
-        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset)
-        tavoitetiedot (first (hae-tavoitetiedot urakka-id hoitokausinumero))]
-    (is (= (:tavoitehinta tavoitetiedot) hankinnat-yhteensa) "Tavoitehinnan pitäisi vastata hankintojen summaa")
-    (is (= (:tavoitehinta_indeksikorjattu tavoitetiedot) hankinnat-indeksikorjattu-yhteensa)
-      "Indeksikorjatun tavoitehinnan pitäisi vastata indeksikorjattujen hankintojen summaa")
-    (is (= (:kattohinta tavoitetiedot) (* kattohintakerroin hankinnat-yhteensa)) "Kattohinnan pitäisi vastata hankintojen summaa kerrottuna kattohintakertoimella")
-    (is (= (:kattohinta_indeksikorjattu tavoitetiedot) (* kattohintakerroin hankinnat-indeksikorjattu-yhteensa))
-      "Indeksikorjatun kattohinnan pitäisi vastata indeksikorjattujen hankintojen summaa kerrottuna kattohintakertoimella")))
+        ;; Tallennetaan tavoite- ja kattohintahinta, kun muutostenhallinta ei ole käytössä (välitetään funktiolle kustannussunnitelman tavoitehintaan kuuluvat yhteen laskettuna).
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi ei-muutosta {:yhteenlaskettu-tavoitehinta hankinnat-yhteensa})
+        tavoitetiedot-ei-muutostehallintaa (first (hae-tavoitetiedot urakka-id hoitokausinumero))
+
+        ;; Testataan muutoksen huomiointia tavoite- ja kattohinnan päivityksessä. Testi ei testaa muutostenhallintaa koko laajuudessaan, siksi mukana vain testissä tarvittu tieto.
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi muutos {:yhteenlaskettu-tavoitehinta hankinnat-yhteensa})
+        tavoitetiedot-ei-muutostehallintaa-muutoksella (first (hae-tavoitetiedot urakka-id hoitokausinumero))
+
+        ;; Päivitetään muutostenhallinta käyttöön ja tallennetaan tavoite- ja kattohinta uudelleen.
+        _ (u (format "UPDATE urakka_parametrit SET muutosten_hallinta = TRUE WHERE urakkaid = %s;" urakka-id))
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi ei-muutosta)
+        tavoitetiedot-muutostenhallinta (first (hae-tavoitetiedot urakka-id hoitokausinumero))
+
+        _ (uusi-kust-kyselyt/paivita-tavoite-ja-kattohinta db (:id +kayttaja-jvh+) urakka-id hoitovuoden-alkuvuosi muutos)
+        tavoitetiedot-muutostenhallinta-muutoksella (first (hae-tavoitetiedot urakka-id hoitokausinumero))]
+
+    ;; Lopputuloksen tarkastelu: ei muutostenhallintaa, ei muutoksia
+    (is (= (:tavoitehinta tavoitetiedot-ei-muutostehallintaa) hankinnat-yhteensa) "Muutostenhallinta ei ole käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Tavoitehinnan pitäisi vastata hankintojen summaa.")
+    (is (= (:tavoitehinta_indeksikorjattu tavoitetiedot-ei-muutostehallintaa) hankinnat-indeksikorjattu-yhteensa) "Muutostenhallinta ei ole käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Indeksikorjatun tavoitehinnan pitäisi vastata indeksikorjattujen hankintojen summaa")
+    (is (= (:kattohinta tavoitetiedot-ei-muutostehallintaa) (* kattohintakerroin hankinnat-yhteensa)) "Muutostenhallinta ei ole käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Kattohinnan pitäisi vastata hankintojen summaa kerrottuna kattohintakertoimella.")
+    (is (= (:kattohinta tavoitetiedot-ei-muutostehallintaa) (* kattohintakerroin (:tavoitehinta tavoitetiedot-ei-muutostehallintaa))) "Muutostenhallinta ei ole käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Kattohinnan pitäisi vastata tavoitehintaa kerrottuna kattohintakertoimella.")
+    (is (= (:kattohinta_indeksikorjattu tavoitetiedot-ei-muutostehallintaa) (* kattohintakerroin hankinnat-indeksikorjattu-yhteensa)) "Muutostenhallinta ei ole käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Indeksikorjatun kattohinnan pitäisi vastata indeksikorjattujen hankintojen summaa kerrottuna kattohintakertoimella.")
+
+    ;; Lopputuloksen tarkastelu: ei muutostenhallintaa, muutoksia (tosielämässä muutoksia ei pitäisi löytyä, jos muutostenhallinta ei ole käytössä)
+    (is (= (:tavoitehinta tavoitetiedot-ei-muutostehallintaa-muutoksella) hankinnat-yhteensa) "Muutostenhallinta ei ole käytössä. Urakassa on pysyviä muutoksia. Tavoitehinnan pitäisi vastata hankintojen summaa, koska pysyviä muutoksia ei lasketa mukaan.")
+    (is (= (:tavoitehinta_indeksikorjattu tavoitetiedot-ei-muutostehallintaa-muutoksella) hankinnat-indeksikorjattu-yhteensa) "Muutostenhallinta ei ole käytössä. Urakassa on pysyviä muutoksia. Indeksikorjatun tavoitehinnan pitäisi vastata indeksikorjattujen hankintojen summaa, koska pysyviä muutoksia ei lasketa mukaan.")
+    (is (= (:kattohinta tavoitetiedot-ei-muutostehallintaa-muutoksella) (* kattohintakerroin hankinnat-yhteensa)) "Muutostenhallinta ei ole käytössä. Urakassa on pysyviä muutoksia. Kattohinnan pitäisi vastata hankintojen summaa kerrottuna kattohintakertoimella, koska pysyviä muutoksia ei lasketa mukaan..")
+    (is (= (:kattohinta tavoitetiedot-ei-muutostehallintaa-muutoksella) (* kattohintakerroin (:tavoitehinta tavoitetiedot-ei-muutostehallintaa-muutoksella))) "Muutostenhallinta ei ole käytössä. Urakassa on pysyviä muutoksia. Kattohinnan pitäisi vastata tavoitehintaa kerrottuna kattohintakertoimella, koska pysyviä muutoksia ei lasketa mukaan..")
+    (is (= (:kattohinta_indeksikorjattu tavoitetiedot-ei-muutostehallintaa-muutoksella) (* kattohintakerroin hankinnat-indeksikorjattu-yhteensa)) "Muutostenhallinta ei ole käytössä. Urakassa on pysyviä muutoksia. Indeksikorjatun kattohinnan pitäisi vastata indeksikorjattujen hankintojen summaa kerrottuna kattohintakertoimella, koska pysyviä muutoksia ei lasketa mukaan..")
+
+    ;; Lopputuloksen tarkastelu: muutostenhallinta käytössä, ei muutoksia
+    (is (= (:tavoitehinta tavoitetiedot-muutostenhallinta) hankinnat-yhteensa) "Muutostenhallinta on käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Tavoitehinnan pitäisi vastata tarjouksen hankintojen summaa, koska pysyviä muutoksia ei ole.")
+    (is (= (:tavoitehinta_indeksikorjattu tavoitetiedot-muutostenhallinta) hankinnat-indeksikorjattu-yhteensa) "Muutostenhallinta on käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Indeksikorjatun tavoitehinnan pitäisi vastata tarjouksen indeksikorjattujen hankintojen summaa, koska pysyviä muutoksia ei ole.")
+    (is (= (:kattohinta tavoitetiedot-muutostenhallinta) (* kattohintakerroin hankinnat-yhteensa)) "Muutostenhallinta on käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Kattohinnan pitäisi vastata tarjouksen hankintojen summaa kerrottuna kattohintakertoimella, koska pysyviä muutoksia ei ole.")
+    (is (= (:kattohinta tavoitetiedot-muutostenhallinta) (* kattohintakerroin (:tavoitehinta tavoitetiedot-muutostenhallinta))) "Muutostenhallinta on käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Kattohinnan pitäisi vastata tarjouksen tavoitehintaa kerrottuna kattohintakertoimella.")
+    (is (= (:kattohinta_indeksikorjattu tavoitetiedot-muutostenhallinta) (* kattohintakerroin hankinnat-indeksikorjattu-yhteensa)) "Muutostenhallinta on käytössä. Edellisiltä hoitovuosilta ei ole muutoksia. Indeksikorjatun kattohinnan pitäisi vastata tarjouksen indeksikorjattujen hankintojen summaa kerrottuna kattohintakertoimella, koska pysyviä muutoksia ei ole.")
+
+    ;; Lopputuloksen tarkastelu: muutostenhallinta käytössä, muutoksia
+    (is (= (:tavoitehinta tavoitetiedot-muutostenhallinta-muutoksella) (+ hankinnat-yhteensa muutos-yhteensa)) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Tavoitehinnan pitäisi olla tarjouksen tavoitehinta + pysyvät muutokset.")
+    (is (= (:tavoitehinta_indeksikorjattu tavoitetiedot-muutostenhallinta-muutoksella) (+ hankinnat-indeksikorjattu-yhteensa muutos-yhteensa-indeksikorjattu)) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Indeksikorjatun tavoitehinnan pitäisi olla tarjouksen tavoitehinta + pysyvät muutokset indeksikorjattuna.")
+    (is (= (:kattohinta tavoitetiedot-muutostenhallinta-muutoksella) (* kattohintakerroin (+ hankinnat-yhteensa muutos-yhteensa))) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Kattohinnan pitäisi olla tarjouksen tavoitehinta + pysyvät muutokset indeksikorjattuna kattohintakertoimella kerrottuna.")
+    (is (= (:kattohinta tavoitetiedot-muutostenhallinta-muutoksella) (* kattohintakerroin (:tavoitehinta tavoitetiedot-muutostenhallinta-muutoksella))) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Kattohinnan pitäisi vastata tarjouksen tavoitehintaa kerrottuna kattohintakertoimella.")
+    (is (= (:kattohinta_indeksikorjattu tavoitetiedot-muutostenhallinta-muutoksella) (* kattohintakerroin (+ hankinnat-indeksikorjattu-yhteensa muutos-yhteensa-indeksikorjattu))) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Indeksikorjatun kattohinnan pitäisi olla tarjouksen tavoitehinta + pysyvät muutokset indeksikorjattuna ja katohintakertoimella kerrottuna.")))
