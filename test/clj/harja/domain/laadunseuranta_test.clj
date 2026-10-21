@@ -187,24 +187,54 @@
                rivi :B [vanha-tyyppi toinen-tyyppi] []))))))
 
 (deftest sanktiotyypin-vaihto-vaihtaa-tyypin-ja-johtaa-toimenpideinstanssin
-  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
         rivi {:laji :A
               :tyyppi {:id 1}
-              :toimenpideinstanssi 101}]
+              :toimenpideinstanssi 101}
+        toimenpideinstanssit [{:id 11 :tpi_id 101}
+                              {:id 22 :tpi_id 202}]]
     (is (= (assoc rivi
              :tyyppi tyyppi
-             :toimenpideinstanssi 202)
+             :toimenpideinstanssi 202
+             :tpi_id 202)
            (sanktio-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2024 [{:tpi_id 202 :toimenpidekoodi "H2"}])))))
+             rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
 
-(deftest sanktiotyypin-vaihto-sailyttaa-toimenpideinstanssin-uudemmassa-urakassa
-  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
+(deftest sanktiotyypin-vaihto-esivalitsee-ainoan-kulun-kohdistuksen-ilman-toimenpidekoodia
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
         rivi {:laji :A
               :tyyppi {:id 1}
-              :toimenpideinstanssi 101}]
+              :toimenpideinstanssi nil}
+        toimenpideinstanssit [{:id 11 :tpi_id 101}
+                              {:id 22 :tpi_id 202}]
+        kulun-kohdistukset [{:id 22 :tpi_id 202}]]
+    (is (= (assoc rivi
+             :tyyppi tyyppi
+             :toimenpideinstanssi 202
+             :tpi_id 202)
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2024 toimenpideinstanssit kulun-kohdistukset)))))
+
+(deftest sanktiotyypin-vaihto-sailyttaa-nykyisen-toimenpideinstanssin-kun-valintaa-ei-voi-johtaa
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :toimenpideinstanssi 101}
+        toimenpideinstanssit [{:id 11 :tpi_id 101}
+                              {:id 22 :tpi_id 202}]]
+    (is (= (assoc rivi :tyyppi tyyppi :tpi_id 101)
+           (sanktio-domain/vaihda-sanktiotyyppia
+             rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
+
+(deftest sanktiotyypin-vaihto-sailyttaa-toimenpideinstanssin-uudemmassa-urakassa
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
+        rivi {:laji :A
+              :tyyppi {:id 1}
+              :toimenpideinstanssi 101}
+        toimenpideinstanssit [{:id 22 :tpi_id 202}]]
     (is (= (assoc rivi :tyyppi tyyppi)
            (sanktio-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [{:tpi_id 202 :toimenpidekoodi "H2"}])))))
+             rivi tyyppi 2025 toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-laskee-kiintean-profiilisumman-omailmoitus-tilassa
   (let [tyyppi {:id 2
@@ -225,7 +255,7 @@
                :omailmoitettu true)
              (dissoc :laskettava-syote :laskennan-syote))
            (sanktio-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [])))))
+             rivi tyyppi 2025 [] [])))))
 
 (deftest sanktiotyypin-vaihto-ei-kirjoita-manuaalista-c-ryhman-summaa
   (let [tyyppi {:id 2
@@ -242,7 +272,7 @@
                :omailmoitettu false)
              (dissoc :normaalimaara :summa))
            (sanktio-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [])))))
+             rivi tyyppi 2025 [] [])))))
 
 (deftest sanktiotyypin-vaihto-poistaa-vanhan-laskennan-ja-nollaa-ei-kiintean-summan
   (let [tyyppi {:id 2 :summamaaritykset []}
@@ -260,7 +290,7 @@
                :omailmoitettu false)
              (dissoc :laskettava-syote :laskennan-syote))
            (sanktio-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [])))))
+             rivi tyyppi 2025 [] [])))))
 
 (deftest sanktiotyypin-uudelleenvalinta-sailyttaa-laskennan-syotteet
   (let [tyyppi {:id 2 :summamaaritykset []}
@@ -274,7 +304,7 @@
               :laskennan-syote laskennan-syote}]
     (is (= (assoc rivi :omailmoitettu false)
            (sanktio-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [])))))
+             rivi tyyppi 2025 [] [])))))
 
       (deftest aikakausikonteksti-kokoaa-urakkakohtaiset-ehdot
         (let [yleinen {:nayta-indeksi? false

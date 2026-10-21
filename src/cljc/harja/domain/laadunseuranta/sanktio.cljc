@@ -291,22 +291,24 @@
       rivi)))
 
 (defn vaihda-sanktiotyyppia
-  [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit]
+  [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]
   (let [tyyppi-vaihtui? (not= (get-in rivi [:tyyppi :id]) (:id uusi-tyyppi))
         rivi (if (<= urakan-alkuvuosi 2024)
                (let [toimenpidekoodi (:toimenpidekoodi uusi-tyyppi)
                      toimenpideinstanssi (cond
+                                           ;; Toimenpideinstanssin :id on toimenpiteen id
                                            toimenpidekoodi
-                                           (:tpi_id (some #(when (= toimenpidekoodi (:toimenpidekoodi %)) %)
-                                                         toimenpideinstanssit))
+                                           (:tpi_id (some #(when (= toimenpidekoodi (:id %)) %)
+                                                      toimenpideinstanssit))
 
-                                           (= 1 (count toimenpideinstanssit))
-                                           (:tpi_id (first toimenpideinstanssit))
+                                           (= 1 (count kulun-kohdistukset))
+                                           (:tpi_id (first kulun-kohdistukset))
 
                                            :else (:toimenpideinstanssi rivi))]
                  (assoc rivi
                    :tyyppi uusi-tyyppi
-                   :toimenpideinstanssi toimenpideinstanssi))
+                   :toimenpideinstanssi toimenpideinstanssi
+                   :tpi_id toimenpideinstanssi))
                (assoc rivi :tyyppi uusi-tyyppi))
         kiintea-summa (sanktiotyypin-kiintea-automaattinen-summa uusi-tyyppi)
         manuaalinen-c? (and (= :C (:laji rivi))
