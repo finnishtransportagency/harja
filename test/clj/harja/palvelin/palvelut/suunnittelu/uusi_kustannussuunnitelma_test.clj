@@ -923,3 +923,37 @@
     (is (= (:kattohinta tavoitetiedot-muutostenhallinta-muutoksella) (* kattohintakerroin (+ hankinnat-yhteensa muutos-yhteensa))) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Kattohinnan pitäisi olla tarjouksen tavoitehinta + pysyvät muutokset indeksikorjattuna kattohintakertoimella kerrottuna.")
     (is (= (:kattohinta tavoitetiedot-muutostenhallinta-muutoksella) (* kattohintakerroin (:tavoitehinta tavoitetiedot-muutostenhallinta-muutoksella))) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Kattohinnan pitäisi vastata tarjouksen tavoitehintaa kerrottuna kattohintakertoimella.")
     (is (= (:kattohinta_indeksikorjattu tavoitetiedot-muutostenhallinta-muutoksella) (* kattohintakerroin (+ hankinnat-indeksikorjattu-yhteensa muutos-yhteensa-indeksikorjattu))) "Muutostenhallinta on käytössä. Urakassa on pysyviä muutoksia. Indeksikorjatun kattohinnan pitäisi olla tarjouksen tavoitehinta + pysyvät muutokset indeksikorjattuna ja katohintakertoimella kerrottuna.")))
+
+
+(deftest laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista-toimii
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        urakan-tiedot (first (urakat-q/hae-urakan-tiedot (:db jarjestelma) urakka-id))
+        urakan-parametrit (first (urakat-q/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakka-id}))
+        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+        urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet (:db jarjestelma) urakka-id)
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})
+        hoitovuoden-alkuvuosi 2024
+        hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
+        hae-tavoitetiedot (fn [urakka-id hoitokausinumero]
+                            (q-map (format "SELECT tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta, kattohinta_indeksikorjattu
+                                        FROM urakka_tavoite WHERE urakka = %s AND hoitokausi = %s"
+                                     urakka-id hoitokausinumero)))
+
+        ;; Riisuttu versio kustannussuunnitelman tiedoista. Mukana lähinnä vain ne osat, jotka yhteissumman laskenta vaatii ja niitäkin vähemmän kuin kustannussuunnitelmassa normaalisti.
+        kustannussuunnitelma {:rahavaraukset '({:rahavaraus_id 1, :nimi "Äkilliset hoitotyöt", :suunniteltu-summa 10, :suunniteltu-summa-indeksikorjattu 10.2}
+                                               {:rahavaraus_id 2, :nimi "Vahinkojen korjaukset", :suunniteltu-summa 10, :suunniteltu-summa-indeksikorjattu 10.2}
+                                               {:rahavaraus_id 3, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :suunniteltu-summa 10, :suunniteltu-summa-indeksikorjattu 10.2}),
+                              :kilpailutettavat-hankinnat {:toimenpiteet '({:nimi "Yhteensä", :kaikki-yhteensa 10000, :kaikki-yhteensa-indeksikorjattu 102000, :kaikki-pysyvat-muutokset "Ei muutoksia"})}
+                              :erillishankinnat '({:summa 1} {:summa 2} {:summa 3})
+                              :johto-ja-hallintokorvaukset [{:toimenkuva "harjoittelija" :yhteensa-kk 100}
+                                                            {:toimenkuva "vastaava" :yhteensa-kk 100}
+                                                            {:toimenkuva "2. vastaava" :yhteensa-kk 100}]
+                              :hoidonjohtopalkkiot '({:summa 11} {:summa 12})}
+        indeksikorjaamattomat-yhteensa 10359
+
+        ;; laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista
+        tavoitehinta (kust-palvelu/laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista kustannussuunnitelma)]
+    (is (= (:yhteenlaskettu-tavoitehinta tavoitehinta) indeksikorjaamattomat-yhteensa) "Kaikki indeksikorjaamattomat, tavoitehintaan vaikuttavat luvut pitäisi laskea mukaan kustannussuunnitelman yhteissummaan.")))
