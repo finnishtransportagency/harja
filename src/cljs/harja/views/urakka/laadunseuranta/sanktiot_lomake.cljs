@@ -80,41 +80,41 @@
                      [yleiset/info-laatikko :neutraali
                       [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
 
-    (when-not (or yllapitourakka?
-                 vesivaylaurakka?
-                 asiakirjamerkinta?
-                 laskutus-ilman-laskutuskelpoisuutta?
-                 (= :laskutus_yli_laskutusrajan (:laji sanktio)))
+   (when-not (or yllapitourakka?
+               vesivaylaurakka?
+               asiakirjamerkinta?
+               laskutus-ilman-laskutuskelpoisuutta?
+               (= :laskutus_yli_laskutusrajan (:laji sanktio)))
      (let [tyyppikentta {:otsikko "Tyyppi" :tyyppi :valinta
-        :pakollinen? true
-        :uusi-rivi? true
-        ::lomake/col-luokka "col-xs-12"
-        :nimi :tyyppi
-        :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
-                 (sanktio-domain/vaihda-sanktiotyyppia
-                   sanktio
-                   tyyppi
-                   urakan-alkuvuosi
-                   @tiedot-urakka/urakan-toimenpideinstanssit
-                   (tiedot/valittavat-kulun-kohdistukset
-                     @tiedot-urakka/urakan-toimenpideinstanssit
-                     (:nimi tyyppi))))
-        :valinta-arvo identity
-        :aseta-vaikka-sama? true
-        :valinnat tyyppi-valinnat
-        :valinta-nayta (fn [arvo]
-                         (if (or (nil? arvo) (nil? (:nimi arvo)))
-                           "Valitse sanktiotyyppi"
-                           (sanktiotyyppi-domain/sanktiotyypin-nimi
-                             (tiedot/valitun-urakan-sanktiolajin-nimi (:laji sanktio))
-                             arvo)))
-        :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
+                         :pakollinen? true
+                         :uusi-rivi? true
+                         ::lomake/col-luokka "col-xs-12"
+                         :nimi :tyyppi
+                         :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                                  (sanktio-domain/vaihda-sanktiotyyppia
+                                    sanktio
+                                    tyyppi
+                                    urakan-alkuvuosi
+                                    @tiedot-urakka/urakan-toimenpideinstanssit
+                                    (tiedot/valittavat-kulun-kohdistukset
+                                      @tiedot-urakka/urakan-toimenpideinstanssit
+                                      (:nimi tyyppi))))
+                         :valinta-arvo identity
+                         :aseta-vaikka-sama? true
+                         :valinnat tyyppi-valinnat
+                         :valinta-nayta (fn [arvo]
+                                          (if (or (nil? arvo) (nil? (:nimi arvo)))
+                                            "Valitse sanktiotyyppi"
+                                            (sanktiotyyppi-domain/sanktiotyypin-nimi
+                                              (tiedot/valitun-urakan-sanktiolajin-nimi (:laji sanktio))
+                                              arvo)))
+                         :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
            lukutilan-tyyppikentta (assoc (lukutilan-kenttakuvaus tyyppikentta)
                                     :hae (fn [rivi]
                                            (sanktiotyyppi-domain/sanktiotyypin-nimi
                                              (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
                                              (:tyyppi rivi))))]
-      (if lukutila? lukutilan-tyyppikentta tyyppikentta)))])
+       (if lukutila? lukutilan-tyyppikentta tyyppikentta)))])
 
 (defn- yllapitokohde-kentta
   [yllapitokohdeurakka? yllapitokohteet voi-muokata?]
@@ -298,27 +298,23 @@
                          "Liikenneympäristön hoito"
                          "Sorateiden hoito ja ylläpito"
                          "Hallinnolliset laiminlyönnit"} (get-in sanktio [:tyyppi :nimi]))))
-    (if (and (not (:maaraystapa? aikakausikonteksti)) (not lukutila?))
-      {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
-       :pakollinen? true
-       :disabled? (or (empty? @urakan-toimenpideinstanssit)
-                      (and (> urakan-alkuvuosi 2024)
-                        (<= (count mahdolliset-kulun-kohdistukset) 1)))
-       ::lomake/col-luokka "col-xs-12"
-       :nimi :toimenpideinstanssi
-       :tyyppi :valinta
-       :valinta-arvo :tpi_id
-       :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-       :valinnat mahdolliset-kulun-kohdistukset
-       :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
-
-      ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-      {:otsikko (str (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])))
-       :tyyppi :string
-       :nimi :toimenpideinstanssi
-       :muokattava? (constantly false)
-       ::lomake/col-luokka "col-xs-12"
-       :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)})))
+    (let [kulun-kohdistus {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
+                           :pakollinen? true
+                           :disabled? (or (empty? @urakan-toimenpideinstanssit)
+                                        (and (> urakan-alkuvuosi 2024)
+                                          (<= (count mahdolliset-kulun-kohdistukset) 1)))
+                           ::lomake/col-luokka "col-xs-12"
+                           :nimi :toimenpideinstanssi
+                           :tyyppi :valinta
+                           :valinta-arvo :tpi_id
+                           :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+                           :valinnat mahdolliset-kulun-kohdistukset
+                           :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+          lukutilan-kulun-kohdistus (assoc (lukutilan-kenttakuvaus kulun-kohdistus)
+                                      :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr))]
+      (if (and (not (:maaraystapa? aikakausikonteksti)) (not lukutila?))
+        kulun-kohdistus
+        lukutilan-kulun-kohdistus))))
 
 (defn- paivamaarat-ja-perinta-kentat
   [laskutus-ilman-laskutuskelpoisuutta? aikakausikonteksti voi-muokata? lukutila?
