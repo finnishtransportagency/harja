@@ -87,24 +87,86 @@ WHERE t.id = :id;
 SELECT exists(SELECT id FROM johto_ja_hallintokorvaus_toimenkuva WHERE id = :toimenkuva-id :: BIGINT);
 
 -- name: hae-urakan-toimenkuvat-alkuvuoden-perusteella
--- Hae urakkakohtaiset toimenkuvat
-WITH urakka_toimenkuvat AS (SELECT toimenkuva
-                            FROM unnest(
-                                     CASE
-                                         WHEN (:urakan-alkuvuosi >= 2019 AND :urakan-alkuvuosi <= 2021)
-                                             THEN ARRAY ['sopimusvastaava', 'vastuunalainen työnjohtaja', 'päätoiminen apulainen', 'apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
-                                         WHEN (:urakan-alkuvuosi >= 2022 AND :urakan-alkuvuosi <= 2023)
-                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja', 'päätoiminen apulainen','apulainen/työnjohtaja', 'viherhoidosta vastaava henkilö', 'hankintavastaava', 'harjoittelija']
-                                         WHEN (:urakan-alkuvuosi = 2024)
-                                             THEN ARRAY ['valmistelukausi ennen urakka-ajan alkua','vastuunalainen työnjohtaja','2. työnjohtaja', '3. työnjohtaja', 'viherhoidosta vastaava henkilö', 'harjoittelija']
-                                         END
-                                 ) AS toimenkuva)
-SELECT id, toimenkuva
-FROM johto_ja_hallintokorvaus_toimenkuva jht
-WHERE jht."urakka-id" = :urakka-id
-  AND jht.toimenkuva is not null
+-- Haetaan urakan toimenkuvat urakkatyypin ja alkuvuoden perusteella.
+WITH urakka_tiedot AS (
+    SELECT tyyppi,
+           alkupvm
+    FROM urakka
+    WHERE id = :urakka-id
+),
+     urakka_toimenkuvat AS (
+         SELECT unnest(
+                    CASE
+                        WHEN u.tyyppi <> 'vesivayla-hoito'
+                            AND EXTRACT(YEAR FROM u.alkupvm) BETWEEN 2019 AND 2021
+                            THEN ARRAY[
+                            'sopimusvastaava',
+                            'vastuunalainen työnjohtaja',
+                            'päätoiminen apulainen',
+                            'apulainen/työnjohtaja',
+                            'viherhoidosta vastaava henkilö',
+                            'hankintavastaava',
+                            'harjoittelija'
+                            ]::TEXT[]
+
+                        WHEN u.tyyppi <> 'vesivayla-hoito'
+                            AND EXTRACT(YEAR FROM u.alkupvm) BETWEEN 2022 AND 2023
+                            THEN ARRAY[
+                            'valmistelukausi ennen urakka-ajan alkua',
+                            'vastuunalainen työnjohtaja',
+                            'päätoiminen apulainen',
+                            'apulainen/työnjohtaja',
+                            'viherhoidosta vastaava henkilö',
+                            'hankintavastaava',
+                            'harjoittelija'
+                            ]::TEXT[]
+
+                        WHEN u.tyyppi <> 'vesivayla-hoito'
+                            AND EXTRACT(YEAR FROM u.alkupvm) = 2024
+                            THEN ARRAY[
+                            'valmistelukausi ennen urakka-ajan alkua',
+                            'vastuunalainen työnjohtaja',
+                            '2. työnjohtaja',
+                            '3. työnjohtaja',
+                            'viherhoidosta vastaava henkilö',
+                            'harjoittelija'
+                            ]::TEXT[]
+
+                        ELSE ARRAY[]::TEXT[]
+                        END
+                ) AS toimenkuva
+         FROM urakka_tiedot u
+     )
+-- Vesiväyläurakan urakkakohtaiset toimenkuvat.
+-- Vuodesta 2023 alkaen alkavat vesiväyläurakat otetaan mukaan.
+SELECT t.id,
+       t.toimenkuva
+FROM johto_ja_hallintokorvaus_toimenkuva t
+         JOIN urakka_tiedot u
+              ON TRUE
+WHERE t."urakka-id" = :urakka-id
+  AND t.toimenkuva IS NOT NULL
+  AND (
+    u.tyyppi <> 'vesivayla-hoito'
+        OR u.alkupvm >= DATE '2023-01-01'
+    )
+
 UNION
-SELECT (select MIN(id) from johto_ja_hallintokorvaus_toimenkuva where toimenkuva = ut.toimenkuva) AS id,
-       toimenkuva
-from urakka_toimenkuvat ut
-ORDER BY ID;
+
+-- Yleiset alkuvuoden perusteella määritellyt toimenkuvat
+-- koskevat vain MHU- eli teiden-hoito-urakoita.
+SELECT (
+           SELECT MIN(t.id)
+           FROM johto_ja_hallintokorvaus_toimenkuva t
+           WHERE t."urakka-id" IS NULL
+             AND t.toimenkuva = ut.toimenkuva
+       ) AS id,
+       ut.toimenkuva
+FROM urakka_toimenkuvat ut
+WHERE EXISTS (
+    SELECT 1
+    FROM johto_ja_hallintokorvaus_toimenkuva t
+    WHERE t."urakka-id" IS NULL
+      AND t.toimenkuva = ut.toimenkuva
+)
+ORDER BY id;

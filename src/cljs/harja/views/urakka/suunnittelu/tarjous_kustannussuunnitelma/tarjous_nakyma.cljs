@@ -85,13 +85,15 @@
 (defn johto-ja-hallintokorvaukset [e! vahvistetut-vuodet uusi-toimenkuva-valittavana kaikki-toimenkuvat vuositaulukon-otsikot vuosi-leveys toimenkuvat vesivayla-hoito?]
   (let [urakan-vuodet (range (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
                         (inc (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))))
+        rajoitetusti-muokattavat-toimenkuvat #{"Valmistelukausi ennen urakka-ajan alkua"
+                                               "Sopimusvastaava (ennen urakka-ajan alkua)"
+                                               "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)"}
+        vesivaylaurakoiden-suojatut-toimenkuvat #{"sopimusvastaava (ennen urakka-ajan alkua)"
+                               "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)"}
         vuositaulukon-otsikot (map-indexed (fn [index rivi]
                                              (merge rivi
                                                {:muokattava? (fn [rivi _]
                                                                (let [rivi-vuosi (if (> (count urakan-vuodet) index) (nth urakan-vuodet index) (first urakan-vuodet))
-                                                                     rajoitetusti-muokattavat-toimenkuvat #{"Valmistelukausi ennen urakka-ajan alkua"
-                                                                                                            "Sopimusvastaava (ennen urakka-ajan alkua)"
-                                                                                                            "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)"}
                                                                      salli-muokkaus? (cond
                                                                                        ;; Rajoitetusti muokattavat toimenkuvat ovat muokattavissa
                                                                                        ;; vain ensimmäisenä vuotena, jos vuotta ei ole vahvistettu.
@@ -134,10 +136,7 @@
                       true false)
         vuosiavaimet (flatten (map :nimi vuositaulukon-otsikot))
         vuosi-map (zipmap vuosiavaimet (repeat 0))
-        ohjauskahva (grid/grid-ohjaus)
-        suojatut-toimenkuvat #{"valmistelukausi ennen urakka-ajan alkua"
-                               "sopimusvastaava (ennen urakka-ajan alkua)"
-                               "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)"}]
+        ohjauskahva (grid/grid-ohjaus)]
     [grid/grid
      {:otsikko ""
       :data-cy "tarjous-toimenkuvat-grid"
@@ -205,12 +204,15 @@
                             vuosi-map))
                  :luokka "yhteensa"
                  :leveys (str nimi-leveys "%")
-                 :muokattava? (fn [rivi arvo] (if (or (and (not= "Sopimusvastaava (ennen urakka-ajan alkua)" (:nimi rivi))
-                                                        (not= "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:nimi rivi))
-                                                        (seq muut-toimenkuvat))
-                                                      (and (= -1 (:id rivi))
-                                                        (seq muut-toimenkuvat)))
-                                                true false))}
+                 :muokattava? (fn [rivi]
+                                (and
+                                  (not
+                                    (contains?
+                                      vesivaylaurakoiden-suojatut-toimenkuvat
+                                      (some-> (:nimi rivi)
+                                        str/trim
+                                        str/lower-case)))
+                                  (seq muut-toimenkuvat)))}
                 {:otsikko "Johto- ja hallintokorvaus"
                  :nimi :nimi
                  :tyyppi :valinta
@@ -232,12 +234,10 @@
                  ;; Jos on vielä mahdollista vaihtaa toimenkuvaa ja toimenkuva ei ole 'Valmistelukausi ennen urakka-ajan alkua'
                  ;; niin näytä valikko. Muuten ei näytetä valikkoa.
                  :muokattava? (fn [rivi]
-                                (if (and
-                                      (not= "Valmistelukausi ennen urakka-ajan alkua" (:nimi rivi))
-                                      (not= "Sopimusvastaava (ennen urakka-ajan alkua)" (:nimi rivi))
-                                      (not= "Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:nimi rivi))
-                                      (seq muut-toimenkuvat))
-                                  true false))})]
+                                (and
+                                  (not (contains? rajoitetusti-muokattavat-toimenkuvat
+                                         (:nimi rivi)))
+                                  (seq muut-toimenkuvat)))})]
        [;; Poista nappi vain 2025 tai jälkeen alkaneissa urakoissa sekä vesiväylä-hoito-tyyppisissä urakoissa.
         (if (or (>= urakan-alkuvuosi 2025) vesivayla-hoito?)
           {:otsikko ""
@@ -247,7 +247,7 @@
                                                   (or "")
                                                   str/trim
                                                   str/lower-case)]
-                           (if (contains? suojatut-toimenkuvat toimenkuvan-nimi)
+                           (if (contains? vesivaylaurakoiden-suojatut-toimenkuvat toimenkuvan-nimi)
                              [:span]
                              (napit/yleinen "Poista rivi"
                                :toissijainen
