@@ -1797,7 +1797,7 @@
                     :kun-valmis #(do
                                    (reset! data (normalisoi %))
                                    (reset! karttavalinta-kaynnissa? false)
-                                   (log "Saatiin tr-osoite! " (pr-str %))
+                                   (log "Saatiin tr-osoite!")
                                    (go (>! tr-osoite-ch %)))}]))
 
               (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
