@@ -44,6 +44,13 @@
   [sanktiotyypit tyyppi-id]
   (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
 
+
+(defn- lukutilan-kenttakuvaus
+  [kenttakuvaus]
+  (assoc kenttakuvaus
+    :tyyppi :string
+    :muokattava? (constantly false)))
+
 (defn- sanktion-laji-ja-tyyppikentat
   [sanktio lukutila? vesivaylaurakka? mahdolliset-sanktiolajit yllapitourakka?
    asiakirjamerkinta? laskutus-ilman-laskutuskelpoisuutta? tyyppi-valinnat
@@ -73,13 +80,12 @@
                      [yleiset/info-laatikko :neutraali
                       [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
 
-   (when-not (or yllapitourakka?
+    (when-not (or yllapitourakka?
                  vesivaylaurakka?
                  asiakirjamerkinta?
                  laskutus-ilman-laskutuskelpoisuutta?
                  (= :laskutus_yli_laskutusrajan (:laji sanktio)))
-     (if (not lukutila?)
-       {:otsikko "Tyyppi" :tyyppi :valinta
+     (let [tyyppikentta {:otsikko "Tyyppi" :tyyppi :valinta
         :pakollinen? true
         :uusi-rivi? true
         ::lomake/col-luokka "col-xs-12"
@@ -103,16 +109,12 @@
                              (tiedot/valitun-urakan-sanktiolajin-nimi (:laji sanktio))
                              arvo)))
         :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
-
-       ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-       ;; Vanhat poistetut sanktiotyypit eivät tule valintakomponenttiin vaihtoehdoiksi vanhoissa kirjauksissa,
-       ;; joten näytetään tyyppi pelkkänä tekstinä.
-       {:otsikko "Tyyppi" :tyyppi :teksti :nimi :tyyppi
-        ::lomake/col-luokka "col-xs-12"
-        :hae (fn [rivi]
-               (sanktiotyyppi-domain/sanktiotyypin-nimi
-                 (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
-                 (:tyyppi rivi)))}))])
+           lukutilan-tyyppikentta (assoc (lukutilan-kenttakuvaus tyyppikentta)
+                                    :hae (fn [rivi]
+                                           (sanktiotyyppi-domain/sanktiotyypin-nimi
+                                             (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
+                                             (:tyyppi rivi))))]
+      (if lukutila? lukutilan-tyyppikentta tyyppikentta)))])
 
 (defn- yllapitokohde-kentta
   [yllapitokohdeurakka? yllapitokohteet voi-muokata?]
