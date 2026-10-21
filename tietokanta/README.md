@@ -1,61 +1,71 @@
 # Harja tietokanta
 
-Sisältää Harja-järjestelmän tietokantamääritykset
+Uudet migraatiot lisätään hakemistoon `src/main/resources/db/migration/`.
 
-Uudet migraatiot lisätään kansioon src\main\resources\db\migration
+## Migraatioiden lisääminen
 
-Migraatiot voi ajaan Maven buildin kautta komennolla: mvn clean compile flyway:migrate
+Ennen uuden versioidun migraatiotiedoston lisäämistä tai versionumeron muutosta suorita projektin juurihakemistosta:
 
-Testitietokannan voi päivittää ajamalla komennon: mvn clean compile -Pharjatest flyway:migrate
+```bash
+./tietokanta/viimeisin_migraatio.sh
+```
 
-## Tietokantaan pääsy omalta koneelta
+Skripti hakee `origin/develop`-haaran tiedot ja näyttää sen suurimman migraationumeron. Nimeä uusi tiedosto muodossa
+`V1_<numero>__<kuvaus>.sql` käyttäen seuraavaa numeroa. Uuden migraation version numero ei saa jättää numeroa välistä,
+vaan
+numeron täytyy olla seuraavaksi suurin numero `origin/develop`-haaran migraatioon verrattuna.
 
-> ssh -L 7777:harja-db1-test:5432 harja-jenkins.solitaservices.fi
+Migraatiot lisätään ja mergetään numerojärjestyksessä. Jos useassa rinnakkaisessa PR:ssä on migraatioita, tarkista aina
+PR-branchissä `origin/develop` migraatioiden tilanne scriptin avulla uudelleen ennen mergeä ja muokkaa oman
+migraatiotiedostosi numero tarvittaessa oikeanlaiseksi
 
-sitten psql komento:
+Jo mergettyjä versioituja `V1_...`-migraatioita ei enää saa muokata eikä poistaa. Käytännössä migraatiota voi kuitenkin
+vielä muokata, jos sitä ei ole ehditty vielä deployata johonkin kohdeympäristöön: dev/stg/prod.
 
-> psql -h localhost -p 7777 -U flyway harja
+`R__...`-migraatiot ovat toistettavia migraatioita, ja niitä voi päivittää jälkikäteen. Flyway havaitsee muutoksen
+R-migraatiossa ja ajaa sen uudelleen.
+
+## Migraatioiden automaattinen tarkistus
+
+PR-testeissä ajetaan check `Validoi Flyway-migraatiot`, joka vertaa PR:n migraatiomuutoksia base-branchiin
+(`.github/scripts/tarkista-migraatiot.js`, Node.js ilman riippuvuuksia).  
+Jos migraatioihin ei ole muutoksia, tarkistus menee suoraan läpi. 
+
+**Tarkistus estää:**
+- virheelliset tiedostonimet. Sallitut muodot: `V1_<numero>__[kuvaus].sql` (numero on pakollinen, ei etunollia; kuvaus
+  vapaaehtoinen, merkit `A-Z a-z 0-9 _ -`), `R__<kuvaus>.sql` ja `afterMigrate.sql`
+- versionumeron, joka on jo käytössä (myös eri kuvauksella)
+- numeroinnin, joka ei jatka base-branchin suurinta numeroa aukottomasti
+- base-branchissa jo olevan `V1_...`-migraation muokkauksen, poiston tai uudelleennimeämisen
+
+Jos olemassa olevaa `V1_...`-migraatiota on tarkoituksella muutettava (esim. sitä ei ole vielä deployattu), lisää PR:ään
+label `salli-v1-migraation-muutos` ja pushaa sen jälkeen uusi commit. Label luetaan PR-eventistä, joten pelkkä
+uudelleenajo ei huomaa sitä.
+
+Tarkistuksen voi ajaa paikallisesti ennen PR:n avaamista (vain commitoidut muutokset):
+
+```bash
+git fetch origin develop
+node .github/scripts/tarkista-migraatiot.js origin/develop
+```
+
+Skriptin omat testit: `node --test .github/scripts/tarkista-migraatiot.test.js`.
+
+Tarkistus ei estä kahden rinnakkaisen PR:n kilpailutilannetta. 
+Se ajetaan PR:n ja sen hetkisen base-branchin merge-commitille, joten develop-haaran muututtua PR on päivitettävä, 
+jotta tarkistus ajetaan uudelleen.
 
 ## Tietokantojen salasanat
 
 Kyselepä tiimiläisiltä.
 
-## Tietokannan lokitus paikallisessa Docker-kontissa. Tällä sisään kantakoneelle:
-> docker exec -it harjadb /bin/bash
-### Aseta haluamasi lokitustaso, ohjeet: https://www.postgresql.org/docs/9.5/static/runtime-config-logging.html
-> nano /etc/postgresql/9.5/main/postgresql.conf
-### Jos nano tai muu haluamasi tekstinkäsittelyohjelma puuttui
-> apt-get update
-> apt-get install nano
-### log-tason muutoksen voimaannuttamiseksi, restart possu
-> service postgresql restart
-### tarkkaile lokin häntää
-> tail -f /var/log/postgresql/postgresql-9.5-main.log
+## Paikallinen kehitystietokanta
 
-Jos osaat ja ehdit, voit tehdä yo. tehtäviin skriptejä esim Sedin avulla, esim. log-localdb.sh
+Suorita komennot projektin juurihakemistosta.
 
-## Tietokantaskriptit ja niiden keskinäiset riippuvuudet
+- Käynnistä kanta komennolla `./tietokanta/devdb_up.sh`. Skripti käynnistää `harjadb`-kontin ja ajaa siinä migraatiot
+  sekä testidatan.
+- Sammuta kanta komennolla `./tietokanta/devdb_down.sh`. Kontin poistaminen poistaa myös paikallisen tietokannan.
+- Luo kanta uudelleen tyhjästä komennolla `./tietokanta/devdb_restart.sh`. Skripti poistaa vanhan kontin ja käynnistää
+  uuden, minkä jälkeen migraatiot ja testidata alustetaan uudelleen.
 
-Skriptit rakentavat ja tarvittaessa tuhoavat lokaalin kehitystietokannan.
-
-Kun haluat putsata tietokannan ja alkaa puhtaalta pöydältä, 
-aja juuressa tietokanta/devdb_restart.sh tai tietokanta-kansiossa ./devdb_restart.sh
-
-Skriptihierarkia ja -riippuvuudet alla.
-
-devdb_restart.sh
-    devdb_down.sh tuhoaa harjadb Docker-kontin ja tietokannan sen mukana
-    devdb_up.sh luo harjadb Docker-kontin 
-        devdb_testidata.sh ajaa tietokantasisällön tietokantaan, ei toimi omana skriptinään
-            testidata.sql
-
-## Imagen luonti ja päivitys dockerhubiin
-* Aja `$ build-and-tag-docker-image.sh`
-    * Image tagataan default-arvolla, jota käytetään ci-putkessa ja kehittäjien ympäristöissä.
-      Mutta, jos haluat käyttää eri tagin nimeä, niin voit antaa sen argumenttina scriptille.
-* Kun build on valmis, niin voit ajaa `$ push-docker-image.sh`
-    * Tämä script puskee halutun imagen dockerhubiin.
-    * Default-arvolla tagattu image pusketaan ensisijaisesti, mutta jos haluat käyttää eri tagia, niin voit antaa sen
-      argumenttina scriptille.
-    * Varmista, että olet kirjautunut sisään dockeriin kehityskoneella ja että sinulla
-      on riittävät oikeudet Dockerhubissa `solita/harjadb`-repositorioon.
