@@ -383,6 +383,74 @@ FROM ilmoitus i
 WHERE urakka = :urakka AND
       (i.muokattu > :aika OR i.luotu > :aika);
 
+-- name: hae-ilmoitukset-urakka-idlla
+SELECT
+  i.ilmoitusid,
+  i.tunniste,
+  i.tila,
+  i.ilmoitettu,
+  i.valitetty                       AS "valitetty-harjaan",
+  i."valitetty-urakkaan",
+  i."vastaanotettu-alunperin"       AS "vastaanotettu-harjaan",
+  CASE
+    WHEN i."vastaanotettu-alunperin" = i.vastaanotettu THEN NULL
+    ELSE i.vastaanotettu
+  END                               AS "paivitetty-harjaan",
+  i.ilmoitustyyppi,
+  i.yhteydenottopyynto,
+  i.paikankuvaus,
+  i.lisatieto,
+  i.otsikko,
+  i.selitteet,
+  i.kuvat,
+  i."emon-ilmoitusid",
+  i.aihe                            AS aihe_id,
+  i.tarkenne                        AS tarkenne_id,
+  pa.nimi                           AS aihe_nimi,
+  pt.nimi                           AS tarkenne_nimi,
+  i.sijainti,
+  i.tr_numero                       AS tienumero,
+  i.ilmoittaja_etunimi,
+  i.ilmoittaja_sukunimi,
+  i.ilmoittaja_tyopuhelin,
+  i.ilmoittaja_matkapuhelin,
+  i.ilmoittaja_sahkoposti,
+  i.lahettaja_etunimi,
+  i.lahettaja_sukunimi,
+  i.lahettaja_puhelinnumero,
+  i.lahettaja_sahkoposti,
+  i."aiheutti-toimenpiteita",
+  json_agg(
+    json_build_object(
+      'kuitattu', it.kuitattu,
+      'kuittaustyyppi', it.kuittaustyyppi,
+      'vakiofraasi', coalesce(it.vakiofraasi, ''),
+      'vapaateksti', coalesce(it.vapaateksti, ''),
+      'kuittaaja_henkilo_etunimi', it.kuittaaja_henkilo_etunimi,
+      'kuittaaja_henkilo_sukunimi', it.kuittaaja_henkilo_sukunimi,
+      'kuittaaja_organisaatio_nimi', it.kuittaaja_organisaatio_nimi,
+      'kuittaaja_organisaatio_ytunnus', coalesce(it.kuittaaja_organisaatio_ytunnus, ''),
+      'kanava', it.kanava
+    )
+  ) AS kuittaukset
+FROM ilmoitus i
+  LEFT JOIN ilmoitustoimenpide it ON it.ilmoitus = i.id
+  LEFT JOIN palautevayla_aihe pa ON i.aihe = pa.ulkoinen_id
+  LEFT JOIN palautevayla_tarkenne pt ON i.tarkenne = pt.ulkoinen_id
+WHERE i.urakka = :urakka-id
+  AND (
+    i."valitetty-urakkaan" BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+    OR EXISTS (
+      SELECT 1
+      FROM ilmoitustoimenpide haettu_it
+      WHERE haettu_it.ilmoitus = i.id
+        AND haettu_it.kuitattu BETWEEN :alkuaika::TIMESTAMP AND :loppuaika::TIMESTAMP
+    )
+  )
+GROUP BY i.id, i."valitetty-urakkaan", pa.nimi, pt.nimi
+ORDER BY i."valitetty-urakkaan" ASC
+LIMIT 10000;
+
 -- name: hae-ilmoitukset-ytunnuksella
 WITH ilmoitus_urakat AS (SELECT u.id as id, u.urakkanro as urakkanro
                            FROM urakka u

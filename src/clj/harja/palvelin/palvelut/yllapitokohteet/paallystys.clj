@@ -64,14 +64,13 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kohdeluettelo-paallystysilmoitukset user urakka-id)
   (yy/vaadi-yllapitokohde-kuuluu-urakkaan db urakka-id paallystyskohde-id)
   (let [paakohde (first (yllapitokohteet-q/hae-yllapitokohde db {:id paallystyskohde-id}))
-        haku (if haku
-               (assoc haku
-                      :tr-alkuetaisyys 0
-                      :tr-loppuetaisyys Integer/MAX_VALUE)
-               (select-keys paakohde
-                            [:tr-numero :tr-alkuosa :tr-alkuetaisyys
-                             :tr-loppuosa :tr-loppuetaisyys]))]
-    (tieverkko-q/hae-tieosuudet db haku)))
+        hakuehdot (or haku
+                     (select-keys paakohde [:tr-numero :tr-alkuosa :tr-loppuosa]))
+        hakuehdot (assoc hakuehdot
+                        :tr-alkuetaisyys 0
+                        :tr-loppuetaisyys Integer/MAX_VALUE
+                        :rajoita-tieosuuksien-maara pot2-domain/+tieosuushaun-rajoitus+)]
+    (tieverkko-q/hae-tieosuudet db hakuehdot)))
 
 (defn hae-urakan-paallystysilmoitukset [db user {:keys [urakka-id sopimus-id vuosi paikkauskohteet? tilat evkt]}]
   (log/debug "Haetaan urakan päällystysilmoitukset. Urakka-id " urakka-id ", sopimus-id: " sopimus-id)
@@ -775,6 +774,14 @@
          :osoitteet
          (filter (comp not :poistettu)))))
 
+(defn pot2-massamenekki
+  "Päällystekerrosrivin massamenekki (kg/m2). Nolla, jos leveys, massamäärä tai pinta-ala on nolla."
+  [{:keys [massamenekki leveys kokonaismassamaara pinta_ala]}]
+  (cond
+    (some? massamenekki) massamenekki
+    (some #(and (number? %) (zero? %)) [leveys kokonaismassamaara pinta_ala]) 0
+    :else (paikkaus-domain/massamaara-ja-pinta-ala->massamenekki kokonaismassamaara pinta_ala)))
+
 (defn- tallenna-pot2-paallystekerros
   [db paallystysilmoitus pot2-id paivitetyt-kohdeosat]
   (try
@@ -786,6 +793,8 @@
            kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
            params (merge rivi
                          {:kohdeosa_id kohdeosan-id
+                          :pinta_ala (:pinta_ala rivi)
+                          :massamenekki (pot2-massamenekki rivi)
                           :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
                           :lisatieto (:lisatieto rivi)
                           :pot2_id pot2-id
