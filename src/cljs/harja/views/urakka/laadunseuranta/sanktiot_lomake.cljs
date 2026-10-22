@@ -611,6 +611,21 @@
                                 (-> (dissoc :summa :normaalimaara :laskennan-syote)
                                   (assoc :omailmoitettu false
                                     :laskettava-syote (sanktion-laskenta/laskettava-syote @muokattu))))
+        ;; Laatupoikkeaman näkymässä sanktio tallennetaan paikallisesti atomiin, ei kantaan.
+        tallenna! (if tallenna-fn
+                    (fn []
+                      (tallenna-fn tallennettava-sanktio)
+                      (reset! sivupaneeli-auki?-atom false)
+                      (reset! tiedot/valittu-sanktio nil))
+                    ;; Suorasanktio tallennetaan suoraan kantaan.
+                    (fn []
+                      (tiedot/tallenna-sanktio
+                        tallennettava-sanktio
+                        urakka-id
+                        #(reset! sivupaneeli-auki?-atom false))))
+        tallennusnapin-komponentti (if tallenna-fn
+                                     napit/yleinen-ensisijainen
+                                     napit/palvelinkutsu-nappi)
         ;; Lukutila välitetään laatupoikkeaman sanktiolle sanktion tiedoissa.
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
@@ -659,29 +674,14 @@
        :footer-fn (fn [sanktio]
                     [:span.nappiwrappi.flex-row
                      (when-not lukutila?
-                       (if tallenna-fn
-                           ;; Laatupoikkeaman sanktio: tallennetaan paikallisesti atomiin, ei kantaan
-                         [napit/yleinen-ensisijainen
-                          (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                          (fn []
-                            (tallenna-fn tallennettava-sanktio)
-                            (reset! sivupaneeli-auki?-atom false)
-                            (reset! tiedot/valittu-sanktio nil))
-                          {:ikoni (ikonit/tallenna)
-                           :disabled (or (not voi-muokata?)
-                                       (not (lomake/voi-tallentaa? sanktio)))}]
-                           ;; Suorasanktio: tallennetaan suoraan kantaan
-                         [napit/palvelinkutsu-nappi
-                          (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                          (fn []
-                            (tiedot/tallenna-sanktio
-                              tallennettava-sanktio
-                              urakka-id
-                              #(reset! sivupaneeli-auki?-atom false)))
-                          {:luokka "nappi-ensisijainen"
-                           :ikoni (ikonit/tallenna)
-                           :disabled (or (not voi-muokata?)
-                                       (not (lomake/voi-tallentaa? sanktio)))}]))
+                       [tallennusnapin-komponentti
+                        (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                        tallenna!
+                        (cond-> {:ikoni (ikonit/tallenna)
+                                 :disabled (or (not voi-muokata?)
+                                               (not (lomake/voi-tallentaa? sanktio)))}
+                          (not tallenna-fn)
+                          (assoc :luokka "nappi-ensisijainen"))])
                      (when (and voi-muokata? saa-poistaa? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
                        [:button.nappi-kielteinen.oikealle
                         {:on-click
