@@ -3,7 +3,7 @@
 
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :refer [round2]]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
+
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.valikatselmus.apurit :as apurit]))
 
@@ -165,15 +165,6 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
       paatokset)))
 
-
-(defn- laske-muutos-prosentteina [piste-keskiarvo alkuperainen-pisteluku]
-  (if (or (zero? piste-keskiarvo) (zero? alkuperainen-pisteluku))
-    0
-    (round2 1
-      (* (/ (- piste-keskiarvo alkuperainen-pisteluku)
-           piste-keskiarvo)
-        100))))
-
 (defn valmistele-hoitovuoden-lopun-indeksikorjauspaatos [validoinnit-kaytossa? paatokset hoitovuoden-lopun-indeksikorjaus-summa oikaistu-tavoitehinta tavoitehinnan-muutokset
                                                          taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
                                                          tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit]
@@ -213,7 +204,7 @@
           alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
           pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
           alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)
-          muutos-prosentteina (laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
+          muutos-prosentteina (apurit/laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
           ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
           indeksikorotuksen-prosenttiosuus (if (and muutos-prosentteina (> muutos-prosentteina 2)) (- muutos-prosentteina 2) 0)
           tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-muutokset))
@@ -364,7 +355,7 @@
 
           tavoitehinnan-ylitys (cond
                                  ;; Kustannukset on suurempi kuin tavoitehinta ja pienempi kuin kattohinta
-                                 (and  (> kustannukset hoitovuoden-lopun-indeksikorjattu-tavoitehinta) (<= kustannukset lopullinen-hoitovuoden-lopun-kattohinta))
+                                 (and (> kustannukset hoitovuoden-lopun-indeksikorjattu-tavoitehinta) (<= kustannukset lopullinen-hoitovuoden-lopun-kattohinta))
                                  (- kustannukset hoitovuoden-lopun-indeksikorjattu-tavoitehinta)
 
                                  ;; Kustannukset on suurempi kuin kattohointa
@@ -468,8 +459,9 @@
 
 
 ;; Hoitovuoden lopun tavoite- ja kattohinta
-(defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinta-indeksikorjattu
-                                                 tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
+(defn valmistele-hv-lopun-tavoite-ja-kattohinta [validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset
+                                                 tavoitehinnan-oikaisut tavoitehinta-indeksikorjattu
+                                                 taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
                                                  hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitovuoden-lopun-indeksikorjaus-summa
                                                  lisaa-hoitokauden-lopun-indeksikorjaus
                                                  tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit]
@@ -509,33 +501,34 @@
                     (conj "Hoitovuosi on kesken."))
 
           hintapaatos (first (filter #(= (:nimi %) "Hoitovuoden lopun tavoite- ja kattohinta") mahdolliset-paatokset))
-          ;; Tavoitehinnan oikaisut on -24 asti käytössä.
-          hintamuutos-oikaisut (if tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut)) 0)
+          tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
+          hintamuutokset-2025-summa (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht)
           ;; 2025 vuodesta eteenpäin ei ole käytössä vanhat tavoitehinnan-oikaisut, vaan monimutkaisemmat vuosittaiset muutoset/pysyvät muutokset sekä arvonvähennykset
-          hintamuutos (if (<= urakan-alkuvuosi 2024)
-                        ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset
-                        (if (>= 2026  valittu-hoitovuosi)
-                          (+ hintamuutos-oikaisut thv-arvonvahennykset-yht)
-                          hintamuutos-oikaisut)
-                        (+ taman-vuoden-muutokset-summa thv-arvonvahennykset-yht))
+          kattohinnan-hintamuutos (if (<= urakan-alkuvuosi 2024)
+                                    ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset - vanhantyyppiset oikaisut on jo kattohinnassa mukana
+                                    (if (>= 2026 valittu-hoitovuosi) thv-arvonvahennykset-yht 0)
+                                    hintamuutokset-2025-summa)
+          tavoitehinnan-hintamuutos (if (<= urakan-alkuvuosi 2024)
+                                      ;; Jos kuluva hoitovuosi on 2026, niin lisätään vielä mahdolliset arvonvähennykset ja vanhantyyppiset oikaisut
+                                      (if (>= 2026 valittu-hoitovuosi) (+ tavoitehinnan-oikaisut-summa thv-arvonvahennykset-yht) tavoitehinnan-oikaisut-summa)
+                                      hintamuutokset-2025-summa)
           hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
 
           hoitovuoden-lopun-indeksikorjaus-summa (or hoitovuoden-lopun-indeksikorjaus-summa 0)
-          hoitovuoden-lopun-tavoitehinta (+ (or tavoitehinta-indeksikorjattu 0) (or hintamuutos 0) hoitovuoden-lopun-indeksikorjaus-summa)
+          hoitovuoden-lopun-tavoitehinta (+ (or tavoitehinta-indeksikorjattu 0) (or tavoitehinnan-hintamuutos 0) hoitovuoden-lopun-indeksikorjaus-summa)
           ;; Lasketaan kattohinta -- Etsitään ensin indeksikorjauspäätös
           indeksikorjauspaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset))
 
           hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
                                          (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                         (* hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                         (* hintamuutos-oikaisut (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+                                         (* kattohinnan-hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
 
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
                         (assoc :nimi "Hoitovuoden lopun tavoite- ja kattohinta") ;; Nimi löytyy, jos päätösten alkuvuosia ei kovakoodaten vaihdeta testitarkoituksissa
                         (assoc :tavoitehinta_ennen tavoitehinta-indeksikorjattu)
                         (assoc :tavoitehinta_jalkeen hoitovuoden-lopun-tavoitehinta)
-                        (assoc :tavoitehinnan_muutokset hintamuutos)
+                        (assoc :tavoitehinnan_muutokset tavoitehinnan-hintamuutos)
                         (assoc :hoitokauden_lopun_indeksikorjaus hoitovuoden-lopun-indeksikorjaus-summa)
                         (assoc :kattohinta hoitovuoden-lopun-kattohinta)
                         (assoc :kattohintakerroin kattohintakerroin)

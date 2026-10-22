@@ -3,10 +3,9 @@
 GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
 1. Testitietokanta (harjadb): [docker/tietokanta/Dockerfile](./tietokanta/Dockerfile)
     * Tarvitaan Harjan buildaamisessa (Specql-kirjasto tarvitsee kantayhteyden) ja testien ajamisessa
-    * Tämä on modernimpi versio kehittäjien käytössä olevasta Dockerhubiin julkaistusta harjadb-imagesta.
-        *  **TODO**: Otetaan tämä käyttöön myös paikallisessa kehityksessä. Katso [tietokanta/devdeb_up_uusi.sh](../../tietokanta/devdb_up_uusi.sh)
-2. ActiveMQ: [.github/docker/activemq-artemis/Dockerfile](./activemq/Dockerfile)
-    * Tarvitaan Integraatiotestien ajamisessa
+    * Sama image on käytössä paikallisessa kehityksessä. Sen käynnistää [tietokanta/devdb_up.sh](../../tietokanta/devdb_up.sh), joka ajaa myös migraatiot ja testidatan.
+2. ActiveMQ Artemis: [.github/docker/activemq-artemis/Dockerfile](./activemq-artemis/Dockerfile)
+    * Tarvitaan integraatiotestien ajamisessa
 3. Cypress: [.github/docker/cypress/Dockerfile](./cypress/Dockerfile)
     * Tarvitaan E2E-testien ajamisesssa
 
@@ -52,7 +51,6 @@ Lue tarkasti varsinkin ohje, jossa neuvotaan pienentämään tokenin access scop
 
 Harjan käyttämät Docker imaget julkaistaan Harjan GitHub repositorion Container Registryyn, finnishtransportagency-organisaation alle.
 Container Registryyn julkaisun etuna on se, että imaget ovat mahdollisimman lähellä Actionsin workfloweja, jolloin ne latautuvat nopeasti.
-Myöskään ei ole tarvetta luoda erillistä organisaatiota tai tunnuksia Dockerhubiin.
 
 GitHubin container registry toimii siten, että repositorion imaget julkaistaan aina organisaatiokohtaisesti ja imagen Dockerfilessa
 olevan Label-määrityksen avulla image paritetaan oikean repositorion kanssa.
@@ -64,11 +62,11 @@ Alla olevat seikat on syytä huomioida, jos on tarvetta toteuttaa uusi image.
 
 1. Dockerfilessa on LABEL:
    ```dockerfile
-      FROM postgis/postgis:12-3.1
+      FROM postgres:15.18-bookworm
     
       # Yhdistä image harjan repositoryyn
       LABEL org.opencontainers.image.source https://github.com/finnishtransportagency/harja
-      ...
+      # Muut Dockerfile-rivit
    ```
    Tämä kertoo, että kyseinen image täytyy yhdistää Harjan GitHub-repositorioon julkaisun yhteydessä.
 2. Buildataan image tagilla: ```docker build -t ghcr.io/finnishtransportagency/harja_harjadb:latest .```
@@ -94,10 +92,10 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
 
     Esim.
     ```bash
-    ./build-image.sh --tag 13-3.1
+    ./build-image.sh --tag 15.18-3.3.3
     ```
     
-    Tämä tekee uudet "latest" ja "13-3.1" tagatut imaget.
+    Tämä tekee uudet "latest" ja "15.18-3.3.3" tagatut imaget.
     
     Katso muut optiot komennolle ajamalla:
     ```bash
@@ -119,7 +117,7 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
     Käytetään komentoa:
     
     ```bash
-    ./push-image.sh --tag 13-3.1
+    ./push-image.sh --tag 15.18-3.3.3
     ```
     
     Defaulttina ei päivitetä "latest"-tagia Container Registryyn.
@@ -138,8 +136,8 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
 5. Aja scripti: ```./push-image.sh --update-latest```
 
 
-### ActiveMQ-imagen päivitys
-1. Navigoi polkuun: ```.github/docker/activemq/```
+### ActiveMQ Artemis -imagen päivitys
+1. Navigoi polkuun: ```.github/docker/activemq-artemis/```
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh```
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
