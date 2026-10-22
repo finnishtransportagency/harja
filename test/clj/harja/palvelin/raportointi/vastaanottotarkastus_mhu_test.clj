@@ -67,17 +67,19 @@
       (is (not= (:suorita paallystys) (:suorita mhu))))))
 
 (def ^:private testi-hoitokaudet
-  [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-   {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}])
+  (mapv (fn [vuosi]
+          {:alkupvm (pvm/hoitokauden-alkupvm vuosi)
+           :loppupvm (pvm/paivan-lopussa
+                       (pvm/hoitokauden-loppupvm (inc vuosi)))})
+    (range 2021 2023)))
 
 (def ^:private testi-mhu25-urakka-id -1)
 
 (def ^:private testi-mhu25-hoitokaudet
   (mapv (fn [vuosi]
           {:alkupvm (pvm/luo-pvm-aika vuosi 9 1 0)
-           :loppupvm (pvm/luo-pvm-aika (inc vuosi) 8 30 23 59 59)})
+           :loppupvm (pvm/paivan-lopussa
+                       (pvm/hoitokauden-loppupvm (inc vuosi)))})
     (range 2025 2030)))
 
 (def ^:private testi-mhu25-urakan-tiedot
@@ -613,9 +615,11 @@
 
 (deftest lupaukset-kayttaa-kuukausittaisia-pisteita-toimii
   (let [urakka-id -3
-        urakan-tiedot {:alkupvm #inst "2019-10-01T00:00:00.000-00:00"}
-        hoitokaudet [{:alkupvm #inst "2019-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2020-09-30T23:59:59.000-00:00"}]
+        hoitovuosi 2019
+        urakan-tiedot {:alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)}
+        hoitokaudet [{:alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
+                      :loppupvm (pvm/paivan-lopussa
+                                  (pvm/hoitokauden-loppupvm (inc hoitovuosi)))}]
         raportti (with-redefs [lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle
                                (fn [_ _] {:lupaus-sitoutuminen {:pisteet 70}
                                           :yhteenveto {:pisteet {:maksimi 100, :ennuste 100, :toteuma 100}
@@ -806,10 +810,7 @@
 
 (deftest sanktiotaulukko-erottelee-muistutukset-poikkeamaraportit-ja-arvonvahennykset
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
+        hoitokaudet testi-hoitokaudet
         sanktiot (fn [_ {:keys [alkupvm]}]
                    (if (= alkupvm (-> hoitokaudet first :alkupvm))
                      [{:sakkoryhma "muistutus"}
@@ -844,10 +845,7 @@
 
 (deftest bonustaulukko-erottelee-lupausbonukset-asiastyytyvaisyysbonukset
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
+        hoitokaudet testi-hoitokaudet
         bonukset (fn [_ {:keys [alkupvm]}]
                    (if (= alkupvm (-> hoitokaudet first :alkupvm))
                      [{:tyyppi "lupausbonus" :rahasumma 20M}
@@ -1130,4 +1128,3 @@
         (is (= 19345.44 (nth (:rivi (yhteensarivi taulukko)) 5)))
         (is (= 0 (nth (:rivi (yhteensarivi taulukko)) 6)))
         (is (= 9210333.9933724 (nth (:rivi (yhteensarivi taulukko)) 7)))))))
-
