@@ -278,7 +278,10 @@
                  vanha-tyyppi)
                (assoc rivi
                  :tyyppi vanha-tyyppi
-                 :toimenpideinstanssi (:toimenpidekoodi vanha-tyyppi))
+                 :toimenpideinstanssi (some #(when (= (:toimenpidekoodi vanha-tyyppi)
+                                                     (:toimenpidekoodi %))
+                                             (:tpi_id %))
+                                         toimenpideinstanssit))
 
                :else (dissoc rivi :laskettava-syote :laskennan-syote))]
     (if (and (not (muu-kuin-muistutus? rivi))

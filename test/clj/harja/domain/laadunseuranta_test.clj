@@ -117,7 +117,8 @@
 
 (deftest sanktiolajin-vaihto-sailyttaa-uuteen-lajiin-kuuluvan-tyypin
   (let [vanha-tyyppi {:id 1 :koodi 13 :toimenpidekoodi "H1"}
-    toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H2"}
+        toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H2"}
+        toimenpideinstanssit [{:tpi_id 303 :toimenpidekoodi "H1"}]
         rivi {:laji :A
               :tyyppi vanha-tyyppi
               :toimenpideinstanssi 101
@@ -125,14 +126,14 @@
               :normaalimaara 500
               :laskettava-syote {:maara 2}
               :laskennan-syote {:maara 2}}]
-    (is (= (assoc rivi :laji :B :toimenpideinstanssi "H1")
+    (is (= (assoc rivi :laji :B :toimenpideinstanssi 303)
            (sanktio-domain/vaihda-sanktiolajia
-             rivi :B [vanha-tyyppi toinen-tyyppi] [])))))
+             rivi :B [vanha-tyyppi toinen-tyyppi] toimenpideinstanssit)))))
 
 (deftest sanktiolajin-vaihto-esivalitsee-yhden-tyypin-ja-paattelee-toimenpideinstanssin
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
         toimenpideinstanssit [{:tpi_id 202 :toimenpidekoodi "H2"}
-                  {:tpi_id 203 :toimenpidekoodi "H3"}]
+                              {:tpi_id 203 :toimenpidekoodi "H3"}]
         rivi {:laji :A
               :tyyppi {:id 1}
               :toimenpideinstanssi nil}]
@@ -173,18 +174,17 @@
            (sanktio-domain/vaihda-sanktiolajia
              rivi :B [] [])))))
 
-(deftest sanktiolajin-vaihto-dokumentoi-h6n-vanhan-toimenpidekoodin
+(deftest sanktiolajin-vaihto-sailyttaa-vanhan-tyypin-toimenpideinstanssin
   (let [vanha-tyyppi {:id 1 :koodi 13 :toimenpidekoodi "H6"}
-  toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H7"}
+        toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H7"}
         rivi {:laji :A
               :tyyppi vanha-tyyppi
-              :toimenpideinstanssi 606}]
-    ;; H6 on nykyinen käyttäytyminen: lajin vaihto käyttää vanhan tyypin
-    ;; :toimenpidekoodi-arvoa :toimenpideinstanssi-kentässä. Tätä ei korjata T04:ssä.
-    (is (= "H6"
+              :toimenpideinstanssi 606}
+        toimenpideinstanssit [{:tpi_id 202 :toimenpidekoodi "H6"}]]
+    (is (= 202
            (:toimenpideinstanssi
              (sanktio-domain/vaihda-sanktiolajia
-               rivi :B [vanha-tyyppi toinen-tyyppi] []))))))
+               rivi :B [vanha-tyyppi toinen-tyyppi] toimenpideinstanssit))))))
 
 (deftest sanktiotyypin-vaihto-vaihtaa-tyypin-ja-johtaa-toimenpideinstanssin
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
