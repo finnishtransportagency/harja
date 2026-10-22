@@ -132,25 +132,29 @@
   (let [urakka-id (Integer/parseInt (:id parametrit))
         ulkoinen-id (get-in data [:liite-poisto :tunniste :id])]
     (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (liitteet-q/merkitse-liite-poistetuksi! db {:urakka urakka-id
-                                                :ulkoinen_id ulkoinen-id
-                                                :kayttaja (:id kayttaja)})
+    (when (= 0 (liitteet-q/merkitse-liite-poistetuksi! db {:urakka urakka-id
+                                                             :ulkoinen_id ulkoinen-id
+                                                             :kayttaja (:id kayttaja)}))
+      (heita-liitevirhe (format "Liitettä ei löydy tunnisteella: %s" ulkoinen-id)))
     (tee-kirjausvastauksen-body {:ilmoitukset "Liite poistettu onnistuneesti"})))
 
 (defn vastaanota-liite [parametrit data kayttaja db liitteiden-hallinta]
   (let [kohdeluokka (get-in data [:liite-lahetys :kohdeluokka])]
-    (case kohdeluokka
-      "siltatarkastuskohde" (tallenna-siltatarkastuskohteen-liitteet
+    (try
+      (case kohdeluokka
+        "siltatarkastuskohde" (tallenna-siltatarkastuskohteen-liitteet
+                                 parametrit data kayttaja db liitteiden-hallinta)
+        "tarkastus" (tallenna-tarkastuksen-liite
+                       parametrit data kayttaja db liitteiden-hallinta)
+        "tarkastushavainto" (tallenna-tarkastushavainnon-liite
                                parametrit data kayttaja db liitteiden-hallinta)
-      "tarkastus" (tallenna-tarkastuksen-liite
-                     parametrit data kayttaja db liitteiden-hallinta)
-      "tarkastushavainto" (tallenna-tarkastushavainnon-liite
-                             parametrit data kayttaja db liitteiden-hallinta)
-      "laatupoikkeama" (tallenna-laatupoikkeaman-liite
-                          parametrit data kayttaja db liitteiden-hallinta)
-      "turvallisuuspoikkeama" (tallenna-turvallisuuspoikkeaman-liite
-                                parametrit data kayttaja db liitteiden-hallinta)
-      (heita-liitevirhe (format "Liitteen kohdeluokkaa ei vielä tueta: %s" kohdeluokka)))))
+        "laatupoikkeama" (tallenna-laatupoikkeaman-liite
+                            parametrit data kayttaja db liitteiden-hallinta)
+        "turvallisuuspoikkeama" (tallenna-turvallisuuspoikkeaman-liite
+                                  parametrit data kayttaja db liitteiden-hallinta)
+        (heita-liitevirhe (format "Liitteen kohdeluokkaa ei vielä tueta: %s" kohdeluokka)))
+      (catch IllegalArgumentException _
+        (heita-liitevirhe "Liitteen sisältö on virheellinen")))))
 
 
 (defrecord Liitteet []
