@@ -194,34 +194,6 @@
      :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
-(defn- laskutusrajan-ylitys-kentta
-  [sanktio]
-  (when (= :laskutus_yli_laskutusrajan (:laji sanktio))
-    {:otsikko "Ylityksen määrä (€)"
-     :nimi :laskutusrajan-ylitys
-     :tyyppi :euro
-     :vaadi-positiivinen-numero? true
-     ::lomake/col-luokka "col-xs-4"
-     :hae #(when (:laskutusrajan-ylitys %) (Math/abs (:laskutusrajan-ylitys %)))
-     :aseta (fn [rivi arvo] (-> rivi
-                              (assoc :laskutusrajan-ylitys arvo)
-                              (assoc :summa (* 0.2 arvo))))
-     :pakollinen? true :uusi-rivi? true
-     :validoi [[:ei-tyhja "Anna ylityksen määrä"]
-               [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]}))
-
-(defn- laskutusrajan-summa-kentta
-  [sanktio]
-  (when (= :laskutus_yli_laskutusrajan (:laji sanktio))
-    {:otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"
-     :nimi :summa
-     :tyyppi :euro
-     :muokattava? (constantly false)
-     :vaadi-positiivinen-numero? true
-     ::lomake/col-luokka "col-xs-8"
-     :hae #(when (:summa %) (Math/abs (:summa %)))
-     :pakollinen? true :uusi-rivi? true}))
-
 (defn- summan-maarityksen-kentat
   [laskutus-ilman-laskutuskelpoisuutta? laskettu-maaritys laskentaparametrit
    manuaalinen-laskettavan-sisartyyppi? c-ryhman-maaritys kiintea-profiilisumma?
@@ -731,10 +703,6 @@
              (perustelu-kentta tyon-tekematta-jattamisen-tyyppi-22? voi-muokata?)
 
              (omailmoitus-kentta omailmoitus-sallittu?)
-
-             (laskutusrajan-ylitys-kentta @muokattu)
-
-             (laskutusrajan-summa-kentta @muokattu)
 
              (summan-maarityksen-kentat
                laskutus-ilman-laskutuskelpoisuutta?

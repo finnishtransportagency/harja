@@ -3073,8 +3073,10 @@
         laskutusrajan-ylitys 12345.60M
         sanktio {:suorasanktio true
                  :laji :laskutus_yli_laskutusrajan
-                 :laskutusrajan-ylitys laskutusrajan-ylitys
-                 :summa (* 0.2M laskutusrajan-ylitys)
+                 ;; Profiilin syöteavain on laskutusrajan ylitys; summa tulee palvelimelta.
+                 :laskettava-syote laskutusrajan-ylitys
+                 ;; Asiakkaan lähettämä summa ei saa ohittaa profiilin laskentaa.
+                 :summa 1
                  :perintapvm perintapvm}
         laatupoikeama {:tekijanimi "testaus-tekija"
                        :paatos {:paatos "sanktio"
@@ -3094,4 +3096,8 @@
                                                                                     :loppu hk-loppupvm})
             lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
         (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
-        (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))
+        (is (zero? (compare -2469.12M (:summa lisatty-sanktio)))
+          "Palvelin laskee sanktion summaksi 20 prosenttia profiilin syötteestä")
+        (is (zero? (compare laskutusrajan-ylitys
+                             (get-in lisatty-sanktio [:laskennan-syote :syote])))
+          "Profiilin laskennan syöte tallentuu snapshotiin")))))
