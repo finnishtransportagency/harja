@@ -311,10 +311,69 @@
                            :valinnat mahdolliset-kulun-kohdistukset
                            :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
           lukutilan-kulun-kohdistus (assoc (lukutilan-kenttakuvaus kulun-kohdistus)
-                                      :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr))]
+                                      :hae (if (:maaraystapa? aikakausikonteksti)
+                                             #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)
+                                             #(some (fn [tpi]
+                                                      (when (= (:tpi_id tpi) (:toimenpideinstanssi %))
+                                                        (:tpi_nimi tpi)))
+                                                @urakan-toimenpideinstanssit)))]
       (if (and (not (:maaraystapa? aikakausikonteksti)) (not lukutila?))
         kulun-kohdistus
         lukutilan-kulun-kohdistus))))
+
+(defn- laskutuskuukausi-muokkauskuvaus
+  [laskutuskuukausi-id laskutuskuukaudet yllapitourakka?]
+  {:otsikko "Laskutuskuukausi"
+   :label-for-id laskutuskuukausi-id
+   :nimi :perintapvm
+   :pakollinen? true
+   :tyyppi :komponentti
+   ::lomake/col-luokka "col-xs-6"
+   :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+   :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
+                  (let [perintapvm (get-in data [:perintapvm])]
+                    [:<>
+                     [yleiset/livi-pudotusvalikko
+                      {:data-cy "koontilaskun-kk-dropdown"
+                       :vayla-tyyli? true
+                       :skrollattava? true
+                       :elementin-id laskutuskuukausi-id
+                       :pakollinen? true
+                       :valinta (or
+                                  ;; Näytetään valintana joko valittua laskutuskuukautta, tai
+                                  (-> data :laskutuskuukausi-komp-tiedot)
+                                  ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
+                                  (when perintapvm
+                                    (some #(when (and
+                                                   (= (pvm/vuosi perintapvm)
+                                                      (:vuosi %))
+                                                   (= (pvm/kuukausi perintapvm)
+                                                      (:kuukausi %))) %)
+                                      laskutuskuukaudet)))
+                       :valitse-fn #(muokkaa-lomaketta
+                                      (assoc data
+                                        ;; Tallennetaan tieto koko laskutuskuukauden valinnasta erikseen, jotta
+                                        ;; sitä voi hyödyntää muualla lomakkeessa.
+                                        :laskutuskuukausi-komp-tiedot %
+                                        ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
+                                        :perintapvm (:pvm %)))
+                       :format-fn :teksti}
+                      laskutuskuukaudet]
+                     ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
+                     (when (not yllapitourakka?)
+                       [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))})
+
+(defn- laskutuskuukausi-lukutilakuvaus
+  [muokkauskuvaus laskutuskuukaudet]
+  (-> (lukutilan-kenttakuvaus muokkauskuvaus)
+    (dissoc :label-for-id :huomauta :komponentti)
+    (assoc :fmt (fn [pvm]
+                  ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
+                  (when pvm
+                    (some #(when (and
+                                   (= (pvm/vuosi pvm) (pvm/vuosi (:pvm %)))
+                                   (= (pvm/kuukausi pvm) (pvm/kuukausi (:pvm %)))) (:teksti %))
+                      laskutuskuukaudet))))))
 
 (defn- paivamaarat-ja-perinta-kentat
   [laskutus-ilman-laskutuskelpoisuutta? aikakausikonteksti voi-muokata? lukutila?
@@ -356,59 +415,11 @@
 
     ;; MHU25 urakoille ei näytetä laskutuskuukautta
     (if (= :laskutuskuukausi (:perinta-tapa aikakausikonteksti))
-      (if (and voi-muokata? (not lukutila?))
-        {:otsikko "Laskutuskuukausi"
-         :label-for-id laskutuskuukausi-id
-         :nimi :perintapvm
-         :pakollinen? true
-         :tyyppi :komponentti
-         ::lomake/col-luokka "col-xs-6"
-         :huomauta [[:urakan-aikana-ja-hoitokaudella]]
-         :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
-                        (let [perintapvm (get-in data [:perintapvm])]
-                          [:<>
-                           [yleiset/livi-pudotusvalikko
-                            {:data-cy "koontilaskun-kk-dropdown"
-                             :vayla-tyyli? true
-                             :skrollattava? true
-                             :elementin-id laskutuskuukausi-id
-                             :pakollinen? true
-                             :valinta (or
-                                        ;; Näytetään valintana joko valittua laskutuskuukautta, tai
-                                        (-> data :laskutuskuukausi-komp-tiedot)
-                                        ;; jos käyttäjä ei tehnyt/muuttanut valintaa, käytetään tietokannasta haettua arvoa
-                                        (when perintapvm
-                                          (some #(when (and
-                                                         (= (pvm/vuosi perintapvm)
-                                                            (:vuosi %))
-                                                         (= (pvm/kuukausi perintapvm)
-                                                            (:kuukausi %))) %)
-                                            laskutuskuukaudet)))
-                             :valitse-fn #(muokkaa-lomaketta
-                                            (assoc data
-                                              ;; Tallennetaan tieto koko laskutuskuukauden valinnasta erikseen, jotta
-                                              ;; sitä voi hyödyntää muualla lomakkeessa.
-                                              :laskutuskuukausi-komp-tiedot %
-                                              ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
-                                              :perintapvm (:pvm %)))
-                             :format-fn :teksti}
-                            laskutuskuukaudet]
-                           ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
-                           (when (not yllapitourakka?)
-                             [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))}
-
-        {:otsikko "Laskutuskuukausi"
-         :nimi :perintapvm
-         :fmt (fn [pvm]
-                ;; Lukutilassa haetaan näytettävä laskutuskuukausi suoraan lomakkeen avaimesta
-                (when pvm
-                  (some #(when (and
-                                 (= (pvm/vuosi pvm) (pvm/vuosi (:pvm %)))
-                                 (= (pvm/kuukausi pvm) (pvm/kuukausi (:pvm %)))) (:teksti %))
-                    laskutuskuukaudet)))
-         :pakollinen? true
-         :tyyppi :pvm
-         ::lomake/col-luokka "col-xs-6"})
+      (let [muokkauskuvaus (laskutuskuukausi-muokkauskuvaus
+                             laskutuskuukausi-id laskutuskuukaudet yllapitourakka?)]
+        (if (and voi-muokata? (not lukutila?))
+          muokkauskuvaus
+          (laskutuskuukausi-lukutilakuvaus muokkauskuvaus laskutuskuukaudet)))
       ;; MHU25 urakoille näytetään perintäpäivä hoitokautena
       {:otsikko "Kohdistuu hoitovuodelle"
        :nimi :perintapvm
@@ -426,29 +437,24 @@
 (defn- kasittely-kentat
   [aikakausikonteksti lukutila? voi-muokata? sanktio]
   [(when (:maaraystapa? aikakausikonteksti)
-     (if (not lukutila?)
-       {:otsikko "Määräystapa"
-        :radio-luokka "maaraystapa-ei-marginia"
-        :nimi :maaraystapa
-        :tyyppi :radio-group
-        :pakollinen? true
-        :uusi-rivi? true
-        :nayta-rivina? true
-        ::lomake/col-luokka "col-xs-12"
-        :vaihtoehdot [:tyomaakokous :valikatselmus]
-        :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
-                           :valikatselmus "Välikatselmus"}}
-
-       {:otsikko "Määräystapa"
-        :nimi :maaraystapa
-        :tyyppi :teksti
-        :muokattava? (constantly false)
-        ::lomake/col-luokka "col-xs-12"
-        :fmt (fn [arvo]
-               (case arvo
-                 :tyomaakokous "Työmaakokous"
-                 :valikatselmus "Välikatselmus"
-                 arvo))}))
+     (let [muokkauskuvaus {:otsikko "Määräystapa"
+                           :radio-luokka "maaraystapa-ei-marginia"
+                           :nimi :maaraystapa
+                           :tyyppi :radio-group
+                           :pakollinen? true
+                           :uusi-rivi? true
+                           :nayta-rivina? true
+                           ::lomake/col-luokka "col-xs-12"
+                           :vaihtoehdot [:tyomaakokous :valikatselmus]
+                           :vaihtoehto-nayta {:tyomaakokous "Työmaakokous"
+                                              :valikatselmus "Välikatselmus"}}
+           lukutilan-kuvaus (assoc (lukutilan-kenttakuvaus muokkauskuvaus)
+                              :fmt (fn [arvo]
+                                     (case arvo
+                                       :tyomaakokous "Työmaakokous"
+                                       :valikatselmus "Välikatselmus"
+                                       arvo)))]
+       (if lukutila? lukutilan-kuvaus muokkauskuvaus)))
 
    {:otsikko "Käsittelytapa"
     :nimi :kasittelytapa
