@@ -695,8 +695,7 @@ tietorivit ["Urakan nimi:" (:nimi ur)
                     "Sopimustyyppi: " (sopimustyyppi ur)
                     "Indeksi: " (when-not (#{:paallystys :paikkaus} (:tyyppi ur))
                                   [urakan-indeksi ur])
-                    "Urakan kesäaika: " (when-not (= :vesivayla-hoito (:tyyppi ur))
-                                          [urakan-kesa-aika ur])
+                    "Urakan kesäaika: " (when (or (not= (:tyyppi ur) :vesivayla-hoito) (not (k/kehitysymparistossa?))) [urakan-kesa-aika ur])
                     "Projektikansio: " [urakan-projektikansio ur]
                     "Analytiikkaportaali: " [yleiset/staattinen-linkki-uuteen-valilehteen analytiikkaportaalin-linkki analytiikkaportaalin-linkki]]
    tietorivit (cond-> tietorivit
@@ -898,7 +897,9 @@ tietorivit ["Urakan nimi:" (:nimi ur)
              [paallystys-indeksit/paallystysurakan-indeksit ur])
            [urakkaan-liitetyt-kayttajat @kayttajat]
            [yhteyshenkilot ur]
-           (when (u/vesivayla-urakkatyypit-ilman-kanavia-ja-hoitoa ur)
+           (when (or (u/vesivayla-urakkatyypit-ilman-kanavia-ja-hoitoa ur)
+                   (and (= :vesivayla-hoito (:tyyppi ur))
+                     (not (k/kehitysymparistossa?))))
              [alukset ur])
            (when (urakka/paivystys-kaytossa? ur)
              [paivystajat/paivystajat ur])
