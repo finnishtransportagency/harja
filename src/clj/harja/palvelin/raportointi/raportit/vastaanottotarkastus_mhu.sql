@@ -48,5 +48,4 @@ WHERE lp.urakka = :urakka-id
        lp.yllapitokohde IS NOT NULL AND
        (SELECT poistettu
         FROM yllapitokohde
-        WHERE id = lp.yllapitokohde) IS NOT TRUE)
-GROUP BY lp.id;
+        WHERE id = lp.yllapitokohde) IS NOT TRUE);
