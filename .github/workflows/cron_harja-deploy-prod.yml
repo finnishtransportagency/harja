@@ -2,9 +2,10 @@
 # https://docs.github.com/en/actions/security-guides/security-hardening-for-github-actions#using-third-party-actions
 
 name: '[Scheduled] Harja: Deploy to production'
-run-name: '[Scheduled] Harja: Deploy latest successful build to production'
+run-name: "[Scheduled] Harja: Deploy latest successful build to production ${{ inputs.dry-run && '(Dry run)' || '' }}"
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref_name }}
+  # Dry-run ei saa syrjäyttää jonottavaa oikeaa deploymentia.
+  group: ${{ github.workflow }}-${{ github.ref_name }}${{ inputs.dry-run && '-dry-run' || '' }}
   # Anna edellisen deploymentin mennä rauhassa loppuun, koska mahdollisesti käynnissä olevaa AWS migration lambdaa ei pysty canceloimaan
   # Jos edellinen deployment on ehtinyt migraatioiden ajon vaiheeseen, canceloiminen voi aiheuttaa ongelmia.
   cancel-in-progress: false
@@ -15,6 +16,11 @@ on:
     inputs:
       force-deployment:
         description: "Pakota deployment, vaikka ympäristöön olisi jo julkaistu sama versio"
+        type: boolean
+        default: false
+        required: false
+      dry-run:
+        description: "Dry run: Näytä tiedot suorittamatta julkaisua"
         type: boolean
         default: false
         required: false
@@ -54,10 +60,12 @@ jobs:
     needs: [ get-env-vars ]
     permissions:
       contents: read # Tarvitaan checkout actionissa
+      actions: read # Tarvitaan workflow runien ja artifactien hakemiseen
       deployments: read  # Tarvitaan viimeisimmän deploymentin tilan tarkistamiseen
     env:
       ## Scriptin käyttämät ympäristömuuttujat ##
       BRANCH_NAME: ${{ needs.get-env-vars.outputs.BRANCH_NAME }}
+      TARGET_ENVIRONMENT: ${{ needs.get-env-vars.outputs.TARGET_ENVIRONMENT }}
       WORKFLOW_FILENAME: 'harja_build_and_deploy.yml'
       # Tarkastaa, että viimeisimmästä buildista löytyy build artifact
       CHECK_ARTIFACT_WITH_NAME: 'harja-uberjar'
@@ -84,14 +92,23 @@ jobs:
             
             core.setOutput("commit-sha", result.commitSha);
             core.setOutput("run-id", result.runId);
+            core.setOutput("artifact-url", result.artifactUrl);
 
-      - name: Print output results
+      - name: Print latest successful build fetch results
         env:
+          DRY_RUN: ${{ inputs.dry-run }}
           COMMIT_SHA: ${{ steps.latest-successful-build.outputs.commit-sha }}
           RUN_ID: ${{ steps.latest-successful-build.outputs.run-id }}
+          ARTIFACT_URL: ${{ steps.latest-successful-build.outputs.artifact-url }}
         run: |
-          echo "Latest successful commit SHA: ${COMMIT_SHA}"
-          echo "Latest successful run ID: ${RUN_ID}"
+          printf -v TIEDOT '%s\n' \
+            "Dry-run: ${DRY_RUN:-false}" \
+            "Kohdeympäristö: ${TARGET_ENVIRONMENT}" \
+            "Viimeisimmän onnistuneen buildin commit SHA: ${COMMIT_SHA}" \
+            "Viimeisimmän onnistuneen buildin run ID: ${RUN_ID}" \
+            "Build artifactin URL: ${ARTIFACT_URL}"
+          printf '%s\n' "$TIEDOT"
+          printf '%s\n' "$TIEDOT" >> "$GITHUB_STEP_SUMMARY"
 
       # TODO: Jos tämä ei osoittaudu riittävän luotettavaksi tavaksi tunnistaa viimeisin onnistunut GH deployment,
       #       niin haetaan AWS ECR:stä viimeisin deployattu image ja verrataan sen tagia viimeisimmän buildin committiin.
@@ -137,7 +154,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy notification to Slack
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
-        if: ${{ steps.deployment-check.outputs.status == 'deploy' }}
+        if: ${{ !inputs.dry-run && steps.deployment-check.outputs.status == 'deploy' }}
         env:
           LATEST_BUILD_SHA_LINK: <${{ github.server_url }}/${{ github.repository }}/commit/${{ steps.latest-successful-build.outputs.commit-sha }}|${{ steps.latest-successful-build.outputs.commit-sha }}>
         with:
@@ -158,7 +175,7 @@ jobs:
 
       - name: Send deploy notification to Slack
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
-        if: ${{ steps.deployment-check.outputs.status == 'skip' }}
+        if: ${{ !inputs.dry-run && steps.deployment-check.outputs.status == 'skip' }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
           webhook-type: incoming-webhook
@@ -179,8 +196,7 @@ jobs:
   deploy-to-production:
     uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: [ get-env-vars, get-latest-successful-build ]
-    # Ajetaan deployment, mikäli viimeisin onnistunut build ei ole vielä deployattu kohdeympäristöön, tai deployment pakotetaan
-    if: ${{ needs.get-latest-successful-build.outputs.status == 'deploy' }}
+    if: ${{ !inputs.dry-run && needs.get-latest-successful-build.outputs.status == 'deploy' }}
 
     # Huom. parametrit ja salaisudet on määritelty GitHub environmenteissa
     permissions:
@@ -207,6 +223,7 @@ jobs:
     name: "Replace latest deployment SHA"
     runs-on: ubuntu-latest
     needs: [ get-env-vars, get-latest-successful-build, deploy-to-production ]
+    if: ${{ !inputs.dry-run }}
 
     permissions:
       contents: read # Tarvitaan checkout actionissa

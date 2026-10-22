@@ -885,11 +885,11 @@
                       {:sakkoryhma "arvonvahennyssanktio" :maara -2M}
                       {:sakkoryhma "A" :maara -3M}]))]
     (with-redefs [vastaanottotarkastus-mhu/hae-sanktiot-vastaanottotarkastusraportille sanktiot
-                  laatupoikkeamat-q/hae-poikkeamaraportilliset-laatupoikkeamat
-                  (fn [_ {:keys [alku]}]
-                    (if (= alku (-> hoitokaudet first :alkupvm))
-                      [{} {}]
-                      [{}]))]
+                  vastaanottotarkastus-mhu/hae-sakottomat-poikkeamaraportilliset-laatupoikkeamamaarat
+                  (fn [_ {:keys [alkupvm]}]
+                    (if (= alkupvm (-> hoitokaudet first :alkupvm))
+                      [{:kpl 2}]
+                      [{:kpl 1}]))]
       (is (= [:taulukko
               {:otsikko "Kirjalliset muistutukset, sanktiot, arvonvähennykset ja poikkeamaraportit"
                :viimeinen-rivi-yhteenveto? true

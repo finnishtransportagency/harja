@@ -1717,7 +1717,7 @@
 
         vastaus (try
                   (with-redefs [;; Feikataan vastaukset
-                                valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan (fn [a b c d e] tavoitehinnan_muutokset)
+                                valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan (fn [a b c d ] tavoitehinnan_muutokset)
                                 valikatselmukset/laske-hoitovuoden-lopun-indeksikorjaus (fn [a b c d e] hoitokauden-lopun-indeksikorjaus)
                                 valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta (fn [a b c d e f g h] tavoitehinta_jalkeen)
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite

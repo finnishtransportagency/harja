@@ -1090,6 +1090,27 @@
     (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :materiaali])))
     (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :toimenpide])))))
 
+(deftest tallenna-pot2-paallystysilmoitus-nollaleveydella-ja-massalla
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> (pot2-testidata paallystyskohde-id)
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] false)
+                               (assoc-in [:paallystekerros 0 :leveys] 0)
+                               (assoc-in [:paallystekerros 0 :kokonaismassamaara] 0)
+                               (assoc-in [:paallystekerros 1 :leveys] 0)
+                               (update-in [:paallystekerros 0] dissoc :pinta_ala :massamenekki)
+                               (update-in [:paallystekerros 1] dissoc :pinta_ala :massamenekki))
+        paallystysilmoitus-kannassa-jalkeen (second (tallenna-pot2-testi-paallystysilmoitus
+                                                     urakka-id sopimus-id paallystyskohde-id paallystysilmoitus))]
+    (is (zero? (paallystys/pot2-massamenekki {:kokonaismassamaara 0.0M :pinta_ala 1M})))
+    (is (zero? (paallystys/pot2-massamenekki {:kokonaismassamaara 1M :pinta_ala 0.0M})))
+    (is (zero? (paallystys/pot2-massamenekki {:kokonaismassamaara 1M :leveys 0})))
+    (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :pinta_ala])))
+    (is (zero? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :massamenekki])))
+    (is (zero? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :massamenekki])))))
+
 (deftest tallenna-pot2-paallystysilmoitus-testaa-paallystys-hypyt
   (let [toimenpide pot2-domain/+masuunikuonan-sideainetyyppi-koodi+
         paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
