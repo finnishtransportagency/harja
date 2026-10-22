@@ -45,13 +45,13 @@ BEGIN
                                             ELSE tavoitepalkkion_maksuprosentti_2025_ END);
             tavoitehinnan_ylityksen_maksuprosentti := (CASE
                                                            WHEN urakan_tiedot.alkupvm < '2024-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                                urakan_tiedot.sopimustyyppi IS DISTINCT FROM 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024
                                                            WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                                urakan_tiedot.sopimustyyppi IS DISTINCT FROM 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_
                                                            WHEN urakan_tiedot.alkupvm > '2023-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi = 'mhu+'
+                                                                urakan_tiedot.sopimustyyppi IS NOT NULL AND urakan_tiedot.sopimustyyppi = 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_MHUplus
                 -- Kaikille muille defaulttina 70%
                                                            ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
