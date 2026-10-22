@@ -757,3 +757,49 @@
                     {:error (.getMessage e)}))]
     (is (not= (get-in tarjous [:tarjous 0 :hoitovuosittaiset-arvot 0 :summa]) uusi-summa2) "2021 vuoden summaksi asetettin 1234M, mutta se ei mennyt päivityksessä läpi.")
     (is (not= (get-in tarjous [:tarjous 1 :hoitovuosittaiset-arvot 0 :summa]) 1234M) "2022 summaksi asetettin 1234M.")))
+
+(deftest hae-vesivaylaurakan-tarjous-ei-sisalla-rahavarauksia
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka
+                               db
+                               {:id urakka-id}))
+        tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
+        tarjousrivit (:tarjous tarjous)
+        rahavarausrivit
+        (filter #(= "tavoitehintaiset-rahavaraukset" (:osio %))
+          tarjousrivit)]
+
+    (is urakka-id
+      "Testi vesiväyläurakka löytyy testitietokannasta.")
+
+    (is (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+      "Testattava urakka on vesiväyläurakka.")
+
+    (is (empty? rahavarausrivit)
+      "Vesiväyläurakan tarjoukseen ei lisätä rahavarauksia.")))
+
+(deftest hae-vesivaylaurakan-tarjous-kayttaa-urakan-hankinnat-rivia
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        urakan-tiedot (first (urakat-kyselyt/hae-urakka
+                               db
+                               {:id urakka-id}))
+
+        ;; Varmistetaan, että hae-tarjous joutuu muodostamaan oletustarjouksen.
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+
+        tarjous (tarjous-kyselyt/hae-tarjous db urakka-id)
+        hankintarivit
+        (filter #(= "hankintakustannukset" (:osio %))
+          (:tarjous tarjous))
+        hankintojen-nimet (set (map :nimi hankintarivit))]
+
+    (is (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+      "Testattava urakka on vesiväyläurakka.")
+
+    (is (= #{"Urakan hankinnat"} hankintojen-nimet)
+      "Vesiväyläurakan tarjouksessa käytetään Urakan hankinnat -riviä.")
+
+    (is (not (contains? hankintojen-nimet "Kilpailutettavat hankinnat"))
+      "Vesiväyläurakan tarjouksessa ei käytetä Kilpailutettavat hankinnat -riviä.")))

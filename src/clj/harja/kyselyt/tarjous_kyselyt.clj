@@ -644,7 +644,8 @@
         ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
         kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
         puuttuvat-rahavaraukset (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
-                                  [] (filter
+                                  []
+                                  (filter
                                        (fn [r]
                                          (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
                                        kaikki-urakan-rahavaraukset))
