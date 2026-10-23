@@ -509,9 +509,9 @@
 
 (defn paivita-tavoite-ja-kattohinta
   "Urakoissa ja hoitovuosina, jolloin muutosten hallinta on käytössä, lasketaan tavoite- ja kattohinta tarjouksen ja pysyvien muutosten perusteella.
-   Tällöin Tavoitehinta = Tarjous + Aiempien vuosien pysyvät muutokset.
-   Jos muutostenhallinta ei ole käytössä, tavoitehinta lasketaan kustannussuunnitelmaan kirjattujen tietojen pohjalta.
-   Tällöin funktiolle täytyy antaa parametreissa yhteenlaskettu tavoitehinta (= kustannussuunnitelman luvut yhteenlaskettuna hoitovuodelta)"
+   Jos muutostenhallinta on käytössä: Tavoitehinta = Tarjous + Aiempien vuosien pysyvät muutokset.
+   Jos muutostenhallinta ei ole käytössä: Tavoitehinta = Kustannussuunnitelman luvut yhteenlaskettuna hoitovuodelta.
+   Tällöin tälle funktiolle täytyy välittää valmiiksi kustannussuunnitelman tiedoista laskettu tavoitehinta."
   ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset]
    (paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset nil))
   ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset yhteenlaskettu-tavoitehinta]
@@ -527,15 +527,15 @@
 
          kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
 
-         tarjous-data (hae-urakan-hoitovuoden-tarjous db
-                        {:urakka_id urakka-id
-                         :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi})
-
-         tarjous (-> tarjous-data first :tarjous_tavoitehinta)
+         tarjous (-> (hae-urakan-hoitovuoden-tarjous db
+                       {:urakka_id urakka-id
+                        :hoitokauden_alkuvuosi hoitovuoden-alkuvuosi})
+                   first
+                   :tarjous_tavoitehinta)
 
          hoitovuoden-alun-tavoitehinta (if muutoshallinta-kaytossa?
                                          (+ (or tarjous 0M) (or pysyvat-muutokset-maara 0M))
-                                         (or (:yhteenlaskettu-tavoitehinta yhteenlaskettu-tavoitehinta) 0M))
+                                         (or (:yhteenlaskettu-tavoitehinta kustannussuunnitelman-tavoitehinta) 0M))
 
          hoitovuoden-alun-kattohinta (or (when kattohintakerroin
                                            (* kattohintakerroin hoitovuoden-alun-tavoitehinta)) 0)
