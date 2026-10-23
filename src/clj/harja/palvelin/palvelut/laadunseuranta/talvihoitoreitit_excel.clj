@@ -21,6 +21,16 @@
     "Huoltoaukot ja pysäköintialueet - Ei talvihoitoa" "Ei talvihoitoa"
     excel-hoitoluokka))
 
+(defn normalisoi-reitin-nimi
+  "Käyttäjät voivat kirjata rivit numeroina, jolloin apache/poi palauttaa esim 2.0
+  Normalisoidaan tämä -> '2', kuten exceliin on kirjattukin."
+  [nimi]
+  (if (and
+        (number? nimi)
+        (== (double nimi) (Math/floor (double nimi))))
+    (str (long nimi))
+    (str nimi)))
+
 (defn- lue-excel-raaka-data [sivu]
   (->> sivu
     xls/row-seq
@@ -126,6 +136,7 @@
         reitit (reduce
                  (fn [tulos nimi]
                    (let [;; Excelistä tuotavalla talvihoitoreitillä ei ole tunnistetta tai ulkoista id:tä, joten käytetään nimeä
+                         nimi (normalisoi-reitin-nimi nimi)
                          reitin-kalusto (some #(when (= (:nimi %) nimi) %) kalusto-rivit)
                          talvihoitoreitti {:reittinimi nimi
                                            :tunniste nimi
