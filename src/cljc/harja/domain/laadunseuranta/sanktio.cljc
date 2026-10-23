@@ -307,6 +307,7 @@
                                               laskutus-ilman-laskutuskelpoisuutta?
                                               laskutusrajan-ylitys?))
      :nayta-perustelu? (not tyon-tekematta-jattamisen-tyyppi-22?)
+     :nayta-puute-tai-laiminlyonti? yllapitourakka?
      :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)
      :salli-arvonvahennys? (:salli-arvonvahennys? aikakausikonteksti)
      :talvisuolan-validointi (fn [arvo]

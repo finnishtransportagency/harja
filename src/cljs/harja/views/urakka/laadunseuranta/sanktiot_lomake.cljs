@@ -139,8 +139,8 @@
      :validoi [[:ei-tyhja "Anna sanktion tapahtumapaikka/kuvaus"]]}))
 
 (defn- puute-tai-laiminlyonti-kentta
-  [yllapitourakka?]
-  (when yllapitourakka?
+  [lomakekonteksti]
+  (when (:nayta-puute-tai-laiminlyonti? lomakekonteksti)
     {:otsikko "Puute tai laiminlyönti"
      :uusi-rivi? true
      :nimi :vakiofraasi
@@ -661,7 +661,7 @@
                lomakekonteksti
                voi-muokata?)
 
-             (puute-tai-laiminlyonti-kentta yllapitourakka?)
+             (puute-tai-laiminlyonti-kentta lomakekonteksti)
 
              (perustelu-kentta lomakekonteksti voi-muokata?)
 

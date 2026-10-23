@@ -19,10 +19,15 @@
       (is (= {:nayta-tyyppi? true
               :nayta-tapahtumapaikka? true
               :nayta-perustelu? true
+              :nayta-puute-tai-laiminlyonti? false
               :salli-arvonvahennys? false}
              (select-keys (sanktio-domain/sanktion-lomakekonteksti perus)
                           [:nayta-tyyppi? :nayta-tapahtumapaikka? :nayta-perustelu?
-                           :salli-arvonvahennys?]))))
+                           :nayta-puute-tai-laiminlyonti? :salli-arvonvahennys?]))))
+    (testing "ylläpitourakka näyttää puute- tai laiminlyöntikentän"
+      (is (true? (:nayta-puute-tai-laiminlyonti?
+                   (sanktio-domain/sanktion-lomakekonteksti
+                     (assoc perus :yllapitourakka? true))))))
     (testing "asiakirjamerkintä piilottaa tyypin ja laskutus ilman laskutuskelpoisuutta tapahtumapaikan"
       (is (false? (:nayta-tyyppi?
                     (sanktio-domain/sanktion-lomakekonteksti
