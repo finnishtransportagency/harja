@@ -380,7 +380,11 @@
                                  :arvo-fn #(get-in % [:rahavaraus-arvot nimi])})
                           rahavarausnimet)
 
-        yhteensa {:lihavoi? true, :yhteensa? true, :otsikko "Yhteensä", :avain_yht :kaikki_rahavaraukset_val_yht, :avain_hoitokausi :kaikki_rahavaraukset_hoitokausi_yht}
+        yhteensa {:lihavoi? true
+                  :yhteensa? true
+                  :otsikko "Yhteensä"
+                  :avain_yht :kaikki_rahavaraukset_val_yht
+                  :avain_hoitokausi :kaikki_rahavaraukset_hoitokausi_yht}
         taulukon-tiedot (conj rahavarausrivit yhteensa)]
     [rahavarausdata taulukon-tiedot]))
 
