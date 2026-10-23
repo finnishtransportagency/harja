@@ -159,6 +159,24 @@
     </Operation>
 </Sampo2harja>")
 
+(def +testi-vesivaylaurakka-sanoma+
+  "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+    <Sampo2harja xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"
+                 xsi:noNamespaceSchemaLocation=\"SampToharja.xsd\">
+      <Project id=\"TESTIURAKKA\"
+               message_Id=\"VesivaylaUrakkaMessageId\"
+               name=\"Testi vesiväyläurakka\"
+               resourceId=\"TESTIHENKILO\"
+               programId=\"TESTIHANKE\"
+               vv_transferred_harja=\"2019-09-19T20:27:14+03:00\"
+               schedule_start=\"2025-10-01T08:00:00.0\"
+               schedule_finish=\"2030-09-30T17:00:00.0\"
+               financialDepartmentHash=\"3800481310\"
+               vv_alueurakkanro=\"VHH-001\">
+        <documentLinks/>
+      </Project>
+    </Sampo2harja>")
+
 (def +lahetysjono-sisaan+ "lahetysjono-sisaan")
 (def +kuittausjono-sisaan+ "kuittausjono-sisaan")
 (def +lahetysjono-ulos+ "lahetysjono-ulos")
@@ -204,6 +222,96 @@
                     +testi-maanteiden-hoidon-urakka-sanoma+)
          urakat (:urakat (sampo-sanoma/lue-viesti sanoma))]
      (urakat/kasittele-urakat testi/ds urakat))))
+
+(defn tuo-vesivaylaurakka []
+  (let [urakat (:urakat
+                 (sampo-sanoma/lue-viesti +testi-vesivaylaurakka-sanoma+))]
+    (urakat/kasittele-urakat testi/ds urakat)))
+
+(defn hae-vesivaylaurakka []
+  (first
+    (q-map
+      "SELECT id, nimi, tyyppi, alkupvm, loppupvm
+         FROM urakka
+        WHERE sampoid = 'TESTIURAKKA';")))
+
+(defn poista-vesivaylaurakka []
+  (let [urakkaid (:id (hae-vesivaylaurakka))]
+    (when urakkaid
+      ;; Poistetaan ensin hinnoitteluiden liitostaulu.
+      (u (format
+           "DELETE FROM vv_hinnoittelu_toimenpide
+             WHERE \"hinnoittelu-id\" IN (
+               SELECT id
+                 FROM vv_hinnoittelu
+                WHERE \"urakka-id\" = %s
+             );"
+           urakkaid))
+
+      ;; Poistetaan hinnoitteluun liittyvät työt.
+      (u (format
+           "DELETE FROM vv_tyo
+             WHERE \"hinnoittelu-id\" IN (
+               SELECT id
+                 FROM vv_hinnoittelu
+                WHERE \"urakka-id\" = %s
+             );"
+           urakkaid))
+
+      ;; Poistetaan hinnoitteluun liittyvät hinnat.
+      (u (format
+           "DELETE FROM vv_hinta
+             WHERE \"hinnoittelu-id\" IN (
+               SELECT id
+                 FROM vv_hinnoittelu
+                WHERE \"urakka-id\" = %s
+             );"
+           urakkaid))
+
+      ;; Poistetaan hinnoitteluun liittyvät kommentit.
+      (u (format
+           "DELETE FROM vv_hinnoittelu_kommentti
+             WHERE \"hinnoittelu-id\" IN (
+               SELECT id
+                 FROM vv_hinnoittelu
+                WHERE \"urakka-id\" = %s
+             );"
+           urakkaid))
+
+      ;; Poistetaan itse hinnoittelut.
+      (u (format
+           "DELETE FROM vv_hinnoittelu
+             WHERE \"urakka-id\" = %s;"
+           urakkaid))
+
+      ;; Poistetaan muut urakkaan suoraan liittyvät testitiedot.
+      (u (format
+           "DELETE FROM rahavaraus_urakka
+             WHERE urakka_id = %s;"
+           urakkaid))
+      (u (format
+           "UPDATE sopimus
+               SET urakka = NULL
+             WHERE urakka = %s;"
+           urakkaid))
+      (u (format
+           "DELETE FROM yhteyshenkilo_urakka
+             WHERE urakka = %s;"
+           urakkaid))
+      (u (format
+           "DELETE FROM valitavoite
+             WHERE urakka = %s;"
+           urakkaid))
+      (u (format
+           "DELETE FROM johto_ja_hallintokorvaus_toimenkuva
+             WHERE \"urakka-id\" = %s;"
+           urakkaid))
+
+      ;; Urakka poistetaan viimeisenä.
+      (u (format
+           "DELETE FROM urakka
+             WHERE id = %s;"
+           urakkaid)))))
 
 (defn poista-urakka []
   (let [urakkaid (:id (first (q-map "SELECT id FROM urakka WHERE sampoid = 'TESTIURAKKA';")))]

@@ -63,15 +63,19 @@
           elinvoimakeskus-id urakoitsija-id)
         ;; Päivitetään urakan parametrit
         (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
-        ;; Lisätään urakalle toimenkuvat
+        ;; Lisätään mhu-urakalle toimenkuvat
         (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
+        ;; Lisätään vesiväyläurakalle toimenkuvat.
+        (urakat-q/aseta-vesivaylaurakan-toimenkuvat db {:alkupvm alkupvm})
         urakka-id)
       (let [urakka-id (luo-urakka db nimi alkupvm loppupvm hanke-sampo-id sampo-id urakkanro urakkatyyppi sopimustyyppi
                         elinvoimakeskus-id urakoitsija-id)
             ;; Lisätään urakan parametrit
             _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
-            ;; Lisätään urakalle toimenkuvat
-            _ (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})]
+            ;; Lisätään mhu-urakalle toimenkuvat
+            _ (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
+            ;; Lisätään vesiväyläurakalle toimenkuvat.
+            _ (urakat-q/aseta-vesivaylaurakan-toimenkuvat db {:alkupvm alkupvm})]
         urakka-id))))
 
 (defn- paivita-yhteyshenkilo [db yhteyshenkilo-sampo-id urakka-id]

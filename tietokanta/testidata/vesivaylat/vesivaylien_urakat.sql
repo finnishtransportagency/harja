@@ -85,13 +85,33 @@ INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsi
 VALUES
   ('Rentoselän urakka',
     'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi',
-    '2016-08-01', '2019-07-30',
+    '2023-01-01', '2028-12-31',
     (SELECT id FROM organisaatio WHERE nimi = 'Sisävesiväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
     (SELECT id FROM hanke WHERE nimi = 'Rentoselän syvennyshanke'),
     'vesivayla-hoito',
     true, '2017-10-01'::DATE, (SELECT id FROM kayttaja WHERE kayttajanimi = 'tero'),
    '555', 'vv-HAR-1250');
+
+-- Vesiväylä-urakoiden uusien toimintojen kehittämistä varten lisätään vanhalle vesiväylä-urakalle tiedot
+INSERT INTO urakka_parametrit (urakkaid, indeksi_kaytossa_sanktiolla, indeksi_kaytossa_bonuksella,
+                               lupauspaatoksen_bonusprosentti, lupauspaatoksen_sanktioprosentti, lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, hoitokauden_lopun_kattohinta_kerroin,
+                               muokkaa_kattohinta_kasin, kattohintaylityksen_siirron_prosenttirajoitus, tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti, tavoitehinnan_ylityksen_tilaajan_maksuprosentti,
+                               tavoitepalkkion_maksuprosentti, tavoitepalkkion_maksimi, luotu, muokattu, luoja, muokkaaja, maksuera_lahetys_sampo, kustannussuunnitelma_lahetys_sampo, laskutusraja_kaytossa)
+VALUES (60, FALSE, FALSE, 0.08, 0.18, true,
+        1.10, false, 0.03, 30, 50, 75.00,
+        3.00, NOW(), null,
+        (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), null, TRUE, TRUE, TRUE);
+
+-- Lisätään vanhalle vesiväyläurakalle toimenkuvia vesiväyläurakoiden uusien toimintojen kehittämistä varten
+insert into johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id", urakkakohtainen_nimi)
+VALUES
+    ('sopimusvastaava (ennen urakka-ajan alkua)', 60, 'Sopimusvastaava (ennen urakka-ajan alkua)'),
+    ('sopimusvastaava', 60, 'Sopimusvastaava'),
+    ('vastuunalainen työnjohtaja (ennen urakka-ajan alkua)', 60, 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'),
+    ('vastuunalainen työnjohtaja', 60, 'Vastuunalainen työnjohtaja'),
+    ('2. työnjohtaja', 60, '2. Työnjohtaja'),
+    ('työnjohtoharjoittelija', 60, 'Työnjohtoharjoittelija');
 
 -- SOPIMUS
 INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
