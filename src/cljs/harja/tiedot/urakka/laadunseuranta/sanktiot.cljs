@@ -110,14 +110,6 @@
   [laji]
   (domain-sanktio/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
 
-(defn sanktiotyypin-automaattinen-summa
-  [sanktiotyyppi]
-  (domain-sanktio/sanktiotyypin-kiintea-automaattinen-summa sanktiotyyppi))
-
-(defn sanktiotyypilla-kiintea-automaattinen-summa?
-  [sanktiotyyppi]
-  (domain-sanktio/sanktiotyypilla-kiintea-automaattinen-summamaaritys? sanktiotyyppi))
-
 (def valitun-urakan-sanktiolajit
   "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."
   (reaction
