@@ -622,11 +622,17 @@
         ;; Aloita ensimmäinen taulukko omalle sheetilleen, vaikka sitä edeltäisi tekstiä.
         ymparistoraportti (if (some? ensimmaisen-taulukon-indeksi)
                             (update-in ymparistoraportti [ensimmaisen-taulukon-indeksi 1]
-                              assoc :samalle-sheetille? false :leveysprosentti 100)
+                              assoc
+                              :samalle-sheetille? false
+                              :leveysprosentti 100
+                              :sheet-otsikko "Ympäristöraportti"
+                              :excel-alkutekstit (when (= kasittelija :excel)
+                                                   [[:otsikko-heading "Talvisuolat"]]))
                             ymparistoraportti)
 
-        ymparistoraportti (into
-                            [[:otsikko-heading "Ympäristöraportti"]]
+        ymparistoraportti (into (if (= kasittelija :excel)
+                                  []
+                                  [[:otsikko-heading "Ympäristöraportti"]])
                             ymparistoraportti)]
     ymparistoraportti))
 

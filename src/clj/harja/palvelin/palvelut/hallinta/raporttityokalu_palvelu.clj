@@ -7,8 +7,6 @@
             [harja.kyselyt.konversio :as konversio-kyselyt]
             [harja.kyselyt.materiaalit :as materiaali-kyselyt]
             [harja.kyselyt.urakat :as urakka-kyselyt]
-            [harja.kyselyt.raportit :as raportit-kyselyt]
-            [harja.kyselyt.debug :as debug-kyselyt]
             [taoensso.timbre :as log]))
 
 
@@ -29,12 +27,7 @@
                                                                           :urakkaid urakka-id}))
         _ (materiaali-kyselyt/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
                                                                                     :alkupvm alku-inst
-                                                                                    :loppupvm loppu-inst})
-        _ (debug-kyselyt/paivita-toteuma-tehtavat db)
-        _ (debug-kyselyt/paivita-toteuma-materiaalit db)
-        _ (debug-kyselyt/paivita-pohjavesialuekooste db)
-        _ (debug-kyselyt/paivita-pohjavesialueiden-suolatoteumat db)
-        _ (raportit-kyselyt/paivita_raportti_toteutuneet_materiaalit db)]
+                                                                                    :loppupvm loppu-inst})]
     {:status "OK"
      :urakka-id urakka-id
      :viesti "Materiaalicachet päivitetty urakalle"}))
