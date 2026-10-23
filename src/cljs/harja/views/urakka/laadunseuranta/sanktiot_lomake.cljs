@@ -278,7 +278,7 @@
         lukutilan-kulun-kohdistus))))
 
 (defn- laskutuskuukausi-muokkauskuvaus
-  [laskutuskuukausi-id laskutuskuukaudet yllapitourakka?]
+  [laskutuskuukausi-id laskutuskuukaudet lomakekonteksti]
   {:otsikko "Laskutuskuukausi"
    :label-for-id laskutuskuukausi-id
    :nimi :perintapvm
@@ -316,7 +316,7 @@
                        :format-fn :teksti}
                       laskutuskuukaudet]
                      ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
-                     (when (not yllapitourakka?)
+                     (when (:nayta-laskutuskuukausi-teksti? lomakekonteksti)
                        [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))})
 
 (defn- laskutuskuukausi-lukutilakuvaus
@@ -333,7 +333,7 @@
 
 (defn- paivamaarat-ja-perinta-kentat
   [lomakekonteksti aikakausikonteksti voi-muokata? lukutila?
-   laskutuskuukausi-id laskutuskuukaudet yllapitourakka? hoitovuodet
+   laskutuskuukausi-id laskutuskuukaudet hoitovuodet
    perintapvm->hoitovuosi hoitovuosi->teksti talvisuolan-validointi-fn]
   (lomake/ryhma {:rivi? true}
     (when (:nayta-havaittu? lomakekonteksti)
@@ -372,7 +372,7 @@
     ;; MHU25 urakoille ei näytetä laskutuskuukautta
     (if (= :laskutuskuukausi (:perinta-tapa aikakausikonteksti))
       (let [muokkauskuvaus (laskutuskuukausi-muokkauskuvaus
-                             laskutuskuukausi-id laskutuskuukaudet yllapitourakka?)]
+                             laskutuskuukausi-id laskutuskuukaudet lomakekonteksti)]
         (if (and voi-muokata? (not lukutila?))
           muokkauskuvaus
           (laskutuskuukausi-lukutilakuvaus muokkauskuvaus laskutuskuukaudet)))
@@ -696,7 +696,6 @@
                lukutila?
                laskutuskuukausi-id
                laskutuskuukaudet
-               yllapitourakka?
                hoitovuodet
                perintapvm->hoitovuosi
                hoitovuosi->teksti
