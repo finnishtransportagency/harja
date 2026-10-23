@@ -253,7 +253,7 @@ SELECT id,
        muokkaaja,
        poistettu
 FROM siltatarkastus
-WHERE ulkoinen_id = :id
+WHERE ulkoinen_id = :id::TEXT
   AND urakka = :urakka-id
   AND poistettu = FALSE;
 
