@@ -419,7 +419,7 @@
 
 (defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma hoitokauden-alkuvuosi] :as app}]
   ;; Pysyvät muutokset-osio näkyy, jos muutosominaisuus on sovelluksessa käytössä ja jos urakassa on vuonna 2025 toteutettu muutostenhallinta käytössä (hallinnoidaan urakka_parametrit-taulussa).
-  (if (and (istunto/ominaisuus-kaytossa? :mhu-muutokset) (:muutosten-hallinta-kaytossa? kustannussuunnitelma))
+  (when (and (istunto/ominaisuus-kaytossa? :mhu-muutokset) (:muutosten-hallinta-kaytossa? kustannussuunnitelma))
     (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
