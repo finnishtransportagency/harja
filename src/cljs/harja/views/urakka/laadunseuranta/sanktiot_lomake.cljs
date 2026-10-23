@@ -332,11 +332,11 @@
                       laskutuskuukaudet))))))
 
 (defn- paivamaarat-ja-perinta-kentat
-  [laskutus-ilman-laskutuskelpoisuutta? aikakausikonteksti voi-muokata? lukutila?
+  [lomakekonteksti aikakausikonteksti voi-muokata? lukutila?
    laskutuskuukausi-id laskutuskuukaudet yllapitourakka? hoitovuodet
    perintapvm->hoitovuosi hoitovuosi->teksti talvisuolan-validointi-fn]
   (lomake/ryhma {:rivi? true}
-    (when-not laskutus-ilman-laskutuskelpoisuutta?
+    (when (:nayta-havaittu? lomakekonteksti)
       {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
        :pakollinen? true
        ::lomake/col-luokka "col-xs-3"
@@ -690,7 +690,7 @@
                tiedot-urakka/urakan-toimenpideinstanssit)
 
              (paivamaarat-ja-perinta-kentat
-               laskutus-ilman-laskutuskelpoisuutta?
+               lomakekonteksti
                aikakausikonteksti
                voi-muokata?
                lukutila?

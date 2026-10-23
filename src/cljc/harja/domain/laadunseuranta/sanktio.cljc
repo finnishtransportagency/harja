@@ -306,6 +306,7 @@
      :nayta-tapahtumapaikka? (not (or yllapitokohdeurakka? vesivaylaurakka?
                                               laskutus-ilman-laskutuskelpoisuutta?
                                               laskutusrajan-ylitys?))
+     :nayta-havaittu? (not laskutus-ilman-laskutuskelpoisuutta?)
      :nayta-perustelu? (not tyon-tekematta-jattamisen-tyyppi-22?)
      :nayta-puute-tai-laiminlyonti? yllapitourakka?
      :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)
