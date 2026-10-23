@@ -1,8 +1,9 @@
 (ns harja.domain.laadunseuranta.sanktion-lomake
-  (:require [clojure.string :as str]
-            [harja.pvm :as pvm]
+  (:require [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
-            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]))
+            [harja.domain.laadunseuranta.sanktion-summamaaritys :as summamaaritys]
+            [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]))
 
 (defn- viimeinen-hoitokausi-nykyhetkella?
   [urakan-loppupvm pvm]
@@ -11,47 +12,13 @@
        (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi pvm)))))
 
 (defn talvisuolan-validointi
-  "Palauttaa talvisuolan viimeisen hoitovuoden virheen tai nilin."
+  "Palauttaa talvisuolan viimeisen hoitovuoden virheen tai nil."
   [urakan-loppupvm arvo sanktio]
   (when (and (some? arvo)
              (= :talvisuolan_ylitys (:laji sanktio))
              (not (viimeinen-hoitokausi-nykyhetkella? urakan-loppupvm arvo)))
     (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle "
          (pvm/vuosi urakan-loppupvm) ".")))
-
-(defn- kiintea-automaattinen-summamaaritys?
-  [{:keys [maaritystapa ohjeteksti]}]
-  (and (= :automaattinen maaritystapa)
-       (str/blank? ohjeteksti)))
-
-(defn sanktiotyypilla-kiintea-automaattinen-summamaaritys?
-  [{:keys [summamaaritykset]}]
-  (boolean (some kiintea-automaattinen-summamaaritys? summamaaritykset)))
-
-(defn sanktiotyypin-kiintea-automaattinen-summa
-  [{:keys [summamaaritykset]}]
-  (some (fn [{:keys [maaritystapa summa-euroina] :as summamaaritys}]
-          (when (and (kiintea-automaattinen-summamaaritys? summamaaritys)
-                     (number? summa-euroina)
-                     (pos? summa-euroina)
-                     #?(:clj (Double/isFinite (double summa-euroina))
-                        :cljs (js/isFinite summa-euroina)))
-            summa-euroina))
-        summamaaritykset))
-
-(defn kiintea-sanktiosumma
-  [normaali-summa itse-ilmoitettu?]
-  (if itse-ilmoitettu?
-    (/ normaali-summa 2)
-    normaali-summa))
-
-(defn kiintea-summamalli
-  [{:keys [voi-puolittaa-omailmoituksella] :as sanktiotyyppi} omailmoitettu?]
-  (when-let [normaalimaara (sanktiotyypin-kiintea-automaattinen-summa sanktiotyyppi)]
-    (let [omailmoitettu (boolean (and voi-puolittaa-omailmoituksella omailmoitettu?))]
-      {:normaalimaara normaalimaara
-       :omailmoitettu omailmoitettu
-       :summa (kiintea-sanktiosumma normaalimaara omailmoitettu)})))
 
 (defn sanktion-tallennusmuoto
   [muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot]
@@ -65,23 +32,11 @@
 
 (defn sanktion-summakonteksti
   [{:keys [laji omailmoitettu aktiivinen-tyyppi]}]
-  (let [kiintea (kiintea-summamalli aktiivinen-tyyppi omailmoitettu)
-        c-ryhman-maaritys (when (= :C laji)
-                             (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
-                                     (when (and (= :manuaalinen maaritystapa)
-                                                (some? summa-euroina)
-                                                (not (str/blank? ohjeteksti)))
-                                       {:summa-euroina summa-euroina
-                                        :ohjeteksti ohjeteksti}))
-                                   (:summamaaritykset aktiivinen-tyyppi)))]
-    {:kiintea-profiilisumma? (sanktiotyypilla-kiintea-automaattinen-summamaaritys? aktiivinen-tyyppi)
-     :omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
-     :kiintea-summamalli kiintea
-     :laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
-     :c-ryhman-maaritys c-ryhman-maaritys}))
-
-(def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
-(def kasittelytavat-mhu25 [:valikatselmus])
+  {:kiintea-profiilisumma? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? aktiivinen-tyyppi)
+   :omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
+   :kiintea-summamalli (summamaaritys/kiintea-summamalli aktiivinen-tyyppi omailmoitettu)
+   :laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
+   :c-ryhman-maaritys (summamaaritys/c-ryhman-manuaalinen-maaritys laji aktiivinen-tyyppi)})
 
 (defn aikakausikonteksti
   [urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi]
@@ -93,9 +48,36 @@
                      :laskutuskuukausi
                      :hoitovuosi)
      :maaraystapa? mhu25?
-     :kasittelytavat (if mhu25? kasittelytavat-mhu25 kasittelytavat)
+     :kasittelytavat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
      :salli-arvonvahennys? (and (not mhu25?)
                               (< hoitokauden-alkuvuosi 2026))}))
+
+;; Hoitovuosi tunnistetaan sen alkuvuodella (hoitovuosi alkaa 1.10.).
+(defn hoitovuodet
+  "Urakan hoitovuosien alkuvuodet urakan alkuvuodesta viimeiseen urakan loppupäivään osuvaan hoitovuoteen."
+  [urakan-alkuvuosi urakan-loppupvm]
+  (let [viimeinen (if (>= (pvm/kuukausi urakan-loppupvm) 10)
+                    (pvm/vuosi urakan-loppupvm)
+                    (dec (pvm/vuosi urakan-loppupvm)))]
+    (vec (range urakan-alkuvuosi (inc viimeinen)))))
+
+(defn hoitovuosi-tekstina
+  [urakan-alkuvuosi hoitovuosi]
+  (when (int? hoitovuosi)
+    (str (inc (- hoitovuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")")))
+
+(defn perintapvm-hoitovuodeksi
+  "Palauttaa perintäpäivän hoitovuoden alkuvuoden, jos se kuuluu annettuihin hoitovuosiin."
+  [hoitovuodet perintapvm]
+  (when perintapvm
+    (let [hoitovuosi (pvm/hoitokauden-alkuvuosi (pvm/vuosi perintapvm) (pvm/kuukausi perintapvm))]
+      (when (some #{hoitovuosi} hoitovuodet)
+        hoitovuosi))))
+
+(defn hoidonjohtopalkkio-tehtavaryhma
+  "MHU25+ sanktio kohdistuu tehtäväryhmään G - Hoidonjohtopalkkio."
+  [tehtavaryhmat]
+  (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat))
 
 (defn aseta-kasittely-tai-maarattypvm
   [sanktio arvo perinta-tapa]
@@ -167,13 +149,8 @@
                    :toimenpideinstanssi toimenpideinstanssi
                    :tpi_id toimenpideinstanssi))
                (assoc rivi :tyyppi uusi-tyyppi))
-        kiintea-summa (sanktiotyypin-kiintea-automaattinen-summa uusi-tyyppi)
-        manuaalinen-c? (and (= :C (:laji rivi))
-                (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
-                  (and (= :manuaalinen maaritystapa)
-                 (some? summa-euroina)
-                 (not (str/blank? ohjeteksti))))
-                  (:summamaaritykset uusi-tyyppi)))
+        kiintea-summa (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa uusi-tyyppi)
+        manuaalinen-c? (some? (summamaaritys/c-ryhman-manuaalinen-maaritys (:laji rivi) uusi-tyyppi))
         omailmoitettu (if kiintea-summa
                         (:omailmoitettu rivi)
                         false)
@@ -187,7 +164,7 @@
       (dissoc :laskettava-syote :laskennan-syote)
       (and tyyppi-vaihtui? kiintea-summa)
       (assoc :normaalimaara kiintea-summa
-             :summa (kiintea-sanktiosumma kiintea-summa omailmoitettu))
+             :summa (summamaaritys/kiintea-sanktiosumma kiintea-summa omailmoitettu))
       (and tyyppi-vaihtui? manuaalinen-c?)
       (dissoc :normaalimaara :summa)
       (and tyyppi-vaihtui? (nil? kiintea-summa) (not manuaalinen-c?))
@@ -213,8 +190,7 @@
         laskutusrajan-ylitys? (= :laskutus_yli_laskutusrajan laji)
         laskutus-ilman-laskutuskelpoisuutta? (or laskutus-ilman-laskutuskelpoisuutta?
                                                  (= :laskutus_ilman_laskutuskelpoisuutta laji))
-        tyon-tekematta-jattamisen-tyyppi-22? (and (= :tyon_tekematta_jattaminen laji)
-                                                  (= 22 (:koodi tyyppi)))]
+        perusteluton? (sanktiotyyppi-domain/perusteluton-sanktio? laji tyyppi)]
     {:vesivaylaurakka? vesivaylaurakka?
      :yllapitourakka? yllapitourakka?
      :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
@@ -231,7 +207,7 @@
                            (not= :muistutus laji))
      :nayta-manuaalinen-summa? (and (not= :muistutus laji)
                                     (not= :laskutus_yli_laskutusrajan laji))
-     :nayta-perustelu? (not tyon-tekematta-jattamisen-tyyppi-22?)
+     :nayta-perustelu? (not perusteluton?)
      :nayta-puute-tai-laiminlyonti? yllapitourakka?
      :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)
      :salli-arvonvahennys? (:salli-arvonvahennys? aikakausikonteksti)
