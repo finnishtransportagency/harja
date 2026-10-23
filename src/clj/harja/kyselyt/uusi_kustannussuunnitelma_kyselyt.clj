@@ -518,11 +518,11 @@
    (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
          hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
          urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
-         muutostenhallinta-kaytossa? (:muutosten_hallinta urakan-parametrit)
+         muutosten-hallinta-kaytossa? (:muutosten_hallinta urakan-parametrit)
          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
 
          ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
-         pysyvat-muutokset-maara (if muutostenhallinta-kaytossa?
+         pysyvat-muutokset-maara (if muutosten-hallinta-kaytossa?
                                    (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset)) 0)
 
          kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
@@ -533,7 +533,7 @@
                    first
                    :tarjous_tavoitehinta)
 
-         hoitovuoden-alun-tavoitehinta (if muutostenhallinta-kaytossa?
+         hoitovuoden-alun-tavoitehinta (if muutosten-hallinta-kaytossa?
                                          (+ (or tarjous 0M) (or pysyvat-muutokset-maara 0M))
                                          (or (:yhteenlaskettu-tavoitehinta kustannussuunnitelman-tavoitehinta) 0M))
 
