@@ -46,6 +46,7 @@
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
+            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
 
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
@@ -334,9 +335,9 @@
                   (when (number? summa-euroina)
                     summa-euroina))
             (:summamaaritykset profiilin-summamaaritykset)))
-        kiintea-automaattinen-summa? (sanktiot-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+        kiintea-automaattinen-summa? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
                                        profiilin-summamaaritykset)
-        automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
+        automaattinen-summa-raakana (sanktion-lomake-domain/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
         tilannekuvan-maaritystapa (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
                                     ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.

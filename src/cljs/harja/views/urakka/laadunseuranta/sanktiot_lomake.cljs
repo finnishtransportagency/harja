@@ -3,7 +3,6 @@
   (:require
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
-            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]

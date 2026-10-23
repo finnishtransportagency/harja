@@ -5,7 +5,6 @@
   (:require [clojure.string :as str]
             [harja.pvm :as pvm]
             [harja.domain.urakka :as urakka-domain]
-            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]))
 
 ;; -> Ehtolauseilla hallitaan mitä subsettejä lajeista näytetään missäkin näkymässä mhu XXXX- #{:A :B :C ...}
