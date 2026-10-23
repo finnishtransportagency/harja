@@ -6,6 +6,7 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
+            [harja.domain.laadunseuranta.sanktion-summamaaritys :as summamaaritys]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.pvm :as pvm]))
 
@@ -528,12 +529,12 @@
         manuaalinen {:summamaaritykset [{:maaritystapa :manuaalinen
                                          :summa-euroina 200M
                                          :ohjeteksti "Kirjaa summa"}]}]
-    (is (true? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kiintea)))
-    (is (= 4000M (sanktion-lomake-domain/sanktiotyypin-kiintea-automaattinen-summa kiintea)))
-    (is (false? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kaava)))
-    (is (nil? (sanktion-lomake-domain/sanktiotyypin-kiintea-automaattinen-summa kaava)))
-    (is (false? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? manuaalinen)))
-    (is (nil? (sanktion-lomake-domain/sanktiotyypin-kiintea-automaattinen-summa manuaalinen)))
+    (is (true? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kiintea)))
+    (is (= 4000M (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa kiintea)))
+    (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kaava)))
+    (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa kaava)))
+    (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? manuaalinen)))
+    (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa manuaalinen)))
     (is (nil? (sanktion-laskenta/laskettu-summamaaritys manuaalinen)))
     (is (= {:maaritystapa :manuaalinen
         :summa-euroina 200M
@@ -543,14 +544,14 @@
 (deftest kiintea-normaali-summa-perustuu-aina-alkuperaiseen-summaan
   (testing "Normaali kiinteä summa"
     (is (= 4000M
-           (sanktion-lomake-domain/kiintea-sanktiosumma 4000M false))))
+           (summamaaritys/kiintea-sanktiosumma 4000M false))))
   (testing "Itse ilmoitettu kiinteä summa"
     (is (= 2000M
-           (sanktion-lomake-domain/kiintea-sanktiosumma 4000M true))))
+           (summamaaritys/kiintea-sanktiosumma 4000M true))))
   (testing "Itse ilmoitetun summan uudelleen laskeminen ei puolita jo johdettua summaa"
     (is (= 2000M
-           (sanktion-lomake-domain/kiintea-sanktiosumma 4000M true)
-           (sanktion-lomake-domain/kiintea-sanktiosumma 4000M true)))))
+           (summamaaritys/kiintea-sanktiosumma 4000M true)
+           (summamaaritys/kiintea-sanktiosumma 4000M true)))))
 
 (deftest kiintea-summamalli-johtaa-summan-yhdesta-lahteesta
   (let [kiintea {:id 1
@@ -564,22 +565,22 @@
                                          :ohjeteksti "Kirjaa summa"}]}]
     (testing "Ilman omailmoitusta summa on normaalimäärä"
       (is (= {:normaalimaara 14000M :omailmoitettu false :summa 14000M}
-             (sanktion-lomake-domain/kiintea-summamalli kiintea false))))
+             (summamaaritys/kiintea-summamalli kiintea false))))
     (testing "Omailmoitus puolittaa normaalimäärästä johdetun summan"
       (is (= {:normaalimaara 14000M :omailmoitettu true :summa 7000M}
-             (sanktion-lomake-domain/kiintea-summamalli kiintea true))))
+             (summamaaritys/kiintea-summamalli kiintea true))))
     (testing "Toistuva kutsu samoilla arvoilla ei puolita summaa uudelleen"
-      (let [ensimmainen (sanktion-lomake-domain/kiintea-summamalli kiintea true)
-            toinen (sanktion-lomake-domain/kiintea-summamalli kiintea true)]
+      (let [ensimmainen (summamaaritys/kiintea-summamalli kiintea true)
+            toinen (summamaaritys/kiintea-summamalli kiintea true)]
         (is (= 7000M (:summa ensimmainen) (:summa toinen)))
         (is (= ensimmainen toinen))))
     (testing "Omailmoitusta ei sallita, jos profiili ei salli sitä"
       (is (= {:normaalimaara 14000M :omailmoitettu false :summa 14000M}
-             (sanktion-lomake-domain/kiintea-summamalli ei-puolitettava true))))
+             (summamaaritys/kiintea-summamalli ei-puolitettava true))))
     (testing "Manuaalisen määrityksen summaa ei johdeta kiinteäksi"
-      (is (nil? (sanktion-lomake-domain/kiintea-summamalli manuaalinen true))))
+      (is (nil? (summamaaritys/kiintea-summamalli manuaalinen true))))
     (testing "Laskettavalle määritykselle kiinteää summamallia ei muodosteta"
-      (is (nil? (sanktion-lomake-domain/kiintea-summamalli
+      (is (nil? (summamaaritys/kiintea-summamalli
                   {:id 3
                    :summamaaritykset [{:maaritystapa :laskettu
                                        :laskentatapa :tiekm-yksikkohinta
@@ -647,7 +648,7 @@
     (is (nil? (sanktion-laskenta/laskettu-summamaaritys ohjetekstillinen-manuaalinen))
       "Ohjetekstiä ei saa tulkita laskentakaavana")
     (is (nil? (sanktion-laskenta/laskettu-summamaaritys nil)))
-    (is (false? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? laskettu-tyyppi))
+    (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? laskettu-tyyppi))
       "Laskettu määritys ei ole kiinteä automaattinen summa")))
 
 (deftest laske-sanktion-summa-tiekm-kertaa-yksikkohinta
@@ -827,9 +828,9 @@
                                       :ohjeteksti nil}]}
         ei-sallittu (dissoc sallittu :voi-puolittaa-omailmoituksella)]
     (is (= {:normaalimaara 6000M :omailmoitettu true :summa 3000M}
-           (sanktion-lomake-domain/kiintea-summamalli sallittu true)))
+           (summamaaritys/kiintea-summamalli sallittu true)))
     (is (= {:normaalimaara 6000M :omailmoitettu false :summa 6000M}
-           (sanktion-lomake-domain/kiintea-summamalli ei-sallittu true)))))
+           (summamaaritys/kiintea-summamalli ei-sallittu true)))))
 
 (deftest karakterisointi-laskettava-sanktio-ei-kiinteaa-summaa
   (let [laskettava {:id 9
@@ -837,8 +838,8 @@
                                         :laskentatapa :tiekm-yksikkohinta
                                         :laskentaversio 1
                                         :laskentaparametrit {:yksikkohinta 10M}}]}]
-    (is (nil? (sanktion-lomake-domain/kiintea-summamalli laskettava false)))
-    (is (false? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? laskettava)))
+    (is (nil? (summamaaritys/kiintea-summamalli laskettava false)))
+    (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? laskettava)))
     (is (some? (sanktion-laskenta/laskettu-summamaaritys laskettava)))))
 
 (deftest karakterisointi-c-ryhman-manuaalinen-summa-ei-ole-kiinteaa
@@ -846,9 +847,9 @@
                   :summamaaritykset [{:maaritystapa :manuaalinen
                                       :summa-euroina 250M
                                       :ohjeteksti "Kirjaa summa"}]}]
-    (is (nil? (sanktion-lomake-domain/kiintea-summamalli c-tyyppi true)))
-    (is (false? (sanktion-lomake-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? c-tyyppi)))
-    (is (nil? (sanktion-lomake-domain/sanktiotyypin-kiintea-automaattinen-summa c-tyyppi)))))
+    (is (nil? (summamaaritys/kiintea-summamalli c-tyyppi true)))
+    (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? c-tyyppi)))
+    (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa c-tyyppi)))))
 
 (deftest sanktion-tallennusmuoto-kiintea-ja-laskettava-polku
   (let [kiintea-tyyppi {:id 7
@@ -881,3 +882,67 @@
       (is (not (contains? tallennettu-laskettava :normaalimaara)))
       (is (not (contains? tallennettu-laskettava :laskennan-syote)))
       (is (= 42M (:laskettava-syote tallennettu-laskettava))))))
+
+(deftest c-ryhman-manuaalinen-maaritys-vaatii-c-lajin-ja-ohjetekstin
+  (let [tyyppi {:summamaaritykset [{:maaritystapa :manuaalinen
+                                    :summa-euroina 1250M
+                                    :ohjeteksti "C-ryhmän viitesumma"}]}
+        ilman-ohjetta {:summamaaritykset [{:maaritystapa :manuaalinen
+                                           :summa-euroina 1250M}]}]
+    (is (= {:summa-euroina 1250M :ohjeteksti "C-ryhmän viitesumma"}
+           (summamaaritys/c-ryhman-manuaalinen-maaritys :C tyyppi)))
+    (is (nil? (summamaaritys/c-ryhman-manuaalinen-maaritys :A tyyppi)))
+    (is (nil? (summamaaritys/c-ryhman-manuaalinen-maaritys :C ilman-ohjetta)))
+    (is (nil? (summamaaritys/c-ryhman-manuaalinen-maaritys :C nil)))))
+
+(deftest hoitovuodet-johdetaan-urakan-alku-ja-loppupvm-sta
+  (testing "Loppupvm hoitovuoden lopussa (syyskuu) päättää viimeisen hoitovuoden edelliseen alkuvuoteen"
+    (is (= [2025 2026 2027 2028 2029]
+           (sanktion-lomake-domain/hoitovuodet 2025 (pvm/->pvm "30.9.2030")))))
+  (testing "Loppupvm uuden hoitovuoden alussa (lokakuu) sisältää sen hoitovuoden"
+    (is (= [2025 2026]
+           (sanktion-lomake-domain/hoitovuodet 2025 (pvm/->pvm "1.10.2026")))))
+  (testing "Loppu ennen alkua antaa tyhjän"
+    (is (= [] (sanktion-lomake-domain/hoitovuodet 2025 (pvm/->pvm "30.9.2025"))))))
+
+(deftest hoitovuosi-tekstina-numeroi-hoitovuoden
+  (is (= "1. hoitovuosi (2025 - 2026)" (sanktion-lomake-domain/hoitovuosi-tekstina 2025 2025)))
+  (is (= "3. hoitovuosi (2027 - 2028)" (sanktion-lomake-domain/hoitovuosi-tekstina 2025 2027)))
+  (is (nil? (sanktion-lomake-domain/hoitovuosi-tekstina 2025 nil))))
+
+(deftest perintapvm-hoitovuodeksi-tunnistaa-hoitovuoden-rajat
+  (let [hoitovuodet [2025 2026]]
+    (is (= 2025 (sanktion-lomake-domain/perintapvm-hoitovuodeksi hoitovuodet (pvm/->pvm "1.10.2025"))))
+    (is (= 2025 (sanktion-lomake-domain/perintapvm-hoitovuodeksi hoitovuodet (pvm/->pvm "30.9.2026"))))
+    (is (= 2026 (sanktion-lomake-domain/perintapvm-hoitovuodeksi hoitovuodet (pvm/->pvm "1.10.2026"))))
+    (is (nil? (sanktion-lomake-domain/perintapvm-hoitovuodeksi hoitovuodet (pvm/->pvm "1.10.2027"))))
+    (is (nil? (sanktion-lomake-domain/perintapvm-hoitovuodeksi hoitovuodet nil)))))
+
+(deftest hoidonjohtopalkkio-tehtavaryhma-loytyy-nimella
+  (let [g {:tehtavaryhma 7 :tehtavaryhma_nimi "G - Hoidonjohtopalkkio"}]
+    (is (= g (sanktion-lomake-domain/hoidonjohtopalkkio-tehtavaryhma
+               [{:tehtavaryhma 1 :tehtavaryhma_nimi "A - Muu"} g])))
+    (is (nil? (sanktion-lomake-domain/hoidonjohtopalkkio-tehtavaryhma [])))))
+
+(deftest perusteluton-sanktio-on-vain-laskettava-tyon-tekematta-jattaminen
+  (is (true? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen {:koodi 22})))
+  (is (false? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen {:koodi 23})))
+  (is (false? (sanktiotyyppi-domain/perusteluton-sanktio? :muistutus {:koodi 22})))
+  (is (false? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen nil))))
+
+(deftest laskentamaarityksen-virhe-kuvaa-virheen-kentan-nimella
+  (let [maaritys {:laskentatapa :tiekm-yksikkohinta
+                  :laskentaversio 1
+                  :laskentaparametrit {:syoteavain "tiekm" :yksikko "tiekm" :desimaalit 2 :yksikkohinta 200.0}}]
+    (is (nil? (sanktion-laskenta/laskentamaarityksen-virhe maaritys)))
+    (is (re-find #"laskentatapa.*:tuntematon"
+          (sanktion-laskenta/laskentamaarityksen-virhe (assoc maaritys :laskentatapa :tuntematon))))
+    (is (re-find #"laskentaversio.*0"
+          (sanktion-laskenta/laskentamaarityksen-virhe (assoc maaritys :laskentaversio 0))))
+    (is (re-find #"laskentaparametrit.*yksikkohinta"
+          (sanktion-laskenta/laskentamaarityksen-virhe
+            (update maaritys :laskentaparametrit dissoc :yksikkohinta))))
+    (testing "raaka laskentatapa näkyy virheessä"
+      (is (re-find #"\"tiekm_typo\""
+            (sanktion-laskenta/laskentamaarityksen-virhe
+              (assoc maaritys :laskentatapa nil) "tiekm_typo"))))))
