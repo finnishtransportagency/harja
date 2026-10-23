@@ -346,8 +346,8 @@
                   raportin-tunniste tyhja
                   korosta-rivit korostustyyli
                   oikealle-tasattavat-kentat vetolaatikot
-                  esta-tiivis-grid? avattavat-rivit
                   sivuttain-rullattava? ensimmainen-sarake-sticky?
+                  esta-tiivis-grid? avattavat-rivit
                   ei-footer-muokkauspaneelia?
                   piilota-otsikot?
                   sarakkeet data]]
