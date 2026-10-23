@@ -44,10 +44,9 @@
     :muokattava? (constantly false)))
 
 (defn- sanktion-laji-ja-tyyppikentat
-  [sanktio lukutila? vesivaylaurakka? mahdolliset-sanktiolajit yllapitourakka?
-   asiakirjamerkinta? laskutus-ilman-laskutuskelpoisuutta? tyyppi-valinnat
-   urakan-alkuvuosi urakan-toimenpideinstanssit]
-  [(when-not vesivaylaurakka? ;; Vesiväylässä lajeina on vain sakko
+  [sanktio lukutila? mahdolliset-sanktiolajit tyyppi-valinnat
+   urakan-alkuvuosi urakan-toimenpideinstanssit lomakekonteksti]
+  [(when-not (:vesivaylaurakka? lomakekonteksti) ;; Vesiväylässä lajeina on vain sakko
      {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
       ::lomake/col-luokka "col-xs-12"
       :uusi-rivi? true :nimi :laji
@@ -63,7 +62,7 @@
       :validoi [[:ei-tyhja "Valitse laji"]]})
 
    ;; Näytetään mahdollisesti Talvisuolan kokonaiskäytön ylitys sanktiosta tuleva ilmoitus
-   (when (and (not lukutila?) (= :talvisuolan_ylitys (:laji sanktio)))
+   (when (and (not lukutila?) (:nayta-talvisuola-ilmoitus? lomakekonteksti))
      {:otsikko ""
       :nimi :talvisuolan-kokonaiskayton-ylitys
       ::lomake/col-luokka "col-xs-12"
@@ -72,11 +71,7 @@
                      [yleiset/info-laatikko :neutraali
                       [:span "Talvisuolan kokonaiskäytön ylitys -sanktio käsitellään urakan päätteeksi vastaanottotarkastuksessa ja sen voi kirjata Harjaan vasta viimeisenä hoitovuonna."]])})
 
-   (when-not (or yllapitourakka?
-               vesivaylaurakka?
-               asiakirjamerkinta?
-               laskutus-ilman-laskutuskelpoisuutta?
-               (= :laskutus_yli_laskutusrajan (:laji sanktio)))
+   (when (:nayta-tyyppi? lomakekonteksti)
      (let [tyyppikentta {:otsikko "Tyyppi" :tyyppi :valinta
                          :pakollinen? true
                          :uusi-rivi? true
@@ -132,11 +127,8 @@
                             ""))))}))
 
 (defn- tapahtumapaikka-kentta
-  [yllapitokohdeurakka? vesivaylaurakka? laskutus-ilman-laskutuskelpoisuutta? sanktio voi-muokata?]
-  (when (and (not yllapitokohdeurakka?)
-             (not vesivaylaurakka?)
-             (not laskutus-ilman-laskutuskelpoisuutta?)
-             (not (= :laskutus_yli_laskutusrajan (:laji sanktio))))
+  [lomakekonteksti voi-muokata?]
+  (when (:nayta-tapahtumapaikka? lomakekonteksti)
     {:otsikko "Tapahtumapaikka/kuvaus" :tyyppi :string :nimi :kohde
      :uusi-rivi? true
      :hae (comp :kohde :laatupoikkeama)
@@ -160,8 +152,8 @@
      :valinnat sanktio-domain/+yllapidon-sanktiofraasit+}))
 
 (defn- perustelu-kentta
-  [tyon-tekematta-jattamisen-tyyppi-22? voi-muokata?]
-  (when-not tyon-tekematta-jattamisen-tyyppi-22?
+  [lomakekonteksti voi-muokata?]
+  (when (:nayta-perustelu? lomakekonteksti)
     {:otsikko "Perustelu"
      :uusi-rivi? true
      :nimi :perustelu
@@ -537,17 +529,16 @@
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
         aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
+        laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
         lomakekonteksti (sanktio-domain/sanktion-lomakekonteksti
                            {:sanktio @muokattu
                             :aktiivinen-tyyppi aktiivinen-tyyppi
                             :yllapitourakka? yllapitourakka?
                             :yllapitokohdeurakka? yllapitokohdeurakka?
                             :vesivaylaurakka? vesivaylaurakka?
+                            :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
                             :aikakausikonteksti aikakausikonteksti
                             :urakan-loppupvm urakan-loppupvm})
-        asiakirjamerkinta? (= :asiakirjamerkintojen_paikkansa_pitamattomyys (:laji @muokattu))
-        laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
-        tyon-tekematta-jattamisen-tyyppi-22? (not (:nayta-perustelu? lomakekonteksti))
         summakonteksti (sanktio-domain/sanktion-summakonteksti
                          {:laji (:laji @muokattu)
                           :omailmoitettu (:omailmoitettu @muokattu)
@@ -658,26 +649,21 @@
           (sanktion-laji-ja-tyyppikentat
             @muokattu
             lukutila?
-            vesivaylaurakka?
             mahdolliset-sanktiolajit
-            yllapitourakka?
-            asiakirjamerkinta?
-            laskutus-ilman-laskutuskelpoisuutta?
             tyyppi-valinnat
             urakan-alkuvuosi
-            @tiedot-urakka/urakan-toimenpideinstanssit)
+            @tiedot-urakka/urakan-toimenpideinstanssit
+            lomakekonteksti)
           (mapcat #(if (vector? %) % [%])
             [(yllapitokohde-kentta yllapitokohdeurakka? yllapitokohteet voi-muokata?)
 
-             (tapahtumapaikka-kentta yllapitokohdeurakka?
-               vesivaylaurakka?
-               laskutus-ilman-laskutuskelpoisuutta?
-               @muokattu
+             (tapahtumapaikka-kentta
+               lomakekonteksti
                voi-muokata?)
 
              (puute-tai-laiminlyonti-kentta yllapitourakka?)
 
-             (perustelu-kentta tyon-tekematta-jattamisen-tyyppi-22? voi-muokata?)
+             (perustelu-kentta lomakekonteksti voi-muokata?)
 
              (omailmoitus-kentta omailmoitus-sallittu?)
 

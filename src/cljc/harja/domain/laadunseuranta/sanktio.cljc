@@ -297,7 +297,9 @@
                                                  (= :laskutus_ilman_laskutuskelpoisuutta laji))
         tyon-tekematta-jattamisen-tyyppi-22? (and (= :tyon_tekematta_jattaminen laji)
                                                   (= 22 (:koodi tyyppi)))]
-    {:nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
+    {:vesivaylaurakka? vesivaylaurakka?
+     :yllapitourakka? yllapitourakka?
+     :nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
                              asiakirjamerkinta?
                              laskutus-ilman-laskutuskelpoisuutta?
                              laskutusrajan-ylitys?))
@@ -305,6 +307,7 @@
                                               laskutus-ilman-laskutuskelpoisuutta?
                                               laskutusrajan-ylitys?))
      :nayta-perustelu? (not tyon-tekematta-jattamisen-tyyppi-22?)
+     :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)
      :salli-arvonvahennys? (:salli-arvonvahennys? aikakausikonteksti)
      :talvisuolan-validointi (fn [arvo]
                                (talvisuolan-validointi urakan-loppupvm arvo sanktio))}))

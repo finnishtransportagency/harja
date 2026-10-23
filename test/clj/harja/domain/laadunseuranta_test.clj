@@ -35,13 +35,14 @@
                     (sanktio-domain/sanktion-lomakekonteksti
                       (assoc perus :sanktio {:laji :tyon_tekematta_jattaminen
                                              :tyyppi {:koodi 22}}))))))
-    (testing "talvisuolan validointi rajoittuu viimeiseen hoitovuoteen"
-      (is (some? ((:talvisuolan-validointi
-                    (sanktio-domain/sanktion-lomakekonteksti
-                      (assoc perus
-                        :sanktio {:laji :talvisuolan_ylitys}
-                        :urakan-loppupvm (pvm/->pvm "30.9.2026"))))
-                   (pvm/->pvm "1.10.2024")))))
+    (testing "talvisuolan ilmoitus ja validointi koskevat talvisuolan ylitystä"
+      (let [konteksti (sanktio-domain/sanktion-lomakekonteksti
+                        (assoc perus
+                          :sanktio {:laji :talvisuolan_ylitys}
+                          :urakan-loppupvm (pvm/->pvm "30.9.2026")))]
+        (is (true? (:nayta-talvisuola-ilmoitus? konteksti)))
+        (is (some? ((:talvisuolan-validointi konteksti)
+                    (pvm/->pvm "1.10.2024"))))))
     (testing "aikakausikonteksti vaikuttaa arvonvähennyksen sallimiseen"
       (is (true? (:salli-arvonvahennys?
                    (sanktio-domain/sanktion-lomakekonteksti
