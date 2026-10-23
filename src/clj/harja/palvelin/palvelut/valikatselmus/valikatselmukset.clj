@@ -148,14 +148,6 @@
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
     (bigdec (round2 2 hoitovuoden-lopun-tavoitehinta))))
 
-(defn- laske-muutos-prosentteina [piste-keskiarvo alkuperainen-pisteluku]
-  (if (or (zero? piste-keskiarvo) (zero? alkuperainen-pisteluku))
-    0
-    (round2 1
-      (* (/ (- piste-keskiarvo alkuperainen-pisteluku)
-           piste-keskiarvo)
-        100))))
-
 (defn laske-hoitovuoden-lopun-indeksikorjaus [urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku
                                               tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta]
   ;; Varmistetaan, että indeksikorjausta, ei tehdä ennenkuin 2024 ja sitä myöhemmille urakoille
@@ -166,7 +158,7 @@
                             (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet))) 0)
           alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
 
-          muutos-prosentteina (laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
+          muutos-prosentteina (v-apurit/laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
           ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
           indeksikorotuksen-prosenttiosuus (if (and muutos-prosentteina (> muutos-prosentteina 2)) (- muutos-prosentteina 2) 0)
           oikaistu-tavoitehinta (or oikaistu-tavoitehinta 0)
