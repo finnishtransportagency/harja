@@ -514,11 +514,11 @@
    Tällöin tälle funktiolle täytyy välittää valmiiksi kustannussuunnitelman tiedoista laskettu tavoitehinta."
   ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset]
    (paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset nil))
-  ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset yhteenlaskettu-tavoitehinta]
+  ([db kayttaja-id urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset kustannussuunnitelman-tavoitehinta]
    (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
          hoitokausinumero (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
          urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
-         muutoshallinta-kaytossa? (:muutosten_hallinta urakan-parametrit) ;; TODO: Huomoi tässä myöhemmin tarve urakan hoitovuosikohtaiseen muutoshallintamäärittelyyn
+         muutoshallinta-kaytossa? (:muutosten_hallinta urakan-parametrit)
          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
 
          ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
