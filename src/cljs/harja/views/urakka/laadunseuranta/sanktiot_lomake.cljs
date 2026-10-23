@@ -6,7 +6,7 @@
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
-            [harja.fmt :as fmt]
+            [harja.fmt :as fmt]    
             [harja.pvm :as pvm]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as tiedot-urakka]
@@ -90,7 +90,7 @@
                          :uusi-rivi? true
                          ::lomake/col-luokka "col-xs-12"
                          :nimi :tyyppi
-                         :aseta (fn [sanktio {tpk :toimenpidekoodi :as tyyppi}]
+                         :aseta (fn [sanktio tyyppi]
                                   (sanktio-domain/vaihda-sanktiotyyppia
                                     sanktio
                                     tyyppi
@@ -259,7 +259,7 @@
                        :valinta-nayta #(or % "Ei indeksiä")})])))
 
 (defn- kulun-kohdistus-kentta
-  [sanktio aikakausikonteksti lukutila? urakan-alkuvuosi
+  [sanktio aikakausikonteksti lukutila?
    mahdolliset-kulun-kohdistukset hoidonjohtopalkkio-tr
    urakan-toimenpideinstanssit]
   ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
@@ -273,7 +273,7 @@
     (let [kulun-kohdistus {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
                            :pakollinen? true
                            :disabled? (or (empty? @urakan-toimenpideinstanssit)
-                                        (and (> urakan-alkuvuosi 2024)
+                                        (and (:maaraystapa? aikakausikonteksti)
                                           (<= (count mahdolliset-kulun-kohdistukset) 1)))
                            ::lomake/col-luokka "col-xs-12"
                            :nimi :toimenpideinstanssi
@@ -722,7 +722,6 @@
                @muokattu
                aikakausikonteksti
                lukutila?
-               urakan-alkuvuosi
                mahdolliset-kulun-kohdistukset
                hoidonjohtopalkkio-tr
                tiedot-urakka/urakan-toimenpideinstanssit)
