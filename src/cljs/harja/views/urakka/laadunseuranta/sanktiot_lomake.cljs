@@ -567,16 +567,19 @@
                                                aktiivinen-tyyppi tyyppi-valinnat)
         omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
         omailmoitettu (boolean (and omailmoitus-sallittu? (:omailmoitettu @muokattu)))
-        normaalimaara (if kiintea-profiilisumma?
-                        automaattinen-summa
-                        (:normaalimaara @muokattu))
-        lopullinen-maara (when normaalimaara
-                           (sanktio-domain/kiintea-sanktiosumma normaalimaara omailmoitettu))
+        kiintea-summamalli {:normaalimaara (if kiintea-profiilisumma?
+                                             automaattinen-summa
+                                             (:normaalimaara @muokattu))
+                            :omailmoitettu omailmoitettu}
+        kiintea-summamalli (cond-> kiintea-summamalli
+                              (:normaalimaara kiintea-summamalli)
+                              (assoc :summa
+                                (sanktio-domain/kiintea-sanktiosumma
+                                  (:normaalimaara kiintea-summamalli)
+                                  (:omailmoitettu kiintea-summamalli))))
         tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
                                 kiintea-profiilisumma?
-                                (assoc :normaalimaara normaalimaara
-                                  :omailmoitettu omailmoitettu
-                                  :summa lopullinen-maara)
+                                (merge kiintea-summamalli)
 
                                 ;; Lähetetään vain raakasyöte; palvelin laskee summan itse.
                                 laskettu-maaritys
@@ -711,7 +714,7 @@
                manuaalinen-laskettavan-sisartyyppi?
                c-ryhman-maaritys
                kiintea-profiilisumma?
-               lopullinen-maara
+               (:summa kiintea-summamalli)
                aikakausikonteksti
                @muokattu
                lukutila?
