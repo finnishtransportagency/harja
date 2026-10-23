@@ -17,11 +17,12 @@
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
 
 (defn laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista
-  "Funktio laskee indeksikorjaamattoman tavoitehinnan käyttöliittymästä välitettyjen kustannussuunnitelman tietojen perusteella.
+  "Funktio laskee indeksikorjaamattoman tavoitehinnan käyttöliittymästä välitetyn hoitovuosikohtaisen kustannussuunnitelman tietojen perusteella.
   Indeksikorjaus lasketaan tavoite- ja kattohinnan tallennuksen yhteydessä.
-  ÄLÄ KÄYTÄ funktiota urakoissa tai hoitovuosina, kun on käytössä muutosten hallinta (urakkaparametri: muutos_hallinta). Muutoshallintaa
-  käyttävillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella."
-  [vuosi {:keys [kilpailutettavat-hankinnat rahavaraukset erillishankinnat johto-ja-hallintokorvaukset hoidonjohtopalkkiot] :as tiedot}]
+  Älä käytä:
+  * Jos muutostenhallinta on käytössä (urakkaparametri: muutos_hallinta). Näillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella.
+  * Koko urakka-ajan yhteissumman laskentaan"
+  [{:keys [kilpailutettavat-hankinnat rahavaraukset erillishankinnat johto-ja-hallintokorvaukset hoidonjohtopalkkiot] :as tiedot}]
   (let [hankinnat-yhteenveto (first (filter #(= (:nimi %) "Yhteensä") (:toimenpiteet kilpailutettavat-hankinnat)))
         hankinnat-yhteensa (or (:kaikki-yhteensa hankinnat-yhteenveto) 0)
         rahavaraukset-yhteensa (reduce +
@@ -40,9 +41,10 @@
     {:yhteenlaskettu-tavoitehinta hoitokauden-alun-tavoitehinta}))
 
 (defn laske-ja-tallenna-tavoite-ja-kattohinta
-  "Laskee tavoitehinnan kustannussuunnitelman yksittäisten arvojen perusteella ja kutsuu sitten tavoite- ja kattohinnan tallentavaa funktiota.
-  ÄLÄ KÄYTÄ tätä tapaa urakoissa tai hoitovuosina, jolloin käytössä on muutosten hallinta. Tämä tapa laskea tavoitehinta on voimassa vain,
-  jos muutostenhallinta ei ole käytössä."
+  "Kutsuu kustannussuunnitelman hoitokausikohtaisen yhteissumman laskentaa ja sitten tavoite- ja kattohinnan tallentavaa funktiota.
+    Älä käytä:
+    * Jos muutostenhallinta on käytössä (urakkaparametri: muutos_hallinta). Näillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella.
+    * Koko urakka-ajan yhteissumman laskentaan"
   [db kayttaja urakka-id vuosi kustannussuunnitelma]
   (let [yhteenlaskettu-tavoitehinta (laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista vuosi kustannussuunnitelma)]
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi nil yhteenlaskettu-tavoitehinta)))
@@ -152,7 +154,7 @@
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
                                     :laskutusraja-kaytossa? laskutusraja-kaytossa?
                                     :laskutusraja laskutusraja
-                                    :muutosten-hallinta-urakassa? muutosten-hallinta-urakassa?
+                                    :muutosten-hallinta-kaytossa? muutosten-hallinta-urakassa?
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
                                     :indeksikerroin indeksikerroin
