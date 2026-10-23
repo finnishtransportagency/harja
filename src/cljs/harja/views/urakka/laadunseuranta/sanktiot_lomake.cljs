@@ -521,11 +521,9 @@
         liitteet-id (str "liiteet-element-id-" (gensym))
         ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin.
         mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
-        ;;mhu -25 alkaen, sanktio kohdistuu tehtäväryhmään "G - Hoindonjohtopalkkio" - Kaivetaan siis oikea tehtäväryhmä listasta
-        tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %))
-              @tiedot/valitun-urakan-tehtavaryhmat)
-        ;; Etsitään G - Hoidonjohtopalkkio tehtäväryhmä, jos se löytyy tehtäväryhmistä
-        hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
+        ;; mhu -25 alkaen sanktio kohdistuu tehtäväryhmään "G - Hoidonjohtopalkkio"
+        hoidonjohtopalkkio-tr (sanktion-lomake-domain/hoidonjohtopalkkio-tehtavaryhma
+                                @tiedot/valitun-urakan-tehtavaryhmat)
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
         aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
         laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
@@ -574,25 +572,9 @@
                     lukutila?)
         talvisuolan-validointi-fn (fn [arvo _sanktio]
                                     ((:talvisuolan-validointi lomakekonteksti) arvo))
-        urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
-        urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
-        viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)
-                                          urakan-loppuvuosi
-                                          (dec urakan-loppuvuosi))
-        hoitovuodet (if (<= urakan-alkuvuosi viimeinen-hoitovuoden-alkuvuosi)
-                      (vec (range urakan-alkuvuosi (inc viimeinen-hoitovuoden-alkuvuosi)))
-                      [])
-        hoitovuosi->teksti (fn [hoitovuosi]
-                             (when (int? hoitovuosi)
-                               (let [jarjestysnumero (inc (- hoitovuosi urakan-alkuvuosi))]
-                                 (str jarjestysnumero ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")"))))
-        perintapvm->hoitovuosi (fn [perintapvm]
-                                 (when perintapvm
-                                   (let [vuosi (pvm/vuosi perintapvm)
-                                         kuukausi (pvm/kuukausi perintapvm)
-                                         hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
-                                     (when (some #{hoitovuosi} hoitovuodet)
-                                       hoitovuosi))))]
+        hoitovuodet (sanktion-lomake-domain/hoitovuodet urakan-alkuvuosi urakan-loppupvm)
+        hoitovuosi->teksti (partial sanktion-lomake-domain/hoitovuosi-tekstina urakan-alkuvuosi)
+        perintapvm->hoitovuosi (partial sanktion-lomake-domain/perintapvm-hoitovuodeksi hoitovuodet)]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit)
