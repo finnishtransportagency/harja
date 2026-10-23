@@ -148,7 +148,8 @@
                     (merge
                       {:urakka-id urakka-id
                        :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-                       :kopioi-tuleville-vuosille? false}
+                       :kopioi-tuleville-vuosille? false
+                       :muutosten-hallinta-kaytossa? false}
                       h-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
@@ -177,7 +178,8 @@
                     (merge
                       {:urakka-id urakka-id
                        :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-                       :kopioi-tuleville-vuosille? true}
+                       :kopioi-tuleville-vuosille? true
+                       :muutosten-hallinta-kaytossa? false}
                       h-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
@@ -283,7 +285,8 @@
                     :tallenna-erillishankinnat +kayttaja-jvh+ (merge apurit/erillishankinnat-tietomalli
                                                                 {:urakka-id urakka-id
                                                                  :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-                                                                 :kopioi-tuleville-vuosille? true}))
+                                                                 :kopioi-tuleville-vuosille? true
+                                                                 :muutosten-hallinta-kaytossa? false}))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
@@ -394,7 +397,8 @@
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+
                     (merge {:urakka-id urakka-id
                             :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-                            :kopioi-tuleville-vuosille? false}
+                            :kopioi-tuleville-vuosille? false
+                            :muutosten-hallinta-kaytossa? false}
                       apurit/hoidonjohtopalkkiot-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
@@ -433,7 +437,8 @@
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-hoidonjohtopalkkiot +kayttaja-jvh+
                     (merge {:urakka-id urakka-id
                             :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-                            :kopioi-tuleville-vuosille? true}
+                            :kopioi-tuleville-vuosille? true
+                            :muutosten-hallinta-kaytossa? false}
                       apurit/hoidonjohtopalkkiot-tietomalli))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
@@ -549,7 +554,8 @@
                     :tallenna-johto-ja-hallintokorvaukset-2019 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2019
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi hoitokauden-alkuvuosi
-                                                                                 :kopioi-tuleville-vuosille? true}))
+                                                                                 :kopioi-tuleville-vuosille? true
+                                                                                 :muutosten-hallinta-kaytossa? false}))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
@@ -622,7 +628,8 @@
                     :tallenna-johto-ja-hallintokorvaukset-2025 +kayttaja-jvh+ (merge apurit/johto-ja-hallinto-tietomalli-2025
                                                                                 {:urakka-id urakka-id
                                                                                  :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi
-                                                                                 :kopioi-tuleville-vuosille? true}))
+                                                                                 :kopioi-tuleville-vuosille? true
+                                                                                 :muutosten-hallinta-kaytossa? true}))
                   (catch Exception e
                     (println "Tapahtui virhe:" (.getMessage e))
                     {:error (.getMessage e)}))
