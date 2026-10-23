@@ -26,7 +26,7 @@
   hae-kustannus-tarjoukselle hae-rahavaraus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tavoite-ja-kattohinnat
   lisaa-urakan-tavoite-tarjous<! paivita-rahavaraus-budjettiin<! lisaa-rahavaraus-budjettiin<!
-  paivita-urakan-tavoite-ja-kattohinta! lisaa-urakan-tavoite-ja-kattohinta<! hae-laskutusraja-kaytossa)
+  paivita-urakan-tavoite-ja-kattohinta! lisaa-urakan-tavoite-ja-kattohinta<!)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
