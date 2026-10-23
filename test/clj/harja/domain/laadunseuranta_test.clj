@@ -723,3 +723,80 @@
                   [laskettava c-manuaalinen-ohjetekstilla]))
       "Profiilin manuaalinen määritys säilyttää nykyisen käytöksen")
     (is (false? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi? nil lajin-tyypit)))))
+
+;; Karakterisointi: summapolut ennen summakontekstin purkua. Testit käyttävät vain julkisia funktioita.
+(deftest karakterisointi-kiintea-profiilisumma-ilman-omailmoitusta
+  (let [tyyppi {:id 7
+                :voi-puolittaa-omailmoituksella true
+                :summamaaritykset [{:maaritystapa :automaattinen
+                                    :summa-euroina 6000M
+                                    :ohjeteksti nil}]}
+        rivi (sanktio-domain/vaihda-sanktiotyyppia
+               {:laji :A :tyyppi {:id 1} :omailmoitettu false}
+               tyyppi 2025 [] [])]
+    (is (= 6000M (:normaalimaara rivi)))
+    (is (= 6000M (:summa rivi)))
+    (is (false? (:omailmoitettu rivi)))))
+
+(deftest karakterisointi-omailmoitettu-puolitus-vain-kun-profiili-sallii
+  (let [sallittu {:id 7
+                  :voi-puolittaa-omailmoituksella true
+                  :summamaaritykset [{:maaritystapa :automaattinen
+                                      :summa-euroina 6000M
+                                      :ohjeteksti nil}]}
+        ei-sallittu (dissoc sallittu :voi-puolittaa-omailmoituksella)]
+    (is (= {:normaalimaara 6000M :omailmoitettu true :summa 3000M}
+           (sanktio-domain/kiintea-summamalli sallittu true)))
+    (is (= {:normaalimaara 6000M :omailmoitettu false :summa 6000M}
+           (sanktio-domain/kiintea-summamalli ei-sallittu true)))))
+
+(deftest karakterisointi-laskettava-sanktio-ei-kiinteaa-summaa
+  (let [laskettava {:id 9
+                    :summamaaritykset [{:maaritystapa :laskettu
+                                        :laskentatapa :tiekm-yksikkohinta
+                                        :laskentaversio 1
+                                        :laskentaparametrit {:yksikkohinta 10M}}]}]
+    (is (nil? (sanktio-domain/kiintea-summamalli laskettava false)))
+    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? laskettava)))
+    (is (some? (sanktion-laskenta/laskettu-summamaaritys laskettava)))))
+
+(deftest karakterisointi-c-ryhman-manuaalinen-summa-ei-ole-kiinteaa
+  (let [c-tyyppi {:id 3
+                  :summamaaritykset [{:maaritystapa :manuaalinen
+                                      :summa-euroina 250M
+                                      :ohjeteksti "Kirjaa summa"}]}]
+    (is (nil? (sanktio-domain/kiintea-summamalli c-tyyppi true)))
+    (is (false? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys? c-tyyppi)))
+    (is (nil? (sanktio-domain/sanktiotyypin-kiintea-automaattinen-summa c-tyyppi)))))
+
+(deftest sanktion-tallennusmuoto-kiintea-ja-laskettava-polku
+  (let [kiintea-tyyppi {:id 7
+                        :voi-puolittaa-omailmoituksella true
+                        :summamaaritykset [{:maaritystapa :automaattinen
+                                            :summa-euroina 6000M
+                                            :ohjeteksti nil}]}
+        laskettava-tyyppi {:id 9
+                           :summamaaritykset [{:maaritystapa :laskettu
+                                               :laskentatapa :tiekm-yksikkohinta
+                                               :laskentaversio 1
+                                               :laskentaparametrit {:yksikkohinta 10M}}]}
+        lomake {:laji :A :tyyppi {:id 7} :omailmoitettu true :summa 1M}
+        kiintea (sanktio-domain/sanktion-summakonteksti
+                  {:laji :A :omailmoitettu true :aktiivinen-tyyppi kiintea-tyyppi})
+        laskettava (sanktio-domain/sanktion-summakonteksti
+                     {:laji :A :omailmoitettu false :aktiivinen-tyyppi laskettava-tyyppi})
+        tallennettu (sanktio-domain/sanktion-tallennusmuoto
+                      lomake kiintea {:laji :A :tyyppi {:id 7} :omailmoitettu true})]
+    (is (= {:normaalimaara 6000M :omailmoitettu true :summa 3000M}
+           (select-keys tallennettu [:normaalimaara :omailmoitettu :summa])))
+    (let [tallennettu-laskettava (sanktio-domain/sanktion-tallennusmuoto
+                                   {:laji :A :omailmoitettu true :summa 99M
+                                    :normaalimaara 5M :laskennan-syote {:syote 42M}}
+                                   laskettava
+                                   {:laji :A :omailmoitettu true :summa 99M
+                                    :normaalimaara 5M :laskennan-syote {:syote 42M}})]
+      (is (false? (:omailmoitettu tallennettu-laskettava)))
+      (is (not (contains? tallennettu-laskettava :summa)))
+      (is (not (contains? tallennettu-laskettava :normaalimaara)))
+      (is (not (contains? tallennettu-laskettava :laskennan-syote)))
+      (is (= 42M (:laskettava-syote tallennettu-laskettava))))))

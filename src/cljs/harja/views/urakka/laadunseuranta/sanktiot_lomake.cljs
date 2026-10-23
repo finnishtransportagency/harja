@@ -1,6 +1,6 @@
 (ns harja.views.urakka.laadunseuranta.sanktiot-lomake
   "Sanktiolomake"
-  (:require [clojure.string :as str]
+  (:require
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
@@ -549,33 +549,21 @@
         laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
         tyon-tekematta-jattamisen-tyyppi-22? (and (= :tyon_tekematta_jattaminen (:laji @muokattu))
                        (= 22 (:koodi aktiivinen-tyyppi)))
-        c-ryhman-maaritys (when (= :C (:laji @muokattu))
-                            (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
-                                    (when (and (= :manuaalinen maaritystapa)
-                                            (some? summa-euroina)
-                                            (not (str/blank? ohjeteksti)))
-                                      {:summa-euroina summa-euroina
-                                       :ohjeteksti ohjeteksti}))
-                              (:summamaaritykset aktiivinen-tyyppi)))
-        kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
-                                 aktiivinen-tyyppi)
-        omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
-        kiintea-summamalli (sanktio-domain/kiintea-summamalli
-                             aktiivinen-tyyppi
-                             (:omailmoitettu @muokattu))
-        laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
+        summakonteksti (sanktio-domain/sanktion-summakonteksti
+                         {:laji (:laji @muokattu)
+                          :omailmoitettu (:omailmoitettu @muokattu)
+                          :aktiivinen-tyyppi aktiivinen-tyyppi})
+        c-ryhman-maaritys (:c-ryhman-maaritys summakonteksti)
+        kiintea-profiilisumma? (:kiintea-profiilisumma? summakonteksti)
+        omailmoitus-sallittu? (:omailmoitus-sallittu? summakonteksti)
+        kiintea-summamalli (:kiintea-summamalli summakonteksti)
+        laskettu-maaritys (:laskettu-maaritys summakonteksti)
         laskentaparametrit (:laskentaparametrit laskettu-maaritys)
         manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
                                                aktiivinen-tyyppi tyyppi-valinnat)
-        tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
-                                kiintea-summamalli
-                                (merge kiintea-summamalli)
-
-                                ;; Lähetetään vain raakasyöte; palvelin laskee summan itse.
-                                laskettu-maaritys
-                                (-> (dissoc :summa :normaalimaara :laskennan-syote)
-                                  (assoc :omailmoitettu false
-                                    :laskettava-syote (sanktion-laskenta/laskettava-syote @muokattu))))
+        tallennettava-sanktio (sanktio-domain/sanktion-tallennusmuoto
+                                @muokattu summakonteksti
+                                (lomake/ilman-lomaketietoja @muokattu))
         ;; Laatupoikkeaman näkymässä sanktio tallennetaan paikallisesti atomiin, ei kantaan.
         tallenna! (if tallenna-fn
                     (fn []

@@ -4,7 +4,8 @@
 (ns harja.domain.laadunseuranta.sanktio
   (:require [clojure.string :as str]
             [harja.pvm :as pvm]
-            [harja.domain.urakka :as urakka-domain]))
+            [harja.domain.urakka :as urakka-domain]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]))
 
 ;; -> Ehtolauseilla hallitaan mitä subsettejä lajeista näytetään missäkin näkymässä mhu XXXX- #{:A :B :C ...}
 ;; Ehtolauseilla voidaan myös hallita miten mikäkin sanktiotyyppi asettuu tietyn lajin alle eri urakkatyyppeillä/vuosikerroilla
@@ -225,6 +226,37 @@
       {:normaalimaara normaalimaara
        :omailmoitettu omailmoitettu
        :summa (kiintea-sanktiosumma normaalimaara omailmoitettu)})))
+
+;; Tallennettava sanktio: kiinteä summa lisätään sellaisenaan, laskettavalla lähetetään vain raakasyöte.
+(defn sanktion-tallennusmuoto
+  [muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot]
+  (cond-> lomakkeen-tiedot
+    kiintea-summamalli
+    (merge kiintea-summamalli)
+
+    ;; Lähetetään vain raakasyöte; palvelin laskee summan itse.
+    laskettu-maaritys
+    (-> (dissoc :summa :normaalimaara :laskennan-syote)
+      (assoc :omailmoitettu false
+        :laskettava-syote (sanktion-laskenta/laskettava-syote muokattu)))))
+
+;; Lomakkeen summanäkymä: kiinteä johdettu summa tai manuaalinen C-ryhmän summa, ei atomeja.
+(defn sanktion-summakonteksti
+  [{:keys [laji omailmoitettu aktiivinen-tyyppi]}]
+  (let [kiintea (kiintea-summamalli aktiivinen-tyyppi omailmoitettu)
+        c-ryhman-maaritys (when (= :C laji)
+                            (some (fn [{:keys [maaritystapa summa-euroina ohjeteksti]}]
+                                    (when (and (= :manuaalinen maaritystapa)
+                                            (some? summa-euroina)
+                                            (not (str/blank? ohjeteksti)))
+                                      {:summa-euroina summa-euroina
+                                       :ohjeteksti ohjeteksti}))
+                              (:summamaaritykset aktiivinen-tyyppi)))]
+    {:kiintea-profiilisumma? (sanktiotyypilla-kiintea-automaattinen-summamaaritys? aktiivinen-tyyppi)
+     :omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
+     :kiintea-summamalli kiintea
+     :laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
+     :c-ryhman-maaritys c-ryhman-maaritys}))
 
 
 
