@@ -32,7 +32,7 @@
                                    (mapv #(if (nil? (:summa %)) 0 (:summa %))
                                      erillishankinnat))
         johto-ja-hallintokorvaukset-yhteensa (reduce +
-                                               (map #(if (nil? (:yhteensa-kk %)) 0 (:yhteensa-kk %))
+                                               (map #(if (nil? (:summa %)) 0 (:summa %))
                                                  johto-ja-hallintokorvaukset))
         hoidonjohtopalkkiot-yhteensa (reduce +
                                        (mapv #(if (nil? (:summa %)) 0 (:summa %))
@@ -172,7 +172,8 @@
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot))
         (when (not muutosten-hallinta-kaytossa?)
-          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi kustannussuunnitelma)))
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :toimenpiteet (constantly (:toimenpiteet tiedot))))))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
                                                      :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
@@ -184,7 +185,8 @@
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
         (when (not muutosten-hallinta-kaytossa?)
-          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi kustannussuunnitelma))))
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :erillishankinnat (constantly (:erillishankinnat tiedot)))))))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
                                                    :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
@@ -201,11 +203,13 @@
 
           avain (if (<= urakan-alkuvuosi 2024)
                   :johto-ja-hallintokorvaukset-2019
-                  :johto-ja-hallintokorvaukset-2025)]
+                  :johto-ja-hallintokorvaukset-2025)
+          johto-ja-hallintokorvaukset (get tiedot avain)]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi)
+        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id johto-ja-hallintokorvaukset vuosi)
         (when (not muutosten-hallinta-kaytossa?)
-          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi kustannussuunnitelma)))
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :johto-ja-hallintokorvaukset (constantly johto-ja-hallintokorvaukset)))))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
                                                      :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
@@ -217,7 +221,8 @@
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)
         (when (not muutosten-hallinta-kaytossa?)
-          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi kustannussuunnitelma))))
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :hoidonjohtopalkkiot (constantly (:hoidonjohtopalkkiot tiedot)))))))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta] :as tiedot}]
