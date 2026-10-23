@@ -2,6 +2,8 @@
   "Sanktiolomake"
   (:require
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
+            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.oikeudet :as oikeudet]
@@ -528,7 +530,7 @@
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
         aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
         laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
-        lomakekonteksti (sanktio-domain/sanktion-lomakekonteksti
+        lomakekonteksti (sanktion-lomake-domain/sanktion-lomakekonteksti
                            {:sanktio @muokattu
                             :aktiivinen-tyyppi aktiivinen-tyyppi
                             :yllapitourakka? yllapitourakka?
@@ -537,7 +539,7 @@
                             :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
                             :aikakausikonteksti aikakausikonteksti
                             :urakan-loppupvm urakan-loppupvm})
-        summakonteksti (sanktio-domain/sanktion-summakonteksti
+        summakonteksti (sanktion-lomake-domain/sanktion-summakonteksti
                          {:laji (:laji @muokattu)
                           :omailmoitettu (:omailmoitettu @muokattu)
                           :aktiivinen-tyyppi aktiivinen-tyyppi})
@@ -549,7 +551,7 @@
         laskentaparametrit (:laskentaparametrit laskettu-maaritys)
         manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
                                                aktiivinen-tyyppi tyyppi-valinnat)
-        tallennettava-sanktio (sanktio-domain/sanktion-tallennusmuoto
+        tallennettava-sanktio (sanktion-lomake-domain/sanktion-tallennusmuoto
                                 @muokattu summakonteksti
                                 (lomake/ilman-lomaketietoja @muokattu))
         ;; Laatupoikkeaman näkymässä sanktio tallennetaan paikallisesti atomiin, ei kantaan.
