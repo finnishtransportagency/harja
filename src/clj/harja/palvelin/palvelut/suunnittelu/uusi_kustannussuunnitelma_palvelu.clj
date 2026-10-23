@@ -46,7 +46,7 @@
     * Jos muutostenhallinta on käytössä (urakkaparametri: muutos_hallinta). Näillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella.
     * Koko urakka-ajan yhteissumman laskentaan"
   [db kayttaja urakka-id vuosi kustannussuunnitelma]
-  (let [yhteenlaskettu-tavoitehinta (laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista vuosi kustannussuunnitelma)]
+  (let [yhteenlaskettu-tavoitehinta (laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista kustannussuunnitelma)]
     (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi nil yhteenlaskettu-tavoitehinta)))
 
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
