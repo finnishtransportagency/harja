@@ -456,16 +456,12 @@
         urakka-id (:id urakan-tiedot)
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         vuosidata (mapv (fn [{:keys [alkupvm loppupvm]}]
-                          (let [haun-loppupvm (if (and (pvm/kyseessa-hoitokausi-vali? alkupvm loppupvm)
-                                                     (pvm/ennen? nyt loppupvm))
-                                                nyt
-                                                loppupvm)
-                                laskutustiedot (first
+                          (let [laskutustiedot (first
                                                  (laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
                                                    db user {:urakka-id urakka-id
                                                             :alkupvm alkupvm
                                                             :loppupvm loppupvm
-                                                            :haun-loppupvm haun-loppupvm}))]
+                                                            :haun-loppupvm loppupvm}))]
                             {:otsikko (str "Laskutus " (pvm/vuosi alkupvm) "-" (pvm/vuosi loppupvm) " (€)")
                              :hoitovuosi (pvm/vuosi alkupvm)
                              :data laskutustiedot}))

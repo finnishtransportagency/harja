@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-tyomaa
   "Työmaakokous laskutusyhteenveto raportin taulukko rakenteet"
-  (:require [harja.kyselyt.konversio :as konversio]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
@@ -268,7 +269,6 @@
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
-
         rivit (cond
                 (= "Hankinnat" otsikko)
                 (tee-taulukko-rivit data kyseessa-kk-vali? hankinnat-rivit)
@@ -408,6 +408,33 @@
      rivit]))
 
 
+(defn- tee-laskutus-yhteenveto-taulukko
+  "Muodostaa vuosittaiset laskutukset kokoavan yhteenvetotaulukon."
+  [vuosidata]
+  (let [vuosittaiset-laskutukset
+        (mapv #(or (get-in % [:data :yhteensa_kaikki_hoitokausi_yht]) 0M)
+          vuosidata)
+        sarakkeet (into [{:otsikko "Yhteenveto" :leveys 36}]
+                    (concat
+                      (map (fn [{:keys [otsikko]}]
+                             {:otsikko otsikko :leveys 16 :fmt :raha})
+                        vuosidata)
+                      [{:otsikko "Yhteensä (€)" :leveys 16 :fmt :raha}]))
+        laskutus-yhteensa-rivi
+        {:lihavoi? true
+         :korosta-hennosti? true
+         :rivi (into ["Laskutus yhteensä"]
+                 (conj vuosittaiset-laskutukset
+                   (reduce + 0M vuosittaiset-laskutukset)))}]
+    [:taulukko {:sheet-nimi "Laskutusyhteenveto"
+                :samalle-sheetille? true
+                :viimeinen-rivi-yhteenveto? true
+                :pdf-optiot {:skaalaa-teksti? true}
+                :oikealle-tasattavat-kentat (set (range 1 (+ 2 (count vuosidata))))}
+     sarakkeet
+     [laskutus-yhteensa-rivi]]))
+
+
 (defn taulukot-tyomaakokous-vuosittain
   "Muodostaa työmaakokouksen laskutusyhteenvetoraportin vuosittaiset taulukot.
 
@@ -420,6 +447,8 @@
   (if (empty? vuosidata)
     [[:teksti "Ei hoitovuosia."]]
     (let [[rahavaraus-vuosidata rahavarausrivit] (rahavaraus-taulukon-tiedot vuosidata)
+          tavoitehinnan-ulkopuolisten-vuosidata
+          (mapv #(update % :otsikko str/replace-first #"^Laskutus " "") vuosidata)
           alkutaulukot (vec
                          (concat
                            [(tee-vuosittainen-taulukko vuosidata "Hankinnat" hankinnat-rivit)
@@ -432,7 +461,7 @@
                                 (map #(tavoitehintaan-vaikuttavat-rivit (:hoitovuosi %) urakan-alkuvuosi)
                                   vuosidata)))]))
           ei-tavoitehintaiset-taulukko
-          (tee-vuosittainen-taulukko vuosidata "Kustannus"
+          (tee-vuosittainen-taulukko tavoitehinnan-ulkopuolisten-vuosidata "Kustannus"
             (yhdista-rivimaaritykset
               (map #(ei-tavoitehintaiset-rivit (:data %)) vuosidata)))
           taulukot (map-indexed (fn [indeksi taulukko]
@@ -441,4 +470,5 @@
           [ennen ulkopuoliset] (split-at (dec (count taulukot)) taulukot)]
       (concat ennen
         [[:otsikko "Tavoitehinnan ulkopuoliset kustannukset"]]
-        ulkopuoliset))))
+        ulkopuoliset
+        [(tee-laskutus-yhteenveto-taulukko tavoitehinnan-ulkopuolisten-vuosidata)]))))

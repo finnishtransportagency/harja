@@ -556,13 +556,11 @@
 
           purettu (pura-tyomaaraportti-mapiksi (first raportti))]
 
-      ;; Arvot tallennetaan
+      ;; Varmista, että arvot on tallennettu ja näkyvät raportilla oikein
       (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_hoitokausi_yht purettu)) "Kirjattu bonus MHU25 täsmää tulosta (hk yht)")
       (is (= (+ alihankintabonus_summa bonus_summa) (:bonukset_val_aika_yht purettu)) "Kirjattu bonus MHU25 täsmää tulosta (val aika)")
       (is (= (* -1 sanktio_summa) (:sanktiot_hoitokausi_yht purettu)) "Kirjattu sanktio MHU25 täsmää tulosta (hk yht)")
       (is (= (* -1 sanktio_summa) (:sanktiot_val_aika_yht purettu)) "Kirjattu sanktio MHU25 täsmää tulosta (val aika)")
-
-      ;; Mutta niitä ei lasketa toteutuneisiin, eivätkä näy raportilla 
       (is (= (+ bonus_summa (* -1 sanktio_summa) alihankintabonus_summa)
             (:muut_kustannukset_hoitokausi_yht purettu)) "Sanktioit & bonukset näytetään MHU25 raportilla (val aika)")
       (is (= (+ bonus_summa (* -1 sanktio_summa) alihankintabonus_summa)

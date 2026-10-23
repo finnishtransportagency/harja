@@ -1,8 +1,10 @@
 (ns harja.palvelin.raportointi.vastaanottotarkastus-mhu-laskutusyht-test
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
-            [harja.testi :refer [+kayttaja-jvh+ jarjestelma testi-http-palvelin testitietokanta urakkatieto-fixture]]
+            [harja.testi :refer [+kayttaja-jvh+ hae-kajaanin-maanteiden-hoitourakan-2025-2030-id jarjestelma
+                                testi-http-palvelin testitietokanta urakkatieto-fixture]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.asetukset :as asetukset]
             [harja.pvm :as pvm]
@@ -32,19 +34,17 @@
   urakkatieto-fixture
   jarjestelma-fixture)
 
-(def ^:private testi-laskutus-hoitokaudet
-  [{:alkupvm #inst "2019-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2020-09-30T23:59:59.000-00:00"}
-   {:alkupvm #inst "2020-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2021-09-30T23:59:59.000-00:00"}
-   {:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-   {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}
-   {:alkupvm #inst "2023-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2024-09-30T23:59:59.000-00:00"}])
+(defn- testi-laskutus-urakka [urakka-id]
+  (first (urakat-q/hae-urakan-tiedot
+           (:db jarjestelma)
+           {:id urakka-id})))
 
-(def ^:private testi-laskutus-vuosidata
+(defn- testi-laskutus-hoitokaudet [urakka]
+  (->> (urakat-q/hae-urakan-hoitokaudet (:db jarjestelma) (:id urakka))
+    (sort-by :alkupvm)
+    vec))
+
+(defn- testi-laskutus-vuosidata [hoitokaudet]
   (mapv (fn [indeksi {:keys [alkupvm loppupvm]}]
           (let [kerroin (inc indeksi)
                 rahavarausnimet (if (even? indeksi)
@@ -83,9 +83,10 @@
                     :paatos_tavoiteh_ylitys_hoitokausi_yht (* 18M kerroin)
                     :paatos_tavoitepalkkio_hoitokausi_yht (* 19M kerroin)
                     :paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht (* 20M kerroin)
-                    :muut_kulut_ei_tavoite_hoitokausi_yht (* 43M kerroin)}}))
+                    :muut_kulut_ei_tavoite_hoitokausi_yht (* 43M kerroin)
+                    :yhteensa_kaikki_hoitokausi_yht (* 100M kerroin)}}))
     (range)
-    testi-laskutus-hoitokaudet))
+    hoitokaudet))
 
 (defn- laskutusvuositaulukko [sisalto nimi]
   (some (fn [osa]
@@ -119,27 +120,52 @@
     (iterator-seq (.rowIterator sivu))))
 
 (deftest laskutusyhteenveto-muodostaa-sarakkeet-ja-kustannusryhmat
-  (let [sisalto (laskutus-sisalto testi-laskutus-vuosidata 2025)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        urakka (testi-laskutus-urakka urakka-id)
+        vuosidata (testi-laskutus-vuosidata (testi-laskutus-hoitokaudet urakka))
+        sisalto (laskutus-sisalto vuosidata (pvm/vuosi (:alkupvm urakka)))
         taulukot (filter #(and (vector? %) (= :taulukko (first %)))
                    (tree-seq coll? seq sisalto))
-        vuosien-otsikot (mapv :otsikko testi-laskutus-vuosidata)
+        vuosien-otsikot (mapv :otsikko vuosidata)
+        tavoitehinnan-ulkopuolisten-vuosien-otsikot
+        (mapv (fn [{:keys [hoitovuosi]}]
+                (str hoitovuosi "-" (inc hoitovuosi) " (€)"))
+          vuosidata)
+        yhteenveto-vuosiarvot (mapv #(* 100M %) (range 1 (inc (count vuosidata))))
+        laskutus-yhteenveto (last taulukot)
         sarakeotsikot (fn [nimi]
                         (mapv :otsikko (nth (laskutusvuositaulukko sisalto nimi) 2)))]
     (is (= ["Hankinnat" "Hoidonjohto" "Muutokset" "Rahavaraukset"
-            "Muut tavoitehintaan vaikuttavat kulut" "Kustannus"]
+            "Muut tavoitehintaan vaikuttavat kulut" "Kustannus" "Yhteenveto"]
           (mapv #(get-in % [2 0 :otsikko]) taulukot)))
     (doseq [nimi ["Hankinnat" "Hoidonjohto" "Muutokset" "Rahavaraukset"
                   "Muut tavoitehintaan vaikuttavat kulut" "Kustannus"]]
-      (is (= (into [nimi] (concat vuosien-otsikot ["Yhteensä"]))
+      (is (= (into [nimi]
+               (concat (if (= nimi "Kustannus")
+                         tavoitehinnan-ulkopuolisten-vuosien-otsikot
+                         vuosien-otsikot)
+                 ["Yhteensä"]))
             (sarakeotsikot nimi)))
       (is (every? #(= :raha (:fmt %))
             (rest (nth (laskutusvuositaulukko sisalto nimi) 2))))
       (is (true? (get-in (laskutusvuositaulukko sisalto nimi) [1 :viimeinen-rivi-yhteenveto?]))))
+    (is (= (into ["Yhteenveto"]
+             (concat tavoitehinnan-ulkopuolisten-vuosien-otsikot ["Yhteensä (€)"]))
+          (mapv :otsikko (nth laskutus-yhteenveto 2))))
+    (is (every? #(= :raha (:fmt %))
+          (rest (nth laskutus-yhteenveto 2))))
+    (is (= (into ["Laskutus yhteensä"]
+             (conj yhteenveto-vuosiarvot (reduce + 0M yhteenveto-vuosiarvot)))
+          (:rivi (first (nth laskutus-yhteenveto 3)))))
+    (is (= 1 (count (nth laskutus-yhteenveto 3))))
     (is (= [:otsikko "Tavoitehinnan ulkopuoliset kustannukset"]
           (nth sisalto 6)))))
 
 (deftest laskutusyhteenveto-kohdistaa-vuosiarvot-ja-laskee-summat
-  (let [sisalto (laskutus-sisalto testi-laskutus-vuosidata 2025)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        urakka (testi-laskutus-urakka urakka-id)
+        vuosidata (testi-laskutus-vuosidata (testi-laskutus-hoitokaudet urakka))
+        sisalto (laskutus-sisalto vuosidata (pvm/vuosi (:alkupvm urakka)))
         hankinnat (laskutusvuositaulukko sisalto "Hankinnat")
         hoidonjohto (laskutusvuositaulukko sisalto "Hoidonjohto")
         muutokset (laskutusvuositaulukko sisalto "Muutokset")
@@ -171,7 +197,12 @@
           (raporttirivin-arvot ulkopuoliset "Yhteensä")))))
 
 (deftest laskutusyhteenveto-kohdistaa-rahavaraukset-nimen-mukaan
-  (let [taulukko (laskutusvuositaulukko (laskutus-sisalto testi-laskutus-vuosidata 2025) "Rahavaraukset")]
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        urakka (testi-laskutus-urakka urakka-id)
+        vuosidata (testi-laskutus-vuosidata (testi-laskutus-hoitokaudet urakka))
+        taulukko (laskutusvuositaulukko
+                   (laskutus-sisalto vuosidata (pvm/vuosi (:alkupvm urakka)))
+                   "Rahavaraukset")]
     (is (= ["Äkilliset hoitotyöt" 10M 20M 30M 40M 50M 150M]
           (raporttirivin-arvot taulukko "Äkilliset hoitotyöt")))
     (is (= ["Vahinkojen korjaukset" 20M 40M 60M 80M 100M 300M]
@@ -182,11 +213,15 @@
           (raporttirivin-arvot taulukko "Yhteensä")))))
 
 (deftest laskutusyhteenveto-nayttaa-ehtojen-mukaiset-rivit
-  (let [ilman-muutoksia (with-redefs [;; :mhu-muutokset käyttöön
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        urakka (testi-laskutus-urakka urakka-id)
+        vuosidata (testi-laskutus-vuosidata (testi-laskutus-hoitokaudet urakka))
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+        ilman-muutoksia (with-redefs [;; :mhu-muutokset käyttöön
                                       asetukset/ominaisuus-kaytossa? (constantly false)]
                           (laskutusyhteenveto-taulukko-tyomaa/taulukot-tyomaakokous-vuosittain
-                            testi-laskutus-vuosidata 2025))
-        muutoksilla (laskutus-sisalto testi-laskutus-vuosidata 2025)
+                            vuosidata urakan-alkuvuosi))
+        muutoksilla (laskutus-sisalto vuosidata urakan-alkuvuosi)
         ilman-muutoksia (laskutusvuositaulukko ilman-muutoksia "Muutokset")
         ulkopuoliset (laskutusvuositaulukko muutoksilla "Kustannus")]
     (is (nil? ilman-muutoksia))
@@ -197,11 +232,10 @@
       (is (some? (raporttirivin-arvot ulkopuoliset nimi))))))
 
 (deftest laskutusyhteenveto-hakee-tiedot-hoitokausittain
-  (let [kutsut (atom [])
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        kutsut (atom [])
         nyt #inst "2026-03-15T00:00:00.000-00:00"
-        keskenerainen {:alkupvm #inst "2025-10-01T00:00:00.000-00:00"
-                       :loppupvm #inst "2026-09-30T00:00:00.000-00:00"}
-        hoitokaudet (conj (vec testi-laskutus-hoitokaudet) keskenerainen)]
+        hoitokaudet (testi-laskutus-hoitokaudet (testi-laskutus-urakka urakka-id))]
     (with-redefs [pvm/nyt (constantly nyt)
                   laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
                   (fn [_ _ parametrit]
@@ -209,15 +243,15 @@
                     [{}])]
       (let [sisalto (vastaanottotarkastus-mhu/muodosta-laskutusyhteenveto-taulukko
                       (:db jarjestelma) +kayttaja-jvh+
-                      {:id 987 :alkupvm #inst "2025-10-01T00:00:00.000-00:00"}
+                      {:id urakka-id :alkupvm #inst "2025-10-01T00:00:00.000-00:00"}
                       hoitokaudet)
             hankinnat (laskutusvuositaulukko sisalto "Hankinnat")]
         (is (= (count hoitokaudet) (count @kutsut)))
         (is (= (mapv (fn [{:keys [alkupvm loppupvm]}]
-                       {:urakka-id 987
+                       {:urakka-id urakka-id
                         :alkupvm alkupvm
                         :loppupvm loppupvm
-                        :haun-loppupvm (if (= alkupvm (:alkupvm keskenerainen)) nyt loppupvm)})
+                        :haun-loppupvm loppupvm})
                  hoitokaudet)
               @kutsut))
         (is (= (mapv #(str "Laskutus " (pvm/vuosi (:alkupvm %)) "-" (pvm/vuosi (:loppupvm %)) " (€)")
@@ -235,9 +269,12 @@
       (is (zero? @kutsut)))))
 
 (deftest laskutusyhteenveto-tulostuu-exceliin-ja-pdfaan
-  (let [sisalto (laskutus-sisalto testi-laskutus-vuosidata 2025)
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        urakka (testi-laskutus-urakka urakka-id)
+        vuosidata (testi-laskutus-vuosidata (testi-laskutus-hoitokaudet urakka))
+        sisalto (laskutus-sisalto vuosidata (pvm/vuosi (:alkupvm urakka)))
         hankinnat (laskutusvuositaulukko sisalto "Hankinnat")
-        vuosien-otsikot (mapv :otsikko testi-laskutus-vuosidata)]
+        vuosien-otsikot (mapv :otsikko vuosidata)]
     (testing "Excel-vienti sijoittaa vuositaulukot samalle välilehdelle"
       (with-open [workbook (XSSFWorkbook.)]
         (excel/muodosta-excel (into [:raportti {:nimi "Testi"}] sisalto) workbook)
@@ -295,19 +332,18 @@
     (is (= 1 (count (filter #{"Tavoitepalkkio"} (riveista-nimet ulkopuoliset-rivit)))))))
 
 (deftest laskutusyhteenveto-rajaa-keskeneraisen-hoitovuoden-toteumaan
-  (let [alkupvm #inst "2025-10-01T00:00:00.000-00:00"
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        alkupvm #inst "2025-10-01T00:00:00.000-00:00"
         loppupvm #inst "2026-09-30T00:00:00.000-00:00"
-        nyt #inst "2026-03-15T00:00:00.000-00:00"
         haetut-parametrit (atom [])]
-    (with-redefs [pvm/nyt (constantly nyt)
-                  laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
+    (with-redefs [laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
                   (fn [_ _ parametrit]
                     (swap! haetut-parametrit conj parametrit)
                     [{}])]
       (vastaanottotarkastus-mhu/muodosta-laskutusyhteenveto-taulukko
-        (:db jarjestelma) +kayttaja-jvh+ {:id 1 :alkupvm alkupvm}
+        (:db jarjestelma) +kayttaja-jvh+ {:id urakka-id :alkupvm alkupvm}
         [{:alkupvm alkupvm :loppupvm loppupvm}])
-      (is (= [{:urakka-id 1 :alkupvm alkupvm :loppupvm loppupvm :haun-loppupvm nyt}]
+      (is (= [{:urakka-id urakka-id :alkupvm alkupvm :loppupvm loppupvm :haun-loppupvm loppupvm}]
             @haetut-parametrit)))))
 
 (deftest laskutusyhteenveto-liitetaan-raporttiin-oikeaan-kohtaan
