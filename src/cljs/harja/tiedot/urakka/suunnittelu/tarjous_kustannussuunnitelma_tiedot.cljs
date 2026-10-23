@@ -395,6 +395,7 @@
          :hoitovuoden-alkuvuosi vuosi
          :toimenpiteet kilpailutettavat-hankinnat
          :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+         :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
          :kustannussuunnitelma (:kustannussuunnitelma app)}
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
@@ -447,6 +448,7 @@
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :erillishankinnat erillishankinnat
        :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
        :kustannussuunnitelma (:kustannussuunnitelma app)}
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
@@ -516,6 +518,7 @@
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :hoidonjohtopalkkiot hoidonjohtopalkkiot
        :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
        :kustannussuunnitelma (:kustannussuunnitelma app)}
       {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
        :epaonnistui ->TallennaHoidonjohtopalkkiotEpaonnistui
@@ -603,6 +606,7 @@
          :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
          avain johto-ja-hallintokorvaukset
          :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+         :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
          :kustannussuunnitelma (:kustannussuunnitelma app)}
         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
          :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
