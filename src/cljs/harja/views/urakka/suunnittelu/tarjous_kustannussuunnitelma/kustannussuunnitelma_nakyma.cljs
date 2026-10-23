@@ -418,7 +418,9 @@
    muutokset])
 
 (defn pysyvat-muutokset [e! {:keys [valittu-hoitokausi kustannussuunnitelma hoitokauden-alkuvuosi] :as app}]
-  (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
+  ;; Pysyvät muutokset-osio näkyy, jos muutosominaisuus on sovelluksessa käytössä ja jos urakassa on vuonna 2025 toteutettu muutostenhallinta käytössä (hallinnoidaan urakka_parametrit-taulussa).
+  (when (and (istunto/ominaisuus-kaytossa? :mhu-muutokset) (:muutosten-hallinta-kaytossa? kustannussuunnitelma))
+    (let [muutokset (:pysyvat-muutokset kustannussuunnitelma)
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))]
@@ -428,26 +430,17 @@
        [:h2 "Pysyvät muutokset"]
        [:div.flex-row {:style {:margin-top "-15px" :margin-bottom "12px"}}
         [:div.body-text (fmt/hoitokauden-jarjestysluku-ja-vuodet (pvm/vuosi (first valittu-hoitokausi)) hoitovuodet "Hoitovuosi")]
-        (when (istunto/ominaisuus-kaytossa? :mhu-muutokset)
           [yleiset/linkki "Siirry muutokset-sivulle"
-           #(e! (muutokset-tiedot/->SiirryMuutosNakymaan))])]
+           #(e! (muutokset-tiedot/->SiirryMuutosNakymaan))]]
        [:div.row
         [:div "Hoitovuoden alun tavoitehintaan sisällytetään ennen indeksitarkistuksen tekemistä aikaisempina hoitovuosina tehtyjen pysyvien muutosten tavoitehintavaikutus."]]
-
-       (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
          ;; Täytyy passata näin, sillä valittu-hoitokausi on jostain syystä: 20280930 T 000000
          ;; Kun pysyvän muutoksen lomake haluaa sen: 20280930 T 235959
-         [pysyvat-muutokset-grid* e! muutokset (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi)]
-
-         ;; Mhu-muutokset ei käytössä, näytetään placeholder
-         [:div.row
-          [:div {:style {:background "#f0f0f0" :padding "20px" :margin "12px 0"}}
-           [:div {:style {:text-align "center" :font-size "40px" :color "#0066CC"}} [ikonit/ikoni-ja-teksti (ikonit/harja-icon-misc-maintenance) ""]]
-           [:div {:style {:text-align "center" :font-size "15px"}} "Muutokset ovat vielä työn alla. Pahoittelemme aiheutuvaa haittaa."]]])]]]))
+         [pysyvat-muutokset-grid* e! muutokset (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi)]]]])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
                                         paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe vanha-urakka?] :as app}]
-  (let [{:keys [pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
+  (let [{:keys [muutosten-hallinta-urakassa? pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
                 hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin-str
                 kattohintakerroin hoitovuoden-alun-kattohinta
                 hoitovuoden-alun-indeksikorjattu-kattohinta vahvistettu?
@@ -499,7 +492,7 @@
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.text-right.kohdista-teksti "Tarjouksen tavoitehinta"]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true tarjouksen-maara)]]]
-     (when (>= valittu-vuosi yhteiset/rajavuosi)
+     (when (or (>= urakan-alkuvuosi yhteiset/rajavuosi) muutosten-hallinta-urakassa?)
        [:div.row
         [:div.col-xs-12.korkea-rivi.bottom-border-text
          [:div.col-xs-9.body-text.text-right.kohdista-teksti "Pysyvät muutokset ilman indeksitarkistusta"]
@@ -508,7 +501,7 @@
       [:div.col-xs-12.korkea-rivi.bottom-border-text
        [:div.col-xs-9.body-text.text-right.kohdista-teksti "Hoitovuoden alun tavoitehinta"]
        [:div.col-xs-3.body-text.strong.kohdista-teksti.text-right (fmt/euro-opt true hoitovuoden-alun-tavoitehinta)]]]
-     (when (< valittu-vuosi yhteiset/rajavuosi)
+     (when (and (< urakan-alkuvuosi yhteiset/rajavuosi) (not muutosten-hallinta-urakassa?))
        [:div.row
         [:div.col-xs-12.korkea-rivi.bottom-border-text
          [:div.col-xs-9.body-text.text-right.kohdista-teksti "Ero tarjoukseen"]
