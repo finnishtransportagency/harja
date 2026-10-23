@@ -53,7 +53,7 @@
       :uusi-rivi? true :nimi :laji
       :hae (comp keyword :laji)
       :aseta (fn [rivi arvo]
-               (sanktio-domain/vaihda-sanktiolajia
+               (sanktion-lomake-domain/vaihda-sanktiolajia
                  rivi
                  arvo
                  (tiedot/valitun-urakan-sanktiotyypit arvo)
@@ -79,7 +79,7 @@
                          ::lomake/col-luokka "col-xs-12"
                          :nimi :tyyppi
                          :aseta (fn [sanktio tyyppi]
-                                  (sanktio-domain/vaihda-sanktiotyyppia
+                                  (sanktion-lomake-domain/vaihda-sanktiotyyppia
                                     sanktio
                                     tyyppi
                                     urakan-alkuvuosi
@@ -352,7 +352,7 @@
        ::lomake/col-luokka "col-xs-3"
        :hae (comp :kasittelyaika :paatos :laatupoikkeama)
        :aseta (fn [rivi arvo]
-                (sanktio-domain/aseta-kasittely-tai-maarattypvm
+                (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                   rivi arvo :kasittelyaika))
        :fmt pvm/pvm-opt :tyyppi :pvm
        :validoi [[:ei-tyhja "Valitse päivämäärä"]
@@ -362,7 +362,7 @@
        :pakollinen? true
        ::lomake/col-luokka "col-xs-3"
        :aseta (fn [rivi arvo]
-                (sanktio-domain/aseta-kasittely-tai-maarattypvm
+                (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                   rivi arvo :maarattypvm))
        :fmt pvm/pvm-opt :tyyppi :pvm
        :validoi [[:ei-tyhja "Valitse päivämäärä"]
@@ -501,7 +501,7 @@
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
         urakan-loppupvm (:loppupvm @nav/valittu-urakka)
         urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
-        aikakausikonteksti (sanktio-domain/aikakausikonteksti
+        aikakausikonteksti (sanktion-lomake-domain/aikakausikonteksti
                  urakan-alkuvuosi
                  (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
                  (:tyyppi @nav/valittu-urakka))
