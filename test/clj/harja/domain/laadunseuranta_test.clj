@@ -9,8 +9,15 @@
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.pvm :as pvm]))
 
+(deftest muu-kuin-muistutus-on-julkinen-sanktiodomainin-predikaatti
+  (testing "muistutukset tunnistetaan yleisessä sanktio-domainissa"
+    (is (sanktio-domain/muu-kuin-muistutus? {:laji :A}))
+    (is (not (sanktio-domain/muu-kuin-muistutus? {:laji :muistutus})))
+    (is (not (sanktio-domain/muu-kuin-muistutus? {:laji :yllapidon_muistutus})))
+    (is (not (sanktio-domain/muu-kuin-muistutus? {:laji :vesivayla_muistutus})))))
+
 (deftest sanktion-lomakekonteksti-palauttaa-kenttasaannot
-  (let [aikakausikonteksti (sanktio-domain/aikakausikonteksti 2025 2025 :teiden-hoito)
+  (let [aikakausikonteksti (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito)
         perus {:sanktio {:laji :A :tyyppi {:koodi 1}}
                :yllapitourakka? false
                :yllapitokohdeurakka? false
@@ -42,12 +49,12 @@
       (is (true? (:nayta-indeksi?
                    (sanktion-lomake-domain/sanktion-lomakekonteksti
                      (assoc perus :aikakausikonteksti
-                            (sanktio-domain/aikakausikonteksti 2020 2020 :teiden-hoito))))))
+                            (sanktion-lomake-domain/aikakausikonteksti 2020 2020 :teiden-hoito))))))
       (is (false? (:nayta-indeksi?
                     (sanktion-lomake-domain/sanktion-lomakekonteksti
                       (assoc perus :sanktio {:laji :muistutus}
                              :aikakausikonteksti
-                             (sanktio-domain/aikakausikonteksti 2020 2020 :teiden-hoito)))))))
+                             (sanktion-lomake-domain/aikakausikonteksti 2020 2020 :teiden-hoito)))))))
     (testing "ylläpitourakka näyttää puute- tai laiminlyöntikentän"
       (is (true? (:nayta-puute-tai-laiminlyonti?
                    (sanktion-lomake-domain/sanktion-lomakekonteksti
@@ -80,7 +87,7 @@
       (is (true? (:salli-arvonvahennys?
                    (sanktion-lomake-domain/sanktion-lomakekonteksti
                      (assoc perus :aikakausikonteksti
-                            (sanktio-domain/aikakausikonteksti 2024 2025 :teiden-hoito)))))))))
+                            (sanktion-lomake-domain/aikakausikonteksti 2024 2025 :teiden-hoito)))))))))
 
 (deftest sanktion-paivamaarien-asetus
   (let [kasittelypvm (pvm/->pvm "15.11.2025")
@@ -96,20 +103,20 @@
       (is (= {:laatupoikkeama {:paatos {:kasittelyaika kasittelypvm}}
               :maarattypvm kasittelypvm
               :perintapvm kasittelypvm}
-             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+             (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                  perusrivi kasittelypvm :kasittelyaika))))
     (testing "määräyspäivän asetus asettaa käsittelyajan ja puuttuvan perintäpäivän hoitokauden loppuun"
       (is (= {:laatupoikkeama {:paatos {:kasittelyaika maarattypvm}}
               :maarattypvm maarattypvm
               :perintapvm (pvm/hoitokauden-loppupvm 2026)}
-             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+             (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                  perusrivi maarattypvm :maarattypvm))))
     (testing "olemassa oleva perintäpäivä säilyy, kun laskutuskuukausi on valittu"
       (is (= {:laatupoikkeama {:paatos {:kasittelyaika kasittelypvm}}
               :maarattypvm kasittelypvm
               :perintapvm olemassa-oleva-perintapvm
               :laskutuskuukausi-komp-tiedot {:vuosi 2025 :kuukausi 11}}
-             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+             (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                (assoc perusrivi
                  :perintapvm olemassa-oleva-perintapvm
                  :laskutuskuukausi-komp-tiedot {:vuosi 2025 :kuukausi 11})
@@ -119,14 +126,14 @@
                :maarattypvm kasittelypvm
                :perintapvm nil
                :laatupoikkeama {:paatos {:kasittelyaika kasittelypvm}})
-             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+             (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                komponenttirivi kasittelypvm :kasittelyaika))))
     (testing "määräyspäivän asetus ei aseta perintäpäivää, kun komponenttitiedot ovat olemassa"
       (is (= (assoc komponenttirivi
                :maarattypvm maarattypvm
                :perintapvm nil
                :laatupoikkeama {:paatos {:kasittelyaika maarattypvm}})
-             (sanktio-domain/aseta-kasittely-tai-maarattypvm
+             (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                komponenttirivi maarattypvm :maarattypvm))))))
 
 (deftest urakan-mahdolliset-sanktiolajit
@@ -201,7 +208,7 @@
               :laskettava-syote {:maara 2}
               :laskennan-syote {:maara 2}}]
     (is (= (assoc rivi :laji :B :toimenpideinstanssi 303)
-           (sanktio-domain/vaihda-sanktiolajia
+           (sanktion-lomake-domain/vaihda-sanktiolajia
              rivi :B [vanha-tyyppi toinen-tyyppi] toimenpideinstanssit)))))
 
 (deftest sanktiolajin-vaihto-esivalitsee-yhden-tyypin-ja-paattelee-toimenpideinstanssin
@@ -215,7 +222,7 @@
              :laji :muistutus
              :tyyppi tyyppi
              :toimenpideinstanssi 202)
-           (sanktio-domain/vaihda-sanktiolajia
+           (sanktion-lomake-domain/vaihda-sanktiolajia
              rivi :muistutus [tyyppi] toimenpideinstanssit)))))
 
 (deftest sanktiolajin-vaihto-nollaa-muistutuksen-summan-ja-kohdistuksen
@@ -232,7 +239,7 @@
              :omailmoitettu false
              :toimenpideinstanssi nil
              :indeksi nil)
-           (sanktio-domain/vaihda-sanktiolajia
+           (sanktion-lomake-domain/vaihda-sanktiolajia
              rivi :muistutus [] [])))))
 
 (deftest sanktiolajin-vaihto-sailyttaa-summa-ja-poistaa-laskennan-syotteet
@@ -245,7 +252,7 @@
     (is (= (-> rivi
              (assoc :laji :B :tyyppi nil)
              (dissoc :laskettava-syote :laskennan-syote))
-           (sanktio-domain/vaihda-sanktiolajia
+           (sanktion-lomake-domain/vaihda-sanktiolajia
              rivi :B [] [])))))
 
 (deftest sanktiolajin-vaihto-sailyttaa-vanhan-tyypin-toimenpideinstanssin
@@ -257,7 +264,7 @@
         toimenpideinstanssit [{:tpi_id 202 :toimenpidekoodi "H6"}]]
     (is (= 202
            (:toimenpideinstanssi
-             (sanktio-domain/vaihda-sanktiolajia
+             (sanktion-lomake-domain/vaihda-sanktiolajia
                rivi :B [vanha-tyyppi toinen-tyyppi] toimenpideinstanssit))))))
 
 (deftest sanktiotyypin-vaihto-vaihtaa-tyypin-ja-johtaa-toimenpideinstanssin
@@ -271,7 +278,7 @@
              :tyyppi tyyppi
              :toimenpideinstanssi 202
              :tpi_id 202)
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-esivalitsee-ainoan-kulun-kohdistuksen-ilman-toimenpidekoodia
@@ -286,7 +293,7 @@
              :tyyppi tyyppi
              :toimenpideinstanssi 202
              :tpi_id 202)
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2024 toimenpideinstanssit kulun-kohdistukset)))))
 
 (deftest sanktiotyypin-vaihto-sailyttaa-nykyisen-toimenpideinstanssin-kun-valintaa-ei-voi-johtaa
@@ -297,7 +304,7 @@
         toimenpideinstanssit [{:id 11 :tpi_id 101}
                               {:id 22 :tpi_id 202}]]
     (is (= (assoc rivi :tyyppi tyyppi :tpi_id 101)
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-sailyttaa-toimenpideinstanssin-uudemmassa-urakassa
@@ -307,7 +314,7 @@
               :toimenpideinstanssi 101}
         toimenpideinstanssit [{:id 22 :tpi_id 202}]]
     (is (= (assoc rivi :tyyppi tyyppi)
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2025 toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-laskee-kiintean-profiilisumman-omailmoitus-tilassa
@@ -328,7 +335,7 @@
                :summa 2000M
                :omailmoitettu true)
              (dissoc :laskettava-syote :laskennan-syote))
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2025 [] [])))))
 
 (deftest sanktiotyypin-vaihto-ei-kirjoita-manuaalista-c-ryhman-summaa
@@ -345,7 +352,7 @@
              (assoc :tyyppi tyyppi
                :omailmoitettu false)
              (dissoc :normaalimaara :summa))
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2025 [] [])))))
 
 (deftest sanktiotyypin-vaihto-poistaa-vanhan-laskennan-ja-nollaa-ei-kiintean-summan
@@ -363,7 +370,7 @@
                :summa nil
                :omailmoitettu false)
              (dissoc :laskettava-syote :laskennan-syote))
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2025 [] [])))))
 
 (deftest sanktiotyypin-uudelleenvalinta-sailyttaa-laskennan-syotteet
@@ -377,7 +384,7 @@
               :laskettava-syote laskettava-syote
               :laskennan-syote laskennan-syote}]
     (is (= (assoc rivi :omailmoitettu false)
-           (sanktio-domain/vaihda-sanktiotyyppia
+           (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2025 [] [])))))
 
       (deftest aikakausikonteksti-kokoaa-urakkakohtaiset-ehdot
@@ -402,19 +409,19 @@
                  :kasittelytavat sanktio-domain/kasittelytavat
                  :salli-arvonvahennys? true}]
           (is (= (assoc yleinen :nayta-indeksi? true)
-            (sanktio-domain/aikakausikonteksti 2020 2025 :teiden-hoito)))
+            (sanktion-lomake-domain/aikakausikonteksti 2020 2025 :teiden-hoito)))
           (is (= yleinen
-            (sanktio-domain/aikakausikonteksti 2023 2025 :teiden-hoito)))
+            (sanktion-lomake-domain/aikakausikonteksti 2023 2025 :teiden-hoito)))
           (is (= mhu25
-            (sanktio-domain/aikakausikonteksti 2025 2025 :teiden-hoito)))
+            (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito)))
           (is (= mhu26-hoitokausi-2025
-            (sanktio-domain/aikakausikonteksti 2026 2025 :teiden-hoito)))
+            (sanktion-lomake-domain/aikakausikonteksti 2026 2025 :teiden-hoito)))
           (is (= muu-urakkatyyppi
-            (sanktio-domain/aikakausikonteksti 2025 2025 :hoito)))
+            (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :hoito)))
           (is (= (assoc muu-urakkatyyppi
               :perinta-tapa :hoitovuosi
               :salli-arvonvahennys? false)
-            (sanktio-domain/aikakausikonteksti 2026 2026 :hoito)))))
+            (sanktion-lomake-domain/aikakausikonteksti 2026 2026 :hoito)))))
 
 (deftest laatupoikkeaman-mahdolliset-sanktiolajit
   (let [hoidon-lajit [:muistutus :A :B :C :arvonvahennyssanktio]
@@ -805,7 +812,7 @@
                 :summamaaritykset [{:maaritystapa :automaattinen
                                     :summa-euroina 6000M
                                     :ohjeteksti nil}]}
-        rivi (sanktio-domain/vaihda-sanktiotyyppia
+        rivi (sanktion-lomake-domain/vaihda-sanktiotyyppia
                {:laji :A :tyyppi {:id 1} :omailmoitettu false}
                tyyppi 2025 [] [])]
     (is (= 6000M (:normaalimaara rivi)))
