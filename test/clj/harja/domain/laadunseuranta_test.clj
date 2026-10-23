@@ -471,6 +471,40 @@
            (sanktio-domain/kiintea-sanktiosumma 4000M true)
            (sanktio-domain/kiintea-sanktiosumma 4000M true)))))
 
+(deftest kiintea-summamalli-johtaa-summan-yhdesta-lahteesta
+  (let [kiintea {:id 1
+                 :summamaaritykset [{:maaritystapa :automaattinen
+                                     :summa-euroina 14000M}]
+                 :voi-puolittaa-omailmoituksella true}
+        ei-puolitettava (dissoc kiintea :voi-puolittaa-omailmoituksella)
+        manuaalinen {:id 2
+                     :summamaaritykset [{:maaritystapa :manuaalinen
+                                         :summa-euroina 200M
+                                         :ohjeteksti "Kirjaa summa"}]}]
+    (testing "Ilman omailmoitusta summa on normaalimäärä"
+      (is (= {:normaalimaara 14000M :omailmoitettu false :summa 14000M}
+             (sanktio-domain/kiintea-summamalli kiintea false))))
+    (testing "Omailmoitus puolittaa normaalimäärästä johdetun summan"
+      (is (= {:normaalimaara 14000M :omailmoitettu true :summa 7000M}
+             (sanktio-domain/kiintea-summamalli kiintea true))))
+    (testing "Toistuva kutsu samoilla arvoilla ei puolita summaa uudelleen"
+      (let [ensimmainen (sanktio-domain/kiintea-summamalli kiintea true)
+            toinen (sanktio-domain/kiintea-summamalli kiintea true)]
+        (is (= 7000M (:summa ensimmainen) (:summa toinen)))
+        (is (= ensimmainen toinen))))
+    (testing "Omailmoitusta ei sallita, jos profiili ei salli sitä"
+      (is (= {:normaalimaara 14000M :omailmoitettu false :summa 14000M}
+             (sanktio-domain/kiintea-summamalli ei-puolitettava true))))
+    (testing "Manuaalisen määrityksen summaa ei johdeta kiinteäksi"
+      (is (nil? (sanktio-domain/kiintea-summamalli manuaalinen true))))
+    (testing "Laskettavalle määritykselle kiinteää summamallia ei muodosteta"
+      (is (nil? (sanktio-domain/kiintea-summamalli
+                  {:id 3
+                   :summamaaritykset [{:maaritystapa :laskettu
+                                       :laskentatapa :tiekm-yksikkohinta
+                                       :laskentaparametrit {:yksikkohinta 100}}]}
+                  true))))))
+
 (deftest liikennevahinkobonus-ja-alihankintabonus-palauttavat-kanoniset-nimet
   (is (= "Bonus alihankintasopimusten maksuehdoista"
          (sanktio-domain/sanktiolaji->teksti :alihankintabonus)))

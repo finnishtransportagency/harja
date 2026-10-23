@@ -559,26 +559,16 @@
                               (:summamaaritykset aktiivinen-tyyppi)))
         kiintea-profiilisumma? (sanktio-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
                                  aktiivinen-tyyppi)
-        automaattinen-summa (when kiintea-profiilisumma?
-                              (tiedot/sanktiotyypin-automaattinen-summa aktiivinen-tyyppi))
+        omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
+        kiintea-summamalli (sanktio-domain/kiintea-summamalli
+                             aktiivinen-tyyppi
+                             (:omailmoitettu @muokattu))
         laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
         laskentaparametrit (:laskentaparametrit laskettu-maaritys)
         manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
                                                aktiivinen-tyyppi tyyppi-valinnat)
-        omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
-        omailmoitettu (boolean (and omailmoitus-sallittu? (:omailmoitettu @muokattu)))
-        kiintea-summamalli {:normaalimaara (if kiintea-profiilisumma?
-                                             automaattinen-summa
-                                             (:normaalimaara @muokattu))
-                            :omailmoitettu omailmoitettu}
-        kiintea-summamalli (cond-> kiintea-summamalli
-                              (:normaalimaara kiintea-summamalli)
-                              (assoc :summa
-                                (sanktio-domain/kiintea-sanktiosumma
-                                  (:normaalimaara kiintea-summamalli)
-                                  (:omailmoitettu kiintea-summamalli))))
         tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
-                                kiintea-profiilisumma?
+                                kiintea-summamalli
                                 (merge kiintea-summamalli)
 
                                 ;; Lähetetään vain raakasyöte; palvelin laskee summan itse.

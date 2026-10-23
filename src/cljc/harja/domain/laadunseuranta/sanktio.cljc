@@ -216,6 +216,16 @@
     (/ normaali-summa 2)
     normaali-summa))
 
+;; Ainoa paikka, josta kiinteän sanktion normaalimäärä ja summa johdetaan lomakkeelle.
+;; Omailmoitus puolittaa summan vain, jos profiili sallii sen.
+(defn kiintea-summamalli
+  [{:keys [voi-puolittaa-omailmoituksella] :as sanktiotyyppi} omailmoitettu?]
+  (when-let [normaalimaara (sanktiotyypin-kiintea-automaattinen-summa sanktiotyyppi)]
+    (let [omailmoitettu (boolean (and voi-puolittaa-omailmoituksella omailmoitettu?))]
+      {:normaalimaara normaalimaara
+       :omailmoitettu omailmoitettu
+       :summa (kiintea-sanktiosumma normaalimaara omailmoitettu)})))
+
 
 
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
