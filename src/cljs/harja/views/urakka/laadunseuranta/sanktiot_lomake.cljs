@@ -32,14 +32,6 @@
     "Hallinnolliset laiminlyönnit" "Toimenpide"
     "Kulun kohdistus"))
 
-(defn- viimeinen-hoitokausi-nykyhetkella?
-  [urakan-tiedot pvm]
-  (when (and urakan-tiedot pvm)
-    (let [loppuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))
-          viimeinen (dec loppuvuosi) ; viimeisen hoitokauden alkuvuosi
-          kauden-alku (pvm/hoitokauden-alkuvuosi pvm)]
-      (= kauden-alku viimeinen))))
-
 (defn- hae-sanktiotyyppi-idlla
   [sanktiotyypit tyyppi-id]
   (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
@@ -545,10 +537,17 @@
         hoidonjohtopalkkio-tr (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat)
         tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
         aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
+        lomakekonteksti (sanktio-domain/sanktion-lomakekonteksti
+                           {:sanktio @muokattu
+                            :aktiivinen-tyyppi aktiivinen-tyyppi
+                            :yllapitourakka? yllapitourakka?
+                            :yllapitokohdeurakka? yllapitokohdeurakka?
+                            :vesivaylaurakka? vesivaylaurakka?
+                            :aikakausikonteksti aikakausikonteksti
+                            :urakan-loppupvm urakan-loppupvm})
         asiakirjamerkinta? (= :asiakirjamerkintojen_paikkansa_pitamattomyys (:laji @muokattu))
         laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
-        tyon-tekematta-jattamisen-tyyppi-22? (and (= :tyon_tekematta_jattaminen (:laji @muokattu))
-                       (= 22 (:koodi aktiivinen-tyyppi)))
+        tyon-tekematta-jattamisen-tyyppi-22? (not (:nayta-perustelu? lomakekonteksti))
         summakonteksti (sanktio-domain/sanktion-summakonteksti
                          {:laji (:laji @muokattu)
                           :omailmoitettu (:omailmoitettu @muokattu)
@@ -583,11 +582,8 @@
         lukutila? (if (and (not suorasanktio?) (:lukutila? @muokattu))
                     (:lukutila? @muokattu)
                     lukutila?)
-        talvisuolan-validointi-fn (fn [arvo sanktio]
-                                    (when (and (not (nil? arvo))
-                                            (= :talvisuolan_ylitys (:laji sanktio))
-                                            (not (viimeinen-hoitokausi-nykyhetkella? @nav/valittu-urakka arvo)))
-                                      (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle " (pvm/vuosi (:loppupvm @nav/valittu-urakka)) ".")))
+        talvisuolan-validointi-fn (fn [arvo _sanktio]
+                                    ((:talvisuolan-validointi lomakekonteksti) arvo))
         urakan-loppuvuosi (pvm/vuosi urakan-loppupvm)
         urakan-loppukuukausi (pvm/kuukausi urakan-loppupvm)
         viimeinen-hoitovuoden-alkuvuosi (if (>= urakan-loppukuukausi 10)

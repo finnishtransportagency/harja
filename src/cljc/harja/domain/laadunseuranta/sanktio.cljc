@@ -263,6 +263,52 @@
 (def kasittelytavat [:tyomaakokous :valikatselmus :puhelin :kommentit :muu])
 (def kasittelytavat-mhu25 [:valikatselmus])
 
+(defn- viimeinen-hoitokausi-nykyhetkella?
+  [urakan-loppupvm pvm]
+  (when (and urakan-loppupvm pvm)
+    (= (dec (pvm/vuosi urakan-loppupvm))
+       (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi pvm)))))
+
+(defn talvisuolan-validointi
+  "Palauttaa talvisuolan viimeisen hoitovuoden virheen tai nilin."
+  [urakan-loppupvm arvo sanktio]
+  (when (and (some? arvo)
+             (= :talvisuolan_ylitys (:laji sanktio))
+             (not (viimeinen-hoitokausi-nykyhetkella? urakan-loppupvm arvo)))
+    (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle "
+         (pvm/vuosi urakan-loppupvm) ".")))
+
+(defn sanktion-lomakekonteksti
+  "Ratkaisee sanktiolomakkeen kenttien nykyisen näkyvyyden ja validoinnin.
+
+  Syötteessä annetaan sanktio, urakkatyypin boolean-konteksti,
+  aikakausikonteksti sekä tarvittaessa urakan loppupäivä. Paluuarvo sisältää
+  vain lomakkeen domain-päätökset; kohdistus- ja tunnistepäätökset eivät kuulu
+  tähän funktioon."
+  [{:keys [sanktio aktiivinen-tyyppi yllapitourakka? yllapitokohdeurakka?
+           vesivaylaurakka? laskutus-ilman-laskutuskelpoisuutta?
+           aikakausikonteksti urakan-loppupvm]
+    :or {sanktio {}}}]
+  (let [laji (:laji sanktio)
+        tyyppi (or aktiivinen-tyyppi (:tyyppi sanktio))
+        asiakirjamerkinta? (= :asiakirjamerkintojen_paikkansa_pitamattomyys laji)
+        laskutusrajan-ylitys? (= :laskutus_yli_laskutusrajan laji)
+        laskutus-ilman-laskutuskelpoisuutta? (or laskutus-ilman-laskutuskelpoisuutta?
+                                                 (= :laskutus_ilman_laskutuskelpoisuutta laji))
+        tyon-tekematta-jattamisen-tyyppi-22? (and (= :tyon_tekematta_jattaminen laji)
+                                                  (= 22 (:koodi tyyppi)))]
+    {:nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
+                             asiakirjamerkinta?
+                             laskutus-ilman-laskutuskelpoisuutta?
+                             laskutusrajan-ylitys?))
+     :nayta-tapahtumapaikka? (not (or yllapitokohdeurakka? vesivaylaurakka?
+                                              laskutus-ilman-laskutuskelpoisuutta?
+                                              laskutusrajan-ylitys?))
+     :nayta-perustelu? (not tyon-tekematta-jattamisen-tyyppi-22?)
+     :salli-arvonvahennys? (:salli-arvonvahennys? aikakausikonteksti)
+     :talvisuolan-validointi (fn [arvo]
+                               (talvisuolan-validointi urakan-loppupvm arvo sanktio))}))
+
 (defn aikakausikonteksti
   [urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi]
   (let [mhu25? (and (= :teiden-hoito urakkatyyppi)

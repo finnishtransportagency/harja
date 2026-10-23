@@ -8,6 +8,46 @@
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.pvm :as pvm]))
 
+(deftest sanktion-lomakekonteksti-palauttaa-kenttasaannot
+  (let [aikakausikonteksti (sanktio-domain/aikakausikonteksti 2025 2025 :teiden-hoito)
+        perus {:sanktio {:laji :A :tyyppi {:koodi 1}}
+               :yllapitourakka? false
+               :yllapitokohdeurakka? false
+               :vesivaylaurakka? false
+               :aikakausikonteksti aikakausikonteksti}]
+    (testing "tavallinen hoidon sanktio näyttää tyypin, tapahtumapaikan ja perustelun"
+      (is (= {:nayta-tyyppi? true
+              :nayta-tapahtumapaikka? true
+              :nayta-perustelu? true
+              :salli-arvonvahennys? false}
+             (select-keys (sanktio-domain/sanktion-lomakekonteksti perus)
+                          [:nayta-tyyppi? :nayta-tapahtumapaikka? :nayta-perustelu?
+                           :salli-arvonvahennys?]))))
+    (testing "asiakirjamerkintä piilottaa tyypin ja laskutus ilman laskutuskelpoisuutta tapahtumapaikan"
+      (is (false? (:nayta-tyyppi?
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus :sanktio {:laji :asiakirjamerkintojen_paikkansa_pitamattomyys})))))
+      (is (false? (:nayta-tapahtumapaikka?
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus :sanktio {:laji :laskutus_ilman_laskutuskelpoisuutta}))))))
+    (testing "työn tekemättä jättämisen tyyppi 22 piilottaa perustelun"
+      (is (false? (:nayta-perustelu?
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus :sanktio {:laji :tyon_tekematta_jattaminen
+                                             :tyyppi {:koodi 22}}))))))
+    (testing "talvisuolan validointi rajoittuu viimeiseen hoitovuoteen"
+      (is (some? ((:talvisuolan-validointi
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus
+                        :sanktio {:laji :talvisuolan_ylitys}
+                        :urakan-loppupvm (pvm/->pvm "30.9.2026"))))
+                   (pvm/->pvm "1.10.2024")))))
+    (testing "aikakausikonteksti vaikuttaa arvonvähennyksen sallimiseen"
+      (is (true? (:salli-arvonvahennys?
+                   (sanktio-domain/sanktion-lomakekonteksti
+                     (assoc perus :aikakausikonteksti
+                            (sanktio-domain/aikakausikonteksti 2024 2025 :teiden-hoito)))))))))
+
 (deftest sanktion-paivamaarien-asetus
   (let [kasittelypvm (pvm/->pvm "15.11.2025")
         maarattypvm (pvm/->pvm "20.11.2025")
