@@ -179,16 +179,16 @@
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
 (defn- summan-maarityksen-kentat
-  [laskutus-ilman-laskutuskelpoisuutta? laskettu-maaritys laskentaparametrit
+  [lomakekonteksti laskettu-maaritys laskentaparametrit
    manuaalinen-laskettavan-sisartyyppi? c-ryhman-maaritys kiintea-profiilisumma?
    lopullinen-maara aikakausikonteksti sanktio lukutila? indeksi-kaytossa? urakan-indeksi]
   (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
     (keep identity [(when laskettu-maaritys
-                      {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
+                      {:otsikko (if (:laskutus-ilman-laskutuskelpoisuutta? lomakekonteksti)
                                   "Laskutettu summa"
                                   (sanktion-laskenta/syotteen-otsikko laskentaparametrit))
                        :nimi :laskettava-syote
-                       :tyyppi (if laskutus-ilman-laskutuskelpoisuutta? :euro :numero)
+                       :tyyppi (if (:laskutus-ilman-laskutuskelpoisuutta? lomakekonteksti) :euro :numero)
                        :max-desimaalit (:desimaalit laskentaparametrit)
                        :data-cy "sanktio-laskettava-syote"
                        ::lomake/col-luokka "col-xs-3"
@@ -198,7 +198,7 @@
                        :validoi [(fn [arvo _rivi _taulukko]
                                    (sanktion-laskenta/syotteen-virhe laskentaparametrit arvo))]})
                     (when laskettu-maaritys
-                      {:otsikko (if laskutus-ilman-laskutuskelpoisuutta?
+                      {:otsikko (if (:laskutus-ilman-laskutuskelpoisuutta? lomakekonteksti)
                                   "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"
                                   "Sanktion suuruus")
                        :nimi :laskettu-sanktion-maara
@@ -668,7 +668,7 @@
              (omailmoitus-kentta omailmoitus-sallittu?)
 
              (summan-maarityksen-kentat
-               laskutus-ilman-laskutuskelpoisuutta?
+               lomakekonteksti
                laskettu-maaritys
                laskentaparametrit
                manuaalinen-laskettavan-sisartyyppi?

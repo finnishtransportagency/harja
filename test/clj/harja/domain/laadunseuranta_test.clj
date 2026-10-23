@@ -21,10 +21,12 @@
               :nayta-perustelu? true
               :nayta-puute-tai-laiminlyonti? false
               :nayta-havaittu? true
+              :laskutus-ilman-laskutuskelpoisuutta? false
               :salli-arvonvahennys? false}
              (select-keys (sanktio-domain/sanktion-lomakekonteksti perus)
                           [:nayta-tyyppi? :nayta-tapahtumapaikka? :nayta-perustelu?
-                           :nayta-puute-tai-laiminlyonti? :nayta-havaittu? :salli-arvonvahennys?]))))
+                           :nayta-puute-tai-laiminlyonti? :nayta-havaittu?
+                           :laskutus-ilman-laskutuskelpoisuutta? :salli-arvonvahennys?]))))
     (testing "ylläpitourakka näyttää puute- tai laiminlyöntikentän"
       (is (true? (:nayta-puute-tai-laiminlyonti?
                    (sanktio-domain/sanktion-lomakekonteksti

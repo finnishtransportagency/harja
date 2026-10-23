@@ -299,6 +299,7 @@
                                                   (= 22 (:koodi tyyppi)))]
     {:vesivaylaurakka? vesivaylaurakka?
      :yllapitourakka? yllapitourakka?
+    :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
      :nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
                              asiakirjamerkinta?
                              laskutus-ilman-laskutuskelpoisuutta?
