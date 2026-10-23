@@ -24,7 +24,8 @@
   hae-kaikki-urakat-aikavalilla hae-elinvoimakeskuksen-urakat hae-urakoiden-tunnistetiedot
   hae-jarjestelmakayttajan-urakat hae-urakat-ytunnuksella hae-urakat-joihin-jarjestelmalla-erillisoikeus
   hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat hae-hallintayksikon-kaynnissa-olevat-urakat
-  hae-kaynnissa-olevat-urakkatyypin-urakat hae-kaynnissa-olevat-urakat hae-kaynnissa-olevat-hoitourakat)
+  hae-kaynnissa-olevat-urakkatyypin-urakat hae-kaynnissa-olevat-urakat hae-kaynnissa-olevat-hoitourakat
+  hae-aktiivisten-hoitourakoiden-urakkanumerot)
 
 (defn onko-olemassa? [db id]
   (:exists (first (onko-olemassa db id))))
