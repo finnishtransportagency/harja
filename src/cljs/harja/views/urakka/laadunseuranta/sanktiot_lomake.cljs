@@ -181,7 +181,7 @@
 (defn- summan-maarityksen-kentat
   [lomakekonteksti laskettu-maaritys laskentaparametrit
    manuaalinen-laskettavan-sisartyyppi? c-ryhman-maaritys kiintea-profiilisumma?
-   lopullinen-maara aikakausikonteksti sanktio lukutila? indeksi-kaytossa? urakan-indeksi]
+   lopullinen-maara lukutila? indeksi-kaytossa? urakan-indeksi]
   (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
     (keep identity [(when laskettu-maaritys
                       {:otsikko (if (:laskutus-ilman-laskutuskelpoisuutta? lomakekonteksti)
@@ -208,9 +208,8 @@
                        :uusi-rivi? true
                        ::lomake/col-luokka "col-xs-12"
                        :hae #(sanktion-laskenta/laskettu-tulos laskettu-maaritys %)})
-                    (when (and (sanktio-domain/muu-kuin-muistutus? sanktio)
-                               (not laskettu-maaritys)
-                               (not (= :laskutus_yli_laskutusrajan (:laji sanktio))))
+                    (when (and (:nayta-manuaalinen-summa? lomakekonteksti)
+                               (not laskettu-maaritys))
                       {:otsikko (if manuaalinen-laskettavan-sisartyyppi?
                                   "Sanktion määrä (€)"
                                   "Sanktion suuruus")
@@ -674,8 +673,6 @@
                c-ryhman-maaritys
                kiintea-profiilisumma?
                (:summa kiintea-summamalli)
-               aikakausikonteksti
-               @muokattu
                lukutila?
                (tiedot-urakka/indeksi-kaytossa-sakoissa?)
                (:indeksi @nav/valittu-urakka))

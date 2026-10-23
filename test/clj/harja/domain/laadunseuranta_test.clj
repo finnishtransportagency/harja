@@ -23,12 +23,20 @@
               :nayta-havaittu? true
               :laskutus-ilman-laskutuskelpoisuutta? false
               :nayta-indeksi? false
+              :nayta-manuaalinen-summa? true
               :salli-arvonvahennys? false}
              (select-keys (sanktio-domain/sanktion-lomakekonteksti perus)
                           [:nayta-tyyppi? :nayta-tapahtumapaikka? :nayta-perustelu?
                            :nayta-puute-tai-laiminlyonti? :nayta-havaittu?
                            :laskutus-ilman-laskutuskelpoisuutta? :nayta-indeksi?
-                           :salli-arvonvahennys?]))))
+                           :nayta-manuaalinen-summa? :salli-arvonvahennys?]))))
+    (testing "manuaalinen summakenttä piilotetaan muistutukselta ja laskutusrajan ylitykseltä"
+      (is (false? (:nayta-manuaalinen-summa?
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus :sanktio {:laji :muistutus})))))
+      (is (false? (:nayta-manuaalinen-summa?
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus :sanktio {:laji :laskutus_yli_laskutusrajan}))))))
     (testing "indeksi näkyy vain indeksin sallivalla aikakausikontekstilla ja muulla kuin muistutuksella"
       (is (true? (:nayta-indeksi?
                    (sanktio-domain/sanktion-lomakekonteksti
