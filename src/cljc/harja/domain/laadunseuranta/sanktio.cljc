@@ -309,6 +309,8 @@
                                               laskutusrajan-ylitys?))
      :nayta-havaittu? (not laskutus-ilman-laskutuskelpoisuutta?)
      :nayta-laskutuskuukausi-teksti? (not yllapitourakka?)
+     :nayta-indeksi? (and (:nayta-indeksi? aikakausikonteksti)
+                           (not= :muistutus laji))
      :nayta-perustelu? (not tyon-tekematta-jattamisen-tyyppi-22?)
      :nayta-puute-tai-laiminlyonti? yllapitourakka?
      :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)

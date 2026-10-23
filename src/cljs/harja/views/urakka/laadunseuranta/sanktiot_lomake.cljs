@@ -229,8 +229,7 @@
                        :pakollinen? true :uusi-rivi? true
                        :validoi [[:ei-tyhja "Anna summa"]
                                  [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
-                    (when (and (:nayta-indeksi? aikakausikonteksti)
-                               (sanktio-domain/muu-kuin-muistutus? sanktio))
+                    (when (:nayta-indeksi? lomakekonteksti)
                       {:otsikko (str "Indeksi") :nimi :indeksi
                        :tyyppi :valinta
                        ::lomake/col-luokka "col-xs-4"

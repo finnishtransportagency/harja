@@ -22,11 +22,23 @@
               :nayta-puute-tai-laiminlyonti? false
               :nayta-havaittu? true
               :laskutus-ilman-laskutuskelpoisuutta? false
+              :nayta-indeksi? false
               :salli-arvonvahennys? false}
              (select-keys (sanktio-domain/sanktion-lomakekonteksti perus)
                           [:nayta-tyyppi? :nayta-tapahtumapaikka? :nayta-perustelu?
                            :nayta-puute-tai-laiminlyonti? :nayta-havaittu?
-                           :laskutus-ilman-laskutuskelpoisuutta? :salli-arvonvahennys?]))))
+                           :laskutus-ilman-laskutuskelpoisuutta? :nayta-indeksi?
+                           :salli-arvonvahennys?]))))
+    (testing "indeksi näkyy vain indeksin sallivalla aikakausikontekstilla ja muulla kuin muistutuksella"
+      (is (true? (:nayta-indeksi?
+                   (sanktio-domain/sanktion-lomakekonteksti
+                     (assoc perus :aikakausikonteksti
+                            (sanktio-domain/aikakausikonteksti 2020 2020 :teiden-hoito))))))
+      (is (false? (:nayta-indeksi?
+                    (sanktio-domain/sanktion-lomakekonteksti
+                      (assoc perus :sanktio {:laji :muistutus}
+                             :aikakausikonteksti
+                             (sanktio-domain/aikakausikonteksti 2020 2020 :teiden-hoito)))))))
     (testing "ylläpitourakka näyttää puute- tai laiminlyöntikentän"
       (is (true? (:nayta-puute-tai-laiminlyonti?
                    (sanktio-domain/sanktion-lomakekonteksti
