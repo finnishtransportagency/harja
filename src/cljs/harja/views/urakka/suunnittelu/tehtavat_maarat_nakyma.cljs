@@ -237,7 +237,7 @@
       [:h1 "Tehtävä ja määräluettelo"]]
 
      ;; Esimerkki, miten lukituksesta voisi kommunikoida
-     #_ (when lukittu?
+      (when lukittu?
       [yleiset/info-laatikko :varoitus
        (str "Hoitovuosi " valitun-hoitokauden-alkuvuosi
          " on lukittu Välikatselmuksen tavoitehinnan muutospäätöksellä.")

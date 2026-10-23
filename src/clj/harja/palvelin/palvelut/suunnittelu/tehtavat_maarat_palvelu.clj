@@ -20,13 +20,12 @@
           vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)
           lukitut-vuodet (set (keep
                                 (fn [vuosi]
-                                  (let [lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id (:vuosi vuosi) :tehtavat-ja-maarat))]
-                                    (when lukittu? (:vuosi vuosi))))
+                                  (let [lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :tehtavat-ja-maarat))]
+                                    (when lukittu? vuosi)))
                                 vuodet))
-          lukitut-vuodet (set (map :vuosi (filter true? lukitut-vuodet)))
 
           ;; Poistetaan ne vuodet, jotka on lukittu, jotta niitä ei yritetä tallentaa
-          vuodet (remove #(contains? lukitut-vuodet (:vuosi %)) vuodet)
+          vuodet (remove #(contains? lukitut-vuodet %) vuodet)
           _ (doseq [vuosi vuodet]
               (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) vuosi (:tehtavat tiedot)))
           ;; Merkitään sopimuksen tehtävämäärät tallennetuksi 
