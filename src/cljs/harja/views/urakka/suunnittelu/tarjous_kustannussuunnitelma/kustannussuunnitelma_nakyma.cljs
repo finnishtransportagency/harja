@@ -450,9 +450,7 @@
         urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         hoitovuodet (into [] (range urakan-alkuvuosi urakan-loppuvuosi))
-        tarjouksen-maara (if-not vanha-urakka?
-                           (or (:summa (first tarjous-yht-rivi)) 0)
-                           (or (-> tarjous first :tarjous_tavoitehinta) 0))
+        tarjouksen-maara (or (:summa (first tarjous-yht-rivi)) (-> tarjous first :tarjous_tavoitehinta) 0) ;; FIXME: Tarvitaanko täällä kakkosvaihtoehtoa oikeasti koskaan?
         pysyvat-muutokset-maara (or pysyvat-muutokset-maara 0)
         hoitovuoden-alun-tavoitehinta (or hoitovuoden-alun-tavoitehinta 0)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or hoitovuoden-alun-indeksikorjattu-tavoitehinta 0)
