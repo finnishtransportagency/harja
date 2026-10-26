@@ -489,6 +489,32 @@
      ::lomake/col-luokka "col-xs-12"
      :muokattava? (constantly false)}))
 
+(defn- lue-nakymakonteksti
+  "Lukee lomakkeen tarvitsemat atomit ja kokoaa niistä kenttäkuvausten yhteisen kontekstin.
+  Atomien luku tehdään vain täällä; päätöslogiikka on domainin `kokoa-nakymakonteksti`ssa."
+  [muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?]
+  (let [urakka @nav/valittu-urakka]
+    (sanktion-lomake-domain/kokoa-nakymakonteksti
+      {:sanktio @muokattu
+       :urakka urakka
+       :hoitokauden-alkuvuosi (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
+       :yllapitourakka? @tiedot-urakka/yllapitourakka?
+       :yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+       :vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
+       :sanktiolajit @tiedot/valitun-urakan-sanktiolajit
+       :sanktiotyypit (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu))
+       :toimenpideinstanssit @tiedot-urakka/urakan-toimenpideinstanssit
+       ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin,
+       ;; mhu -25 alkaen tehtäväryhmään "G - Hoidonjohtopalkkio".
+       :kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset
+                             (:suorasanktio @muokattu) (pvm/vuosi (:alkupvm urakka)) muokattu)
+       :tehtavaryhmat @tiedot/valitun-urakan-tehtavaryhmat
+       :laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
+       :laskutuskuukausi-id laskutuskuukausi-id
+       :indeksi-kaytossa? (tiedot-urakka/indeksi-kaytossa-sakoissa?)
+       :lukutila? lukutila-parametri
+       :voi-muokata? voi-muokata?})))
+
 (defn- tallennustoiminto
   "Palauttaa tallennusfunktion ja sitä vastaavan napin komponentin."
   [{:keys [tallenna-fn muokattu summa urakka-id sivupaneeli-auki?-atom]}]
@@ -512,36 +538,13 @@
 
 (defn sanktio-lomake
   [_sivupaneeli-auki?-atom _lukutila? _voi-muokata? & [_asetukset]]
-  ;; Elementtien id:t luodaan kerran, jotta ne pysyvät vakaina uudelleenpiirroissa.
   (let [laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))]
     (fn [sivupaneeli-auki?-atom lukutila-parametri voi-muokata? & [{:keys [tallenna-fn]}]]
       (let [muokattu tiedot/valittu-sanktio
-            urakka @nav/valittu-urakka
-            urakka-id (:id urakka)
+            urakka-id (:id @nav/valittu-urakka)
             suorasanktio? (:suorasanktio @muokattu)
-            yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
-            yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-            konteksti (sanktion-lomake-domain/kokoa-nakymakonteksti
-                        {:sanktio @muokattu
-                         :urakka urakka
-                         :hoitokauden-alkuvuosi (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
-                         :yllapitourakka? @tiedot-urakka/yllapitourakka?
-                         :yllapitokohdeurakka? yllapitokohdeurakka?
-                         :vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
-                         :sanktiolajit @tiedot/valitun-urakan-sanktiolajit
-                         :sanktiotyypit (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu))
-                         :toimenpideinstanssit @tiedot-urakka/urakan-toimenpideinstanssit
-                         ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin,
-                         ;; mhu -25 alkaen tehtäväryhmään "G - Hoidonjohtopalkkio".
-                         :kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset
-                                               suorasanktio? (pvm/vuosi (:alkupvm urakka)) muokattu)
-                         :tehtavaryhmat @tiedot/valitun-urakan-tehtavaryhmat
-                         :laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
-                         :laskutuskuukausi-id laskutuskuukausi-id
-                         :indeksi-kaytossa? (tiedot-urakka/indeksi-kaytossa-sakoissa?)
-                         :lukutila? lukutila-parametri
-                         :voi-muokata? voi-muokata?})
+            konteksti (lue-nakymakonteksti muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?)
             {:keys [lukutila? sanktiolajit]} konteksti
             ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
             ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.
@@ -557,9 +560,7 @@
                                                           :sivupaneeli-auki?-atom sivupaneeli-auki?-atom})]
 
         ;; Vaadi tarvittavat tiedot ennen rendausta
-        (if (and (seq sanktiolajit)
-              (or (not yllapitokohdeurakka?)
-                (and yllapitokohdeurakka? yllapitokohteet)))
+        (if (seq sanktiolajit)
 
           [:div
            [lomake/lomake
@@ -609,7 +610,9 @@
               (concat
                 (sanktion-laji-ja-tyyppikentat konteksti)
                 (mapcat #(if (vector? %) % [%])
-                  [(yllapitokohde-kentta yllapitokohdeurakka? yllapitokohteet voi-muokata?)
+                  [(yllapitokohde-kentta @tiedot-urakka/yllapitokohdeurakka?
+                                       (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
+                                       voi-muokata?)
                    (tapahtumapaikka-kentta konteksti)
                    (puute-tai-laiminlyonti-kentta konteksti)
                    (perustelu-kentta konteksti)
