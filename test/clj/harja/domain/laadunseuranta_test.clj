@@ -946,3 +946,43 @@
       (is (re-find #"\"tiekm_typo\""
             (sanktion-laskenta/laskentamaarityksen-virhe
               (assoc maaritys :laskentatapa nil) "tiekm_typo"))))))
+
+(deftest aikakausikonteksti-sisaltaa-hoitovuodet-kun-loppupvm-annetaan
+  (testing "Ilman loppupäivää kontekstissa ei ole hoitovuosia"
+    (is (not (contains? (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito) :hoitovuodet))))
+  (testing "Loppupäivän kanssa hoitovuodet johdetaan urakan alkuvuodesta"
+    (is (= [2025 2026 2027 2028 2029]
+           (:hoitovuodet (sanktion-lomake-domain/aikakausikonteksti
+                           2025 2025 :teiden-hoito (pvm/->pvm "30.9.2030")))))
+    (is (= (dissoc (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito) :hoitovuodet)
+           (dissoc (sanktion-lomake-domain/aikakausikonteksti
+                     2025 2025 :teiden-hoito (pvm/->pvm "30.9.2030")) :hoitovuodet)))))
+
+(deftest sallitut-sanktiolajit-poistaa-arvonvahennyksen-kun-sita-ei-sallita
+  (let [lajit [:A :B :arvonvahennyssanktio :muistutus]]
+    (is (= [:A :B :muistutus]
+           (sanktion-lomake-domain/sallitut-sanktiolajit {:salli-arvonvahennys? false} lajit)))
+    (is (= lajit
+           (sanktion-lomake-domain/sallitut-sanktiolajit {:salli-arvonvahennys? true} lajit)))
+    (is (= [] (sanktion-lomake-domain/sallitut-sanktiolajit {:salli-arvonvahennys? false} nil)))))
+
+(deftest lukutila-valitetaan-vain-laatupoikkeaman-sanktiolle-sanktion-tiedoissa
+  (testing "Suorasanktion lukutila tulee aina parametrista"
+    (is (false? (sanktion-lomake-domain/lukutila? true {:lukutila? true} false)))
+    (is (true? (sanktion-lomake-domain/lukutila? true {} true))))
+  (testing "Laatupoikkeaman sanktio voi pakottaa lukutilan sanktion tiedoissa"
+    (is (true? (sanktion-lomake-domain/lukutila? false {:lukutila? true} false)))
+    (is (true? (sanktion-lomake-domain/lukutila? false {} true)))
+    (is (false? (sanktion-lomake-domain/lukutila? false {} false)))
+    (is (false? (sanktion-lomake-domain/lukutila? nil nil nil)))))
+
+(deftest nakymakonteksti-vaatii-kaikki-avaimet-nil-arvolla-sallittu
+  (let [kokonainen (zipmap sanktion-lomake-domain/nakymakontekstin-avaimet (repeat nil))]
+    (is (= kokonainen (sanktion-lomake-domain/nakymakonteksti kokonainen)))
+    (testing "puuttuva avain nimetään virheessä"
+      (let [virhe (try (sanktion-lomake-domain/nakymakonteksti (dissoc kokonainen :lukutila? :lomake))
+                    nil
+                    (catch clojure.lang.ExceptionInfo e e))]
+        (is (some? virhe))
+        (is (= #{:lukutila? :lomake} (set (:puuttuvat (ex-data virhe)))))
+        (is (re-find #":lomake" (ex-message virhe)))))))
