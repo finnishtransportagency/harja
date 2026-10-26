@@ -128,7 +128,10 @@
                                                                              :loppupvm (second valittu-hoitokausi)
                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
-        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
+        indeksikorjaamaton-tavoitehinta
+        (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta db {:urakka-id urakka-id
+                                                                                     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or indeksikorjaamaton-tavoitehinta 0)
                                                             muutosvaikutus
                                                             arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista

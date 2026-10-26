@@ -826,6 +826,8 @@
                  alituksen-maara siirron-maara tavoitepalkkio tavoitepalkkion-maksuprosentti tavoitepalkkion_maksimi_prosentti kulu-id false kayttajaid)
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+                                (fn [db hakuparametrit] oikaistu-tavoitehinta)
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite
                                 (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                           :tavoitehinta-oikaistu oikaistu-tavoitehinta
@@ -1507,6 +1509,7 @@
                                        :tavoitehinta-oikaistu hv_lopun_tavoitehinta_ennen_indkorj}]
         vastaus (try
                   (with-redefs [valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] hv_lopun_tavoitehinta_ennen_indkorj)
                                 ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
@@ -1558,6 +1561,7 @@
         vastaus (try
                   (with-redefs [;; valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] (+ hv_alun_indkorj_tavoitehinta tavoitehinnan-muutokset))
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] (- hv_lopun_tavoitehinta_ennen_indkorj muutokset))
                                 ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
@@ -1832,6 +1836,7 @@
                   (with-redefs [;; Feikataan vastaukset
                                 ;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] hv_lopun_indkorjaamaton_tavoitehinta)
                                 lupaus-palvelu/maarita-urakan-tavoitehinta (fn [db urakkaid hoitokauden-alkuvuosi] tarjouksen_tavoitehinta)
                                 paatos-kyselyt/hae-budjetoitu-hoidonjohtopalkkio-hoitokaudelle (fn [db hakuparametrit] [{:budjetoitu_summa_indeksikorjattu hoidonjohtopalkkio}])
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
