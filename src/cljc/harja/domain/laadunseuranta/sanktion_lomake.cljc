@@ -1,4 +1,7 @@
 (ns harja.domain.laadunseuranta.sanktion-lomake
+  "Sanktiolomakkeen puhtaat päätökset: näkyvyys, tilamuunnokset ja tallennusmuoto.
+  Ei lue atomeja eikä kutsu palvelua. Atomit luetaan näkymässä ja annetaan tänne arvoina;
+  lopullisen määrän ja sallivuuden ratkaisee palvelu."
   (:require [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktion-summamaaritys :as summamaaritys]
@@ -11,13 +14,15 @@
                                 :cljs pvm)))
 
 (defn- viimeinen-hoitokausi-nykyhetkella?
+  "Tosi, kun annettu päivämäärä osuu urakan viimeiseen hoitovuoteen. Nil, jos jompikumpi päivämäärä puuttuu."
   [urakan-loppupvm pvm]
   (when (and urakan-loppupvm pvm)
     (= (dec (pvm/vuosi urakan-loppupvm))
        (pvm-hoitokauden-alkuvuosi pvm))))
 
 (defn talvisuolan-validointi
-  "Palauttaa talvisuolan viimeisen hoitovuoden virheen tai nil."
+  "Palauttaa virheviestin, kun talvisuolan ylityssanktion päivämäärä ei osu urakan viimeiseen
+  hoitovuoteen. Muille lajeille sekä puuttuvalle urakan loppupäivälle tai päivämäärälle palauttaa nil."
   [urakan-loppupvm arvo sanktio]
   (when (and urakan-loppupvm
           (some? arvo)
@@ -27,7 +32,9 @@
       (pvm/vuosi urakan-loppupvm) ".")))
 
 (defn aseta-omailmoitus
-  "Asettaa omailmoituksen ja päivittää kiinteän sanktiosumman sen mukaiseksi."
+  "Asettaa omailmoituksen ja päivittää kiinteän sanktiosumman sen mukaiseksi.
+  Summa lasketaan aina normaalimäärästä, joten toistuva kutsu ei puolita summaa uudelleen.
+  Jos riviltä puuttuu sekä normaalimäärä että summa, vain omailmoituksen tila asetetaan."
   [rivi arvo]
   (let [omailmoitettu (boolean arvo)
         normaalimaara (or (:normaalimaara rivi) (:summa rivi))]
@@ -37,6 +44,12 @@
         :summa (summamaaritys/kiintea-sanktiosumma normaalimaara omailmoitettu)))))
 
 (defn sanktion-tallennusmuoto
+  "Muodostaa tallennettavan sanktion lomakkeen tiedoista.
+  Kiinteän summamallin tiedot (normaalimäärä, omailmoitus, summa) yhdistetään sanktioon.
+  Laskettavalla sanktiolla käyttäjän summa poistetaan ja tilalle asetetaan laskennan syöte;
+  lopullisen määrän ratkaisee palvelu.
+  `muokattu` on lomakkeen nykyinen sanktio, `summakonteksti` on `sanktion-summakonteksti`n tulos
+  ja `lomakkeen-tiedot` on sanktio ilman lomakkeen sisäisiä tilatietoja."
   [muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot]
   (cond-> lomakkeen-tiedot
     kiintea-summamalli
@@ -47,6 +60,10 @@
         :laskettava-syote (sanktion-laskenta/laskettava-syote muokattu)))))
 
 (defn sanktion-summakonteksti
+  "Ratkaisee aktiivisen sanktiotyypin summamäärityksen: palauttaa avaimet
+  `:kiintea-profiilisumma?`, `:omailmoitus-sallittu?`, `:kiintea-summamalli`
+  (normaalimäärä, omailmoitus ja summa tai nil), `:laskettu-maaritys` ja
+  `:c-ryhman-maaritys` (manuaalisen viitesumman tiedot tai nil)."
   [{:keys [laji omailmoitettu aktiivinen-tyyppi]}]
   {:kiintea-profiilisumma? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? aktiivinen-tyyppi)
    :omailmoitus-sallittu? (boolean (:voi-puolittaa-omailmoituksella aktiivinen-tyyppi))
@@ -58,7 +75,10 @@
 
 (defn aikakausikonteksti
   "Urakan alkuvuoden, hoitokauden ja urakkatyypin mukaiset lomakeehdot.
-  Kun urakan loppupäivä annetaan, mukana on myös urakan hoitovuosien alkuvuodet."
+  Avaimet: `:nayta-indeksi?` (teiden hoito, alkuvuosi ≤ 2020), `:perinta-tapa`
+  (`:laskutuskuukausi` alkuvuosi ≤ 2024, muuten `:hoitovuosi`), `:maaraystapa?` ja
+  `:kasittelytavat` (MHU25+), `:salli-arvonvahennys?` (ei MHU25+ eikä hoitokaudesta 2026 alkaen).
+  Kun urakan loppupäivä annetaan, mukana on myös `:hoitovuodet`, urakan hoitovuosien alkuvuodet."
   ([urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi]
    (let [mhu25? (and (= :teiden-hoito urakkatyyppi)
                   (>= urakan-alkuvuosi 2025))]
@@ -121,6 +141,8 @@
       (vec (range urakan-alkuvuosi (inc viimeinen))))))
 
 (defn hoitovuosi-tekstina
+  "Muotoilee hoitovuoden alkuvuoden tekstiksi, esim. `1. hoitovuosi (2026 - 2027)`.
+  Palauttaa nil, jos hoitovuosi ei ole kokonaisluku."
   [urakan-alkuvuosi hoitovuosi]
   (when (int? hoitovuosi)
     (str (inc (- hoitovuosi urakan-alkuvuosi)) ". hoitovuosi (" hoitovuosi " - " (inc hoitovuosi) ")")))
@@ -134,11 +156,16 @@
         hoitovuosi))))
 
 (defn hoidonjohtopalkkio-tehtavaryhma
-  "MHU25+ sanktio kohdistuu tehtäväryhmään G - Hoidonjohtopalkkio."
+  "MHU25+ sanktio kohdistuu tehtäväryhmään G - Hoidonjohtopalkkio.
+  Palauttaa tehtäväryhmän nimen perusteella tai nil. Nimihaku korvataan vakaalla tunnisteella tiketissä T09."
   [tehtavaryhmat]
   (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat))
 
 (defn aseta-kasittely-tai-maarattypvm
+  "Asettaa käsittelyajan ja määräyspäivän sanktioon.
+  Perintäpäivä päivitetään vain, jos sanktiolla ei ole laskutuskuukauden komponenttitietoja:
+  `:maarattypvm`-perintätavalla se on määräpäivän hoitokauden loppupäivä, muuten annettu päivämäärä.
+  Puuttuva päivämäärä (nil) tyhjentää arvot eikä aiheuta virhettä."
   [sanktio arvo perinta-tapa]
   (let [maarattypvm? (= :maarattypvm perinta-tapa)
         perintapvm (when-not (:laskutuskuukausi-komp-tiedot sanktio)
@@ -156,6 +183,10 @@
       arvo)))
 
 (defn vaihda-sanktiolajia
+  "Vaihtaa sanktion lajin ja ratkaisee tyypin ja toimenpideinstanssin uuden lajin tyypeistä.
+  Yksi tyyppi valitaan automaattisesti, kun urakalla ei ole täsmälleen yhtä toimenpideinstanssia; usean tyypin joukosta säilytetään aiemmin valittu tyyppi
+  jos se on yhä sallittu. Muussa tapauksessa tyyppi tyhjenee ja laskennan syötteet poistetaan.
+  Muistutusta lukuun ottamatta tyypittömän rivin summa, omailmoitus, toimenpideinstanssi ja indeksi nollataan."
   [rivi uusi-laji sanktiotyypit toimenpideinstanssit]
   (let [vanha-tyyppi-id (get-in rivi [:tyyppi :id])
         rivi (assoc rivi :laji uusi-laji :tyyppi nil)
@@ -193,6 +224,11 @@
       rivi)))
 
 (defn vaihda-sanktiotyyppia
+  "Vaihtaa sanktion tyypin ja päivittää tyypistä riippuvat summatiedot.
+  Kiinteällä automaattisella summalla asetetaan normaalimäärä ja omailmoituksen mukainen summa.
+  C-ryhmän manuaalisella summalla ja muilla tyypeillä aiempi summa poistetaan tai nollataan.
+  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Urakoilla ≤ 2024 myös toimenpideinstanssi
+  päätellään tyypin toimenpidekoodista tai ainoasta kulun kohdistuksesta."
   [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]
   (let [tyyppi-vaihtui? (not= (get-in rivi [:tyyppi :id]) (:id uusi-tyyppi))
         rivi (if (<= urakan-alkuvuosi 2024)
