@@ -948,10 +948,14 @@
         vastaus (try
                   (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hoitokauden-alun-tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] hoitokauden-lopun-tavoitehinta)
                                 valikatselmus-kyselyt/hae-oikaistu-tavoitehinta (fn [db hakuparametrit] hoitokauden-lopun-tavoitehinta)]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-tavoitehinnan-alituspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e e))
-        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)
+        tallennettu-paatos (assoc (valitse-paatos (:paatokset vastaus) :tavoitehinnan-alitus)
+                                  :avain :tavoitehinnan-alitus
+                                  :urakkaid urakkaid
+                                  :hoitokauden_alkuvuosi hoitokauden-alkuvuosi)
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
                                       tallennettu-paatos)
@@ -1072,6 +1076,8 @@
         ;; Ei odoteta vastausta, koska ehdot ei täyty
         _ (try
             (with-redefs [;; Urakalla ei välttämättä ole tavoitehintaa, niin feikataan se tässä
+                          valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+                          (fn [db hakuparametrit] tavoitehinta)
                           budjettisuunnittelu-kyselyt/hae-budjettitavoite
                           (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                     :tavoitehinta-oikaistu tavoitehinta
@@ -1082,7 +1088,10 @@
         ;; Haetaan sen sijaan tehty päätös suoraan tietokannasta
         haettavat-paatokset [{:nimi "Tavoitehinnan ylitys" :tyyppi "A" :jarjestys 10}]
         tietokantapaatokset (paatos-kyselyt/hae-paatokset (:db jarjestelma) haettavat-paatokset urakkaid hoitokauden-alkuvuosi)
-        tallennettu-paatos (assoc (first tietokantapaatokset) :avain :tavoitehinnan-ylitys)
+        tallennettu-paatos (assoc (first tietokantapaatokset)
+                                  :avain :tavoitehinnan-ylitys
+                                  :urakkaid urakkaid
+                                  :hoitokauden_alkuvuosi hoitokauden-alkuvuosi)
 
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
@@ -1611,12 +1620,16 @@
                   (with-redefs [;; Budjettitavoitteesta ei tarvi kuin pari hassua juttua
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite (fn [db hakuparametrit] kovakoodattu-budjettitavoite)
                                 valikatselmus-kyselyt/hae-hoitokauden-alun-indeksikorjattu-tavoitehinta (fn [db hakuparametrit] hv_alun_indkorj_tavoitehinta)
+                                valikatselmus-kyselyt/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (fn [db hakuparametrit] hv_lopun_tavoitehinta_ennen_indkorj)
                                 ;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
                                 jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
                     (kutsu-palvelua (:http-palvelin jarjestelma) :tee-indeksikorjauspaatos +kayttaja-jvh+ paatos))
                   (catch Exception e
                     (println "ERROR: " e)))
-        tallennettu-paatos (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
+        tallennettu-paatos (assoc (valitse-paatos (:paatokset vastaus) :hoitovuoden-lopun-indeksikorjaus)
+                                  :urakkaid urakkaid
+                                  :hoitokauden_alkuvuosi hoitokauden-alkuvuosi
+                                  :avain :indeksikorjaus)
         tehdyt-kumoutuvat-paatokset (kutsu-palvelua (:http-palvelin jarjestelma)
                                       :hae-ketjutetusti-kumoutuvat-paatokset +kayttaja-jvh+
                                       tallennettu-paatos)
