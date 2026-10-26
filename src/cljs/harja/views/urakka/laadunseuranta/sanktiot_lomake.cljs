@@ -4,7 +4,6 @@
    [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
    [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
    [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
-   [harja.domain.laadunseuranta.sanktion-summamaaritys :as summamaaritys]
    [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
    [harja.domain.oikeudet :as oikeudet]
    [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -178,13 +177,7 @@
      ::lomake/col-luokka "col-xs-12"
      :hae :omailmoitettu
      :data-cy "sanktion-omailmoitus"
-     :aseta (fn [rivi arvo]
-              (let [omailmoitettu (boolean arvo)
-                    normaalimaara (or (:normaalimaara rivi) (:summa rivi))]
-                (assoc rivi
-                  :omailmoitettu omailmoitettu
-                  :normaalimaara normaalimaara
-                  :summa (summamaaritys/kiintea-sanktiosumma normaalimaara omailmoitettu))))
+     :aseta sanktion-lomake-domain/aseta-omailmoitus
      :aseta-vaikka-sama? true
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
@@ -230,10 +223,8 @@
                          :vaadi-positiivinen-numero? true
                          ::lomake/col-luokka "col-xs-4"
                          :hae #(if kiintea-profiilisumma?
-                                 (when-let [normaalimaara (:normaalimaara kiintea-summamalli)]
-                                   (Math/abs
-                                     (summamaaritys/kiintea-sanktiosumma normaalimaara
-                                       (:omailmoitettu @tiedot/valittu-sanktio))))
+                                 (when-let [summa (:summa kiintea-summamalli)]
+                                   (Math/abs summa))
                                  (when (:summa %)
                                    (Math/abs (:summa %))))
                          :vihje (when c-ryhman-maaritys

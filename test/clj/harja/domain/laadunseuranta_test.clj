@@ -860,6 +860,17 @@
     (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? c-tyyppi)))
     (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa c-tyyppi)))))
 
+(deftest omailmoituksen-asetus-paivittaa-kiintean-summan
+  (testing "omailmoitus puolittaa summan normaalimäärästä"
+    (is (= {:omailmoitettu true :normaalimaara 14000 :summa 7000}
+           (sanktion-lomake-domain/aseta-omailmoitus {:normaalimaara 14000 :summa 14000} true))))
+  (testing "omailmoituksen poisto palauttaa normaalimäärän eikä puolita kahdesti"
+    (is (= {:omailmoitettu false :normaalimaara 14000 :summa 14000}
+           (sanktion-lomake-domain/aseta-omailmoitus {:omailmoitettu true :normaalimaara 14000 :summa 7000} false))))
+  (testing "ilman summaa vain omailmoitus asetetaan"
+    (is (= {:omailmoitettu true}
+           (sanktion-lomake-domain/aseta-omailmoitus {} true)))))
+
 (deftest sanktion-tallennusmuoto-kiintea-ja-laskettava-polku
   (let [kiintea-tyyppi {:id 7
                         :voi-puolittaa-omailmoituksella true

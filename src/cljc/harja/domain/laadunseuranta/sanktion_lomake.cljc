@@ -5,14 +5,10 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]))
 
-#?(:clj
-   (defn- pvm-hoitokauden-alkuvuosi
-     [pvm]
-     (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi pvm)))
-   :cljs
-   (defn- pvm-hoitokauden-alkuvuosi
-     [pvm]
-     (pvm/hoitokauden-alkuvuosi pvm)))
+(defn- pvm-hoitokauden-alkuvuosi
+  [pvm]
+  (pvm/hoitokauden-alkuvuosi #?(:clj (pvm/joda-timeksi pvm)
+                                :cljs pvm)))
 
 (defn- viimeinen-hoitokausi-nykyhetkella?
   [urakan-loppupvm pvm]
@@ -25,12 +21,20 @@
   [urakan-loppupvm arvo sanktio]
   (when (and urakan-loppupvm
           (some? arvo)
-          #?(:clj (pvm/joda-timeksi arvo)
-             :cljs arvo)
           (= :talvisuolan_ylitys (:laji sanktio))
           (not (viimeinen-hoitokausi-nykyhetkella? urakan-loppupvm arvo)))
     (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle "
       (pvm/vuosi urakan-loppupvm) ".")))
+
+(defn aseta-omailmoitus
+  "Asettaa omailmoituksen ja päivittää kiinteän sanktiosumman sen mukaiseksi."
+  [rivi arvo]
+  (let [omailmoitettu (boolean arvo)
+        normaalimaara (or (:normaalimaara rivi) (:summa rivi))]
+    (cond-> (assoc rivi :omailmoitettu omailmoitettu)
+      normaalimaara
+      (assoc :normaalimaara normaalimaara
+        :summa (summamaaritys/kiintea-sanktiosumma normaalimaara omailmoitettu)))))
 
 (defn sanktion-tallennusmuoto
   [muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot]
