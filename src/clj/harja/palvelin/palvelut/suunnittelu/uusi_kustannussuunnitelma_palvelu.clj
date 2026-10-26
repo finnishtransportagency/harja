@@ -113,17 +113,12 @@
           tavoitetiedot (first (suunnitelma-q/hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitovuosinro
                                                                                        :urakka-id urakka-id}))
 
-          _ (println "A. Haetaan kustannussuunnitelma, tavoitetiedot " tavoitetiedot)
-
           aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
           ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
           pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
 
           ;; FIXME Onko epäloogista että nimi on yhteenlaskettu, kun tässä tilanteessa tieto tulee tietokannasta?
           kustannussuunnitelman-tavoitehinta (when (not muutosten-hallinta-kaytossa?) (:tavoitehinta tavoitetiedot))
-
-          _ (println "A. Haetaan kustannussuunnitelma, (:tavoitehinta tavoitetiedot) " (:tavoitehinta tavoitetiedot))
-          _ (println "A. Haetaan kustannussuunnitelma, kustannussuunnitelman-tavoitehinta " kustannussuunnitelman-tavoitehinta)
 
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta_indeksikorjattu tavoitetiedot)
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
@@ -236,7 +231,6 @@
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta kustannussuunnitelma] :as tiedot}]
-  (println "A. VAHVISTA TAI KUMOA TAVOITE JA KATTOHINTA")
   (log/debug "vahvista-tai-kumoa-tavoite-ja-kattohinta :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
