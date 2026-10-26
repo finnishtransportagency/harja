@@ -955,9 +955,9 @@
                                                {:rahavaraus_id 3, :nimi "Tilaajan rahavaraus kannustinjärjestelmään", :suunniteltu-summa 10, :suunniteltu-summa-indeksikorjattu 10.2}),
                               :kilpailutettavat-hankinnat {:toimenpiteet '({:nimi "Yhteensä", :kaikki-yhteensa 10000, :kaikki-yhteensa-indeksikorjattu 102000, :kaikki-pysyvat-muutokset "Ei muutoksia"})}
                               :erillishankinnat '({:summa 1} {:summa 2} {:summa 3})
-                              :johto-ja-hallintokorvaukset [{:toimenkuva "harjoittelija" :yhteensa-kk 100}
-                                                            {:toimenkuva "vastaava" :yhteensa-kk 100}
-                                                            {:toimenkuva "2. vastaava" :yhteensa-kk 100}]
+                              :johto-ja-hallintokorvaukset [{:toimenkuva "harjoittelija" :summa 100}
+                                                            {:toimenkuva "vastaava" :summa 100}
+                                                            {:toimenkuva "2. vastaava" :summa 100}]
                               :hoidonjohtopalkkiot '({:summa 11} {:summa 12})}
         indeksikorjaamattomat-yhteensa 10359
 
