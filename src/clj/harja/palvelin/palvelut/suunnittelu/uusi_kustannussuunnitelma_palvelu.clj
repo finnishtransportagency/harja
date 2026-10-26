@@ -11,6 +11,7 @@
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
+            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as suunnitelma-palvelu]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
@@ -63,7 +64,7 @@
           vanha-urakka? (boolean
                           (when urakan-alkuvuosi
                             (< urakan-alkuvuosi 2025)))
-          muutosten-hallinta-urakassa? (:muutosten_hallinta urakan-parametrit)
+          muutosten-hallinta-kaytossa? (:muutosten_hallinta urakan-parametrit)
           hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
           ;; Varmistetaan, että ei edes yritetä hakea tietoja urakkakauden ulkopuolelta
           hoitovuoden-alkuvuosi (cond
@@ -112,9 +113,17 @@
           tavoitetiedot (first (suunnitelma-q/hae-urakan-hoitovuoden-tavoitetiedot db {:hoitokausinumero hoitovuosinro
                                                                                        :urakka-id urakka-id}))
 
+          _ (println "A. Haetaan kustannussuunnitelma, tavoitetiedot " tavoitetiedot)
+
           aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
           ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
           pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
+
+          ;; FIXME Onko epäloogista että nimi on yhteenlaskettu, kun tässä tilanteessa tieto tulee tietokannasta?
+          kustannussuunnitelman-tavoitehinta (when (not muutosten-hallinta-kaytossa?) (:tavoitehinta tavoitetiedot))
+
+          _ (println "A. Haetaan kustannussuunnitelma, (:tavoitehinta tavoitetiedot) " (:tavoitehinta tavoitetiedot))
+          _ (println "A. Haetaan kustannussuunnitelma, kustannussuunnitelman-tavoitehinta " kustannussuunnitelman-tavoitehinta)
 
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta_indeksikorjattu tavoitetiedot)
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
@@ -154,9 +163,10 @@
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
                                     :laskutusraja-kaytossa? laskutusraja-kaytossa?
                                     :laskutusraja laskutusraja
-                                    :muutosten-hallinta-kaytossa? muutosten-hallinta-urakassa?
+                                    :muutosten-hallinta-kaytossa? muutosten-hallinta-kaytossa?
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
+                                    :yhteenlaskettu-tavoitehinta kustannussuunnitelman-tavoitehinta
                                     :indeksikerroin indeksikerroin
                                     :indeksikerroin-str indeksikerroin-str
                                     :kattohintakerroin kattohintakerroin
@@ -225,7 +235,8 @@
             (update kustannussuunnitelma :hoidonjohtopalkkiot (constantly (:hoidonjohtopalkkiot tiedot)))))))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
-(defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta] :as tiedot}]
+(defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta kustannussuunnitelma] :as tiedot}]
+  (println "A. VAHVISTA TAI KUMOA TAVOITE JA KATTOHINTA")
   (log/debug "vahvista-tai-kumoa-tavoite-ja-kattohinta :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
@@ -237,13 +248,13 @@
                             (< urakan-alkuvuosi 2025)))
           muutosten-hallinta-urakassa? (:muutosten_hallinta urakan-parametrit)
           hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
-          aiempien-vuosien-pysyvat-muutokset (when (or (>= urakan-alkuvuosi 2025)(:muutosten_hallinta urakan-parametrit))
+          aiempien-vuosien-pysyvat-muutokset (when (or (>= urakan-alkuvuosi 2025) muutosten-hallinta-urakassa?)
                                                (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true))
-          ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
-          ;; meni se läpi tai ei. Tämä laskee pysyvät muutokset mukaan, jos urakassa on muutosten hallinta käytössä.
-          ;; Jos muutosten hallintaa ei ole, tavoitehinta lasketaan kustannussuunnitelman perusteella.
-          _ (when (or (>= urakan-alkuvuosi 2025) (:hoitovuoden_alun_tavoitehinta_kaytossa urakan-parametrit))
-              (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset))
+          ;; Päivitä urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä, jos muutostenhallinta on käytössä.
+          ;; Päivityksessä lasketaan pysyvät muutokset mukaan tavoitehintaan.
+          ;; Jos muutostenhallinta ei ole käytössä, tavoitehinta on jo aiemmin laskettu kustannussuunnitelman perusteella. Tallennusta ei vahvistusvaiheessa tuolloin enää tarvita
+          _ (when (or (>= urakan-alkuvuosi 2025) muutosten-hallinta-urakassa?)
+              (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset  (:yhteenlaskettu-tavoitehinta kustannussuunnitelma)))
 
           ;; Riipumatta vahvistuksen onnistumisesta, aseta kattohinta, jos se on annettu
           _ (when (and paivitetty-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit))
