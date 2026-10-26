@@ -15,10 +15,10 @@
   "Palauttaa talvisuolan viimeisen hoitovuoden virheen tai nil."
   [urakan-loppupvm arvo sanktio]
   (when (and (some? arvo)
-             (= :talvisuolan_ylitys (:laji sanktio))
-             (not (viimeinen-hoitokausi-nykyhetkella? urakan-loppupvm arvo)))
+          (= :talvisuolan_ylitys (:laji sanktio))
+          (not (viimeinen-hoitokausi-nykyhetkella? urakan-loppupvm arvo)))
     (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle "
-         (pvm/vuosi urakan-loppupvm) ".")))
+      (pvm/vuosi urakan-loppupvm) ".")))
 
 (defn sanktion-tallennusmuoto
   [muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot]
@@ -27,8 +27,8 @@
     (merge kiintea-summamalli)
     laskettu-maaritys
     (-> (dissoc :summa :normaalimaara :laskennan-syote)
-        (assoc :omailmoitettu false
-               :laskettava-syote (sanktion-laskenta/laskettava-syote muokattu)))))
+      (assoc :omailmoitettu false
+        :laskettava-syote (sanktion-laskenta/laskettava-syote muokattu)))))
 
 (defn sanktion-summakonteksti
   [{:keys [laji omailmoitettu aktiivinen-tyyppi]}]
@@ -38,19 +38,60 @@
    :laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys aktiivinen-tyyppi)
    :c-ryhman-maaritys (summamaaritys/c-ryhman-manuaalinen-maaritys laji aktiivinen-tyyppi)})
 
+(declare hoitovuodet)
+
 (defn aikakausikonteksti
-  [urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi]
-  (let [mhu25? (and (= :teiden-hoito urakkatyyppi)
-                 (>= urakan-alkuvuosi 2025))]
-    {:nayta-indeksi? (and (= :teiden-hoito urakkatyyppi)
-                       (<= urakan-alkuvuosi 2020))
-     :perinta-tapa (if (<= urakan-alkuvuosi 2024)
-                     :laskutuskuukausi
-                     :hoitovuosi)
-     :maaraystapa? mhu25?
-     :kasittelytavat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
-     :salli-arvonvahennys? (and (not mhu25?)
+  "Urakan alkuvuoden, hoitokauden ja urakkatyypin mukaiset lomakeehdot.
+  Kun urakan loppupäivä annetaan, mukana on myös urakan hoitovuosien alkuvuodet."
+  ([urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi]
+   (let [mhu25? (and (= :teiden-hoito urakkatyyppi)
+                  (>= urakan-alkuvuosi 2025))]
+     {:nayta-indeksi? (and (= :teiden-hoito urakkatyyppi)
+                        (<= urakan-alkuvuosi 2020))
+      :perinta-tapa (if (<= urakan-alkuvuosi 2024)
+                      :laskutuskuukausi
+                      :hoitovuosi)
+      :maaraystapa? mhu25?
+      :kasittelytavat (if mhu25? sanktio-domain/kasittelytavat-mhu25 sanktio-domain/kasittelytavat)
+      :salli-arvonvahennys? (and (not mhu25?)
                               (< hoitokauden-alkuvuosi 2026))}))
+  ([urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi urakan-loppupvm]
+   (assoc (aikakausikonteksti urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi)
+     :hoitovuodet (hoitovuodet urakan-alkuvuosi urakan-loppupvm))))
+
+(defn sallitut-sanktiolajit
+  "Arvonvähennys kuuluu urakan sanktioihin, mutta ei sanktiolomakkeelle silloin, kun sille on oma lomake
+  (MHU25+ ja hoitovuodesta 2026 alkaen)."
+  [{:keys [salli-arvonvahennys?]} sanktiolajit]
+  (if salli-arvonvahennys?
+    sanktiolajit
+    (vec (remove #(= :arvonvahennyssanktio %) sanktiolajit))))
+
+(defn lukutila?
+  "Laatupoikkeaman kautta tehdyn sanktion lukutila välitetään sanktion tiedoissa.
+  Suorasanktion lukutila tulee aina lomakkeen parametrista."
+  [suorasanktio? sanktio lukutila-parametri]
+  (boolean
+    (if (and (not suorasanktio?) (:lukutila? sanktio))
+      (:lukutila? sanktio)
+      lukutila-parametri)))
+
+(def nakymakontekstin-avaimet
+  "Sanktiolomakkeen kenttäkuvausfunktioiden yhteinen konteksti. Arvo voi olla nil, avain ei saa puuttua."
+  [:sanktio :lomake :aikakausi :summa :lukutila? :voi-muokata?
+   :sanktiolajit :tyyppi-valinnat :urakan-alkuvuosi :toimenpideinstanssit
+   :kulun-kohdistukset :hoidonjohtopalkkio-tr :laskutuskuukaudet :laskutuskuukausi-id
+   :indeksi-kaytossa? :urakan-indeksi :manuaalinen-laskettavan-sisartyyppi?])
+
+(defn nakymakonteksti
+  "Palauttaa kontekstin sellaisenaan tai heittää virheen, jos jokin avain puuttuu.
+  Estää kirjoitusvirheen muuttumisen hiljaa nil-arvoksi kenttäkuvauksessa."
+  [konteksti]
+  (let [puuttuvat (vec (remove #(contains? konteksti %) nakymakontekstin-avaimet))]
+    (when (seq puuttuvat)
+      (throw (ex-info (str "Sanktiolomakkeen kontekstista puuttuu avaimet: " (pr-str puuttuvat))
+               {:puuttuvat puuttuvat})))
+    konteksti))
 
 ;; Hoitovuosi tunnistetaan sen alkuvuodella (hoitovuosi alkaa 1.10.).
 (defn hoitovuodet
@@ -109,8 +150,8 @@
                  :tyyppi yksi-tyyppi
                  :toimenpideinstanssi
                  (some #(when (= (:toimenpidekoodi yksi-tyyppi)
-                                  (:toimenpidekoodi %))
-                        (:tpi_id %))
+                                 (:toimenpidekoodi %))
+                          (:tpi_id %))
                    toimenpideinstanssit))
 
                (and (> (count sanktiotyypit) 1)
@@ -118,9 +159,9 @@
                (assoc rivi
                  :tyyppi vanha-tyyppi
                  :toimenpideinstanssi (some #(when (= (:toimenpidekoodi vanha-tyyppi)
-                                                     (:toimenpidekoodi %))
-                                             (:tpi_id %))
-                                         toimenpideinstanssit))
+                                                      (:toimenpidekoodi %))
+                                               (:tpi_id %))
+                                        toimenpideinstanssit))
 
                :else (dissoc rivi :laskettava-syote :laskennan-syote))]
     (if (and (not (sanktio-domain/muu-kuin-muistutus? rivi))
@@ -164,7 +205,7 @@
       (dissoc :laskettava-syote :laskennan-syote)
       (and tyyppi-vaihtui? kiintea-summa)
       (assoc :normaalimaara kiintea-summa
-             :summa (summamaaritys/kiintea-sanktiosumma kiintea-summa omailmoitettu))
+        :summa (summamaaritys/kiintea-sanktiosumma kiintea-summa omailmoitettu))
       (and tyyppi-vaihtui? manuaalinen-c?)
       (dissoc :normaalimaara :summa)
       (and tyyppi-vaihtui? (nil? kiintea-summa) (not manuaalinen-c?))
@@ -189,24 +230,24 @@
         asiakirjamerkinta? (= :asiakirjamerkintojen_paikkansa_pitamattomyys laji)
         laskutusrajan-ylitys? (= :laskutus_yli_laskutusrajan laji)
         laskutus-ilman-laskutuskelpoisuutta? (or laskutus-ilman-laskutuskelpoisuutta?
-                                                 (= :laskutus_ilman_laskutuskelpoisuutta laji))
+                                               (= :laskutus_ilman_laskutuskelpoisuutta laji))
         perusteluton? (sanktiotyyppi-domain/perusteluton-sanktio? laji tyyppi)]
     {:vesivaylaurakka? vesivaylaurakka?
      :yllapitourakka? yllapitourakka?
      :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
      :nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
-                             asiakirjamerkinta?
-                             laskutus-ilman-laskutuskelpoisuutta?
-                             laskutusrajan-ylitys?))
+                           asiakirjamerkinta?
+                           laskutus-ilman-laskutuskelpoisuutta?
+                           laskutusrajan-ylitys?))
      :nayta-tapahtumapaikka? (not (or yllapitokohdeurakka? vesivaylaurakka?
-                                              laskutus-ilman-laskutuskelpoisuutta?
-                                              laskutusrajan-ylitys?))
+                                    laskutus-ilman-laskutuskelpoisuutta?
+                                    laskutusrajan-ylitys?))
      :nayta-havaittu? (not laskutus-ilman-laskutuskelpoisuutta?)
      :nayta-laskutuskuukausi-teksti? (not yllapitourakka?)
      :nayta-indeksi? (and (:nayta-indeksi? aikakausikonteksti)
-                           (not= :muistutus laji))
+                       (not= :muistutus laji))
      :nayta-manuaalinen-summa? (and (not= :muistutus laji)
-                                    (not= :laskutus_yli_laskutusrajan laji))
+                                 (not= :laskutus_yli_laskutusrajan laji))
      :nayta-perustelu? (not perusteluton?)
      :nayta-puute-tai-laiminlyonti? yllapitourakka?
      :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)
