@@ -33,10 +33,6 @@
     "Hallinnolliset laiminlyönnit" "Toimenpide"
     "Kulun kohdistus"))
 
-(defn- hae-sanktiotyyppi-idlla
-  [sanktiotyypit tyyppi-id]
-  (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
-
 
 (defn- lukutilan-kenttakuvaus
   [kenttakuvaus]
@@ -493,168 +489,145 @@
      ::lomake/col-luokka "col-xs-12"
      :muokattava? (constantly false)}))
 
+(defn- tallennustoiminto
+  "Palauttaa tallennusfunktion ja sitä vastaavan napin komponentin."
+  [{:keys [tallenna-fn muokattu summa urakka-id sivupaneeli-auki?-atom]}]
+  (let [tallennettava-sanktio #(sanktion-lomake-domain/sanktion-tallennusmuoto
+                                 @muokattu summa
+                                 (lomake/ilman-lomaketietoja @muokattu))]
+    (if tallenna-fn
+      ;; Laatupoikkeaman näkymässä sanktio tallennetaan paikallisesti atomiin, ei kantaan.
+      {:tallenna! (fn []
+                    (tallenna-fn (tallennettava-sanktio))
+                    (reset! sivupaneeli-auki?-atom false)
+                    (reset! tiedot/valittu-sanktio nil))
+       :nappi napit/yleinen-ensisijainen}
+      ;; Suorasanktio tallennetaan suoraan kantaan.
+      {:tallenna! (fn []
+                    (tiedot/tallenna-sanktio
+                      (tallennettava-sanktio)
+                      urakka-id
+                      #(reset! sivupaneeli-auki?-atom false)))
+       :nappi napit/palvelinkutsu-nappi})))
+
 (defn sanktio-lomake
-  [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
-  (let [muokattu tiedot/valittu-sanktio
-        suorasanktio? (:suorasanktio @muokattu)
-        ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
-        ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.
-        saa-poistaa? (or suorasanktio?
-                       (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot
-                         (:id @nav/valittu-urakka)))
-        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
-        urakan-loppupvm (:loppupvm @nav/valittu-urakka)
-        urakan-alkuvuosi (pvm/vuosi urakan-alkupvm)
-        aikakausikonteksti (sanktion-lomake-domain/aikakausikonteksti
-                             urakan-alkuvuosi
-                             (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
-                             (:tyyppi @nav/valittu-urakka)
-                             urakan-loppupvm)
-        muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
-        urakka-id (:id @nav/valittu-urakka)
-        yllapitourakka? @tiedot-urakka/yllapitourakka?
-        yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
-        vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
-        laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
-        yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
-        mahdolliset-sanktiolajit (sanktion-lomake-domain/sallitut-sanktiolajit
-                                   aikakausikonteksti @tiedot/valitun-urakan-sanktiolajit)
-        sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
-        laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
-        liitteet-id (str "liiteet-element-id-" (gensym))
-        ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin.
-        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
-        ;; mhu -25 alkaen sanktio kohdistuu tehtäväryhmään "G - Hoidonjohtopalkkio"
-        hoidonjohtopalkkio-tr (sanktion-lomake-domain/hoidonjohtopalkkio-tehtavaryhma
-                                @tiedot/valitun-urakan-tehtavaryhmat)
-        tyyppi-valinnat (vec (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu)))
-        aktiivinen-tyyppi (hae-sanktiotyyppi-idlla tyyppi-valinnat (get-in @muokattu [:tyyppi :id]))
-        laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji @muokattu))
-        lomakekonteksti (sanktion-lomake-domain/sanktion-lomakekonteksti
-                          {:sanktio @muokattu
-                           :aktiivinen-tyyppi aktiivinen-tyyppi
-                           :yllapitourakka? yllapitourakka?
-                           :yllapitokohdeurakka? yllapitokohdeurakka?
-                           :vesivaylaurakka? vesivaylaurakka?
-                           :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
-                           :aikakausikonteksti aikakausikonteksti
-                           :urakan-loppupvm urakan-loppupvm})
-        summakonteksti (sanktion-lomake-domain/sanktion-summakonteksti
-                         {:laji (:laji @muokattu)
-                          :omailmoitettu (:omailmoitettu @muokattu)
-                          :aktiivinen-tyyppi aktiivinen-tyyppi})
-        manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
-                                               aktiivinen-tyyppi tyyppi-valinnat)
-        tallennettava-sanktio #(sanktion-lomake-domain/sanktion-tallennusmuoto
-                                 @muokattu summakonteksti
-                                 (lomake/ilman-lomaketietoja @muokattu))
-        ;; Laatupoikkeaman näkymässä sanktio tallennetaan paikallisesti atomiin, ei kantaan.
-        tallenna! (if tallenna-fn
-                    (fn []
-                      (tallenna-fn (tallennettava-sanktio))
-                      (reset! sivupaneeli-auki?-atom false)
-                      (reset! tiedot/valittu-sanktio nil))
-                    ;; Suorasanktio tallennetaan suoraan kantaan.
-                    (fn []
-                      (tiedot/tallenna-sanktio
-                        (tallennettava-sanktio)
-                        urakka-id
-                        #(reset! sivupaneeli-auki?-atom false))))
-        tallennusnapin-komponentti (if tallenna-fn
-                                     napit/yleinen-ensisijainen
-                                     napit/palvelinkutsu-nappi)
-        lukutila? (sanktion-lomake-domain/lukutila? suorasanktio? @muokattu lukutila?)
-        konteksti (sanktion-lomake-domain/nakymakonteksti
-                    {:sanktio @muokattu
-                     :lomake lomakekonteksti
-                     :aikakausi aikakausikonteksti
-                     :summa summakonteksti
-                     :lukutila? lukutila?
-                     :voi-muokata? voi-muokata?
-                     :sanktiolajit mahdolliset-sanktiolajit
-                     :tyyppi-valinnat tyyppi-valinnat
-                     :urakan-alkuvuosi urakan-alkuvuosi
-                     :toimenpideinstanssit @tiedot-urakka/urakan-toimenpideinstanssit
-                     :kulun-kohdistukset mahdolliset-kulun-kohdistukset
-                     :hoidonjohtopalkkio-tr hoidonjohtopalkkio-tr
-                     :laskutuskuukaudet laskutuskuukaudet
-                     :laskutuskuukausi-id laskutuskuukausi-id
-                     :indeksi-kaytossa? (tiedot-urakka/indeksi-kaytossa-sakoissa?)
-                     :urakan-indeksi (:indeksi @nav/valittu-urakka)
-                     :manuaalinen-laskettavan-sisartyyppi? manuaalinen-laskettavan-sisartyyppi?})]
+  [_sivupaneeli-auki?-atom _lukutila? _voi-muokata? & [_asetukset]]
+  ;; Elementtien id:t luodaan kerran, jotta ne pysyvät vakaina uudelleenpiirroissa.
+  (let [laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
+        liitteet-id (str "liiteet-element-id-" (gensym))]
+    (fn [sivupaneeli-auki?-atom lukutila-parametri voi-muokata? & [{:keys [tallenna-fn]}]]
+      (let [muokattu tiedot/valittu-sanktio
+            urakka @nav/valittu-urakka
+            urakka-id (:id urakka)
+            suorasanktio? (:suorasanktio @muokattu)
+            yllapitokohdeurakka? @tiedot-urakka/yllapitokohdeurakka?
+            yllapitokohteet (conj @laadunseuranta/urakan-yllapitokohteet-lomakkeelle {:id nil})
+            konteksti (sanktion-lomake-domain/kokoa-nakymakonteksti
+                        {:sanktio @muokattu
+                         :urakka urakka
+                         :hoitokauden-alkuvuosi (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))
+                         :yllapitourakka? @tiedot-urakka/yllapitourakka?
+                         :yllapitokohdeurakka? yllapitokohdeurakka?
+                         :vesivaylaurakka? @tiedot-urakka/vesivaylaurakka?
+                         :sanktiolajit @tiedot/valitun-urakan-sanktiolajit
+                         :sanktiotyypit (tiedot/valitun-urakan-sanktiotyypit (:laji @muokattu))
+                         :toimenpideinstanssit @tiedot-urakka/urakan-toimenpideinstanssit
+                         ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin,
+                         ;; mhu -25 alkaen tehtäväryhmään "G - Hoidonjohtopalkkio".
+                         :kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset
+                                               suorasanktio? (pvm/vuosi (:alkupvm urakka)) muokattu)
+                         :tehtavaryhmat @tiedot/valitun-urakan-tehtavaryhmat
+                         :laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
+                         :laskutuskuukausi-id laskutuskuukausi-id
+                         :indeksi-kaytossa? (tiedot-urakka/indeksi-kaytossa-sakoissa?)
+                         :lukutila? lukutila-parametri
+                         :voi-muokata? voi-muokata?})
+            {:keys [lukutila? sanktiolajit]} konteksti
+            ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
+            ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.
+            saa-poistaa? (or suorasanktio?
+                           (oikeudet/on-muu-oikeus? "poisto" oikeudet/urakat-laadunseuranta-sanktiot
+                             urakka-id))
+            muokataan-vanhaa? (or (some? (:id @muokattu)) (some? (:paikallinen-avain @muokattu)))
+            sanktio-konfiguraation-tila @tiedot/valitun-urakan-sanktio-konfiguraation-tila
+            {:keys [tallenna! nappi]} (tallennustoiminto {:tallenna-fn tallenna-fn
+                                                          :muokattu muokattu
+                                                          :summa (:summa konteksti)
+                                                          :urakka-id urakka-id
+                                                          :sivupaneeli-auki?-atom sivupaneeli-auki?-atom})]
 
-    ;; Vaadi tarvittavat tiedot ennen rendausta
-    (if (and (seq mahdolliset-sanktiolajit)
-          (or (not yllapitokohdeurakka?)
-            (and yllapitokohdeurakka? yllapitokohteet)))
+        ;; Vaadi tarvittavat tiedot ennen rendausta
+        (if (and (seq sanktiolajit)
+              (or (not yllapitokohdeurakka?)
+                (and yllapitokohdeurakka? yllapitokohteet)))
 
-      [:div
-       [lomake/lomake
-        {:otsikko "SANKTION TIEDOT"
-         :otsikko-elementti :h4
-         :ei-borderia? true
-         :vayla-tyyli? true
-         :luokka "padding-16 taustavari-taso3"
-         :muokkaa! #(reset! tiedot/valittu-sanktio %)
-         :validoi-alussa? false
-         :voi-muokata? (and voi-muokata? (not lukutila?))
-         :tarkkaile-ulkopuolisia-muutoksia? true
-         :footer-fn (fn [sanktio]
-                      [:span.nappiwrappi.flex-row
-                       (when-not lukutila?
-                         [tallennusnapin-komponentti
-                          (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
-                          tallenna!
-                          (cond-> {:ikoni (ikonit/tallenna)
-                                   :disabled (or (not voi-muokata?)
-                                               (not (lomake/voi-tallentaa? sanktio)))}
-                            (not tallenna-fn)
-                            (assoc :luokka "nappi-ensisijainen"))])
-                       (when (and voi-muokata? saa-poistaa? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
-                         [:button.nappi-kielteinen.oikealle
-                          {:on-click
-                           (fn [e]
-                             (.preventDefault e)
-                             (varmista-kayttajalta/varmista-kayttajalta
-                               {:otsikko "Sanktion poistaminen"
-                                :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
-                                :modal-luokka "varmistus-modal"
-                                :hyvaksy "Poista"
-                                :toiminto-fn (fn []
-                                               (tiedot/poista-suorasanktio
-                                                 (:id @muokattu)
-                                                 urakka-id
-                                                 #(reset! sivupaneeli-auki?-atom false)))}))}
-                          (ikonit/livicon-trash) " Poista"])
-                       [napit/peruuta (if lukutila?
-                                        "Sulje"
-                                        "Peruuta")
-                        #(do
-                           (reset! sivupaneeli-auki?-atom false)
-                           (reset! tiedot/valittu-sanktio nil))]])}
-        (into []
-          (concat
-            (sanktion-laji-ja-tyyppikentat konteksti)
-            (mapcat #(if (vector? %) % [%])
-              [(yllapitokohde-kentta yllapitokohdeurakka? yllapitokohteet voi-muokata?)
-               (tapahtumapaikka-kentta konteksti)
-               (puute-tai-laiminlyonti-kentta konteksti)
-               (perustelu-kentta konteksti)
-               (omailmoitus-kentta konteksti)
-               (summan-maarityksen-kentat konteksti)
-               (kulun-kohdistus-kentta konteksti)
-               (paivamaarat-ja-perinta-kentat konteksti)
-               (kasittely-kentat konteksti)
-               (liitteet-muokkaustilassa-kentta lukutila? urakka-id liitteet-id muokattu)
-               (liitteet-lukutilassa-kentta lukutila? suorasanktio? muokattu)
-               (kirjaaja-kentta lukutila?)])))
-        @muokattu]]
-      (case sanktio-konfiguraation-tila
-        :haku-kaynnissa [ajax-loader "Ladataan..."]
-        :haku-epaonnistui [:div
-                           [:p "Sanktioita ei voitu ladata juuri nyt."]
-                           [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]]
-        :ei-konfiguraatiota [:div
-                             [:p "Sanktioita ei ole määritelty tälle urakalle valitulla hoitokaudella."]
-                             [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]]
-        [ajax-loader "Ladataan..."]))))
+          [:div
+           [lomake/lomake
+            {:otsikko "SANKTION TIEDOT"
+             :otsikko-elementti :h4
+             :ei-borderia? true
+             :vayla-tyyli? true
+             :luokka "padding-16 taustavari-taso3"
+             :muokkaa! #(reset! tiedot/valittu-sanktio %)
+             :validoi-alussa? false
+             :voi-muokata? (and voi-muokata? (not lukutila?))
+             :tarkkaile-ulkopuolisia-muutoksia? true
+             :footer-fn (fn [sanktio]
+                          [:span.nappiwrappi.flex-row
+                           (when-not lukutila?
+                             [nappi
+                              (str "Tallenna" (when muokataan-vanhaa? " muutokset"))
+                              tallenna!
+                              (cond-> {:ikoni (ikonit/tallenna)
+                                       :disabled (or (not voi-muokata?)
+                                                   (not (lomake/voi-tallentaa? sanktio)))}
+                                (not tallenna-fn)
+                                (assoc :luokka "nappi-ensisijainen"))])
+                           (when (and voi-muokata? saa-poistaa? (or (:id @muokattu) (:lukutila? @muokattu)) (not lukutila?))
+                             [:button.nappi-kielteinen.oikealle
+                              {:on-click
+                               (fn [e]
+                                 (.preventDefault e)
+                                 (varmista-kayttajalta/varmista-kayttajalta
+                                   {:otsikko "Sanktion poistaminen"
+                                    :sisalto "Haluatko varmasti poistaa sanktion? Toimintoa ei voi perua."
+                                    :modal-luokka "varmistus-modal"
+                                    :hyvaksy "Poista"
+                                    :toiminto-fn (fn []
+                                                   (tiedot/poista-suorasanktio
+                                                     (:id @muokattu)
+                                                     urakka-id
+                                                     #(reset! sivupaneeli-auki?-atom false)))}))}
+                              (ikonit/livicon-trash) " Poista"])
+                           [napit/peruuta (if lukutila?
+                                            "Sulje"
+                                            "Peruuta")
+                            #(do
+                               (reset! sivupaneeli-auki?-atom false)
+                               (reset! tiedot/valittu-sanktio nil))]])}
+            (into []
+              (concat
+                (sanktion-laji-ja-tyyppikentat konteksti)
+                (mapcat #(if (vector? %) % [%])
+                  [(yllapitokohde-kentta yllapitokohdeurakka? yllapitokohteet voi-muokata?)
+                   (tapahtumapaikka-kentta konteksti)
+                   (puute-tai-laiminlyonti-kentta konteksti)
+                   (perustelu-kentta konteksti)
+                   (omailmoitus-kentta konteksti)
+                   (summan-maarityksen-kentat konteksti)
+                   (kulun-kohdistus-kentta konteksti)
+                   (paivamaarat-ja-perinta-kentat konteksti)
+                   (kasittely-kentat konteksti)
+                   (liitteet-muokkaustilassa-kentta lukutila? urakka-id liitteet-id muokattu)
+                   (liitteet-lukutilassa-kentta lukutila? suorasanktio? muokattu)
+                   (kirjaaja-kentta lukutila?)])))
+            @muokattu]]
+          (case sanktio-konfiguraation-tila
+            :haku-kaynnissa [ajax-loader "Ladataan..."]
+            :haku-epaonnistui [:div
+                               [:p "Sanktioita ei voitu ladata juuri nyt."]
+                               [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]]
+            :ei-konfiguraatiota [:div
+                                 [:p "Sanktioita ei ole määritelty tälle urakalle valitulla hoitokaudella."]
+                                 [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]]
+            [ajax-loader "Ladataan..."]))))))

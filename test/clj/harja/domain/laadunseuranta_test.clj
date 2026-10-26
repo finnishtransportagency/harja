@@ -1008,3 +1008,43 @@
         (is (some? virhe))
         (is (= #{:lukutila? :lomake} (set (:puuttuvat (ex-data virhe)))))
         (is (re-find #":lomake" (ex-message virhe)))))))
+
+(deftest kokoa-nakymakonteksti-yhdistaa-lomakkeen-paatokset
+  (let [tyyppi {:id 7 :koodi 1 :summamaaritykset []}
+        syote {:sanktio {:laji :A :tyyppi {:id 7} :suorasanktio true}
+               :urakka {:alkupvm (pvm/->pvm "1.10.2025")
+                        :loppupvm (pvm/->pvm "30.9.2030")
+                        :tyyppi :teiden-hoito
+                        :indeksi "MAKU 2015"}
+               :hoitokauden-alkuvuosi 2025
+               :yllapitourakka? false
+               :yllapitokohdeurakka? false
+               :vesivaylaurakka? false
+               :sanktiolajit [:A :arvonvahennyssanktio]
+               :sanktiotyypit [tyyppi {:id 8 :koodi 2}]
+               :toimenpideinstanssit [{:tpi_id 1}]
+               :kulun-kohdistukset [{:tpi_id 1}]
+               :tehtavaryhmat [{:tehtavaryhma_nimi "G - Hoidonjohtopalkkio" :tehtavaryhma 5}]
+               :laskutuskuukaudet []
+               :laskutuskuukausi-id "laskutuskuukausi-1"
+               :indeksi-kaytossa? false
+               :lukutila? true
+               :voi-muokata? true}
+        konteksti (sanktion-lomake-domain/kokoa-nakymakonteksti syote)]
+    (testing "sisältää kaikki näkymäkontekstin avaimet"
+      (is (every? #(contains? konteksti %) sanktion-lomake-domain/nakymakontekstin-avaimet)))
+    (testing "urakan ja tyypin tiedot johdetaan syötteestä"
+      (is (= 2025 (:urakan-alkuvuosi konteksti)))
+      (is (= "MAKU 2015" (:urakan-indeksi konteksti)))
+      (is (= [tyyppi {:id 8 :koodi 2}] (:tyyppi-valinnat konteksti)))
+      (is (= 5 (:tehtavaryhma (:hoidonjohtopalkkio-tr konteksti)))))
+    (testing "MHU25+ ei salli arvonvähennystä lomakkeella"
+      (is (= [:A] (:sanktiolajit konteksti))))
+    (testing "suorasanktion lukutila tulee parametrista"
+      (is (true? (:lukutila? konteksti)))
+      (is (false? (:lukutila? (sanktion-lomake-domain/kokoa-nakymakonteksti
+                                (assoc syote :lukutila? false))))))
+    (testing "tuntematon sanktiotyyppi ei riko kontekstia"
+      (is (nil? (get-in (sanktion-lomake-domain/kokoa-nakymakonteksti
+                          (assoc-in syote [:sanktio :tyyppi :id] 99))
+                  [:summa :kiintea-summamalli]))))))

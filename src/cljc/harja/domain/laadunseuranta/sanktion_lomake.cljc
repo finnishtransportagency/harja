@@ -273,3 +273,59 @@
      :salli-arvonvahennys? (:salli-arvonvahennys? aikakausikonteksti)
      :talvisuolan-validointi (fn [arvo]
                                (talvisuolan-validointi urakan-loppupvm arvo sanktio))}))
+
+(defn aktiivinen-sanktiotyyppi
+  "Palauttaa sanktiotyyppien joukosta sen, jonka id on annettu, tai nil."
+  [sanktiotyypit tyyppi-id]
+  (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
+
+(defn kokoa-nakymakonteksti
+  "Kokoaa sanktiolomakkeen kenttäkuvausten yhteisen kontekstin valmiiksi luetuista arvoista.
+  Ei lue atomeja. Paluuarvo täyttää `nakymakonteksti`-funktion avainvaatimukset.
+
+  Syöte: sanktio, urakka (:alkupvm :loppupvm :tyyppi :indeksi), hoitokauden-alkuvuosi,
+  yllapitourakka?, yllapitokohdeurakka?, vesivaylaurakka?, sanktiolajit, sanktiotyypit
+  (valitun lajin tyypit), toimenpideinstanssit, kulun-kohdistukset, tehtavaryhmat,
+  laskutuskuukaudet, laskutuskuukausi-id, indeksi-kaytossa?, lukutila? ja voi-muokata?."
+  [{:keys [sanktio urakka hoitokauden-alkuvuosi yllapitourakka? yllapitokohdeurakka?
+           vesivaylaurakka? sanktiolajit sanktiotyypit toimenpideinstanssit
+           kulun-kohdistukset tehtavaryhmat laskutuskuukaudet laskutuskuukausi-id
+           indeksi-kaytossa? voi-muokata?]
+    lukutila-parametri :lukutila?}]
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
+        urakan-loppupvm (:loppupvm urakka)
+        aikakausi (aikakausikonteksti urakan-alkuvuosi hoitokauden-alkuvuosi
+                    (:tyyppi urakka) urakan-loppupvm)
+        sanktiotyypit (vec sanktiotyypit)
+        aktiivinen-tyyppi (aktiivinen-sanktiotyyppi sanktiotyypit (get-in sanktio [:tyyppi :id]))
+        laskutus-ilman-laskutuskelpoisuutta? (= :laskutus_ilman_laskutuskelpoisuutta (:laji sanktio))]
+    (nakymakonteksti
+      {:sanktio sanktio
+       :lomake (sanktion-lomakekonteksti
+                 {:sanktio sanktio
+                  :aktiivinen-tyyppi aktiivinen-tyyppi
+                  :yllapitourakka? yllapitourakka?
+                  :yllapitokohdeurakka? yllapitokohdeurakka?
+                  :vesivaylaurakka? vesivaylaurakka?
+                  :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
+                  :aikakausikonteksti aikakausi
+                  :urakan-loppupvm urakan-loppupvm})
+       :aikakausi aikakausi
+       :summa (sanktion-summakonteksti
+                {:laji (:laji sanktio)
+                 :omailmoitettu (:omailmoitettu sanktio)
+                 :aktiivinen-tyyppi aktiivinen-tyyppi})
+       :lukutila? (lukutila? (:suorasanktio sanktio) sanktio lukutila-parametri)
+       :voi-muokata? voi-muokata?
+       :sanktiolajit (sallitut-sanktiolajit aikakausi sanktiolajit)
+       :tyyppi-valinnat sanktiotyypit
+       :urakan-alkuvuosi urakan-alkuvuosi
+       :toimenpideinstanssit toimenpideinstanssit
+       :kulun-kohdistukset kulun-kohdistukset
+       :hoidonjohtopalkkio-tr (hoidonjohtopalkkio-tehtavaryhma tehtavaryhmat)
+       :laskutuskuukaudet laskutuskuukaudet
+       :laskutuskuukausi-id laskutuskuukausi-id
+       :indeksi-kaytossa? indeksi-kaytossa?
+       :urakan-indeksi (:indeksi urakka)
+       :manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
+                                               aktiivinen-tyyppi sanktiotyypit)})))
