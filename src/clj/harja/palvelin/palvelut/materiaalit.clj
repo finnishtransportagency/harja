@@ -37,19 +37,46 @@
               (map #(assoc % :kokonaismaara (if (:kokonaismaara %) (double (:kokonaismaara %)) 0))))
         (q/hae-urakassa-kaytetyt-materiaalit db (konv/sql-date hk-alkanut) (konv/sql-date hk-paattynyt) sopimus)))
 
+(defn- hae-toteuman-lukitustieto [db urakka-id paivamaara]
+  (when-let [hoitovuosi (some-> paivamaara pvm/joda-timeksi pvm/hoitokauden-alkuvuosi)]
+    (get (tarkistukset/hae-vuosittaiset-lukitustiedot db urakka-id [hoitovuosi])
+      hoitovuosi)))
+
+(defn hae-materiaalitoteuman-lukitustiedot
+  [db user {:keys [urakka-id toteuma-id alkanut]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
+  (let [alkuperainen-pvm (when (id/id-olemassa? toteuma-id)
+                           (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
+                           (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id}))]
+    {:alkuperainen (hae-toteuman-lukitustieto db urakka-id alkuperainen-pvm)
+     :valittu (hae-toteuman-lukitustieto db urakka-id alkanut)}))
+
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id [alku loppu] sopimus]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
-  (into []
-        (comp (map konv/alaviiva->rakenne)
-              (map #(assoc-in % [:toteuma :maara] (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
-        (let [tulos (q/hae-urakan-toteumat-materiaalille db
-                                                         sopimus
-                                                         materiaali-id
-                                                         (konv/sql-date alku)
-                                                         (konv/sql-date loppu))]
-          (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE (" sopimus materiaali-id ")")
-          tulos)))
+  (let [toteumat (into []
+                    (comp (map konv/alaviiva->rakenne)
+                          (map #(assoc-in % [:toteuma :maara]
+                                 (when (:maara (:toteuma %)) (double (:maara (:toteuma %)))))))
+                    (q/hae-urakan-toteumat-materiaalille db
+                      sopimus
+                      materiaali-id
+                      (konv/sql-date alku)
+                      (konv/sql-date loppu)))
+        lukitustiedot-hoitovuosittain (tarkistukset/hae-vuosittaiset-lukitustiedot
+                                      db urakka-id
+                                      (keep #(some-> (get-in % [:toteuma :alkanut])
+                                               pvm/joda-timeksi
+                                               pvm/hoitokauden-alkuvuosi)
+                                        toteumat))]
+    (log/debug "HAETAAN URAKAN TOTEUMAT MATERIAALEILLE (" sopimus materiaali-id ")")
+    (mapv (fn [rivi]
+            (let [hoitovuosi (some-> (get-in rivi [:toteuma :alkanut])
+                               pvm/joda-timeksi
+                               pvm/hoitokauden-alkuvuosi)]
+              (assoc-in rivi [:toteuma :lukittu?]
+                (get-in lukitustiedot-hoitovuosittain [hoitovuosi :lukittu?]))))
+      toteumat)))
 
 (defn hae-toteuman-materiaalitiedot
   [db user urakka-id toteuma-id]
@@ -156,49 +183,49 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-toteumat-materiaalit user urakka-id)
   (jdbc/with-db-transaction [c db]
     (let [sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt c {:urakka_id urakka-id}))]
-      (doseq [tm toteumamateriaalit
-              :let [tm-id (:id tm)
-                    ;; tässä rajapinnassa toteuman pvm:ää ei voi muuttaa. Haetaan ID:llä kannasta pvm
-                    toteuman-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id (:toteuma tm)})]]
+      (doseq [tm toteumamateriaalit]
         (tarkistukset/vaadi-toteuma-kuuluu-urakkaan c (:toteuma tm) urakka-id)
         (tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma c (:toteuma tm))
-        ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
-        (if (id/id-olemassa? tm-id)
-          (if (:poistettu tm)
+        (let [tm-id (:id tm)
+              ;; Tässä rajapinnassa toteuman päivämäärää ei voi muuttaa, joten se haetaan kannasta.
+              toteuman-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla c {:id (:toteuma tm)})]
+          (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id toteuman-pvm)
+          ;; Positiivinen id = luodaan tai poistetaan toteuma-materiaali
+          (if (id/id-olemassa? tm-id)
+            (if (:poistettu tm)
+              (do
+                (log/debug "Poistetaan materiaalitoteuma " tm-id)
+                (q/poista-toteuma-materiaali! c (:id user) tm-id))
+              (do
+                (log/debug "Päivitä materiaalitoteuma "
+                  tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
+                (q/paivita-toteuma-materiaali! c
+                  {:materiaalikoodi (:materiaalikoodi tm)
+                   :maara (:maara tm)
+                   :kayttaja (:id user)
+                   :toteuma (:toteuma tm)
+                   :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))
+                   :id tm-id})))
             (do
-              (log/debug "Poistetaan materiaalitoteuma " tm-id)
-              (q/poista-toteuma-materiaali! c (:id user) tm-id))
-            (do
-              (log/debug "Päivitä materiaalitoteuma "
-                tm-id " (" (:materiaalikoodi tm) ", " (:maara tm) "), toteumassa " (:toteuma tm))
-              (q/paivita-toteuma-materiaali! c
-                {:materiaalikoodi (:materiaalikoodi tm)
-                 :maara (:maara tm)
-                 :kayttaja (:id user)
-                 :toteuma (:toteuma tm)
-                 :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))
-                 :id tm-id})))
-          (do
-            (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
-            (q/luo-toteuma-materiaali<! c {:toteuma (:toteuma tm),
-                                           :materiaalikoodi (:materiaalikoodi tm),
-                                           :maara (:maara tm),
-                                           :kayttaja (:id user),
-                                           :urakka urakka-id,
-                                           :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))})))
+              (log/debug "Luo uusi materiaalitoteuma (" (:materiaalikoodi tm) ", " (:maara tm) ") toteumalle " (:toteuma tm))
+              (q/luo-toteuma-materiaali<! c {:toteuma (:toteuma tm),
+                                             :materiaalikoodi (:materiaalikoodi tm),
+                                             :maara (:maara tm),
+                                             :kayttaja (:id user),
+                                             :urakka urakka-id,
+                                             :hoitokauden_alkuvuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi toteuman-pvm))})))
 
-
-        ;; Päivitä toteuman päivän mukainen materiaalin käyttö
-        (doseq [sopimus-id sopimus-idt]
-          (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
-                                                                 :toteuma (:toteuma tm)
-                                                                 :urakkaid urakka-id}))
-        ;; Käsin kirjatut materiaalit (t.lahde = 'harja-ui') lisätään hoitoluokittaisessa erittelyssä hoitoluokalle
-        ;; 100, eli 'hoitoluokka ei tiedossa'.
-        (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
-                                                                :alkupvm toteuman-pvm
-                                                                :loppupvm toteuman-pvm})
-        (toteumat-q/paivita-toteuman-muokattu! c {:id (:toteuma tm) :kayttaja (:id user)}))))
+          ;; Päivitä toteuman päivän mukainen materiaalin käyttö
+          (doseq [sopimus-id sopimus-idt]
+            (q/paivita-sopimuksen-materiaalin-kaytto-toteumapvm c {:sopimus sopimus-id
+                                                                   :toteuma (:toteuma tm)
+                                                                   :urakkaid urakka-id}))
+          ;; Käsin kirjatut materiaalit (t.lahde = 'harja-ui') lisätään hoitoluokittaisessa erittelyssä hoitoluokalle
+          ;; 100, eli 'hoitoluokka ei tiedossa'.
+          (q/paivita-urakan-materiaalin-kaytto-hoitoluokittain c {:urakka urakka-id
+                                                                  :alkupvm toteuman-pvm
+                                                                  :loppupvm toteuman-pvm})
+          (toteumat-q/paivita-toteuman-muokattu! c {:id (:toteuma tm) :kayttaja (:id user)})))))
 
   (when hoitokausi
     (hae-urakassa-kaytetyt-materiaalit db user urakka-id (first hoitokausi) (second hoitokausi)
@@ -232,18 +259,37 @@
                                                                         :materiaali_id materiaali-id}))]
     toteumat))
 
+(defn- liita-suolatoteumien-lukitustiedot [db urakka-id toteumat]
+  (let [lukitustiedot-hoitovuosittain (tarkistukset/hae-vuosittaiset-lukitustiedot
+                                      db urakka-id
+                                      (keep #(some-> (:pvm %)
+                                               pvm/joda-timeksi
+                                               pvm/hoitokauden-alkuvuosi)
+                                        toteumat))]
+    (mapv (fn [rivi]
+            (if-let [hoitovuosi (some-> (:pvm rivi)
+                                  pvm/joda-timeksi
+                                  pvm/hoitokauden-alkuvuosi)]
+              (assoc rivi
+                :lukittu-hoitovuosi hoitovuosi
+                :lukittu? (get-in lukitustiedot-hoitovuosittain [hoitovuosi :lukittu?]))
+              rivi))
+      toteumat)))
+
 (defn hae-suolatoteumat [db user {:keys [urakka-id alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (log/debug "kutsutaan hae-suolatoteumat: " {:urakka urakka-id
                                               :alkupvm alkupvm
                                               :loppupvm loppupvm})
-  (let [toteumat (into []
-                       (comp
-                         (map konv/alaviiva->rakenne)
-                         (map #(konv/array->vec % :toteumaidt)))
-                       (q/hae-suolatoteumien-summatiedot db {:urakka urakka-id
-                                                             :alkupvm alkupvm
-                                                             :loppupvm loppupvm}))
+  (let [toteumat (liita-suolatoteumien-lukitustiedot
+                   db urakka-id
+                   (into []
+                     (comp
+                       (map konv/alaviiva->rakenne)
+                       (map #(konv/array->vec % :toteumaidt)))
+                     (q/hae-suolatoteumien-summatiedot db {:urakka urakka-id
+                                                           :alkupvm alkupvm
+                                                           :loppupvm loppupvm})))
         ;; Lisätään taulun viimeiseksi riviksi yhteenveto lukumääristä ja summista. Ja mahdollistetaan väylä muotoinen ui luokka
         yhteensa-rivi (reduce (fn [yhteensa rivi]
                                 (-> yhteensa
@@ -254,19 +300,21 @@
 
 (defn hae-suolatoteumat-tr-valille [db user {:keys [urakka-id tie alkuosa alkuet loppuosa loppuet alkupvm loppupvm]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
-  (into []
-        (comp
-         (map konv/alaviiva->rakenne)
-         (map #(konv/array->vec % :toteumaidt)))
-        (q/hae-suolatoteumat-tr-valille db {:urakka urakka-id
-                                            :alkupvm alkupvm
-                                            :loppupvm loppupvm
-                                            :threshold 50
-                                            :tie tie
-                                            :alkuosa alkuosa
-                                            :alkuet alkuet
-                                            :loppuosa loppuosa
-                                            :loppuet loppuet})))
+  (liita-suolatoteumien-lukitustiedot
+    db urakka-id
+    (into []
+      (comp
+        (map konv/alaviiva->rakenne)
+        (map #(konv/array->vec % :toteumaidt)))
+      (q/hae-suolatoteumat-tr-valille db {:urakka urakka-id
+                                          :alkupvm alkupvm
+                                          :loppupvm loppupvm
+                                          :threshold 50
+                                          :tie tie
+                                          :alkuosa alkuosa
+                                          :alkuet alkuet
+                                          :loppuosa loppuosa
+                                          :loppuet loppuet}))))
 
 (defn hae-suolamateriaalit [db user]
   (oikeudet/ei-oikeustarkistusta!)
@@ -312,9 +360,13 @@
         (log/debug "TALLENNA SUOLATOTEUMA: " toteuma)
         (if-not (id/id-olemassa? (:tid toteuma))
           ;; INSERT
-          (luo-suolatoteuma db user urakka-id sopimus-id toteuma)
+          (do
+            (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id (:pvm toteuma))
+            (luo-suolatoteuma db user urakka-id sopimus-id toteuma))
           (let [tmid (:tmid toteuma)
-                toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})]
+                toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})
+                ;; Tarkista, että muokatessa ei muokata lukitulta hoitovuodelta mitään
+                _ (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id toteuman-alkuperainen-pvm)]
             (if (:poistettu toteuma)
               ;; DELETE
               (do
@@ -322,6 +374,7 @@
                 (poista-toteuma-materiaali! db user toteuma))
               ;; UPDATE
               (do
+                (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id (:pvm toteuma))
                 (log/debug "päivitä toteuma materiaali id: " tmid)
                 (toteumat-q/paivita-toteuma<! db
                                               {:alkanut (:pvm toteuma)
@@ -393,6 +446,10 @@
                         (hae-toteuman-materiaalitiedot
                           (:db this) user (:urakka-id tiedot) (:toteuma-id tiedot))))
     (julkaise-palvelu (:http-palvelin this)
+                      :hae-materiaalitoteuman-lukitustiedot
+                      (fn [user tiedot]
+                        (hae-materiaalitoteuman-lukitustiedot (:db this) user tiedot)))
+    (julkaise-palvelu (:http-palvelin this)
                       :tallenna-suunnitellut-materiaalit
                       (fn [user tiedot]
                         (tallenna-suunnitellut-materiaalit (:db this) user tiedot)))
@@ -445,6 +502,7 @@
                      :tallenna-suunnitellut-materiaalit
                      :hae-urakan-toteumat-materiaalille
                      :hae-toteuman-materiaalitiedot
+                     :hae-materiaalitoteuman-lukitustiedot
                      :hae-urakassa-kaytetyt-materiaalit
                      :tallenna-toteuma-materiaaleja!
                      :hae-suolatoteumat

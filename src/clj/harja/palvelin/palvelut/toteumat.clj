@@ -503,6 +503,25 @@
                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     vastaus))
 
+(defn hae-maarien-toteumien-lukitukset
+  "Palauttaa hoitovuodet, joille määrätoteumia ei voi tallentaa."
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  (when-not urakka-id
+    (throw (IllegalArgumentException. "Urakka-id puuttuu")))
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))]
+    (when-not urakan-tiedot
+      (throw (IllegalArgumentException. (format "Urakkaa %s ei ole olemassa." urakka-id))))
+    (let [alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+          loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
+          urakan-vuodet (range alkuvuosi loppuvuosi)
+          lukitustiedot (tarkistukset/hae-vuosittaiset-lukitustiedot db urakka-id urakan-vuodet)
+          lukitut-vuodet (into #{}
+                          (keep (fn [[vuosi {:keys [lukittu?]}]]
+                                  (when lukittu? vuosi)))
+                          lukitustiedot)]
+      {:lukitut-hoitovuodet lukitut-vuodet})))
+
 (defn hae-urakan-tehtavaryhmaotsikot [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (tehtavaryhmat-q/tehtavaryhmaotsikot db))
@@ -568,11 +587,15 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
       (jdbc/with-db-transaction [db db]
+        (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id loppupvm)
         (doall
           (for [{:keys [maara lisatieto tehtava toteuma-id toteuma-tehtava-id poistettu]
                  {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as sijainti} :sijainti
                  :as _toteuma} toteumat]
             (do
+              ;; Varmistetaan, ettei muokata toteumaa, joka on lukitulla hoitovuodella
+              (when (id/id-olemassa? toteuma-id)
+                (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})))
               (when (and
                       (tr-domain/tehtavat-joille-sijainti-pakollinen (:tehtava tehtava))
                       (not (tr-domain/validi-osoite? sijainti)))
@@ -810,6 +833,11 @@
                                   tr-osoite (:tierekisteriosoite t)
                                   reitti-viiva (when tr-osoite (tr-q/hae-tr-viiva c tr-osoite))
                                   toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla c {:id toteuma-id})
+                                  _alkuperaisen-paivamaaran-lukitus (when (id/id-olemassa? toteuma-id)
+                                                                      ;; Estä toteuman muokkaus, jos välikatselmuksen päätös lukitsee hoitokauden
+                                                                      (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id toteuman-alkuperainen-pvm))
+                                  _valitun-paivamaaran-lukitus (when-not (:poistettu t)
+                                                                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id (:alkanut t)))
                                   toteuma (if (id/id-olemassa? toteuma-id)
                                             ;; Jos poistettu=true, halutaan toteuma poistaa.
                                             ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
@@ -1135,6 +1163,9 @@
       :tallenna-toteuma
       (fn [user tiedot]
         (tallenna-toteuma! db user tiedot))
+      :hae-maarien-toteumien-lukitukset
+      (fn [user tiedot]
+        (hae-maarien-toteumien-lukitukset db user tiedot))
       :hae-maarien-toteuma
       (fn [user tiedot]
         (hae-maarien-toteuma db-replica user tiedot))
@@ -1201,6 +1232,7 @@
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma
+      :hae-maarien-toteumien-lukitukset
       :hae-maarien-toteuma
       :poista-toteuma
       :urakan-toteutuneet-muut-tyot

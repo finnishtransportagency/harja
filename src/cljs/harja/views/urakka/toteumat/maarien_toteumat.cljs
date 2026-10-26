@@ -298,6 +298,7 @@
     (komp/sisaan-ulos
       #(do
          (kartta-tasot/taso-paalle! :maarien-toteumat)
+         (e! (maarien-toteumat/->HaeMaarienToteumienLukitukset))
          (e! (maarien-toteumat/->HaeKaikkiTehtavat))
          (e! (maarien-toteumat/->HaeToimenpiteet))
          ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää

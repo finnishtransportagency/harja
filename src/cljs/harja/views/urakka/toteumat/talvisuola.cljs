@@ -1,6 +1,7 @@
 (ns harja.views.urakka.toteumat.talvisuola
   "Suolankäytön toteumat hoidon alueurakoissa"
-  (:require [reagent.core :refer [atom wrap]]
+  (:require [clojure.string :as str]
+            [reagent.core :refer [atom wrap]]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.tiedot.urakka.toteumat.suola :as tiedot]
             [harja.tiedot.navigaatio :as nav]
@@ -78,6 +79,29 @@
     (= "harja-api" (:lahde rivi)) "Koneellisesti raportoitu"
     (= "harja-api-ui" (:lahde rivi)) "Urakoitsijajärjestelmässä käsin syötetty"))
 
+(defn suolatoteuma-muokattavissa?
+  ([muokattava? rivi]
+   (and (muokattava? rivi)
+     (not (:lukittu? rivi))))
+  ([muokattava? rivi _index]
+   (suolatoteuma-muokattavissa? muokattava? rivi)))
+
+(defn suolatoteumien-lukitusvaroituksen-teksti
+  "Jos yksikin toteuma on hoitovuodella, joka on lukittu, niin palauta varoitusteksti."
+  [toteumat]
+  (let [lukitut-hoitovuodet (->> toteumat
+                                 (keep #(when (:lukittu? %) (:lukittu-hoitovuosi %)))
+                                 distinct
+                                 sort
+                                 vec)]
+    (when (seq lukitut-hoitovuodet)
+      (str "Välikatselmuksen päätös lukitsee "
+        (if (= 1 (count lukitut-hoitovuodet)) "hoitovuoden " "hoitovuodet ")
+        (str/join ", " lukitut-hoitovuodet)
+        (if (= 1 (count lukitut-hoitovuodet))
+          ". Sen suolatoteumia ei voi muokata."
+          ". Niiden suolatoteumia ei voi muokata.")))))
+
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id materiaali-nimet]
   [:div.suolatoteumat
    [:h1 "Talvisuolan käyttö"]
@@ -130,7 +154,12 @@
                          [yleiset/ajax-loader "Suolatoteumia haetaan..."]
                          "Ei suolatoteumia valitulle aikavälille")
                 :uusi-rivi #(assoc % :pvm (pvm/nyt))
-                :voi-poistaa? muokattava?
+                :voi-poistaa? (partial suolatoteuma-muokattavissa? muokattava?)
+                :esta-poistaminen? :lukittu?
+                :esta-poistaminen-tooltip (fn [rivi]
+                                            (str "Välikatselmuksen päätös lukitsee hoitovuoden "
+                                              (:lukittu-hoitovuosi rivi)
+                                              "; suolatoteumaa ei voi muokata."))
                 :max-rivimaara 500
                 :max-rivimaaran-ylitys-viesti "Yli 500 suolatoteumaa. Rajoita hakuehtoja."
                 :vetolaatikot (into {}
@@ -139,20 +168,25 @@
                                 (keep #(when-not (:yhteenveto %) %) @tiedot/toteumat))
                 :piilota-toiminnot? true}
      [{:tyyppi :vetolaatikon-tila :leveys 9}
-      {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30 :muokattava? muokattava?
+      {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30
+       :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
        :tyyppi :valinta
        :validoi [[:ei-tyhja "Valitse materiaali"]]
        :valinta-nayta #(or (:nimi %) "- valitse -")
        :valinnat @tiedot/materiaalit}
-      {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 20 :muokattava? muokattava?
+      {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 20
+       :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
        :validoi [[:ei-tyhja "Anna päivämäärä"]]
        :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
       {:otsikko "Käytetty määrä (100% kuivatonni)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
-       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30 :muokattava? muokattava?
+       :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30
+       :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
        :validoi [[:ei-tyhja "Anna määrä"]] :tasaa :oikea}
       {:otsikko "Toteumia" :nimi :lukumaara :tyyppi :positiivinen-numero :kokonaisluku? true
-       :leveys 15 :muokattava? muokattava? :validoi [[:ei-tyhja "Anna lukumäärä"]] :tasaa :oikea}
-      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60 :muokattava? muokattava?
+       :leveys 15 :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
+       :validoi [[:ei-tyhja "Anna lukumäärä"]] :tasaa :oikea}
+      {:otsikko "Lisätieto" :nimi :lisatieto :tyyppi :string :leveys 60
+       :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
        :hae #(when (:pvm %) (str (:lisatieto %) " (" (raportointitapa %) ", toteumia: " (:lukumaara %) ")"))}
       {:otsikko ""
        :nimi :nayta-kartalla
@@ -181,6 +215,8 @@
                (or (= (:suola @tiedot/suodatin-valinnat) "Kaikki")
                  (= (:suola @tiedot/suodatin-valinnat) nimi)))
        @tiedot/toteumat)]]
+   (when-let [lukitusvaroitus (suolatoteumien-lukitusvaroituksen-teksti @tiedot/toteumat)]
+     [yleiset/info-laatikko :varoitus lukitusvaroitus])
    [yleiset/vihje yleiset/rajapinnan-kautta-lisattyja-ei-voi-muokata]])
 
 (defn talvisuolatoteumat []

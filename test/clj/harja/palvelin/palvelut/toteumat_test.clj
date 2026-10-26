@@ -13,6 +13,8 @@
             [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat]
             [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as toteuma-tarkistukset]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.palvelin.integraatiot.integraatioloki :as integraatioloki]
             [slingshot.slingshot :refer [try+]]))
 
@@ -531,6 +533,114 @@
                                      +kayttaja-jvh+
                                      {:urakka-id @oulun-alueurakan-2014-2019-id
                                       :toteuma-id toteuma-id})))))
+
+(deftest materiaalitoteuman-tallennus-estaa-lukitun-hoitovuoden
+  (let [[urakka-id sopimus-id] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka=" @oulun-alueurakan-2005-2010-id)))
+        alkanut (pvm/luo-pvm 2005 11 24)
+        tarkistettu (atom nil)]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                   (fn [_ urakka-id hoitovuosi ominaisuus]
+                     (reset! tarkistettu [urakka-id hoitovuosi ominaisuus])
+                     false)
+                   toteumat-q/luo-uusi-toteuma
+                   (fn [& _]
+                     (throw (ex-info "Tallennus jatkui lukituksen ohi" {})))]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+               {:toteuma {:id -5
+                          :urakka urakka-id
+                          :sopimus sopimus-id
+                          :alkanut alkanut
+                          :paattynyt alkanut
+                          :tyyppi "materiaali"}
+                :toteumamateriaalit []}))))
+    (is (= [urakka-id 2005 :toteuma] @tarkistettu))))
+
+(deftest maarien-toteumien-tallennus-estaa-lukitun-hoitovuoden
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        loppupvm (pvm/luo-pvm 2005 11 24)
+        tarkistettu (atom nil)]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka vuosi ominaisuus]
+                    (reset! tarkistettu [urakka vuosi ominaisuus])
+                    false)]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-toteuma
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :loppupvm loppupvm
+               :tyyppi :maaramitattava
+               :toteumat []}))))
+    (is (= [urakka-id 2005 :toteuma] @tarkistettu))))
+
+(deftest maarien-toteumien-lukitusten-haku-palauttaa-lukitut-hoitovuodet
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        tarkistetut-hoitovuodet (atom [])]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                   (fn [_ urakka-id hoitovuosi ominaisuus]
+                     (swap! tarkistetut-hoitovuodet conj [urakka-id hoitovuosi ominaisuus])
+                     (not= hoitovuosi 2006))]
+      (is (= #{2006}
+            (:lukitut-hoitovuodet
+               (kutsu-palvelua (:http-palvelin jarjestelma)
+                 :hae-maarien-toteumien-lukitukset
+                 +kayttaja-jvh+
+                 {:urakka-id urakka-id})))))
+    (is (some #(= [urakka-id 2006 :toteuma] %) @tarkistetut-hoitovuodet))
+    (is (every? #(= [urakka-id (second %) :toteuma] %)
+          @tarkistetut-hoitovuodet))))
+
+(deftest maarien-toteuman-muokkaus-estaa-lukitun-alkuperaisen-hoitovuoden
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        alkuperainen-pvm (pvm/luo-pvm 2005 11 24)
+        uusi-pvm (pvm/luo-pvm 2006 11 24)
+        tarkistetut-hoitovuodet (atom [])]
+    (with-redefs [toteumat-q/hae-toteuman-alkanut-pvm-idlla (fn [& _] alkuperainen-pvm)
+                   valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                   (fn [_ _ hoitovuosi _]
+                     (swap! tarkistetut-hoitovuodet conj hoitovuosi)
+                     (not= hoitovuosi 2005))]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+               :tallenna-toteuma
+               +kayttaja-jvh+
+               {:urakka-id urakka-id
+                :loppupvm uusi-pvm
+                :tyyppi :maaramitattava
+                :toteumat [{:toteuma-id 123
+                            :tehtava {:id 1}
+                            :maara 1}]}))))
+    (is (= [2006 2005] @tarkistetut-hoitovuodet))))
+
+(deftest materiaalitoteuman-siirto-lukitusta-hoitovuodesta-estetaan
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        vanha-pvm (pvm/luo-pvm 2025 11 24)
+        uusi-pvm (pvm/luo-pvm 2027 11 15)
+        vanha-hoitovuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi vanha-pvm))
+        uusi-hoitovuosi (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi uusi-pvm))
+        tarkistetut-hoitovuodet (atom [])]
+    (with-redefs [toteuma-tarkistukset/vaadi-toteuma-kuuluu-urakkaan (fn [& _])
+                  toteuma-tarkistukset/vaadi-toteuma-ei-jarjestelman-luoma (fn [& _])
+                  toteumat-q/hae-toteuman-alkanut-pvm-idlla (fn [& _] vanha-pvm)
+                  valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ _ hoitovuosi _]
+                    (swap! tarkistetut-hoitovuodet conj hoitovuosi)
+                    (= hoitovuosi vanha-hoitovuosi))
+                  toteumat-q/paivita-toteuma<! (fn [& _]
+                                                 (throw (ex-info "Toteuman päivitys jatkui" {})))]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-toteuma-ja-toteumamateriaalit +kayttaja-jvh+
+              {:toteuma {:id 987654321
+                         :urakka urakka-id
+                         :alkanut uusi-pvm
+                         :paattynyt uusi-pvm
+                         :tyyppi "materiaali"}
+               :toteumamateriaalit []}))))
+    (is (= 2025 vanha-hoitovuosi))
+    (is (= 2027 uusi-hoitovuosi))
+    ;; Onhan molemmat hoitovuodet tarkistettu
+    (is (= [vanha-hoitovuosi uusi-hoitovuosi] @tarkistetut-hoitovuodet))))
 
 (deftest tallenna-toteuma-ja-toteumamateriaalit-test
   (let [[urakka sopimus] (first (q (str "SELECT urakka, id FROM sopimus WHERE urakka=" @oulun-alueurakan-2005-2010-id)))

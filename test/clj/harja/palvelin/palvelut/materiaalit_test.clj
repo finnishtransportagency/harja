@@ -5,8 +5,11 @@
             [harja.palvelin.palvelut.materiaalit :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [harja.kyselyt.toteumat :as toteumat-q]
             [harja.kyselyt.konversio :as konv]
             [harja.pvm :as pvm]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
+            [harja.palvelin.palvelut.toteumat-tarkistukset :as toteumat-tarkistukset]
             [clj-time.coerce :as tc]
             [clj-time.core :as t]))
 
@@ -150,7 +153,8 @@
           (fn [[urakka materiaalikoodi sopimus alkanut paattynyt]]
             (oikeat-sarakkeet-palvelussa?
               [:id [:materiaali :id] [:materiaali :nimi] [:materiaali :yksikko] [:toteuma :maara]
-               [:toteuma :alkanut] [:toteuma :paattynyt] :tmid [:toteuma :lisatieto] [:toteuma :suorittaja]
+               [:toteuma :alkanut] [:toteuma :paattynyt] [:toteuma :lukittu?] :tmid
+               [:toteuma :lisatieto] [:toteuma :suorittaja]
                :sopimus]
               :hae-urakan-toteumat-materiaalille
               {:urakka-id urakka
@@ -183,6 +187,75 @@
             false))
         tunnisteet))))
 
+
+(deftest vuosittaisten-lukitustietojen-haku-tarkistaa-kunkin-vuoden-kerran
+  (let [tarkistetut (atom [])]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka-id hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka-id hoitovuosi ominaisuus])
+                    (not= hoitovuosi 2015))]
+      (is (= {} (toteumat-tarkistukset/hae-vuosittaiset-lukitustiedot nil 4 [])))
+      (is (empty? @tarkistetut))
+      (is (= {2014 {:hoitovuosi 2014 :lukittu? false}
+              2015 {:hoitovuosi 2015 :lukittu? true}}
+            (toteumat-tarkistukset/hae-vuosittaiset-lukitustiedot nil 4 [2014 2015 2014 2015])))
+      (is (= [[4 2014 :toteuma] [4 2015 :toteuma]] @tarkistetut)))))
+
+(deftest toteuman-muokkaustarkistus-kayttaa-paivamaaran-hoitovuotta
+  (let [tarkistetut (atom [])]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka-id hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka-id hoitovuosi ominaisuus])
+                    (not= hoitovuosi 2015))]
+      (is (nil? (toteumat-tarkistukset/vaadi-toteuman-muokkaus-sallittu! nil 4 nil)))
+      (is (empty? @tarkistetut))
+      (is (nil? (toteumat-tarkistukset/vaadi-toteuman-muokkaus-sallittu!
+                  nil 4 (pvm/->pvm "30.9.2015"))))
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden 2015"
+            (toteumat-tarkistukset/vaadi-toteuman-muokkaus-sallittu!
+              nil 4 (pvm/->pvm "1.10.2015"))))
+      (is (= [[4 2014 :toteuma] [4 2015 :toteuma]] @tarkistetut)))))
+
+(deftest hae-materiaalitoteuman-lukitustiedot-palvelusta
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        alkanut (pvm/luo-pvm 2005 11 24)
+        tarkistetut (atom [])]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka vuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka vuosi ominaisuus])
+                    false)]
+      (is (= {:alkuperainen nil
+              :valittu {:hoitovuosi 2005 :lukittu? true}}
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :hae-materiaalitoteuman-lukitustiedot
+              +kayttaja-jvh+
+              {:urakka-id urakka-id :alkanut alkanut}))))
+    (is (= [[urakka-id 2005 :toteuma]] @tarkistetut))))
+
+(deftest tallenna-toteuma-materiaaleja-estaa-lukitun-hoitovuoden
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        toteuma-id (ffirst
+                     (q (str "SELECT t.id FROM toteuma t
+                              JOIN toteuma_materiaali tm ON tm.toteuma = t.id
+                              WHERE t.urakka = " urakka-id "
+                                AND t.poistettu IS NOT TRUE
+                                AND tm.poistettu IS NOT TRUE
+                                AND t.luoja IN (SELECT id FROM kayttaja WHERE jarjestelma IS NOT TRUE)
+                              LIMIT 1")))
+        tarkistettu (atom nil)]
+    (is (some? toteuma-id) "Testidatassa on käsin kirjattu materiaalitoteuma")
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka vuosi ominaisuus]
+                    (reset! tarkistettu [urakka vuosi ominaisuus])
+                    false)]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-toteuma-materiaaleja!
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :toteumamateriaalit [{:toteuma toteuma-id :materiaalikoodi 1 :maara 1}]}))))
+    (is (= urakka-id (first @tarkistettu)))
+    (is (= :toteuma (last @tarkistettu)))))
 
 
 (deftest tallenna-toteuma-materiaaleja-test
@@ -513,6 +586,8 @@
 (def odotettu-ennen
   [{:lahde "harja-ui"
     :lisatieto "LYV-toteuma Talvisuola"
+    :lukittu-hoitovuosi 2014
+    :lukittu? false
     :lukumaara 1
     :maara 200M
     :materiaali {:id 7
@@ -524,6 +599,8 @@
     :toteumaidt [1074]}
    {:lahde "harja-ui"
     :lisatieto "LYV-toteuma"
+    :lukittu-hoitovuosi 2014
+    :lukittu? false
     :lukumaara 1
     :maara 1800M
     :materiaali {:id 1
@@ -535,7 +612,7 @@
     :toteumaidt [1073]}])
 
 (def lisatty-toteuma
-  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 29, :lukumaara 1, :lahde "harja-ui", :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555"})
+  {:tid 1156, :pvm #inst "2015-02-15T22:00:00.000000000-00:00", :toteumaidt [1156], :rivinumero 3, :tmid 29, :lukumaara 1, :lahde "harja-ui", :maara 666M, :materiaali {:id 1, :nimi "Talvisuolaliuos NaCl"}, :lisatieto "555" :lukittu-hoitovuosi 2014 :lukittu? false})
 
 
 
@@ -564,6 +641,111 @@
    [#inst "2015-02-18T22:00:00.000-00:00" 7 99 4 200M]
    [#inst "2015-02-18T22:00:00.000-00:00" 16 99 4 2000M]])
 
+
+(deftest hae-suolatoteumat-palauttaa-hoitovuoden-lukitustiedon
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        toteumat (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                               (fn [_ _ _ _] false)]
+                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                     :hae-suolatoteumat
+                     +kayttaja-jvh+
+                     {:urakka-id urakka-id
+                      :alkupvm (pvm/->pvm "15.2.2015")
+                      :loppupvm (pvm/->pvm "19.2.2015")}))]
+    (is (some (fn [rivi]
+                (and (not (:yhteenveto rivi))
+                  (:lukittu? rivi)
+                  (= 2014 (:lukittu-hoitovuosi rivi))))
+          toteumat)
+      "Suolatoteuman lukitus palautetaan rivin päivämäärän hoitovuodelle")))
+
+(deftest tallenna-suolatoteumat-estaa-lukitun-lisayshoitovuoden
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        tarkistetut (atom [])]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka hoitovuosi ominaisuus])
+                    false)]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-suolatoteumat
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+               :toteumat [{:pvm (pvm/->pvm "16.2.2015")
+                           :materiaali {:id 1}
+                           :maara 10}]}))))
+    (is (= [[urakka-id 2014 :toteuma]] @tarkistetut))))
+
+(deftest tallenna-suolatoteumat-estaa-lukitun-alkuperaisen-hoitovuoden
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        alkuperainen-pvm (pvm/->pvm "18.2.2015")
+        tarkistetut (atom [])]
+    (with-redefs [toteumat-tarkistukset/vaadi-toteuma-kuuluu-urakkaan (fn [& _] nil)
+                  toteumat-q/hae-toteuman-alkanut-pvm-idlla (fn [& _] alkuperainen-pvm)
+                  valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka hoitovuosi ominaisuus])
+                    false)]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-suolatoteumat
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+               :toteumat [{:tid 1074
+                           :tmid 15
+                           :pvm (pvm/->pvm "14.2.2015")
+                           :materiaali {:id 7}
+                           :maara 500}]}))))
+    (is (= [[urakka-id 2014 :toteuma]] @tarkistetut))))
+
+(deftest tallenna-suolatoteumat-estaa-lukitun-uuden-hoitovuoden
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        alkuperainen-pvm (pvm/->pvm "18.2.2015")
+        tarkistetut (atom [])]
+    (with-redefs [toteumat-tarkistukset/vaadi-toteuma-kuuluu-urakkaan (fn [& _] nil)
+                  toteumat-q/hae-toteuman-alkanut-pvm-idlla (fn [& _] alkuperainen-pvm)
+                  valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka hoitovuosi ominaisuus])
+                    (not= hoitovuosi 2015))]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-suolatoteumat
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+               :toteumat [{:tid 1074
+                           :tmid 15
+                           :pvm (pvm/->pvm "15.10.2015")
+                           :materiaali {:id 7}
+                           :maara 500}]}))))
+    (is (= [[urakka-id 2014 :toteuma]
+            [urakka-id 2015 :toteuma]]
+          @tarkistetut))))
+
+(deftest tallenna-suolatoteumat-poisto-tarkistaa-vain-alkuperaisen-hoitovuoden
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        alkuperainen-pvm (pvm/->pvm "18.2.2015")
+        tarkistetut (atom [])]
+    (with-redefs [toteumat-tarkistukset/vaadi-toteuma-kuuluu-urakkaan (fn [& _] nil)
+                  toteumat-q/hae-toteuman-alkanut-pvm-idlla (fn [& _] alkuperainen-pvm)
+                  valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [urakka hoitovuosi ominaisuus])
+                    false)]
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :tallenna-suolatoteumat
+              +kayttaja-jvh+
+              {:urakka-id urakka-id
+               :sopimus-id (hae-oulun-alueurakan-2014-2019-paasopimuksen-id)
+               :toteumat [{:tid 1074
+                           :tmid 15
+                           :pvm (pvm/->pvm "15.10.2015")
+                           :poistettu true}]}))))
+    (is (= [[urakka-id 2014 :toteuma]] @tarkistetut))))
 
 
 ;; 1. tarkista alkutila, myös tauluissa sopimuksen_kaytetty_materiaali ja urakan_materiaalin_kaytto_hoitoluokittain
@@ -618,8 +800,12 @@
         hoitoluokittaiset-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id
                                           (pvm-vali-sql-tekstina "pvm" "'2015-02-01' AND '2015-02-28'") ";"))]
 
-    (is (= (map #(dissoc % :pvm :tid :toteumaidt) ennen) (map #(dissoc % :pvm :tid :toteumaidt) (conj odotettu-ennen odotettu-yht-rivi))) "Suolatoteumat ennen lisäystä")
-    (is (= (map #(dissoc % :pvm :tid :toteumaidt) jalkeen) (map #(dissoc % :pvm :tid :toteumaidt) odotettu-jalkeen)) "Suolatoteumat jälkeen lisäyksen")
+    (is (= (map #(dissoc % :pvm :tid :toteumaidt :lukittu? :lukittu-hoitovuosi) ennen)
+          (map #(dissoc % :pvm :tid :toteumaidt :lukittu? :lukittu-hoitovuosi) (conj odotettu-ennen odotettu-yht-rivi)))
+      "Suolatoteumat ennen lisäystä")
+    (is (= (map #(dissoc % :pvm :tid :toteumaidt :lukittu? :lukittu-hoitovuosi) jalkeen)
+          (map #(dissoc % :pvm :tid :toteumaidt :lukittu? :lukittu-hoitovuosi) odotettu-jalkeen))
+      "Suolatoteumat jälkeen lisäyksen")
 
     (is (= sopimuksen-mat-kaytto-ennen (sopimuksen-kaytetty-mat-ennen-odotettu sopimus-id)) "Materiaalicache 1 ennen OK")
     (is (= sopimuksen-mat-kaytto-jalkeen (sopimuksen-kaytetty-mat-jalkeen-odotettu sopimus-id [sopimus-id #inst "2015-02-15T22:00:00.000-00:00" 1 666M])) "Materiaalicache 1 jälkeen OK")
