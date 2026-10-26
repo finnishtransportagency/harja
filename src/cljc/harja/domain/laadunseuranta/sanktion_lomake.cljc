@@ -5,16 +5,28 @@
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]))
 
+#?(:clj
+   (defn- pvm-hoitokauden-alkuvuosi
+     [pvm]
+     (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi pvm)))
+   :cljs
+   (defn- pvm-hoitokauden-alkuvuosi
+     [pvm]
+     (pvm/hoitokauden-alkuvuosi pvm)))
+
 (defn- viimeinen-hoitokausi-nykyhetkella?
   [urakan-loppupvm pvm]
   (when (and urakan-loppupvm pvm)
     (= (dec (pvm/vuosi urakan-loppupvm))
-       (pvm/hoitokauden-alkuvuosi (pvm/joda-timeksi pvm)))))
+       (pvm-hoitokauden-alkuvuosi pvm))))
 
 (defn talvisuolan-validointi
   "Palauttaa talvisuolan viimeisen hoitovuoden virheen tai nil."
   [urakan-loppupvm arvo sanktio]
-  (when (and (some? arvo)
+  (when (and urakan-loppupvm
+          (some? arvo)
+          #?(:clj (pvm/joda-timeksi arvo)
+             :cljs arvo)
           (= :talvisuolan_ylitys (:laji sanktio))
           (not (viimeinen-hoitokausi-nykyhetkella? urakan-loppupvm arvo)))
     (str "Sanktio voidaan määrätä ainostaan urakan viimeiselle hoitovuodelle "
@@ -97,10 +109,12 @@
 (defn hoitovuodet
   "Urakan hoitovuosien alkuvuodet urakan alkuvuodesta viimeiseen urakan loppupäivään osuvaan hoitovuoteen."
   [urakan-alkuvuosi urakan-loppupvm]
-  (let [viimeinen (if (>= (pvm/kuukausi urakan-loppupvm) 10)
+  (if-not urakan-loppupvm
+    []
+    (let [viimeinen (if (>= (pvm/kuukausi urakan-loppupvm) 10)
                     (pvm/vuosi urakan-loppupvm)
                     (dec (pvm/vuosi urakan-loppupvm)))]
-    (vec (range urakan-alkuvuosi (inc viimeinen)))))
+      (vec (range urakan-alkuvuosi (inc viimeinen))))))
 
 (defn hoitovuosi-tekstina
   [urakan-alkuvuosi hoitovuosi]
@@ -125,9 +139,10 @@
   (let [maarattypvm? (= :maarattypvm perinta-tapa)
         perintapvm (when-not (:laskutuskuukausi-komp-tiedot sanktio)
                      (if maarattypvm?
-                       (pvm/hoitokauden-loppupvm
-                         (pvm/vuosi
-                           (second (pvm/paivamaaran-hoitokausi arvo))))
+                       (when arvo
+                         (pvm/hoitokauden-loppupvm
+                           (pvm/vuosi
+                             (second (pvm/paivamaaran-hoitokausi arvo)))))
                        arvo))]
     (assoc-in
       (cond-> (assoc sanktio :maarattypvm arvo)

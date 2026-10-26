@@ -4,6 +4,7 @@
    [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
    [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
    [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
+   [harja.domain.laadunseuranta.sanktion-summamaaritys :as summamaaritys]
    [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
    [harja.domain.oikeudet :as oikeudet]
    [harja.domain.yllapitokohde :as yllapitokohde-domain]
@@ -176,15 +177,22 @@
      :label-luokka "fontti-12"
      ::lomake/col-luokka "col-xs-12"
      :hae :omailmoitettu
-     :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
+     :data-cy "sanktion-omailmoitus"
+     :aseta (fn [rivi arvo]
+              (let [omailmoitettu (boolean arvo)
+                    normaalimaara (or (:normaalimaara rivi) (:summa rivi))]
+                (assoc rivi
+                  :omailmoitettu omailmoitettu
+                  :normaalimaara normaalimaara
+                  :summa (summamaaritys/kiintea-sanktiosumma normaalimaara omailmoitettu))))
+     :aseta-vaikka-sama? true
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
 (defn- summan-maarityksen-kentat
   [{:keys [lomake summa lukutila? indeksi-kaytossa? urakan-indeksi
            manuaalinen-laskettavan-sisartyyppi?]}]
   (let [{:keys [laskettu-maaritys c-ryhman-maaritys kiintea-profiilisumma? kiintea-summamalli]} summa
-        laskentaparametrit (:laskentaparametrit laskettu-maaritys)
-        lopullinen-maara (:summa kiintea-summamalli)]
+        laskentaparametrit (:laskentaparametrit laskettu-maaritys)]
     (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
       (keep identity [(when laskettu-maaritys
                         {:otsikko (if (:laskutus-ilman-laskutuskelpoisuutta? lomake)
@@ -218,11 +226,14 @@
                                     "Sanktion suuruus")
                          :nimi :summa :tyyppi :euro
                          :muokattava? (constantly (not kiintea-profiilisumma?))
+                         :data-cy (when kiintea-profiilisumma? "sanktion-summa")
                          :vaadi-positiivinen-numero? true
                          ::lomake/col-luokka "col-xs-4"
                          :hae #(if kiintea-profiilisumma?
-                                 (when-let [summa lopullinen-maara]
-                                   (Math/abs summa))
+                                 (when-let [normaalimaara (:normaalimaara kiintea-summamalli)]
+                                   (Math/abs
+                                     (summamaaritys/kiintea-sanktiosumma normaalimaara
+                                       (:omailmoitettu @tiedot/valittu-sanktio))))
                                  (when (:summa %)
                                    (Math/abs (:summa %))))
                          :vihje (when c-ryhman-maaritys

@@ -437,11 +437,11 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko label-for-id tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot data-cy] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   (let [kentan-id (or label-for-id (str (when (and nimi (keyword? nimi)) (name nimi)) "-" (gensym)))]
-    [:div.form-group {:class (str
+    [:div.form-group (merge {:class (str
                                ;; Korostaa input/tekstikentän reunat, jos on virhe
                                (when (some? virheet) "lomake-validointivirhe ")
                                (or
@@ -460,6 +460,7 @@ ja kaikki pakolliset kentät on täytetty"
                                  " sisaltaa-varoituksen")
                                (when-not (empty? huomautukset)
                                  " sisaltaa-huomautuksen"))}
+                     (when data-cy {:data-cy data-cy}))
      [:div {:class (yleiset/luokat
                      (when sisallon-leveys?
                        "sisallon-leveys lomake-kentan-leveys")

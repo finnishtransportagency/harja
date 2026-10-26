@@ -84,6 +84,9 @@
         (is (true? (:nayta-talvisuola-ilmoitus? konteksti)))
         (is (some? ((:talvisuolan-validointi konteksti)
                     (pvm/->pvm "1.10.2024"))))))
+    (testing "puuttuva urakan loppupäivä ei riko talvisuolan validointia"
+      (is (nil? (sanktion-lomake-domain/talvisuolan-validointi
+                  nil (pvm/->pvm "1.10.2024") {:laji :talvisuolan_ylitys}))))
     (testing "aikakausikonteksti vaikuttaa arvonvähennyksen sallimiseen"
       (is (true? (:salli-arvonvahennys?
                    (sanktion-lomake-domain/sanktion-lomakekonteksti
@@ -135,7 +138,13 @@
                :perintapvm nil
                :laatupoikkeama {:paatos {:kasittelyaika maarattypvm}})
              (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
-               komponenttirivi maarattypvm :maarattypvm))))))
+               komponenttirivi maarattypvm :maarattypvm))))
+    (testing "puuttuva määräyspäivä ei riko päivämäärien asetusta"
+      (is (= {:laatupoikkeama {:paatos {:kasittelyaika nil}}
+              :maarattypvm nil
+              :perintapvm nil}
+             (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
+               perusrivi nil :maarattypvm))))))
 
 (deftest urakan-mahdolliset-sanktiolajit
   (let [hoidon-lajit-ilman-arvonvahennysta [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys
@@ -896,6 +905,8 @@
     (is (nil? (summamaaritys/c-ryhman-manuaalinen-maaritys :C nil)))))
 
 (deftest hoitovuodet-johdetaan-urakan-alku-ja-loppupvm-sta
+  (testing "Puuttuva loppupäivä ei aiheuta virhettä"
+    (is (= [] (sanktion-lomake-domain/hoitovuodet 2025 nil))))
   (testing "Loppupvm hoitovuoden lopussa (syyskuu) päättää viimeisen hoitovuoden edelliseen alkuvuoteen"
     (is (= [2025 2026 2027 2028 2029]
            (sanktion-lomake-domain/hoitovuodet 2025 (pvm/->pvm "30.9.2030")))))
