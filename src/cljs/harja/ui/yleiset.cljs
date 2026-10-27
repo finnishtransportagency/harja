@@ -874,8 +874,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
          reunan-voimakkuus (if (= :vahva reunan-voimakkuus) :vahva :hillitty)]
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
              (get @infolaatikko-nakyvissa? sulje-nappi-id))
-       [:div {:class (vec (keep identity ["info-laatikko" (name tyyppi) luokka
-                                          (when (= :vahva reunan-voimakkuus) "reunan-voimakkuus-vahva")]))
+      [:div {:class (luokat "info-laatikko" (name tyyppi) luokka
+            (when (= :vahva reunan-voimakkuus) "reunan-voimakkuus-vahva"))
               :style {:max-width leveys :white-space "pre-line"}}
         [:div.infolaatikon-ikoni
          (case tyyppi
