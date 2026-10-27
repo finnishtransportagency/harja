@@ -6,7 +6,8 @@ ALTER TABLE liite
 
 CREATE UNIQUE INDEX liite_urakka_luoja_ulkoinen_id_idx
     ON liite (urakka, luoja, ulkoinen_id)
-    WHERE poistettu IS NOT TRUE;
+    WHERE poistettu IS NOT TRUE
+      AND ulkoinen_id IS NOT NULL;
 
 -- Lisätään liitteiden API-integraatiot
 INSERT INTO integraatio (jarjestelma, nimi) VALUES ('api', 'api-vastaanota-liite');
