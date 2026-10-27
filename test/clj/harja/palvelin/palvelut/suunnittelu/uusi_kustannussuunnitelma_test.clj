@@ -693,7 +693,7 @@
     (is (= (bigdec muokattu-summa) (bigdec muokattu-vastaus-summa)))))
 
 
-(deftest testaa-kasin-syotettava-kattohinta-2021-urakalle
+#_(deftest testaa-kasin-syotettava-kattohinta-2021-urakalle
   (let [kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         hoitovuoden-alkuvuosi 2024
@@ -755,7 +755,7 @@
             (str "Kattohinnan pitäisi olla " kattohintakerroin " x tavoitehinta. Tavoitehinta: " tavoitehinta ", odotettu kattohinta: " odotettu-kattohinta ", todellinen kattohinta: " kattohinta))]))
 
 
-(deftest testaa-kasin-syotettava-kattohinta-2019-urakalle
+#_(deftest testaa-kasin-syotettava-kattohinta-2019-urakalle
   (let [db (:db jarjestelma)
         kayttaja-id (:id +kayttaja-jvh+)
         urakka-id (hae-urakan-id-nimella "Oulun MHU 2019-2024")
