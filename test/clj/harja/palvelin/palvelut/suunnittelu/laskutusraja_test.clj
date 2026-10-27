@@ -706,9 +706,7 @@
                                                               WHERE urakka = %s AND hoitokausi = 1" urakka-id))))]
           (when laskutusraja-alkuperainen
             (is (every? #(= laskutusraja-alkuperainen (get % (keyword "tarkistettu-laskutusraja"))) tulos)
-              "Tarkistettu laskutusraja pitäisi olla sama kuin alkuperäinen kun tarkistus on 0"))))))
-  (println "LASKUTUSRAJA KAJAANI 18 " (hae-urakan-laskutusraja 44))
-  )
+              "Tarkistettu laskutusraja pitäisi olla sama kuin alkuperäinen kun tarkistus on 0")))))))
 
 
 (deftest hae-laskutusrajan-tarkistukset-yli-3-prosenttia
