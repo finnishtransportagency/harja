@@ -102,10 +102,12 @@ BEGIN
                      kustannusennuste_keskiarvo_pisteet)
                     VALUES (urakka_id, hoitokauden_alkuvuosi, 40,
                             40, TO_DATE(CONCAT((hoitokauden_alkuvuosi + 1)::text, '10', '15'), 'YYYYMMDD'), kayttaja_id, NOW(),
-                            8);
+                            8)
+                    ON CONFLICT ("urakka-id", hoitovuosi_alkuvuosi) DO UPDATE
+                        SET kustannusennuste_keskiarvo_pisteet = EXCLUDED.kustannusennuste_keskiarvo_pisteet;
                 END IF;
 
-                END IF;
+            END IF;
         END LOOP;
 END;
 $$ LANGUAGE plpgsql;
