@@ -331,6 +331,7 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN turvallisuuspoikkeama_liite hl ON l.id = hl.liite
  WHERE hl.turvallisuuspoikkeama = :turvallisuuspoikkeamaid
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
 
 --name: paivita-korjaava-toimenpide<!

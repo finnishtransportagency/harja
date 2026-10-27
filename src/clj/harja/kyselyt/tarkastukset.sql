@@ -296,6 +296,7 @@ SELECT l.id,
   FROM liite l
            JOIN tarkastus_liite tl ON l.id = tl.liite
  WHERE tl.tarkastus = :tarkastus
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
 
 -- name: luo-tarkastus<!

@@ -96,4 +96,6 @@ SELECT id,
        liite_oid,
        "virustarkastettu?"
   FROM liite
- WHERE id IN (:idt) AND urakka = :urakka;
+ WHERE id IN (:idt)
+   AND urakka = :urakka
+   AND poistettu IS NOT TRUE;
