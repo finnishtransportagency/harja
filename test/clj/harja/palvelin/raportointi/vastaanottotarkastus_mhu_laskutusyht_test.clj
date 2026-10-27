@@ -347,11 +347,28 @@
             @haetut-parametrit)))))
 
 (deftest laskutusyhteenveto-liitetaan-raporttiin-oikeaan-kohtaan
-  (let [laskutus-osio [[:otsikko "Laskutusyhteenveto"]
+  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
+        hoitokaudet (testi-laskutus-hoitokaudet (testi-laskutus-urakka urakka-id))
+        odotetut-lupausbonukset-ja-sanktiot
+        (mapv (fn [indeksi]
+                (case indeksi
+                  0 75M
+                  1 300M
+                  150M))
+          (range (count hoitokaudet)))
+        laskutus-osio [[:otsikko "Laskutusyhteenveto"]
                        [:taulukko {:otsikko "Laskutuksen testitaulukko"} [] []]]
         raportti (with-redefs [vastaanottotarkastus-mhu/muodosta-laskutusyhteenveto-taulukko
                                (fn [& _] laskutus-osio)]
                    (testiapurit/muodosta-testiraportti true))
+        lupaus-taulukko (some (fn [osa]
+                                (when (and (vector? osa)
+                                        (= :taulukko (first osa))
+                                        (= "Lupaukset" (get-in osa [1 :otsikko])))
+                                  osa))
+                          (tree-seq coll? seq raportti))
+        lupausvuosien-rivit (when lupaus-taulukko
+                              (butlast (nth lupaus-taulukko 3)))
         laskutus-otsikon-indeksi (.indexOf raportti [:otsikko "Laskutusyhteenveto"])
         laskutustaulukon-indeksi (.indexOf raportti (second laskutus-osio))
         tavoitehintataulukon-indeksi (first
@@ -364,4 +381,7 @@
                                         raportti))]
     (is (not= -1 laskutus-otsikon-indeksi))
     (is (not= -1 laskutustaulukon-indeksi))
-    (is (< laskutus-otsikon-indeksi laskutustaulukon-indeksi tavoitehintataulukon-indeksi))))
+    (is (< laskutus-otsikon-indeksi laskutustaulukon-indeksi tavoitehintataulukon-indeksi))
+    (is (some? lupaus-taulukko))
+    (is (= odotetut-lupausbonukset-ja-sanktiot
+          (mapv #(nth % 3) lupausvuosien-rivit)))))
