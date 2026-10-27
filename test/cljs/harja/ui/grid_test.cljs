@@ -2,6 +2,7 @@
   (:require [harja.ui.grid :as g]
             [cljs.test :as t :refer-macros [deftest is]]
             [harja.testutils.shared-testutils :as u]
+            [harja.ui.yleiset :as yleiset]
             [reagent.core :as r]
             [clojure.string :as str]
             [harja.ui.grid.yleiset :as grid-yleiset]
@@ -12,6 +13,21 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (t/use-fixtures :each u/komponentti-fixture)
+
+(deftest info-laatikon-reunan-voimakkuus
+  (komponenttitesti
+    [:div
+     [:div {:id "reunan-voimakkuus-oletus"}
+      [yleiset/info-laatikko :vahva-ilmoitus "Ilmoitus"]]
+     [:div {:id "reunan-voimakkuus-hillitty"}
+      [yleiset/info-laatikko :vahva-ilmoitus "Ilmoitus" nil nil
+       {:reunan-voimakkuus :hillitty}]]
+     [:div {:id "reunan-voimakkuus-vahva"}
+      [yleiset/info-laatikko :vahva-ilmoitus "Ilmoitus" nil nil
+       {:reunan-voimakkuus :vahva}]]]
+    (is (nil? (u/sel1 "#reunan-voimakkuus-oletus .reunan-voimakkuus-vahva")))
+    (is (nil? (u/sel1 "#reunan-voimakkuus-hillitty .reunan-voimakkuus-vahva")))
+    (is (some? (u/sel1 "#reunan-voimakkuus-vahva .reunan-voimakkuus-vahva")))))
 
 (def vuosi-virhe
   "Kieli ei voi olla julkaistu ennen 1. ohjelmoitavaa tietokonetta (Colossus, v 1943)")
