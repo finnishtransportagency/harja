@@ -1,6 +1,7 @@
 (ns harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-tyomaa
   "Työmaakokous laskutusyhteenveto raportin taulukko rakenteet"
-  (:require [harja.kyselyt.konversio :as konversio]
+  (:require [clojure.string :as str]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.raportointi.raportit.yleinen :refer [rivi]]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as yhteiset]
@@ -268,7 +269,6 @@
   (let [rahavaraukset-nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
         rahavaraukset-val-aika (konversio/pgarray->vector (:val_aika_yht_array data))
         rahavaraukset-hoitokausi (konversio/pgarray->vector (:hoitokausi_yht_array data))
-
         rivit (cond
                 (= "Hankinnat" otsikko)
                 (tee-taulukko-rivit data kyseessa-kk-vali? hankinnat-rivit)
@@ -310,3 +310,169 @@
        {:otsikko laskutettu-teksti :leveys 29 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali? {:otsikko laskutetaan-teksti :leveys 29 :tyyppi :varillinen-teksti}))
      rivit]))
+
+
+(defn- yhdista-rivimaaritykset
+  "Yhdistää useista vuosikohtaisista lähteistä tulevat rivimääritykset yhdeksi listaksi.
+
+  Kutsu rivilistoilla, joiden alkiot ovat rivimäppejä tai nil-arvoja.
+  Saman otsikon ja :avain_hoitokausi-avaimen rivit säilytetään vain kerran;
+  Yhteensä-rivit siirretään listan loppuun. Palauttaa rivimääritykset vektorina."
+  [rivilistat]
+  (let [rivit (reduce (fn [rivit uusi-rivi]
+                        (if (or (nil? uusi-rivi)
+                              (some #(= [(:otsikko %) (:avain_hoitokausi %)]
+                                      [(:otsikko uusi-rivi) (:avain_hoitokausi uusi-rivi)])
+                                rivit))
+                          rivit
+                          (conj rivit uusi-rivi)))
+                []
+                (mapcat identity rivilistat))]
+    (concat (remove :yhteensa? rivit)
+      (filter :yhteensa? rivit))))
+
+
+(defn- vuosittainen-rivi
+  "Muodostaa yhdestä rivimäärityksestä arvot sisältävän vuosittaisen raporttirivin.
+
+  Vuosidata on vuosijärjestyksessä oleva vektori vuosittaisista mäpeistä, joissa arvot
+  löytyvät :data-mäpistä. Rivimääritys sisältää :otsikko- ja
+  :avain_hoitokausi-avaimet; vaihtoehtoisesti :arvo-fn saa koko vuosimäpin.
+  Puuttuvat arvot tulkitaan nollaksi. Tavallinen rivi palautuu vektorina, ja
+  :yhteensa?-rivi mäppinä, jossa arvot sisältävä vektori on :rivi-avaimessa."
+  [vuosidata {:keys [otsikko avain_hoitokausi arvo-fn yhteensa?]}]
+  (let [arvot (mapv (fn [{:keys [data] :as vuosi}]
+                      (or (if arvo-fn
+                            (arvo-fn vuosi)
+                            (get data avain_hoitokausi))
+                        0M))
+                vuosidata)
+        rivi (into [otsikko] (conj arvot (reduce + 0M arvot)))]
+    (if yhteensa?
+      {:lihavoi? true
+       :korosta-hennosti? true
+       :rivi rivi}
+      rivi)))
+
+
+(defn- rahavaraus-taulukon-tiedot
+  "Valmistelee rahavarausten vuosidatan ja sitä vastaavat rivimääritykset.
+
+  Kutsu vuosidatalla, jonka kunkin alkion :data-mäpissä ovat PostgreSQL-arrayt
+  :rahavaraus_nimet ja :hoitokausi_yht_array. Palauttaa vektorin
+  [rahavaraus-vuosidata rivimääritykset]: vuosidata sisältää arrayista
+  muodostetut :rahavaraus-nimet- ja :rahavaraus-arvot-avaimet, ja rivimääritykset
+  sisältävät kaikki eri rahavarausnimet sekä yhteensä-rivin. Valmisteltu vuosidata
+  annetaan taulukon muodostajalle, jotta rahavarausrivien :arvo-fn löytää arvonsa."
+  [vuosidata]
+  (let [rahavarausdata (mapv (fn [{:keys [data] :as vuosi}]
+                          (let [nimet (konversio/pgarray->vector (:rahavaraus_nimet data))
+                                arvot (konversio/pgarray->vector (:hoitokausi_yht_array data))]
+                            (assoc vuosi
+                              :rahavaraus-nimet nimet
+                              :rahavaraus-arvot (zipmap nimet arvot))))
+                    vuosidata)
+        rahavarausnimet (into []
+                          (distinct
+                            (mapcat :rahavaraus-nimet rahavarausdata)))
+        rahavarausrivit (mapv (fn [nimi]
+                                {:otsikko nimi
+                                 :arvo-fn #(get-in % [:rahavaraus-arvot nimi])})
+                          rahavarausnimet)
+
+        yhteensa {:lihavoi? true
+                  :yhteensa? true
+                  :otsikko "Yhteensä"
+                  :avain_yht :kaikki_rahavaraukset_val_yht
+                  :avain_hoitokausi :kaikki_rahavaraukset_hoitokausi_yht}
+        taulukon-tiedot (conj rahavarausrivit yhteensa)]
+    [rahavarausdata taulukon-tiedot]))
+
+
+(defn- tee-vuosittainen-taulukko
+  "Rakentaa yhden laskutusyhteenvetoraportin vuosittaisen taulukon.
+
+  Kutsu vuosijärjestyksessä olevalla vuosidatalla, otsikolla ja rivimääritysten
+  sekvenssillä. Vuosimäpeissä käytetään sarakeotsikkona :otsikko-avainta ja
+  rivien arvot luetaan :data-mäpistä tai rivimäärityksen :arvo-fn-funktiolla.
+  Palauttaa raportin :taulukko-rakenteen sarakkeineen ja muodostettuine riveineen."
+  [vuosidata otsikko rivimaaritykset]
+  (let [sarakkeet (into [{:otsikko otsikko :leveys 36}]
+                    (concat
+                      (map (fn [{:keys [otsikko]}]
+                             {:otsikko otsikko :leveys 16 :fmt :raha})
+                        vuosidata)
+                      [{:otsikko "Yhteensä" :leveys 16 :fmt :raha}]))
+        rivit (mapv #(vuosittainen-rivi vuosidata %) rivimaaritykset)]
+    [:taulukko {:sheet-nimi "Laskutusyhteenveto"
+                :viimeinen-rivi-yhteenveto? true
+                :pdf-optiot {:skaalaa-teksti? true}
+                :oikealle-tasattavat-kentat (set (range 1 (+ 2 (count vuosidata))))}
+     sarakkeet
+     rivit]))
+
+
+(defn- tee-laskutus-yhteenveto-taulukko
+  "Muodostaa vuosittaiset laskutukset kokoavan yhteenvetotaulukon."
+  [vuosidata]
+  (let [vuosittaiset-laskutukset
+        (mapv #(or (get-in % [:data :yhteensa_kaikki_hoitokausi_yht]) 0M)
+          vuosidata)
+        sarakkeet (into [{:otsikko "Yhteenveto" :leveys 36}]
+                    (concat
+                      (map (fn [{:keys [otsikko]}]
+                             {:otsikko otsikko :leveys 16 :fmt :raha})
+                        vuosidata)
+                      [{:otsikko "Yhteensä (€)" :leveys 16 :fmt :raha}]))
+        laskutus-yhteensa-rivi
+        {:lihavoi? true
+         :korosta-hennosti? true
+         :rivi (into ["Laskutus yhteensä"]
+                 (conj vuosittaiset-laskutukset
+                   (reduce + 0M vuosittaiset-laskutukset)))}]
+    [:taulukko {:sheet-nimi "Laskutusyhteenveto"
+                :samalle-sheetille? true
+                :viimeinen-rivi-yhteenveto? true
+                :pdf-optiot {:skaalaa-teksti? true}
+                :oikealle-tasattavat-kentat (set (range 1 (+ 2 (count vuosidata))))}
+     sarakkeet
+     [laskutus-yhteensa-rivi]]))
+
+
+(defn taulukot-tyomaakokous-vuosittain
+  "Muodostaa työmaakokouksen laskutusyhteenvetoraportin vuosittaiset taulukot.
+
+  Vuosidata on vuosijärjestyksessä oleva sekvenssi mäpeistä, joissa on
+  :hoitovuosi, :otsikko ja raportin luvut sisältävä :data-mäp.
+  Urakan-alkuvuosi on vuosiluku, jota käytetään tavoitehintarivien valintaan.
+  Palauttaa raportin taulukko- ja otsikkorakenteet; tyhjällä vuosidatalla
+  palauttaa Ei hoitovuosia -tekstin sisältävän rakenteen."
+  [vuosidata urakan-alkuvuosi]
+  (if (empty? vuosidata)
+    [[:teksti "Ei hoitovuosia."]]
+    (let [[rahavaraus-vuosidata rahavarausrivit] (rahavaraus-taulukon-tiedot vuosidata)
+          tavoitehinnan-ulkopuolisten-vuosidata
+          (mapv #(update % :otsikko str/replace-first #"^Laskutus " "") vuosidata)
+          alkutaulukot (vec
+                         (concat
+                           [(tee-vuosittainen-taulukko vuosidata "Hankinnat" hankinnat-rivit)
+                            (tee-vuosittainen-taulukko vuosidata "Hoidonjohto" hoidonjohto-rivit)]
+                           (when (ominaisuus-kaytossa? :mhu-muutokset)
+                             [(tee-vuosittainen-taulukko vuosidata "Muutokset" muutokset-rivit)])
+                           [(tee-vuosittainen-taulukko rahavaraus-vuosidata "Rahavaraukset" rahavarausrivit)
+                            (tee-vuosittainen-taulukko vuosidata "Muut tavoitehintaan vaikuttavat kulut"
+                              (yhdista-rivimaaritykset
+                                (map #(tavoitehintaan-vaikuttavat-rivit (:hoitovuosi %) urakan-alkuvuosi)
+                                  vuosidata)))]))
+          ei-tavoitehintaiset-taulukko
+          (tee-vuosittainen-taulukko tavoitehinnan-ulkopuolisten-vuosidata "Kustannus"
+            (yhdista-rivimaaritykset
+              (map #(ei-tavoitehintaiset-rivit (:data %)) vuosidata)))
+          taulukot (map-indexed (fn [indeksi taulukko]
+                                  (assoc-in taulukko [1 :samalle-sheetille?] (pos? indeksi)))
+                    (conj alkutaulukot ei-tavoitehintaiset-taulukko))
+          [ennen ulkopuoliset] (split-at (dec (count taulukot)) taulukot)]
+      (concat ennen
+        [[:otsikko "Tavoitehinnan ulkopuoliset kustannukset"]]
+        ulkopuoliset
+        [(tee-laskutus-yhteenveto-taulukko tavoitehinnan-ulkopuolisten-vuosidata)]))))
