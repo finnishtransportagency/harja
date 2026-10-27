@@ -13,6 +13,7 @@
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+            [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
             [harja.pvm :as pvm]))
@@ -97,7 +98,7 @@
       taulukko)))
 
 (defn rahavarausten-tavoitehinnan-muutokset-taulukko [db urakka-id hoitokaudet]
-  (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+  (let [urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-perusnimiset-rahavaraukset db {:urakka_id urakka-id})
         raportoitavat-rahavaraukset ["Äkilliset hoitotyöt" "Vahinkojen korjaukset" "Tilaajan rahavaraus kannustinjärjestelmään"]
         ;; Säilytetään haluttu järjestys ja poimitaan vain urakalta löytyvät
         nimetyt-rahavaraukset (vec (keep (fn [nimi]
@@ -133,7 +134,7 @@
                                         [tavoitehinnan-muutos])))]
                         rivit))
                 hoitokaudet)
-        yhteenveto-fn (fn [rivi i1 i2]
+        yhteenveto-fn (fn [_rivi i1 i2]
                         (reduce (fn [a rivi]
                                   (let [a (assoc a :suunniteltu (+ (:suunniteltu a) (or (nth rivi i1 0) 0)))
                                         a (assoc a :toteutunut (+ (:toteutunut a) (or (nth rivi i2 0) 0)))]
@@ -238,6 +239,7 @@
                  :leveysprosentti 50
                  :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
                  :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :samalle-sheetille? false
                  :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
@@ -273,6 +275,7 @@
                  :leveysprosentti 50
                  :otsikko "Harjaan kirjatut tavoitehinnan muutokset"
                  :sheet-nimi "Harjaan kirjatut tavoitehinnan muutokset"
+                 :samalle-sheetille? false
                  :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title])}
       [{:leveys 5 :otsikko "Hoitovuosi"}
        {:leveys 5 :otsikko "Kirjatut tavoitehinnan muutokset yhteensä (€)" :fmt :raha}]
@@ -576,6 +579,39 @@
        {:leveys 5 :otsikko "Urakoitsija maksaa kattohinnan ylityksestä (€)" :fmt :raha}]
       (into [] (concat rivit (when-not (empty? rivit) hinnat-yhteensarivi)))]]))
 
+(defn muodosta-ymparistoraportti [db urakka-id hoitokaudet kasittelija]
+  (let [ymparistoraportti (ymparisto/suorita db nil {:alkupvm (:alkupvm (first hoitokaudet))
+                                                     :loppupvm (:loppupvm (last hoitokaudet))
+                                                     :urakka-id urakka-id
+                                                     :urakoittain? false
+                                                     :urakkatyyppi :teiden-hoito
+                                                     :koko-urakkaaika? true})
+        ;; Poistetaan :raportti ja parametrit,  jätetään tekstit ja taulukot
+        ymparistoraportti (subvec ymparistoraportti 2)
+        ;; Poistetaan kaikki :tekstit
+        ymparistoraportti (vec (remove #(or (= :teksti (first %)) (= :teksti-paksu (first %))) ymparistoraportti))
+        ensimmaisen-taulukon-indeksi (first (keep-indexed (fn [indeksi osa]
+                                                            (when (and (vector? osa)
+                                                                    (= :taulukko (first osa)))
+                                                              indeksi))
+                                                  ymparistoraportti))
+        ;; Aloita ensimmäinen taulukko omalle sheetilleen, vaikka sitä edeltäisi tekstiä.
+        ymparistoraportti (if (some? ensimmaisen-taulukon-indeksi)
+                            (update-in ymparistoraportti [ensimmaisen-taulukon-indeksi 1]
+                              assoc
+                              :samalle-sheetille? false
+                              :leveysprosentti 100
+                              :sheet-otsikko "Ympäristöraportti"
+                              :excel-alkutekstit (when (= kasittelija :excel)
+                                                   [[:otsikko-heading "Talvisuolat"]]))
+                            ymparistoraportti)
+
+        ymparistoraportti (into (if (= kasittelija :excel)
+                                  []
+                                  [[:otsikko-heading "Ympäristöraportti"]])
+                            ymparistoraportti)]
+    ymparistoraportti))
+
 (defn suorita [db user {:keys [urakka-id kasittelija]}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
         urakan-parametrit (first (urakat-q/hae-urakan-parametrit db urakka-id))
@@ -607,6 +643,8 @@
           (muodosta-tavoitehinnan-muutokset db user urakka-id hoitokaudet kasittelija)
           ;; Käytännössä -24 ja sitä nuoremmilla urakoilla
           (muodosta-tavoitehinnan-oikaisut db urakka-id hoitokaudet kasittelija))
+
+        (muodosta-ymparistoraportti db urakka-id hoitokaudet kasittelija)
 
         (muodosta-lisatyo-taulukko db urakka-id hoitokaudet kasittelija)
 
