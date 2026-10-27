@@ -19,7 +19,7 @@
 
 (deftest sanktion-lomakekonteksti-palauttaa-kenttasaannot
   (let [aikakausikonteksti (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito)
-        perus {:sanktio {:laji :A :tyyppi {:koodi 1}}
+        perus {:sanktio {:laji :A :tyyppi {:id 1 :koodi 1}}
                :yllapitourakka? false
                :yllapitokohdeurakka? false
                :vesivaylaurakka? false
@@ -92,6 +92,32 @@
                    (sanktion-lomake-domain/sanktion-lomakekonteksti
                      (assoc perus :aikakausikonteksti
                             (sanktion-lomake-domain/aikakausikonteksti 2024 2025 :teiden-hoito)))))))))
+
+(deftest sanktion-summa-naytetaan-pakollisen-tyypin-valinnan-jalkeen
+  (let [syote {:sanktio {:laji :A :tyyppi nil}
+               :aikakausikonteksti
+               (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito)}]
+    (testing "tyyppiä edellyttävä summa piilotetaan ennen valintaa"
+      (let [konteksti (sanktion-lomake-domain/sanktion-lomakekonteksti syote)]
+        (is (true? (:nayta-tyyppi? konteksti)))
+        (is (false? (:nayta-manuaalinen-summa? konteksti)))))
+    (testing "pelkkä tyhjä tyyppitieto ei ole valinta"
+      (is (false? (:nayta-manuaalinen-summa?
+                   (sanktion-lomake-domain/sanktion-lomakekonteksti
+                     (assoc-in syote [:sanktio :tyyppi] {:id nil}))))))
+    (testing "valitun tyypin jälkeen summa näytetään"
+      (is (true? (:nayta-manuaalinen-summa?
+                  (sanktion-lomake-domain/sanktion-lomakekonteksti
+                    (assoc-in syote [:sanktio :tyyppi] {:id 7}))))))
+    (testing "tyypittömien lomakkeiden summakentän näkyvyys säilyy"
+      (doseq [[tyypiton-syote summa-nakyvissa?] [[(assoc syote :yllapitourakka? true) true]
+                                                 [(assoc syote :vesivaylaurakka? true) true]
+                                                 [(assoc syote :sanktio {:laji :asiakirjamerkintojen_paikkansa_pitamattomyys}) true]
+                                                 [(assoc syote :sanktio {:laji :laskutus_ilman_laskutuskelpoisuutta}) true]
+                                                 [(assoc syote :sanktio {:laji :laskutus_yli_laskutusrajan}) false]]]
+        (let [konteksti (sanktion-lomake-domain/sanktion-lomakekonteksti tyypiton-syote)]
+          (is (false? (:nayta-tyyppi? konteksti)))
+          (is (= summa-nakyvissa? (:nayta-manuaalinen-summa? konteksti))))))))
 
 (deftest sanktion-paivamaarien-asetus
   (let [kasittelypvm (pvm/->pvm "15.11.2025")
@@ -1167,6 +1193,11 @@
       (is (= "MAKU 2015" (:urakan-indeksi konteksti)))
       (is (= [tyyppi {:id 8 :koodi 2}] (:tyyppi-valinnat konteksti)))
       (is (= 5 (:tehtavaryhma (:hoidonjohtopalkkio-tr konteksti)))))
+    (testing "summa piilotetaan puuttuvalla tyypillä näkymäkontekstissa"
+      (is (true? (get-in konteksti [:lomake :nayta-manuaalinen-summa?])))
+      (is (false? (get-in (sanktion-lomake-domain/kokoa-nakymakonteksti
+                            (assoc-in syote [:sanktio :tyyppi] nil))
+                    [:lomake :nayta-manuaalinen-summa?]))))
     (testing "MHU25+ ei salli arvonvähennystä lomakkeella"
       (is (= [:A] (:sanktiolajit konteksti))))
     (testing "suorasanktion lukutila tulee parametrista"

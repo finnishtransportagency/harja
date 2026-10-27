@@ -312,7 +312,8 @@
   Syötteessä annetaan sanktio, urakkatyypin boolean-konteksti,
   aikakausikonteksti sekä tarvittaessa urakan loppupäivä. Paluuarvo sisältää
   vain lomakkeen domain-päätökset; kohdistus- ja tunnistepäätökset eivät kuulu
-  tähän funktioon."
+  tähän funktioon. Manuaalinen summakenttä näytetään vasta tyypin valinnan jälkeen,
+  jos lomakkeella on tyyppikenttä."
   [{:keys [sanktio aktiivinen-tyyppi yllapitourakka? yllapitokohdeurakka?
            vesivaylaurakka? laskutus-ilman-laskutuskelpoisuutta?
            aikakausikonteksti urakan-loppupvm]
@@ -323,14 +324,15 @@
         laskutusrajan-ylitys? (= :laskutus_yli_laskutusrajan laji)
         laskutus-ilman-laskutuskelpoisuutta? (or laskutus-ilman-laskutuskelpoisuutta?
                                                (= :laskutus_ilman_laskutuskelpoisuutta laji))
-        perusteluton? (sanktiotyyppi-domain/perusteluton-sanktio? laji tyyppi)]
+        perusteluton? (sanktiotyyppi-domain/perusteluton-sanktio? laji tyyppi)
+        nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
+                             asiakirjamerkinta?
+                             laskutus-ilman-laskutuskelpoisuutta?
+                             laskutusrajan-ylitys?))]
     {:vesivaylaurakka? vesivaylaurakka?
      :yllapitourakka? yllapitourakka?
      :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
-     :nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
-                           asiakirjamerkinta?
-                           laskutus-ilman-laskutuskelpoisuutta?
-                           laskutusrajan-ylitys?))
+     :nayta-tyyppi? nayta-tyyppi?
      :nayta-tapahtumapaikka? (not (or yllapitokohdeurakka? vesivaylaurakka?
                                     laskutus-ilman-laskutuskelpoisuutta?
                                     laskutusrajan-ylitys?))
@@ -339,7 +341,8 @@
      :nayta-indeksi? (and (:nayta-indeksi? aikakausikonteksti)
                        (not= :muistutus laji))
      :nayta-manuaalinen-summa? (and (not= :muistutus laji)
-                                 (not= :laskutus_yli_laskutusrajan laji))
+                                 (not= :laskutus_yli_laskutusrajan laji)
+                                 (or (not nayta-tyyppi?) (some? (:id tyyppi))))
      :nayta-perustelu? (not perusteluton?)
      :nayta-puute-tai-laiminlyonti? yllapitourakka?
      :nayta-talvisuola-ilmoitus? (= :talvisuolan_ylitys laji)
