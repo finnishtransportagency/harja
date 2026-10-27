@@ -908,6 +908,13 @@
   (is (= "Laskutuskelvottomana laskutettu osuus (€)"
          (sanktion-laskenta/syotteen-otsikko (:laskentaparametrit prosenttiosuus-maaritys)))))
 
+(deftest laskettavan-sanktion-otsikot-palauttaa-laskutusrajan-ylityksen-otsikot
+  (is (= {:syotteen-otsikko "Ylityksen määrä (€)"
+          :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
+         (sanktion-laskenta/laskettavan-sanktion-otsikot
+           (assoc (:laskentaparametrit prosenttiosuus-maaritys)
+             :syoteavain "laskutusrajan_ylitys")))))
+
 (deftest syotteen-virhe-esitarkistaa-syotteen-profiilin-saannoilla
   (let [parametrit (:laskentaparametrit tiekm-maaritys)
         rajattu (assoc parametrit :minimi 0.5 :maksimi 100)]

@@ -184,12 +184,11 @@
   [{:keys [lomake summa lukutila? indeksi-kaytossa? urakan-indeksi
            manuaalinen-laskettavan-sisartyyppi?]}]
   (let [{:keys [laskettu-maaritys c-ryhman-maaritys kiintea-profiilisumma? kiintea-summamalli]} summa
-        laskentaparametrit (:laskentaparametrit laskettu-maaritys)]
+        laskentaparametrit (:laskentaparametrit laskettu-maaritys)
+        otsikot (sanktion-laskenta/laskettavan-sanktion-otsikot laskentaparametrit)]
     (apply lomake/ryhma {:rivi? (not laskettu-maaritys)}
       (keep identity [(when laskettu-maaritys
-                        {:otsikko (if (:laskutus-ilman-laskutuskelpoisuutta? lomake)
-                                    "Laskutettu summa"
-                                    (sanktion-laskenta/syotteen-otsikko laskentaparametrit))
+                        {:otsikko (:syotteen-otsikko otsikot)
                          :nimi :laskettava-syote
                          :tyyppi (if (:laskutus-ilman-laskutuskelpoisuutta? lomake) :euro :numero)
                          :max-desimaalit (:desimaalit laskentaparametrit)
@@ -201,9 +200,7 @@
                          :validoi [(fn [arvo _rivi _taulukko]
                                      (sanktion-laskenta/syotteen-virhe laskentaparametrit arvo))]})
                       (when laskettu-maaritys
-                        {:otsikko (if (:laskutus-ilman-laskutuskelpoisuutta? lomake)
-                                    "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"
-                                    "Sanktion suuruus")
+                        {:otsikko (:tuloksen-otsikko otsikot)
                          :nimi :laskettu-sanktion-maara
                          :tyyppi :euro
                          :kentan-arvon-luokka "fontti-14"

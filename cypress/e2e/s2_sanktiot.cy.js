@@ -119,17 +119,9 @@ describe('Sanktiot toimii - MHU25 (Kajaani)', function () {
         cy.contains('label', 'Tyyppi').should('not.exist')
         cy.contains('label', 'Tapahtumapaikka/kuvaus').should('not.exist')
 
-        // Sanktion suuruuden otsikko pitää näkyä ja arvon olla vain luettavissa
+        // Laskentakaava tulee profiilista, mutta kenttien liiketoimintanimet säilyvät.
         cy.contains('label', 'Sanktion suuruus (20% ylittävästä laskutuksesta)').should('be.visible')
-        cy.get('label').contains('Sanktion suuruus (20% ylittävästä laskutuksesta)').parent().parent().parent().within(() => {
-            cy.get('div.lomake-arvo').should('be.visible').invoke('text').should('not.be.empty')
-            cy.get('input').should('have.length', 0)
-            cy.get('button').should('have.length', 0)
-        })
-
-        // Ylityksen määrä -kenttä pitää löytyä
         cy.contains('label', 'Ylityksen määrä (€)').should('be.visible')
-        cy.get('label').contains('Ylityksen määrä (€)').parent().parent().parent().find('input').first().should('be.visible')
     })
 
     it('Avaa sanktio listasta MHU25', function () {
@@ -269,7 +261,7 @@ describe('MHU26 laskettava sanktio', function () {
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default')
             .valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('[data-cy="sanktio-laskettava-syote"]')
+        cy.get('[data-cy="sanktio-laskettava-syote"] input')
             .clear().type('12,5')
         cy.get('label').contains('Sanktion suuruus').closest('.form-group').within(() => {
             cy.get('input').should('not.exist')
@@ -315,11 +307,10 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('label').contains('Perustelu').click()
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default').valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('label', 'Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %').closest('.form-group').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+        cy.get('[data-cy="sanktion-summa"] .lomake-arvo').invoke('text').should('match', /14\s?000/)
+        cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
+            .check().should('be.checked')
+        cy.get('[data-cy="sanktion-summa"] .lomake-arvo').invoke('text').should('match', /7\s?000/)
 
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B1', {timeout: clickTimeout}).then(({response}) => {

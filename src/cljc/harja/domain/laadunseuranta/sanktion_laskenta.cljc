@@ -65,6 +65,15 @@
       (when-not (contains? syoteavainten-otsikot syoteavain)
         (str " (" yksikko ")")))))
 
+(defn laskettavan-sanktion-otsikot
+  "Palauttaa laskettavan sanktion käyttöliittymäotsikot tunnetulle väliaikaiselle erikoistapaukselle."
+  [{:keys [syoteavain] :as laskentaparametrit}]
+  (if (= "laskutusrajan_ylitys" syoteavain)
+    {:syotteen-otsikko "Ylityksen määrä (€)"
+     :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
+    {:syotteen-otsikko (syotteen-otsikko laskentaparametrit)
+     :tuloksen-otsikko "Sanktion suuruus"}))
+
 (defn syotteen-virhe
   "Selaimen esitarkistus, joka peilaa palvelimen syötesääntöjä. Palauttaa virheviestin tai nil.
   Palvelin validoi syötteen aina uudelleen."
