@@ -464,11 +464,11 @@
                                ;; Jos urakassa ei ole muutostenhallinta käytössä, säilytetään kustannussuunnitelman pohjalta laskettu tavoitehinta, jos sellainen on.
                                ;; TODO: Täällä täytyy myöhemmin huomioida muutostenhallinnan hoitovuosikohtaisuus #hoitovuosikohtainen-muutostenhallinta
                                urakka-tavoite-db (first (filter #(= kuluva-hoitovuosi-nro (:hoitovuosinro %)) urakan-tavoitteet-tietokannasta))
-                               tavoitehinta (if muutosten-hallinta-kaytossa? (:tarjous_tavoitehinta rivi) (or (:tavoitehinta urakka-tavoite-db) (:tarjous_tavoitehinta rivi)))
+                               tarjouksen-tavoitehinta (:tarjous_tavoitehinta rivi)
                                ;; Haetaan aiempien vuosien pysyvät muutokset ja lisätään ne laskutusrajaan jo ennen tavoite- ja kattohinnan vahvistusta
                                aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi rivi) true)
                                pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
-                               hoitovuoden-alun-tavoitehinta (if muutosten-hallinta-kaytossa? (+ (or tavoitehinta 0M) (or pysyvat-muutokset-maara 0M)) tavoitehinta)
+                               hoitovuoden-alun-tavoitehinta (if muutosten-hallinta-kaytossa? (+ (or tarjouksen-tavoitehinta 0M) (or pysyvat-muutokset-maara 0M)) tarjouksen-tavoitehinta)
                                hoitovuoden-alun-tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                               (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) hoitovuoden-alun-tavoitehinta)
                                laskutusraja-ennen-vahvistusta (indeksi-kyselyt/indeksikorjaa
@@ -477,8 +477,8 @@
                                _ (if urakka-tavoite-db
                                    (paivita-urakan-tavoite-ja-kattohinta! db {:urakka-id urakka-id
                                                                               :hoitokausinumero kuluva-hoitovuosi-nro
-                                                                              :tarjous_tavoitehinta tavoitehinta
-                                                                              :tarjous_kattohinta (* kattohintakerroin tavoitehinta)
+                                                                              :tarjous_tavoitehinta tarjouksen-tavoitehinta
+                                                                              :tarjous_kattohinta (* kattohintakerroin tarjouksen-tavoitehinta)
                                                                               :tavoitehinta hoitovuoden-alun-tavoitehinta
                                                                               :tavoitehinta_indeksikorjattu hoitovuoden-alun-tavoitehinta_indeksikorjattu
                                                                               :laskutusraja (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
@@ -489,11 +489,11 @@
                                                                                                             (* kattohintakerroin hoitovuoden-alun-tavoitehinta))
                                                                               :muokkaaja kayttaja-id})
                                    ;; Ei lisätä 0 arvoja ollenkaan.
-                                   (when-not (zero? tavoitehinta)
+                                   (when-not (zero? tarjouksen-tavoitehinta)
                                      (lisaa-urakan-tavoite-ja-kattohinta<! db {:urakka-id urakka-id
                                                                                :hoitokausinumero kuluva-hoitovuosi-nro
-                                                                               :tarjous_tavoitehinta tavoitehinta
-                                                                               :tarjous_kattohinta (* kattohintakerroin tavoitehinta)
+                                                                               :tarjous_tavoitehinta tarjouksen-tavoitehinta
+                                                                               :tarjous_kattohinta (* kattohintakerroin tarjouksen-tavoitehinta)
                                                                                :tavoitehinta hoitovuoden-alun-tavoitehinta
                                                                                :tavoitehinta_indeksikorjattu hoitovuoden-alun-tavoitehinta_indeksikorjattu
                                                                                :laskutusraja (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
