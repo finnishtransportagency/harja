@@ -11,7 +11,6 @@
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
-            [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as suunnitelma-palvelu]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
