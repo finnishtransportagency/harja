@@ -356,6 +356,9 @@
              toimenpiteet :toimenpiteet :as app}]
       (let [urakan-alkupvm (-> @tila/yleiset :urakka :alkupvm)
             urakan-loppupvm (-> @tila/yleiset :urakka :loppupvm)
+            vuositeksti (if (= :vesivayla-hoito (:tyyppi (-> @tila/yleiset :urakka)))
+                          "Urakkavuosi"
+                          "Hoitovuosi")
             ;; Varmista, että käsitellään vain valitun urakan ajalta kuluja
             aikaisin-mahdollinen-nyt (if (pvm/sama-tai-jalkeen? (pvm/nyt) urakan-alkupvm)
                                        (pvm/nyt)
@@ -445,7 +448,7 @@
             [:div.display-flex.flex-col.sisalto-leveys
              [:div.flex-row.alkuun
               [:div.filtteri.label-ja-alasveto
-               [:label.alasvedon-otsikko {:for "kulut-hoitokausi-valinta"} "Hoitovuosi"]
+               [:label.alasvedon-otsikko {:for "kulut-hoitokausi-valinta" :data-cy "kulut-vuositeksti"} vuositeksti]
                [yleiset/livi-pudotusvalikko {:elementin-id "kulut-hoitokausi-valinta"
                                              :valinta valittu-hoitokausi
                                              :disabled haku-menossa
@@ -455,7 +458,7 @@
                                                             ;; Nullaa mahdollinen aikaväli
                                                             (e! (tiedot/->AsetaHakuPaivamaara nil nil))
                                                             (e! (tiedot/->ValitseHoitokausi %)))
-                                             :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet "Hoitovuosi")
+                                             :format-fn #(fmt/hoitokauden-jarjestysluku-ja-vuodet % hoitovuodet vuositeksti)
                                              :klikattu-ulkopuolelle-params {:tarkista-komponentti? true}}
                 hoitovuodet]]
               [valinnat/kuukausi {:nil-valinta "Koko hoitokausi"
