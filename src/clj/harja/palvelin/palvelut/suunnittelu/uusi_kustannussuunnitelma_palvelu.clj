@@ -22,7 +22,7 @@
   Älä käytä:
   * Jos muutostenhallinta on käytössä (urakkaparametri: muutos_hallinta). Näillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella.
   * Koko urakka-ajan yhteissumman laskentaan"
-  [{:keys [kilpailutettavat-hankinnat rahavaraukset erillishankinnat johto-ja-hallintokorvaukset hoidonjohtopalkkiot] :as tiedot}]
+  [{:keys [kilpailutettavat-hankinnat rahavaraukset erillishankinnat johto-ja-hallintokorvaukset hoidonjohtopalkkiot] :as _tiedot}]
   (let [hankinnat-yhteenveto (first (filter #(= (:nimi %) "Yhteensä") (:toimenpiteet kilpailutettavat-hankinnat)))
         hankinnat-yhteensa (or (:kaikki-yhteensa hankinnat-yhteenveto) 0)
         rahavaraukset-yhteensa (reduce +
