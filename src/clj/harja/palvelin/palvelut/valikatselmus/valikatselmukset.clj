@@ -146,8 +146,9 @@
   Budjettitavoite-vuodelle parametrin sisältämä tavoitehinta-oikaistu arvo sisältää mahdolliset tavoitehinnan oikaisut,
   joita on tehty 2024 ja sitä aemmin alkaneille urakoille."
   [db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa]
-  (let [indeksikorjaamaton-tavoitehinta (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
-        hoitovuoden-lopun-tavoitehinta (+ indeksikorjaamaton-tavoitehinta (or hoitovuoden-lopun-indeksikorjaus-summa 0))]
+  (let [indeksikorjaamaton-tavoitehinta (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
+        hoitovuoden-lopun-tavoitehinta (+ (or indeksikorjaamaton-tavoitehinta 0)
+                                          (or hoitovuoden-lopun-indeksikorjaus-summa 0))]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
     (bigdec (round2 2 hoitovuoden-lopun-tavoitehinta))))
 
