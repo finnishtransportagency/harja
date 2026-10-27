@@ -2,7 +2,8 @@
   "Sanktiolomakkeen puhtaat päätökset: näkyvyys, tilamuunnokset ja tallennusmuoto.
   Ei lue atomeja eikä kutsu palvelua. Atomit luetaan näkymässä ja annetaan tänne arvoina;
   lopullisen määrän ja sallivuuden ratkaisee palvelu."
-  (:require [harja.pvm :as pvm]
+  (:require [clojure.string :as str]
+            [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.domain.laadunseuranta.sanktion-summamaaritys :as summamaaritys]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
@@ -182,61 +183,89 @@
       [:laatupoikkeama :paatos :kasittelyaika]
       arvo)))
 
+(defn mahdolliset-kulun-kohdistukset
+  "Palauttaa sanktiotyypille valittavat kohdistukset urakan alkuvuoden perusteella.
+  Vuodesta 2025 alkaen kohdistus rajataan hoidon johtoon; sitä vanhemmilla urakoilla
+  vaihtoehdot suodatetaan sanktiotyypin nimen perusteella."
+  [toimenpideinstanssit urakan-alkuvuosi sanktion-tyyppi]
+  (if (> urakan-alkuvuosi 2024)
+    (filter #(= "23150" (:t2_koodi %)) toimenpideinstanssit)
+    (case sanktion-tyyppi
+      "Muut hoitourakan tehtäväkokonaisuudet" (remove
+                                                #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                                                toimenpideinstanssit)
+      "Talvihoito, päätiet" (filter
+                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                              toimenpideinstanssit)
+      "Talvihoito, muut tiet" (filter
+                                #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
+                                toimenpideinstanssit)
+      "Sorateiden hoito ja ylläpito" (filter
+                                       #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
+                                          (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
+                                       toimenpideinstanssit)
+      "Liikenneympäristön hoito" (filter
+                                   #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
+                                   toimenpideinstanssit)
+      toimenpideinstanssit)))
+
+(defn- tyypin-toimenpideinstanssi
+  [tyyppi toimenpideinstanssit]
+  (when-some [toimenpidekoodi (:toimenpidekoodi tyyppi)]
+    (some #(when (= toimenpidekoodi (:id %)) (:tpi_id %))
+      toimenpideinstanssit)))
+
+(defn- ainoa-kulun-kohdistus
+  [kulun-kohdistukset]
+  (when (= 1 (count kulun-kohdistukset))
+    (:tpi_id (first kulun-kohdistukset))))
+
 (defn vaihda-sanktiolajia
   "Vaihtaa sanktion lajin ja ratkaisee tyypin ja toimenpideinstanssin uuden lajin tyypeistä.
-  Yksi tyyppi valitaan automaattisesti, kun urakalla ei ole täsmälleen yhtä toimenpideinstanssia; usean tyypin joukosta säilytetään aiemmin valittu tyyppi
-  jos se on yhä sallittu. Muussa tapauksessa tyyppi tyhjenee ja laskennan syötteet poistetaan.
+  Aiempi sallittu tyyppi säilytetään, muuten valitaan ainoa sallittu tyyppi.
+  Valitun tyypin toimenpideinstanssi ratkaistaan toimenpidekoodin perusteella tai koodittomalle
+  tyypille uudemman urakan ainoasta kulun kohdistuksesta.
+  Jos tyyppiä ei voida valita, se tyhjenee ja laskennan syötteet poistetaan.
   Muistutusta lukuun ottamatta tyypittömän rivin summa, omailmoitus, toimenpideinstanssi ja indeksi nollataan."
-  [rivi uusi-laji sanktiotyypit toimenpideinstanssit]
-  (let [vanha-tyyppi-id (get-in rivi [:tyyppi :id])
-        rivi (assoc rivi :laji uusi-laji :tyyppi nil)
-        vanha-tyyppi (some #(when (= vanha-tyyppi-id (:id %)) %) sanktiotyypit)
-        yksi-tyyppi (first sanktiotyypit)
-        rivi (cond
-               (and (= 1 (count sanktiotyypit))
-                 yksi-tyyppi
-                 (not= 1 (count toimenpideinstanssit)))
-               (assoc rivi
-                 :tyyppi yksi-tyyppi
-                 :toimenpideinstanssi
-                 (some #(when (= (:toimenpidekoodi yksi-tyyppi)
-                                 (:toimenpidekoodi %))
-                          (:tpi_id %))
-                   toimenpideinstanssit))
-
-               (and (> (count sanktiotyypit) 1)
-                 vanha-tyyppi)
-               (assoc rivi
-                 :tyyppi vanha-tyyppi
-                 :toimenpideinstanssi (some #(when (= (:toimenpidekoodi vanha-tyyppi)
-                                                      (:toimenpidekoodi %))
-                                               (:tpi_id %))
-                                        toimenpideinstanssit))
-
-               :else (dissoc rivi :laskettava-syote :laskennan-syote))]
-    (if (and (not (sanktio-domain/muu-kuin-muistutus? rivi))
-          (nil? (:tyyppi rivi)))
-      (assoc rivi
-        :summa nil
-        :omailmoitettu false
-        :toimenpideinstanssi nil
-        :indeksi nil)
-      rivi)))
+  ([rivi uusi-laji sanktiotyypit toimenpideinstanssit]
+   (vaihda-sanktiolajia rivi uusi-laji sanktiotyypit toimenpideinstanssit nil nil))
+  ([rivi uusi-laji sanktiotyypit toimenpideinstanssit urakan-alkuvuosi kulun-kohdistukset]
+   (let [vanha-tyyppi-id (get-in rivi [:tyyppi :id])
+         rivi (assoc rivi :laji uusi-laji :tyyppi nil)
+         vanha-tyyppi (when (some? vanha-tyyppi-id)
+                        (some #(when (= vanha-tyyppi-id (:id %)) %) sanktiotyypit))
+         tyyppi (or vanha-tyyppi
+                  (when (= 1 (count sanktiotyypit)) (first sanktiotyypit)))
+         rivi (if tyyppi
+                (assoc rivi
+                  :tyyppi tyyppi
+                  :toimenpideinstanssi (if (some? (:toimenpidekoodi tyyppi))
+                                         (tyypin-toimenpideinstanssi tyyppi toimenpideinstanssit)
+                                         (when (and urakan-alkuvuosi (> urakan-alkuvuosi 2024))
+                                           (ainoa-kulun-kohdistus kulun-kohdistukset))))
+                (dissoc rivi :laskettava-syote :laskennan-syote))]
+     (if (and (not (sanktio-domain/muu-kuin-muistutus? rivi))
+           (nil? (:tyyppi rivi)))
+       (assoc rivi
+         :summa nil
+         :omailmoitettu false
+         :toimenpideinstanssi nil
+         :indeksi nil)
+       rivi))))
 
 (defn vaihda-sanktiotyyppia
   "Vaihtaa sanktion tyypin ja päivittää tyypistä riippuvat summatiedot.
   Kiinteällä automaattisella summalla asetetaan normaalimäärä ja omailmoituksen mukainen summa.
   C-ryhmän manuaalisella summalla ja muilla tyypeillä aiempi summa poistetaan tai nollataan.
-  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Urakoilla ≤ 2024 myös toimenpideinstanssi
-  päätellään tyypin toimenpidekoodista tai ainoasta kulun kohdistuksesta."
+  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Toimenpideinstanssi päätellään tyypin
+  toimenpidekoodista tai koodittomalle tyypille ainoasta kulun kohdistuksesta."
   [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]
   (let [tyyppi-vaihtui? (not= (get-in rivi [:tyyppi :id]) (:id uusi-tyyppi))
         rivi (if (<= urakan-alkuvuosi 2024)
                (let [toimenpidekoodi (:toimenpidekoodi uusi-tyyppi)
                      toimenpideinstanssi (cond
                                            toimenpidekoodi
-                                           (:tpi_id (some #(when (= toimenpidekoodi (:id %)) %)
-                                                      toimenpideinstanssit))
+                                           (tyypin-toimenpideinstanssi uusi-tyyppi toimenpideinstanssit)
                                            (= 1 (count kulun-kohdistukset))
                                            (:tpi_id (first kulun-kohdistukset))
                                            :else (:toimenpideinstanssi rivi))]
@@ -244,7 +273,15 @@
                    :tyyppi uusi-tyyppi
                    :toimenpideinstanssi toimenpideinstanssi
                    :tpi_id toimenpideinstanssi))
-               (assoc rivi :tyyppi uusi-tyyppi))
+               (let [toimenpidekoodi (:toimenpidekoodi uusi-tyyppi)
+                     kohdistus (ainoa-kulun-kohdistus kulun-kohdistukset)]
+                 (cond-> (assoc rivi :tyyppi uusi-tyyppi)
+                   (and (some? uusi-tyyppi)
+                     (or (some? toimenpidekoodi) (some? kohdistus)))
+                   (assoc :toimenpideinstanssi
+                     (if (some? toimenpidekoodi)
+                       (tyypin-toimenpideinstanssi uusi-tyyppi toimenpideinstanssit)
+                       kohdistus)))))
         kiintea-summa (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa uusi-tyyppi)
         manuaalinen-c? (some? (summamaaritys/c-ryhman-manuaalinen-maaritys (:laji rivi) uusi-tyyppi))
         omailmoitettu (if kiintea-summa

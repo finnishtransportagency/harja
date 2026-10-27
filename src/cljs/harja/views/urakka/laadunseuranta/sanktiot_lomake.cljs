@@ -42,7 +42,7 @@
 
 (defn- sanktion-laji-ja-tyyppikentat
   [{:keys [sanktio lomake lukutila? sanktiolajit tyyppi-valinnat
-           urakan-alkuvuosi toimenpideinstanssit]}]
+           urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]}]
   [(when-not (:vesivaylaurakka? lomake) ;; Vesiväylässä lajeina on vain sakko
      {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
       ::lomake/col-luokka "col-xs-12"
@@ -53,7 +53,9 @@
                  rivi
                  arvo
                  (tiedot/valitun-urakan-sanktiotyypit arvo)
-                 toimenpideinstanssit))
+                 toimenpideinstanssit
+                 urakan-alkuvuosi
+                 kulun-kohdistukset))
       :valinnat (vec sanktiolajit)
       :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
       :validoi [[:ei-tyhja "Valitse laji"]]})
@@ -80,8 +82,9 @@
                                     tyyppi
                                     urakan-alkuvuosi
                                     toimenpideinstanssit
-                                    (tiedot/valittavat-kulun-kohdistukset
+                                    (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
                                       toimenpideinstanssit
+                                      urakan-alkuvuosi
                                       (:nimi tyyppi))))
                          :valinta-arvo identity
                          :aseta-vaikka-sama? true

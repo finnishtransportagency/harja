@@ -209,7 +209,7 @@
 (deftest sanktiolajin-vaihto-sailyttaa-uuteen-lajiin-kuuluvan-tyypin
   (let [vanha-tyyppi {:id 1 :koodi 13 :toimenpidekoodi "H1"}
         toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi "H2"}
-        toimenpideinstanssit [{:tpi_id 303 :toimenpidekoodi "H1"}]
+        toimenpideinstanssit [{:tpi_id 303 :id "H1"}]
         rivi {:laji :A
               :tyyppi vanha-tyyppi
               :toimenpideinstanssi 101
@@ -223,8 +223,8 @@
 
 (deftest sanktiolajin-vaihto-esivalitsee-yhden-tyypin-ja-paattelee-toimenpideinstanssin
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
-        toimenpideinstanssit [{:tpi_id 202 :toimenpidekoodi "H2"}
-                              {:tpi_id 203 :toimenpidekoodi "H3"}]
+        toimenpideinstanssit [{:tpi_id 202 :id "H2"}
+                              {:tpi_id 203 :id "H3"}]
         rivi {:laji :A
               :tyyppi {:id 1}
               :toimenpideinstanssi nil}]
@@ -234,6 +234,18 @@
              :toimenpideinstanssi 202)
            (sanktion-lomake-domain/vaihda-sanktiolajia
              rivi :muistutus [tyyppi] toimenpideinstanssit)))))
+
+(deftest sanktiolajin-vaihto-palauttaa-nil-kohdistuksen-puuttuvalla-vastaavuudella
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi "H2"}
+        rivi {:laji :muistutus
+              :tyyppi tyyppi
+              :toimenpideinstanssi nil}
+        toimenpideinstanssit [{:tpi_id 202 :id "H3"}
+                              {:tpi_id 203 :id "H4"}]]
+    (is (nil?
+          (:toimenpideinstanssi
+            (sanktion-lomake-domain/vaihda-sanktiolajia
+              rivi :A [tyyppi] toimenpideinstanssit))))))
 
 (deftest sanktiolajin-vaihto-nollaa-muistutuksen-summan-ja-kohdistuksen
   (let [rivi {:laji :A
@@ -271,11 +283,128 @@
         rivi {:laji :A
               :tyyppi vanha-tyyppi
               :toimenpideinstanssi 606}
-        toimenpideinstanssit [{:tpi_id 202 :toimenpidekoodi "H6"}]]
+        toimenpideinstanssit [{:tpi_id 202 :id "H6"}]]
     (is (= 202
            (:toimenpideinstanssi
              (sanktion-lomake-domain/vaihda-sanktiolajia
                rivi :B [vanha-tyyppi toinen-tyyppi] toimenpideinstanssit))))))
+
+(deftest muistutuksesta-a-lajiksi-vaihto-palauttaa-toimenpideinstanssin-idn
+  (let [tyyppi {:id 1 :koodi 13 :toimenpidekoodi "H6"}
+        rivi {:laji :muistutus
+              :tyyppi tyyppi
+              :toimenpideinstanssi nil}
+        toimenpideinstanssit [{:tpi_id 202 :id "H6"}]]
+    (is (= 202
+           (:toimenpideinstanssi
+             (sanktion-lomake-domain/vaihda-sanktiolajia
+               rivi :A [tyyppi] toimenpideinstanssit))))))
+
+(deftest muistutuksesta-a-lajiksi-sailyttaa-tyypin-ja-palauttaa-kohdistuksen
+  (let [tyyppi {:id 1 :koodi 13 :toimenpidekoodi 22}
+        toinen-tyyppi {:id 2 :koodi 14 :toimenpidekoodi 33}
+        toimenpideinstanssit [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303}]
+        muistutus (sanktion-lomake-domain/vaihda-sanktiolajia
+                    {:laji :A :tyyppi tyyppi :toimenpideinstanssi 202}
+                    :muistutus [tyyppi] toimenpideinstanssit)]
+    (doseq [vuosi [2025 2026]]
+      (let [a-sanktio (sanktion-lomake-domain/vaihda-sanktiolajia
+                        (assoc muistutus :toimenpideinstanssi nil)
+                        :A [toinen-tyyppi tyyppi] toimenpideinstanssit vuosi [])]
+        (is (= tyyppi (:tyyppi a-sanktio)))
+        (is (= 202 (:toimenpideinstanssi a-sanktio)))))))
+
+(deftest muistutuksesta-a-lajiksi-ei-valitse-epa-selvaa-tyyppia
+  (let [rivi {:laji :muistutus :tyyppi {:id 3} :toimenpideinstanssi nil}
+        tyypit [{:id 1 :toimenpidekoodi 22} {:id 2 :toimenpidekoodi 33}]
+        tulos (sanktion-lomake-domain/vaihda-sanktiolajia
+                rivi :A tyypit [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303}])]
+    (is (nil? (:tyyppi tulos)))
+    (is (nil? (:toimenpideinstanssi tulos)))))
+
+(deftest sanktiotyypin-vaihto-palauttaa-toimenpideinstanssin-uudemmissa-urakoissa
+  (doseq [vuosi [2025 2026]]
+    (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
+          tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                  {:laji :A :tyyppi nil :toimenpideinstanssi nil}
+                  tyyppi vuosi [{:id 22 :tpi_id 202}] [])]
+      (is (= tyyppi (:tyyppi tulos)))
+      (is (= 202 (:toimenpideinstanssi tulos))))))
+
+(deftest koodittoman-tyypin-vaihto-palauttaa-uudemman-urakan-kiintean-kohdistuksen
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
+        rivi {:laji :A :tyyppi nil :toimenpideinstanssi nil}
+        kulun-kohdistukset [{:id 22 :tpi_id 202 :t2_koodi "23150"}]
+        toimenpideinstanssit (conj kulun-kohdistukset {:id 33 :tpi_id 303 :t2_koodi "23120"})]
+    (is (= 202 (:toimenpideinstanssi
+                (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                  rivi tyyppi 2026 toimenpideinstanssit kulun-kohdistukset))))))
+
+(deftest koodittoman-tyypin-lajinvaihto-palauttaa-uudemman-urakan-kiintean-kohdistuksen
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
+        toinen-tyyppi {:id 3 :koodi 18 :toimenpidekoodi 33}
+        rivi {:laji :muistutus :tyyppi tyyppi :toimenpideinstanssi nil}
+        kohdistukset [{:id 22 :tpi_id 202 :t2_koodi "23150"}]
+        toimenpideinstanssit (conj kohdistukset {:id 33 :tpi_id 303 :t2_koodi "23120"})
+        tulos (sanktion-lomake-domain/vaihda-sanktiolajia
+                rivi :A [toinen-tyyppi tyyppi] toimenpideinstanssit 2026 kohdistukset)]
+    (is (= tyyppi (:tyyppi tulos)))
+    (is (= 202 (:toimenpideinstanssi tulos)))))
+
+(deftest koodittoman-tyypin-vaihto-ei-valitse-epa-selvaa-kohdistusta
+  (let [tyyppi {:id 2 :toimenpidekoodi nil}
+        rivi {:laji :A :tyyppi nil :toimenpideinstanssi nil}
+        kohdistukset [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303}]]
+    (is (nil? (:toimenpideinstanssi
+               (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                 rivi tyyppi 2026 kohdistukset kohdistukset))))))
+
+(deftest sanktiotyypin-vaihto-ei-keksi-puuttuvaa-kohdistusta
+  (let [rivi {:laji :A :tyyppi {:id 1} :toimenpideinstanssi 101}
+        kohdistukset [{:id 33 :tpi_id 303}]
+        tyyppi {:id 2 :toimenpidekoodi 22}]
+    (is (nil? (:toimenpideinstanssi
+               (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                 rivi tyyppi 2026 kohdistukset kohdistukset))))
+    (is (= 101 (:toimenpideinstanssi
+                (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                  rivi nil 2026 kohdistukset kohdistukset))))))
+
+(deftest sanktion-kulun-kohdistukset-maaraytyvat-urakan-ja-tyypin-mukaan
+  (let [talvi {:id 1 :tpi_id 101 :tpi_nimi "Talvihoito" :t2_koodi "23110"}
+        soratie {:id 2 :tpi_id 202 :tpi_nimi "Sorateiden hoito" :t2_koodi "23120"}
+        liikenne {:id 3 :tpi_id 303 :tpi_nimi "Liikenneympäristö" :t2_koodi "23130"}
+        johto {:id 4 :tpi_id 404 :tpi_nimi "Hoidon johto" :t2_koodi "23150"}
+        toimenpideinstanssit [talvi soratie liikenne johto]]
+    (doseq [[tyyppi odotetut] [["Talvihoito, päätiet" [talvi]]
+                               ["Talvihoito, muut tiet" [talvi]]
+                               ["Muut hoitourakan tehtäväkokonaisuudet" [soratie liikenne johto]]
+                               ["Sorateiden hoito ja ylläpito" [soratie]]
+                               ["Liikenneympäristön hoito" [liikenne]]
+                               [nil toimenpideinstanssit]]]
+      (is (= odotetut
+             (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+               toimenpideinstanssit 2024 tyyppi)))
+      (is (= [johto]
+             (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+               toimenpideinstanssit 2025 tyyppi))))
+    (is (empty? (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset nil 2025 nil)))))
+
+(deftest sanktiotyypin-vaihto-kayttaa-uuden-tyypin-kulun-kohdistuksia
+  (let [talvi {:id 1 :tpi_id 101 :tpi_nimi "Talvihoito" :t2_koodi "23110"}
+        soratie {:id 2 :tpi_id 202 :tpi_nimi "Sorateiden hoito" :t2_koodi "23120"}
+        johto {:id 3 :tpi_id 303 :tpi_nimi "Hoidon johto" :t2_koodi "23150"}
+        toimenpideinstanssit [talvi soratie johto]
+        tyyppi {:id 2 :nimi "Sorateiden hoito ja ylläpito"}
+        rivi {:laji :A :tyyppi {:id 1 :nimi "Talvihoito, päätiet"}
+              :toimenpideinstanssi nil}]
+    (doseq [[vuosi odotettu] [[2024 202] [2025 303]]]
+      (let [kohdistukset (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+                           toimenpideinstanssit vuosi (:nimi tyyppi))
+            tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                    rivi tyyppi vuosi toimenpideinstanssit kohdistukset)]
+        (is (= tyyppi (:tyyppi tulos)))
+        (is (= odotettu (:toimenpideinstanssi tulos)))))))
 
 (deftest sanktiotyypin-vaihto-vaihtaa-tyypin-ja-johtaa-toimenpideinstanssin
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
@@ -318,14 +447,14 @@
              rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-sailyttaa-toimenpideinstanssin-uudemmassa-urakassa
-  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
+  (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
         rivi {:laji :A
               :tyyppi {:id 1}
               :toimenpideinstanssi 101}
         toimenpideinstanssit [{:id 22 :tpi_id 202}]]
     (is (= (assoc rivi :tyyppi tyyppi)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 toimenpideinstanssit toimenpideinstanssit)))))
+             rivi tyyppi 2025 toimenpideinstanssit [])))))
 
 (deftest sanktiotyypin-vaihto-laskee-kiintean-profiilisumman-omailmoitus-tilassa
   (let [tyyppi {:id 2
