@@ -8,6 +8,7 @@
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
             [harja.ui.skeema :as skeema]
+            [harja.ui.dom :as dom]
             [goog.events.EventType :as EventType]
 
             [clojure.string :as str]
@@ -118,7 +119,11 @@
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
         fokus? (atom false)
-        fokus-elementille #(reset! fokus? true)
+        hiiri? (atom false)
+        ilmoitus-suljettu? (atom false)
+        fokus-elementille #(do
+                             (reset! fokus? true)
+                             (reset! ilmoitus-suljettu? false))
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
                                       fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
                                                                     (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
@@ -208,10 +213,26 @@
                             (cond
                               (not (empty? kentan-virheet)) " sisaltaa-virheen"
                               (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
-                   :on-click #(.stopPropagation %)}
+                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen")
+                            (when (and (or @fokus? @hiiri?)
+                                    (not @ilmoitus-suljettu?))
+                              " ilmoitus-nakyvissa"))
+                   :on-click #(.stopPropagation %)
+                   :on-focus fokus-elementille
+                   :on-blur #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
+                                   fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
+                                                                 (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
+                               (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
+                                 (reset! fokus? (and uusi-fokusoitu-komponentti
+                                                  (.contains (.-currentTarget %) uusi-fokusoitu-komponentti)))))
+                   :on-mouse-enter #(do
+                                      (reset! hiiri? true)
+                                      (reset! ilmoitus-suljettu? false))
+                   :on-mouse-leave #(reset! hiiri? false)
+                   :on-key-down #(when (dom/esc-nappain? %)
+                                   (reset! ilmoitus-suljettu? true))}
               (when (case nayta-virheet?
-                      :fokus @fokus?
+                      :fokus (or @fokus? @hiiri?)
                       :aina true)
                 (cond
                   (not (empty? kentan-virheet)) (validointi-ilmoitus kentan-virheet :virhe
@@ -575,8 +596,8 @@
   :uusi-id                        seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
                                   sarjana -1, -2, -3, ...
   :nayta-virheet?                 :aina (oletus) tai :fokus.
-                                  Jos fokus, näytetään virheviesti vain fokusoidulle kentälle,
-                                  virheen indikoiva punainen viiva näytetään silti aina.
+                                  Jos fokus, näytetään virheviesti fokusoitaessa kenttä tai vietäessä hiiri
+                                  sen päälle. Virheen indikoiva punainen viiva näytetään silti aina.
 
   :valiotsikot                    mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
   :ulkoinen-validointi?           jos true, grid ei tee validointia muokkauksen yhteydessä.

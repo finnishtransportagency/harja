@@ -96,6 +96,43 @@
       (is (= (nth @data 3)
              {:id -1 :nimi "Max Syöttöpaine" :kieli "Vanha hieno kieli" :vuosi 2016})))))
 
+(deftest validointiviesti-naytetaan-fokuksessa-ja-hoverissa
+  (let [solu (partial u/grid-solu "fokus-grid")]
+    (komponenttitesti
+      [g/grid {:id "fokus-grid"
+               :tallenna (constantly nil)
+               :nayta-virheet? :fokus}
+       skeema
+       data]
+
+      (u/click :.grid-muokkaa)
+      (u/change (solu 2 2 "input") "1890")
+      --
+      (let [solu-elementti (solu 2 2)
+            input (solu 2 2 "input")]
+        (is (nil? (u/sel1 (solu 2 2 "div.virheet")))
+            "Ilmoitus ei ole näkyvissä ennen hoveria tai fokusta")
+
+        (sim/mouse-enter solu-elementti nil)
+        --
+        (is (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa")
+            "Hover näyttää validointi-ilmoituksen")
+
+        (sim/mouse-leave solu-elementti nil)
+        --
+        (is (not (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa"))
+            "Hiiren poistuminen piilottaa ilmoituksen")
+
+        (sim/focus input nil)
+        --
+        (is (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa")
+            "Näppäimistöfokus näyttää validointi-ilmoituksen")
+
+        (sim/key-down input {:key "Escape"})
+        --
+        (is (not (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa"))
+            "Escape piilottaa ilmoituksen fokuksen säilyessä")))))
+
 (defn- grid-container []
   [:div
    (for [id (range 0 3)]
