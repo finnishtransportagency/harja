@@ -65,6 +65,8 @@
         (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
         ;; Lisätään mhu-urakalle toimenkuvat
         (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
+        ;; Päivitetään vesiväyläurakan parametrit
+        (urakat-q/aseta-tai-paivita-vesivaylaurakan-parametrit db {:urakkaid urakka-id})
         ;; Lisätään vesiväyläurakalle toimenkuvat.
         (urakat-q/aseta-vesivaylaurakan-toimenkuvat db {:alkupvm alkupvm})
         urakka-id)
@@ -74,6 +76,8 @@
             _ (urakat-q/aseta-tai-paivita-urakkaparametrit db {:urakkaid urakka-id})
             ;; Lisätään mhu-urakalle toimenkuvat
             _ (urakat-q/aseta-urakan-toimenkuvat db {:alkupvm alkupvm})
+            ;; Lisätään vesiväyläurakan parametrit
+            _ (urakat-q/aseta-tai-paivita-vesivaylaurakan-parametrit db {:urakkaid urakka-id})
             ;; Lisätään vesiväyläurakalle toimenkuvat.
             _ (urakat-q/aseta-vesivaylaurakan-toimenkuvat db {:alkupvm alkupvm})]
         urakka-id))))

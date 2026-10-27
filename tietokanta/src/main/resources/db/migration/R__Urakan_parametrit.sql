@@ -149,3 +149,88 @@ END
 $$ LANGUAGE plpgsql;
 
 select aseta_urakka_parametrit();
+
+-- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
+CREATE OR REPLACE FUNCTION aseta_tai_paivita_urakka_parametrit_vesivaylaurakalle(urakkaid_ INT) RETURNS VOID AS
+$$
+DECLARE
+    urakan_tiedot                                                RECORD;
+    bonusprosentti                                               DECIMAL(10, 2) := 0.08;
+    sanktioprosentti                                             DECIMAL(10, 2) := 0.18;
+    tavoitepalkkioprosentti                                      DECIMAL(4, 2)  := 75;
+    tavoitepalkkionmaxprosentti                                  DECIMAL(4, 2)  := 3;
+    tavoitehinnan_ylityksen_maksuprosentti                       DECIMAL(4, 2)  := 25;
+    luojaid                                                      INTEGER        := (SELECT id
+                                                                                    FROM kayttaja
+                                                                                    WHERE kayttajanimi = 'Integraatio');
+    indeksi_kaytossa                                             BOOLEAN := TRUE;
+    kattohintaylityksen_prosenttirajoitus_siirrolle              DECIMAL(4, 2) := 0.03;
+    muokkaa_kasin_kattohinta                                     BOOLEAN := FALSE;
+    kerroin_hoitokauden_lopun_kattohinnalle                      DECIMAL(4, 2) := 1.1;
+    tavoitehintaan_hoitovuodenlopunindeksikorjaus                BOOLEAN := TRUE;
+    onko_laskutusraja_kaytossa                                   BOOLEAN := FALSE;
+    onko_muutosten_hallinta_kaytossa                             BOOLEAN := TRUE;
+BEGIN
+    -- Haetaan kaikki vesivayla-hoito-urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
+    FOR urakan_tiedot IN (SELECT * FROM urakka WHERE id = urakkaid_ AND tyyppi = 'vesivayla-hoito')
+        LOOP
+
+            -- Tarkistetaan, että löytyykö rivi jo taulusta
+            IF EXISTS(SELECT 1 FROM urakka_parametrit WHERE urakkaid = urakan_tiedot.id)
+                THEN
+                    UPDATE urakka_parametrit
+                    SET indeksi_kaytossa_sanktiolla                         = indeksi_kaytossa,
+                        indeksi_kaytossa_bonuksella                         = indeksi_kaytossa,
+                        lupauspaatoksen_bonusprosentti                      = bonusprosentti,
+                        lupauspaatoksen_sanktioprosentti                    = sanktioprosentti,
+                        tavoitepalkkion_maksuprosentti                      = tavoitepalkkioprosentti,
+                        tavoitepalkkion_maksimi                             = tavoitepalkkionmaxprosentti,
+                        tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti = (100 - tavoitehinnan_ylityksen_maksuprosentti),
+                        tavoitehinnan_ylityksen_tilaajan_maksuprosentti     = tavoitehinnan_ylityksen_maksuprosentti,
+                        kattohintaylityksen_siirron_prosenttirajoitus       = kattohintaylityksen_prosenttirajoitus_siirrolle,
+                        muokkaa_kattohinta_kasin                            = muokkaa_kasin_kattohinta,
+                        hoitokauden_lopun_kattohinta_kerroin                = kerroin_hoitokauden_lopun_kattohinnalle,
+                        lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus = tavoitehintaan_hoitovuodenlopunindeksikorjaus,
+                        muokattu                                            = NOW(),
+                        muokkaaja                                           = luojaid,
+                        laskutusraja_kaytossa                               = onko_laskutusraja_kaytossa,
+                        muutosten_hallinta                                  = onko_muutosten_hallinta_kaytossa
+                    WHERE urakkaid = urakan_tiedot.id;
+                ELSE
+                    -- Jos ei löydy, niin lisätään
+                    INSERT INTO urakka_parametrit (urakkaid, indeksi_kaytossa_sanktiolla, indeksi_kaytossa_bonuksella,
+                                                   lupauspaatoksen_bonusprosentti,
+                                                   lupauspaatoksen_sanktioprosentti, tavoitepalkkion_maksuprosentti,
+                                                   tavoitepalkkion_maksimi,
+                                                   tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti,
+                                                   tavoitehinnan_ylityksen_tilaajan_maksuprosentti,
+                                                   kattohintaylityksen_siirron_prosenttirajoitus,
+                                                   muokkaa_kattohinta_kasin,
+                                                   hoitokauden_lopun_kattohinta_kerroin,
+                                                   lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, luoja, luotu, laskutusraja_kaytossa, muutosten_hallinta)
+                    VALUES (urakan_tiedot.id, indeksi_kaytossa, indeksi_kaytossa, bonusprosentti, sanktioprosentti,
+                            tavoitepalkkioprosentti, tavoitepalkkionmaxprosentti,
+                            (100 - tavoitehinnan_ylityksen_maksuprosentti), tavoitehinnan_ylityksen_maksuprosentti,
+                            kattohintaylityksen_prosenttirajoitus_siirrolle, muokkaa_kasin_kattohinta,
+                            kerroin_hoitokauden_lopun_kattohinnalle,
+                            tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW(), onko_laskutusraja_kaytossa, onko_muutosten_hallinta_kaytossa);
+                END IF;
+        END LOOP;
+END
+$$ LANGUAGE plpgsql;
+
+
+CREATE OR REPLACE FUNCTION aseta_urakka_parametrit_vesivaylaurakalle() RETURNS VOID AS
+$$
+DECLARE
+    urakkaid INT;
+
+BEGIN
+for urakkaid in (SELECT id FROM urakka WHERE tyyppi = 'vesivayla-hoito')
+        LOOP
+            PERFORM aseta_tai_paivita_urakka_parametrit_vesivaylaurakalle(urakkaid);
+end loop;
+END
+$$ LANGUAGE plpgsql;
+
+select aseta_urakka_parametrit_vesivaylaurakalle();

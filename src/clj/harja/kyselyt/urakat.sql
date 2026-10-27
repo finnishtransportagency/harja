@@ -1382,6 +1382,9 @@ WHERE
 -- name: aseta-tai-paivita-urakkaparametrit
 SELECT aseta_tai_paivita_urakka_parametrit_urakalle(:urakkaid);
 
+-- name: aseta-tai-paivita-vesivaylaurakan-parametrit
+SELECT aseta_tai_paivita_urakka_parametrit_vesivaylaurakalle(:urakkaid);
+
 -- name: hae-urakan-parametrit
 select *
   from urakka_parametrit

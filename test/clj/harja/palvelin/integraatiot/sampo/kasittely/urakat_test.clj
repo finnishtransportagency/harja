@@ -150,17 +150,16 @@
     (let [urakka (hae-vesivaylaurakka)
           urakkaid (:id urakka)
           db (:db jarjestelma)
-          urakan-toimenkuvat
-          (toimenkuvat-kyselyt/hae-urakan-toimenkuvat
-            db
-            {:urakkaid urakkaid})
-          toimenkuvien-nimet
-          (set (map :toimenkuva urakan-toimenkuvat))
-          odotetut-toimenkuvat
-          #{"valmistelukausi ennen urakka-ajan alkua"
-            "sopimusvastaava"
-            "vastuunalainen työnjohtaja"
-            "2. työnjohtaja"}]
+          urakan-toimenkuvat (toimenkuvat-kyselyt/hae-urakan-toimenkuvat db {:urakkaid urakkaid})
+          toimenkuvien-nimet (set (map :toimenkuva urakan-toimenkuvat))
+          odotetut-toimenkuvat #{"valmistelukausi ennen urakka-ajan alkua"
+                                 "sopimusvastaava"
+                                 "vastuunalainen työnjohtaja"
+                                 "2. työnjohtaja"}
+          urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakkaid}))]
+
+      (is (some? urakan-parametrit)
+        "Vesiväyläurakalle tallentui urakka_parametrit-rivi.")
 
       (is (= "vesivayla-hoito" (:tyyppi urakka)))
 
