@@ -106,9 +106,10 @@
        data]
 
       (u/click :.grid-muokkaa)
+      --
       (u/change (solu 2 2 "input") "1890")
       --
-      (let [solu-elementti (solu 2 2)
+      (let [solu-elementti (u/sel1 "#fokus-grid tbody tr:nth-child(3) td:nth-child(3)")
             input (solu 2 2 "input")]
         (is (nil? (u/sel1 (solu 2 2 "div.virheet")))
             "Ilmoitus ei ole näkyvissä ennen hoveria tai fokusta")
