@@ -98,7 +98,7 @@ INSERT INTO urakka_parametrit (urakkaid, indeksi_kaytossa_sanktiolla, indeksi_ka
                                lupauspaatoksen_bonusprosentti, lupauspaatoksen_sanktioprosentti, lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, hoitokauden_lopun_kattohinta_kerroin,
                                muokkaa_kattohinta_kasin, kattohintaylityksen_siirron_prosenttirajoitus, tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti, tavoitehinnan_ylityksen_tilaajan_maksuprosentti,
                                tavoitepalkkion_maksuprosentti, tavoitepalkkion_maksimi, luotu, muokattu, luoja, muokkaaja, maksuera_lahetys_sampo, kustannussuunnitelma_lahetys_sampo, laskutusraja_kaytossa)
-VALUES (60, TRUE, TRUE, 0.08, 0.18, true,
+VALUES ((SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), TRUE, TRUE, 0.08, 0.18, true,
         1.10, false, 0.03, 75, 25, 75.00,
         3.00, NOW(), null,
         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'), null, TRUE, TRUE, TRUE);
