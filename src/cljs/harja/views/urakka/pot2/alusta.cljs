@@ -53,7 +53,7 @@
                                                                    (get tr-osien-tiedot (:tr-numero rivi))
                                                                    []
                                                                    vuosi)]
-    (yllapitokohteet-domain/validoi-alustatoimenpide-teksti validoitu)))
+    (yllapitokohteet-domain/validoi-alustatoimenpide-teksti validoitu {:pot2? true})))
 
 (defn- alustalomakkeen-lisakentat
   [{:keys [alustalomake massat murskeet koodistot]}]
@@ -222,6 +222,7 @@
                                 :voi-muokata? voi-muokata?}])
      [grid/muokkaus-grid
       {:otsikko "Alusta"
+        :data-cy "pot2-alusta"
        :tunniste :id :piilota-toiminnot? true :voi-muokata? voi-muokata?
        :rivinumerot? true ;; Nämä tarkoituksella piilotetaan tyyleissä. Halutaan samoihin kohtiin sarakkeet kuin päällystekerroksessa
        :voi-kumota? false :voi-lisata? false
@@ -266,6 +267,7 @@
         :validoi [[:ei-tyhja "Anna arvo"]]}
        {:otsikko "Tie" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-numero :validoi (:tr-numero validointi)
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :sarake-sort {:fn (fn [rivi]
                             (reset! pot2-tiedot/valittu-alustan-sort :tieosoite)
                             (pot2-tiedot/jarjesta-ja-indeksoi-atomin-rivit
@@ -279,10 +281,12 @@
                               (grid/validoi-grid ohjauskahva)))
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :tieosoite) "valittu-sort")}}
        {:otsikko "Ajor." :nimi :tr-ajorata :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-ajor"
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :valinnat pot/+ajoradat-numerona+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi] (if rivi (:nimi rivi) "- Valitse Ajorata -"))
         :tasaa :oikea :kokonaisluku? true}
        {:otsikko "Kaista" :nimi :tr-kaista :tyyppi :valinta :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :elementin-id "alustan-kaista"
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :valinnat pot/+kaistat+ :valinta-arvo :koodi
         :valinta-nayta (fn [rivi]
                          (if rivi (:nimi rivi) "- Valitse kaista -"))
@@ -300,12 +304,16 @@
                       :luokka (when (= @pot2-tiedot/valittu-alustan-sort :kaista) "valittu-sort")}
         :tasaa :oikea :kokonaisluku? true}
        {:otsikko "Aosa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuosa :validoi (:tr-alkuosa validointi)}
        {:otsikko "Aet" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-alkuetaisyys :validoi (:tr-alkuetaisyys validointi)}
        {:otsikko "Losa" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuosa :validoi (:tr-loppuosa validointi)}
        {:otsikko "Let" :tyyppi :positiivinen-numero :tasaa :oikea :kokonaisluku? true
+        :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko
         :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :nimi :tr-loppuetaisyys :validoi (:tr-loppuetaisyys validointi)}
        {:otsikko "Pituus" :nimi :pituus :leveys (:perusleveys pot2-yhteiset/gridin-leveydet) :tyyppi :numero :tasaa :oikea
         :muokattava? (constantly false)
