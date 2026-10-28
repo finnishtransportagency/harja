@@ -16,6 +16,8 @@
             [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
             [harja.palvelin.raportointi.raportit.talvihoitosuolan-kokonaiskayttomaara :as talvisuola]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as laskutusyhteenveto-yhteiset]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-taulukko-tyomaa :refer [taulukot-tyomaakokous-vuosittain]]
             [harja.pvm :as pvm]))
 
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus_mhu.sql"
@@ -449,6 +451,24 @@
              {:leveys 5 :otsikko "Osallistuminen tilaajalle kuuluvien viranomaistehtävien hoitoon (h)" :fmt :kokonaisluku}]
             (into [] (concat osallistuminen-rivit (when-not (empty? osallistuminen-rivit) osallistuminen-yhteensarivi)))]])))))
 
+(defn muodosta-laskutusyhteenveto-taulukko [db user urakan-tiedot hoitokaudet]
+  (let [nyt (pvm/nyt)
+        urakka-id (:id urakan-tiedot)
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        vuosidata (mapv (fn [{:keys [alkupvm loppupvm]}]
+                          (let [laskutustiedot (first
+                                                 (laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
+                                                   db user {:urakka-id urakka-id
+                                                            :alkupvm alkupvm
+                                                            :loppupvm loppupvm
+                                                            :haun-loppupvm loppupvm}))]
+                            {:otsikko (str "Laskutus " (pvm/vuosi alkupvm) "-" (pvm/vuosi loppupvm) " (€)")
+                             :hoitovuosi (pvm/vuosi alkupvm)
+                             :data laskutustiedot}))
+                    hoitokaudet)]
+    (into [[:otsikko "Laskutusyhteenveto"]]
+      (taulukot-tyomaakokous-vuosittain vuosidata urakan-alkuvuosi))))
+
 (defn muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko
   "Taulukossa ei ole erikseen kohtaa arvonvähennyksille tai muille kuluille, kuten Välikatselmuksessa. Tässä ne lisätään hankintakustannuksiin, kuten rahanvarauksetkin."
   [db urakan-tiedot hoitokaudet kasittelija]
@@ -653,6 +673,8 @@
         (muodosta-bonukset-taulukko db urakka-id hoitokaudet kasittelija)
 
         (muodosta-virhanomaistehtavat-taulukko db urakka-id hoitokaudet kasittelija)
+
+        (muodosta-laskutusyhteenveto-taulukko db user urakan-tiedot hoitokaudet)
 
         (muodosta-tavoitehintaan-kuuluvat-kustannukset-taulukko db urakan-tiedot hoitokaudet kasittelija)
 

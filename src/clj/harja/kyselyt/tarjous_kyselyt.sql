@@ -115,8 +115,14 @@ DELETE FROM tarjous_johto_ja_hallintokorvaus
  WHERE johto_ja_hallintokorvaus_toimenkuva_id = :toimenkuvaid
    AND urakka_id = :urakkaid;
 
--- name: hae-urakan-tarjous-tavoitehinnat
-SELECT id, hoitokausi as hoitovuosinro, urakka, tarjous_tavoitehinta
+-- name: hae-urakan-tavoite-ja-kattohinnat
+SELECT id,
+       hoitokausi as hoitovuosinro,
+       urakka,
+       tarjous_tavoitehinta,
+       tarjous_kattohinta,
+       tavoitehinta,
+       kattohinta
 FROM urakka_tavoite
 WHERE urakka = :urakkaid
 ORDER BY hoitokausi;
@@ -161,6 +167,7 @@ SET tavoitehinta = :tavoitehinta,
     muokattu = NOW(),
     muokkaaja = :muokkaaja,
     tarjous_tavoitehinta = :tarjous_tavoitehinta,
+    tarjous_kattohinta = :tarjous_kattohinta,
     laskutusraja = :laskutusraja,
     laskutusraja_alkuperainen = :laskutusraja_alkuperainen
 WHERE urakka = :urakka-id
@@ -168,11 +175,7 @@ WHERE urakka = :urakka-id
 
 -- name: lisaa-urakan-tavoite-ja-kattohinta<!
 INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, tavoitehinta_indeksikorjattu, kattohinta,
-                            kattohinta_indeksikorjattu, tarjous_tavoitehinta, laskutusraja, laskutusraja_alkuperainen, luotu, luoja)
+                            kattohinta_indeksikorjattu, tarjous_tavoitehinta, tarjous_kattohinta, laskutusraja, laskutusraja_alkuperainen, luotu, luoja)
 VALUES (:urakka-id, :hoitokausinumero, :tavoitehinta, :tavoitehinta_indeksikorjattu, :kattohinta,
-        :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, :laskutusraja, :laskutusraja_alkuperainen, NOW(), :luoja);
+        :kattohinta_indeksikorjattu, :tarjous_tavoitehinta, :tarjous_kattohinta, :laskutusraja, :laskutusraja_alkuperainen, NOW(), :luoja);
 
--- name: hae-laskutusraja-kaytossa
-SELECT up.laskutusraja_kaytossa AS "laskutusraja-kaytossa"
-FROM urakka_parametrit up
-WHERE up.urakkaid = :urakka-id;
