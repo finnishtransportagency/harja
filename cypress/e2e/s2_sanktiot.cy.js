@@ -157,7 +157,7 @@ describe('Sanktiot toimii - MHU25 (Kajaani)', function () {
         // Sivupaneeli aukeaa ja näyttää sanktion tiedot
         cy.contains(testiSanktioKuvaus).should('be.visible')
         cy.contains('label', 'Määräystapa').parent().parent().parent().find('div').contains("Työmaakokous").should('be.visible') // Työmaakokous on valittuna
-        cy.contains('label', 'Käsittely ja laskutus').parent().parent().parent().find('div').contains("Välikatselmus").should('be.visible') // Työmaakokous on valittuna
+        cy.contains('label', 'Käsittelytapa').parent().parent().parent().find('div').contains("Välikatselmus").should('be.visible') // Työmaakokous on valittuna
         cy.contains('label', 'Liitteet').parent().parent().parent().find('div').contains("Ei liitettä").should('be.visible') // Työmaakokous on valittuna
         cy.contains('label', 'Havaittu').parent().parent().parent().find('div').contains("15.02.2026").should('be.visible') // Työmaakokous on valittuna
         cy.contains('label', 'Määrätty').parent().parent().parent().find('div').contains("15.02.2026").should('be.visible') // Työmaakokous on valittuna
@@ -239,7 +239,7 @@ describe('MHU26 laskettava sanktio', function () {
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default')
             .valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('[data-cy="sanktio-laskettava-syote"]')
+        cy.get('[data-cy="sanktio-laskettava-syote"] input')
             .clear().type('12,5')
         cy.get('label').contains('Sanktion suuruus').closest('.form-group').within(() => {
             cy.get('input').should('not.exist')
@@ -285,10 +285,10 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('label').contains('Perustelu').click()
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default').valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').check()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
 
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
@@ -303,14 +303,14 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         cy.contains('B - Vakava laiminlyönti').should('be.visible')
         cy.contains(tyyppiMhu26B).should('be.visible')
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input').should('be.checked')
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B2')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input[type="checkbox"]').uncheck()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').uncheck()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B2', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
@@ -319,14 +319,14 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input').should('not.be.checked')
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('not.be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B3')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').check()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B3', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
@@ -335,9 +335,9 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input').should('be.checked')
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B4')
         cy.contains('button', 'Muokkaa').click()
@@ -348,7 +348,7 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
     })
 })
