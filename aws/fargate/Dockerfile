@@ -2,7 +2,7 @@
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
-FROM eclipse-temurin:17.0.20_8-jre-noble
+FROM eclipse-temurin:17.0.20.1_1-jre-noble
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
@@ -80,13 +80,13 @@ RUN mkdir -p /app && chown -R harja:harja /app
 USER $USERNAME
 WORKDIR /app
 
-# Kopioi uberjar pipelinesta
-# Tässä oletetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
-COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
-
 # Harja-app tarkastaa tällä hetkellä jotkin asetetut ENV muuttujat .harja_env tiedoston mukaisesti
 # harja.palvelin.asetukset/tarkista-ymparisto! -funktiolla
 COPY ./aws/fargate/.harja_env .harja_env
+
+# Kopioi uberjar pipelinesta
+# Tässä oletetaan, että uberjar on jo buildattu ja se on hakemistossa "target"
+COPY ./target/harja-0.0.1-SNAPSHOT-standalone.jar harja.jar
 
 # Aseta volume
 # https://docs.aws.amazon.com/AmazonECS/latest/developerguide/bind-mounts.html

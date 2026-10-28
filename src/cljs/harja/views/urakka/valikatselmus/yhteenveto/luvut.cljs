@@ -48,8 +48,7 @@
                                        ;; Jos päätös on tehty, niin indeksikorjaus on jo luvuissa mukana
                                        (* (if (:id hv-lopun-indkorjaus-paatos) 0 hoitokauden_lopun_indeksikorjaus) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
                                        (* pysyvat-muutokset-toteuma-muutokset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                       (* thv-arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                       (* tavoitehinnan-oikaisut-24-urakoille (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
+                                       (* thv-arvonvahennykset-yht (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))]
     {:yhteenvedon-tiedot yhteenvedon-tiedot
      :hoitovuoden-alun-indeksikorjattu-tavoitehinta hoitovuoden-alun-indeksikorjattu-tavoitehinta
      :tavoitehinnan-oikaisut-24-urakoille tavoitehinnan-oikaisut-24-urakoille

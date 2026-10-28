@@ -867,10 +867,10 @@
               aiempi-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
               summa (:summa (first kustannusvaikutukset))
               muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
-              (when (and hoitovuoden-tavoitehinta summa)
+              (when (and hoitovuoden-tavoitehinta summa (pos? hoitovuoden-tavoitehinta))
                 (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta)))))
               muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
-              (when (and hoitovuoden-tavoitehinta summa)
+              (when (and hoitovuoden-tavoitehinta summa (pos? hoitovuoden-tavoitehinta))
                 (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta)))))]
 
           ;; Tallenna liitteet
@@ -1020,19 +1020,19 @@
                                :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
                                           :viesti "Muutosta ei löydy"}]}))
 
-                  tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
-                  ;; Tarkasta voiko muutoksen poistaa
-                  {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty? conn tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
-                  hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-                  {:keys [hoitokausinro hoitovuoden-tavoitehinta laskutusraja laskutusraja_alkuperainen
-                          laskutusrajaa_nostettu? muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua]}
-                  (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi muutos-id)
-                  tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
-                  tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
-                  poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
-                  prosenttiosuus (when hoitovuoden-tavoitehinta
-                                   (tyokalut/pyorista-kahteen-decimaaliin
-                                     (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
+          tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
+          ;; Tarkasta voiko muutoksen poistaa
+          {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty? conn tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
+          hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+          {:keys [hoitokausinro hoitovuoden-tavoitehinta laskutusraja laskutusraja_alkuperainen
+                  laskutusrajaa_nostettu? muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua]}
+          (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi muutos-id)
+          tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
+          tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
+          poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
+          prosenttiosuus (when (and hoitovuoden-tavoitehinta (pos? hoitovuoden-tavoitehinta))
+                           (tyokalut/pyorista-kahteen-decimaaliin
+                             (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
 
               (when (not voi-poistaa?)
                 (throw+ {:type virheet/+sisainen-kasittelyvirhe+

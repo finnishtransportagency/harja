@@ -1,6 +1,3 @@
-(def jenkinsissa? (= "harja-jenkins.solitaservices.fi"
-                    (.getHostName (java.net.InetAddress/getLocalHost))))
-
 (defproject harja "0.0.1-SNAPSHOT"
   :description "Väylän Harja"
 
@@ -57,7 +54,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.5"]
+                 [ring/ring-core "1.15.6"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
@@ -74,7 +71,7 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.13"]
+                 [org.postgresql/postgresql "42.7.14"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
@@ -174,13 +171,13 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.3"]
-                         [com.fasterxml.jackson.core/jackson-core "2.22.3"]
+                         [tools.jackson.core/jackson-core "3.2.4"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.4"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.14.0"]]
 
   :profiles {:uberjar {:aot :all}
-             :dev {:test2junit-run-ant ~(not jenkinsissa?)}}
+             :dev {:test2junit-run-ant true}}
 
   :jvm-opts ^:replace ["-Xms256m" "-Xmx2g"]
 
@@ -245,7 +242,7 @@
   :main ^:skip-aot harja.palvelin.main
   :auto-clean false ;; for uberjar
 
-  ;; Tehdään komentoaliakset ettei build-komento jää vain johonkin Jenkins jobin konfiguraatioon
+  ;; Kootaan yleisesti käytetyt kehitys- ja build-komennot Leiningen-aliaksiksi
   :aliases {"fig" ["trampoline" "with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main"]
             "build-dev" ["with-profile" "+dev-ymparisto" "with-env-vars" "run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
             "build-dev-no-env" ["run" "-m" "figwheel.main" "-b" "figwheel_conf/dev" "-r"]
@@ -254,6 +251,8 @@
             "compile-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/prod"]
             "compile-laadunseuranta-dev" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-dev"]
             "compile-laadunseuranta-prod" ["run" "-m" "figwheel.main" "-O" "advanced" "-fw" "false" "-bo" "figwheel_conf/laadunseuranta-prod"]
+            ;; Dev-bundle on nopea unoptimized bundle, jota hyödynnetään esimerkiksi testiympäristöjen CI/CD workflowssa
+            "compile-dev-bundle" ["run" "-m" "figwheel.main" "-fw" "false" "-bo" "figwheel_conf/dev-bundle"]
             "tuotanto" ["do" "clean," "deps," "gitlog," "compile," "test2junit,"
                         "with-profile" "+prod-cljs" "compile-prod,"
                         ;; Harja mobiili laadunseuranta fronttibuildi
