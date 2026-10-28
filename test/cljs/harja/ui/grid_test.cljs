@@ -112,43 +112,52 @@
       (is (= (nth @data 3)
              {:id -1 :nimi "Max Syöttöpaine" :kieli "Vanha hieno kieli" :vuosi 2016})))))
 
+(def muokkaus-gridin-data
+  {1 {:id 1 :nimi "Rich Hickey" :kieli "Clojure" :vuosi 2009}
+   2 {:id 2 :nimi "Martin Odersky" :kieli "Scala" :vuosi 2004}
+   3 {:id 3 :nimi "Joe Armstrong" :kieli "Erlang" :vuosi 1986}})
+
 (deftest validointiviesti-naytetaan-fokuksessa-ja-hoverissa
-  (let [solu (partial u/grid-solu "fokus-grid")]
+  (let [solu (partial u/grid-solu "fokus-grid")
+        ;; Solu ja input haetaan aina uudelleen, koska `--` toimii vain komponenttitestin ylätasolla
+        ilmoitus-nakyvissa? #(.contains (.-classList (solu 2 2 "")) "ilmoitus-nakyvissa")]
     (komponenttitesti
-      [g/grid {:id "fokus-grid"
-               :tallenna (constantly nil)
-               :nayta-virheet? :fokus}
+      [g/muokkaus-grid {:id "fokus-grid"
+                        :tunniste :id
+                        :jarjesta :id
+                        :voi-muokata? true
+                        :voi-lisata? false
+                        :piilota-toiminnot? true
+                        :nayta-virheet? :fokus
+                        :virheet (r/atom {3 {:vuosi [vuosi-virhe]}})}
        skeema
-       data]
+       (r/atom muokkaus-gridin-data)]
 
-      (u/click :.grid-muokkaa)
+      "Ilmoitus ei ole näkyvissä ennen hoveria tai fokusta"
+      (is (not (ilmoitus-nakyvissa?)))
+      (is (nil? (solu 2 2 "div.virheet")))
+
+      "Hover näyttää validointi-ilmoituksen"
+      (sim/mouse-enter (solu 2 2 "") nil)
       --
-      (u/change (solu 2 2 "input") "1890")
+      (is (ilmoitus-nakyvissa?))
+      (is (= vuosi-virhe (str/trim (u/text (solu 2 2 "div.virheet")))))
+
+      "Hiiren poistuminen piilottaa ilmoituksen"
+      (sim/mouse-leave (solu 2 2 "") nil)
       --
-      (let [solu-elementti (u/sel1 "#fokus-grid tbody tr:nth-child(3) td:nth-child(3)")
-            input (solu 2 2 "input")]
-        (is (nil? (u/sel1 (solu 2 2 "div.virheet")))
-            "Ilmoitus ei ole näkyvissä ennen hoveria tai fokusta")
+      (is (not (ilmoitus-nakyvissa?)))
+      (is (nil? (solu 2 2 "div.virheet")))
 
-        (sim/mouse-enter solu-elementti nil)
-        --
-        (is (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa")
-            "Hover näyttää validointi-ilmoituksen")
+      "Näppäimistöfokus näyttää validointi-ilmoituksen"
+      (sim/focus (solu 2 2 "input") nil)
+      --
+      (is (ilmoitus-nakyvissa?))
 
-        (sim/mouse-leave solu-elementti nil)
-        --
-        (is (not (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa"))
-            "Hiiren poistuminen piilottaa ilmoituksen")
-
-        (sim/focus input nil)
-        --
-        (is (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa")
-            "Näppäimistöfokus näyttää validointi-ilmoituksen")
-
-        (sim/key-down input {:key "Escape"})
-        --
-        (is (not (.contains (.-classList solu-elementti) "ilmoitus-nakyvissa"))
-            "Escape piilottaa ilmoituksen fokuksen säilyessä")))))
+      "Escape piilottaa ilmoituksen fokuksen säilyessä"
+      (sim/key-down (solu 2 2 "input") {:key "Escape"})
+      --
+      (is (not (ilmoitus-nakyvissa?))))))
 
 (defn- grid-container []
   [:div
@@ -228,11 +237,6 @@
       (is (= (u/text (u/grid-solu "g3" 2 0 "")) "Joe Armstrong"))
       (is (= (u/text (u/grid-solu "g3" 2 1 "")) "Erlang"))
       (is (= (u/text (u/grid-solu "g3" 2 2 "")) "1986")))))
-
-(def muokkaus-gridin-data
-  {1 {:id 1 :nimi "Rich Hickey" :kieli "Clojure" :vuosi 2009}
-   2 {:id 2 :nimi "Martin Odersky" :kieli "Scala" :vuosi 2004}
-   3 {:id 3 :nimi "Joe Armstrong" :kieli "Erlang" :vuosi 1986}})
 
 (deftest muokkaus-grid-datalla
   (let [data (r/atom muokkaus-gridin-data)]
