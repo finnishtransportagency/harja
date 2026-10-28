@@ -1,3 +1,4 @@
+-- MHU-URAKOIDEN URAKKA-PARAMETRIEN ASETTAMINEN
 -- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
 CREATE OR REPLACE FUNCTION aseta_tai_paivita_urakka_parametrit_urakalle(urakkaid_ INT) RETURNS VOID AS
 $$
@@ -150,6 +151,8 @@ $$ LANGUAGE plpgsql;
 
 select aseta_urakka_parametrit();
 
+-------------------------------------------------------------------------------------------
+-- VESIVÄYLÄURAKOIDEN URAKKA-PARAMETRIEN ASETTAMINEN
 -- Pyritään täyttämään taulu mahdollisimman hyvin alkuun ja hallintapaneelista sitten loput
 CREATE OR REPLACE FUNCTION aseta_tai_paivita_urakka_parametrit_vesivaylaurakalle(urakkaid_ INT) RETURNS VOID AS
 $$
@@ -168,7 +171,7 @@ DECLARE
     muokkaa_kasin_kattohinta                                     BOOLEAN := FALSE;
     kerroin_hoitokauden_lopun_kattohinnalle                      DECIMAL(4, 2) := 1.1;
     tavoitehintaan_hoitovuodenlopunindeksikorjaus                BOOLEAN := TRUE;
-    onko_laskutusraja_kaytossa                                   BOOLEAN := FALSE;
+    onko_laskutusraja_kaytossa                                   BOOLEAN := TRUE;
     onko_muutosten_hallinta_kaytossa                             BOOLEAN := TRUE;
 BEGIN
     -- Haetaan kaikki vesivayla-hoito-urakat ja lisätään niiden perustiedot urakka_parametrit tauluun
