@@ -135,7 +135,7 @@ describe('Vesiväyläurakan Kulut-näkymä', function () {
             .and('not.contain.text', 'Hoitovuosi');
 
         cy.get('[data-cy=hoitokausi-valinta]').click();
-        cy.wait(250);
+        cy.get('[data-cy=hoitokausi-valinta]').find('ul.livi-alasvetolista').should('be.visible');
         cy.get('[data-cy=hoitokausi-valinta]')
             .find('ul.livi-alasvetolista li')
             .contains('urakkavuosi')
