@@ -17,13 +17,14 @@
                     (component/start
                       (component/system-map
                         :db (tietokanta/luo-tietokanta testitietokanta)
+                        :db-replica (tietokanta/luo-tietokanta testitietokanta)
                         :http-palvelin (testi-http-palvelin)
                         :karttakuvat (component/using
                                        (karttakuvat/luo-karttakuvat)
                                        [:http-palvelin :db])
                         :tarkastukset (component/using
                                         (t/->Tarkastukset)
-                                        [:http-palvelin :db :karttakuvat])))))
+                                        [:http-palvelin :db :db-replica :karttakuvat])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 

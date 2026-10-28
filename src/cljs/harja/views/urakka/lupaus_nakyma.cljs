@@ -368,21 +368,35 @@
          [:div.otsikko-ja-hoitokausi
           [:h1 "Lupaukset"]
           [valinnat/urakan-hoitokausi-tuck (:valittu-hoitokausi app)
-           (:urakan-hoitokaudet app)
-           #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
-         [yhteenveto e! app urakka]
-         [ennuste e! app]
-         ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
-         (when (>= (pvm/vuosi (:alkupvm urakka)) 2021)
-           (when-not (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
-             [:div.row {:style (merge {}
-                                 (when (not (empty? (:lupausryhmat app)))
-                                   {:border-top "1px solid #D6D6D6"}))}
-              (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
-                (for [ryhma lupausryhmat]
-                  ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
-                  [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))]))]))
-         [testausvalinnat e! app]]))))
+            (:urakan-hoitokaudet app)
+            #(e! (lupaus-tiedot/->HoitokausiVaihdettu urakka %))]]
+          [yhteenveto e! app urakka]
+          [ennuste e! app]
+          ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
+          (let [valittu-hoitokausi-alkaa (first (:valittu-hoitokausi app))
+                nyt (or (:nykyhetki app) (pvm/nyt))
+                hoitovuosi-tuleva? (pvm/jalkeen? valittu-hoitokausi-alkaa nyt)
+                paivia-valissa (if valittu-hoitokausi-alkaa (pvm/paivia-valissa valittu-hoitokausi-alkaa nyt) 10000) ;; Valittu hoitokausi voi olla hetken null
+                lupausryhmat-naytetaan? (or
+                                          ;; Perustilanne, jossa ennuste on jo olemassa
+                                          (not= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
+                                          ;; Ennustetta ei näytetä, mutta hoitovuosi on tulossa ja välissä ei ole liikaa päiviä
+                                          (and
+                                            (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
+                                            hoitovuosi-tuleva?
+                                            (<= paivia-valissa 120)) ;; Noin neljö kuukautta kesä-, heinä-, elo-, syyskuu
+                                          ;; Jos hoitovuosi on mennyt, niin näytetään aina
+                                          (not hoitovuosi-tuleva?))]
+            (when (and (>= (pvm/vuosi (:alkupvm urakka)) 2021)
+                    lupausryhmat-naytetaan?)
+              [:div.row {:style (merge {}
+                                  (when (not (empty? (:lupausryhmat app)))
+                                    {:border-top "1px solid #D6D6D6"}))}
+               (let [lupausryhmat (sort-by :jarjestys (:lupausryhmat app))]
+                 (for [ryhma lupausryhmat]
+                   ^{:key (str "lupaustyhma" (:jarjestys ryhma))}
+                   [lupausryhma-rivi e! app ryhma (get (:lupaukset app) (:otsikko ryhma))]))]))
+          [testausvalinnat e! app]]))))
 
 (defn- valilehti-mahdollinen? [valilehti {:keys [tyyppi sopimustyyppi id] :as urakka}]
   (case valilehti

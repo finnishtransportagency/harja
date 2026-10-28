@@ -15,6 +15,13 @@ function alustaKajaanin25Urakka() {
     ks.alustaKanta('POP MHU Kajaani 2025-2030');
 }
 
+function valitseEnsimmainenHoitovuosi() {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+        cy.contains('1. hoitovuosi').click();
+    });
+}
+
 
 function tarkistaToimenpideLuvut(toimenpide, luku1, luku2) {
     cy.get('#kilpailutettavat-hankinnat-elementti table.grid')
@@ -144,11 +151,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
             cy.intercept('POST', '_/tallenna-erillishankinnat').as('tallenna-erillishankinnat');
             avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
 
-            // Valitse ensimmäinen hoitovuosi
-            cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
-                cy.get('button').click({force: true});
-                cy.contains('1. hoitovuosi').click();
-            });
+            valitseEnsimmainenHoitovuosi();
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -211,6 +214,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-johto-ja-hallintokorvaukset-2025').as('tallenna-toimenkuvat-2025');
             avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
+            valitseEnsimmainenHoitovuosi();
         });
 
         it('Taulukon arvot alussa oikein', function () {
@@ -266,6 +270,7 @@ describe('Tavoitehintaiset rahavaraukset osio', function () {
         beforeEach(function () {
             cy.intercept('POST', '_/tallenna-hoidonjohtopalkkiot').as('tallenna-hoidonjohtopalkkiot');
             avaaUusiKustannussuunnittelu('POP MHU Kajaani 2025-2030', 'Pohjois-Suomi');
+            valitseEnsimmainenHoitovuosi();
         });
 
         it('Taulukon arvot alussa oikein', function () {
