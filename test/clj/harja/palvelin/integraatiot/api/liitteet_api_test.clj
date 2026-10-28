@@ -45,20 +45,14 @@
                :lahetysaika "2026-01-01T12:00:00Z"}
      :liite-poisto {:tunniste {:id liite-tunniste}}}))
 
-(defn- hae-vapaa-tarkastus-ulkoinen-id []
-  (let [id (rand-int 10000)]
-    (if (empty? (q (str "SELECT id FROM tarkastus WHERE ulkoinen_id = " id ";")))
-      id
-      (recur))))
-
 (defn- hae-toinen-kayttaja []
   (ffirst (q (format "SELECT kayttajanimi FROM kayttaja WHERE kayttajanimi <> '%s' AND kayttajanimi <> 'Integraatio' LIMIT 1"
                     kayttaja))))
 
 (deftest liite-tarkastukselle-tallentuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 100000000 (rand-int 100000000))
+        kohde-id 910001
+        liite-tunniste 920001
         nimi "liite-api-tarkastus.txt"
         kayttaja-id (ffirst (q (format "SELECT id FROM kayttaja WHERE kayttajanimi = '%s'" kayttaja)))]
     (anna-kirjoitusoikeus kayttaja)
@@ -86,10 +80,11 @@
                    urakka-id liite-tunniste))
         (u (format "DELETE FROM tarkastus WHERE urakka = %s AND ulkoinen_id = %s"
                    urakka-id kohde-id))))))
+
 (deftest liite-poistetaan
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 200000000 (rand-int 100000000))
+        kohde-id 910002
+        liite-tunniste 920002
         kayttaja-id (ffirst (q (format "SELECT id FROM kayttaja WHERE kayttajanimi = '%s'" kayttaja)))]
     (anna-kirjoitusoikeus kayttaja)
     (u (format "INSERT INTO tarkastus (urakka, aika, tyyppi, ulkoinen_id, poistettu, luoja, lahde) VALUES (%s, CURRENT_TIMESTAMP, 'soratie', %s, FALSE, %s, 'harja-api')"
@@ -119,13 +114,13 @@
 (deftest liitteen-poisto-tuntemattomalla-tunnisteella-epaeonnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         poisto-vastaus (api-tyokalut/delete-kutsu ["/api/urakat/" urakka-id "/liite"] kayttaja portti
-                                                   (poisto-pyynto (+ 300000000 (rand-int 100000000))))]
+                                                   (poisto-pyynto 920003))]
     (is (= 400 (:status poisto-vastaus)))))
 
 (deftest liitteen-lahetyksen-skeema-validoidaan
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 400000000 (rand-int 100000000))
+        kohde-id 910003
+        liite-tunniste 920004
         pyynto (cheshire/decode (liite-pyynto "tarkastus" kohde-id liite-tunniste "validointi.txt") true)
         puuttuva-liite (update-in pyynto [:liite-lahetys] dissoc :liite)
         vaeaerae-tunniste (assoc-in pyynto [:liite-lahetys :liite :tunniste :id] "merkkijono")
@@ -137,7 +132,7 @@
 
 (deftest liitteen-poiston-skeema-validoidaan
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        pyynto (cheshire/decode (poisto-pyynto 800000000) true)
+        pyynto (cheshire/decode (poisto-pyynto 920005) true)
         puuttuva-liite-poisto (dissoc pyynto :liite-poisto)
         puuttuva-tunniste (update pyynto :liite-poisto dissoc :tunniste)
         vaeaerae-tunniste (assoc-in pyynto [:liite-poisto :tunniste :id] "merkkijono")]
@@ -148,8 +143,8 @@
 
 (deftest liitteen-virheellinen-sisalto-palauttaa-400
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 500000000 (rand-int 100000000))
+        kohde-id 910005
+        liite-tunniste 920006
         kayttaja-id (ffirst (q (format "SELECT id FROM kayttaja WHERE kayttajanimi = '%s'" kayttaja)))]
     (anna-kirjoitusoikeus kayttaja)
     (u (format "INSERT INTO tarkastus (urakka, aika, tyyppi, ulkoinen_id, poistettu, luoja, lahde) VALUES (%s, CURRENT_TIMESTAMP, 'soratie', %s, FALSE, %s, 'harja-api')"
@@ -165,11 +160,12 @@
       (finally
         (u (format "DELETE FROM tarkastus WHERE urakka = %s AND ulkoinen_id = %s"
                    urakka-id kohde-id))))))
+
 (deftest liitteen-toinen-kayttaja-ei-voi-poistaa
   (let [poistaja (hae-toinen-kayttaja)
         urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 600000000 (rand-int 100000000))
+        kohde-id 910006
+        liite-tunniste 920007
         kayttaja-id (ffirst (q (format "SELECT id FROM kayttaja WHERE kayttajanimi = '%s'" kayttaja)))]
     (anna-kirjoitusoikeus kayttaja)
     (anna-kirjoitusoikeus poistaja)
@@ -196,10 +192,11 @@
                    urakka-id liite-tunniste))
         (u (format "DELETE FROM tarkastus WHERE urakka = %s AND ulkoinen_id = %s"
                    urakka-id kohde-id))))))
+
 (deftest liitteen-uudelleenpoisto-epaonnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 700000000 (rand-int 100000000))
+        kohde-id 910007
+        liite-tunniste 920008
         kayttaja-id (ffirst (q (format "SELECT id FROM kayttaja WHERE kayttajanimi = '%s'" kayttaja)))]
     (anna-kirjoitusoikeus kayttaja)
     (u (format "INSERT INTO tarkastus (urakka, aika, tyyppi, ulkoinen_id, poistettu, luoja, lahde) VALUES (%s, CURRENT_TIMESTAMP, 'soratie', %s, FALSE, %s, 'harja-api')"
@@ -223,10 +220,11 @@
                    urakka-id liite-tunniste))
         (u (format "DELETE FROM tarkastus WHERE urakka = %s AND ulkoinen_id = %s"
                    urakka-id kohde-id))))))
+
 (deftest liitteen-lahetys-olemattomaan-tarkastukseen-epaonnistuu
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        kohde-id (hae-vapaa-tarkastus-ulkoinen-id)
-        liite-tunniste (+ 800000000 (rand-int 100000000))
+        kohde-id 910008
+        liite-tunniste 920009
         vastaus (api-tyokalut/post-kutsu ["/api/urakat/" urakka-id "/liite"] kayttaja portti
                                           (liite-pyynto "tarkastus" kohde-id liite-tunniste "olemattomaan-tarkastukseen.txt"))]
     (is (= 400 (:status vastaus)))))

@@ -68,8 +68,8 @@
           [{:liite liite}]))
       (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
 
-(defn- tallenna-tarkastushavainnon-liite
-  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
+(defn- tallenna-laatupoikkeamaan-liite
+  [{id :id} {:keys [liite-lahetys]} virheviesti kayttaja db liitteiden-hallinta]
   (let [urakka-id (Integer/parseInt id)
         ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
         liite (:liite liite-lahetys)]
@@ -77,7 +77,7 @@
     (let [laatupoikkeama (first (laatupoikkeamat-q/hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
                                   db ulkoinen-id urakka-id))]
       (when-not laatupoikkeama
-        (heita-liitevirhe (format "Tarkastushavaintoa ei löydy tunnisteella: %s" ulkoinen-id)))
+        (heita-liitevirhe (format "%s ei löydy tunnisteella: %s" virheviesti ulkoinen-id)))
       (jdbc/with-db-transaction [db db]
         (liite-tyokalut/tallenna-liitteet-laatupoikkeamalle
           db
@@ -88,25 +88,15 @@
           [{:liite liite}]))
       (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
 
+(defn- tallenna-tarkastushavainnon-liite
+  [parametrit data kayttaja db liitteiden-hallinta]
+  (tallenna-laatupoikkeamaan-liite
+    parametrit data "Tarkastushavaintoa" kayttaja db liitteiden-hallinta))
+
 (defn- tallenna-laatupoikkeaman-liite
-  [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
-  (let [urakka-id (Integer/parseInt id)
-        ulkoinen-id (str (get-in liite-lahetys [:kohdetunniste :id]))
-        liite (:liite liite-lahetys)]
-    (validointi/tarkista-urakka-ja-kayttaja db urakka-id kayttaja)
-    (let [laatupoikkeama (first (laatupoikkeamat-q/hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
-                                  db ulkoinen-id urakka-id))]
-      (when-not laatupoikkeama
-        (heita-liitevirhe (format "Laatupoikkeamaa ei löydy tunnisteella: %s" ulkoinen-id)))
-      (jdbc/with-db-transaction [db db]
-        (liite-tyokalut/tallenna-liitteet-laatupoikkeamalle
-          db
-          liitteiden-hallinta
-          urakka-id
-          (:id laatupoikkeama)
-          kayttaja
-          [{:liite liite}]))
-      (tee-kirjausvastauksen-body {:ilmoitukset "Liite vastaanotettu onnistuneesti"}))))
+  [parametrit data kayttaja db liitteiden-hallinta]
+  (tallenna-laatupoikkeamaan-liite
+    parametrit data "Laatupoikkeamaa" kayttaja db liitteiden-hallinta))
 
 (defn- tallenna-turvallisuuspoikkeaman-liite
   [{id :id} {:keys [liite-lahetys]} kayttaja db liitteiden-hallinta]
