@@ -14,6 +14,12 @@
             [harja.ui.komponentti :as komp])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
+(defn tieosoitevirheen-otsikko [rivi]
+  (let [arvo #(if (nil? (get rivi %)) "-" (get rivi %))]
+    (str "Kohteessa tie: " (arvo :tr-numero) ", "
+      (arvo :tr-alkuosa) "/" (arvo :tr-alkuetaisyys) " - "
+      (arvo :tr-loppuosa) "/" (arvo :tr-loppuetaisyys) " on virhe")))
+
 (defn validoi-kaistavalinta
   [rivi taulukko]
   (let [{:keys [kaistat]} (:paallystysilmoitus-lomakedata @paallystys/tila)
