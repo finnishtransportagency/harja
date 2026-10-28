@@ -85,7 +85,10 @@
     [#".*android.*" #".*ipad.*"]))
 
 (defn header [s]
-  [bs/navbar {:luokka (str/join " " ["harja-ylin-header" (when (k/kehitysymparistossa?) "testiharja")])}
+  [bs/navbar {:luokka (str/join " "
+                        (cond-> ["harja-ylin-header"]
+                          (k/kehitysymparistossa?) (conj "testiharja")
+                          (k/kehitysymparistossa-aws?) (conj "aws-testiharja")))}
    [:span
     [:img#harja-brand-icon {:alt "HARJA"
                             :src "images/harja_logo_soft.svg"
@@ -93,7 +96,7 @@
                                          (.preventDefault %)
                                          (nav/siirry-sivulle-ja-nollaa-parametrit! :urakat :yleiset))}]
     (when (k/kehitysymparistossa?)
-      [:span#testiharja "TESTI"])]
+      [:span#testiharja (k/kehitysymparisto-nav-tagi)])]
    [haku/haku]
 
    [:ul#sivut.nav.nav-pills

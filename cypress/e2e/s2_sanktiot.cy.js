@@ -1,13 +1,11 @@
 import {
     avaaSanktiotJaBonuksetNakyma,
     clickTimeout,
-    evkLappi,
     evkPohjoisSuomi,
     siivoaSanktiotKannasta,
     testiurakkaMhu26,
     testiurakkaMhu19,
-    testiurakkaMhu24,
-    testiurakkaMhu25
+    testiurakkaMhu24
 } from '../support/sanktiotJaBonuksetFns';
 import {SP} from "../support/apurit";
 
@@ -27,16 +25,32 @@ let testiTalvisuolaKuvausMhu25Viimeinen = "CY-talvisuola-mhu25-viimeinen";
 let testiTalvisuolaKuvausMhu19EiViimeinen = "CY-talvisuola-mhu19-ei-viimeinen";
 let testiTalvisuolaKuvausMhu19Viimeinen = "CY-talvisuola-mhu19-viimeinen";
 let testiTalvisuolaPerustelu = "CY-talvisuola-perustelu";
+let testiurakkaMhu25 = "POP MHU Kajaani 2025-2030";
+let evkLappi = "Lappi";
+
+function valitseHoitovuosi(hoitovuosi) {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+    });
+    cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
+    cy.wait('@sanktiot', {timeout: clickTimeout});
+    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
+}
+
+function avaaSanktiotJaBonuksetHoitovuodella(urakka, evk, hoitovuosi) {
+    avaaSanktiotJaBonuksetNakyma(urakka, evk);
+    valitseHoitovuosi(hoitovuosi);
+}
 
 
-describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
+describe('Sanktiot toimii - MHU25 (Kajaani)', function () {
     before(function () {
         siivoaSanktiotKannasta(testiSanktioKuvaus);
     });
 
     it('Mene sanktiot ja bonukset -välilehdelle', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
 
         // Varmistetaan, että näkymä latautui
         cy.contains('Sanktiot, bonukset ja arvonvähennykset').should('be.visible')
@@ -44,7 +58,7 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
 
     it('Lisää uusi sanktio MHU25', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallenna')
 
@@ -99,7 +113,7 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
 
     it('Näyttää laskutusraja-sanktion kentät oikein MHU25', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
 
         // Klikkaa "Lisää uusi" -nappia
         cy.contains('Lisää uusi').click()
@@ -132,7 +146,7 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
 
     it('Avaa sanktio listasta MHU25', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
 
         // Määrätty päivämäärä pitäisi näkyä listassa
         cy.contains('td', '15.02.2026');
@@ -143,7 +157,7 @@ describe('Sanktiot toimii - MHU25 (Rovaniemi)', function () {
         // Sivupaneeli aukeaa ja näyttää sanktion tiedot
         cy.contains(testiSanktioKuvaus).should('be.visible')
         cy.contains('label', 'Määräystapa').parent().parent().parent().find('div').contains("Työmaakokous").should('be.visible') // Työmaakokous on valittuna
-        cy.contains('label', 'Käsittely ja laskutus').parent().parent().parent().find('div').contains("Välikatselmus").should('be.visible') // Työmaakokous on valittuna
+        cy.contains('label', 'Käsittelytapa').parent().parent().parent().find('div').contains("Välikatselmus").should('be.visible') // Työmaakokous on valittuna
         cy.contains('label', 'Liitteet').parent().parent().parent().find('div').contains("Ei liitettä").should('be.visible') // Työmaakokous on valittuna
         cy.contains('label', 'Havaittu').parent().parent().parent().find('div').contains("15.02.2026").should('be.visible') // Työmaakokous on valittuna
         cy.contains('label', 'Määrätty').parent().parent().parent().find('div').contains("15.02.2026").should('be.visible') // Työmaakokous on valittuna
@@ -271,10 +285,10 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('label').contains('Perustelu').click()
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default').valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('label', 'Urakoitsijan omailmoitus').closest('.form-group').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').check()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
 
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
@@ -285,42 +299,45 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
-        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
+        cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         cy.contains('B - Vakava laiminlyönti').should('be.visible')
         cy.contains(tyyppiMhu26B).should('be.visible')
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('label', 'Urakoitsijan omailmoitus').parent().find('input').should('be.checked')
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B2')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('label', 'Urakoitsijan omailmoitus').closest('.form-group').find('input[type="checkbox"]').uncheck()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').uncheck()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B2', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
-        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
+        cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('label', 'Urakoitsijan omailmoitus').parent().find('input').should('not.be.checked')
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('not.be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B3')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('label', 'Urakoitsijan omailmoitus').closest('.form-group').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').check()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B3', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
-        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
+        cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('label', 'Urakoitsijan omailmoitus').parent().find('input').should('be.checked')
+        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B4')
         cy.contains('button', 'Muokkaa').click()
@@ -329,8 +346,9 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
-        cy.contains('td', testiSanktioKuvausMhu26B, {timeout: clickTimeout}).click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
+        cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
+        cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
     })
 })
@@ -342,7 +360,7 @@ describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
 
     it('Mene sanktiot ja bonukset -välilehdelle MHU24', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu24, evkPohjoisSuomi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu24, evkPohjoisSuomi, 2)
 
         // Varmistetaan, että näkymä latautui
         cy.contains('Sanktiot, bonukset ja arvonvähennykset').should('be.visible')
@@ -350,7 +368,7 @@ describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
 
     it('Lisää uusi sanktio MHU24', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu24, evkPohjoisSuomi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu24, evkPohjoisSuomi, 2)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallenna')
 
@@ -409,7 +427,7 @@ describe('Sanktiot toimii - MHU24 (Suomussalmi)', function () {
 
     it('Avaa sanktio listasta MHU24', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu24, evkPohjoisSuomi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu24, evkPohjoisSuomi, 2)
 
         // Klikataan luotua sanktiota gridissä
         cy.contains('td', testiSanktioKuvaus2).click()
@@ -519,7 +537,7 @@ describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function (
 
     it('MHU25: talvisuolan ylitys ei tallenna ennen viimeistä hoitovuotta', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
 
         cy.contains('Lisää uusi').click()
         cy.contains('h2', 'Lisää uusi').should('be.visible')
@@ -541,7 +559,7 @@ describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function (
 
     it('MHU25: talvisuolan ylitys tallentuu viimeisellä hoitovuodella', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaTalvisuolaMhu25')
 
@@ -630,10 +648,10 @@ describe('Siivotaan sanktiot lopuksi', function () {
 
     it('Tarkista, että kanta on siivottu', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu25, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
         cy.contains(testiSanktioKuvaus).should('not.exist')
 
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu24, evkPohjoisSuomi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu24, evkPohjoisSuomi, 2)
         cy.contains(testiSanktioKuvaus2).should('not.exist')
 
         avaaSanktiotJaBonuksetNakyma(testiurakkaMhu19, evkPohjoisSuomi)
