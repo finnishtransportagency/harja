@@ -128,6 +128,7 @@
         :data-cy "pot2-kulutuskerros"
        :luokat ["pot2-kulutuskerros-grid"]
        :voi-muokata? voi-muokata? :voi-lisata? false
+       :piilota-toiminnot? true
        :voi-kumota? false
        :custom-yla-panel custom-yla-panel
        :custom-yla-panel-otsikon-alla? true
@@ -396,7 +397,8 @@
                         "Massamenekki saa olla maksimissaan 50 kg/m2"
                         [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
                          [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
-                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)
+                             :reunan-voimakkuus :vahva}]
         :validoi [[:ei-tyhja "Anna arvo"]]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
 
@@ -411,7 +413,8 @@
                         "Massamenekki saa olla maksimissaan 50 kg/m2"
                         [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
                          [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
-                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)
+                             :reunan-voimakkuus :vahva}]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
 
        {:otsikko "Pinta-ala (m²)"

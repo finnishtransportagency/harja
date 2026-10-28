@@ -5,13 +5,16 @@
              [hallintayksikot :as hallintayksikot-q]
              [lampotilat :as suolasakko-q]
              [konversio :as konv]
-             [urakat :as urakat-q]]
+             [urakat :as urakat-q]
+             [suolarajoitus-kyselyt :as suolarajoitus-kyselyt]]
             [harja.palvelin.raportointi.raportit.yleinen :refer [raportin-otsikko] :as yleinen]
             [jeesql.core :refer [defqueries]]
             [harja.pvm :as pvm]))
 
 (defqueries "harja/palvelin/raportointi/raportit/ymparisto.sql"
   {:positional? true})
+
+(declare hae-ymparistoraportti-tiedot hae-materiaalit hae-talvisuolan-kokonaiskayttoraja-raportille)
 
 (def talvisuola-yht-rivi-materiaali "Talvisuolat yhteensä")
 (def materiaali-kaikki-talvisuola-yhteensa
@@ -34,13 +37,6 @@
    :yksikko "t"
    :yht-rivi true
    :tyyppi "kesasuola"})
-
-(def materiaali-kaikki-heikoitushiekat-yhteensa
-  {:id 999
-   :nimi "Hiekoitushiekka yhteensä"
-   :yksikko "t"
-   :yht-rivi true
-   :tyyppi "hiekoitushiekka"})
 
 (def materiaali-kaikki-murskeet-yhteensa
   {:id 999
@@ -98,13 +94,6 @@
                      :elinvoimakeskus elinvoimakeskus-id
                      :urakoittain? urakoittain?}))
 
-(defn- materiaalin-nimi [nimi]
-  (if-not (= "Talvisuola" nimi)
-    nimi
-    ;; Osa käyttäjistä on sekoittanut Talvisuola nimen tarkoittavan kaikkea käytettyä
-    ;; talvisuolaa. Tehdään siihen ero kertomalla että tämä on rakeista NaCl:ia
-    "Talvisuola, NaCl"))
-
 (defn- materiaalin-nimi-ja-selite [nimi]
   (case nimi
     "Talvisuola, rakeinen NaCl" {:arvo "Talvisuola, rakeinen" :selite "NaCl"}
@@ -121,12 +110,13 @@
     ;; default
     {:arvo nimi}))
 
-(defn- kk-rivit
-  "Kk-rivit toteumille eli tummmennetut rivit - ei hoitoluokkakohtaiset"
-  [rivit]
-  (group-by :kk (filter
-                  #(and (not (:talvitieluokka %)) (not (:soratieluokka %)))
-                  (remove #(nil? (:kk %)) rivit))))
+(defn- avainryhma-rivit
+  "avainryhma-rivit toteumille eli tummmennetut rivit - ei hoitoluokkakohtaiset"
+  [rivit koko-urakkaaika?]
+  (let [avain (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk)]
+    (group-by avain (filter
+                      #(and (not (:talvitieluokka %)) (not (:soratieluokka %)))
+                      (remove #(nil? (:kk %)) rivit)))))
 
 (defn- kk-arvot
   "Funktio joka palauttaa kk-arvot raportin ymmärtämässä muodossa ja oikeassa järjestyksessä"
@@ -166,7 +156,7 @@
   Kun luokka on nil, tulkitaan toteumaksi, ei hoitoluokittaiseksi määräksi."
   [talvisuolan-maxmaarat urakka urakoittain?]
   (let [talvisuolan-maxmaara (if urakoittain?
-                               (:talvisuolaraja (first (get talvisuolan-maxmaarat urakka)))
+                               (:talvisuolaraja (first (get talvisuolan-maxmaarat (:id urakka))))
                                (reduce + 0 (keep :talvisuolaraja
                                              (apply concat (vals talvisuolan-maxmaarat)))))]
     {:maara talvisuolan-maxmaara
@@ -200,9 +190,26 @@
     (hoitoluokat/talvihoitoluokan-nimi luokka)
     (hoitoluokat/soratieluokan-nimi luokka)))
 
-(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet urakoittain? osamateriaalit yksikot-soluissa?
-                               nayta-suunnittelu? urakkanumero?] :as taulukon-tiedot} kasittelija]
+(defn arvo-sarakkeen-leveys [koko-urakkaaika? urakoittain?]
+  (cond
+    (and urakoittain? (not koko-urakkaaika?)) "4.83%"
+    (and (not urakoittain?) (not koko-urakkaaika?))"5%"
+    koko-urakkaaika? "10%"
+    :else "5%"))
+
+(defn yhteensa-sarakkeen-leveys [urakoittain? koko-urakkaaika?]
+  (cond
+    (and urakoittain? (not koko-urakkaaika?)) "7%"
+    (and (not urakoittain?) (not koko-urakkaaika?)) "8%"
+    koko-urakkaaika? "12%"
+    :else "8%"))
+
+(defn koosta-taulukko [{:keys [otsikko konteksti kuukaudet hoitokaudet urakoittain? osamateriaalit yksikot-soluissa?
+                               nayta-suunnittelu? urakkanumero? koko-urakkaaika?] :as _taulukon-tiedot} kasittelija]
   (let [isantarivi-indeksi (atom -1)
+        ;; Raportilla voidaan näyttää joko kuukaudet (esim 11/24) tai hoitovuoden (esim 2024-2025)
+        arvosarakkeet (if (seq hoitokaudet) hoitokaudet kuukaudet)
+
         ;; Avattavien rivien indeksit päätellään loopilla.
         ;; Jos rivillä on lapsia, lisätään sen indeksi listaan ja inkrementoidaan seuraavaa indeksiä lasten määrällä.
 
@@ -250,7 +257,7 @@
         ;; Jokaisella taulukolla on omat isäntärivinsä. Eli rivit, joilla voi olla olla avattavia rivejä
         _ (reset! isantarivi-indeksi -1)]
     [:taulukko {:otsikko otsikko
-                :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ (if nayta-suunnittelu? 5 3) (count kuukaudet))))
+                :oikealle-tasattavat-kentat (into #{} (range (if urakoittain? 3 2) (+ (if nayta-suunnittelu? 5 3) (count arvosarakkeet))))
                 :esta-tiivis-grid? true
                 :sivuttain-rullattava? true
                 :ensimmainen-sarake-sticky? true
@@ -269,15 +276,15 @@
          ;; Materiaalin nimi
          [{:otsikko "Materiaali" :leveys (if urakoittain? "10%" "14%")}]
          ;; Kaikki kuukaudet
-         (map (fn [kk]
-                {:otsikko kk
-                 :leveys (if urakoittain? "4.83%" "5%")
-                 :fmt :numero}) kuukaudet)
+         (map (fn [arvo]
+                {:otsikko (if koko-urakkaaika? (str arvo "-" (inc arvo)) arvo)
+                 :leveys (arvo-sarakkeen-leveys koko-urakkaaika? urakoittain?) ;; Prosentti pitää laskea hoitokausissa eri tavalla
+                 :fmt :numero}) arvosarakkeet)
          (if nayta-suunnittelu?
-           [{:otsikko (str "Yhteensä") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
-            {:otsikko "Suunniteltu" :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}
+           [{:otsikko (str "Yhteensä") :leveys (yhteensa-sarakkeen-leveys urakoittain? koko-urakkaaika?) :fmt :numero :jos-tyhja "-"}
+            {:otsikko "Suunniteltu" :leveys (yhteensa-sarakkeen-leveys urakoittain? koko-urakkaaika?) :fmt :numero :jos-tyhja "-"}
             {:otsikko "Tot-%" :leveys (if urakoittain? "6%" "7%") :fmt :prosentti :jos-tyhja "-"}]
-           [{:otsikko (str "Yhteensä") :leveys (if urakoittain? "7%" "8%") :fmt :numero :jos-tyhja "-"}])))
+           [{:otsikko (str "Yhteensä") :leveys (yhteensa-sarakkeen-leveys urakoittain? koko-urakkaaika?) :fmt :numero :jos-tyhja "-"}])))
 
      (mapcat
        (fn [[{:keys [urakka materiaali]} rivit]]
@@ -295,7 +302,7 @@
                ;; Jos materiaalilla on avattavia rivejä, nostetaan isantarivin-indeksiä yhdellä
                ;; koska materiaalit, joilla ei ole niitä, ei löydy myöskään avattavat-rivit-vektorista.
                _ (when avattava? (swap! isantarivi-indeksi inc))
-               kk-rivit (kk-rivit rivit)
+               kk-rivit (avainryhma-rivit rivit koko-urakkaaika?)
                kk-arvot (kk-arvot kk-rivit materiaali yksikot-soluissa?)
                kk-arvot-yht (yhteensa-arvo (vals kk-arvot))
                poikkeamat (into {} (map (fn [[kk materiaalit]]
@@ -312,7 +319,7 @@
                                                   :desimaalien-maara 2
                                                   :ryhmitelty? true
                                                   :varoitus? (< poikkeama-varoitus-raja (Math/abs (float prosentti)))}]}))
-                                     (group-by :kk rivit)))
+                                     (group-by (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk) rivit)))
                yhteensa-kentta (fn [arvot nayta-aina?]
                                  (let [yht (yhteensa-arvo arvot)]
                                    (when (or (> yht 0) nayta-aina?)
@@ -356,8 +363,8 @@
                                  lisaa-yksikko?
                                  (update :selite #(str % (when % ", ") (:yksikko materiaali))))]])
 
-                           ;; Kuukausittaiset määrät, viiva jos tyhjä.
-                           (map #(or (kk-arvot %) "–") kuukaudet)
+                           ;; Arvosarakkeiden määrät, viiva jos tyhjä.
+                           (map #(or (kk-arvot %) "–") arvosarakkeet)
 
                            ;; Yhteensä, toteumaprosentti ja suunniteltumäärä
                            (if nayta-suunnittelu?
@@ -393,19 +400,28 @@
              ;; Mahdolliset hoitoluokkakohtaiset rivit - Hoitoluokat ovat valmiina vain talvisuolalle ja formiaateille
              ;; Jätetään soratieluokat myöhempää aikaa varten
              (concat (mapv (fn [[luokka rivit]]
-                             (let [rivit (if (or urakoittain? (= konteksti :urakka))
+                             (let [rivit (cond
+                                           koko-urakkaaika?
+                                           (map (fn [[_ rivit]]
+                                                  (assoc (first rivit) :maara (reduce + 0 (keep :maara rivit))))
+                                             (group-by :hoitokauden-alkuvuosi rivit))
+
+                                           (or urakoittain? (= konteksti :urakka))
                                            rivit
+
                                            ;; Jos ei eritellä urakoittain, on laskettava eri urakoiden määrät yhteen
+                                           :else
                                            (map
                                              #(assoc (first (val %)) :maara (reduce + 0 (keep :maara (val %))))
-                                             (group-by :kk rivit)))
+                                             (group-by (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk) rivit)))
                                    kk-arvot (into {}
-                                              (map (juxt :kk #(if yksikot-soluissa?
-                                                                [:arvo-ja-yksikko {:arvo (:maara %)
-                                                                                   :yksikko (:yksikko materiaali)
-                                                                                   :desimaalien-maara 2
-                                                                                   :ryhmitelty? true}]
-                                                                (:maara %))))
+                                              (map (juxt (if koko-urakkaaika? :hoitokauden-alkuvuosi :kk)
+                                                     #(if yksikot-soluissa?
+                                                        [:arvo-ja-yksikko {:arvo (:maara %)
+                                                                           :yksikko (:yksikko materiaali)
+                                                                           :desimaalien-maara 2
+                                                                           :ryhmitelty? true}]
+                                                        (:maara %))))
                                               rivit)]
                                {:lihavoi? false
                                 ;; Ja täällä haetaan isanta-rivin-id avattavat-rivit-vektorista isäntärivin indeksillä.
@@ -421,7 +437,7 @@
                                             [(hoitoluokalle-nimi luokka otsikko)])
 
                                           ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
-                                          (map #(or (kk-arvot %) "–") kuukaudet)
+                                          (map #(or (kk-arvot %) "–") arvosarakkeet)
 
                                           (if nayta-suunnittelu?
                                             [(yhteensa-kentta (vals kk-arvot) true)
@@ -443,7 +459,7 @@
                                                 :info poikkeama-info}]]
 
                              ;; Hoitoluokkakohtaiselle riville myös viiva jos ei arvoa.
-                             (map #(or (poikkeamat %) "–") kuukaudet)
+                             (map #(or (poikkeamat %) "–") arvosarakkeet)
 
                              (let [arvo (yhteensa-arvo (vals poikkeamat))]
                                (concat
@@ -458,60 +474,165 @@
                                  (when nayta-suunnittelu? [nil nil])))))}])))))
        osamateriaalit)]))
 
-(defn summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan [urakoittain? materiaalit-kannasta materiaalityyppi]
-  (let [ryhmittely-fn (if urakoittain? (juxt :kk :urakka) :kk)
+(defn summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan [urakoittain? materiaalit-kannasta materiaalityyppi koko-urakkaaika?]
+  (let [ryhmittely-fn (cond
+                        koko-urakkaaika?
+                        :hoitokauden-alkuvuosi
+
+                        urakoittain?
+                        (juxt :kk :urakka)
+
+                        :else
+                        :kk)
         materiaalit (apply concat (map second materiaalit-kannasta))
         valitut-materiaalit (filter
                               (fn [rivi]
                                 (and
-                                  ;; summataan vain toteumat eli kun luokka (viittaa talvihoitoluokkaan) ja soratieluokka on nil
+                                  ;; summataan vain toteumat
+                                  (= "toteuma" (:maarantyyppi rivi))
+                                  ;; ja kun luokka (viittaa talvihoitoluokkaan) ja soratieluokka on nil
+                                  ;; SQL haku on vähän monimutkainen ja tällä filtteröinnillä estetään raportti_toteutuneet_materiaalit
+                                  ;; ja urakan_materiaalin_kaytto_hoitoluokittain taulujen hakutulosten duplikointi
                                   (and (nil? (:talvitieluokka rivi)) (nil? (:soratieluokka rivi)))
                                   (= (str materiaalityyppi) (str (get-in rivi [:materiaali :tyyppi])))))
                               materiaalit)]
     (group-by ryhmittely-fn valitut-materiaalit)))
 
-(defn materiaalit-summattuna-ja-ryhmiteltyna [urakoittain? materiaalityyppi-ryhmiteltyna yht-rivi-materiaali]
-  (map (fn [[ryhmittelyavain rivit]]
-         {(if urakoittain?
-            ;; [kk urakka]
-            [(first ryhmittelyavain) (second ryhmittelyavain)]
-            ;; kk
-            [ryhmittelyavain])
-          (assoc (first rivit) :maara (reduce + (keep :maara rivit))
-            :materiaali yht-rivi-materiaali
-            :urakka (if urakoittain?
-                      (:urakka (first rivit))
-                      nil))})
+(defn materiaalit-summattuna-ja-ryhmiteltyna [urakoittain? koko-urakkaaika? materiaalityyppi-ryhmiteltyna yht-rivi-materiaali]
+  (mapv (fn [[ryhmittelyavain rivit]]
+          {(cond
+             koko-urakkaaika?
+             [ryhmittelyavain]
+
+             urakoittain?
+             ;; [kk urakka]
+             [(first ryhmittelyavain) (second ryhmittelyavain)]
+
+             ;; kk
+             :else
+             [ryhmittelyavain])
+           (assoc (first rivit) :maara (reduce + (keep :maara rivit))
+             :materiaali yht-rivi-materiaali
+             :urakka (if urakoittain?
+                       (:urakka (first rivit))
+                       nil))})
     materiaalityyppi-ryhmiteltyna))
 
-(defn koosta-yhteensa-rivi [tyypin-mukaan-jaotellut-materiaalit tyypin-yhteensa-materiaali]
-  (if-not (empty? tyypin-mukaan-jaotellut-materiaalit)
-    (mapv (fn [[urakka rivit]]
-            [{:materiaali tyypin-yhteensa-materiaali
-              :urakka urakka}
-             rivit])
-      tyypin-mukaan-jaotellut-materiaalit)
-    (list [{:maara 0
-            :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
-            :materiaali tyypin-yhteensa-materiaali}])))
+(defn summaa-murskeiden-suunnitelmat [urakoittain? materiaalit-kannasta]
+  (->> (mapcat second materiaalit-kannasta)
+    (filter (fn [rivi]
+              (and (= "suunnitelma" (:maarantyyppi rivi))
+                (= "murske" (get-in rivi [:materiaali :tyyppi]))
+                (nil? (:talvitieluokka rivi))
+                (nil? (:soratieluokka rivi)))))
+    (group-by #(when urakoittain? (:urakka %)))
+    (map (fn [[urakka rivit]]
+           [urakka [{:maara (reduce + 0 (keep :maara rivit))
+                     :talvitieluokka nil
+                     :soratieluokka nil
+                     :kk nil
+                     :urakka urakka
+                     :materiaali materiaali-kaikki-murskeet-yhteensa
+                     :maarantyyppi "suunnitelma"}]]))
+    (into {})))
 
-(defn suorita [db user {:keys [alkupvm loppupvm
-                               urakka-id elinvoimakeskus-id
-                               urakoittain? urakkatyyppi urakkanumero? tyomaakokousraportti? kasittelija] :as parametrit}]
-  (let [urakoittain? (if urakka-id false urakoittain?)
+(defn summaa-formiaattien-suunnitelmat [urakoittain? materiaalit-kannasta]
+  (->> (mapcat second materiaalit-kannasta)
+    (filter (fn [rivi]
+              (and (= "suunnitelma" (:maarantyyppi rivi))
+                (= "formiaatti" (get-in rivi [:materiaali :tyyppi]))
+                (nil? (:talvitieluokka rivi))
+                (nil? (:soratieluokka rivi)))))
+    (group-by #(when urakoittain? (:urakka %)))
+    (map (fn [[urakka rivit]]
+           [urakka [{:maara (reduce + 0 (keep :maara rivit))
+                     :talvitieluokka nil
+                     :soratieluokka nil
+                     :kk nil
+                     :urakka urakka
+                     :materiaali materiaali-kaikki-formiaatit-yhteensa
+                     :maarantyyppi "suunnitelma"}]]))
+    (into {})))
+
+(defn koosta-yhteensa-rivi
+  ([tyypin-mukaan-jaotellut-materiaalit tyypin-yhteensa-materiaali]
+   (koosta-yhteensa-rivi tyypin-mukaan-jaotellut-materiaalit tyypin-yhteensa-materiaali {}))
+  ([tyypin-mukaan-jaotellut-materiaalit tyypin-yhteensa-materiaali suunnitelmat-urakoittain]
+   (let [rivit-urakoittain (merge-with into
+                            (into {} (map (fn [[urakka rivit]] [urakka (vec rivit)])
+                                       tyypin-mukaan-jaotellut-materiaalit))
+                            suunnitelmat-urakoittain)]
+     (if-not (empty? rivit-urakoittain)
+       (mapv (fn [[urakka rivit]]
+               [{:materiaali tyypin-yhteensa-materiaali
+                 :urakka urakka}
+                rivit])
+         rivit-urakoittain)
+       (list [{:maara 0
+               :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
+               :materiaali tyypin-yhteensa-materiaali}])))))
+
+(defn muodosta-talvisuolan-yhteensa-rivi [db kontekstin-urakka-idt hoitokauden-alkuvuosi
+                                          hoitokaudet urakoittain? materiaali-kaikki-talvisuola-yhteensa talvisuolatoteumat]
+  (let [talvisuolarajat (hae-talvisuolan-kokonaiskayttoraja-raportille db
+                          {:urakka_idt kontekstin-urakka-idt
+                           :hoitokauden-alkuvuodet (if (seq hoitokaudet) hoitokaudet [hoitokauden-alkuvuosi])})
+        talvisuolan-maxmaarat (group-by #(get-in % [:urakka :id]) (map konv/alaviiva->rakenne talvisuolarajat))
+        talvisuolaa-suunniteltu-yhteensa (apply + (keep :talvisuolaraja talvisuolarajat)) #_(if koko-urakkaaika?
+                                                                                              talvisuolarajat-yhteensa
+                                                                                              (apply + (keep :talvisuolaraja talvisuolarajat)))
+
+
+        ;; Lisätään suolasummiin talvisuolojen käyttörajat
+        talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
+                                    (mapv (fn [[{_materiaali :materiaali urakka :urakka :as avain} rivit]]
+                                           [avain (conj rivit (urakan-talvisuolan-maxmaara talvisuolan-maxmaarat
+                                                                urakka
+                                                                urakoittain?))])
+                                      talvisuolatoteumat)
+                                    (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil :hoitokauden-alkuvuosi nil
+                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}
+                                           [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))]
+    talvisuolat-yhteensa-rivi))
+
+(defn muodosta-kesasuolan-yhteensa-rivi [urakoittain? materiaali-kaikki-kesasuolat-yhteensa kesasuolatoteumat kesasuolan-suunnittelurivi]
+  (let [kokonaismaara (apply + (map :maara (second kesasuolan-suunnittelurivi)))]
+    (if-not (empty? kesasuolatoteumat)
+      (map (fn [[{_materiaali :materiaali urakka :urakka :as avain} rivit]]
+             [avain (conj rivit {:maara kokonaismaara
+                                 :talvitieluokka nil :kk nil :urakka (when urakoittain? urakka)
+                                 :materiaali materiaali-kaikki-kesasuolat-yhteensa})])
+        kesasuolatoteumat)
+      (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
+              :materiaali materiaali-kaikki-kesasuolat-yhteensa}
+             [{:kk nil :maara kokonaismaara}]]))))
+
+(defn suorita [db user {:keys [alkupvm loppupvm urakka-id elinvoimakeskus-id urakoittain? urakkatyyppi urakkanumero?
+                               tyomaakokousraportti? kasittelija koko-urakkaaika?] :as parametrit}]
+  (let [urakan-tiedot (first (urakat-q/hae-urakka db urakka-id))
+        urakoittain? (if urakka-id false urakoittain?)
         ;;tyomaakokousraportissa näytetään aina koko hoitovuoden tiedot, vaikka on kuukausi valittuna
         alkupvm (if tyomaakokousraportti? (first (pvm/paivamaaran-hoitokausi alkupvm)) alkupvm)
         loppupvm (if tyomaakokousraportti? (second (pvm/paivamaaran-hoitokausi loppupvm)) loppupvm)
+
+        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
+        ;; Hoitokausista otetaan vain alkuvuosi
+        hoitokaudet (when koko-urakkaaika?
+                      (map #(pvm/vuosi (:alkupvm %)) (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db urakka-id))))
         konteksti (cond urakka-id :urakka
                     elinvoimakeskus-id :elinvoimakeskus
                     :default :koko-maa)
+
+        ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
+        hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
         materiaalit-kannasta (if urakoittain?
                                (hae-raportti-urakoittain db alkupvm loppupvm elinvoimakeskus-id urakkatyyppi urakoittain?)
                                (hae-raportti db alkupvm loppupvm urakka-id elinvoimakeskus-id urakkatyyppi urakoittain?))
+        kontekstin-urakka-idt (set (keep #(get-in % [:urakka :id]) (apply concat (vals materiaalit-kannasta))))
         raportin-nimi "Ympäristöraportti"
         otsikko (raportin-otsikko
                   (case konteksti
-                    :urakka (let [{nimi :nimi urakkanro :alueurakkanumero} (first (urakat-q/hae-urakka db urakka-id))]
+                    :urakka (let [{nimi :nimi urakkanro :alueurakkanumero} urakan-tiedot]
                               (if urakkanro
                                 (format "%s (%s)" nimi urakkanro)
                                 nimi))
@@ -519,76 +640,58 @@
                                                      db elinvoimakeskus-id)))
                     :koko-maa "KOKO MAA")
                   raportin-nimi alkupvm loppupvm)
-        talvisuola-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain?
-                                                    materiaalit-kannasta "talvisuola")
-        formiaatti-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain?
-                                                    materiaalit-kannasta "formiaatti")
-        kesasuola-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain?
-                                                   materiaalit-kannasta "kesasuola")
-        murske-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain?
-                                                materiaalit-kannasta "murske")
 
-        talvisuola-toteumat-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? talvisuola-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-talvisuola-yhteensa)
-        kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? formiaatti-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-formiaatit-yhteensa)
-        kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? kesasuola-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-kesasuolat-yhteensa)
-        kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna
-        (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? murske-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-murskeet-yhteensa)
+        ;; Talvisuola
+        talvisuola-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain? materiaalit-kannasta "talvisuola" koko-urakkaaika?)
+        talvisuola-toteumat-ryhmiteltyna-ja-summattuna (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? koko-urakkaaika? talvisuola-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-talvisuola-yhteensa)
 
-        talvisuola-toteumat-ryhmiteltyna-ja-summattuna
-        (group-by :urakka
-          (apply concat (map vals talvisuola-toteumat-ryhmiteltyna-ja-summattuna)))
+        talvisuola-toteumat-ryhmiteltyna-ja-summattuna (group-by :urakka (apply concat (map vals talvisuola-toteumat-ryhmiteltyna-ja-summattuna)))
         talvisuolatoteumat (mapv (fn [[urakka rivit]]
                                    [{:materiaali materiaali-kaikki-talvisuola-yhteensa
                                      :urakka urakka}
                                     rivit])
                              talvisuola-toteumat-ryhmiteltyna-ja-summattuna)
+        talvisuolat-yhteensa-rivi (muodosta-talvisuolan-yhteensa-rivi db kontekstin-urakka-idt hoitokauden-alkuvuosi hoitokaudet urakoittain? materiaali-kaikki-talvisuola-yhteensa talvisuolatoteumat)
 
-        kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
-        (group-by :urakka
-          (apply concat (map vals kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)))
+        ;; Kesäsuola
+        kesasuola-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain? materiaalit-kannasta "kesasuola" koko-urakkaaika?)
+        kesasuolan-suunnittelurivi (first (filter
+                                            (fn [rivi]
+                                              (and
+                                                (= "Kesäsuola" (get-in (first rivi) [:materiaali :nimi]))
+                                                (= "kesasuola" (get-in (first rivi) [:materiaali :tyyppi]))
+                                                #_ (= "suunnittelu" (:maarantyyppi rivi))))
+                                            materiaalit-kannasta))
+        kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? koko-urakkaaika? kesasuola-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-kesasuolat-yhteensa)
+        kesasuola-toteumat-ryhmiteltyna-ja-summattuna (group-by :urakka (apply concat (map vals kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)))
+        kesasuolatoteumat (mapv (fn [[urakka rivit]]
+                                  [{:materiaali materiaali-kaikki-kesasuolat-yhteensa
+                                    :urakka urakka}
+                                   rivit])
+                            kesasuola-toteumat-ryhmiteltyna-ja-summattuna)
+        kesasuola-yhteensa-rivi (muodosta-kesasuolan-yhteensa-rivi urakoittain? materiaali-kaikki-kesasuolat-yhteensa kesasuolatoteumat kesasuolan-suunnittelurivi)
+
+        ;; Formiaatit
+        formiaatti-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain? materiaalit-kannasta "formiaatti" koko-urakkaaika?)
+        kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? koko-urakkaaika? formiaatti-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-formiaatit-yhteensa)
+        kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna (group-by :urakka (apply concat (map vals kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna)))
+        formiaattien-suunnitelmat (summaa-formiaattien-suunnitelmat urakoittain? materiaalit-kannasta)
         formiaatit-yhteensa-rivi (koosta-yhteensa-rivi
                                    kaikki-formiaatit-yhteensa-ryhmiteltyna-ja-summattuna
-                                   materiaali-kaikki-formiaatit-yhteensa)
+                                   materiaali-kaikki-formiaatit-yhteensa
+                                   formiaattien-suunnitelmat)
 
-        kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
-        (group-by :urakka
-          (apply concat (map vals kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna)))
-        kesasuola-yhteensa-rivi (koosta-yhteensa-rivi
-                                  kaikki-kesasuolat-yhteensa-ryhmiteltyna-ja-summattuna
-                                  materiaali-kaikki-kesasuolat-yhteensa)
-        kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna (group-by :urakka
-                                                              (apply concat (map vals kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)))
-        murske-yhteensa-rivi (koosta-yhteensa-rivi
-                               kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna
-                               materiaali-kaikki-murskeet-yhteensa)
+        ;; Murskeet
+        murske-toteumat-yhteensa-ryhmiteltyna (summaa-toteumat-ja-ryhmittele-materiaalityypin-mukaan urakoittain? materiaalit-kannasta "murske" koko-urakkaaika?)
+        kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna (materiaalit-summattuna-ja-ryhmiteltyna urakoittain? koko-urakkaaika? murske-toteumat-yhteensa-ryhmiteltyna materiaali-kaikki-murskeet-yhteensa)
+        kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna (group-by :urakka (apply concat (map vals kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna)))
+        murskeiden-suunnitelmat (summaa-murskeiden-suunnitelmat urakoittain? materiaalit-kannasta)
+        murske-yhteensa-rivi (koosta-yhteensa-rivi kaikki-murskeet-yhteensa-ryhmiteltyna-ja-summattuna
+                              materiaali-kaikki-murskeet-yhteensa
+                              murskeiden-suunnitelmat)
 
-        kontekstin-urakka-idt (set (keep #(get-in % [:urakka :id]) (apply concat (vals materiaalit-kannasta))))
-
-        ;; Haetaan tietokannasta kontekstin urakoiden talvisuolojen käyttörajat
-        hoitokauden-alkuvuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi alkupvm)))
-        talvisuolarajat (suolasakko-q/hae-urakoiden-talvisuolarajat db
-                          {:urakka_idt kontekstin-urakka-idt
-                           :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
-        talvisuolan-maxmaarat (group-by :urakka (map konv/alaviiva->rakenne talvisuolarajat))
-        talvisuolaa-suunniteltu-yhteensa (apply + (keep :talvisuolaraja talvisuolarajat))
-
-        ;; Lisätään suolasummiin talvisuolojen käyttörajat
-        talvisuolat-yhteensa-rivi (if-not (empty? talvisuolatoteumat)
-                                    (map (fn [[{materiaali :materiaali urakka :urakka :as avain} rivit]]
-                                           [avain (conj rivit (urakan-talvisuolan-maxmaara talvisuolan-maxmaarat
-                                                                urakka
-                                                                urakoittain?))])
-                                      talvisuolatoteumat)
-                                    (list [{:maara 0 :talvitieluokka nil :soratieluokka nil :kk nil :urakka nil
-                                            :materiaali materiaali-kaikki-talvisuola-yhteensa}
-                                           [{:kk nil :maara talvisuolaa-suunniteltu-yhteensa}]]))
-
+        ;; Ydistä data
         materiaalit (sort #(materiaalien-comparator %2 %1) (concat materiaalit-kannasta talvisuolat-yhteensa-rivi formiaatit-yhteensa-rivi kesasuola-yhteensa-rivi murske-yhteensa-rivi))
-
-        kuukaudet (yleinen/kuukaudet alkupvm loppupvm yleinen/kk-ja-vv-fmt)
         materiaalit-tyypin-mukaan (fn [materiaalityyppi]
                                     (keep (fn [rivi]
                                             (when (and
@@ -599,16 +702,19 @@
                                                     (= materiaalityyppi (get-in (first rivi) [:materiaali :tyyppi])))
                                               rivi))
                                       materiaalit))
+
         taulukon-tiedot {:otsikko nil
                          :osamateriaalit nil
                          :konteksti konteksti
                          :kuukaudet kuukaudet
+                         :hoitokaudet hoitokaudet
                          :urakoittain? urakoittain?
                          :urakkanumero? urakkanumero?
                          :yksikot-soluissa? false
-                         :nayta-suunnittelu? (if (pvm/onko-hoitokausi? alkupvm loppupvm)
+                         :nayta-suunnittelu? (if (or (pvm/onko-hoitokausi? alkupvm loppupvm) koko-urakkaaika?)
                                                true
-                                               false)}]
+                                               false)
+                         :koko-urakkaaika? koko-urakkaaika?}]
     [:raportti {:nimi raportin-nimi
                 :orientaatio :landscape}
      [:teksti-paksu otsikko]

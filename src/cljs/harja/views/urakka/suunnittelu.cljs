@@ -33,9 +33,9 @@
     :kokonaishintaiset (not= tyyppi :teiden-hoito)
     :yksikkohintaiset (not= tyyppi :teiden-hoito)
     :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))) ;; => 2025 alkaen sekä yli 5-vuotisilla
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (or (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka) (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))) ;; => 2025 alkaen sekä yli 5-vuotisilla
     :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
-    :tarjous (and (= tyyppi :teiden-hoito) (or (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))))) ;; => 2025 alkaen sekä yli 5-vuotisilla
+    :tarjous (and (= tyyppi :teiden-hoito) (or (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka) (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))))) ;; => 2025 alkaen sekä yli 5-vuotisilla
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -90,7 +90,7 @@
                   (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
                   (some-> alkupvm pvm/vuosi (>= 2025)))
             ^{:key "tehtavat-maarat"}
-            [tehtavat-maarat-nakyma/tehtavat-maarat]) 
+            [tehtavat-maarat-nakyma/tehtavat-maarat])
 
           "Kokonaishintaiset työt"
           :kokonaishintaiset
@@ -131,7 +131,7 @@
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
             [kiintiot/kiintiot])
-          
+
           "Kalustoresurssit"
           :kalustoresurssit
           (when (and

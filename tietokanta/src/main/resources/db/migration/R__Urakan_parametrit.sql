@@ -45,13 +45,13 @@ BEGIN
                                             ELSE tavoitepalkkion_maksuprosentti_2025_ END);
             tavoitehinnan_ylityksen_maksuprosentti := (CASE
                                                            WHEN urakan_tiedot.alkupvm < '2024-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                                urakan_tiedot.sopimustyyppi IS DISTINCT FROM 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024
                                                            WHEN urakan_tiedot.alkupvm > '2024-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi != 'mhu+'
+                                                                urakan_tiedot.sopimustyyppi IS DISTINCT FROM 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2025_
                                                            WHEN urakan_tiedot.alkupvm > '2023-10-02' AND
-                                                                urakan_tiedot.sopimustyyppi = 'mhu+'
+                                                                urakan_tiedot.sopimustyyppi IS NOT NULL AND urakan_tiedot.sopimustyyppi = 'mhu+'
                                                                THEN tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2024_MHUplus
                 -- Kaikille muille defaulttina 70%
                                                            ELSE tavoitehinnan_ylityksen_tilaajan_maksuprosentti_2019_2024 END);
@@ -83,7 +83,7 @@ BEGIN
                                                                       THEN FALSE
                                                                   ELSE TRUE END);
             onko_laskutusraja_kaytossa := (CASE
-                                          WHEN urakan_tiedot.alkupvm >= '2025-10-01' THEN TRUE
+                                          WHEN urakan_tiedot.alkupvm >= '2025-01-01' THEN TRUE
                                           ELSE FALSE END);
             onko_muutosten_hallinta_kaytossa := (CASE
                                                      WHEN urakan_tiedot.alkupvm >= '2025-01-01' THEN TRUE
@@ -122,13 +122,13 @@ BEGIN
                                                kattohintaylityksen_siirron_prosenttirajoitus,
                                                muokkaa_kattohinta_kasin,
                                                hoitokauden_lopun_kattohinta_kerroin,
-                                               lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, luoja, luotu, laskutusraja_kaytossa)
+                                               lisaa_tavoitehintaan_hoitovuodenlopunindeksikorjaus, luoja, luotu, laskutusraja_kaytossa, muutosten_hallinta)
                 VALUES (urakan_tiedot.id, indeksi_kaytossa, indeksi_kaytossa, bonusprosentti, sanktioprosentti,
                         tavoitepalkkioprosentti, tavoitepalkkionmaxprosentti,
                         (100 - tavoitehinnan_ylityksen_maksuprosentti), tavoitehinnan_ylityksen_maksuprosentti,
                         kattohintaylityksen_prosenttirajoitus_siirrolle, muokkaa_kasin_kattohinta,
                         kerroin_hoitokauden_lopun_kattohinnalle,
-                        tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW(), onko_laskutusraja_kaytossa);
+                        tavoitehintaan_hoitovuodenlopunindeksikorjaus, luojaid, NOW(), onko_laskutusraja_kaytossa, onko_muutosten_hallinta_kaytossa);
             END IF;
         end LOOP;
 END

@@ -119,7 +119,11 @@
                 (oikeudet/urakat-kulut id)
                 (not= tyyppi :paallystys)
                 (not= tyyppi :tiemerkinta)
-                (not (urakka/vesivaylaurakkatyyppi? tyyppi)))
+                (or
+                  (not (urakka/vesivaylaurakkatyyppi? tyyppi))
+                  (and
+                    (= tyyppi :vesivayla-hoito)
+                    (k/kehitysymparistossa?))))
 
     :laskutus-vesivaylat (and
                            (oikeudet/urakat-kulut-vesivaylalaskutusyhteenveto id)
@@ -168,6 +172,8 @@
             (nav/aseta-valittu-valilehti! :urakat :yleiset))
         mhu-urakka? (= :teiden-hoito
                       (:tyyppi ur))
+        vesivayla-hoito-urakka? (= :vesivayla-hoito
+                                 (:tyyppi ur))
         sopimustyyppi (:sopimustyyppi ur)
         hae-urakan-tyot (fn [ur]
                           ;; Urakan töitä ei tarvita, jos käsitellään paikkauksia tai lupauksia tai kustannusten seurantaa. Joten
@@ -218,7 +224,7 @@
          ^{:key "suunnittelu"}
          [suunnittelu/suunnittelu ur])
 
-       (if mhu-urakka? "Kulut" "Laskutus")
+       (if (or mhu-urakka? (and vesivayla-hoito-urakka? (k/kehitysymparistossa?))) "Kulut" "Laskutus")
        :laskutus
        (when (valilehti-mahdollinen? :laskutus ur)
          ^{:key "laskutus"}

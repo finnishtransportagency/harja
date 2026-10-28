@@ -517,6 +517,7 @@
                {:haetaan? false
                 :tieosuudet (mapv #(assoc % :valittu? false) (:tieosuudet vastaus))
                 :kohteen-ulkopuolelle-jatkuvat (:kohteen-ulkopuolelle-jatkuvat vastaus)
+                :tieosuuksia-rajattu? (:tieosuuksia-rajattu? vastaus)
                 :virhe nil}))
 
   HaeTieosuudetEpaonnistui

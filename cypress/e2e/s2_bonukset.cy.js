@@ -8,6 +8,7 @@ import {
     testiurakkaMhu23,
     testiurakkaMhu25
 } from '../support/sanktiotJaBonuksetFns';
+import {kuluvaHoitokausiAlkuvuosi} from '../support/apurit.js';
 
 // Bonusten E2E-testit (Sanktiot ja bonukset -näkymä).
 // Sanktiotestit ovat omassa tiedostossaan: s2_sanktiot.cy.js
@@ -17,6 +18,17 @@ import {
 let testiBonusPerustelu = "CY-bonus-perustelu";
 let testiBonusPerustelu2 = "CY-bonus-perustelu2";
 let testiBonusPerustelu3 = "CY-bonus-perustelu3";
+const mhu25HoitokausiAlkuvuosi = kuluvaHoitokausiAlkuvuosi();
+const mhu25EnsimmainenHoitovuosi = `1. hoitovuosi (${mhu25HoitokausiAlkuvuosi} - ${mhu25HoitokausiAlkuvuosi + 1})`;
+const mhu23HoitokausiAlkuvuosi = kuluvaHoitokausiAlkuvuosi(-1);
+const mhu23KolmasHoitovuosi = '3. hoitovuosi';
+
+function valitseHoitokausi(hoitokausi) {
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
+        cy.get('button').click({force: true});
+        cy.contains(hoitokausi).click();
+    });
+}
 
 describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
     before(function () {
@@ -39,6 +51,8 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         cy.contains('label', 'Bonus').click()
         cy.wait(250) // odotetaan, että lomake päivittyy
 
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'Bonus tienkäyttäjien hyvästä palvelusta ja urakoitsijan innovatiivisuudesta'});
+
         // Varmistetaan, että Indeksi-kenttä EI näy bonus-lomakkeella
         cy.contains('label', 'Indeksi').should('not.exist')
 
@@ -53,22 +67,25 @@ describe('Bonukset toimii - MHU25 (Rovaniemi)', function () {
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('300')
 
         // Käsitelty pvm
-        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type('{selectall}15.02.2026')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type(`{selectall}01.10.${mhu25HoitokausiAlkuvuosi}`)
 
         // Siirretään fokus pois päivämääräkentästä
         cy.get('label').contains('Perustelu').click()
 
         // Varmistetaan, että "Laskutuskuukausi" -kenttä on "Kohdistuu hoitovuodelle" ja hoitovuosi on valittavissa
         //cy.get('label').contains('Kohdistuu hoitovuodelle').parent().parent().parent().find('button').should('have.length', 0)
-        cy.get('label[for*=perintapvm] + div').valinnatValitse({valinta: '1. hoitovuosi (2025 - 2026)'});
+        cy.get('label[for*=perintapvm] + div').valinnatValitse({valinta: mhu25EnsimmainenHoitovuosi});
         cy.get('label').contains('Laskutuskuukausi').should('not.exist')
 
         // Varmistetaan, että "Käsittelytapa" -kenttää ei ole MHU25 urakalla
         cy.get('label').contains('Käsittelytapa').should('not.exist')
 
         // Tallenna
-        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
+        cy.get('div.lomake-footer button').contains('Tallenna')
+            .should('not.be.disabled')
+            .click({force: true});
         cy.wait('@tallennaBonus', {timeout: clickTimeout})
+            .its('response.statusCode').should('equal', 200)
 
         // Varmistetaan onnistuminen
         cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
@@ -129,7 +146,7 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         cy.get('label').contains('Summa').parent().parent().parent().find('input').first().clear().type('400')
 
         // Käsitelty pvm
-        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type('{selectall}15.02.2026')
+        cy.get('label').contains('Käsitelty').parent().parent().parent().find('input').first().type(`{selectall}15.02.${mhu23HoitokausiAlkuvuosi + 1}`)
 
         // Siirretään fokus pois päivämääräkentästä
         cy.get('label').contains('Perustelu').click()
@@ -137,7 +154,7 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         // Varmistetaan, että "Laskutuskuukausi" -kenttä ON käytössä (ei disabled) MHU23 urakalla
         cy.get('[data-cy="koontilaskun-kk-dropdown"]').within(() => {
             cy.get('button').click({force: true});
-            cy.contains('Helmikuu 2026 (3. hoitovuosi)');
+            cy.contains(`Helmikuu ${mhu23HoitokausiAlkuvuosi + 1} (3. hoitovuosi)`);
         });
 
         // Siirretään focus pois
@@ -150,6 +167,7 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
         cy.wait('@tallennaBonus', {timeout: clickTimeout})
+            .its('response.statusCode').should('equal', 200)
 
         // Varmistetaan onnistuminen
         cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
@@ -158,6 +176,7 @@ describe('Bonukset toimii - MHU23 (Raahe)', function () {
     it('Avaa bonus listasta MHU23 (Raahe)', function () {
         cy.viewport(1100, 1200)
         avaaSanktiotJaBonuksetNakyma(testiurakkaMhu23, evkPohjoisSuomi)
+        valitseHoitokausi(mhu23KolmasHoitovuosi)
 
         // Klikataan luotua bonusta gridissä
         cy.contains('td', testiBonusPerustelu2).click()
@@ -223,6 +242,7 @@ describe('Bonukset toimii - MHU19 (Oulu)', function () {
         // Tallenna
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true});
         cy.wait('@tallennaBonus', {timeout: clickTimeout})
+            .its('response.statusCode').should('equal', 200)
 
         // Varmistetaan onnistuminen
         cy.get('.toast-viesti', {timeout: clickTimeout}).should('be.visible')
@@ -261,9 +281,8 @@ describe('Siivotaan bonukset lopuksi', function () {
     })
 })
 
-// TODO: kovakoodatut vuodet ja hoitovuositekstit ('1. hoitovuosi (2025 - 2026)',
-// 'Helmikuu 2026 (3. hoitovuosi)', 'Toukokuu 2024 (5. hoitovuosi)') pitäisi laskea
-// kuluvasta hoitokaudesta, esim. apurit.js:n kuluvaHoitokausiAlkuvuosi-funktiolla.
+// MHU23:n ja päättyneen MHU19:n vuodet ovat sidottuja niiden historialliseen
+// testidataan. MHU25:n aloitusvuosi taas tulee testidatassa nykyisestä päivästä.
 // HUOM: päättyneille urakoille (MHU19 Oulu 2019-2024) kuluva hoitokausi ei toimi,
 // koska pvm:n on oltava urakan voimassaolon sisällä.
 

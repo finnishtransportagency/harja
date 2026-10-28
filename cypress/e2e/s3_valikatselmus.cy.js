@@ -1,41 +1,46 @@
 let timeout = 60000; // Minuutin timeout hitaan ci putken takia
+let clickTimeout = 10000;
 const testiaika = new Date(2021, 9, 15, 12).getTime() // Urakan 1. vuoden loppu
+const urakkanimi = "Raahen MHU 2023-2028";
 
 // Helper funkkareita
-function siivoaKanta() {
+function siivoaKanta(urakkanimi) {
     console.log("Siivotaan kanta!");
-    let komento = 'psql -h localhost -U harja harja -c ' + "\"DELETE FROM tavoitehinnan_oikaisu tavo WHERE tavo.\\\"hoitokauden-alkuvuosi\\\" = 2022 AND tavo.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = 'Iin MHU 2021-2026');\"";
+    const komento = `psql -h localhost -U harja harja -c "DELETE FROM tavoitehinnan_oikaisu tavo WHERE tavo.\\\"hoitokauden-alkuvuosi\\\" = 2024 AND tavo.\\\"urakka-id\\\" = (SELECT id FROM urakka WHERE nimi = '${urakkanimi}');
+        DELETE FROM urakka_tavoite WHERE urakka = (SELECT id FROM urakka WHERE nimi = '${urakkanimi}');
+        INSERT INTO urakka_tavoite (urakka, hoitokausi, tavoitehinta, kattohinta, tavoitehinta_indeksikorjattu, kattohinta_indeksikorjattu)
+        SELECT u.id,
+               hoitokaudet.hoitokausi,
+               1988273.5,
+               (1988273.5 * 1.1),
+               testidata_indeksikorjaa(1988273.5, EXTRACT(YEAR FROM u.alkupvm)::INTEGER + hoitokaudet.hoitokausi - 1, 9, u.id),
+               testidata_indeksikorjaa((1988273.5 * 1.1), EXTRACT(YEAR FROM u.alkupvm)::INTEGER + hoitokaudet.hoitokausi - 1, 9, u.id)
+        FROM urakka u
+        CROSS JOIN generate_series(1, 5) AS hoitokaudet(hoitokausi)
+        WHERE u.nimi = '${urakkanimi}';"`;
     console.log("Komento:", komento);
-    // Tyhjennetään tavoitehinnan muutokset ennen testiä
+    // Tyhjennetään ja alustetaan tavoitehinnan tiedot ennen testiä
     cy.terminaaliKomento().then((terminaaliKomento) => {
-        // Poista kiinteähintaiset työt
+        // Alusta tavoitehinnan testidata
         cy.exec(terminaaliKomento + komento)
             .then((tulos) => {
-                console.log("Poista oikaisut:", tulos)
+                console.log("Tavoitehintojen alustuksen tulos:", tulos)
             });
         })
 }
 
+    function naytaPaattyneetUrakat() {
+        cy.contains('label', 'Näytä päättyneet', {timeout})
+        .should('be.visible')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
+    }
+
 describe('Välikatselmus aukeaa', () => {
 
-    before(siivoaKanta);
-
-    it('Välikatselmuksen voi avata kustannusten seurannasta', () => {
-        cy.intercept('POST', 'urakan-kustannusten-seuranta-paaryhmittain' ).as('hae-kustannukset')
-        cy.viewport(1400, 1400)
-        cy.visit('/')
-        cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
-        cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
-        cy.get('[data-cy=tabs-taso1-Kulut]').click()
-        cy.get('[data-cy="tabs-taso2-Kustannusten seuranta"]').click()
-        cy.wait('@hae-kustannukset')
-        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '1. hoitovuosi (2021—2022)'})
-        cy.contains('Siirry välikatselmukseen').click();
-        cy.contains('Välikatselmus')
-        cy.contains('Iin MHU 2021-2026')
-        cy.contains('2. hoitovuosi (01.10.2022 − 30.09.2023)')
-    })
+    before(() => siivoaKanta(urakkanimi));
 
     it('Välikatselmuksen voi avata päävalikosta', () => {
 
@@ -45,21 +50,32 @@ describe('Välikatselmus aukeaa', () => {
         cy.intercept('POST', 'tallenna-tavoitehinnan-oikaisu' ).as('tavoitehinnan-oikaisu')
         cy.intercept('POST', 'poista-tavoitehinnan-oikaisu' ).as('poista-tavoitehinnan-oikaisu')
 
-        cy.viewport(1400, 1400)
+        cy.viewport(1000, 1400)
         cy.visit('/')
         cy.contains('.haku-lista-item', 'Pohjois-Suomi', {timeout}).click()
         cy.get('.ajax-loader', {timeout: 30000}).should('not.exist')
-        cy.contains('[data-cy=urakat-valitse-urakka] li', 'Iin MHU 2021-2026', {timeout}).click()
+        //naytaPaattyneetUrakat()
+        cy.contains('[data-cy=urakat-valitse-urakka] li', urakkanimi, {timeout}).click()
         cy.get('[data-cy=tabs-taso1-Valikatselmus]').click()
         cy.wait('@hae-valikatselmuksen-tiedot')
-        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '2. hoitovuosi (01.10.2022 − 30.09.2023)'})
+        cy.get('[data-cy=hoitokausi-valinta]').valinnatValitse({valinta: '2. hoitovuosi (01.10.2024 − 30.09.2025)'})
 
         // Tarkistellaan tietoja
         cy.contains('Välikatselmus')
-        cy.contains('Iin MHU 2021-2026')
-        cy.contains('2. hoitovuosi (01.10.2022 − 30.09.2023)')
+        cy.contains(urakkanimi)
+        cy.contains('2. hoitovuosi (01.10.2024 − 30.09.2025)')
         cy.contains('Tavoitehinnan muutokset')
         cy.contains('Yhteenveto')
+
+        let hoitovuodenAlunIndeksikorjattuTavoitehinta;
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi-ylin', 'Hoitovuoden alun indeksikorjattu tavoitehinta')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((summa) => {
+                const tavoitehinta = Number(summa.replace(/\s/g, '').replace(',', '.'));
+                expect(Number.isFinite(tavoitehinta)).to.be.true;
+                hoitovuodenAlunIndeksikorjattuTavoitehinta = tavoitehinta;
+            });
 
         // Lisätään yksi tavoitehinnan oikaisu
         cy.contains('Muutos')
@@ -71,12 +87,43 @@ describe('Välikatselmus aukeaa', () => {
         cy.contains('Lisää rivi').click();
         cy.get('[data-cy="luokka-1"]').valinnatValitse({valinta: 'Tiestömuutokset'})
         cy.get('#0selite-1').type('{selectall}seliseli');
-        cy.get('#0summa-1').type('{selectall}100000');
+        var oikaisu = 100000;
+        cy.get('#0summa-1').type('{selectall}'+oikaisu);
         cy.contains('Tallenna muutokset').click();
         cy.wait('@tavoitehinnan-oikaisu')
+        // Viesti onnistumisesta pitäisi näkyä
+        cy.contains('Oikaisu tallennettu', {timeout: clickTimeout}).should('be.visible');
 
         // Tarkista oikaisun tiedot
         cy.get('[data-cy="luokka-1"]').contains('Tiestömuutokset');
         cy.get('#0selite-1').should('have.value', 'seliseli')
+
+        cy.wait(1000);
+
+        // Tarkista oikaisun tiedot yhteenvedosta
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Tavoitehinnan muutokset')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((teksti) => {
+                expect(teksti.replace(/\s/g, '')).to.equal(`+${oikaisu.toFixed(2).replace('.', ',')}`);
+            });
+
+        // Tarkista muuttunut tavoitehinta
+        cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Hoitovuoden lopun tavoitehinta')
+            .find('span').eq(1)
+            .invoke('text')
+            .then((summa) => {
+                const odotettuTavoitehinta = hoitovuodenAlunIndeksikorjattuTavoitehinta + oikaisu;
+                expect(summa.replace(/\s/g, '')).to.equal(odotettuTavoitehinta.toFixed(2).replace('.', ','));
+
+                // Tarkista yhteenvedon kattohinta - Käytä 1.1 kerrointa, koska urakka on alkanut -21 vuonna
+                const odotettuKattohinta = odotettuTavoitehinta * 1.1;
+                return cy.contains('.valikatselmus-yhteenveto.osio .flex-row.summa-rivi', 'Hoitovuoden lopun kattohinta')
+                    .find('span').eq(1)
+                    .invoke('text')
+                    .then((kattohinta) => {
+                        expect(kattohinta.replace(/\s/g, '')).to.equal(odotettuKattohinta.toFixed(2).replace('.', ','));
+                    });
+            });
     })
 })
