@@ -1,5 +1,6 @@
 (ns harja.palvelin.raportointi.vastaanottotarkastus-mhu-test
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
+            [harja.kyselyt.konversio :as konversio]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
 
@@ -17,8 +18,11 @@
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.raportointi.raportit.muutos-ja-lisatyoraportti :as muutos-ja-lisatyoraportti]
+            [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as laskutusyhteenveto-yhteiset]
             [harja.palvelin.raportointi.raportit :as raportit]
-            [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu :as vastaanottotarkastus-mhu]))
+            [harja.palvelin.raportointi.raportit.vastaanottotarkastus-mhu :as vastaanottotarkastus-mhu]
+            [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
+            [harja.palvelin.raportointi.testiapurit :as apurit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -45,6 +49,7 @@
             osa))
     (tree-seq coll? seq raportti)))
 
+
 ;; Meillä on kaksi vastaantottotarkastusraporttia, joista toinen on päällystysurakoille ja toinen MHU-urakoille.
 ;; Testataan, että ne ovat rekisteröityinä eri urakkatyyppien alle ja että ne eroavat toisistaan.
 (deftest vastaanottotarkastusraportit-ovat-erilliset
@@ -65,17 +70,19 @@
       (is (not= (:suorita paallystys) (:suorita mhu))))))
 
 (def ^:private testi-hoitokaudet
-  [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-   {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-    :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}])
+  (mapv (fn [vuosi]
+          {:alkupvm (pvm/hoitokauden-alkupvm vuosi)
+           :loppupvm (pvm/paivan-lopussa
+                       (pvm/hoitokauden-loppupvm (inc vuosi)))})
+    (range 2021 2023)))
 
-(def ^:private testi-mhu25-urakka-id -1)
+(def ^:private testi-mhu25-urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id))
 
 (def ^:private testi-mhu25-hoitokaudet
   (mapv (fn [vuosi]
           {:alkupvm (pvm/luo-pvm-aika vuosi 9 1 0)
-           :loppupvm (pvm/luo-pvm-aika (inc vuosi) 8 30 23 59 59)})
+           :loppupvm (pvm/paivan-lopussa
+                       (pvm/hoitokauden-loppupvm (inc vuosi)))})
     (range 2025 2030)))
 
 (def ^:private testi-mhu25-urakan-tiedot
@@ -88,7 +95,7 @@
   {:muutosten_hallinta true
    :hoitokauden_lopun_kattohinta_kerroin 1.2M})
 
-(def ^:private testi-mhu21-urakka-id -2)
+(def ^:private testi-mhu21-urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id))
 
 (def ^:private testi-mhu21-hoitokaudet
   (mapv (fn [vuosi]
@@ -183,7 +190,7 @@
                                                    [{:sakkoryhma :talvisuolan_ylitys :maara 100M}]
                                                    :else
                                                    [{:maara -50M}]))
-                  rahavaraus-kyselyt/hae-urakan-rahavaraukset
+                  rahavaraus-kyselyt/hae-urakan-perusnimiset-rahavaraukset
                   (fn [_ _]
                     [{:id 1 :nimi "Äkilliset hoitotyöt"}
                      {:id 2 :nimi "Vahinkojen korjaukset"}
@@ -306,8 +313,41 @@
              {:lihavoi? true
               :korosta-hennosti? true
               :rivi ["Yhteensä" 1000M 750M 500M 450M 250M 225M 350M 250M -425M]}]]
-          taulukko))
-    (is (not-any? #(and (vector? %) (= "Ympäristöraportti" (get-in % [1 :otsikko]))) raportti))))
+          taulukko))))
+
+(deftest vastaanottotarkastusraportti-sisaltaa-ymparistoraportin
+  (let [urakka-id testi-mhu25-urakka-id
+        hoitokaudet testi-mhu25-hoitokaudet
+        ymparistoraportin-suorita ymparisto/suorita
+        kutsutut-parametrit (atom [])
+        taulukoiden-otsikot ["Talvisuolat"
+                             "Formiaatit"
+                             "Kesäsuola"
+                             "Hiekoitushiekka"
+                             "Murskeet"
+                             "Paikkausmateriaalit"
+                             "Muut materiaalit"]]
+    (with-redefs [ymparisto/suorita
+                  (fn [db kayttaja parametrit]
+                    (swap! kutsutut-parametrit conj parametrit)
+                    (ymparistoraportin-suorita db kayttaja parametrit))]
+      (let [raportti (muodosta-testiraportti true)
+            taulukot (mapv #(etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko %)
+                       taulukoiden-otsikot)]
+        (testing "ympäristöraporttia kutsutaan kerran koko sopimuskaudelle"
+          (is (= 1 (count @kutsutut-parametrit)))
+          (is (= {:alkupvm (:alkupvm (first hoitokaudet))
+                  :loppupvm (:loppupvm (last hoitokaudet))
+                  :urakka-id urakka-id
+                  :urakoittain? false
+                  :urakkatyyppi :teiden-hoito
+                  :koko-urakkaaika? true}
+                (first @kutsutut-parametrit))))
+        (testing "ympäristöraportti sisältää kaikki päätaulukot"
+          (is (= taulukoiden-otsikot
+                (mapv #(get-in % [1 :otsikko]) taulukot))))
+        (testing "ympäristöraportin ensimmäinen taulukko aloittaa oman sheetin"
+          (is (false? (get-in (first taulukot) [1 :samalle-sheetille?]))))))))
 
 (deftest MHU25-urakan-tavoitehinnan-muutokset-muodostuvat-kaikille-hoitovuosille
   (let [urakka-id testi-mhu25-urakka-id
@@ -578,9 +618,11 @@
 
 (deftest lupaukset-kayttaa-kuukausittaisia-pisteita-toimii
   (let [urakka-id -3
-        urakan-tiedot {:alkupvm #inst "2019-10-01T00:00:00.000-00:00"}
-        hoitokaudet [{:alkupvm #inst "2019-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2020-09-30T23:59:59.000-00:00"}]
+        hoitovuosi 2019
+        urakan-tiedot {:alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)}
+        hoitokaudet [{:alkupvm (pvm/hoitokauden-alkupvm hoitovuosi)
+                      :loppupvm (pvm/paivan-lopussa
+                                  (pvm/hoitokauden-loppupvm (inc hoitovuosi)))}]
         raportti (with-redefs [lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle
                                (fn [_ _] {:lupaus-sitoutuminen {:pisteet 70}
                                           :yhteenveto {:pisteet {:maksimi 100, :ennuste 100, :toteuma 100}
@@ -638,7 +680,7 @@
          ["2028-2029" 440M 23M 33M 43M -9M 6M 536M]
          ["2029-2030" 550M 24M 34M 44M -11M 7M 648M]]
         odotettu-yhteensa ["Yhteensä" 1650M 110M 160M 210M -35M 24.5M 2119.5M]]
-    (testing "testiurakan kaikki hoitovuodet ovat mukana"
+    (testing "-25 Testiurakan kaikki hoitovuodet ovat mukana"
       (is (= [2025 2026 2027 2028 2029]
             (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet))))
     (with-redefs [valikatselmus-palvelu/hae-kustannukset-jarjestettyna
@@ -671,6 +713,68 @@
           (is (= "Urakan tavoitehintaan kuuluvat kustannukset"
                 (get-in taulukko [1 :sheet-nimi])))
           (is (true? (get-in taulukko [1 :viimeinen-rivi-yhteenveto?]))))))))
+
+(deftest testaa-laskutusyhteenveto-taulukko-toimii
+  (let [db (:db jarjestelma)
+        urakan-tiedot testi-mhu25-urakan-tiedot
+        hoitokaudet testi-mhu25-hoitokaudet
+        laskutusdata-vuosittain (into {}
+                                  (map (fn [[vuosi kerroin]]
+                                         [vuosi {;; Hankinnat - talvihoito
+                                                 :hankinnat_hoitokausi_yht (* 10M kerroin)
+                                                 :talvihoito_hoitokausi_yht (* 10M kerroin)
+                                                 ;; Rahavaraukset
+                                                 :kaikki_rahavaraukset_val_yht (* 5M kerroin)
+                                                 :rahavaraus_nimet ["Äkilliset hoitotyöt" "Vahinkojen korjaukset" "Tilaajan rahavaraus kannustinjärjestelmään"]
+
+                                                 :muut_kulut_hoitokausi_yht (* 2.5M kerroin)
+
+                                                 :sanktiot_hoitokausi_yht (* -15.0M kerroin)
+                                                 :bonukset_hoitokausi_yht (* 5.50M kerroin)
+                                                 ;; Lasketaan bonukset ja sanktiot yhteen
+                                                 :muut_kulut_ei_tavoite_hoitokausi_yht (+ (* -15.0M kerroin) (* 5.50M kerroin))}]))
+                                  (map vector (range 2025 2030) (range 1 6)))
+        hae-taulukko (fn [otsikko raportin-osat]
+                       (some (fn [osa]
+                               (when (= otsikko (get-in osa [2 0 :otsikko])) osa))
+                         (tree-seq coll? seq raportin-osat)))]
+    (with-redefs [;; Oikastaan vähän. PGArrayn matkiminen on vaikeaa muuten
+                  konversio/pgarray->vector identity
+                  ;; Mockattu data riittää. Laskutusyhteenvedon toiminta pitäisi testata erikseen muualla
+                  laskutusyhteenveto-yhteiset/hae-tyomaa-laskutusyhteenvedon-tiedot
+                  (fn [_ _ {:keys [alkupvm]}]
+                    [(get laskutusdata-vuosittain (pvm/vuosi alkupvm))])]
+      (let [raportin-osat (vastaanottotarkastus-mhu/muodosta-laskutusyhteenveto-taulukko
+                            db +kayttaja-jvh+ urakan-tiedot hoitokaudet)
+            hankinnat-taulukko (hae-taulukko "Hankinnat" raportin-osat)
+            rahavaraukset-taulukko (hae-taulukko "Rahavaraukset" raportin-osat)
+            tavhinnan-ulkopuoliset-taulukko (hae-taulukko "Kustannus" raportin-osat)
+
+            hankinta-rivit (nth hankinnat-taulukko 3)
+            rahavaraus-rivit (nth rahavaraukset-taulukko 3)
+            tavhinnan-ulkopuoliset-rivit (nth tavhinnan-ulkopuoliset-taulukko 3)]
+        (is (= [:otsikko "Laskutusyhteenveto"] (first raportin-osat)))
+        (testing "yhteenveto ja hankintataulukon sarakkeet muodostuvat hoitovuosittain"
+          (is (= [:otsikko "Laskutusyhteenveto"] (first raportin-osat)))
+          (is (= (into ["Hankinnat"]
+                   (concat (map #(str "Laskutus " % "-" (inc %) " (€)") (range 2025 2030))
+                     ["Yhteensä"]))
+                (mapv :otsikko (nth hankinnat-taulukko 2)))))
+        (testing "vuosikohtaiset arvot ja niiden yhteissumma täsmäävät"
+          (is (= ["Talvihoito" 10M 20M 30M 40M 50M 150M] (first hankinta-rivit)))
+          (is (= ["Liikenneympäristön hoito" 0M 0M 0M 0M 0M 0M] (second hankinta-rivit)))
+          (is (= ["Yhteensä" 10M 20M 30M 40M 50M 150M] (get-in (last hankinta-rivit) [:rivi])))
+
+          (is (= ["Äkilliset hoitotyöt" 0M 0M 0M 0M 0M 0M] (first rahavaraus-rivit)))
+          (is (= ["Vahinkojen korjaukset" 0M 0M 0M 0M 0M 0M] (second rahavaraus-rivit)))
+          (is (= ["Tilaajan rahavaraus kannustinjärjestelmään" 0M 0M 0M 0M 0M 0M] (nth rahavaraus-rivit 2)))
+          (is (= ["Yhteensä" 0M 0M 0M 0M 0M 0M] (:rivi (nth rahavaraus-rivit 3))))
+
+          (is (= ["Lisätyöt" 0M 0M 0M 0M 0M 0M] (nth tavhinnan-ulkopuoliset-rivit 0)))
+          (is (= ["Bonukset" 5.50M 11.00M 16.50M 22.00M 27.50M 82.50M] (nth tavhinnan-ulkopuoliset-rivit 1)))
+          (is (= ["Sanktiot" -15.0M -30.0M -45.0M -60.0M -75.0M -225.0M] (nth tavhinnan-ulkopuoliset-rivit 2)))
+          (is (= ["Muut tavoitehinnan ulkopuoliset kulut" 0M 0M 0M 0M 0M 0M] (nth tavhinnan-ulkopuoliset-rivit 3)))
+          (is (= ["Yhteensä" -9.50M -19.00M -28.50M -38.00M -47.50M -142.50M] (:rivi (nth tavhinnan-ulkopuoliset-rivit 4)))))))))
 
 (deftest MHU25-urakan-lopullinen-tavoite-ja-kattohinta-muodostuvat
   (let [urakka-id testi-mhu25-urakka-id
@@ -771,10 +875,7 @@
 
 (deftest sanktiotaulukko-erottelee-muistutukset-poikkeamaraportit-ja-arvonvahennykset
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
+        hoitokaudet testi-hoitokaudet
         sanktiot (fn [_ {:keys [alkupvm]}]
                    (if (= alkupvm (-> hoitokaudet first :alkupvm))
                      [{:sakkoryhma "muistutus"}
@@ -809,10 +910,7 @@
 
 (deftest bonustaulukko-erottelee-lupausbonukset-asiastyytyvaisyysbonukset
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
-        hoitokaudet [{:alkupvm #inst "2021-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2022-09-30T23:59:59.000-00:00"}
-                     {:alkupvm #inst "2022-10-01T00:00:00.000-00:00"
-                      :loppupvm #inst "2023-09-30T23:59:59.000-00:00"}]
+        hoitokaudet testi-hoitokaudet
         bonukset (fn [_ {:keys [alkupvm]}]
                    (if (= alkupvm (-> hoitokaudet first :alkupvm))
                      [{:tyyppi "lupausbonus" :rahasumma 20M}
@@ -856,6 +954,86 @@
                          (last (nth taulukko 3))))
         vuosilabelit (fn [taulukko]
                        (mapv first (vuosirivit taulukko)))]
+    (testing "Ympäristöraportti Oulu19 urakalle"
+      (let [;; Käytetään vanhaa urakkaa, koska sillä on dataa olemassa
+            hoitokaudet (sort-by :alkupvm (urakat-q/hae-urakan-hoitokaudet db oulu19-urakka-id))
+            vuodet (mapv #(pvm/vuosi (:alkupvm %)) hoitokaudet)
+            alkupvm (:alkupvm (first hoitokaudet))
+            loppupvm (:loppupvm (last hoitokaudet))
+            ;; Haetaan tietokannasta kaikki raportin tiedot, jotta voidaan verrata raportin sisältöä tietokannan sisältöön.
+            tietokantarivit (ymparisto/hae-raportti db alkupvm loppupvm oulu19-urakka-id nil :teiden-hoito false)
+            tietokanta-suolarivit (->> tietokantarivit
+                                    (filter #(= "talvisuola" (get-in (first %) [:materiaali :tyyppi])))
+                                    (mapcat second))
+            tietokanta-toteumat (filter #(and (= "toteuma" (:maarantyyppi %))
+                                           (nil? (:talvitieluokka %))
+                                           (nil? (:soratieluokka %)))
+                                  tietokanta-suolarivit)
+            tietokanta-suunnitelmat (filter #(and (= "suunnitelma" (:maarantyyppi %))
+                                               (nil? (:talvitieluokka %))
+                                               (nil? (:soratieluokka %)))
+                                      (mapcat second tietokantarivit))
+            tietokanta-hoitoluokkatoteumat (filter #(and (= "toteuma" (:maarantyyppi %))
+                                                      (:talvitieluokka %))
+                                             tietokanta-suolarivit)
+            tietokanta-suunnitelman-summa (fn [tyyppi]
+                                            (reduce + 0 (map :maara (filter #(= tyyppi (get-in % [:materiaali :tyyppi])) tietokanta-suunnitelmat))))
+            tietokanta-summat-vuosittain (into {}
+                                           (map (fn [[vuosi rivit]]
+                                                  [vuosi (reduce + (map :maara rivit))]))
+                                           (group-by :hoitokauden-alkuvuosi tietokanta-toteumat))
+            tietokanta-hoitoluokkien-summat-vuosittain (into {}
+                                                         (map (fn [[vuosi rivit]]
+                                                                [vuosi (reduce + (map :maara rivit))]))
+                                                         (group-by :hoitokauden-alkuvuosi tietokanta-hoitoluokkatoteumat))
+
+            raportti (ymparisto/suorita db nil {:alkupvm alkupvm
+                                                :loppupvm loppupvm
+                                                :urakka-id oulu19-urakka-id
+                                                :urakoittain? false
+                                                :urakkatyyppi :teiden-hoito
+                                                :koko-urakkaaika? true})
+            talvisuolataulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Talvisuolat")
+            formiaattitaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Formiaatit")
+            mursketaulukko (etsi-taulukko-avaimella-ja-otsikolla raportti :taulukko "Murskeet")
+            talvisuola-sarakevuodet (mapv :otsikko (take (count vuodet) (drop 2 (nth talvisuolataulukko 2))))
+            talvisuola-datarivit (nth talvisuolataulukko 3)
+            riviotsikko (fn [rivi]
+                          (apurit/raporttisolun-arvo (second (:rivi rivi))))
+            suunniteltu-summa (fn [taulukko nimi]
+                                (let [rivi (some #(when (= nimi (riviotsikko %)) %) (nth taulukko 3))
+                                      summa (apurit/raporttisolun-arvo (nth (:rivi rivi) (+ 3 (count vuodet))))]
+                                  ;; Taulukon arvot on nil - jos arvoa ei ole, mutta pyöristetään se nollaksi.
+                                  (or summa 0)))
+            yhteenvetorivi (some #(when (= "Talvisuolat yhteensä" (riviotsikko %)) %) talvisuola-datarivit)
+            talvisuola-hoitoluokkarivit (filter #(and (:isanta-rivin-id %)
+                                                   (not= "Poikkeama (+/-)" (riviotsikko %)))
+                                          talvisuola-datarivit)
+            raportoidut-hoitoluokkien-summat
+            (reduce (fn [summat rivi]
+                      (reduce (fn [summat [indeksi vuosi]]
+                                (let [maara (apurit/raporttisolun-arvo (nth (:rivi rivi) (+ 2 indeksi)))]
+                                  (if (number? maara)
+                                    (update summat vuosi (fnil + 0) maara)
+                                    summat)))
+                        summat
+                        (map-indexed vector vuodet)))
+              {}
+              talvisuola-hoitoluokkarivit)]
+        (is (= (mapv #(str % "-" (inc %)) vuodet) talvisuola-sarakevuodet))
+        (is (seq tietokanta-hoitoluokkatoteumat) "Testiurakalla on hoitoluokittaisia talvisuolatoteumia tietokantahaussa")
+        (is (some? yhteenvetorivi) "Talvisuolojen yhteenvetorivi löytyy ympäristöraportista")
+        (is (= (mapv #(get tietokanta-summat-vuosittain % "–") vuodet)
+              (mapv #(apurit/raporttisolun-arvo
+                       (nth (:rivi yhteenvetorivi) (+ 2 %)))
+                (range (count vuodet)))))
+        (is (= (tietokanta-suunnitelman-summa "formiaatti")
+              (suunniteltu-summa formiaattitaulukko "Formiaatit raportista täsmää formiaatteihin tietokannasta")))
+        (is (= (tietokanta-suunnitelman-summa "murske")
+              (suunniteltu-summa mursketaulukko "Murskeet raportista täsmää murskeisiin tietokannasta")))
+        (is (= (select-keys tietokanta-hoitoluokkien-summat-vuosittain vuodet)
+              (select-keys raportoidut-hoitoluokkien-summat vuodet)) "Raportin hoitoluokkien summat vastaavat tietokantahakua")))
+
     (testing "Lupaukset taulukko"
       (let [taulukko (hae-taulukko kajaanin-raportti "Lupaukset")]
         (is (some? taulukko))
@@ -1015,4 +1193,3 @@
         (is (= 19345.44 (nth (:rivi (yhteensarivi taulukko)) 5)))
         (is (= 0 (nth (:rivi (yhteensarivi taulukko)) 6)))
         (is (= 9210333.9933724 (nth (:rivi (yhteensarivi taulukko)) 7)))))))
-

@@ -389,7 +389,8 @@
                         "Massamenekki saa olla maksimissaan 50 kg/m2"
                         [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
                          [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
-                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)
+                             :reunan-voimakkuus :vahva}]
         :validoi [[:ei-tyhja "Anna arvo"]]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 20 2))}
 
@@ -404,7 +405,8 @@
                         "Massamenekki saa olla maksimissaan 50 kg/m2"
                         [:<> [:div "Massamenekki lasketaan tien pituuden, leveyden ja kokonaismassan perusteella. Tien pituus lasketaan tieosoitteen perusteella."]
                          [:div "Muuta jotenkin yllä mainituista arvoista, jotta massamenekin summaksi tulee maksimissaan 50 kg/m2."]]
-                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)}]
+                        nil {:ikoni-fn #(ikonit/harja-icon-status-alert)
+                             :reunan-voimakkuus :vahva}]
         :validoi-kentta-fn (fn [numero] (v/validoi-numero numero 0 1000000 1))}
 
        {:otsikko "Pinta-ala (m²)"
