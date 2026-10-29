@@ -128,12 +128,7 @@
                                                                              :loppupvm (second valittu-hoitokausi)
                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
-        indeksikorjaamaton-tavoitehinta (if (>= urakan-alkuvuosi 2024)
-                                          (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
-                                          (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
-                                            db {:urakka-id urakka-id
-                                                :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))
-        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or indeksikorjaamaton-tavoitehinta 0)
+        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or (:tavoitehinta-oikaistu budjettitavoite-vuodelle) 0)
                                                              muutosvaikutus
                                                              arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
@@ -245,7 +240,13 @@
                                        (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
                                        0)
         mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
-        hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        ;; HJP:n laskenta käyttää vanhoilla urakoilla indeksikorjaamatonta tavoitehintaa.
+        hv-lopun-tavoitehinta-ilman-indeksia (if (< urakan-alkuvuosi 2024)
+                                               (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+                                                 db {:urakka-id urakkaid
+                                                     :hoitokauden-alkuvuosi valittu-hoitovuosi})
+                                               (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta
+                                                 db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle))
         arvonvahennykset (valikatselmus-q/hae-tavoitehintaan-vaikuttavat-arvonvahennykset db {:urakka-id urakkaid
                                                                                               :alkupvm (first valittu-hoitokausi)
                                                                                               :loppupvm (second valittu-hoitokausi)
@@ -1159,8 +1160,12 @@
                        validaatio)
 
           ;; Verrataan tietokannan tavoitehintaa saatuun tavoitehintaan
-          hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta
-                                                              db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+          hoitokauden-lopun-indeksikorjaamaton-tavoitehinta (if (< urakan-alkuvuosi 2024)
+                                                              (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+                                                                db {:urakka-id urakkaid
+                                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                                                              (maarita-hv-lopun-indeksikorjaamaton-tavoitehinta
+                                                                db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle))
           validaatio (if-not (= (konversio/konvertoi->int hoitokauden-lopun-indeksikorjaamaton-tavoitehinta) (konversio/konvertoi->int (:hv_lopun_indkorjaamaton_tavoitehinta paatos)))
                        (conj validaatio (str "Tavoitehinta ei täsmää suunnitelman kanssa.
                        Suunniteltu tavoitehinta:" (fmt/euro-opt false false hoitokauden-lopun-indeksikorjaamaton-tavoitehinta) "€.
