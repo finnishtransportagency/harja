@@ -18,12 +18,24 @@
     border-bottom: solid 2px @lemon-dark-saavutettava;
   }
 
+  .virheet > .info-laatikko,
   .varoitukset > .info-laatikko {
     bottom: 5px;
     position: absolute;
     right: 0;
     text-align: left;
     width: max-content;
+  }
+
+  .virheet > .info-laatikko.pot2-tieosoite-validointi,
+  .varoitukset > .info-laatikko.pot2-tieosoite-validointi {
+    left: 0;
+    right: auto;
+    border: 2px solid @lemon-dark-data;
+
+    > .infolaatikon-ikoni {
+      align-self: center;
+    }
   }
 }
 
