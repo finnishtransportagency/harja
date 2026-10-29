@@ -181,8 +181,7 @@
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
 (defn- summan-maarityksen-kentat
-  [{:keys [lomake summa lukutila? indeksi-kaytossa? urakan-indeksi
-           manuaalinen-laskettavan-sisartyyppi?]}]
+  [{:keys [lomake summa lukutila? indeksi-kaytossa? urakan-indeksi]}]
   (let [{:keys [laskettu-maaritys c-ryhman-maaritys kiintea-profiilisumma? kiintea-summamalli]} summa
         laskentaparametrit (:laskentaparametrit laskettu-maaritys)
         otsikot (sanktion-laskenta/laskettavan-sanktion-otsikot laskentaparametrit)]
@@ -210,9 +209,7 @@
                          :hae #(sanktion-laskenta/laskettu-tulos laskettu-maaritys %)})
                       (when (and (:nayta-manuaalinen-summa? lomake)
                               (not laskettu-maaritys))
-                        {:otsikko (if manuaalinen-laskettavan-sisartyyppi?
-                                    "Sanktion määrä (€)"
-                                    "Sanktion suuruus")
+                        {:otsikko "Sanktion suuruus"
                          :nimi :summa :tyyppi :euro
                          :muokattava? (constantly (not kiintea-profiilisumma?))
                          :data-cy (when kiintea-profiilisumma? "sanktion-summa")

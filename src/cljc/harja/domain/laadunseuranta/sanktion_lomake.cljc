@@ -118,7 +118,7 @@
   [:sanktio :lomake :aikakausi :summa :lukutila? :voi-muokata?
    :sanktiolajit :tyyppi-valinnat :urakan-alkuvuosi :toimenpideinstanssit
    :kulun-kohdistukset :hoidonjohtopalkkio-tr :laskutuskuukaudet :laskutuskuukausi-id
-   :indeksi-kaytossa? :urakan-indeksi :manuaalinen-laskettavan-sisartyyppi?])
+   :indeksi-kaytossa? :urakan-indeksi])
 
 (defn nakymakonteksti
   "Palauttaa kontekstin sellaisenaan tai heittää virheen, jos jokin avain puuttuu.
@@ -402,6 +402,4 @@
        :laskutuskuukaudet laskutuskuukaudet
        :laskutuskuukausi-id laskutuskuukausi-id
        :indeksi-kaytossa? indeksi-kaytossa?
-       :urakan-indeksi (:indeksi urakka)
-       :manuaalinen-laskettavan-sisartyyppi? (sanktion-laskenta/manuaalinen-laskettavan-sisartyyppi?
-                                               aktiivinen-tyyppi sanktiotyypit)})))
+       :urakan-indeksi (:indeksi urakka)})))
