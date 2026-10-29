@@ -224,8 +224,12 @@ BEGIN
   ELSEIF NEW.tyyppi = 'vesivayla-hoito' THEN
     IF EXTRACT(year FROM NEW.alkupvm) < 2017 THEN
       NEW.indeksi := 'MAKU 2005 kunnossapidon osaindeksi';
-    ELSE
+    ELSEIF EXTRACT(year FROM NEW.alkupvm) < 2023 THEN
       NEW.indeksi := 'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi';
+    ELSEIF EXTRACT(year FROM NEW.alkupvm) < 2025 THEN
+      NEW.indeksi := 'MAKU 2015, kokonaisindeksi';
+    ELSE
+      NEW.indeksi := 'MAKU 2020, kokonaisindeksi';
     END IF;
 
   ELSEIF NEW.tyyppi = 'vesivayla-kanavien-hoito' THEN
