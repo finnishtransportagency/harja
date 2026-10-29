@@ -143,3 +143,41 @@
     (is (= merivaylat (urakat/hae-hallintayksikko db nil "vesivayla-hoito" "VESI-001")))
     (is (= pop-ely (urakat/hae-hallintayksikko db "3800481310" "hoito" "TIE-001")))))
 
+(deftest vesivaylaurakan-tallentuminen
+  (try
+    (tuo-vesivaylaurakka)
+
+    (let [urakka (hae-vesivaylaurakka)
+          urakkaid (:id urakka)
+          db (:db jarjestelma)
+          urakan-toimenkuvat (toimenkuvat-kyselyt/hae-urakan-toimenkuvat db {:urakkaid urakkaid})
+          toimenkuvien-nimet (set (map :toimenkuva urakan-toimenkuvat))
+          odotetut-toimenkuvat #{"valmistelukausi ennen urakka-ajan alkua"
+                                 "sopimusvastaava"
+                                 "vastuunalainen työnjohtaja"
+                                 "2. työnjohtaja"}
+          urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakkaid}))]
+
+      (is (some? urakan-parametrit)
+        "Vesiväyläurakalle tallentui urakka_parametrit-rivi.")
+
+      (is (= "vesivayla-hoito" (:tyyppi urakka)))
+
+      (is (= "Testi vesiväyläurakka" (:nimi urakka))
+        "Vesiväyläurakan nimi tallentuu oikein.")
+
+      (is (= #inst "2030-09-29T21:00:00.000-00:00"
+            (:loppupvm urakka))
+        "Vesiväyläurakan loppupäivä tallentuu oikein.")
+
+      (is (= "Meriväylät" (hae-urakan-hallintayksikon-nimi))
+        "Vesiväyläurakalle asetetaan Meriväylät-hallintayksikkö.")
+
+      (is (= odotetut-toimenkuvat toimenkuvien-nimet)
+        "Vesiväyläurakalle tallennetaan oikeat toimenkuvat.")
+
+      (is (= 4 (count urakan-toimenkuvat))
+        "Vesiväyläurakalle tallennetaan kuusi toimenkuvaa."))
+
+    (finally
+      (poista-vesivaylaurakka))))

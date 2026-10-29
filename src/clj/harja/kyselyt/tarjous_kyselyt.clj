@@ -103,7 +103,9 @@
                                 :toimenkuva-id (:id toimenkuva)
                                 :osio "johto-ja-hallintokorvaus"
                                 ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
-                                :hoitovuosittaiset-arvot (if (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                :hoitovuosittaiset-arvot (if (or (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                                               (= "sopimusvastaava (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))
+                                                               (= "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva)))
                                                            [(first hoitovuosittaiset-arvot)] hoitovuosittaiset-arvot))))
                       toimenkuvat)
         toimenkuvat (sort-by :jarjestys toimenkuvat)]
@@ -111,6 +113,7 @@
 
 (defn luo-default-tarjous [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        vesivaylaurakka? (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
         urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
@@ -118,7 +121,9 @@
         tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
-        tarjousrivit [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
+        tarjousrivit [{:nimi (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+                               "Urakan hankinnat"
+                               "Kilpailutettavat hankinnat"), :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
                       {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
@@ -135,7 +140,7 @@
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
 
         ; haetaan urakan rahavaraukset
-        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        rahavaraukset (if vesivaylaurakka? [] (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id}))
         rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
                                    (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
                                                              :osio "tavoitehintaiset-rahavaraukset"
@@ -603,6 +608,7 @@
 (defn hae-tarjous [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        vesivaylaurakka? (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
         vuodet (map (fn [vuosi]
                       {:vuosi vuosi}) (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi (:vuosi vuosi) :summa 0.00M}) vuodet)
@@ -639,10 +645,12 @@
                           kustannus-rivit)
         ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
         kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
-        puuttuvat-rahavaraukset (filter
-                                  (fn [r]
-                                    (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
-                                  kaikki-urakan-rahavaraukset)
+        puuttuvat-rahavaraukset (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+                                  []
+                                  (filter
+                                       (fn [r]
+                                         (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
+                                       kaikki-urakan-rahavaraukset))
         puuttuvat-rahavaraukset (reduce (fn [lopulliset rahavaraus]
                                           (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
                                                                     :summa 0
@@ -715,7 +723,8 @@
                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                  :tarjous tarjousrivit}
         ;; Tarkistetaan, että tarjous ei ole tyhjä
-        tarjous (if (not= "Kilpailutettavat hankinnat" (:nimi (first (:tarjous tarjous))))
+        tarjous (if (not (#{"Kilpailutettavat hankinnat" "Urakan hankinnat"}
+                          (:nimi (first (:tarjous tarjous)))))
                   {:urakka-id urakka-id
                    :kaikki-toimenkuvat kaikki-toimenkuvat
                    :kattohintakerroin kattohintakerroin
