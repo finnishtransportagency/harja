@@ -22,7 +22,13 @@ SELECT
   mk.yksikko AS materiaali_yksikko,
   mk.materiaalityyppi AS materiaali_tyyppi,
   date_trunc('month', rtm.paiva) AS kk,
-  SUM(rtm.kokonaismaara) AS maara
+  (EXTRACT(YEAR FROM rtm.paiva)::INTEGER
+          - CASE
+                WHEN EXTRACT(MONTH FROM rtm.paiva) < 10 THEN 1
+                ELSE 0
+          END) AS "hoitokauden-alkuvuosi",
+  SUM(rtm.kokonaismaara) AS maara,
+  'toteuma' as maarantyyppi
 FROM raportti_toteutuneet_materiaalit rtm
   JOIN urakka u ON rtm."urakka-id" = u.id AND u.urakkanro IS NOT NULL
   JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id
@@ -31,7 +37,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
       AND (rtm.paiva::DATE BETWEEN :alkupvm AND :loppupvm)
       AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
       AND mk.materiaalityyppi != 'erityisalue'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, mk.yksikko, date_trunc('month', rtm.paiva)
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, mk.yksikko, "hoitokauden-alkuvuosi",  date_trunc('month', rtm.paiva)
 
 UNION
 
@@ -53,7 +59,13 @@ SELECT
         END AS materiaali_yksikko,
     'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
     date_trunc('month', rtmaarat.alkanut) AS kk,
-    SUM(rtmaarat.tehtavamaara) AS maara
+    (EXTRACT(YEAR FROM rtmaarat.alkanut)::INTEGER
+        - CASE
+              WHEN EXTRACT(MONTH FROM rtmaarat.alkanut) < 10 THEN 1
+              ELSE 0
+         END) AS "hoitokauden-alkuvuosi",
+    SUM(rtmaarat.tehtavamaara) AS maara,
+    'toteuma' as maarantyyppi
   FROM raportti_toteuma_maarat rtmaarat
            JOIN urakka u ON (u.id = rtmaarat.urakka_id AND u.urakkanro IS NOT NULL)
            JOIN tehtava tk ON tk.id = rtmaarat.toimenpidekoodi
@@ -62,7 +74,7 @@ SELECT
    AND u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi)
    AND (rtmaarat.alkanut BETWEEN :alkupvm::TIMESTAMP AND :loppupvm::TIMESTAMP)
    AND rtmaarat.toimenpidekoodi IN (SELECT id FROM paikkaustehtavat)
- GROUP BY u.id, u.nimi, materiaali_id, tk.nimi, materiaali_tyyppi, materiaali_yksikko, date_trunc('month', rtmaarat.alkanut)
+ GROUP BY u.id, u.nimi, materiaali_id, tk.nimi, materiaali_tyyppi, materiaali_yksikko, "hoitokauden-alkuvuosi", date_trunc('month', rtmaarat.alkanut)
 
 UNION
 
@@ -78,7 +90,13 @@ SELECT
   mk.yksikko AS materiaali_yksikko,
   mk.materiaalityyppi AS materiaali_tyyppi,
   date_trunc('month', umkh.pvm) AS kk,
-  SUM(umkh.maara) AS maara
+  (EXTRACT(YEAR FROM umkh.pvm)::INTEGER
+      - CASE
+            WHEN EXTRACT(MONTH FROM umkh.pvm) < 10 THEN 1
+            ELSE 0
+       END) AS "hoitokauden-alkuvuosi",
+  SUM(umkh.maara) AS maara,
+  'toteuma' as maarantyyppi
 FROM urakka u
   JOIN urakan_materiaalin_kaytto_hoitoluokittain umkh ON u.id = umkh.urakka
   LEFT JOIN LATERAL (select normalisoi_talvihoitoluokka(umkh.talvihoitoluokka::INTEGER, umkh.pvm) AS hoitoluokka) hl ON TRUE
@@ -97,7 +115,7 @@ WHERE (:urakka::INTEGER IS NULL OR u.id = :urakka)
                END)
       AND mk.materiaalityyppi != 'erityisalue'
       AND u.urakkanro IS NOT NULL
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, date_trunc('month', umkh.pvm), talvitieluokka, soratieluokka
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.materiaalityyppi, "hoitokauden-alkuvuosi", date_trunc('month', umkh.pvm), talvitieluokka, soratieluokka
 
 
 --- Suunnittelutietojen hakujen unionit alla ----
@@ -116,7 +134,13 @@ SELECT
   mk.yksikko AS materiaali_yksikko,
   mk.materiaalityyppi AS materiaali_tyyppi,
   NULL as kk,
-  SUM(s.maara) as maara
+  (EXTRACT(YEAR FROM s.alkupvm)::INTEGER
+      - CASE
+            WHEN EXTRACT(MONTH FROM s.alkupvm) < 10 THEN 1
+            ELSE 0
+       END) AS "hoitokauden-alkuvuosi",
+  SUM(s.maara) as maara,
+  'suunnitelma' as maarantyyppi
 FROM materiaalin_kaytto s
   JOIN materiaalikoodi mk ON s.materiaali = mk.id
   JOIN urakka u ON s.urakka = u.id AND u.urakkanro IS NOT NULL
@@ -132,7 +156,8 @@ WHERE s.poistettu IS NOT TRUE
                        u.tyyppi = :urakkatyyppi::urakkatyyppi
                END)
       AND mk.materiaalityyppi != 'erityisalue'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, mk.yksikko, mk.materiaalityyppi, "hoitokauden-alkuvuosi"
+
 UNION
 -- Liitä myös tehtävät ja määrät sivun suunnittelutiedot MHU urakoiden osalta.
 -- toimenpidekoodit on mäpätty materiaaleihin erikseen materiaaliluokan ja materiaalikoodin avulla
@@ -148,7 +173,9 @@ SELECT
     coalesce(mk.yksikko, ml.yksikko) AS materiaali_yksikko,
     coalesce(mk.materiaalityyppi, ml.materiaalityyppi) AS materiaali_tyyppi,
     NULL as kk,
-    SUM(v.laskettu_maara) as maara
+    v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+    SUM(v.laskettu_maara) as maara,
+    'suunnitelma' as maarantyyppi
 FROM urakka_tehtavamaara_yhteenveto v
          JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
          JOIN tehtava tk ON v.tehtava = tk.id AND tk.materiaaliluokka_id IS NOT NULL
@@ -156,12 +183,22 @@ FROM urakka_tehtavamaara_yhteenveto v
          LEFT JOIN materiaalikoodi mk ON tk.materiaalikoodi_id = mk.id
 WHERE v.poistettu IS NOT TRUE
   -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
-  AND v.hoitokauden_alkuvuosi = EXTRACT(YEAR from :alkupvm::DATE)
+  AND v.hoitokauden_alkuvuosi BETWEEN
+    (EXTRACT(YEAR FROM :alkupvm::DATE)::INTEGER
+        - CASE
+              WHEN EXTRACT(MONTH FROM :alkupvm::DATE) < 10 THEN 1
+              ELSE 0
+         END)
+    AND (EXTRACT(YEAR FROM :loppupvm::DATE)::INTEGER
+        - CASE
+              WHEN EXTRACT(MONTH FROM :loppupvm::DATE) < 10 THEN 1
+              ELSE 0
+             END)
   AND (:urakka::integer IS NULL OR v.urakka = :urakka)
   AND (:elinvoimakeskus::integer IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
   -- Rajoitetaan koskemaan pelkästään teiden-hoito (MHU) tyyppisiin urakohin
   AND u.tyyppi = 'teiden-hoito'
-GROUP BY u.id, u.nimi, mk.id, mk.nimi, tk.nimi, mk.yksikko, mk.materiaalityyppi, ml.nimi, ml.yksikko, ml.materiaalityyppi
+GROUP BY u.id, u.nimi, mk.id, mk.nimi, tk.nimi, mk.yksikko, mk.materiaalityyppi, ml.nimi, ml.yksikko, ml.materiaalityyppi, v.hoitokauden_alkuvuosi
 
 UNION
 
@@ -184,7 +221,9 @@ SELECT u.id AS urakka_id,
            END AS materiaali_yksikko,
        'paikkausmateriaali'::MATERIAALITYYPPI AS materiaali_tyyppi,
        NULL AS kk,
-       SUM(v.laskettu_maara) AS maara
+       v.hoitokauden_alkuvuosi AS "hoitokauden-alkuvuosi",
+       SUM(v.laskettu_maara) AS maara,
+       'suunnitelma' as maarantyyppi
   FROM urakka_tehtavamaara_yhteenveto v
     JOIN urakka u ON v.urakka = u.id AND u.urakkanro IS NOT NULL
     JOIN tehtava tk ON v.tehtava = tk.id
@@ -194,9 +233,19 @@ SELECT u.id AS urakka_id,
    AND (:urakka::INTEGER IS NULL OR v.urakka = :urakka)
    AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
    -- Hox: ympäristöraportti voidaan hakea kuukaudelle, mutta suunnittelutieto on olemassa vain vuositasolla
-   AND v.hoitokauden_alkuvuosi = EXTRACT(YEAR FROM :alkupvm::DATE)
+   AND v.hoitokauden_alkuvuosi BETWEEN
+     (EXTRACT(YEAR FROM :alkupvm::DATE)::INTEGER
+             - CASE
+                   WHEN EXTRACT(MONTH FROM :alkupvm::DATE) < 10 THEN 1
+                   ELSE 0
+             END)
+     AND (EXTRACT(YEAR FROM :loppupvm::DATE)::INTEGER
+             - CASE
+                   WHEN EXTRACT(MONTH FROM :loppupvm::DATE) < 10 THEN 1
+                   ELSE 0
+             END)
    AND v.tehtava IN (SELECT id FROM paikkaustehtavat)
- GROUP BY u.id, u.nimi, materiaali_id, materiaali_nimi, materiaali_yksikko, materiaali_tyyppi;
+ GROUP BY u.id, u.nimi, materiaali_id, materiaali_nimi, materiaali_yksikko, materiaali_tyyppi, v.hoitokauden_alkuvuosi;
 
 
 -- name: hae-materiaalit
@@ -205,3 +254,30 @@ SELECT u.id AS urakka_id,
 -- "materiaali_*" nimeen
 SELECT id,nimi, yksikko, materiaalityyppi as tyyppi FROM materiaalikoodi
  WHERE materiaalityyppi != 'erityisalue';
+
+-- name: hae-talvisuolan-kokonaiskayttoraja-raportille
+-- MHU urakoille Haetaan urakka_tehtavamaarat tauluun tallennettu Liukkauden torjunta suolaamalla - tehtävälle suunniteltu määrä.
+-- Alueurakoille (tyyppi = 'hoito') haetaan suolasakko taulusta talvisuolaraja, jos se on käytössä.
+SELECT MIN(v.urakka) as urakka_id,
+       u.nimi as urakka_nimi,
+       SUM(v.laskettu_maara) as talvisuolaraja
+FROM urakka_tehtavamaara_yhteenveto v
+     JOIN urakka u ON v.urakka = u.id AND u.tyyppi = 'teiden-hoito'
+WHERE v.tehtava = (SELECT id
+                   FROM tehtava
+                   WHERE suunnitteluyksikko = 'kuivatonnia'
+                     AND suoritettavatehtava = 'suolaus')
+  AND v.hoitokauden_alkuvuosi in (:hoitokauden-alkuvuodet)
+  AND v.urakka IN (:urakka_idt)
+  AND true = (SELECT tallennettu FROM sopimuksen_tehtavamaarat_tallennettu WHERE urakka = u.id LIMIT 1)
+GROUP BY v.urakka, u.nimi
+UNION
+SELECT ss.urakka as urakka_id,
+       u.nimi as urakka_nimi,
+       ss.talvisuolaraja
+FROM suolasakko ss
+         JOIN urakka u ON ss.urakka = u.id AND u.tyyppi = 'hoito'
+WHERE ss.urakka in (:urakka_idt)
+  AND ss.hoitokauden_alkuvuosi IN (:hoitokauden-alkuvuodet)
+  AND ss.kaytossa IS TRUE
+GROUP BY ss.urakka, u.nimi, ss.talvisuolaraja;

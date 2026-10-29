@@ -54,7 +54,7 @@
                  ;; Compojure päivittää ring versioita liian hitaasti, joten hallitaan niitä itse
                  ;; Varmista, että ring versiot ovat yhteensopivia niitä käyttävien kirjastojen kanssa
                  [ring/ring-codec "1.3.0"]
-                 [ring/ring-core "1.15.5"]
+                 [ring/ring-core "1.15.6"]
                  [compojure "1.7.2"]
                  [hiccup "1.0.5"]
 
@@ -71,7 +71,7 @@
 
                  ;; -- Tietokanta: ajuri, kirjastot ja -migraatiot --
                  ;; Ajuria päivittäessä, muista päivittää myös pom.xml, koska flyway käyttää sitä ajurin versiota
-                 [org.postgresql/postgresql "42.7.13"]
+                 [org.postgresql/postgresql "42.7.14"]
                  [net.postgis/postgis-jdbc "2025.1.1"]
                  [org.locationtech.jts/jts-core "1.20.0"]
                  ;; cp3p0 on tietokantayhteyksien hallintaan
@@ -171,8 +171,8 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.22.1"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.3"]
-                         [com.fasterxml.jackson.core/jackson-core "2.22.3"]
+                         [tools.jackson.core/jackson-core "3.2.4"]
+                         [com.fasterxml.jackson.core/jackson-core "2.22.4"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.14.0"]]
 

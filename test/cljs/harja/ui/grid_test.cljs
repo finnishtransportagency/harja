@@ -2,9 +2,12 @@
   (:require [harja.ui.grid :as g]
             [cljs.test :as t :refer-macros [deftest is]]
             [harja.testutils.shared-testutils :as u]
+            [harja.ui.yleiset :as yleiset]
             [reagent.core :as r]
             [clojure.string :as str]
             [harja.ui.grid.yleiset :as grid-yleiset]
+            [harja.ui.yleiset :as yleiset]
+            [harja.views.urakka.pot2.paallyste-ja-alusta-yhteiset :as pot2-yhteiset]
             [harja.loki :refer [log tarkkaile! error]]
             [cljs-react-test.simulate :as sim]
             [harja.ui.grid :as grid])
@@ -12,6 +15,21 @@
                    [cljs.core.async.macros :refer [go]]))
 
 (t/use-fixtures :each u/komponentti-fixture)
+
+(deftest info-laatikon-reunan-voimakkuus
+  (komponenttitesti
+    [:div
+     [:div {:id "reunan-voimakkuus-oletus"}
+      [yleiset/info-laatikko :vahva-ilmoitus "Ilmoitus"]]
+     [:div {:id "reunan-voimakkuus-hillitty"}
+      [yleiset/info-laatikko :vahva-ilmoitus "Ilmoitus" nil nil
+       {:reunan-voimakkuus :hillitty}]]
+     [:div {:id "reunan-voimakkuus-vahva"}
+      [yleiset/info-laatikko :vahva-ilmoitus "Ilmoitus" nil nil
+       {:reunan-voimakkuus :vahva}]]]
+    (is (nil? (u/sel1 "#reunan-voimakkuus-oletus .reunan-voimakkuus-vahva")))
+    (is (nil? (u/sel1 "#reunan-voimakkuus-hillitty .reunan-voimakkuus-vahva")))
+    (is (some? (u/sel1 "#reunan-voimakkuus-vahva .reunan-voimakkuus-vahva")))))
 
 (def vuosi-virhe
   "Kieli ei voi olla julkaistu ennen 1. ohjelmoitavaa tietokonetta (Colossus, v 1943)")
@@ -94,6 +112,53 @@
       (is (= (nth @data 3)
              {:id -1 :nimi "Max Syöttöpaine" :kieli "Vanha hieno kieli" :vuosi 2016})))))
 
+(def muokkaus-gridin-data
+  {1 {:id 1 :nimi "Rich Hickey" :kieli "Clojure" :vuosi 2009}
+   2 {:id 2 :nimi "Martin Odersky" :kieli "Scala" :vuosi 2004}
+   3 {:id 3 :nimi "Joe Armstrong" :kieli "Erlang" :vuosi 1986}})
+
+(deftest validointiviesti-naytetaan-fokuksessa-ja-hoverissa
+  (let [solu (partial u/grid-solu "fokus-grid")
+        ;; Solu ja input haetaan aina uudelleen, koska `--` toimii vain komponenttitestin ylätasolla
+        ilmoitus-nakyvissa? #(.contains (.-classList (solu 2 2 "")) "ilmoitus-nakyvissa")]
+    (komponenttitesti
+      [g/muokkaus-grid {:id "fokus-grid"
+                        :tunniste :id
+                        :jarjesta :id
+                        :voi-muokata? true
+                        :voi-lisata? false
+                        :piilota-toiminnot? true
+                        :nayta-virheet? :fokus
+                        :virheet (r/atom {3 {:vuosi [vuosi-virhe]}})}
+       skeema
+       (r/atom muokkaus-gridin-data)]
+
+      "Ilmoitus ei ole näkyvissä ennen hoveria tai fokusta"
+      (is (not (ilmoitus-nakyvissa?)))
+      (is (nil? (solu 2 2 "div.virheet")))
+
+      "Hover näyttää validointi-ilmoituksen"
+      (sim/mouse-enter (solu 2 2 "") nil)
+      --
+      (is (ilmoitus-nakyvissa?))
+      (is (= vuosi-virhe (str/trim (u/text (solu 2 2 "div.virheet")))))
+
+      "Hiiren poistuminen piilottaa ilmoituksen"
+      (sim/mouse-leave (solu 2 2 "") nil)
+      --
+      (is (not (ilmoitus-nakyvissa?)))
+      (is (nil? (solu 2 2 "div.virheet")))
+
+      "Näppäimistöfokus näyttää validointi-ilmoituksen"
+      (sim/focus (solu 2 2 "input") nil)
+      --
+      (is (ilmoitus-nakyvissa?))
+
+      "Escape piilottaa ilmoituksen fokuksen säilyessä"
+      (sim/key-down (solu 2 2 "input") {:key "Escape"})
+      --
+      (is (not (ilmoitus-nakyvissa?))))))
+
 (defn- grid-container []
   [:div
    (for [id (range 0 3)]
@@ -173,11 +238,6 @@
       (is (= (u/text (u/grid-solu "g3" 2 1 "")) "Erlang"))
       (is (= (u/text (u/grid-solu "g3" 2 2 "")) "1986")))))
 
-(def muokkaus-gridin-data
-  {1 {:id 1 :nimi "Rich Hickey" :kieli "Clojure" :vuosi 2009}
-   2 {:id 2 :nimi "Martin Odersky" :kieli "Scala" :vuosi 2004}
-   3 {:id 3 :nimi "Joe Armstrong" :kieli "Erlang" :vuosi 1986}})
-
 (deftest muokkaus-grid-datalla
   (let [data (r/atom muokkaus-gridin-data)]
     (komponenttitesti
@@ -207,6 +267,62 @@
 
       "Toimintonappeja ei ole"
       (is (= "Kumoa" (u/text (u/sel1 :button)))))))
+
+(deftest tieosoitevirheen-otsikko
+  (let [rivi {:tr-numero 815 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 625}]
+    (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe"
+          (pot2-yhteiset/tieosoitevirheen-otsikko rivi)))
+    (is (= "Kohteessa tie: 815, 1/0 - 1/- on virhe"
+          (pot2-yhteiset/tieosoitevirheen-otsikko (dissoc rivi :tr-loppuetaisyys))))
+    (is (= "Kohteessa tie: -, -/- - -/- on virhe"
+          (pot2-yhteiset/tieosoitevirheen-otsikko {})))))
+
+(deftest virheen-ohje-valinnaisella-otsikolla
+  (komponenttitesti
+    [:div
+     [:div {:id "otsikollinen-varoitus"}
+      [yleiset/virheen-ohje ["Tarkista tieosuuden tiedot." "Tarkista tieosuuden tiedot."] :varoitus
+       {:otsikko "Kohteessa tie: 815, 1/0 - 1/625 on virhe" :virheet-ulos? true :max-width "20rem"}]]
+     [:div {:id "vanha-varoitus"}
+      [yleiset/virheen-ohje ["Vanha kuvaus"] :varoitus {:virheet-ulos? true}]]]
+
+    "Otsikko on lihavoitu, kuvaus erillinen ja toistuvat kuvaukset yhdistetään"
+    (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe" (u/text "#otsikollinen-varoitus strong")))
+    (is (= 1 (count (u/sel "#otsikollinen-varoitus .varoitus > span"))))
+    (is (= "Tarkista tieosuuden tiedot." (str/trim (u/text "#otsikollinen-varoitus .varoitus > span"))))
+    (is (= "20rem" (.. (u/sel1 "#otsikollinen-varoitus .varoitus") -style -maxWidth)))
+
+    "Ilman asetusta vanha esitys säilyy"
+    (is (nil? (u/sel1 "#vanha-varoitus strong")))
+    (is (= "Vanha kuvaus" (str/trim (u/text "#vanha-varoitus .varoitus > span"))))))
+
+(deftest muokkaus-gridin-valinnainen-validointiotsikko
+  (let [rivit (r/atom {1 {:id 1 :tr-numero 815 :tr-alkuosa 1 :tr-alkuetaisyys 0 :tr-loppuosa 1 :tr-loppuetaisyys 625}})
+        sarakkeet [{:nimi :tr-loppuetaisyys :otsikko "Let" :tyyppi :numero
+                    :validointi-otsikko-fn pot2-yhteiset/tieosoitevirheen-otsikko}
+                   {:nimi :tr-alkuetaisyys :otsikko "Aet" :tyyppi :numero}]
+        varoitus "Tarkista tieosuuden tiedot."]
+    (komponenttitesti
+      [g/muokkaus-grid {:id "otsikko-grid" :tunniste :id :voi-muokata? true
+                       :voi-lisata? false :voi-poistaa? (constantly false)
+                       :nayta-virheet? :aina
+                       :virheet (r/atom {})
+                       :varoitukset (r/atom {1 {:tr-loppuetaisyys [varoitus]
+                                                :tr-alkuetaisyys [varoitus]}})}
+       sarakkeet rivit]
+
+      "Vain otsikkoasetuksen saanut sarake näyttää otsikon"
+      (is (= "Kohteessa tie: 815, 1/0 - 1/625 on virhe"
+        (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:first-child"))))
+      (is (= varoitus
+        (str/trim (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:nth-child(2)")))))
+      (is (nil? (u/grid-solu "otsikko-grid" 0 1 "strong")))
+
+      "Otsikko päivittyy nykyisen rivin mukaan"
+      (swap! rivit assoc-in [1 :tr-loppuetaisyys] 624)
+      --
+      (is (= "Kohteessa tie: 815, 1/0 - 1/624 on virhe"
+        (u/text (u/grid-solu "otsikko-grid" 0 0 ".info-laatikko .infolaatikon-teksti > div:first-child")))))))
 
 (deftest rivi-piilotetun-otsikon-alla
   (let [testirivit [(grid/otsikko "A" {:id :A}) 1 2 3 4
