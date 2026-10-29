@@ -285,12 +285,15 @@ DECLARE
        Alkuvuodesta edellisen vuoden syys, loka, marras indeksien keskiarvo
        Muissa tapauksissa voi katsoa funktiosta */
     perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
+    /* Vesiväyläurakoissa tarvitaan: */
+    urakan_alkukuu INTEGER;
+    urakkavuoden_alkuvuosi INTEGER;
 BEGIN
     -- Kaikilla 2019>= urakoilla indeksi yleensä 'MAKU 2015'
-    SELECT indeksi, EXTRACT(YEAR FROM alkupvm)
+    SELECT indeksi, EXTRACT(YEAR FROM alkupvm), EXTRACT(MONTH FROM alkupvm)
       FROM urakka u
      WHERE u.id = urakka_id
-      INTO indeksin_nimi, urakan_alkuvuosi;
+      INTO indeksin_nimi, urakan_alkuvuosi, urakan_alkukuu;
 
     -- Hoitokauden vertailuvuosi
     IF kuukausi_ BETWEEN 1 AND 9
@@ -302,11 +305,35 @@ BEGIN
 
     -- Käytetään vertailukuukauden default-arvona syyskuuta.
     vertailukk := 9;
-    
+
+    IF urakka_tyyppi = 'vesivayla-hoito' THEN
+    /*
+     * Jonkin vesiväyläurakan aloituspäivänä voi olla 1.8. Siksi pitää hakea urakan_alkukuu
+     * ja päätellä sen perusteella, että ollaanko ensimmäisessä urakkavuodessa.
+     */
+        IF vuosi_ = urakan_alkuvuosi AND kuukausi_ >= urakan_alkukuu
+        THEN
+            urakkavuoden_alkuvuosi := urakan_alkuvuosi;
+        ELSIF kuukausi_ >= 10 THEN
+            urakkavuoden_alkuvuosi := vuosi_;
+        ELSE
+            urakkavuoden_alkuvuosi := vuosi_ - 1;
+        END IF;
+
+        IF urakkavuoden_alkuvuosi = urakan_alkuvuosi THEN
+            -- Ensimmäinen urakkavuosi: käytetään aloitusvuoden kesäkuuta.
+            vertailuvuosi := urakan_alkuvuosi;
+            vertailukk := 6;
+        ELSE
+            -- Toinen ja sitä seuraavat urakkavuodet: käytetään urakkavuoden elokuuta.
+            vertailuvuosi := urakkavuoden_alkuvuosi;
+            vertailukk := 8;
+        END IF;
+
     /* Indeksikertoimen laskenta (teiden-hoito): 
       >= 2023 urakat: Kuluvan hk:n elokuun indeksi / perusluku  
       < 2023 urakat: Kuluvan hk:n syyskuun indeksi / perusluku */
-    IF  urakka_tyyppi = 'teiden-hoito' 
+    ELSEIF  urakka_tyyppi = 'teiden-hoito'
     AND urakan_alkuvuosi >= 2023 THEN
         vertailukk := 8;
     END IF;
@@ -317,7 +344,7 @@ BEGIN
                FROM indeksi i
               WHERE i.vuosi = vertailuvuosi
                 AND i.kuukausi = vertailukk
-                AND nimi = indeksin_nimi);
+                AND i.nimi = indeksin_nimi);
 
     -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
     -- Tämä sääntö myös asiakirjoissa 
