@@ -243,7 +243,7 @@ describe('MHU26 laskettava sanktio', function () {
             .clear().type('12,5')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group').within(() => {
             cy.get('input').should('not.exist')
-            cy.get('.lomake-arvo').should('contain.text', '2 500')
+            cy.get('.lomake-arvo').invoke('text').should('match', /2\s?500/)
         })
 
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
@@ -290,7 +290,7 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
             .should('not.be.checked').check().should('be.checked')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
-            .find('.lomake-arvo').should('contain.text', '7 000')
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
 
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B1', {timeout: clickTimeout}).then(({response}) => {
@@ -313,7 +313,7 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
             .should('be.checked').uncheck().should('not.be.checked')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
-            .find('.lomake-arvo').should('contain.text', '14 000')
+            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B2', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
@@ -330,7 +330,7 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
             .should('not.be.checked').check().should('be.checked')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
-            .find('.lomake-arvo').should('contain.text', '7 000')
+            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
         cy.wait('@tallennaMhu26B3', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
