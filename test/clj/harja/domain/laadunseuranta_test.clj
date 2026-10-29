@@ -915,6 +915,9 @@
            (assoc (:laskentaparametrit prosenttiosuus-maaritys)
              :syoteavain "laskutusrajan_ylitys")))))
 
+(deftest laskettavan-sanktion-otsikot-sallii-puuttuvan-maarityksen
+  (is (nil? (sanktion-laskenta/laskettavan-sanktion-otsikot nil))))
+
 (deftest syotteen-virhe-esitarkistaa-syotteen-profiilin-saannoilla
   (let [parametrit (:laskentaparametrit tiekm-maaritys)
         rajattu (assoc parametrit :minimi 0.5 :maksimi 100)]
