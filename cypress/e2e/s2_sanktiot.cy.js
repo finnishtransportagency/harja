@@ -239,11 +239,11 @@ describe('MHU26 laskettava sanktio', function () {
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default')
             .valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('[data-cy="sanktio-laskettava-syote"]')
+        cy.get('[data-cy="sanktio-laskettava-syote"] input')
             .clear().type('12,5')
-        cy.get('label').contains('Sanktion suuruus').closest('.form-group').within(() => {
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group').within(() => {
             cy.get('input').should('not.exist')
-            cy.get('.lomake-arvo').invoke('text').should('match', /2\s?500/)
+            cy.get('.lomake-arvo').should('contain.text', '2 500')
         })
 
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
