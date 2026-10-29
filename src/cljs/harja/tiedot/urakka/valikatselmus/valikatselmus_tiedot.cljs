@@ -138,7 +138,12 @@
   HaeValikatselmuksenTiedot
   (process-event [{urakkaid :urakkaid hoitovuosi :hoitovuosi} app]
     (hae-valikatselmuksen-tiedot urakkaid hoitovuosi)
-    (assoc app :haku-kaynnissa? true))
+    (assoc app
+      :haku-kaynnissa? true
+      :hoitokauden-alkuvuosi hoitovuosi
+      :valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitovuosi)
+                           (pvm/paivan-lopussa
+                             (pvm/hoitokauden-loppupvm (inc hoitovuosi)))]))
 
   HaeValikatselmuksenTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
