@@ -1,137 +1,110 @@
--- Profiilin summamääritys voi olla rakenteisesti määritelty laskettava summa.
--- Palvelin toteuttaa vain tunnetut laskentatavat; ohjetekstiä ei koskaan tulkita kaavana.
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD COLUMN laskentatapa       TEXT,
-    ADD COLUMN laskentaparametrit JSONB;
+-- Korjataan sanktio_laji-taulun ryhmittely ja järjestys.
+WITH jarjestysarvot (koodi, uusi_jarjestys) AS (
+        VALUES
+                ('muistutus', 1),
+                ('A', 2),
+                ('B', 3),
+                ('C', 4),
+                ('tyon_tekematta_jattaminen', 20),
+                ('asiakirjamerkintojen_paikkansa_pitamattomyys', 21),
+                ('muu_sopimuksen_vastainen_toiminta', 22),
+                ('vaihtosanktio', 30),
+                ('vastuuhenkilon_vaihto', 30),
+                ('testikeskiarvo-sanktio', 31),
+                ('tenttikeskiarvo-sanktio', 32),
+                ('vastuuhenkilon_tenttipistemaara_alentuminen', 32),
+                ('laskutus_yli_laskutusrajan', 40),
+                ('laskutus_ilman_laskutuskelpoisuutta', 41),
+                ('pohjavesisuolan_ylitys', 50),
+                ('talvisuolan_ylitys', 51),
+                ('talvisuolan_kokonaiskayton_ylitys', 52),
+                ('yllapidon_sakko', 60),
+                ('yllapidon_muistutus', 61),
+                ('arvonvahennyssanktio', 77)
+),
+integraatio AS (
+        SELECT id
+          FROM kayttaja
+         WHERE kayttajanimi = 'Integraatio'
+)
+UPDATE sanktio_laji sl
+SET jarjestys = ja.uusi_jarjestys,
+           muokkaaja = i.id,
+           muokattu = CURRENT_TIMESTAMP
+FROM jarjestysarvot ja
+           CROSS JOIN integraatio i
+WHERE sl.koodi = ja.koodi
+   AND sl.jarjestys IS DISTINCT FROM ja.uusi_jarjestys;
 
-COMMENT ON COLUMN sanktio_profiili_rivi_summamaaritys.laskentatapa IS
-    'Tyypitetty laskentatapa, pakollinen kun maaritystapa = laskettu. Palvelin tuntee vain check-rajoituksessa luetellut tavat.';
-COMMENT ON COLUMN sanktio_profiili_rivi_summamaaritys.laskentaparametrit IS
-    'Laskentatavan rakenteiset parametrit (syoteavain, yksikko, desimaalit, yksikkohinta tai prosentti, valinnaiset minimi ja maksimi) JSON-objektina.';
+-- Puuttuva koodi tarkoittaisi, että järjestys jäisi osittain korjaamatta.
+DO $$
+DECLARE
+    puuttuvat TEXT;
+BEGIN
+    SELECT string_agg(odotettu.koodi, ', ' ORDER BY odotettu.koodi)
+      INTO puuttuvat
+      FROM (VALUES
+                ('muistutus'), ('A'), ('B'), ('C'),
+                ('tyon_tekematta_jattaminen'),
+                ('asiakirjamerkintojen_paikkansa_pitamattomyys'),
+                ('muu_sopimuksen_vastainen_toiminta'),
+                ('vaihtosanktio'), ('vastuuhenkilon_vaihto'),
+                ('testikeskiarvo-sanktio'), ('tenttikeskiarvo-sanktio'),
+                ('vastuuhenkilon_tenttipistemaara_alentuminen'),
+                ('laskutus_yli_laskutusrajan'),
+                ('laskutus_ilman_laskutuskelpoisuutta'),
+                ('pohjavesisuolan_ylitys'), ('talvisuolan_ylitys'),
+                ('talvisuolan_kokonaiskayton_ylitys'),
+                ('yllapidon_sakko'), ('yllapidon_muistutus'),
+                ('arvonvahennyssanktio')) AS odotettu(koodi)
+     WHERE NOT EXISTS (SELECT 1 FROM sanktio_laji sl WHERE sl.koodi = odotettu.koodi);
 
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    DROP CONSTRAINT sanktio_profiili_rivi_summamaaritys_maaritystapa_check,
-    DROP CONSTRAINT sanktio_profiili_rivi_summamaaritys_sisalto_check;
+    IF puuttuvat IS NOT NULL THEN
+        RAISE EXCEPTION 'Sanktioiden järjestyksestä puuttuvat lajit: %', puuttuvat;
+    END IF;
+END;
+$$;
 
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_maaritystapa_check
-        CHECK (maaritystapa IN ('automaattinen', 'manuaalinen', 'laskettu')),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_laskentatapa_check
-        CHECK (laskentatapa IS NULL OR laskentatapa IN ('tiekm_yksikkohinta', 'prosenttiosuus_syotteesta')),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_laskentaparametrit_check
-        CHECK (laskentaparametrit IS NULL OR jsonb_typeof(laskentaparametrit) = 'object'),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_sisalto_check
-        CHECK (
-            (maaritystapa = 'automaattinen'
-                AND summa_euroina IS NOT NULL
-                AND laskentatapa IS NULL
-                AND laskentaparametrit IS NULL)
-                OR
-            (maaritystapa = 'manuaalinen'
-                AND (summa_euroina IS NOT NULL OR ohjeteksti IS NOT NULL)
-                AND laskentatapa IS NULL
-                AND laskentaparametrit IS NULL)
-                OR
-            (maaritystapa = 'laskettu'
-                AND summa_euroina IS NULL
-                AND laskentatapa IS NOT NULL
-                AND laskentaparametrit IS NOT NULL)
-            );
-
--- Laskettavan sanktion tapahtumasyöte ja laskennassa käytetty profiilin snapshot.
-ALTER TABLE sanktio
-    ADD COLUMN laskennan_syote JSONB;
-
-COMMENT ON COLUMN sanktio.laskennan_syote IS
-    'Vain laskettaville sanktioille: laskennassa käytetty syöte, laskentatapa ja profiilin laskentaparametrit tallennushetken snapshotina.';
-
-ALTER TABLE sanktio
-    DROP CONSTRAINT sanktio_maaritystapa_check;
-
-ALTER TABLE sanktio
-    ADD CONSTRAINT sanktio_maaritystapa_check
-        CHECK (maaritystapa IS NULL OR maaritystapa IN ('automaattinen', 'manuaalinen', 'laskettu')),
-    ADD CONSTRAINT sanktio_laskennan_syote_check
-        CHECK (
-            CASE
-                WHEN maaritystapa = 'laskettu'
-                    THEN laskennan_syote IS NOT NULL AND jsonb_typeof(laskennan_syote) = 'object'
-                ELSE laskennan_syote IS NULL
-                END
-            );
-
--- MHU26: HARJA-2616 sohjo-ojan ja lumivallin madallus (sanktiotyyppi 22): tiekm × 200 €.
--- Muu töiden tekemättä jättäminen (sanktiotyyppi 23) jää manuaaliseksi, eikä sillä ole summamääritysriviä.
-UPDATE sanktio_profiili_rivi_summamaaritys sprsm
-SET maaritystapa       = 'laskettu',
-    summa_euroina      = NULL,
-    ohjeteksti         = NULL,
-    laskentatapa       = 'tiekm_yksikkohinta',
-    laskentaparametrit = '{"syoteavain": "tiekm", "yksikko": "tiekm", "desimaalit": 2, "yksikkohinta": 200.0}'::JSONB,
-    muokkaaja          = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-    muokattu           = CURRENT_TIMESTAMP
-FROM sanktio_profiili_rivi spr,
-     sanktio_profiili sp,
-     sanktio_laji sl,
-     sanktiotyyppi st
-WHERE sprsm.sanktio_profiili_rivi_id = spr.id
-  AND spr.sanktio_profiili_id = sp.id
-  AND spr.sanktio_laji_id = sl.id
-  AND spr.sanktiotyyppi_id = st.id
-  AND sp.nimi = 'teiden-hoito-mhu2026'
-  AND sl.koodi = 'tyon_tekematta_jattaminen'
-  AND st.koodi = 22;
-
--- MHU26: HARJA-2621 laskutus ilman laskutuskelpoisuutta (sanktiotyyppi 0): 20 % laskutuskelvottomana laskutetusta osuudesta.
-UPDATE sanktio_profiili_rivi_summamaaritys sprsm
-SET maaritystapa       = 'laskettu',
-    summa_euroina      = NULL,
-    ohjeteksti         = NULL,
-    laskentatapa       = 'prosenttiosuus_syotteesta',
-    laskentaparametrit = '{"syoteavain": "laskutuskelvottomana_laskutettu_osuus", "yksikko": "€", "desimaalit": 2, "prosentti": 20}'::JSONB,
-    muokkaaja          = (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
-    muokattu           = CURRENT_TIMESTAMP
-FROM sanktio_profiili_rivi spr,
-     sanktio_profiili sp,
-     sanktio_laji sl,
-     sanktiotyyppi st
-WHERE sprsm.sanktio_profiili_rivi_id = spr.id
-  AND spr.sanktio_profiili_id = sp.id
-  AND spr.sanktio_laji_id = sl.id
-  AND spr.sanktiotyyppi_id = st.id
-  AND sp.nimi = 'teiden-hoito-mhu2026'
-  AND sl.koodi = 'laskutus_ilman_laskutuskelpoisuutta'
-  AND st.koodi = 0;
-
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD COLUMN laskentaversio INTEGER;
-
-UPDATE sanktio_profiili_rivi_summamaaritys
-SET laskentaversio = 1
-WHERE maaritystapa = 'laskettu';
-
-ALTER TABLE sanktio_profiili_rivi_summamaaritys
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_laskentaversio_check
-        CHECK (laskentaversio IS NULL OR laskentaversio > 0),
-    ADD CONSTRAINT sanktio_profiili_rivi_summamaaritys_laskentaversio_sisalto
-        CHECK ((maaritystapa = 'laskettu' AND laskentaversio IS NOT NULL)
-            OR (maaritystapa <> 'laskettu' AND laskentaversio IS NULL));
-
-UPDATE sanktio
-SET laskennan_syote = jsonb_set(laskennan_syote, '{laskentaversio}', '1'::JSONB, true)
-WHERE maaritystapa = 'laskettu'
-  AND laskennan_syote IS NOT NULL
-  AND NOT (laskennan_syote ? 'laskentaversio');
-
-ALTER TABLE sanktio
-    ADD CONSTRAINT sanktio_laskennan_syote_laskentaversio_check
-        CHECK (maaritystapa <> 'laskettu'
-            OR (laskennan_syote ? 'laskentaversio'
-                AND jsonb_typeof(laskennan_syote -> 'laskentaversio') = 'number'
-                AND (laskennan_syote ->> 'laskentaversio') ~ '^[1-9][0-9]*$'
-                AND (length(laskennan_syote ->> 'laskentaversio') < 10
-                    OR (length(laskennan_syote ->> 'laskentaversio') = 10
-                        AND (laskennan_syote ->> 'laskentaversio') <= '2147483647'))));
-
-COMMENT ON COLUMN sanktio_profiili_rivi_summamaaritys.laskentaversio IS
-    'Laskentakaavan semanttinen versio. Eri asia kuin Flyway-migraation versio.';
+-- MHU19-25 C-ryhmän järjestys on profiilirivikohtainen.
+WITH profiilit (nimi) AS (
+                VALUES ('teiden-hoito-legacy'),
+                       ('teiden-hoito-2021-ja-uudemmat'),
+                       ('teiden-hoito-mhu2025')
+),
+kontekstit (soveltuvuuskonteksti) AS (
+                VALUES ('urakka'), ('laatupoikkeama')
+),
+jarjestysarvot (sanktiotyyppi_koodi, uusi_jarjestys) AS (
+                VALUES (8, 1), (9, 2), (10, 3), (12, 4), (11, 5)
+),
+integraatio AS (
+        SELECT id
+                        FROM kayttaja
+                 WHERE kayttajanimi = 'Integraatio'
+),
+kohderivit AS (
+                SELECT spr.id,
+                       ja.uusi_jarjestys
+                        FROM sanktio_profiili_rivi spr
+                                         JOIN sanktio_profiili sp
+                                                 ON sp.id = spr.sanktio_profiili_id
+                                         JOIN sanktio_laji sl
+                                                 ON sl.id = spr.sanktio_laji_id
+                                                AND sl.koodi = 'C'
+                                         JOIN sanktiotyyppi st
+                                                 ON st.id = spr.sanktiotyyppi_id
+                                         JOIN kontekstit k
+                                                 ON k.soveltuvuuskonteksti = spr.soveltuvuuskonteksti
+                                         JOIN profiilit p
+                                                 ON p.nimi = sp.nimi
+                                         JOIN jarjestysarvot ja
+                                                 ON ja.sanktiotyyppi_koodi = st.koodi
+)
+UPDATE sanktio_profiili_rivi spr
+SET jarjestys = kohderivit.uusi_jarjestys,
+                         muokkaaja = i.id,
+                         muokattu = CURRENT_TIMESTAMP
+FROM kohderivit
+                         CROSS JOIN integraatio i
+WHERE spr.id = kohderivit.id
+         AND spr.jarjestys IS DISTINCT FROM kohderivit.uusi_jarjestys;

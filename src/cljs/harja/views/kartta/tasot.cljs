@@ -128,23 +128,30 @@
   piirretään pienemmällä zindexillä." :const true}
   oletus-zindex 4)
 
-(defn- organisaation-geometria [piirrettava]
-  (let [{:keys [stroke] :as alue} (:alue piirrettava)]
+(defn- organisaation-geometria [vari-map
+                                {:keys [urakkanro alue id type valittu] :as piirrettava}]
+  (let [{:keys [stroke] :as alue} alue]
     (when (map? alue)
       (update-in piirrettava
         [:alue]
         assoc
-        :fill (if (:valittu piirrettava) false true)
+        :fill (if valittu false true)
         :stroke (if stroke
                   stroke
-                  (when (or (:valittu piirrettava)
-                          (= :silta (:type piirrettava)))
+                  (when (or valittu
+                          (= :silta type))
                     {:width 3}))
         :color (or (:color alue)
-                 (nth varit/kaikki (mod (:id piirrettava)
-                                     (count varit/kaikki))))
+                 (if (and id (not urakkanro))
+                   ;; Kyseessä ely (ely kohtaiset värit)
+                   ;; Sekoittaa värejä id:n mukaan, jotta eri Elyillä on eri värit
+                   (nth varit/elinvoima-varit (mod id
+                                                (count varit/elinvoima-varit)))
+                   ;; Kyseessä urakka (urakkakohtaiset värit)
+                   ;; Nämä sekoitetaan aiemmassa kutsuvassa funktiossa
+                   (get vari-map id)))
         :zindex (or (:zindex alue)
-                  (case (:type piirrettava)
+                  (case type
                     :hy (kartan-asioiden-z-indeksit :hallintayksikko)
                     :ur (kartan-asioiden-z-indeksit :urakka)
                     :pohjavesialueet (kartan-asioiden-z-indeksit :pohjavesialueet)
@@ -199,25 +206,35 @@
     :default [(assoc v-ur
                 :valittu true)]))
 
+(defn- urakan-id->variksi-uniikki
+  "Sekoittaa värejä id:n mukaan, jotta näkyville urakoille tulee uniikki väri
+  Tämä on 'Valitse hallintayksikön urakka' -näkymälle"
+  [piirrettavat]
+  (let [idt (->> piirrettavat
+              (keep :id)
+              distinct)]
+    (zipmap idt (cycle varit/kaikki))))
+
 (def urakat-ja-organisaatiot-kartalla
   (reaction
-    (with-meta
-      (into []
-        (keep organisaation-geometria)
-        (urakat-ja-organisaatiot-kartalla*
-          @hal/vaylamuodon-hallintayksikot
-          @nav/valittu-hallintayksikko
-          @nav/valittu-urakka
-          (@reitit/url-navigaatio :sivu)
-          (nav/valittu-valilehti (@reitit/url-navigaatio :sivu))
-          @nav/urakat-kartalla))
-      ; Selite mustille urakkarajoille tilannekuvassa
-      {:selitteet
-       (if (and
-             (= :tilannekuva (@reitit/url-navigaatio :sivu))
-             @nav/tilannekuvassa-alueita-valittu?)
-         #{urakkarajan-selite}
-         #{})})))
+    (let [piirrettavat (urakat-ja-organisaatiot-kartalla*
+                         @hal/vaylamuodon-hallintayksikot
+                         @nav/valittu-hallintayksikko
+                         @nav/valittu-urakka
+                         (@reitit/url-navigaatio :sivu)
+                         (nav/valittu-valilehti (@reitit/url-navigaatio :sivu))
+                         @nav/urakat-kartalla)
+          vari-map (urakan-id->variksi-uniikki piirrettavat)]
+      (with-meta
+        (into []
+          (keep #(organisaation-geometria vari-map %))
+          piirrettavat)
+        {:selitteet
+         (if (and
+               (= :tilannekuva (@reitit/url-navigaatio :sivu))
+               @nav/tilannekuvassa-alueita-valittu?)
+           #{urakkarajan-selite}
+           #{})}))))
 
 ;; Ad hoc geometrioiden näyttäminen näkymistä
 ;; Avain on avainsana ja arvo on itse geometria

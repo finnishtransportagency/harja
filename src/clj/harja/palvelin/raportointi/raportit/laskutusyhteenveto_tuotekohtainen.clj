@@ -8,7 +8,6 @@
             [harja.tyokalut.functor :refer [fmap]]
 
             [harja.kyselyt.budjettisuunnittelu :as budjetti-q]
-            [harja.kyselyt.jarjestelman-tila :as jarjestelmatila-q]
             [harja.kyselyt.hallintayksikot :as hallintayksikko-q]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
 
@@ -62,7 +61,7 @@
                  (rest
                    (reductions
                      + 0M
-                     (map #(or (:kaikki_laskutettu %) 0M) tiedot))))
+                     (map #(or (:tavoitehintaiset_laskutettu %) 0M) tiedot))))
 
         onko_laskutusraja_kaytossa (:onko_laskutusraja_kaytossa (last tiedot))
         laskutusraja_yht (or (:laskutusraja_yht (last tiedot)) 0.0M)
@@ -113,7 +112,7 @@
      ;; KK-välin laskutus
      :kaikki-yhteensa-laskutetaan kaikki-yhteensa-laskutetaan
      :nimi "Kaikki toteutuneet kustannukset"
-     ;; Laskutusraja 
+     ;; Laskutusraja
      :laskutusraja_yht laskutusraja_yht
      :laskutusraja_alkuperainen (some :laskutusraja_alkuperainen tiedot)
      :laskutusrajaan_jaljella laskutusrajaan_jaljella
@@ -242,8 +241,8 @@
         rivitiedot (merge (first koostettu-yhteenveto) (second koostettu-yhteenveto))
 
         rivitiedot (assoc rivitiedot
-                     :tavhin_val_aika_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutetaan)
-                     :tavhin_hoitokausi_yht (-> koostettu-yhteenveto first :kaikki-yhteensa-laskutettu)
+                     :tavhin_val_aika_yht (-> koostettu-yhteenveto first :kaikki-tavoitehintaiset-laskutetaan)
+                     :tavhin_hoitokausi_yht (-> koostettu-yhteenveto first :kaikki-tavoitehintaiset-laskutettu)
                      :onko_laskutusraja_kaytossa (-> koostettu-yhteenveto first :onko_laskutusraja_kaytossa)
                      :onko_laskutusraja_ylittynyt (-> koostettu-yhteenveto first :onko_laskutusraja_ylittynyt)
                      :laskutusrajan_ylittynyt_yht (-> koostettu-yhteenveto first :laskutusrajan_ylittynyt_yht)
