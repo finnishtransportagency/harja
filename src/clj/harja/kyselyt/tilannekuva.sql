@@ -681,7 +681,9 @@ SELECT
   u.id, u.elinvoimakeskus_id
 FROM urakka u
   LEFT JOIN organisaatio elv ON u.elinvoimakeskus_id = elv.id
-WHERE elv.id IN (:elinvoimakeskusnumerot)
+WHERE (elv.id IN (:elinvoimakeskusnumerot) OR
+       elv.id IN (SELECT elinvoimakeskus_id FROM urakka WHERE id IN (:urakat))
+           and elinvoimakeskus_id is NOT NULL)
   AND u.tyyppi != 'valaistus';
 
 -- name: elinvoimakeskusten-urakat
