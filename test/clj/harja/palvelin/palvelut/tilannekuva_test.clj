@@ -562,3 +562,7 @@
     (is (not (sallitut-urakat 432)) "Roolin puuttuessa oikeutta ei muodostu")
     (is (not (sallitut-urakat 423)) "Roolin puuttuessa oikeutta ei muodostu")
     (is (not (sallitut-urakat urakka-id-jossa-ei-roolia)) "Roolin puuttuessa oikeutta ei muodostu")))
+
+(deftest hae-urakoitsijan-tai-konsultin-urakat-toimii
+  ;; kutsu: hae-urakoitsijan-tai-konsultin-urakat [db user oikeus-nakyma]
+  (is (= true false) "Tee yksikkötestit"))
