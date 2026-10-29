@@ -73,6 +73,16 @@
 
 (defonce tallennetaan (atom false))
 
+(defonce lukitut-hoitovuodet
+  (reaction<! [suolatoteumissa? @tiedot/suolatoteumissa?
+               urakka @nav/valittu-urakka]
+    {:nil-kun-haku-kaynnissa? true}
+    (when (and suolatoteumissa? urakka)
+      (go
+        (some-> (<! (k/post! :hae-toteumien-lukitukset {:urakka-id (:id urakka)}))
+          :lukitut-hoitovuodet
+          set)))))
+
 (defn raportointitapa [rivi]
   (cond
     (= "harja-ui" (:lahde rivi)) "Käsin syötetty"
@@ -101,6 +111,19 @@
         (if (= 1 (count lukitut-hoitovuodet))
           ". Sen suolatoteumia ei voi muokata."
           ". Niiden suolatoteumia ei voi muokata.")))))
+
+(defn lukitun-hoitovuoden-virhe [lukitut-hoitovuodet rivit]
+  (when-let [vuosi
+             (some (fn [{:keys [pvm koskematon poistettu]}]
+                     (when (and (not koskematon)
+                             (not poistettu)
+                             pvm)
+                       (let [hoitovuosi (pvm/hoitokauden-alkuvuosi pvm)]
+                         (when (contains? lukitut-hoitovuodet hoitovuosi)
+                           hoitovuosi))))
+               rivit)]
+    (str "Välikatselmuksen päätös lukitsee hoitovuoden " vuosi
+      ". Suolatoteumaa ei voi tallentaa tälle hoitovuodelle.")))
 
 (defn suolatoteumat-taulukko [muokattava? urakka sopimus-id materiaali-nimet]
   [:div.suolatoteumat
@@ -166,7 +189,8 @@
                                 (map (juxt :rivinumero (fn [rivi]
                                                          [vetolaatikon-suolarivit rivi urakka])))
                                 (keep #(when-not (:yhteenveto %) %) @tiedot/toteumat))
-                :piilota-toiminnot? true}
+                :piilota-toiminnot? true
+                :data-cy "talvisuolatoteumat-grid"}
      [{:tyyppi :vetolaatikon-tila :leveys 9}
       {:otsikko "Suola\u00ADtyyppi" :nimi :materiaali :fmt :nimi :leveys 30
        :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
@@ -176,7 +200,9 @@
        :valinnat @tiedot/materiaalit}
       {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 20
        :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
-       :validoi [[:ei-tyhja "Anna päivämäärä"]]
+       :validoi [[:ei-tyhja "Anna päivämäärä"]
+                 [:hoitovuosi-lukittu lukitut-hoitovuodet
+                  "Välikatselmuksen päätös lukitsee hoitovuoden, tarkista päivämäärä."]]
        :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
       {:otsikko "Käytetty määrä (100% kuivatonni)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
        :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30

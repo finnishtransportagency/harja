@@ -574,7 +574,7 @@
                :toteumat []}))))
     (is (= [urakka-id 2005 :toteuma] @tarkistettu))))
 
-(deftest maarien-toteumien-lukitusten-haku-palauttaa-lukitut-hoitovuodet
+(deftest toteumien-lukitusten-haku-palauttaa-lukitut-hoitovuodet
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         tarkistetut-hoitovuodet (atom [])]
     (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
@@ -584,7 +584,7 @@
       (is (= #{2006}
             (:lukitut-hoitovuodet
                (kutsu-palvelua (:http-palvelin jarjestelma)
-                 :hae-maarien-toteumien-lukitukset
+                 :hae-toteumien-lukitukset
                  +kayttaja-jvh+
                  {:urakka-id urakka-id})))))
     (is (some #(= [urakka-id 2006 :toteuma] %) @tarkistetut-hoitovuodet))

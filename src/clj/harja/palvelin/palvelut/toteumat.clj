@@ -503,10 +503,15 @@
                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     vastaus))
 
-(defn hae-maarien-toteumien-lukitukset
-  "Palauttaa hoitovuodet, joille määrätoteumia ei voi tallentaa."
+(defn hae-toteumien-lukitukset
+  "Palauttaa urakan lukitut hoitovuodet toteumien syötön validointia varten."
   [db user {:keys [urakka-id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
+  (oikeudet/vaadi-lukuoikeus
+    (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
+      oikeudet/urakat-toteumat-kokonaishintaisettyot
+      oikeudet/urakat-toteumat-suola)
+    user
+    urakka-id)
   (when-not urakka-id
     (throw (IllegalArgumentException. "Urakka-id puuttuu")))
   (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))]
@@ -1163,9 +1168,9 @@
       :tallenna-toteuma
       (fn [user tiedot]
         (tallenna-toteuma! db user tiedot))
-      :hae-maarien-toteumien-lukitukset
+      :hae-toteumien-lukitukset
       (fn [user tiedot]
-        (hae-maarien-toteumien-lukitukset db user tiedot))
+        (hae-toteumien-lukitukset db user tiedot))
       :hae-maarien-toteuma
       (fn [user tiedot]
         (hae-maarien-toteuma db-replica user tiedot))
@@ -1232,7 +1237,7 @@
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma
-      :hae-maarien-toteumien-lukitukset
+      :hae-toteumien-lukitukset
       :hae-maarien-toteuma
       :poista-toteuma
       :urakan-toteutuneet-muut-tyot

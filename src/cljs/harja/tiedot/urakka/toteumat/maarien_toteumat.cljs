@@ -562,7 +562,7 @@
 
   HaeMaarienToteumienLukitukset
   (process-event [_ app]
-    (tuck-apurit/post! :hae-maarien-toteumien-lukitukset
+    (tuck-apurit/post! :hae-toteumien-lukitukset
       {:urakka-id (-> @tila/yleiset :urakka :id)}
       {:onnistui ->MaarienToteumienLukituksetHaettu
        :epaonnistui ->MaarienToteumienLukitustenHakuEpaonnistui
