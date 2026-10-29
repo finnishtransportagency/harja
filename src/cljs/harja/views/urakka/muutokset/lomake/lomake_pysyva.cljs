@@ -469,16 +469,26 @@
                          (let [hoitovuosi-str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
                                                 (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
                                                 (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
-                                                false)]
+                                                false)
+
+                               ;; Perumiselle pitää passata oikea hoitovuosi joka on vahvistettu
+                               ensimmainen-vahvistettu-vuosi (some (fn [[vuosi vahvistettu?]]
+                                                                     (when vahvistettu? vuosi))
+                                                               (sort-by key tavoitehinta-indeksikorjattu-per-hoitovuosi))]
+
                            [yleiset/info-laatikko :vahva-ilmoitus
                             "Hoitovuoden alun tavoitehinta on vahvistettu"
                             [:<>
                              [:div hoitovuosi-str " osalta pysyvän muutoksen tavoitehintavaikutukset sisältyät jo vahvistettuun hoitovuoden alun tavoitehintaan." [:br]
                               "Jos haluat tehdä muutoksia, vahvistus on peruttava ja tehtävä uudelleen."]
                              [:br]
-                             [:div [napit/yleinen-toissijainen "Peru vahvistus"
+                             [:div [napit/yleinen-toissijainen
+                                    (str
+                                      "Peru vahvistus"
+                                      (when ensimmainen-vahvistettu-vuosi
+                                        (str " (" ensimmainen-vahvistettu-vuosi ")")))
                                     #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
-                                           (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))))]]]
+                                           (some-> ensimmainen-vahvistettu-vuosi)))]]]
                             nil
                             {:ikoni-fn #(ikonit/harja-icon-status-alert)}]))})
 
