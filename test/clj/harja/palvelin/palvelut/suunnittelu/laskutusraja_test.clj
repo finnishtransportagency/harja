@@ -137,7 +137,7 @@
     ;; Varmista että laskutusraja_kaytossa = FALSE
     (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = FALSE WHERE urakkaid = " urakka-id)
     ;; Poistetaan kaikki tarjoukseen liittyvä tietokannasta
-    (apurit/poista-tarjoukset-tietokannasta! urakka-id)(apurit/poista-tarjoukset-tietokannasta! urakka-id)
+    (apurit/poista-tarjoukset-tietokannasta! urakka-id) (apurit/poista-tarjoukset-tietokannasta! urakka-id)
 
     ;; Tallenna kustannussuunnitelma ja tarjous
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
@@ -402,12 +402,13 @@
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
       (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
       (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
-    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
 
-    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+    (let [_ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+          laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+
           _ (is (not (nil? laskutusraja-ennen)) "Laskutusrajan pitäisi olla asetettu vahvistuksen jälkeen")
           toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
-          tehtava-id  (ffirst (q "SELECT id FROM tehtava WHERE poistettu IS NOT TRUE LIMIT 1"))
+          tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE poistettu IS NOT TRUE LIMIT 1"))
 
           ;; Pysyvä muutos: positiivinen kustannusvaikutus hoitovuodelle 2025
           ;; -> pitäisi nostaa laskutusrajaa
@@ -423,7 +424,15 @@
                           :tehtavat_ja_maarat [{:tehtava tehtava-id
                                                 :maaramuutos 100
                                                 :hoitokauden_alkuvuosi 2025}]}
+
+          ;; Kumoa vahvistus, sitä ennen ei voi tehdä muutosta
+          _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
+
           _ (tallenna-muutos! urakka-id muutos-payload +hoitokaudet+)
+
+          ;; Aseta vahvistus takaisin
+          _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+
           laskutusraja-jalkeen (hae-urakan-laskutusraja urakka-id)]
 
       (is (not (nil? laskutusraja-jalkeen)) "Laskutusrajan pitäisi olla olemassa")
@@ -442,9 +451,9 @@
     (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
       (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
       (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
-    (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
 
-    (let [laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
+    (let [_ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+          laskutusraja-ennen (hae-urakan-laskutusraja urakka-id)
 
           ;; Negatiivinen kustannusvaikutus -> ei pidä nostaa laskutusrajaa
           muutos-payload {:tyyppi "pysyva"
@@ -459,7 +468,16 @@
                           :tehtavat_ja_maarat [{:tehtava 6953
                                                 :maaramuutos -100
                                                 :hoitokauden_alkuvuosi 2025}]}
+
+          ;; Kumoa ensin vahvistus, koska muutosta ei voi muuten tallentaa
+          _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
+
+          ;; Nyt muutoksen voi tehdä
           _ (tallenna-muutos! urakka-id muutos-payload +hoitokaudet+)
+
+          ;; Vahvista muutoksen jälkeen uudelleen
+          _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+
           laskutusraja-jalkeen (hae-urakan-laskutusraja urakka-id)]
 
       (is (= laskutusraja-ennen laskutusraja-jalkeen)
@@ -510,26 +528,26 @@
                           :voimassa_alkaen #inst "2025-11-01T00:00:00.000-00:00"
                           :tavoitehinnan-muutos summa}
           tallenna-vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                                 :tallenna-muutos +kayttaja-jvh+
-                                 {:urakka-id urakka-id
-                                  :valittu-hoitokausi hoitokaudet
-                                  :hoitokaudet [hoitokaudet]
-                                  :laskenta-automatiikka? true
-                                  :muutos muutos-payload})
+                             :tallenna-muutos +kayttaja-jvh+
+                             {:urakka-id urakka-id
+                              :valittu-hoitokausi hoitokaudet
+                              :hoitokaudet [hoitokaudet]
+                              :laskenta-automatiikka? true
+                              :muutos muutos-payload})
           muutos-id (->> (:kirjatut-muutokset tallenna-vastaus)
-                                (filter #(= (:nimi %) "Testimuutostyö muutoksen poistamisen testausta varten"))
-                                first
-                                :id)
+                      (filter #(= (:nimi %) "Testimuutostyö muutoksen poistamisen testausta varten"))
+                      first
+                      :id)
 
           laskutusraja-tallennuksen-jalkeen (hae-urakan-laskutusraja urakka-id)
           ;; Poistetaan muutos
           _ (kutsu-palvelua (:http-palvelin jarjestelma)
-                           :poista-muutos +kayttaja-jvh+
-                           {:muutos-id muutos-id
-                            :urakka-id urakka-id
-                            :valittu-hoitokausi hoitokaudet
-                            :hoitokaudet [hoitokaudet]
-                            :laskenta-automatiikka? true})
+              :poista-muutos +kayttaja-jvh+
+              {:muutos-id muutos-id
+               :urakka-id urakka-id
+               :valittu-hoitokausi hoitokaudet
+               :hoitokaudet [hoitokaudet]
+               :laskenta-automatiikka? true})
           laskutusraja-poistamisen-jalkeen (hae-urakan-laskutusraja urakka-id)]
       (is (some? laskutusraja-tallennuksen-jalkeen) "Laskutusrajan pitäisi olla olemassa tallennuksen jälkeen")
       (is (some? laskutusraja-poistamisen-jalkeen) "Laskutusrajan pitäisi olla olemassa poistamisen jälkeen")
@@ -545,7 +563,7 @@
         hoitokausi 1
         tavoitehinta 100000M
         kattohinta 110000M
-        muutostyo-osuus 5000M  ;; simuloi muutostöiden kumulatiivinen summa
+        muutostyo-osuus 5000M ;; simuloi muutostöiden kumulatiivinen summa
         laskutusraja-alkuperainen tavoitehinta
         laskutusraja-nykyinen (+ tavoitehinta muutostyo-osuus)]
 
@@ -678,7 +696,7 @@
 
     ;; Haetaan todellinen indeksikorjattu tavoitehinta, jotta 1% pysyy varmasti alle 3%
     (let [tavoitehinta (first (map :tavoitehinta_indeksikorjattu
-                               (q-map (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite
+                                (q-map (format "SELECT tavoitehinta_indeksikorjattu FROM urakka_tavoite
                                               WHERE urakka = %s AND hoitokausi = 1" urakka-id))))]
 
       ;; Tallenna muutostyö jonka summa on < 3% tavoitehinnasta (1%)
@@ -702,7 +720,7 @@
         ;; Tarkistettu laskutusraja = alkuperäinen + 0 = alkuperäinen
         ;; Ei siis nil, vaan sama kuin alkuperäinen laskutusraja
         (let [laskutusraja-alkuperainen (first (map :laskutusraja_alkuperainen
-                                               (q-map (format "SELECT laskutusraja_alkuperainen FROM urakka_tavoite
+                                                 (q-map (format "SELECT laskutusraja_alkuperainen FROM urakka_tavoite
                                                               WHERE urakka = %s AND hoitokausi = 1" urakka-id))))]
           (when laskutusraja-alkuperainen
             (is (every? #(= laskutusraja-alkuperainen (get % (keyword "tarkistettu-laskutusraja"))) tulos)
