@@ -68,9 +68,8 @@
                                              (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2025 2030)))
 
 
-(deftest laskutusraja-nousee-kun-pysyva-muutos-positiivinen-ensimmaisena-hoitovuonna
+(deftest pysyvan-muutoksen-lukitukset-test
   (let [hoitovuoden-alkuvuosi 2025
-        _ (u "UPDATE urakka_parametrit SET laskutusraja_kaytossa = TRUE WHERE urakkaid = " +urakka+)
         _ (apurit/poista-tarjoukset-tietokannasta! +urakka+)
         _ (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
             (:db jarjestelma) +kayttaja-jvh+ +urakka+ hoitovuoden-alkuvuosi
