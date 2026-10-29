@@ -321,11 +321,12 @@
         (:mahdolliset-hoitovuodet-lomakkeella muokattava-muutos))))
 
 (defn taulukko-pysyvan-muutoksen-vaikutukset
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet] :as _app}]
+  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet muokattavat-hoitokaudet] :as _app}]
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
-        hoitovuosi-lukittu? (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi)
+        hoitovuosi-lukittu? (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+                              tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet voimassa-alkaen hoitovuosi)
         voi-muokata? (and
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
                        (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
@@ -383,7 +384,7 @@
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
   [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet
-              haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa? valittu-hoitokausi] :as app}]
+              muokattavat-hoitokaudet muutoksen-tiedot-haku-kaynnissa? valittu-hoitokausi] :as app}]
 
   (let [muokataan? (:id muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
@@ -392,7 +393,14 @@
         ;; Voimassa-alkaen lukitus tarkastatetaan vain muokkaustilanteessa
         voimassa-alkaen-lukittu? (if muokataan?
                                    (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
-                                   false)]
+                                   false)
+        valittu-hk (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        hoitovuosi-str (when valittu-hk
+                         (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                           valittu-hk
+                           (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
+                           false))]
+
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
 
@@ -455,42 +463,54 @@
                           "Valitse")
         :valinta-arvo identity}
 
-       (when
-         ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
-         (and
-           (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
-           (muutos-domain/pysyva-muutos-hoitovuosi-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi))
+       (if (and
+             hoitovuosi
+             muokattavat-hoitokaudet
+             (muutos-domain/pysyva-muutos-hoitovuoden-paatos-tehty? muokattavat-hoitokaudet hoitovuosi))
 
-         ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767 / HARJA-2791
-         ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
+         ;; Välikatselmuksen päätös on tehty
          {:uusi-rivi? true
           :tyyppi :komponentti
-          :komponentti (fn [_]
-                         (let [hoitovuosi-str (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
-                                                (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
-                                                (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
-                                                false)
+          :komponentti (fn [_] [yleiset/info-laatikko :vahva-ilmoitus
+                                "Hoitovuoden tavoitehinnan muutokset on päätetty"
+                                [:<>
+                                 [:div hoitovuosi-str " osalta tavoitehinnan muutokset on jo päätetty." [:br]
+                                  "Jos haluat tehdä muutoksia, välikatselmuksen päätös on peruttava."]]
+                                nil
+                                {:ikoni-fn #(ikonit/harja-icon-status-alert)}])}
 
-                               ;; Perumiselle pitää passata oikea hoitovuosi joka on vahvistettu
-                               ensimmainen-vahvistettu-vuosi (some (fn [[vuosi vahvistettu?]]
-                                                                     (when vahvistettu? vuosi))
-                                                               (sort-by key tavoitehinta-indeksikorjattu-per-hoitovuosi))]
+         (when
+           ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
+           (and
+             (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
+             (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+               tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet voimassa-alkaen hoitovuosi))
 
-                           [yleiset/info-laatikko :vahva-ilmoitus
-                            "Hoitovuoden alun tavoitehinta on vahvistettu"
-                            [:<>
-                             [:div hoitovuosi-str " osalta pysyvän muutoksen tavoitehintavaikutukset sisältyät jo vahvistettuun hoitovuoden alun tavoitehintaan." [:br]
-                              "Jos haluat tehdä muutoksia, vahvistus on peruttava ja tehtävä uudelleen."]
-                             [:br]
-                             [:div [napit/yleinen-toissijainen
-                                    (str
-                                      "Peru vahvistus"
-                                      (when ensimmainen-vahvistettu-vuosi
-                                        (str " (" ensimmainen-vahvistettu-vuosi ")")))
-                                    #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
-                                           (some-> ensimmainen-vahvistettu-vuosi)))]]]
-                            nil
-                            {:ikoni-fn #(ikonit/harja-icon-status-alert)}]))})
+           ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767 / HARJA-2791
+           ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
+           {:uusi-rivi? true
+            :tyyppi :komponentti
+            :komponentti (fn [_]
+                           (let [;; Perumiselle pitää passata oikea hoitovuosi joka on vahvistettu
+                                 ensimmainen-vahvistettu-vuosi (some (fn [[vuosi vahvistettu?]]
+                                                                       (when vahvistettu? vuosi))
+                                                                 (sort-by key tavoitehinta-indeksikorjattu-per-hoitovuosi))]
+
+                             [yleiset/info-laatikko :vahva-ilmoitus
+                              "Hoitovuoden alun tavoitehinta on vahvistettu"
+                              [:<>
+                               [:div hoitovuosi-str " osalta pysyvän muutoksen tavoitehintavaikutukset sisältyät jo vahvistettuun hoitovuoden alun tavoitehintaan." [:br]
+                                "Jos haluat tehdä muutoksia, vahvistus on peruttava ja tehtävä uudelleen."]
+                               [:br]
+                               [:div [napit/yleinen-toissijainen
+                                      (str
+                                        "Peru vahvistus"
+                                        (when ensimmainen-vahvistettu-vuosi
+                                          (str " (" ensimmainen-vahvistettu-vuosi ")")))
+                                      #(e! (t-kirjatut/->PeruutaTavoiteJaKattohinta
+                                             (some-> ensimmainen-vahvistettu-vuosi)))]]]
+                              nil
+                              {:ikoni-fn #(ikonit/harja-icon-status-alert)}]))}))
 
        (if muutoksen-tiedot-haku-kaynnissa?
          {:tyyppi :komponentti

@@ -84,15 +84,22 @@
         indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
     indeksikorjaus-vahvistettu?))
 
+(defn pysyva-muutos-hoitovuoden-paatos-tehty?
+  [muokattavat-hoitokaudet hoitovuosi]
+  (let [alkuvuosi (pvm/vuosi (first hoitovuosi))]
+    (boolean
+      ;; Nykyinen hoitovuosi ei ole muokattava
+      (some (fn [[vuosi muokattava?]]
+              (and (= vuosi alkuvuosi) (false? muokattava?)))
+        muokattavat-hoitokaudet))))
+
 (defn pysyva-muutos-hoitovuosi-lukittu?
   "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
   Lukittu, jos:
   - Muutos vaikuttaa kyseisen tai tulevan hoitokauden vahvistettuun tavoitehintaan 
   - TODO: TAI hoitovuoden välikatselmuksen päätöksiä on tehty"
-  [indeksikorjattu voimassa-alkaen hoitovuosi]
+  [indeksikorjattu muokattavat-hoitokaudet voimassa-alkaen hoitovuosi]
   (assert (map? indeksikorjattu))
-
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767 / HARJA-2791
 
   (let [alkuvuosi (pvm/vuosi (first hoitovuosi))]
     (boolean
@@ -101,6 +108,11 @@
         (some (fn [[vuosi vahvistettu?]]
                 (and (> vuosi alkuvuosi) (true? vahvistettu?)))
           indeksikorjattu)
+
+        ;; Nykyinen hoitovuosi ei ole muokattava
+        (some (fn [[vuosi muokattava?]]
+                (and (= vuosi alkuvuosi) (false? muokattava?)))
+          muokattavat-hoitokaudet)
 
         ;; Nykyinen hoitovuosi on vahvistettu, eikä muutos ala kesken hoitokauden
         (and
@@ -111,8 +123,6 @@
   "Ei voida poistaa, jos poisto vaikuttaa vahvistettuun tavoitehintaan"
   [indeksikorjattu voimassa-alkaen]
   (assert (map? indeksikorjattu))
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767 / HARJA-2791
-
   (boolean
     (some (fn [[vuosi vahvistettu?]]
             (and
