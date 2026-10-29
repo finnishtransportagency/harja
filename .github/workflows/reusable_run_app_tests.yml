@@ -107,7 +107,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       # https://github.com/clj-kondo/clj-kondo/blob/master/doc/ci-integration.md
       - name: Lein deps :tree
@@ -133,10 +133,10 @@ jobs:
           persist-credentials: false
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       - name: Setup test tools
-        uses: ./.github/actions/setup-test-tools
+        uses: $/.github/actions/setup-test-tools
         with:
           clj-kondo: 2023.07.13
 
@@ -161,7 +161,7 @@ jobs:
           persist-credentials: false
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       - name: Generoi EDN-tiedostot uudelleen
         run: lein run -m harja.tyokalut.oikeudet-edn-export
@@ -244,7 +244,7 @@ jobs:
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen ja Harjan buildaamiseen
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         env:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
@@ -260,13 +260,13 @@ jobs:
       # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois
       - name: Build Harja Uberjar (Kevyt)
         if: ${{ inputs.build-harja == 'light' }}
-        uses: ./.github/actions/build-harja-app
+        uses: $/.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
-        uses: ./.github/actions/build-harja-app
+        uses: $/.github/actions/build-harja-app
 
       - name: Name build artifact using the branch name
         id: artifact-name
@@ -363,7 +363,7 @@ jobs:
           load: true
 
       - name: Run Trivy vulnerability scanner
-        uses: ./.github/actions/scan-docker-image
+        uses: $/.github/actions/scan-docker-image
         env:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
           TRIVY_IGNORES_PATH: 'aws/fargate/.trivyignore'
@@ -407,7 +407,7 @@ jobs:
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         env:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
@@ -417,7 +417,7 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       - name: Verify CI JVM options
         run: |
@@ -432,7 +432,9 @@ jobs:
         # LEIN_JVM_OPTS ei vaikuta projekti-JVM:iin koska project.clj:ssä on :jvm-opts ^:replace.
         # Shard-selektorit (:shard-1/2/3) on määritelty project.clj:ssä ja jakavat testit
         # namespacen nimen hashin perusteella kolmeen tasakokoiseen ryhmään.
-        run: lein with-profile +ci test2junit :shard-${{ matrix.shard }}
+        env:
+          SHARD: ${{ matrix.shard }}
+        run: lein with-profile +ci test2junit ":shard-${SHARD}"
 
       - name: Publish Test Report
         uses: mikepenz/action-junit-report@6ef3fdcfcd5f0b5d14df3e659ef19b8c6820f93d # v6.6.1
@@ -520,7 +522,7 @@ jobs:
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         env:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
@@ -530,7 +532,7 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       - name: run slow tests
         run: lein test2junit :hidas
@@ -569,7 +571,7 @@ jobs:
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         env:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
@@ -579,10 +581,10 @@ jobs:
           service-name: ${{ env.TEST_DB_SERVICE }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       - name: Setup test tools
-        uses: ./.github/actions/setup-test-tools
+        uses: $/.github/actions/setup-test-tools
         with:
           phantom-js: 2.1.1
 
@@ -615,7 +617,7 @@ jobs:
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         env:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
@@ -626,14 +628,14 @@ jobs:
 
       # Käynnistetään ActiveMQ JMS-testejä varten
       - name: Start ActiveMQ
-        uses: ./.github/actions/start-activemq
+        uses: $/.github/actions/start-activemq
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup clojure environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
 
       - name: Run integration tests
         run: lein test2junit :integraatio
@@ -682,7 +684,7 @@ jobs:
 
       # Käynnistetään testitietokanta docker-kontti, jota tarvitaan testien ajamiseen
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         env:
           TEST_DB_SERVICE: ${{ inputs.test-db-service }}
         with:
@@ -693,7 +695,7 @@ jobs:
 
       # Asenna pelkkä Java- ja NodeJS-ympäristö ilman riippuvuuksia
       - name: Setup environment
-        uses: ./.github/actions/setup-build-env-and-tools
+        uses: $/.github/actions/setup-build-env-and-tools
         with:
           setup-java: true
           setup-node: true
@@ -775,7 +777,7 @@ jobs:
       # Ajaa cypress testit erillisessä kontissa
       # Konttiin mountataan GITHUB_WORKSPACE, joka sisältää myös aiemmin asennetut node-moduulit, joita testit tarvitsevat
       - name: Run cypress for ${{ matrix.browser }} (shard ${{ matrix.shard }})
-        uses: ./.github/actions/start-cypress
+        uses: $/.github/actions/start-cypress
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}

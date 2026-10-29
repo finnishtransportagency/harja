@@ -36,7 +36,7 @@ jobs:
 
       # Testitietokantaa tarvitaan buildin yhteydessä
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
@@ -50,7 +50,7 @@ jobs:
 
       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
       - name: Build Harja Uberjar
-        uses: ./.github/actions/build-harja-app
+        uses: $/.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
 
