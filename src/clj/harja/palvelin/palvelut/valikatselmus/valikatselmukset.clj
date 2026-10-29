@@ -87,6 +87,12 @@
                        indeksit)]
     indeksiluvut))
 
+(defn- hae-hoitovuoden-alun-tavoitehinta [db urakkaid valittu-hoitovuosi urakan-alkuvuosi]
+  (when (< urakan-alkuvuosi 2024)
+    (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
+      db {:urakka-id urakkaid
+          :hoitokauden-alkuvuosi valittu-hoitovuosi})))
+
 (defn maarita-hv-lopun-tavoitehinta
   "Useimmat päätökset vaativat tietää hoitovuoden lopun tavoitehinnan.
   Sitä ei ole ikävä kyllä tallennettu kantaan valmiiksi.
@@ -95,7 +101,7 @@
   Budjettitavoite-vuodelle parametrin sisältämä tavoitehinta-oikaistu arvo sisältää mahdolliset tavoitehinnan oikaisut,
   joita on tehty 2024 ja sitä aemmin alkaneille urakoille."
   [db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle
-   & [hoitovuoden-alun-tavoitehinta]]
+   & [hoitovuoden-alun-tavoitehinta-ilman-indeksikorjausta]]
   (let [urakan-parametrit (first (q-urakat/hae-urakan-parametrit db {:urakkaid urakka-id}))
         ;; Haetaan pysyvät muutokset, jotka vaikuttavat tähän hoitovuoteen
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
@@ -129,13 +135,13 @@
                                                                              :loppupvm (second valittu-hoitokausi)
                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
-        hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta (+ (or hoitovuoden-alun-tavoitehinta
+        hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta (+ (or hoitovuoden-alun-tavoitehinta-ilman-indeksikorjausta
                                                                (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
                                                                0)
                                                             muutosvaikutus
                                                             arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
-    (bigdec (round2 2 hoitovuoden-lopun-indeksikorjaamaton-tavoitehinta))))
+    (bigdec (round2 2 hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta))))
 
 (defn maarita-hv-lopun-tavoitehinta-indeksipaatoksella
   "Useimmat päätökset vaativat tietää hoitovuoden lopun tavoitehinnan.
@@ -241,10 +247,7 @@
                                        (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
                                        0)
         mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi)
-        hoitovuoden-alun-tavoitehinta (when (< urakan-alkuvuosi 2024)
-                                        (valikatselmus-q/hae-hoitokauden-lopun-indeksikorjaamaton-tavoitehinta
-                                          db {:urakka-id urakkaid
-                                              :hoitokauden-alkuvuosi valittu-hoitovuosi}))
+        hoitovuoden-alun-tavoitehinta (hae-hoitovuoden-alun-tavoitehinta db urakkaid valittu-hoitovuosi urakan-alkuvuosi)
         hv-lopun-tavoitehinta-ilman-indeksia (maarita-hv-lopun-tavoitehinta
                                                db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi
                                                budjettitavoite-vuodelle hoitovuoden-alun-tavoitehinta)
