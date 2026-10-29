@@ -29,11 +29,15 @@ BEGIN
       -- 3) Vuonna 2013 alkaneissa (alkaneet vuoden alusta 1.1.2013 ja päättyvät päättymisvuonna 31.7) urakoissa Kunnossapidon osaindeksi MAKU 2005 = 100
       -- ja perusluku lasketaan vuoden 2012 touko-, kesä- ja heinäkuun keskiarvosta yhden desimaalin tarkkuudella (132,9).
       -- 4) Vuonna 2014 – 2016 alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Kunnossapidon osaindeksi MAKU 2005 = 100
-      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
-      -- 5) Vuonna 2017 ja eteenpäin alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Maarakennuskustannukset, kokonaisindeksi MAKU 2010 = 100
-      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
+      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden desimaalin tarkkuudella.
+      -- 5) Vuonna 2017 - 2022 alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Maarakennuskustannukset, kokonaisindeksi MAKU 2010 = 100
+      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden desimaalin tarkkuudella.
+      -- 6) Vuonna 2023 ja 2024 alkaneissa urakoissa indeksinä: MAKU 2015, kokonaisindeksi
+      -- ja perusluku lasketaan urakan alkamisvuotta edeltävän vuoden syys-, loka- ja marraskuun keskiarvosta yhden desimaalin tarkkuudella.
+      -- 7) Vuonna 2025 ja sen jälkeen alkaneissa urakoissa indeksinä: MAKU 2020, kokonaisindeksi
+      -- ja perusluku lasketaan urakan alkamisvuotta edeltävän vuoden syys-, loka- ja marraskuun keskiarvosta yhden desimaalin tarkkuudella.
     -- Kanavaurakoissa käytössä Palvelujen tuottajahintaindeksi PTHI
-      -- 6) TODO: tarkista sääntö
+      -- 8) TODO: tarkista sääntö
 
     SELECT INTO tulosrivi
       AVG(arvo) AS perusluku,
@@ -61,11 +65,19 @@ BEGIN
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 7)
 
                -- 4) ja 5)
-               WHEN urakkatyyppi = 'vesivayla-hoito'
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm >= DATE '2013-08-02'
+                                                     AND urakan_alkupvm < DATE '2023-01-01'
                  THEN (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 2) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 3)
-               -- 6)
+
+               -- 6) ja 7)
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm >= '2023-01-01'
+                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 11)
+
+               -- 8)
                WHEN urakkatyyppi = 'vesivayla-kanavien-hoito'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 8) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
