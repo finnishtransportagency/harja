@@ -431,36 +431,6 @@
             :hae #(when (:summa %) (Math/abs (:summa %)))
             :pakollinen? true :uusi-rivi? true})
 
-         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
-         (when (or
-                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
-                 (and (sanktio-domain/muistutus? @muokattu)
-                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
-                                "Liikenneympäristön hoito"
-                                "Sorateiden hoito ja ylläpito"
-                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
-           (if (and (not mhu25?) (not lukutila?))
-             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
-              :pakollinen? true
-              :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
-                           (and (> urakan-alkuvuosi 2024)
-                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
-              ::lomake/col-luokka "col-xs-12"
-              :nimi :toimenpideinstanssi
-              :tyyppi :valinta
-              :valinta-arvo :tpi_id
-              :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
-              :valinnat mahdolliset-kulun-kohdistukset
-              :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
-
-             ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
-             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])))
-              :tyyppi :string
-              :nimi :toimenpideinstanssi
-              :muokattava? (constantly false)
-              ::lomake/col-luokka "col-xs-12"
-              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
-
          (apply lomake/ryhma {:rivi? true}
            (keep identity [(when (and (sanktio-domain/muu-kuin-muistutus? @muokattu) (not (= :laskutus_yli_laskutusrajan (:laji @muokattu))))
                              {:otsikko "Sanktion suuruus" :nimi :summa :tyyppi :euro
@@ -493,6 +463,36 @@
                                           [(:indeksi @nav/valittu-urakka) nil]
                                           [nil])
                               :valinta-nayta #(or % "Ei indeksiä")})]))
+
+         ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
+         (when (or
+                 (sanktio-domain/muu-kuin-muistutus? @muokattu)
+                 (and (sanktio-domain/muistutus? @muokattu)
+                   (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
+                                "Liikenneympäristön hoito"
+                                "Sorateiden hoito ja ylläpito"
+                                "Hallinnolliset laiminlyönnit"} (get-in @muokattu [:tyyppi :nimi]))))
+           (if (and (not mhu25?) (not lukutila?))
+             {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
+              :pakollinen? true
+              :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
+                           (and (> urakan-alkuvuosi 2024)
+                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
+              ::lomake/col-luokka "col-xs-12"
+              :nimi :toimenpideinstanssi
+              :tyyppi :valinta
+              :valinta-arvo :tpi_id
+              :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
+              :valinnat mahdolliset-kulun-kohdistukset
+              :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+
+             ;; Näytetään lukutilassa valintakomponentin read-only -tilan sijasta tekstimuotoinen komponentti.
+             {:otsikko (str (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])))
+              :tyyppi :string
+              :nimi :toimenpideinstanssi
+              :muokattava? (constantly false)
+              ::lomake/col-luokka "col-xs-12"
+              :hae #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)}))
 
          (lomake/ryhma {:rivi? true}
            {:otsikko "Havaittu" :nimi :laatupoikkeamaaika
