@@ -180,7 +180,11 @@ SELECT "tr-numero"          AS "tr-numero",
        "tr-osa"             AS "alkuperainen-tr-alkuosa",
        "tr-alkuetaisyys"    AS "alkuperainen-tr-alkuetaisyys",
        "tr-osa"             AS "alkuperainen-tr-loppuosa",
-       "tr-loppuetaisyys"   AS "alkuperainen-tr-loppuetaisyys"
+       "tr-loppuetaisyys"   AS "alkuperainen-tr-loppuetaisyys",
+       (SELECT MAX(o."tr-loppuetaisyys")
+          FROM tr_osoitteet o
+         WHERE o."tr-numero" = tr_osoitteet."tr-numero"
+           AND o."tr-osa" = tr_osoitteet."tr-osa") AS "osan-pituus"
   FROM tr_osoitteet
  WHERE "tr-numero" = :tr-numero
    AND (:tr-alkuosa::INT IS NULL OR "tr-osa" >= :tr-alkuosa)
