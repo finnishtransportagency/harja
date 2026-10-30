@@ -308,15 +308,15 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
-        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
-                                       (keyword laji) (:alkupvm urakan-tiedot))
-        sanktiotyyppi (if (:id tyyppi)
-                        (:id tyyppi)
-                        (when laji
-                          (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
+        sanktiotyyppi (:id tyyppi)
+        _ (when-not sanktiotyyppi
+            (throw (IllegalArgumentException. "Sanktion tyyppi on pakollinen.")))
         paivamaara (or paivamaara perintapvm)
-        _ (when (= :yllapidon_bonus laji)
-            (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
+        profiilipohjainen? (and (= "teiden-hoito" (:tyyppi urakan-tiedot))
+                              (>= (-> urakan-tiedot :alkupvm pvm/vuosi) 2021))
+        _ (when-not profiilipohjainen?
+            (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+              db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
         profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
                        db
                        {:urakka-id urakka

@@ -314,7 +314,7 @@
   vain lomakkeen domain-päätökset; kohdistus- ja tunnistepäätökset eivät kuulu
   tähän funktioon. Manuaalinen summakenttä näytetään vasta tyypin valinnan jälkeen,
   jos lomakkeella on tyyppikenttä."
-  [{:keys [sanktio aktiivinen-tyyppi yllapitourakka? yllapitokohdeurakka?
+  [{:keys [sanktio aktiivinen-tyyppi tyyppi-valinnat yllapitourakka? yllapitokohdeurakka?
            vesivaylaurakka? laskutus-ilman-laskutuskelpoisuutta?
            aikakausikonteksti urakan-loppupvm]
     :or {sanktio {}}}]
@@ -328,7 +328,8 @@
         nayta-tyyppi? (not (or yllapitourakka? vesivaylaurakka?
                              asiakirjamerkinta?
                              laskutus-ilman-laskutuskelpoisuutta?
-                             laskutusrajan-ylitys?))]
+                             laskutusrajan-ylitys?
+                             (= 1 (count (vec tyyppi-valinnat)))))]
     {:vesivaylaurakka? vesivaylaurakka?
      :yllapitourakka? yllapitourakka?
      :laskutus-ilman-laskutuskelpoisuutta? laskutus-ilman-laskutuskelpoisuutta?
@@ -380,6 +381,7 @@
        :lomake (sanktion-lomakekonteksti
                  {:sanktio sanktio
                   :aktiivinen-tyyppi aktiivinen-tyyppi
+                  :tyyppi-valinnat sanktiotyypit
                   :yllapitourakka? yllapitourakka?
                   :yllapitokohdeurakka? yllapitokohdeurakka?
                   :vesivaylaurakka? vesivaylaurakka?

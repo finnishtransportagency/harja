@@ -915,6 +915,12 @@
            (assoc (:laskentaparametrit prosenttiosuus-maaritys)
              :syoteavain "laskutusrajan_ylitys")))))
 
+(deftest laskettavan-sanktion-otsikot-palauttaa-laskutuskelvottomuuden-otsikot
+  (is (= {:syotteen-otsikko "Sanktion suuruus (20 % summasta, joka ei ollut laskutuskelpoinen)"
+          :tuloksen-otsikko "Sanktion suuruus"}
+         (sanktion-laskenta/laskettavan-sanktion-otsikot
+           (:laskentaparametrit prosenttiosuus-maaritys)))))
+
 (deftest laskettavan-sanktion-otsikot-sallii-puuttuvan-maarityksen
   (is (nil? (sanktion-laskenta/laskettavan-sanktion-otsikot nil))))
 
@@ -1203,6 +1209,10 @@
       (is (= "MAKU 2015" (:urakan-indeksi konteksti)))
       (is (= [tyyppi {:id 8 :koodi 2}] (:tyyppi-valinnat konteksti)))
       (is (= 5 (:tehtavaryhma (:hoidonjohtopalkkio-tr konteksti)))))
+    (testing "ainoalla tyypillä tyyppikenttä piilotetaan"
+      (is (false? (get-in (sanktion-lomake-domain/kokoa-nakymakonteksti
+                            (assoc syote :sanktiotyypit [tyyppi]))
+                    [:lomake :nayta-tyyppi?]))))
     (testing "summa piilotetaan puuttuvalla tyypillä näkymäkontekstissa"
       (is (true? (get-in konteksti [:lomake :nayta-manuaalinen-summa?])))
       (is (false? (get-in (sanktion-lomake-domain/kokoa-nakymakonteksti

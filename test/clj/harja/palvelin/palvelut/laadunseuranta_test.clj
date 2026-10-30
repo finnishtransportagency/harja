@@ -108,7 +108,7 @@
         olemassa-oleva-sanktio {:id olemassa-olevan-sanktion-id
                                 :perintapvm #inst "2016-09-15T09:00:01.000-00:00"
                                 :laji :A
-                                :tyyppi 12
+                                :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 13;"))}
                                 :summa 100
                                 :indeksi "MAKU 2010"
                                 :suorasanktio false
@@ -116,7 +116,7 @@
                                 :vakiofraasi nil}
         uusi-sanktio {:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
                       :laji :A
-                      :tyyppi 12
+                      :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 13;"))}
                       :summa 100
                       :indeksi "MAKU 2010"
                       :suorasanktio false
@@ -228,12 +228,13 @@
         perustelu "ABC kissa kävelee"
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         sanktiorunko {:suorasanktio true
+                      :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 4;"))}
                       :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
                       :perintapvm perintapvm
                       :vakiofraasi :laadunvalvontaan-liittyvien-mittausten-ym-toimien-laiminlyonnit}
-        sakko (merge sanktiorunko {:laji :yllapidon_sakko :summa 1234})
-        bonus (merge sanktiorunko {:laji :yllapidon_bonus :summa -4321})
-        muistutus (merge sanktiorunko {:laji :yllapidon_muistutus :summa nil})
+        sakko (merge sanktiorunko {:laji :yllapidon_sakko :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 3;"))} :summa 1234})
+        bonus (merge sanktiorunko {:laji :yllapidon_bonus :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 4;"))} :summa -4321})
+        muistutus (merge sanktiorunko {:laji :yllapidon_muistutus :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 5;"))} :summa nil})
         laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
                         :paatos {:paatos "sanktio", :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00"), :kasittelytapa :kommentit, :perustelu perustelu}
                         :aika (pvm/->pvm-aika "1.1.2017 08:00:00"), :urakka urakka-id,
@@ -343,7 +344,7 @@
         perustelu "Poistotesti: laatupoikkeaman sanktion poisto"
         sanktiorunko {:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
                       :laji :A
-                      :tyyppi 12
+                      :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 13;"))}
                       :indeksi "MAKU 2010"
                       :suorasanktio false
                       :toimenpideinstanssi 4
@@ -1382,6 +1383,7 @@
         perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
         bonus {:suorasanktio true
                :laji :yllapidon_bonus
+               :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 4;"))}
                :summa -4321
                :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
                :perintapvm perintapvm
@@ -1407,6 +1409,48 @@
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
     (is (zero? @validointeja)
       "Ylläpidon bonus jätetään ensimmäisellä kierroksella write-path-validoinnin ulkopuolelle")))
+
+
+(deftest tallenna-suorasanktio-vaatii-olemassaolevan-ja-sallitun-tyypin
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        tpi-id (ffirst (q "SELECT id FROM toimenpideinstanssi where nimi = 'Iin MHU 2021-2026 Talvihoito TP';"))
+        sallittu-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi where koodi = 13;"))
+        perustelu "ABC suorasanktion tyyppi on pakollinen"
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2021 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2021 08:00:00")
+                        :urakka urakka-id}
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2021-10-02T21:00:00.000-00:00"}
+        hk-alkupvm (pvm/->pvm "1.10.2021")
+        hk-loppupvm (pvm/->pvm "31.12.2021")]
+    (testing "tyyppi puuttuu"
+      (is (thrown-with-msg? IllegalArgumentException
+            #"Sanktion tyyppi on pakollinen"
+            (palvelukutsu-tallenna-suorasanktio
+              +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm))))
+    (testing "tyyppi-ID ei ole olemassa"
+      (try+
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+
+          (assoc sanktio :tyyppi {:id -1})
+          laatupoikkeama hk-alkupvm hk-loppupvm)
+        (is false "Olematon sanktiotyyppi-ID pitäisi hylätä")
+        (catch [:type :sanktio-kirjausvirhe] {:keys [virheet]}
+          (is (= :sanktiotyyppi-ei-sallittu (:koodi (first virheet)))))))
+    (testing "sallittu tyyppi tallentuu onnistuneesti"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+
+                         (assoc sanktio :tyyppi {:id sallittu-tyyppi-id})
+                         laatupoikkeama hk-alkupvm hk-loppupvm)]
+        (is (number? sanktio-id)))
+      (testidatan-kaytto/poista-sanktio-perustelulla perustelu))))
 
 (deftest tallenna-suorasanktio-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
@@ -1903,7 +1947,7 @@
                         (if (and (= :C laji)
                               (= "teiden-hoito" (:tyyppi urakka))
                               (<= 2019 (pvm/vuosi (:alkupvm urakka)) 2025))
-                          [8 9 10 12 11]
+                          [8 9 10 11 12]
                           (mapv :koodi
                             (sanktio-domain/sanktiolaji->sanktiotyypit laji kaikki-sanktiotyypit (:alkupvm urakka)))))
         lajit (case soveltuvuuskonteksti
@@ -2993,17 +3037,11 @@
                       (->> lajit
                         (remove #(= :testikeskiarvo-sanktio (:laji %)))
                         vec)
-                      [ennen-suolia suolat] (split-with #(not (contains? #{:pohjavesisuolan_ylitys
-                                                                           :talvisuolan_ylitys}
-                                                                (:laji %)))
-                                              (remove #(= :arvonvahennyssanktio (:laji %))
-                                                lajit-ilman-testikeskiarvoa))
-                      arvonvahennys (filter #(= :arvonvahennyssanktio (:laji %)) lajit-ilman-testikeskiarvoa)]
-                  (vec (concat ennen-suolia
-                         [{:laji :laskutus_yli_laskutusrajan
-                           :sanktiotyyppi-koodit [0]}]
-                         suolat
-                         arvonvahennys))))))]
+                      ilman-laskutusrajaa (remove #(= :laskutus_yli_laskutusrajan (:laji %))
+                                              lajit-ilman-testikeskiarvoa)]
+                  (conj (vec ilman-laskutusrajaa)
+                    {:laji :laskutus_yli_laskutusrajan
+                     :sanktiotyyppi-koodit [0]})))))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
@@ -3029,7 +3067,7 @@
         "MHU25-profiilin koko admin-palautuksen pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
         "MHU25-profiilin laskutusrajalajin pitää käyttää koodi-0-sanktiotyyppiä")
-      (is (= [8 9 10 12 11]
+      (is (= [8 9 10 11 12]
              (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit mhu25-c-rivit)))
         "MHU19-25 C-ryhmän sanktiot pitää näyttää määrätyssä järjestyksessä")
       (is (not-any? #(= :testikeskiarvo-sanktio (:laji %)) (:lajit mhu25-urakka-konteksti))
@@ -3047,15 +3085,15 @@
         urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto vastaus)))]
     (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa järjestystestausta varten")
     (is (= [:muistutus :A :B :C
+            :pohjavesisuolan_ylitys
             :tyon_tekematta_jattaminen
             :asiakirjamerkintojen_paikkansa_pitamattomyys
             :muu_sopimuksen_vastainen_toiminta
-            :vastuuhenkilon_vaihto
-            :vastuuhenkilon_tenttipistemaara_alentuminen
+            :talvisuolan_kokonaiskayton_ylitys
             :laskutus_yli_laskutusrajan
             :laskutus_ilman_laskutuskelpoisuutta
-            :pohjavesisuolan_ylitys
-            :talvisuolan_kokonaiskayton_ylitys]
+            :vastuuhenkilon_tenttipistemaara_alentuminen
+            :vastuuhenkilon_vaihto]
            (mapv :laji (:lajit urakka-konteksti)))
       "MHU2026-lajien pitää ryhmitellä C-, vastuuhenkilö-, laskutus- ja suolalajit oikein")))
 
@@ -3073,6 +3111,7 @@
         perintapvm (pvm/->pvm-aika "2.6.2030 22:00:00")
         sanktio {:suorasanktio true
                  :laji :talvisuolan_ylitys
+                 :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 7;"))}
                  :summa 5000
                  :perintapvm perintapvm}
         laatupoikeama {:tekijanimi "testaus-tekija"
@@ -3096,6 +3135,7 @@
         perintapvm (pvm/->pvm-aika "2.6.2028 22:00:00")
         sanktio {:suorasanktio true
                  :laji :talvisuolan_ylitys
+                 :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 7;"))}
                  :summa 5000
                  :perintapvm perintapvm}
         laatupoikeama {:tekijanimi "testaus-tekija"
@@ -3119,6 +3159,7 @@
         laskutusrajan-ylitys 12345.60M
         sanktio {:suorasanktio true
                  :laji :laskutus_yli_laskutusrajan
+                 :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0;"))}
                  ;; Profiilin syöteavain on laskutusrajan ylitys; summa tulee palvelimelta.
                  :laskettava-syote laskutusrajan-ylitys
                  ;; Asiakkaan lähettämä summa ei saa ohittaa profiilin laskentaa.
