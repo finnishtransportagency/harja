@@ -69,9 +69,14 @@
   "Palauttaa laskettavan sanktion käyttöliittymäotsikot tunnetulle väliaikaiselle erikoistapaukselle."
   [{:keys [syoteavain] :as laskentaparametrit}]
   (when laskentaparametrit
-    (if (= "laskutusrajan_ylitys" syoteavain)
+    (cond
+      (= "laskutusrajan_ylitys" syoteavain)
       {:syotteen-otsikko "Ylityksen määrä (€)"
        :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
+      (= "laskutuskelvottomana_laskutettu_osuus" syoteavain)
+      {:syotteen-otsikko "Sanktion suuruus (20 % summasta, joka ei ollut laskutuskelpoinen)"
+       :tuloksen-otsikko "Sanktion suuruus"}
+      :else
       {:syotteen-otsikko (syotteen-otsikko laskentaparametrit)
        :tuloksen-otsikko "Sanktion suuruus"})))
 
