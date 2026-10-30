@@ -1,5 +1,6 @@
 (ns harja.palvelin.integraatiot.api.liitteet
-  (:require [com.stuartsierra.component :as component]
+  (:require [clojure.string :as str]
+            [com.stuartsierra.component :as component]
             [compojure.core :refer [POST DELETE]]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kutsu tee-kirjausvastauksen-body]]
@@ -129,7 +130,20 @@
     (tee-kirjausvastauksen-body {:ilmoitukset "Liite poistettu onnistuneesti"})))
 
 (defn vastaanota-liite [parametrit data kayttaja db liitteiden-hallinta]
-  (let [kohdeluokka (get-in data [:liite-lahetys :kohdeluokka])]
+  (let [kohdeluokka (get-in data [:liite-lahetys :kohdeluokka])
+        liite (get-in data [:liite-lahetys :liite])]
+    (when (str/blank? (:nimi liite))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti "Liitteellä puutteellinen nimi"}))
+    (when (str/blank? (:tyyppi liite))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti "Liitteellä puutteellinen tyyppi"}))
+    (when (str/blank? (:sisalto liite))
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+puutteelliset-parametrit+
+         :viesti "Liitteellä ei ole sisältöä"}))
     (try
       (case kohdeluokka
         "siltatarkastuskohde" (tallenna-siltatarkastuskohteen-liitteet

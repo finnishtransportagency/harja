@@ -130,6 +130,23 @@
                                               (cheshire/encode virheellinen-pyynto))]
         (is (= 400 (:status vastaus)))))))
 
+(deftest liitteen-tyhjat-kentat-palauttavat-400
+  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
+        kohde-id 910009
+        liite-tunniste 920010
+        pyynto (cheshire/decode (liite-pyynto "tarkastus" kohde-id liite-tunniste "validi-nimi.txt") true)
+        tyhjat-kentat [[[:liite-lahetys :liite :nimi] "Liitteellä puutteellinen nimi"]
+                       [[:liite-lahetys :liite :tyyppi] "Liitteellä puutteellinen tyyppi"]
+                       [[:liite-lahetys :liite :sisalto] "Liitteellä ei ole sisältöä"]]]
+    (doseq [[polku viesti] tyhjat-kentat]
+      (let [vastaus (api-tyokalut/post-kutsu
+                      ["/api/urakat/" urakka-id "/liite"]
+                      kayttaja
+                      portti
+                      (cheshire/encode (assoc-in pyynto polku "")))]
+        (is (= 400 (:status vastaus)))
+        (is (.contains (:body vastaus) viesti))))))
+
 (deftest liitteen-poiston-skeema-validoidaan
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         pyynto (cheshire/decode (poisto-pyynto 920005) true)
