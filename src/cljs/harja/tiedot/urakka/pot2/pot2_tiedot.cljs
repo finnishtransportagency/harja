@@ -11,6 +11,7 @@
     [harja.tiedot.urakka.paallystys :as paallystys]
     [harja.domain.oikeudet :as oikeudet]
     [harja.ui.grid.gridin-muokkaus :as gridin-muokkaus]
+    [harja.ui.grid.protokollat :as grid-protokollat]
     [harja.tiedot.urakka.pot2.materiaalikirjasto :as mk-tiedot]
     [harja.tiedot.urakka.yllapitokohteet :as yllapitokohteet]
     [harja.ui.viesti :as viesti]
@@ -550,6 +551,9 @@
       (if (seq valitut)
         (do
           (lisaa-tieosuudet-paallystekerrokseen! atomi valitut)
+          ;; Atomia muutetaan suoraan, joten grid ei validoi uusia rivejä itse
+          (when-let [ohjauskahva (get-in app [:paallystysilmoitus-lomakedata :ohjauskahvat :paallystekerros])]
+            (grid-protokollat/validoi-grid ohjauskahva))
           (viesti/nayta-toast! (if (= 1 (count valitut))
                                  "Tieosuus lisättiin toimenpidetaulukkoon"
                                  (str (count valitut) " tieosuutta lisättiin toimenpidetaulukkoon")))
