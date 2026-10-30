@@ -237,6 +237,14 @@
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
                                    sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
+(defn- lajin-ainoa-sanktiotyyppi-id
+  "Palauttaa lajin sanktiotyypin id:n, jos lajilla on vain yksi mahdollinen tyyppi
+  (esim. ylläpidon sakko, bonus ja muistutus). Muuten nil."
+  [db laji urakan-alkupvm]
+  (let [koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword laji) urakan-alkupvm)]
+    (when (= 1 (count koodit))
+      (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit koodit}))))))
+
 (defn vaadi-sanktio-kuuluu-urakkaan
   "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
   [db urakka-id sanktio-id]
@@ -308,13 +316,13 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
-        sanktiotyyppi (:id tyyppi)
+        sanktiotyyppi (or (:id tyyppi)
+                        (lajin-ainoa-sanktiotyyppi-id db laji (:alkupvm urakan-tiedot)))
         _ (when-not sanktiotyyppi
             (throw (IllegalArgumentException. "Sanktion tyyppi on pakollinen.")))
         paivamaara (or paivamaara perintapvm)
-        profiilipohjainen? (and (= "teiden-hoito" (:tyyppi urakan-tiedot))
-                              (>= (-> urakan-tiedot :alkupvm pvm/vuosi) 2021))
-        _ (when-not profiilipohjainen?
+        ;; Muut lajit validoidaan sanktio-konfiguraatioprofiilia vasten alla.
+        _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
               db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
         profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa

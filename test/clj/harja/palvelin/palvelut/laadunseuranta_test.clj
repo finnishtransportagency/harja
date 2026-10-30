@@ -278,6 +278,44 @@
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
+(deftest tallenna-suorasanktio-paallystysurakassa-johtaa-tyypin-lajista
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        perustelu "ABC tyyppi johdetaan ylläpidon lajista"
+        sanktiorunko {:suorasanktio true
+                      :toimenpideinstanssi (hae-muhoksen-paallystysurakan-tpi-id)
+                      :perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+                      :vakiofraasi :laadunvalvontaan-liittyvien-mittausten-ym-toimien-laiminlyonnit}
+        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
+                        :paatos {:paatos "sanktio" :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00")
+                                 :kasittelytapa :kommentit :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00") :urakka urakka-id
+                        :yllapitokohde (hae-muhoksen-paallystysurakan-testikohteen-id)}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")
+        tallennetun-tyyppi-koodi (fn [sanktio-id]
+                                   (ffirst (q (str "SELECT st.koodi FROM sanktio s JOIN sanktiotyyppi st ON st.id = s.tyyppi WHERE s.id = " sanktio-id))))]
+    (try
+      (doseq [[laji summa koodi] [[:yllapidon_sakko 1234 3]
+                                  [:yllapidon_bonus -4321 4]
+                                  [:yllapidon_muistutus nil 5]]]
+        (testing (str "Lajin " laji " tyyppi johdetaan, kun sitä ei anneta")
+          (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                             +kayttaja-jvh+ (assoc sanktiorunko :laji laji :summa summa)
+                             laatupoikkeama hk-alkupvm hk-loppupvm)]
+            (is (= koodi (tallennetun-tyyppi-koodi sanktio-id))))))
+      (testing "Ylläpidon lajille annettu väärä tyyppi hylätään"
+        (try+
+          (palvelukutsu-tallenna-suorasanktio
+            +kayttaja-jvh+
+            (assoc sanktiorunko :laji :yllapidon_sakko :summa 1
+              :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 4;"))})
+            laatupoikkeama hk-alkupvm hk-loppupvm)
+          (is false "Väärä sanktiotyyppi pitäisi hylätä")
+          (catch [:type :sanktio-kirjausvirhe] {:keys [virheet]}
+            (is (= :sanktiotyyppi-ei-sallittu (:koodi (first virheet)))))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest tallenna-suorasanktio-hoidon-urakassa-sakko
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
         perustelu "ABC gorilla gävelee hoidon urakka-alueella"
