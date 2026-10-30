@@ -282,12 +282,13 @@ ja kaikki pakolliset kentät on täytetty"
                    (+ palstoja kentan-palstat)
                    skeemat)))))))
 
-(defn kentan-vihje-inline [vihje]
+(defn kentan-vihje-inline [vihje & {:keys [ilman-ikonia? rivittamaton?]}]
   (let [vihjeet (if (vector? vihje) vihje [vihje])]
-    [:div {:class
-           (str "inline-block yleinen-pikkuvihje")}
+    [:div {:class (str "inline-block yleinen-pikkuvihje lomake-vihje"
+                       (when rivittamaton? " lomake-vihje-rivittamaton"))}
      [:div.vihjeen-sisalto
-      (harja.ui.ikonit/livicon-info-sign)
+      (when-not ilman-ikonia?
+        (harja.ui.ikonit/livicon-info-sign))
       [:span (str " " (first vihjeet))]
       (map-indexed
         (fn [i vihje]
@@ -303,12 +304,14 @@ ja kaikki pakolliset kentät on täytetty"
          ^{:key (str "vihje-" i)}
          [:div vihje]) vihjeet)]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi] :as skeema}]
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot vihje-ilman-ikonia? vihje-rivittamaton? tyyppi] :as skeema}]
   [:span
    (when vihje
      (if (or (= :checkbox tyyppi) (= :checkbox-group tyyppi))
        [checkboxin-vihje vihje]
-       [kentan-vihje-inline vihje]))
+       [kentan-vihje-inline vihje
+        :ilman-ikonia? vihje-ilman-ikonia?
+        :rivittamaton? vihje-rivittamaton?]))
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
 

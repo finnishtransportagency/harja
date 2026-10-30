@@ -172,7 +172,7 @@
      :nimi :omailmoitettu
      :tyyppi :checkbox
      :uusi-rivi? true
-     :label-luokka "fontti-12"
+     :pieni-teksti? true
      ::lomake/col-luokka "col-xs-12"
      :hae :omailmoitettu
      :data-cy "sanktion-omailmoitus"
@@ -223,6 +223,8 @@
                          :vihje (when c-ryhman-maaritys
                                   (str "-" (fmt/euro-opt false (:summa-euroina c-ryhman-maaritys))
                                     " " (:ohjeteksti c-ryhman-maaritys)))
+                         :vihje-ilman-ikonia? true
+                         :vihje-rivittamaton? true
                          :pakollinen? true :uusi-rivi? true
                          :validoi [[:ei-tyhja "Anna summa"]
                                    [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})
