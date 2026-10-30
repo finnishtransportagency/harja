@@ -71,11 +71,12 @@
       (is (false? (:nayta-tapahtumapaikka?
                     (sanktion-lomake-domain/sanktion-lomakekonteksti
                       (assoc perus :sanktio {:laji :laskutus_ilman_laskutuskelpoisuutta}))))))
-    (testing "työn tekemättä jättämisen tyyppi 22 piilottaa perustelun"
-      (is (false? (:nayta-perustelu?
-                    (sanktion-lomake-domain/sanktion-lomakekonteksti
-                      (assoc perus :sanktio {:laji :tyon_tekematta_jattaminen
-                                             :tyyppi {:koodi 22}}))))))
+    (testing "työn tekemättä jättämisen tyypit 22 ja 23 piilottavat perustelun"
+      (doseq [koodi [22 23]]
+        (is (false? (:nayta-perustelu?
+                      (sanktion-lomake-domain/sanktion-lomakekonteksti
+                        (assoc perus :sanktio {:laji :tyon_tekematta_jattaminen
+                                               :tyyppi {:koodi koodi}})))))))
     (testing "talvisuolan ilmoitus ja validointi koskevat talvisuolan ylitystä"
       (let [konteksti (sanktion-lomake-domain/sanktion-lomakekonteksti
                         (assoc perus
@@ -1119,7 +1120,7 @@
 
 (deftest perusteluton-sanktio-on-vain-laskettava-tyon-tekematta-jattaminen
   (is (true? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen {:koodi 22})))
-  (is (false? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen {:koodi 23})))
+  (is (true? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen {:koodi 23})))
   (is (false? (sanktiotyyppi-domain/perusteluton-sanktio? :muistutus {:koodi 22})))
   (is (false? (sanktiotyyppi-domain/perusteluton-sanktio? :tyon_tekematta_jattaminen nil))))
 
