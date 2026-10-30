@@ -339,7 +339,7 @@
                          {:vayla-tyyli? true :teksti-nappi? true}])]
                      (when lukitusvaroitus
                        [:div {:style {:padding-bottom "1rem"}}
-                        [yleiset/info-laatikko :varoitus lukitusvaroitus]])])
+                        [yleiset/info-laatikko :neutraali "Osion tiedot lukittu" lukitusvaroitus nil nil]])])
        :footer-fn (fn [data]
                     [:div
                      (when (and @tiedot/nayta-validoinnit?
