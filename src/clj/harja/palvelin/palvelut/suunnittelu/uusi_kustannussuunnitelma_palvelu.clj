@@ -82,6 +82,8 @@
                                   (>= hoitovuoden-alkuvuosi urakan-loppuvuosi) (dec urakan-loppuvuosi)
                                   :else hoitovuoden-alkuvuosi)
           viimeinen-hoitovuosi? (boolean (= hoitovuoden-alkuvuosi (dec urakan-loppuvuosi)))
+          lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                          db urakka-id hoitovuoden-alkuvuosi :uusi-kustannussuunnitelma))
 
           kustannussuunnitelma-vahvistettu? (suunnitelma-q/kustannussuunnitelma-vahvistettu? db urakka-id hoitovuoden-alkuvuosi)
 
@@ -149,6 +151,7 @@
           k {:urakka-id urakka-id
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
+             :lukittu? lukittu?
              :tarjous tarjous
              :vanha-urakka? vanha-urakka?
              :tulevaisuudessa-arvoja? {:muut (get tulevaisuudessa-arvoja "muut" false)

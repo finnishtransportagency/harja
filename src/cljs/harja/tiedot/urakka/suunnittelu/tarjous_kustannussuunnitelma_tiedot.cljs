@@ -384,6 +384,7 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
+      (assoc :lukittu? (:lukittu? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
       (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))

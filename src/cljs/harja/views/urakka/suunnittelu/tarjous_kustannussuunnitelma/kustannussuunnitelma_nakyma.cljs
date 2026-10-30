@@ -439,7 +439,7 @@
          [pysyvat-muutokset-grid* e! muutokset (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi)]]]])))
 
 (defn tavoite-ja-kattohinta [e! {:keys [valittu-hoitokausi tallennus-kesken? tarjous kustannussuunnitelma
-                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe vanha-urakka?] :as app}]
+                                        paivitetty-hoitovuoden-alun-kattohinta kattohinta-virhe vanha-urakka? lukittu?] :as app}]
   (let [{:keys [muutosten-hallinta-urakassa? pysyvat-muutokset-maara hoitovuoden-alun-tavoitehinta
                 hoitovuoden-alun-indeksikorjattu-tavoitehinta indeksikerroin-str
                 kattohintakerroin hoitovuoden-alun-kattohinta
@@ -555,27 +555,27 @@
            #(do
               (reset! yhteiset/tallenna-painettu false)
               (e! (kust-tiedot/->VahvistaTaiPeruutaTavoiteJaKattohinta true)))
-           {:disabled (or tallennus-kesken? false)}]
+           {:disabled (or tallennus-kesken? lukittu? false)}]
 
           [napit/kumoa "Peruuta vahvistus"
            #(do
               (reset! yhteiset/tallenna-painettu false)
               (e! (kust-tiedot/->VahvistaTaiPeruutaTavoiteJaKattohinta false)))
-           {:disabled (or tallennus-kesken? false)}])]]]
+           {:disabled (or tallennus-kesken? lukittu? false)}])]]]
 
      (when vahvistus-virhe
        [:div.row {:style {:margin-bottom "1rem"}}
         [:div.col-xs-12
          [yleiset/nayta-virheet :varoitus vahvistus-virhe "Tavoite- ja kattohintaa ei voi vahvistaa seuraavien virheiden takia:"]]])]))
 
-(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi] :as app}]
+(defn kustannussuunnitelma [e! {:keys [tallennus-kesken? haku-kaynnissa? valittu-hoitokausi lukittu?] :as app}]
   (let [urakan-alkuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :alkupvm))
         urakan-loppuvuosi (pvm/vuosi (-> @tila/yleiset :urakka :loppupvm))
         urakan-kesto-vuosina (- urakan-loppuvuosi urakan-alkuvuosi)
         hoitokaudet (into [] (range urakan-alkuvuosi (+ urakan-kesto-vuosina urakan-alkuvuosi)))]
     [:div
      [:div.row
-      [:div.col-xs-12.col-md-6 {:style {:padding-left "0"}}
+      [:div.col-xs-12.col-md-6.col-sisalto
        [:h1 "Hoitovuoden alun tavoitehinta"]
        [:div (-> @tila/yleiset :urakka :nimi)]]
       [:div.col-xs-12.col-md-6
@@ -585,12 +585,19 @@
         {:style {:float "right"
                  :line-height "2rem"}}]]]
      [:div.row {:style {:margin-top "1rem"}}
-      [:div.col-xs-12.col-md-3 {:style {:padding-left "0"}}
+      [:div.col-xs-12.col-md-3.col-sisalto
        [urakka-valinnat/paivittava-urakkavuosi-tuck
         @u/valittu-aikavali
         #(when kust-tiedot/nakymassa?
            ;; Älä tee turhia kutsuja, jos sivua ei näytetä
            (e! (kust-tiedot/->ValitseHoitokausiKustannussuunnitelmaan))) haku-kaynnissa? false]]]
+     (when lukittu?
+       [:div.row {:style {:margin-top "0.5rem"}}
+        [:div.col-xs-12.col-sisalto
+         [yleiset/info-laatikko :neutraali
+          "Osion tiedot on lukittu"
+          "Tietoja ei voi enää muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
+          nil nil]]])
 
      [kilpailutettavat-hankinnat e! app]
      [rahavaraukset e! app]
