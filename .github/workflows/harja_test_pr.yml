@@ -20,7 +20,7 @@ permissions: {}
 
 jobs:
   tests:
-    uses: ./.github/workflows/reusable_run_app_tests.yml
+    uses: $/.github/workflows/reusable_run_app_tests.yml
     # Permissions
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
