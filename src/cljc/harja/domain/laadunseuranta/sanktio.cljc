@@ -190,25 +190,6 @@
   [sanktio-konfiguraatio laji]
   (vec (:sanktiotyypit (sanktio-konfiguraation-lajin-tiedot sanktio-konfiguraatio laji))))
 
-(defn- kiintea-automaattinen-summamaaritys?
-  [{:keys [maaritystapa ohjeteksti]}]
-  (and (= :automaattinen maaritystapa)
-    (str/blank? ohjeteksti)))
-
-(defn sanktiotyypilla-kiintea-automaattinen-summamaaritys?
-  [{:keys [summamaaritykset]}]
-  (boolean (some kiintea-automaattinen-summamaaritys? summamaaritykset)))
-
-(defn sanktiotyypin-kiintea-automaattinen-summa
-  [{:keys [summamaaritykset]}]
-  (some (fn [{:keys [maaritystapa summa-euroina] :as summamaaritys}]
-          (when (and (kiintea-automaattinen-summamaaritys? summamaaritys)
-                  (number? summa-euroina)
-                  (pos? summa-euroina)
-                  #?(:clj (Double/isFinite (double summa-euroina))
-                     :cljs (js/isFinite summa-euroina)))
-            summa-euroina))
-    summamaaritykset))
 
 
 

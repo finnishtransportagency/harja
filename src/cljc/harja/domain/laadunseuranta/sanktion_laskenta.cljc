@@ -65,6 +65,16 @@
       (when-not (contains? syoteavainten-otsikot syoteavain)
         (str " (" yksikko ")")))))
 
+(defn laskettavan-sanktion-otsikot
+  "Palauttaa laskettavan sanktion käyttöliittymäotsikot tunnetulle väliaikaiselle erikoistapaukselle."
+  [{:keys [syoteavain] :as laskentaparametrit}]
+  (when laskentaparametrit
+    (if (= "laskutusrajan_ylitys" syoteavain)
+      {:syotteen-otsikko "Ylityksen määrä (€)"
+       :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
+      {:syotteen-otsikko (syotteen-otsikko laskentaparametrit)
+       :tuloksen-otsikko "Sanktion suuruus"})))
+
 (defn syotteen-virhe
   "Selaimen esitarkistus, joka peilaa palvelimen syötesääntöjä. Palauttaa virheviestin tai nil.
   Palvelin validoi syötteen aina uudelleen."
@@ -122,27 +132,31 @@
        (or (some-> (first in) name)
          (second (re-find #"contains\? % :([\w-]+)" (pr-str pred)))))
 
-     (defn- vaadi-tunnettu-laskentatapa [laskentatapa]
-       (when-not (contains? laskentatavat laskentatapa)
-         (throw (IllegalArgumentException.
-                  (str "Kenttä laskentatapa on virheellinen: odotettu jokin arvoista " (sort laskentatavat)
-                    ", saatu " (pr-str laskentatapa) " (tyyppi " (tyyppi-tekstina laskentatapa) ").")))))
+     (defn laskentamaarityksen-virhe
+       "Validoi profiilin laskettu-määrityksen muodon. Palauttaa virheviestin tai nil.
+       Kutsuja päättää poikkeuksen tyypin: syöte- ja tietokantavirheet eroavat toisistaan.
+       Raaka laskentatapa annetaan, kun määrityksen avain on jo normalisoitu, jotta virhe näyttää alkuperäisen arvon."
+       ([maaritys] (laskentamaarityksen-virhe maaritys (:laskentatapa maaritys)))
+       ([{:keys [laskentatapa laskentaversio laskentaparametrit]} raaka-laskentatapa]
+        (cond
+          (not (contains? laskentatavat laskentatapa))
+          (str "Kenttä laskentatapa on virheellinen: odotettu jokin arvoista " (sort laskentatavat)
+            ", saatu " (pr-str raaka-laskentatapa) " (tyyppi " (tyyppi-tekstina raaka-laskentatapa) ").")
 
-     (defn- vaadi-laskentaversio [laskentaversio]
-       (when-not (s/valid? ::laskentaversio laskentaversio)
-         (heita-virhe! "laskentaversio" "positiivinen kokonaisluku" laskentaversio)))
+          (not (s/valid? ::laskentaversio laskentaversio))
+          (str "Kenttä laskentaversio on virheellinen: odotettu positiivinen kokonaisluku, saatu "
+            (pr-str laskentaversio) " (tyyppi " (tyyppi-tekstina laskentaversio) ").")
 
-     (defn- vaadi-laskentaparametrit [laskentatapa laskentaparametrit]
-       (let [spec (laskentatavan-parametrit-spec laskentatapa)]
-         (when-not (s/valid? spec laskentaparametrit)
-           (let [ongelmat (::s/problems (s/explain-data spec laskentaparametrit))
-                 kentat (->> ongelmat (keep ongelman-kentta) distinct sort (str/join ", "))]
-             (throw (IllegalArgumentException.
-                      (str "Kenttä laskentaparametrit on virheellinen"
-                        (when-not (str/blank? kentat) (str " (" kentat ")"))
-                        ": odotettu laskentatavan " (name laskentatapa) " mukainen parametrimap, saatu "
-                        (pr-str laskentaparametrit)
-                        " (tyyppi " (tyyppi-tekstina laskentaparametrit) ").")))))))
+          :else
+          (let [spec (laskentatavan-parametrit-spec laskentatapa)]
+            (when-not (s/valid? spec laskentaparametrit)
+              (let [ongelmat (::s/problems (s/explain-data spec laskentaparametrit))
+                    kentat (->> ongelmat (keep ongelman-kentta) distinct sort (str/join ", "))]
+                (str "Kenttä laskentaparametrit on virheellinen"
+                  (when-not (str/blank? kentat) (str " (" kentat ")"))
+                  ": odotettu laskentatavan " (name laskentatapa) " mukainen parametrimap, saatu "
+                  (pr-str laskentaparametrit)
+                  " (tyyppi " (tyyppi-tekstina laskentaparametrit) ").")))))))
 
      (defn- vaadi-syote
        "Palauttaa validoidun syötteen BigDecimalina."
@@ -188,9 +202,10 @@
        "Validoi syötteen profiilin laskettu-määritystä vasten ja laskee summan.
        Palauttaa {:summa BigDecimal :laskennan-syote snapshot}. Heittää IllegalArgumentException virheellisestä syötteestä."
        [{:keys [laskentatapa laskentaversio laskentaparametrit]} syote]
-       (vaadi-tunnettu-laskentatapa laskentatapa)
-       (vaadi-laskentaversio laskentaversio)
-       (vaadi-laskentaparametrit laskentatapa laskentaparametrit)
+       (when-let [virhe (laskentamaarityksen-virhe {:laskentatapa laskentatapa
+                                                    :laskentaversio laskentaversio
+                                                    :laskentaparametrit laskentaparametrit})]
+         (throw (IllegalArgumentException. ^String virhe)))
        (let [arvo (vaadi-syote laskentaparametrit syote)]
          {:summa (laske-summa {:laskentatapa laskentatapa :laskentaparametrit laskentaparametrit} arvo)
           :laskennan-syote {:syoteavain (:syoteavain laskentaparametrit)

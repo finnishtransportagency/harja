@@ -239,9 +239,9 @@ describe('MHU26 laskettava sanktio', function () {
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default')
             .valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('[data-cy="sanktio-laskettava-syote"]')
+        cy.get('[data-cy="sanktio-laskettava-syote"] input')
             .clear().type('12,5')
-        cy.get('label').contains('Sanktion suuruus').closest('.form-group').within(() => {
+        cy.contains('label', 'Sanktion suuruus').closest('.form-group').within(() => {
             cy.get('input').should('not.exist')
             cy.get('.lomake-arvo').invoke('text').should('match', /2\s?500/)
         })
@@ -287,7 +287,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').check()
+        cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
+            .should('not.be.checked').check().should('be.checked')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
 
@@ -305,11 +306,12 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.contains(tyyppiMhu26B).should('be.visible')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input').should('be.checked')
+        cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]').should('be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B2')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').uncheck()
+        cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
+            .should('be.checked').uncheck().should('not.be.checked')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
@@ -325,7 +327,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B3')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('.form-group', 'Kyseessä on urakoitsijan itse ilmoittama').find('input[type="checkbox"]').check()
+        cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]')
+            .should('not.be.checked').check().should('be.checked')
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})

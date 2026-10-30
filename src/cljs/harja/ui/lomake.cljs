@@ -282,12 +282,13 @@ ja kaikki pakolliset kentät on täytetty"
                    (+ palstoja kentan-palstat)
                    skeemat)))))))
 
-(defn kentan-vihje-inline [vihje]
+(defn kentan-vihje-inline [vihje & {:keys [ilman-ikonia? rivittamaton?]}]
   (let [vihjeet (if (vector? vihje) vihje [vihje])]
-    [:div {:class
-           (str "inline-block yleinen-pikkuvihje")}
+    [:div {:class (str "inline-block yleinen-pikkuvihje lomake-vihje"
+                       (when rivittamaton? " lomake-vihje-rivittamaton"))}
      [:div.vihjeen-sisalto
-      (harja.ui.ikonit/livicon-info-sign)
+      (when-not ilman-ikonia?
+        (harja.ui.ikonit/livicon-info-sign))
       [:span (str " " (first vihjeet))]
       (map-indexed
         (fn [i vihje]
@@ -303,12 +304,14 @@ ja kaikki pakolliset kentät on täytetty"
          ^{:key (str "vihje-" i)}
          [:div vihje]) vihjeet)]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi] :as skeema}]
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot vihje-ilman-ikonia? vihje-rivittamaton? tyyppi] :as skeema}]
   [:span
    (when vihje
      (if (or (= :checkbox tyyppi) (= :checkbox-group tyyppi))
        [checkboxin-vihje vihje]
-       [kentan-vihje-inline vihje]))
+       [kentan-vihje-inline vihje
+        :ilman-ikonia? vihje-ilman-ikonia?
+        :rivittamaton? vihje-rivittamaton?]))
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
 
@@ -437,11 +440,11 @@ ja kaikki pakolliset kentät on täytetty"
 (defn kentta
   "UI yhdelle kentälle, renderöi otsikon ja kentän"
   [{:keys [palstoja nimi otsikko label-for-id tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
-           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
+           piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot data-cy] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
    muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
   (let [kentan-id (or label-for-id (str (when (and nimi (keyword? nimi)) (name nimi)) "-" (gensym)))]
-    [:div.form-group {:class (str
+    [:div.form-group (merge {:class (str
                                ;; Korostaa input/tekstikentän reunat, jos on virhe
                                (when (some? virheet) "lomake-validointivirhe ")
                                (or
@@ -460,6 +463,7 @@ ja kaikki pakolliset kentät on täytetty"
                                  " sisaltaa-varoituksen")
                                (when-not (empty? huomautukset)
                                  " sisaltaa-huomautuksen"))}
+                     (when data-cy {:data-cy data-cy}))
      [:div {:class (yleiset/luokat
                      (when sisallon-leveys?
                        "sisallon-leveys lomake-kentan-leveys")

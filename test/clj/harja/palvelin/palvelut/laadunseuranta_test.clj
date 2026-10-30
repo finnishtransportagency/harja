@@ -526,6 +526,51 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
+(deftest tallenna-mhu26-a-sanktio-sailyttaa-profiilin-automaattisen-summan-uudelleentallennuksessa
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2862 profiilin automaattinen summa save read resave"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 777
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-02T21:00:00.000-00:00"
+                 :tyyppi {:id sanktiotyyppi-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "2.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")
+        lue-sanktio (fn [sanktio-id]
+                      (first (filter #(= sanktio-id (:id %))
+                                     (kutsu-palvelua (:http-palvelin jarjestelma)
+                                                     :hae-urakan-sanktiot-ja-bonukset
+                                                     +kayttaja-jvh+
+                                                     {:urakka-id urakka-id
+                                                      :alku hk-alkupvm
+                                                      :loppu hk-loppupvm}))))]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            ensimmainen-luku (lue-sanktio sanktio-id)]
+        (is (= -6000.0 (:summa ensimmainen-luku))
+          "Ensimmäinen luku käyttää profiilin automaattista summaa")
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+
+          (assoc sanktio :id sanktio-id :summa 1)
+          laatupoikkeama hk-alkupvm hk-loppupvm)
+        (is (= -6000.0 (:summa (lue-sanktio sanktio-id)))
+          "Uudelleentallennus ei saa käyttää clientin summaa"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest tallenna-sanktio-kayttaa-profiilin-automaattista-summaa-ilman-vuosirajausta
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         perustelu "Profiili määrää sanktion summan ilman vuosirajausta"
@@ -3074,8 +3119,10 @@
         laskutusrajan-ylitys 12345.60M
         sanktio {:suorasanktio true
                  :laji :laskutus_yli_laskutusrajan
-                 :laskutusrajan-ylitys laskutusrajan-ylitys
-                 :summa (* 0.2M laskutusrajan-ylitys)
+                 ;; Profiilin syöteavain on laskutusrajan ylitys; summa tulee palvelimelta.
+                 :laskettava-syote laskutusrajan-ylitys
+                 ;; Asiakkaan lähettämä summa ei saa ohittaa profiilin laskentaa.
+                 :summa 1
                  :perintapvm perintapvm}
         laatupoikeama {:tekijanimi "testaus-tekija"
                        :paatos {:paatos "sanktio"
@@ -3095,4 +3142,8 @@
                                                                                     :loppu hk-loppupvm})
             lisatty-sanktio (first (filter #(= sanktio-id (:id %)) sanktiot-ja-bonukset))]
         (is (number? sanktio-id) "Sanktion id:n tulee olla numero")
-        (is (zero? (compare (:summa sanktio) (- (bigdec (:summa lisatty-sanktio))))) "Tallennetun sanktion summa vastaa syotettya arvoa") (is (= laskutusrajan-ylitys (:laskutusrajan-ylitys lisatty-sanktio)) "Tallennetun sanktion laskutusrajan ylitys vastaa syotettya arvoa")))))
+        (is (zero? (compare -2469.12M (:summa lisatty-sanktio)))
+          "Palvelin laskee sanktion summaksi 20 prosenttia profiilin syötteestä")
+        (is (zero? (compare laskutusrajan-ylitys
+                             (get-in lisatty-sanktio [:laskennan-syote :syote])))
+          "Profiilin laskennan syöte tallentuu snapshotiin")))))
