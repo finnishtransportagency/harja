@@ -144,9 +144,23 @@
               lukutila? oikeus-muokata?]
              (and arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
              [:<>
-              (when arvonvahennys-paatoksella-lukittu?
-                [yleiset/vihje "Välikatselmuksessa päätös lukitsee tavoitehintaa alentavat arvonvähennykset." nil 18])
-              [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?]]
+              (if arvonvahennys-paatoksella-lukittu?
+                [:div
+                (js/console.log "@tiedot/valittu-sanktio" (pr-str @tiedot/valittu-sanktio))
+                 ;; Näytetään ilmoitus lukituksesta aina, kun lukitus on olemassa
+                 [:div {:style {:margin-bottom "1rem"}}
+                  [yleiset/info-laatikko :neutraali
+                        "Et voi kirjata arvonvähennystä tälle hoitovuodelle"
+                        "Arvonvähennyksiä ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
+                        nil nil]]
+                 ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä arvonvähennystä on kirjattu
+                 (if (:id @tiedot/valittu-sanktio)
+                   [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?]
+                   [napit/peruuta "Sulje"
+                    #(do
+                       (reset! sivupaneeli-auki?-atom false))])]
+                ;; Jos lukitusta ei ole, niin näytetään lomake normaalisti
+                [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?])]
 
              :else
              [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?])])))))

@@ -72,7 +72,7 @@
 
 
     [:div
-     [debug/debug @muokattu]
+     #_ [debug/debug @muokattu]
      [lomake/lomake
       {:otsikko "ARVONVÄHENNYKSEN TIEDOT"
        :otsikko-elementti :h4
