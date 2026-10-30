@@ -17,6 +17,7 @@
             [harja.palvelin.integraatiot.jms.tyokalut :as jms-tk]
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.tloik.aineistot.toimenpidepyynnot :as aineisto-toimenpidepyynnot]
+            [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstiviesti]
             [harja.kyselyt.tieliikenneilmoitukset :as q-ilmoitukset]
             [clj-time
              [coerce :as tc]
@@ -393,6 +394,83 @@
               ilmoitustoimenpide (hae-ilmoitustoimenpide-ilmoitusidlla ilmoitus-id)]
           (is (= 200 status) "Ilmoituksen haku APIsta onnistuu")
           (is (nil? ilmoitustoimenpide) "Ilmoitustoimenpidettä ei voida tehdä, koska päivystäjältä puuttuu sekä puhelinumerot, että email."))
+        (poista-ilmoitus ilmoitus-id)))))
+
+(deftest testaa-toimenpidepyynto-paivystajien-duplikaatti-sahkopostilla
+  "Testataan, että saman ilmoituksen sähköpostien lähettäminen deduplikoidaan per sähköpostiosoite,
+  vaikka sama osoite olisi usealla aktiivisella päivystäjärivillä. SMS lähetetään silti jokaiselle päivystäjälle."
+  (let [viestit (atom [])
+        sms-numerot (atom [])]
+    (lisaa-kuuntelijoita! {"itmf" {+tloik-ilmoituskuittausjono+ #(swap! viestit conj (.getText %))}})
+
+    ;; Ilmoitushausta tehdään future, jotta HTTP long poll on jo käynnissä, kun uusi ilmoitus vastaanotetaan
+    (with-redefs [harja.kyselyt.yhteyshenkilot/hae-urakan-tamanhetkiset-paivystajat
+                  (fn [db urakka-id]
+                    (list {:id 1
+                           :etunimi "Pekka"
+                           :sukunimi "Päivystäjä"
+                           ;; Puhelinnumero aktivoi SMS-haaran, lähetys mockataan alla
+                           :matkapuhelin "0401111111"
+                           :tyopuhelin nil
+                           :sahkoposti "email.email@example.com"
+                           :alku (t/now)
+                           :loppu (t/now)
+                           :vastuuhenkilo true
+                           :varahenkilo true}
+                      {:id 2
+                       :etunimi "Toinen"
+                       :sukunimi "Päivystäjä"
+                       ;; Sama vastaanottaja eri kirjainkoolla ja whitespace-merkeillä
+                       :matkapuhelin "0402222222"
+                       :tyopuhelin nil
+                       :sahkoposti "  EMAIL.EMAIL@EXAMPLE.COM  "
+                       :alku (t/now)
+                       :loppu (t/now)
+                       :vastuuhenkilo true
+                       :varahenkilo true}
+                      {:id 3
+                       :etunimi "Kolmas"
+                       :sukunimi "Päivystäjä"
+                       :matkapuhelin "0403333333"
+                       :tyopuhelin nil
+                       :sahkoposti "toinen.email@example.com"
+                       :alku (t/now)
+                       :loppu (t/now)
+                       :vastuuhenkilo true
+                       :varahenkilo true}))
+                  tloik-tekstiviesti/laheta-ilmoitus-tekstiviestilla
+                  (fn [_ _ _ paivystaja] (swap! sms-numerot conj (:matkapuhelin paivystaja)))]
+      (let [urakka-id (hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")
+            ilmoitushaku (future (api-tyokalut/get-kutsu ["/api/urakat/" urakka-id "/ilmoitukset?odotaUusia=true"]
+                                   kayttaja portti))
+            viesti-id (str (UUID/randomUUID))
+            ilmoitus-id (rand-int 99999999)
+            sijainti aineisto-toimenpidepyynnot/sijainti-rovaniemen-alueella
+            ilmoittaja aineisto-toimenpidepyynnot/ilmoittaja-xml]
+
+        (async/<!! (async/timeout timeout))
+        (jms/laheta (:itmf jarjestelma) +tloik-ilmoitusviestijono+ (aineisto-toimenpidepyynnot/toimenpidepyynto-sanoma viesti-id ilmoitus-id sijainti ilmoittaja))
+
+        (odota-ehdon-tayttymista #(realized? ilmoitushaku) "Saatiin vastaus ilmoitushakuun." kuittaus-timeout)
+        (odota-ehdon-tayttymista #(= 1 (count @viestit)) "Kuittaus on vastaanotettu." kuittaus-timeout)
+        (odota-ehdon-tayttymista #(hae-ilmoitus-ilmoitusidlla-tietokannasta ilmoitus-id) "Ilmoitus on tietokannassa." kuittaus-timeout)
+        ;; Päivystäjät käsitellään järjestyksessä, joten viimeisen osoitteen viesti todistaa duplikaattirivin käsitellyksi.
+        (odota-ehdon-tayttymista
+          #(some (fn [toimenpide]
+                   (= "toinen.email@example.com" (:kuittaaja_henkilo_sahkoposti toimenpide)))
+             (hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id))
+          "Sähköpostitoimenpiteet ovat tietokannassa."
+          kuittaus-timeout)
+
+        (let [sahkopostit (->> (hae-ilmoitustoimenpiteet-ilmoitusidlla ilmoitus-id)
+                            (filter (fn [toimenpide] (= "sahkoposti" (:kanava toimenpide)))))]
+          (is (= ["email.email@example.com" "toinen.email@example.com"]
+                (sort (map :kuittaaja_henkilo_sahkoposti sahkopostit)))
+            "Sama sähköpostiosoite tuottaa yhden viestin ja eri osoite oman viestinsä."))
+
+        (is (= ["0401111111" "0402222222" "0403333333"] (sort @sms-numerot))
+          "Jokainen päivystäjä saa SMS:n, vaikka sähköpostit deduplikoidaan.")
+
         (poista-ilmoitus ilmoitus-id)))))
 
 (deftest testaa-toimenpidepyynto-ilmoittajan-tyyppi
