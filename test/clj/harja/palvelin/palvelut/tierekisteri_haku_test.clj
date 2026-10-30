@@ -102,9 +102,10 @@
       (is (= [] (kutsu :hae-tr-tieosuudet +kayttaja-jvh+ {:tr-numero 99999999}))))))
 
 (deftest hae-tr-tieosuudet-jarjestys-ja-raot
+  ;; Osan 1 pituus on 300, joten kaistan 11 on päätyttävä siihen, jotta osarajan yli yhdistyminen sallitaan
   (luo-tr-osoitteet [[1 0 100 21]
                      [1 200 300 21]
-                     [1 0 100 11]
+                     [1 0 300 11]
                      [2 0 100 11]])
   (u (str "INSERT INTO tr_osoitteet
            (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
