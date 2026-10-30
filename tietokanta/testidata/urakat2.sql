@@ -95,3 +95,15 @@ SELECT 'TEST-NUMMI26', hallintayksikko, elinvoimakeskus_id, 'Nummi 26 - liikenne
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Nummi 26 liikennevahinkobonuksen kohdistussopimus', '2026-10-01', '2031-09-30', 'TEST-NUMMI26-SOP',
         (SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'));
+
+-- Urakkakohtaisen rajauksen toinen positiivinen MHU2026-testikohde.
+INSERT INTO urakka (sampoid, hallintayksikko, elinvoimakeskus_id, nimi,
+        alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue, lyhyt_nimi)
+SELECT 'TEST-RAASEPORI26', hallintayksikko, elinvoimakeskus_id, 'Raasepori 26 - liikennevahinkobonuksen kohdistus',
+       DATE '2026-10-01', DATE '2031-09-30', tyyppi, NULL, urakoitsija, alue, 'Raasepori 26'
+  FROM urakka
+ WHERE nimi = 'Kittilän MHU 2025-2030';
+
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Raasepori 26 liikennevahinkobonuksen kohdistussopimus', '2026-10-01', '2031-09-30', 'TEST-RAASEPORI26-SOP',
+  (SELECT id FROM urakka WHERE nimi = 'Raasepori 26 - liikennevahinkobonuksen kohdistus'));

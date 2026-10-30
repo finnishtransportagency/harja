@@ -57,7 +57,7 @@
 (defn- muodosta-taulukon-rivi [r yllapitourakka?]
   (cond-> []
     true (conj (pvm/pvm-opt (:kasittelyaika r)))
-    true (conj (domain-sanktio/sanktiolaji->teksti (:laji r)))
+    true (conj (or (:laji-nimi r) (domain-sanktio/sanktiolaji->teksti (:laji r))))
     yllapitourakka? (conj (if (get-in r [:yllapitokohde :id])
                             (yllapitokohde-domain/yllapitokohde-tekstina {:kohdenumero (get-in r [:yllapitokohde :numero])
                                                                           :nimi (get-in r [:yllapitokohde :nimi])})
@@ -70,8 +70,7 @@
                                   "–"))
     (not yllapitourakka?) (conj (sanktion-tai-bonuksen-kuvaus r))
     true (conj (sanktion-tai-bonuksen-perustelu r))
-    true (conj (:summa r))
-    true (conj (:indeksikorjaus r))))
+    true (conj (:summa r))))
 
 (defn- muodosta-otsikot [yllapitourakka?]
   (let [normaali-leveydet {:kasitelty 2
@@ -79,16 +78,14 @@
                            :tyyppi 2
                            :kuvaus 3.5
                            :perustelu 4.5
-                           :maara 2
-                           :indeksi 1.5}
+                           :maara 2}
         yllapito-leveydet {:kasitelty 2
                            :laji 3
                            :kohde 2
                            :kuvaus 3
                            :tyyppi 2
                            :perustelu 4.5
-                           :maara 2
-                           :indeksi 1.5}
+                           :maara 2}
         leveydet (if yllapitourakka?
                    yllapito-leveydet
                    normaali-leveydet)
@@ -100,8 +97,7 @@
                   (not yllapitourakka?) (conj {:otsikko "Tyyppi" :leveys (:tyyppi leveydet)})
                   (not yllapitourakka?) (conj {:otsikko "Tapahtumapaikka/kuvaus" :leveys (:kuvaus leveydet)})
                   true (conj {:otsikko "Perustelu" :leveys (:perustelu leveydet)})
-                  true (conj {:otsikko "Määrä (€)" :leveys (:maara leveydet) :tasaa :oikea :fmt :raha})
-                  true (conj {:otsikko "Indeksi (€)" :leveys (:indeksi leveydet) :tasaa :oikea :fmt :raha}))]
+                  true (conj {:otsikko "Määrä (€)" :leveys (:maara leveydet) :tasaa :oikea :fmt :raha}))]
     otsikot))
 (defn sanktiot-ja-bonukset-raportti
   [alkupvm loppupvm urakan-nimi yllapitourakka? valitut-lajit kaikki-lajit rivit]
@@ -113,7 +109,6 @@
                              (muodosta-taulukon-rivi r yllapitourakka?))))
         yht-kpl (count rivit)
         yht-summa (apply + (map #(if (:summa %) (:summa %) 0) rivit))
-        yht-indeksit (apply + (map #(if (:indeksikorjaus %) (:indeksikorjaus %) 0) rivit))
         yht-rivi (cond-> []
                    true (conj "Yht.")
                    true (conj (str yht-kpl " kpl"))
@@ -122,8 +117,7 @@
                    (not yllapitourakka?) (conj nil)
                    (not yllapitourakka?) (conj nil)
                    true (conj nil)
-                   true (conj yht-summa)
-                   true (conj yht-indeksit))
+                   true (conj yht-summa))
         taulukko-rivit (conj taulukko-rivit yht-rivi)
         taulukko [:taulukko {:viimeinen-rivi-yhteenveto? true
                              :sheet-nimi raportin-nimi}
