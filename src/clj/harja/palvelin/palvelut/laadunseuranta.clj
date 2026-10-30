@@ -444,6 +444,14 @@
   [db user tiedot]
   (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
+(defn lisaa-bonus-profiilirivin-urakkarajaus
+  [db user tiedot]
+  (bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus db user tiedot))
+
+(defn poista-bonus-profiilirivin-urakkarajaus
+  [db user tiedot]
+  (bonus-konfiguraatio/poista-bonus-profiilirivin-urakkarajaus db user tiedot))
+
 (defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
@@ -610,6 +618,14 @@
       (fn [user tiedot]
         (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
+      :lisaa-bonus-profiilirivin-urakkarajaus
+      (fn [user tiedot]
+        (bonus-konfiguraatio/lisaa-bonus-profiilirivin-urakkarajaus db user tiedot))
+
+      :poista-bonus-profiilirivin-urakkarajaus
+      (fn [user tiedot]
+        (bonus-konfiguraatio/poista-bonus-profiilirivin-urakkarajaus db user tiedot))
+
       :hae-urakan-laatupoikkeama-liitteet
       (fn [user {:keys [urakka-id alkupvm loppupvm]}]
         (hae-urakan-laatupoikkeama-liitteet db user urakka-id alkupvm loppupvm))
@@ -640,6 +656,8 @@
       :hae-sanktio-profiilin-detalji-admin
       :hae-bonus-profiilit-admin
       :hae-bonus-profiilin-detalji-admin
+      :lisaa-bonus-profiilirivin-urakkarajaus
+      :poista-bonus-profiilirivin-urakkarajaus
       :tallenna-suorasanktio
       :poista-sanktio
       :hae-urakan-laatupoikkeama-liitteet
