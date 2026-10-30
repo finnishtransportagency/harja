@@ -70,6 +70,7 @@
           kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
           hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
+      (is (boolean? (:lukittu? kilpailutettavat-hankinnat)))
       (is (= (count (:toimenpiteet hankinnat)) 7))
       (is (true? (some #(str/includes? (str/lower-case (:nimi %)) "talvihoito") (:toimenpiteet hankinnat))))
       (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))

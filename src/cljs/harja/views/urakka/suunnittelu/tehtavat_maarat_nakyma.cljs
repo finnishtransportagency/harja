@@ -232,20 +232,13 @@
   (let [urakan-loppuvuoden-alkuvuosi (dec (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka))))
         valitun-hoitokauden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
         onko-viimeinen-vuosi? (= valitun-hoitokauden-alkuvuosi urakan-loppuvuoden-alkuvuosi)]
-    [:div#vayla
+    [:div
      [:div.row
       [:h1 "Tehtävä ja määräluettelo"]]
 
-     ;; Esimerkki, miten lukituksesta voisi kommunikoida
-      (when lukittu?
-      [yleiset/info-laatikko :varoitus
-       (str "Hoitovuosi " valitun-hoitokauden-alkuvuosi
-         " on lukittu Välikatselmuksen tavoitehinnan muutospäätöksellä.")
-       nil nil {:sulje-nappi-id (gensym)}])
-
      [:div.flex-row {:style {:justify-content "space-between"}}
       [:div.filtteri
-       [:div {:style {:width "300px"}}
+       [:div {:style {:width "350px"}}
         [urakka-valinnat/paivittava-urakkavuosi-tuck
          @u/valittu-aikavali
          #(e! (tiedot/->HaeTehtavatJaMaarat nil)) haku-kaynnissa? false]]]
@@ -268,6 +261,12 @@
             :taso2 :mhu-muutokset
             :taso3 nil})
         {:luokka "klikattava alleviivaa"}]]]
+
+     (when lukittu?
+       [yleiset/info-laatikko :neutraali
+        "Osion tiedot on lukittu"
+        "Tietoja ei voi enää muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
+        nil nil])
 
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? lukittu? viimeisin-muokkaus viimeisin-muokkaaja tehtavat-ja-maarat
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
