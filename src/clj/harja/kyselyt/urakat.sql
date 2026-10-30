@@ -361,7 +361,10 @@ SELECT
         WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
             THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
             ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
-        END                                     AS alueurakan_alue
+        END                                     AS alueurakan_alue,
+    up.laskutusraja_kaytossa                    AS laskutusraja_kaytossa,
+    up.muutosten_hallinta                       AS muutostenhallinta_kaytossa,
+    up.hoitovuoden_alun_tavoitehinta_kaytossa   AS hoitovuoden_alun_tavoitehinta_kaytossa
 
 FROM urakka u
          LEFT JOIN organisaatio evk ON u.elinvoimakeskus_id = evk.id
@@ -371,6 +374,7 @@ FROM urakka u
          LEFT JOIN siltapalvelusopimus sps ON u.urakkanro = sps.urakkanro
          LEFT JOIN yhatiedot yt ON u.id = yt.urakka
          LEFT JOIN kayttaja k ON k.id = yt.kohdeluettelo_paivittaja
+         LEFT JOIN urakka_parametrit up ON u.id = up.urakkaid
 WHERE u.elinvoimakeskus_id IN (:elinvoimakeskusid) -- Pohjanmaan elinvoimakeskuksen urakat on palautettava, kun haetaan Etelä-Pohjanmaan elinvoimakeskuksen urakoita
   AND u.poistettu = false
   AND (u.id IN (:sallitut_urakat)

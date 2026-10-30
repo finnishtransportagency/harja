@@ -27,6 +27,39 @@
                "Kustannussuunnitelmaa ei voi muokata, koska tavoitehinnan muutospäätös on jo tehty.")))
     muokattavat-vuodet))
 
+(defn laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista
+  "Funktio laskee indeksikorjaamattoman tavoitehinnan käyttöliittymästä välitetyn hoitovuosikohtaisen kustannussuunnitelman tietojen perusteella.
+  Indeksikorjaus lasketaan tavoite- ja kattohinnan tallennuksen yhteydessä.
+  Älä käytä:
+  * Jos muutostenhallinta on käytössä (urakkaparametri: muutos_hallinta). Näillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella.
+  * Koko urakka-ajan yhteissumman laskentaan"
+  [{:keys [kilpailutettavat-hankinnat rahavaraukset erillishankinnat johto-ja-hallintokorvaukset hoidonjohtopalkkiot] :as _tiedot}]
+  (let [hankinnat-yhteenveto (first (filter #(= (:nimi %) "Yhteensä") (:toimenpiteet kilpailutettavat-hankinnat)))
+        hankinnat-yhteensa (or (:kaikki-yhteensa hankinnat-yhteenveto) 0)
+        rahavaraukset-yhteensa (reduce +
+                                 (mapv #(if (nil? (:suunniteltu-summa %)) 0 (:suunniteltu-summa %))
+                                   rahavaraukset))
+        erillihankinnat-yhteensa (reduce +
+                                   (mapv #(if (nil? (:summa %)) 0 (:summa %))
+                                     erillishankinnat))
+        johto-ja-hallintokorvaukset-yhteensa (reduce +
+                                               (map #(if (nil? (:summa %)) 0 (:summa %))
+                                                 johto-ja-hallintokorvaukset))
+        hoidonjohtopalkkiot-yhteensa (reduce +
+                                       (mapv #(if (nil? (:summa %)) 0 (:summa %))
+                                         hoidonjohtopalkkiot))
+        hoitokauden-alun-tavoitehinta (+ hankinnat-yhteensa rahavaraukset-yhteensa erillihankinnat-yhteensa johto-ja-hallintokorvaukset-yhteensa hoidonjohtopalkkiot-yhteensa)]
+    {:yhteenlaskettu-tavoitehinta hoitokauden-alun-tavoitehinta}))
+
+(defn laske-ja-tallenna-tavoite-ja-kattohinta
+  "Kutsuu kustannussuunnitelman hoitokausikohtaisen yhteissumman laskentaa ja sitten tavoite- ja kattohinnan tallentavaa funktiota.
+    Älä käytä:
+    * Jos muutostenhallinta on käytössä (urakkaparametri: muutos_hallinta). Näillä urakoilla ja hoitokausilla tavoitehinta lasketaan tarjouksen tietojen ja pysyvien muutosten perusteella.
+    * Koko urakka-ajan yhteissumman laskentaan"
+  [db kayttaja urakka-id vuosi kustannussuunnitelma]
+  (let [yhteenlaskettu-tavoitehinta (laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista kustannussuunnitelma)]
+    (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id vuosi nil yhteenlaskettu-tavoitehinta)))
+
 (defn hae-kustannussuunnitelman-tiedot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "hae-kustannussuunnitelman-tiedot :: tiedot: " tiedot)
@@ -41,6 +74,7 @@
           vanha-urakka? (boolean
                           (when urakan-alkuvuosi
                             (< urakan-alkuvuosi 2025)))
+          muutosten-hallinta-kaytossa? (:muutosten_hallinta urakan-parametrit)
           hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
           ;; Varmistetaan, että ei edes yritetä hakea tietoja urakkakauden ulkopuolelta
           hoitovuoden-alkuvuosi (cond
@@ -93,6 +127,9 @@
           ;; Lasketaan indeksikorjaamaton pysyvien muutosten määrä, indeksikorjattu saatavilla :tavoitehinnan-muutos-indeksikorjattu
           pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
 
+          ;; FIXME Onko epäloogista että nimi on yhteenlaskettu, kun tässä tilanteessa tieto tulee tietokannasta?
+          kustannussuunnitelman-tavoitehinta (when (not muutosten-hallinta-kaytossa?) (:tavoitehinta tavoitetiedot))
+
           hoitovuoden-alun-indeksikorjattu-tavoitehinta (:tavoitehinta_indeksikorjattu tavoitetiedot)
           kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
           hoitovuoden-alun-kattohinta (:kattohinta tavoitetiedot)
@@ -131,8 +168,10 @@
                                     :hoitovuoden-alun-indeksikorjattu-kattohinta hoitovuoden-alun-indeksikorjattu-kattohinta
                                     :laskutusraja-kaytossa? laskutusraja-kaytossa?
                                     :laskutusraja laskutusraja
+                                    :muutosten-hallinta-kaytossa? muutosten-hallinta-kaytossa?
                                     :pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
                                     :pysyvat-muutokset-maara pysyvat-muutokset-maara
+                                    :yhteenlaskettu-tavoitehinta kustannussuunnitelman-tavoitehinta
                                     :indeksikerroin indeksikerroin
                                     :indeksikerroin-str indeksikerroin-str
                                     :kattohintakerroin kattohintakerroin
@@ -140,7 +179,7 @@
                                     :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit)}}]
       k)))
 
-(defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
+(defn tallenna-kilpailutettavat-hankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille? muutosten-hallinta-kaytossa? kustannussuunnitelma] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
@@ -148,11 +187,14 @@
                    db urakka-id
                    (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot)))
+        (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot))
+        (when (not muutosten-hallinta-kaytossa?)
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :toimenpiteet (constantly (:toimenpiteet tiedot))))))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
                                                      :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
-(defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
+(defn tallenna-erillishankinnat [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille? muutosten-hallinta-kaytossa? kustannussuunnitelma] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
@@ -160,11 +202,14 @@
                    db urakka-id
                    (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)))
+        (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
+        (when (not muutosten-hallinta-kaytossa?)
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :erillishankinnat (constantly (:erillishankinnat tiedot)))))))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
                                                    :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
-(defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
+(defn tallenna-tallenna-johto-ja-hallintokorvaukset [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille? muutosten-hallinta-kaytossa? kustannussuunnitelma] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
@@ -179,13 +224,17 @@
 
           avain (if (<= urakan-alkuvuosi 2024)
                   :johto-ja-hallintokorvaukset-2019
-                  :johto-ja-hallintokorvaukset-2025)]
+                  :johto-ja-hallintokorvaukset-2025)
+          johto-ja-hallintokorvaukset (get tiedot avain)]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id (get tiedot avain) vuosi))
+        (suunnitelma-q/tallenna-johto-ja-hallintokorvaukset db kayttaja urakka-id johto-ja-hallintokorvaukset vuosi)
+        (when (not muutosten-hallinta-kaytossa?)
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :johto-ja-hallintokorvaukset (constantly johto-ja-hallintokorvaukset)))))
       (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id
                                                      :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi}))))
 
-(defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?] :as tiedot}]
+(defn tallenna-hoidonjohtopalkkiot [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille? muutosten-hallinta-kaytossa? kustannussuunnitelma] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
@@ -193,10 +242,13 @@
                    db urakka-id
                    (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))]
       (doseq [vuosi vuodet]
-        (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)))
+        (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)
+        (when (not muutosten-hallinta-kaytossa?)
+          (laske-ja-tallenna-tavoite-ja-kattohinta db kayttaja urakka-id vuosi
+            (update kustannussuunnitelma :hoidonjohtopalkkiot (constantly (:hoidonjohtopalkkiot tiedot)))))))
     (hae-kustannussuunnitelman-tiedot db kayttaja {:urakka-id urakka-id :hoitovuoden-alkuvuosi hoitovuoden-alkuvuosi})))
 
-(defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta] :as tiedot}]
+(defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta kustannussuunnitelma] :as tiedot}]
   (log/debug "vahvista-tai-kumoa-tavoite-ja-kattohinta :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [_ (paatoksella-rajatut-vuodet db urakka-id [hoitovuoden-alkuvuosi])
@@ -208,12 +260,15 @@
           vanha-urakka? (boolean
                           (when urakan-alkuvuosi
                             (< urakan-alkuvuosi 2025)))
+          muutosten-hallinta-urakassa? (:muutosten_hallinta urakan-parametrit)
           hoitovuosinro (pvm/hoitokausivuosi->mhu-hoitovuosi-nro (:alkupvm urakan-tiedot) hoitovuoden-alkuvuosi)
-          aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true)
-          ;; Päivitä aina urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä
-          ;; meni se läpi tai ei. Tämä laskee pysyvät muutokset mukaan 
-          _ (when (>= hoitovuoden-alkuvuosi 2025)
-              (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset))
+          aiempien-vuosien-pysyvat-muutokset (when (or (>= urakan-alkuvuosi 2025) muutosten-hallinta-urakassa?)
+                                               (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuoden-alkuvuosi true))
+          ;; Päivitä urakka_tavoite tauluun tavoitehinta ja kattohinta vahvistuksen yhteydessä, jos muutostenhallinta on käytössä.
+          ;; Päivityksessä lasketaan pysyvät muutokset mukaan tavoitehintaan.
+          ;; Jos muutostenhallinta ei ole käytössä, tavoitehinta on jo aiemmin laskettu kustannussuunnitelman perusteella. Tallennusta ei vahvistusvaiheessa tuolloin enää tarvita
+          _ (when (or (>= urakan-alkuvuosi 2025) muutosten-hallinta-urakassa?)
+              (suunnitelma-q/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuoden-alkuvuosi aiempien-vuosien-pysyvat-muutokset  (:yhteenlaskettu-tavoitehinta kustannussuunnitelma)))
 
           ;; Riipumatta vahvistuksen onnistumisesta, aseta kattohinta, jos se on annettu
           _ (when (and paivitetty-kattohinta (:muokkaa_kattohinta_kasin urakan-parametrit))
