@@ -208,9 +208,12 @@ describe('Sanktion summa näkyy tallennuksen jälkeen MHU26:ssa', function () {
 })
 
 describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', function () {
-    const testiSanktioKuvausMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi";
+    const testiSanktioKuvausMhu26B = `CY-MHU26-B-omailmoitus-${Date.now()}`;
     const testiSanktioPerusteluMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi-perustelu";
     const tyyppiMhu26B = 'Talvihoito Ise/Is/L';
+    const omailmoitus = () => cy.contains('label', 'Kyseessä on urakoitsijan itse ilmoittama')
+        .invoke('attr', 'for').then((id) => cy.get(`[id="${id}"]`));
+    const sanktionSuuruus = () => cy.contains('label', 'Sanktion suuruus').closest('.form-group').find('.lomake-arvo');
 
     before(function () {
         siivoaSanktiotKannasta(testiSanktioKuvausMhu26B);
@@ -228,22 +231,22 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.contains('Lisää uusi').click()
         cy.contains('h2', 'Lisää uusi').should('be.visible')
         cy.contains('label', 'Sanktio').click()
-        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'B - Vakava laiminlyönti'})
-        cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: tyyppiMhu26B})
+        cy.contains('button', 'Muistutus').click()
+        cy.contains('a', 'B - Vakava laiminlyönti').click()
+        cy.contains('button', 'Valitse sanktiotyyppi').click()
+        cy.contains('a', tyyppiMhu26B).click()
         cy.contains('label', 'Tapahtumapaikka/kuvaus').closest('.form-group').find('input').first().clear().type(testiSanktioKuvausMhu26B)
-        cy.get('label').contains('Perustelu').parent().parent().parent().find('textarea').first().clear().type(testiSanktioPerusteluMhu26B)
-        cy.get('label').contains('Havaittu').parent().parent().parent().find('input').first().clear().type('02.10.2026')
-        cy.get('label').contains('Määrätty').parent().parent().parent().find('input').first().clear().type('02.10.2026')
+        cy.contains('label', 'Perustelu').closest('.form-group').find('textarea').clear().type(testiSanktioPerusteluMhu26B)
+        cy.contains('label', 'Havaittu').closest('.form-group').find('input').first().clear().type('02.10.2026')
+        cy.contains('label', 'Määrätty').closest('.form-group').find('input').first().clear().type('02.10.2026')
         cy.get('label').contains('Perustelu').click()
         cy.contains('label', 'Kohdistuu hoitovuodelle').closest('.form-group').find('.select-default').valinnatValitse({valinta: '1. hoitovuosi (2026 - 2027)'})
 
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+        sanktionSuuruus().invoke('text').should('match', /14\s?000/)
+        omailmoitus().check()
+        sanktionSuuruus().invoke('text').should('match', /7\s?000/)
 
-        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.get('div.lomake-footer button').contains('Tallenna').click()
         cy.wait('@tallennaMhu26B1', {timeout: clickTimeout}).then(({response}) => {
             expect(response, 'Tallennuspyynnön vastaus puuttuu').to.exist;
             expect(response.statusCode, 'B-sanktion tallennus epäonnistui').to.be.within(200, 299);
@@ -255,53 +258,49 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         cy.contains('B - Vakava laiminlyönti').should('be.visible')
         cy.contains(tyyppiMhu26B).should('be.visible')
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input').should('be.checked')
+        sanktionSuuruus().invoke('text').should('match', /7\s?000/)
+        omailmoitus().should('be.checked')
+        cy.contains('label', 'Kyseessä on urakoitsijan itse ilmoittama')
+            .should('have.css', 'font-size', '12px')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B2')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input[type="checkbox"]').uncheck()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        omailmoitus().uncheck()
+        sanktionSuuruus().invoke('text').should('match', /14\s?000/)
+        cy.get('div.lomake-footer button').contains('Tallenna').click()
         cy.wait('@tallennaMhu26B2', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /14\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input').should('not.be.checked')
+        sanktionSuuruus().invoke('text').should('match', /14\s?000/)
+        omailmoitus().should('not.be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B3')
         cy.contains('button', 'Muokkaa').click()
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input[type="checkbox"]').check()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        omailmoitus().check()
+        sanktionSuuruus().invoke('text').should('match', /7\s?000/)
+        cy.get('div.lomake-footer button').contains('Tallenna').click()
         cy.wait('@tallennaMhu26B3', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
-        cy.contains('.form-group', 'Urakoitsijan omailmoitus').find('input').should('be.checked')
+        sanktionSuuruus().invoke('text').should('match', /7\s?000/)
+        omailmoitus().should('be.checked')
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B4')
         cy.contains('button', 'Muokkaa').click()
-        cy.get('div.lomake-footer button').contains('Tallenna').click({force: true})
+        cy.get('div.lomake-footer button').contains('Tallenna').click()
         cy.wait('@tallennaMhu26B4', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
         cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
             .and('contain.text', 'Sanktion tallennus onnistui')
 
         cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
-        cy.get('label').contains('Sanktion suuruus').parent().parent().parent()
-            .find('.lomake-arvo').invoke('text').should('match', /7\s?000/)
+        sanktionSuuruus().invoke('text').should('match', /7\s?000/)
     })
 })
 
@@ -615,4 +614,3 @@ describe('Siivotaan sanktiot lopuksi', function () {
 // hoitokaudesta, esim. apurit.js:n kuluvaHoitokausiAlkuvuosi-funktiolla.
 // HUOM: päättyneille urakoille (MHU19 Oulu 2019-2024) kuluva hoitokausi ei toimi,
 // koska pvm:n on oltava urakan voimassaolon sisällä.
-

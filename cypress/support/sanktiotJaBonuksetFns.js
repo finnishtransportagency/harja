@@ -17,9 +17,20 @@ export const testiurakkaMhu23 = "Raahen MHU 2023-2028";
 export const evkLappi = "Lappi";
 export const evkPohjoisSuomi = "Pohjois-Suomi";
 
-// Siivoa testidatan sanktiot kannasta laatupoikkeaman kohteen perusteella
+// Worktree-ajossa CYPRESS_tietokantaKontti osoittaa käytettävän tietokantakontin.
 export function siivoaSanktiotKannasta(kohde) {
-    cy.terminaaliKomento().then((terminaaliKomento) => {
+    const tietokantaKontti = Cypress.env('tietokantaKontti');
+    if (!tietokantaKontti && new URL(Cypress.config('baseUrl')).port !== '3000') {
+        throw new Error('Aseta CYPRESS_tietokantaKontti kohdeinstanssin tietokantakontin nimeksi');
+    }
+    if (tietokantaKontti && !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(tietokantaKontti)) {
+        throw new Error('Tietokantakontin nimi on virheellinen');
+    }
+
+    const komento = tietokantaKontti
+        ? cy.wrap(`/usr/local/bin/docker exec ${tietokantaKontti} `)
+        : cy.terminaaliKomento();
+    komento.then((terminaaliKomento) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE lp.kohde = '" + kohde + "');\"");
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
@@ -61,8 +72,8 @@ export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
     cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
     cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
     cy.wait('@sanktiot', {timeout: clickTimeout})
+        .its('response.statusCode').should('be.within', 200, 299)
     cy.wait('@sanktiokonfiguraatio', {timeout: clickTimeout})
         .its('response.statusCode').should('be.within', 200, 299)
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
 }
-
