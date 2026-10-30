@@ -29,7 +29,8 @@
             [harja.palvelin.asetukset :refer [ominaisuus-kaytossa?]]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
-            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]))
+            [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelut poista-palvelut]]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]))
 
 (defn paivita-muutostyo-kulu-kohdistus
   "Kululomake kutsuu, ei liity automaattisiin kuluihin"
@@ -249,7 +250,23 @@
    {:keys [urakka-id valittu-hoitokausi hoitokaudet rivit] :as _tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   ;; Kutsutaan gridin tallenna painikkeesta 
-  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))]
+  (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        muokattavat-hoitokaudet (into {}
+                                  (map (fn [hoitokausi]
+                                         (let [vuosi (pvm/vuosi (first hoitokausi))]
+                                           [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                                                    db urakka-id vuosi :muutos)]))
+                                    hoitokaudet))
+
+        lukittu? (some (fn [[vuosi muokattava?]]
+                         (and (= vuosi hoitokauden-alkuvuosi) (false? muokattava?)))
+                   muokattavat-hoitokaudet)]
+
+    (when lukittu?
+      (throw+ {:type virheet/+viallinen-kutsu+
+               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                          :viesti "Muutosta ei voi muokata, koska hoitovuoden tavoitehinnan muutokset ovat päätetty."}]}))
+
     (jdbc/with-db-transaction [conn db]
       (doseq [rivi rivit]
         (let [{:keys [syy
@@ -417,9 +434,17 @@
                                  (or (:tavoitehinta-indeksikorjattu budjettitavoiteet) 0)
                                  (or aiemmat-pysyvat-muutokset-indeksikorjattu-yht 0)
                                  kirjatut-muutokset-yht
-                                 toteumiin-perustuvat-muutokset-yht)]
+                                 toteumiin-perustuvat-muutokset-yht)
 
-    {;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
+        muokattavat-hoitokaudet (into {}
+                                  (map (fn [hoitokausi]
+                                         (let [vuosi (pvm/vuosi (first hoitokausi))]
+                                           [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                                                    db urakka-id vuosi :muutos)]))
+                                    hoitokaudet))]
+
+    {:muokattavat-hoitokaudet muokattavat-hoitokaudet
+     ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
      :kirjatut-muutokset kirjatut-muutokset
      :aiempien-hoitovuosien-pysyvat-muutokset aiempien-vuosien-pysyvat-muutokset
      ;; laskennat lasketuille muutoksille jos hoitokausi 2025-2026 tai jälkeen
@@ -643,16 +668,25 @@
    :syy syy})
 
 (defn tallenna-muutoksen-kustannusvaikutukset
-  [db aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?]
+  [db kayttaja-id urakka-id aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?]
   (log/debug "Tallenna muutoksen kustannusvaikutukset: " kustannusvaikutukset)
 
   (let [muutos-id (:id aiti-muutos-id-ja-versio)
-        muutos-versio (:versio aiti-muutos-id-ja-versio)]
+        muutos-versio (:versio aiti-muutos-id-ja-versio)
+        urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
+        hoitovuodet (range (pvm/vuosi (:alkupvm urakan-tiedot))
+                      (inc (- (pvm/vuosi (:loppupvm urakan-tiedot)) 1)))]
     (doseq [kustannusvaikutus kustannusvaikutukset]
       (let [kustannusvaikutus (luo-kustannusvaikutus muutos-id (or muutos-versio 1) kustannusvaikutus)]
         (if tyyppi-muutostyo?
           (muutos-kyselyt/luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<! db kustannusvaikutus)
-          (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus))))))
+          (muutos-kyselyt/luo-tai-paivita-muutos-kustannusvaikutus<! db kustannusvaikutus))))
+
+    ;; Päivitä tavoite ja kattohinta 
+    (doseq [hoitovuosi hoitovuodet]
+      (when hoitovuosi
+        (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id hoitovuosi
+          (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuosi true))))))
 
 
 (defn luo-tehtava-ja-maaramuutos
@@ -687,13 +721,7 @@
       ;; Negatiivisilla id:llä merkityt rivit ovat UI:ssa rivejä, joille ei ole vielä valittu tehtävää
       (when (pos? (:tehtava maaramuutos))
         (let [maaramuutos (luo-tehtava-ja-maaramuutos muutos-id (or muutos-versio 1) maaramuutos)]
-          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))
-
-    ;; Päivitä tavoite ja kattohinta 
-    (doseq [maaramuutos kaikki-muutokset]
-      (when (and (:hoitokauden_alkuvuosi maaramuutos))
-        (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi maaramuutos)
-          (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi maaramuutos) true))))))
+          (muutos-kyselyt/luo-tai-paivita-tehtavan-maaramuutos<! db maaramuutos))))))
 
 
 (defn- tarkista-muutoksen-kirjatut-kulut [db {:keys [id voimassa_alkaen] :as muutos} alityyppi kustannusvaikutukset]
@@ -808,7 +836,14 @@
                 :hoitokauden_alkuvuosi hk-alkuvuosi
                 :tyyppi (:tyyppi muutos)
                 :kayttaja (:id kayttaja)
-                :alityyppi alityyppi}]
+                :alityyppi alityyppi}
+
+        muokattavat-hoitokaudet (into {}
+                                  (map (fn [hoitokausi]
+                                         (let [vuosi (pvm/vuosi (first hoitokausi))]
+                                           [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                                                    db urakka-id vuosi :muutos)]))
+                                    hoitokaudet))]
 
     ;; Validoi voimassa_alkaen päivämäärä
     (cond
@@ -831,36 +866,67 @@
                            (first (muutos-kyselyt/hae-muutos conn {:id (:id muutos)})))
             tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
         (cond
+          (muutos-domain/pysyva-muutos-hoitovuoden-paatos-tehty? muokattavat-hoitokaudet valittu-hoitokausi)
+          (throw+ {:type virheet/+viallinen-kutsu+
+                   :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                              :viesti (str
+                                        "Muutosta ei voi "
+                                        (if paivitetaan? "muokata" "luoda")
+                                        ", koska hoitovuoden tavoitehinnan muutokset ovat päätetty.")}]})
+
           tyyppi-muutostyo?
           (tarkista-muutoksen-kirjatut-kulut conn muutos alityyppi kustannusvaikutukset)
 
           tyyppi-pysyva?
           ;; Estä tallennus, mikäli yritetään muokata lukittua pysyvän muutoksen voimassa_alkaen päivämäärää
-          (when (and
-                  ;; Huom, vain muokkaustilanteessa tarkistus
-                  paivitetaan?
-                  (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
-                  (not= (:voimassa_alkaen muutos) (:voimassa_alkaen vanha-muutos)))
+          (cond
+            (and
+              ;; Huom, vain muokkaustilanteessa tarkistus
+              (boolean paivitetaan?)
+              (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
+              (not= (:voimassa_alkaen muutos) (:voimassa_alkaen vanha-muutos)))
             (throw+ {:type virheet/+viallinen-kutsu+
                      :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
-                                :viesti "Pysyvän muutoksen voimassa alkaen -päivämäärää ei voi muuttaa, koska se on lukittu."}]})))
+                                :viesti "Pysyvän muutoksen voimassa alkaen -päivämäärää ei voi muuttaa, koska se on lukittu."}]})
+
+            (and
+              (not (boolean paivitetaan?))
+              (muutos-domain/pysyva-muutos-poisto-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi (:voimassa_alkaen muutos)))
+            (throw+ {:type virheet/+viallinen-kutsu+
+                     :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
+                                :viesti "Pysyvää muutosta ei voi luoda, koska sen vaikutukset kohdistuvat vahvistettuun tavoitehintaan."}]})))
 
         ;; Muutos-id ja muutos-versio kuljetetaan äiti-muutokselta (mhu_muutos-taulu) lapsitauluille
         ;; Nämä tiedot saadaan muutos-paluurivistä
         (let [aiti-muutos-id-ja-versio (if paivitetaan?
                                          (muutos-kyselyt/paivita-muutos<! conn muutos)
                                          (muutos-kyselyt/luo-muutos<! conn muutos))
-              {:keys [hoitokausinro hoitovuoden-tavoitehinta laskutusraja laskutusraja_alkuperainen
-                      laskutusrajaa_nostettu? muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua]}
-              (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi (when paivitetaan? (:id muutos)))
+
+              {:keys [hoitokausinro
+                      hoitovuoden-tavoitehinta
+                      laskutusraja
+                      laskutusraja_alkuperainen
+                      laskutusrajaa_nostettu?
+                      muutokset-yhteensa-kaikki
+                      muutokset-yhteensa-ilman-valittua]} (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi (when paivitetaan? (:id muutos)))
+
               aiempi-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
               summa (:summa (first kustannusvaikutukset))
-              muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
-              (when (and hoitovuoden-tavoitehinta summa (pos? hoitovuoden-tavoitehinta))
-                (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta)))))
-              muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa
-              (when (and hoitovuoden-tavoitehinta summa (pos? hoitovuoden-tavoitehinta))
-                (tyokalut/pyorista-kahteen-decimaaliin (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta)))))]
+
+              muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa (when (and
+                                                                               hoitovuoden-tavoitehinta
+                                                                               summa
+                                                                               (pos? hoitovuoden-tavoitehinta))
+                                                                         (tyokalut/pyorista-kahteen-decimaaliin
+                                                                           (* 100.00 (/ (+ muutokset-yhteensa-kaikki summa) (double hoitovuoden-tavoitehinta)))))
+
+              muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa (when
+                                                                      (and
+                                                                        hoitovuoden-tavoitehinta
+                                                                        summa
+                                                                        (pos? hoitovuoden-tavoitehinta))
+                                                                      (tyokalut/pyorista-kahteen-decimaaliin
+                                                                        (* 100.00 (/ (+ muutokset-yhteensa-ilman-valittua summa) (double hoitovuoden-tavoitehinta)))))]
 
           ;; Tallenna liitteet
           (tallenna-muutoksen-liitteet conn aiti-muutos-id-ja-versio liitteet)
@@ -872,11 +938,12 @@
                                          ;; Varmistetaan, että lukitulle vuodelle ei tule muutoksia käyttöliittymältä
                                          (filterv #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
                                                           tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                                          muokattavat-hoitokaudet
                                                           (:voimassa_alkaen muutos)
                                                           (pvm/vuodesta-hoitokausi (:hoitokauden_alkuvuosi %))))
                                            kustannusvaikutukset)
                                          kustannusvaikutukset)]
-              (tallenna-muutoksen-kustannusvaikutukset conn aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?)))
+              (tallenna-muutoksen-kustannusvaikutukset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio kustannusvaikutukset tyyppi-muutostyo?)))
 
           ;; Tallenna määrämuutokset
           (when (pos? (count maaramuutokset))
@@ -885,6 +952,7 @@
                                    ;; Varmistetaan, että lukitulle vuodelle ei tule muutoksia käyttöliittymältä
                                    (filterv #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
                                                     tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                                    muokattavat-hoitokaudet
                                                     (:voimassa_alkaen muutos)
                                                     (pvm/vuodesta-hoitokausi (:hoitokauden_alkuvuosi %))))
                                      maaramuutokset)
@@ -935,50 +1003,67 @@
       (remove nil?))))
 
 
-(defn voi-poistaa-pysyvan-muutoksen?
-  "Palauttaa true, jos pysyvän muutoksen voi poistaa.
-  False, jos jokin muutoksen koskema hoitovuosi on lukittu (TODO: tai välikatselmus on tehty)."
-  [db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos]
+(defn voi-poistaa-muutoksen?
+  "Palauttaa true, jos muutoksen voi poistaa.
+  False, jos jokin muutoksen koskema hoitovuosi on lukittu tai välikatselmuksen tavoitehinnan muutospäätös on tehty."
+  [db tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet muutos]
 
   (let [muutoksen-hk-alkuvuodet (pysyvan-muutoksen-hoitovuodet db muutos)
         ;; Tarkistetaan onko hoitovuoden alun tavoitehinnan kannalta relevantteja vuosia jo lukittu
-        lukitut-vuodet (filterv #(muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+        lukitut-vuodet (filterv #(muutos-domain/muutos-hoitovuosi-lukittu?
                                    tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                   muokattavat-hoitokaudet
                                    (:voimassa_alkaen muutos)
                                    (pvm/vuodesta-hoitokausi %))
-                         muutoksen-hk-alkuvuodet)]
+                         muutoksen-hk-alkuvuodet)
 
-    ;; TODO: Välikatselmuksen tarkistus tähän myöhemmin
+        lukitut-vuodet (if (empty? muutoksen-hk-alkuvuodet)
+                         (let [hoitokausi (some-> (:voimassa_alkaen muutos)
+                                            pvm/vuosi
+                                            pvm/vuodesta-hoitokausi)]
+                           (if (and hoitokausi
+                                 (muutos-domain/muutos-hoitovuosi-lukittu?
+                                   tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                   muokattavat-hoitokaudet
+                                   (:voimassa_alkaen muutos)
+                                   hoitokausi))
+                             [hoitokausi]
+                             []))
+                         lukitut-vuodet)]
 
     ;; Muutoksen saa poistaa, mikäli lukittuja vuosia ei ole
     (empty? lukitut-vuodet)))
 
 (defn muutoksen-poisto-estetty?
   "Palauttaa mapin, jossa :voi-poistaa? boolean ja :virhe string (jos ei voi poistaa)"
-  [db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos]
-  (case (:tyyppi muutos)
-    "pysyva"
-    (if (voi-poistaa-pysyvan-muutoksen? db tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
-      {:voi-poistaa? true}
+  [db tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet muutos]
+
+  (let [tyyppi (:tyyppi muutos)]
+    (if (and
+          (#{"pysyva" "johto-ja-hallintokorvaus" "muutostyo"} tyyppi)
+          (not (voi-poistaa-muutoksen?
+                 db
+                 tavoitehinta-indeksikorjattu-per-hoitovuosi
+                 muokattavat-hoitokaudet
+                 muutos)))
       {:voi-poistaa? false
-       :virhe "Muutoksen muuttamia tavoitehintoja on vahvistettu. Peru mahdolliset vahvistukset poistaaksesi muutoksen."})
+       :virhe (str
+                "Muutoksen muuttamia päätöksiä on vahvistettu. "
+                "Peru tavoitehinnan vahvistukset sekä välikatselmuksen päätökset poistaaksesi muutoksen.")}
 
-    "muutostyo"
-    ;; TODO: Alityyppi on toisaalla keyword ja toisaalla string, yhtenäistä tämä jossain vaiheessa muutosten kokonaisuudessa
-    ;;       Kaikki tyypit (tyyppi/alityyppi) saisivat olla stringejä tai keywordeja joka paikassa, mutta ei sekaisin kumpaakin
-    (if (= (:alityyppi muutos) "erillisrahoitus")
-      (let [kulujen-maara (or (muutos-kyselyt/hae-muutostyon-kulujen-maara db
-                                {:muutos-id (:id muutos)})
-                            0)]
-        (if (zero? kulujen-maara)
-          {:voi-poistaa? true}
-          {:voi-poistaa? false
-           :virhe "Muutostyölle on kohdistettu kuluja. Poista kohdistetut kulut ennen muutoksen poistamista."}))
-      ;; Muut muutostyöt
-      {:voi-poistaa? true})
+      (case tyyppi
+        "muutostyo"
+        (if (= (:alityyppi muutos) "erillisrahoitus")
+          (let [kulujen-maara (or (muutos-kyselyt/hae-muutostyon-kulujen-maara db
+                                    {:muutos-id (:id muutos)})
+                                0)]
+            (if (zero? kulujen-maara)
+              {:voi-poistaa? true}
+              {:voi-poistaa? false
+               :virhe "Muutostyölle on kohdistettu kuluja. Poista kohdistetut kulut ennen muutoksen poistamista."}))
+          {:voi-poistaa? true})
 
-    ;; JJH ja muut ilman erityisiä poistorajoituksia
-    {:voi-poistaa? true}))
+        {:voi-poistaa? true}))))
 
 (defn- hae-jjh-muutoksen-kulut
   "Hakee kaikki JJH-muutokseen liittyvät kulut mhu_muutos_kulu -taulusta."
@@ -1002,62 +1087,85 @@
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos-id laskenta-automatiikka?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
-  (jdbc/with-db-transaction [conn db]
-    (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
-          _ (when-not muutos
-              (throw+ {:type virheet/+viallinen-kutsu+
-                       :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-                                  :viesti "Muutosta ei löydy"}]}))
+  (let [_ (jdbc/with-db-transaction [conn db]
+            (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
+                  _ (when-not muutos
+                      (throw+ {:type virheet/+viallinen-kutsu+
+                               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                                          :viesti "Muutosta ei löydy"}]}))
 
-          tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
-          ;; Tarkasta voiko muutoksen poistaa
-          {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty? conn tavoitehinta-indeksikorjattu-per-hoitovuosi muutos)
-          hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-          {:keys [hoitokausinro hoitovuoden-tavoitehinta laskutusraja laskutusraja_alkuperainen
-                  laskutusrajaa_nostettu? muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua]}
-          (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi muutos-id)
-          tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
-          tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
-          poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
-          prosenttiosuus (when (and hoitovuoden-tavoitehinta (pos? hoitovuoden-tavoitehinta))
-                           (tyokalut/pyorista-kahteen-decimaaliin
-                             (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
+                  muokattavat-hoitokaudet (into {}
+                                            (map (fn [hoitokausi]
+                                                   (let [vuosi (pvm/vuosi (first hoitokausi))]
+                                                     [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                                                              db urakka-id vuosi :muutos)]))
+                                              hoitokaudet))
 
-      (when (not voi-poistaa?)
-        (throw+ {:type virheet/+sisainen-kasittelyvirhe+
-                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-                            :viesti virhe}]}))
+                  tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
+                  ;; Tarkasta voiko muutoksen poistaa
+                  {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty?
+                                                 conn tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet muutos)
+                  hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+                  {:keys [hoitokausinro
+                          hoitovuoden-tavoitehinta
+                          laskutusraja
+                          laskutusraja_alkuperainen
+                          laskutusrajaa_nostettu?
+                          muutokset-yhteensa-kaikki
+                          muutokset-yhteensa-ilman-valittua]} (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi muutos-id)
 
-      ;; Poista JJH-muutoksen kulut ennen muutoksen poistoa
-      ;; Kulut ovat automaattisesti luotuja, joten ne voidaan poistaa ilman erillistä käyttäjän vahvistusta
-      (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
-        (poista-jjh-muutoksen-kulut! conn kayttaja muutos-id (:versio muutos)))
+                  tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
+                  tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
+                  poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
+                  prosenttiosuus (when (and hoitovuoden-tavoitehinta (pos? hoitovuoden-tavoitehinta))
+                                   (tyokalut/pyorista-kahteen-decimaaliin
+                                     (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
 
-      ;; Laskutusrajaa pitää päivittää, jos muutosten yhteissumma on yli 3% tavoitehinnasta, ja laskutusrajaa on aiemmin nostettu
-      (when (and
-              laskutusrajaa_nostettu?
-              prosenttiosuus
-              (or tyyppi-muutostyo?
-                (and tyyppi-pysyva?
-                  (not (= muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)))))
-        (kulu-kyselyt/paivita-urakan-laskutusraja! conn
-          {:urakka-id urakka-id
-           :hoitokausinro hoitokausinro
-           :laskutusraja (if (> prosenttiosuus 3.00)
-                           (- laskutusraja poistettava-muutos)
-                           laskutusraja_alkuperainen)
-           :kayttaja (:id kayttaja)}))
+              (when (not voi-poistaa?)
+                (throw+ {:type virheet/+sisainen-kasittelyvirhe+
+                         :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                                    :viesti virhe}]}))
 
-      ;; Merkitse muutos poistetuksi
-      ;; Äiti-muutos poistetaan soft-deletellä ja linkitetyt taulut jätetään ennalleen
-      (muutos-kyselyt/poista-muutos! conn {:id muutos-id
-                                           :kayttaja (:id kayttaja)})
+              ;; Poista JJH-muutoksen kulut ennen muutoksen poistoa
+              ;; Kulut ovat automaattisesti luotuja, joten ne voidaan poistaa ilman erillistä käyttäjän vahvistusta
+              (when (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+                (poista-jjh-muutoksen-kulut! conn kayttaja muutos-id (:versio muutos)))
 
-      ;; Onnistuneen poiston jälkeen palautetaan ajantasaiset tiedot
-      (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
-                                              :hoitokaudet hoitokaudet
-                                              :valittu-hoitokausi valittu-hoitokausi
-                                              :laskenta-automatiikka? laskenta-automatiikka?}))))
+              ;; Laskutusrajaa pitää päivittää, jos muutosten yhteissumma on yli 3% tavoitehinnasta, ja laskutusrajaa on aiemmin nostettu
+              (when (and
+                      laskutusrajaa_nostettu?
+                      prosenttiosuus
+                      (or tyyppi-muutostyo?
+                        (and tyyppi-pysyva?
+                          (not (= muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)))))
+                (kulu-kyselyt/paivita-urakan-laskutusraja! conn
+                  {:urakka-id urakka-id
+                   :hoitokausinro hoitokausinro
+                   :laskutusraja (if (> prosenttiosuus 3.00)
+                                   (- laskutusraja poistettava-muutos)
+                                   laskutusraja_alkuperainen)
+                   :kayttaja (:id kayttaja)}))
+
+              ;; Merkitse muutos poistetuksi
+              ;; Äiti-muutos poistetaan soft-deletellä ja linkitetyt taulut jätetään ennalleen
+              (muutos-kyselyt/poista-muutos! conn {:id muutos-id
+                                                   :kayttaja (:id kayttaja)})))
+
+        urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
+        hoitovuodet (range (pvm/vuosi (:alkupvm urakan-tiedot))
+                      (inc (- (pvm/vuosi (:loppupvm urakan-tiedot)) 1)))
+
+        ;; Päivitä tavoite ja kattohinta 
+        _ (doseq [hoitovuosi hoitovuodet]
+            (when hoitovuosi
+              (ks-kyselyt/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuosi
+                (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuosi true))))]
+
+    ;; Onnistuneen poiston jälkeen palautetaan ajantasaiset tiedot
+    (hae-urakan-muutostiedot db kayttaja {:urakka-id urakka-id
+                                          :hoitokaudet hoitokaudet
+                                          :valittu-hoitokausi valittu-hoitokausi
+                                          :laskenta-automatiikka? laskenta-automatiikka?})))
 
 (defn hae-urakan-muutostyot
   "Hakee kululomakkeeseen laaditut muutostyöt, jotta näille voi kirjata kuluja"
