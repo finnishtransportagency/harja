@@ -12,9 +12,20 @@
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as suunnitelma-q]
             [harja.domain.suunnittelu.uusi-kustannussuunnitelma-domain :as k-domain]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]))
+
+(defn- paatoksella-rajatut-vuodet [db urakka-id vuodet]
+  (let [muokattavat-vuodet (filterv
+                             #(valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                                db urakka-id % :uusi-kustannussuunnitelma)
+                             vuodet)]
+    (when (and (seq vuodet) (empty? muokattavat-vuodet))
+      (throw (IllegalArgumentException.
+               "Kustannussuunnitelmaa ei voi muokata, koska tavoitehinnan muutospäätös on jo tehty.")))
+    muokattavat-vuodet))
 
 (defn laske-hoitovuoden-tavoitehinta-kustannussuunnitelman-tiedoista
   "Funktio laskee indeksikorjaamattoman tavoitehinnan käyttöliittymästä välitetyn hoitovuosikohtaisen kustannussuunnitelman tietojen perusteella.
@@ -71,6 +82,8 @@
                                   (>= hoitovuoden-alkuvuosi urakan-loppuvuosi) (dec urakan-loppuvuosi)
                                   :else hoitovuoden-alkuvuosi)
           viimeinen-hoitovuosi? (boolean (= hoitovuoden-alkuvuosi (dec urakan-loppuvuosi)))
+          lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                          db urakka-id hoitovuoden-alkuvuosi :uusi-kustannussuunnitelma))
 
           kustannussuunnitelma-vahvistettu? (suunnitelma-q/kustannussuunnitelma-vahvistettu? db urakka-id hoitovuoden-alkuvuosi)
 
@@ -138,6 +151,7 @@
           k {:urakka-id urakka-id
              :urakan-alkuvuosi urakan-alkuvuosi
              :valittu-hoitokausi [(pvm/->pvm (str "01.10." hoitovuoden-alkuvuosi)) (pvm/->pvm (str "30.09." (inc hoitovuoden-alkuvuosi)))]
+             :lukittu? lukittu?
              :tarjous tarjous
              :vanha-urakka? vanha-urakka?
              :tulevaisuudessa-arvoja? {:muut (get tulevaisuudessa-arvoja "muut" false)
@@ -172,7 +186,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-kilpailutettavat-hankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
+    (let [vuodet (paatoksella-rajatut-vuodet
+                   db urakka-id
+                   (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-kilpailutettavat-hankinnat db kayttaja urakka-id vuosi (:toimenpiteet tiedot))
         (when (not muutosten-hallinta-kaytossa?)
@@ -185,7 +201,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-erillishankinnat :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
+    (let [vuodet (paatoksella-rajatut-vuodet
+                   db urakka-id
+                   (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-erillishankinnat db kayttaja urakka-id (:erillishankinnat tiedot) vuosi)
         (when (not muutosten-hallinta-kaytossa?)
@@ -199,7 +217,9 @@
   (log/debug "tallenna-johto-ja-hallintokorvaukset :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
     (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
-          vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)
+          vuodet (paatoksella-rajatut-vuodet
+                   db urakka-id
+                   (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))
 
           urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
           ;; Valitaan oikea avain riippuen urakan alkamisvuodesta
@@ -221,7 +241,9 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   (log/debug "tallenna-hoidonjohtopalkkiot :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?)]
+    (let [vuodet (paatoksella-rajatut-vuodet
+                   db urakka-id
+                   (apurit/jasenna-tallennettavat-vuodet db urakka-id hoitovuoden-alkuvuosi kopioi-tuleville-vuosille?))]
       (doseq [vuosi vuodet]
         (suunnitelma-q/tallenna-hoidonjohtopalkkiot db kayttaja urakka-id (:hoidonjohtopalkkiot tiedot) vuosi)
         (when (not muutosten-hallinta-kaytossa?)
@@ -232,7 +254,9 @@
 (defn vahvista-tai-kumoa-tavoite-ja-kattohinta [db kayttaja {:keys [urakka-id hoitovuoden-alkuvuosi vahvista? paivitetty-kattohinta kustannussuunnitelma] :as tiedot}]
   (log/debug "vahvista-tai-kumoa-tavoite-ja-kattohinta :: tiedot: " tiedot)
   (jdbc/with-db-transaction [db db]
-    (let [urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
+    (let [_ (paatoksella-rajatut-vuodet db urakka-id [hoitovuoden-alkuvuosi])
+
+          urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakka-id}))
           urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))
           urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))

@@ -232,6 +232,11 @@
          toteumat     ::t/toteumat
          validius     ::tila/validius
          lomake-validi? ::tila/validi?} lomake
+        hoitovuosi (some-> (::t/pvm lomake) pvm/hoitokauden-alkuvuosi)
+        lukitusvaroitus (or (:toteuman-lukitusvirhe app)
+                          (when (contains? (:lukitut-toteumien-hoitovuodet app) hoitovuosi)
+                            (str "Välikatselmuksen päätös lukitsee hoitovuoden " hoitovuosi
+                              ", joten tälle hoitovuodelle ei voi tallentaa toteumaa.")))
         {ei-sijaintia ::t/ei-sijaintia
          pakota-sijainti? ::t/pakota-sijainti?
          toteuma-id   ::t/toteuma-id
@@ -331,7 +336,10 @@
                               :tehtava (get-in lomake [::t/toteumat 0 ::t/tehtava]) ;; Voi käyttää kova koodattua indeksiä, koska tämä ei ole käytössä, jos toteumia on useampi
                               :maara (get-in lomake [::t/toteumat 0 ::t/maara])
                               :tyyppi (::t/tyyppi lomake)}])
-                         {:vayla-tyyli? true :teksti-nappi? true}])]])
+                         {:vayla-tyyli? true :teksti-nappi? true}])]
+                     (when lukitusvaroitus
+                       [:div {:style {:padding-bottom "1rem"}}
+                        [yleiset/info-laatikko :neutraali "Osion tiedot lukittu" lukitusvaroitus nil nil]])])
        :footer-fn (fn [data]
                     [:div
                      (when (and @tiedot/nayta-validoinnit?

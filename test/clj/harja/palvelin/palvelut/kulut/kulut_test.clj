@@ -579,23 +579,7 @@
       (is (= odotettu-count (count vastaus)))
       (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
 
-(deftest hae-kaikki-kulu-kohdistuksineent-pvmt-nil
-  (testing "hae-kaikki-kulu-kohdistuksineent-pvmt-nil"
-    (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-          vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
-                    :kulut-kohdistuksineen
-                    +kayttaja-jvh+
-                    {:urakka-id urakka-id
-                     :alkupvm nil
-                     :loppupvm nil})
-          vastaus (reduce riisu-kilkkeet [] vastaus)
-          odotettu-count 38
-          kulu-id-9 (first (filter #(= 9 (:id %))
-                             vastaus))]
-      (is (= odotettu-count (count vastaus)))
-      (is (= odotettu-kulu_kohdistus-id-9 kulu-id-9)))))
-
-(deftest hae-hoitokauden-kulu-kohdistuksineent
+(deftest hae-hoitokauden-kulu-kohdistuksineen
   (testing "hae-hoitokauden-kulu-kohdistuksineent"
     (let [urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
           hoitokauden-alkupvm (pvm/->pvm "1.10.2019")

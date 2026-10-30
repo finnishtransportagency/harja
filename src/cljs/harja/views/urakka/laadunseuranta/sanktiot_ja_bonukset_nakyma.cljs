@@ -93,7 +93,14 @@
               arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                        (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
+              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)
+              arvonvahennyksen-hoitovuosi (some-> @tiedot-urakka/valittu-hoitokausi first pvm/vuosi)
+              arvonvahennys-paatoksella-lukittu? (and arvonvahennyslomake-kaytossa?
+                                                    arvonvahennyksen-hoitovuosi
+                                                   (some (fn [{:keys [vuosi lukittu?]}]
+                                                            (and (= vuosi arvonvahennyksen-hoitovuosi)
+                                                              lukittu?))
+                                                      (:lukitustiedot app)))]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -118,7 +125,10 @@
                ;; tällä lomakkeella, koska ne tehdään välikatselmuksessa lupauspäätöksen yhteydessä.
                ;; TODO: Jos/kun lupaussanktio ja lupausbonus sanktio/bonus lajeille tehdään muokkausmahdollisuus tälle lomakkeelle
                ;;       niin, poista "lupaus?" ehto.
-               {:disabled (or (not oikeus-muokata?) lupaus?)}]
+               {:disabled (or (not oikeus-muokata?) lupaus?
+                            (and (= :arvonvahennyssanktio (:laji @muokattu))
+                              arvonvahennys-paatoksella-lukittu?))}]
+
               (cond
                 (not oikeus-muokata?)
                 [yleiset/vihje (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-sanktiot) nil 18]
@@ -133,7 +143,24 @@
               #(tiedot/paivita-sanktiot-ja-bonukset!)
               lukutila? oikeus-muokata?]
              (and arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
-             [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata? mhu25?]
+             [:<>
+              (if arvonvahennys-paatoksella-lukittu?
+                [:div
+                (js/console.log "@tiedot/valittu-sanktio" (pr-str @tiedot/valittu-sanktio))
+                 ;; Näytetään ilmoitus lukituksesta aina, kun lukitus on olemassa
+                 [:div {:style {:margin-bottom "1rem"}}
+                  [yleiset/info-laatikko :neutraali
+                        "Et voi kirjata arvonvähennystä tälle hoitovuodelle"
+                        "Arvonvähennyksiä ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
+                        nil nil]]
+                 ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä arvonvähennystä on kirjattu
+                 (if (:id @tiedot/valittu-sanktio)
+                   [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?]
+                   [napit/peruuta "Sulje"
+                    #(do
+                       (reset! sivupaneeli-auki?-atom false))])]
+                ;; Jos lukitusta ei ole, niin näytetään lomake normaalisti
+                [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?])]
 
              :else
              [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?])])))))
@@ -194,8 +221,8 @@
   (reset! sanktio-atom rivi)
   ;; TODO: Tässä on jotakin sanktioiden liitteiden hakua valinnan yhteydessä?
   ;;       Pitääkö tunnistaa lisäksi onko bonus valittu ja hakea myös bonuksen liitteet?
-  (if (= :virhe (tiedot/hae-sanktion-liitteet! (or 
-                                                 (get-in rivi [:laatupoikkeama :urakka]) 
+  (if (= :virhe (tiedot/hae-sanktion-liitteet! (or
+                                                 (get-in rivi [:laatupoikkeama :urakka])
                                                  (get-in rivi [:urakka :id]))
                                                (get-in rivi [:laatupoikkeama :id])
                                                sanktio-atom))
@@ -333,6 +360,7 @@
       (komp/lippu tiedot/nakymassa?)
       (komp/sisaan-ulos #(do
                            (e! (arvonvahennys-tiedot/->HaeKaikkiTehtavaryhmat))
+                           (e! (arvonvahennys-tiedot/->HaeLukitustiedot))
                            (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
                                                                      :default nil}))
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))

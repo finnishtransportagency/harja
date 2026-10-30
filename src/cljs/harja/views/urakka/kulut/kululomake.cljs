@@ -21,8 +21,6 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]))
 
-(def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
-
 (defn- kulun-poistovarmistus-modaali
   [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]
   [:div#kulun-poisto-modaali
@@ -572,9 +570,6 @@
          "100%"
          {:luokka "ala-margin-16 max-width-full max-width-full"}])]
 
-     ;; Onko kulu lukittu
-     (when (and kulu-lukittu? (not haku-menossa)) [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
-
      #_[debug/debug lomake]
      (map-indexed
        (fn [index kohdistus]
@@ -618,11 +613,11 @@
            koontilaskun-kuukaudet)]
 
         (when (and kulu-lukittu? paatos-tehty?)
-          [:div.vihje-paatoksia-tehty
-           [yleiset/keltainen-vihjelaatikko
-            [:div
-             [:strong "Urakalle on tehty päätöksiä välikatselmuksessa ko. hoitovuodelle. "]
-             "Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja ko. hoitovuodelle."] :info]])]]
+          [yleiset/info-laatikko :vahva-ilmoitus "Et voi kirjata kuluja tälle hoitovuodelle"
+           "Kuluja ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista
+           on jo vahvistettu. Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja tälle hoitovuodelle."
+           nil
+           {:ikoni-fn #(ikonit/harja-icon-status-alert)}])]]
       [:div.col-xs-12.col-md-6.lisatiedot
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto"

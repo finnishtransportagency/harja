@@ -1,9 +1,14 @@
 (ns harja.kyselyt.laatupoikkeamat
   "Laatupoikkeamiin liittyvät tietokantakyselyt"
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [harja.domain.oikeudet :as oikeudet]
+            [harja.kyselyt.sanktiot :as sanktio-kyselyt]
+            [harja.kyselyt.urakat :as urakat]
+            [jeesql.core :refer [defqueries]]
             [harja.kyselyt.konversio :as konv]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
+            [harja.id :refer [id-olemassa?]]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yy]))
 
 (defqueries "harja/kyselyt/laatupoikkeamat.sql"
@@ -74,3 +79,55 @@
   (log/debug "Merkitse laatupoikkeama " laatupoikkeama-id " poistetuksi urakalle " urakka-id)
 
   (poista-laatupoikkeama! db {:id laatupoikkeama-id :muokkaaja (:id user) :urakka-id urakka-id}))
+
+
+(defn vaadi-sanktio-kuuluu-urakkaan
+  "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
+  [db urakka-id sanktio-id]
+  (when (id-olemassa? sanktio-id)
+    (let [sanktion-urakka (:urakka (first (sanktio-kyselyt/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
+      (when-not (= sanktion-urakka urakka-id)
+        (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
+                                     urakka-id " vaan urakkaan " sanktion-urakka)))))))
+
+(defn poista-laatupoikkeaman-sanktio
+  "Poistaa laatupoikkeaman kautta määrätyn (ei-suora)sanktion. Palauttaa sanktion ID:n.
+
+  Toisin kuin suorasanktion poistossa, laatupoikkeamaa EI poisteta, koska laatupoikkeamalla voi
+  olla omaa arvoa ja se voi sisältää useita sanktioita. Sanktion poiston jälkeen laatupoikkeaman
+  päätös perutaan (käsittelytiedot ja päätös nollataan). Tämä poistaa laatupoikkeaman lukituksen ja
+  mahdollistaa laatupoikkeaman muokkauksen (vrt. HARJA-1954). Päätös perutaan silloinkin, kun
+  laatupoikkeamalle jää muita aktiivisia sanktioita — päätös tulee tällöin antaa uudelleen."
+  [db user {sanktio-id :id urakka-id :urakka-id} sanktio]
+  (oikeudet/vaadi-oikeus "poisto" oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+  (vaadi-sanktio-kuuluu-urakkaan db urakka-id sanktio-id)
+  (jdbc/with-db-transaction [c db]
+    (sanktio-kyselyt/poista-sanktio! c {:id sanktio-id
+                                        :muokkaaja (:id user)})
+    ;; Perutaan laatupoikkeaman päätös, jotta lukitus poistuu ja laatupoikkeamaa voi taas muokata.
+    ;; Laatupoikkeamalle mahdollisesti jäävät muut aktiiviset sanktiot säilyvät ennallaan, ja päätös
+    ;; annetaan niille uudelleen laatupoikkeaman muokkauksen yhteydessä.
+    (when-let [laatupoikkeama-id (:laatupoikkeama_id sanktio)]
+      (peru-laatupoikkeaman-paatos! c {:id laatupoikkeama-id
+                                                         :muokkaaja (:id user)}))
+    (sanktio-kyselyt/merkitse-maksuera-likaiseksi! c sanktio-id)
+    sanktio-id))
+
+(defn poista-sanktio-tietokannasta
+  "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n.
+
+  Laatupoikkeaman kautta määrätty (ei-suora)sanktio poistetaan poista-laatupoikkeaman-sanktio
+  -funktiolla, jolloin laatupoikkeamaa ei poisteta vaan sen päätös perutaan."
+  [db user urakka-id sanktio]
+  (if-not (:suorasanktio sanktio)
+    ;; Laatupoikkeaman kautta määrätty sanktio: laatupoikkeamaa ei poisteta.
+    (poista-laatupoikkeaman-sanktio db user {:id (:id sanktio) :urakka-id urakka-id} sanktio)
+    ;; Suorasanktio: poistetaan sekä sanktio että siihen liittyvä laatupoikkeama.
+    (jdbc/with-db-transaction [c db]
+      (when-let [laatupoikkeama-id (:laatupoikkeama_id sanktio)]
+        (poista-laatupoikkeama c user {:id laatupoikkeama-id
+                                       :urakka-id urakka-id}))
+      (sanktio-kyselyt/poista-sanktio! c {:id (:id sanktio)
+                                          :muokkaaja (:id user)})
+      (sanktio-kyselyt/merkitse-maksuera-likaiseksi! c (:id sanktio))
+      (:id sanktio))))

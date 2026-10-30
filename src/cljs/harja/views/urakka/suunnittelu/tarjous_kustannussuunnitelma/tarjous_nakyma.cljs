@@ -402,6 +402,14 @@
   (let [ensimmainen-rivi-jossa-hoitovuodet (first (:tarjous app))
         ;; Jos ei ole dataa, käytetään oletusarvoja 5 vuodelle
         hoitovuosittaiset-arvot (:hoitovuosittaiset-arvot ensimmainen-rivi-jossa-hoitovuodet)
+        lukitusviestit (->> hoitovuosittaiset-arvot
+                         (map-indexed (fn [index {:keys [vuosi]}]
+                                        (when (contains? vahvistetut-vuodet vuosi)
+                                          (str (inc index) ". hoitovuoden tietoja ei voi muokata, koska "
+                                            (inc index) ". hoitovuoden " vuosi "–" (inc vuosi)
+                                            " tavoitehinta on vahvistettu."))))
+                         (remove nil?)
+                         (str/join "\n"))
 
         hoitokausien-maara (count hoitovuosittaiset-arvot)
         vuosi-leveys (if (> hoitokausien-maara 0)
@@ -422,6 +430,8 @@
                                                   (constantly true))})
                                 hoitovuosittaiset-arvot)]
     [:div
+     (when (seq lukitusviestit)
+       [yleiset/info-laatikko :neutraali "Osa tiedoista on lukittu" lukitusviestit nil nil])
      [:hr]
      ;; Custom toteutus - Tallennusnapit on taulukon yläpuolella
      [tallennus-painikkeet e! tallennus-kesken? viimeisin-muokkaus viimeisin-muokkaaja hankinnat toimenkuvat tallentamattomia-muutoksia?]

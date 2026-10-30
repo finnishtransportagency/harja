@@ -24,6 +24,7 @@
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -673,6 +674,48 @@
       (catch SecurityException virhe
         (is false (str "Väärä virhetyyppi vuoti ulos legacy-validoinnista: " (.getMessage virhe)))))
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
+
+(deftest tavoitehintaan-vaikuttavan-arvonvahennyksen-poisto-estyy-paatosvuonna
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        kayttaja-id (:id +kayttaja-jvh+)
+        toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " ORDER BY id LIMIT 1")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0 LIMIT 1"))
+        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
+            db {:urakkaid urakka-id
+                :hoitokauden_alkuvuosi 2026
+                :tavoitehinta 1
+                :kattohinta 1
+                :muokkaa_kattohinta false
+                :luoja kayttaja-id}
+            kayttaja-id)
+        lukitustiedot (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-lukitustiedot +kayttaja-jvh+ {:urakka-id urakka-id})
+        _ (lisaa-suorasanktio-urakalle
+                987654321 "arvonvahennyssanktio" "2026-11-12"
+                urakka-id toimenpideinstanssi-id sanktiotyyppi-id nil nil)
+        sanktio-id (ffirst (q "SELECT id FROM sanktio "
+                              "WHERE sakkoryhma = 'arvonvahennyssanktio' "
+                              "AND maara = 987654321 "
+                              "AND perintapvm::date = '2026-11-12' "
+                              "ORDER BY id DESC LIMIT 1"))
+        perintapvm (pvm/->pvm "12.11.2026")]
+    (is (vector? lukitustiedot))
+    (is (= {:vuosi 2026 :lukittu? true}
+          (some #(when (= 2026 (:vuosi %)) %) lukitustiedot)))
+    (is (thrown? ExceptionInfo
+          (ls/tallenna-laatupoikkeaman-sanktio
+            db +kayttaja-jvh+
+            {:laji :arvonvahennyssanktio :perintapvm perintapvm :summa 1}
+            nil urakka-id perintapvm {:paivamaara perintapvm :soveltuvuuskonteksti :urakka})))
+    (is (thrown? ExceptionInfo
+          (ls/tallenna-laatupoikkeaman-sanktio
+            db +kayttaja-jvh+
+            {:id sanktio-id :laji :arvonvahennyssanktio :perintapvm perintapvm :summa 1}
+            nil urakka-id perintapvm {:paivamaara perintapvm :soveltuvuuskonteksti :urakka})))
+    (is (thrown? ExceptionInfo
+          (palvelukutsu-poista-sanktio +kayttaja-jvh+ sanktio-id urakka-id)))
+    (is (= 1 (ffirst (q (str "SELECT COUNT(*) FROM sanktio WHERE id = " sanktio-id " AND poistettu IS NOT TRUE")))))))
 
 (deftest tallenna-laatupoikkeama-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
