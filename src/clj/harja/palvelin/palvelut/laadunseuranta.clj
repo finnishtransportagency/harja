@@ -237,18 +237,38 @@
        :laji laji
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
+(defn- vaadi-manuaalinen-maara
+  [maara]
+  (when-not (number? maara)
+    (throw (IllegalArgumentException. "Manuaalisen sanktion määrän pitää olla numero.")))
+  (let [maara (-> (bigdec (str maara))
+                (.stripTrailingZeros))]
+    (when (or (neg? maara) (> (.scale maara) 2))
+      (throw (IllegalArgumentException.
+               "Manuaalisen sanktion määrän pitää olla vähintään 0 ja sisältää enintään kaksi desimaalia.")))
+    maara))
+
+(defn- absoluuttinen-maara
+  [maara]
+  (if (decimal? maara)
+    (.abs (bigdec maara))
+    (Math/abs maara)))
+
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava] :as sanktio}
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava
+                   omailmoitettu] :as sanktio}
    laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
   (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+        olemassa-oleva-sanktio (when (id-olemassa? id)
+                                 (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
-        summa (if (decimal? summa)
-                (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
-                summa)
+        pyynto-summa (if (decimal? summa)
+                       (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                       summa)
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
@@ -263,14 +283,59 @@
         paivamaara (or paivamaara perintapvm)
         _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
-        _ (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
-            db
-            {:urakka-id urakka
-             :urakan-alkupvm (:alkupvm urakan-tiedot)
-             :paivamaara paivamaara
-             :soveltuvuuskonteksti soveltuvuuskonteksti
-             :laji laji
-             :sanktiotyyppi-id sanktiotyyppi})
+        profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+                       db
+                       {:urakka-id urakka
+                        :urakan-alkupvm (:alkupvm urakan-tiedot)
+                        :paivamaara paivamaara
+                        :soveltuvuuskonteksti soveltuvuuskonteksti
+                        :laji laji
+                        :sanktiotyyppi-id sanktiotyyppi})
+        profiilin-summamaaritykset (:profiilirivi profiilirivi)
+        maaritystapa (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa)
+        profiilin-manuaalinen-viitemaara
+        (when (= :manuaalinen maaritystapa)
+          (some (fn [{:keys [summa-euroina]}]
+                  (when (number? summa-euroina)
+                    summa-euroina))
+            (:summamaaritykset profiilin-summamaaritykset)))
+        kiintea-automaattinen-summa? (sanktiot-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                       profiilin-summamaaritykset)
+        automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
+                                      profiilin-summamaaritykset)
+        tilannekuvan-maaritystapa (some-> olemassa-oleva-sanktio :maaritystapa keyword)
+        tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
+        manuaalinen-maara (when (= :manuaalinen maaritystapa)
+                            (if (= :C laji)
+                              (vaadi-manuaalinen-maara summa)
+                              pyynto-summa))
+        omailmoitettu (if (nil? omailmoitettu) false omailmoitettu)
+        _ (when-not (boolean? omailmoitettu)
+            (throw (IllegalArgumentException.
+                     "Omailmoitusvalinnan pitää olla totuusarvo.")))
+        _ (when (and omailmoitettu
+                  (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
+            (throw (IllegalArgumentException.
+                     "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
+        normaalimaara (if (and tilannekuvan-automaattinen-maara?
+                            (number? (:normaalimaara olemassa-oleva-sanktio))
+                            (pos? (:normaalimaara olemassa-oleva-sanktio))
+                            (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
+                        (:normaalimaara olemassa-oleva-sanktio)
+                        (if (= :manuaalinen maaritystapa)
+                          (or profiilin-manuaalinen-viitemaara manuaalinen-maara)
+                          (if kiintea-automaattinen-summa?
+                            (if (and (number? automaattinen-summa-raakana)
+                                  (pos? automaattinen-summa-raakana)
+                                  (Double/isFinite (double automaattinen-summa-raakana)))
+                              (double automaattinen-summa-raakana)
+                              (throw (IllegalArgumentException.
+                                       (str "Sanktiolajin " (name laji)
+                                         " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
+                            pyynto-summa)))
+        summa (if (= :manuaalinen maaritystapa)
+                manuaalinen-maara
+                (if omailmoitettu (/ normaalimaara 2) normaalimaara))
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -287,10 +352,15 @@
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
+                :normaalimaara normaalimaara
+                :omailmoitettu omailmoitettu
+                :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                                         (get-in profiilirivi [:profiilirivi :id]))
+                :maaritystapa (some-> (or tilannekuvan-maaritystapa maaritystapa) name)
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)
-                           (- (Math/abs summa))
-                           (Math/abs summa)))
+                           (- (absoluuttinen-maara summa))
+                           (absoluuttinen-maara summa)))
                 :laskutusrajan-ylitys laskutusrajan-ylitys
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama-id
@@ -452,7 +522,7 @@
   (let [olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))
         laatupoikkeaman-sanktion-muokkaus? (boolean (and olemassa-oleva-sanktio
-                                                       (not (:suorasanktio olemassa-oleva-sanktio))))]
+                                                      (not (:suorasanktio olemassa-oleva-sanktio))))]
     (when laatupoikkeaman-sanktion-muokkaus?
       ;; Varmistetaan että muokattava sanktio kuuluu annettuun urakkaan. Varsinainen muokkausoikeus
       ;; tulee kirjoitusoikeudesta (W), joka on jo vaadittu ylhäällä.
@@ -464,9 +534,9 @@
             sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
         ;; Vanhoilla urakoilla käsittelytapa valitaan sanktiolomakkeella.
         ;; Päätöksen tallennus käyttää laatupoikkeaman päätöstä, joten pidä arvot samoina.
-        laatupoikkeama (if (:kasittelytapa sanktio)
-                 (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
-                 laatupoikkeama)
+            laatupoikkeama (if (:kasittelytapa sanktio)
+                             (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
+                             laatupoikkeama)
             ;; Laatupoikkeaman kautta tehtyä sanktiota muokattaessa säilytetään laatupoikkeaman ne
             ;; kentät, joita sanktiolomake ei näytä eikä käsittele oikein (tekijä, selvityspyyntö sekä
             ;; poikkeamaraportti-lippu). Näin muokkaus ei tyhjennä niitä. Suorasanktioille ja uusille
@@ -486,8 +556,8 @@
             {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
             _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
                 (konv/sql-timestamp kasittelyaika)
-              (if (keyword? paatos) (name paatos) paatos) perustelu
-              (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
+                (if (keyword? paatos) (name paatos) paatos) perustelu
+                (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
                 (:id user)
                 id)
             sanktio-id (tallenna-laatupoikkeaman-sanktio
