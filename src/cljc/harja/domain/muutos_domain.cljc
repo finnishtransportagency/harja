@@ -93,14 +93,14 @@
               (and (= vuosi alkuvuosi) (false? muokattava?)))
         muokattavat-hoitokaudet))))
 
-(defn pysyva-muutos-hoitovuosi-lukittu?
+(defn muutos-hoitovuosi-lukittu?
   "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
   Lukittu, jos:
   - Muutos vaikuttaa kyseisen tai tulevan hoitokauden vahvistettuun tavoitehintaan 
   - TODO: TAI hoitovuoden välikatselmuksen päätöksiä on tehty"
   [indeksikorjattu muokattavat-hoitokaudet voimassa-alkaen hoitovuosi]
   (assert (map? indeksikorjattu))
-
+  
   (let [alkuvuosi (pvm/vuosi (first hoitovuosi))]
     (boolean
       (or

@@ -42,7 +42,8 @@
       (tuck-apurit/post! app :tallenna-tehtava-maaramuutokset
         parametrit
         {:onnistui ->TallennaTehtavaMaaramuutoksetOnnistui
-         :epaonnistui ->TallennaTehtavaMaaramuutoksetEpaonnistui})
+         :epaonnistui ->TallennaTehtavaMaaramuutoksetEpaonnistui
+         :paasta-virhe-lapi? true})
       (-> app
         (assoc :haku-kaynnissa? true))))
 
@@ -60,8 +61,12 @@
          :event #(t-yhteiset/->HaeUrakanMuutostiedot :lasketut-muutokset)})))
 
   TallennaTehtavaMaaramuutoksetEpaonnistui
-  (process-event [_ app]
-    (viesti/nayta-toast! "Tehtävä- ja määrämuutosten tallennus epäonnistui" :varoitus viesti/viestin-nayttoaika-keskipitka)
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast!
+      (str
+        "Tehtävä- ja määrämuutosten tallennus epäonnistui: "
+        (get-in vastaus [:response :virhe]))
+      :varoitus viesti/viestin-nayttoaika-keskipitka)
     (assoc app :haku-kaynnissa? false))
 
   AvaaYksikkohintaModal

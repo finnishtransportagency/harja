@@ -24,18 +24,19 @@
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm loppupvm]}]
   (let [yli-5-vuotinen? (> (pvm/hoitokausien-maara alkupvm loppupvm) 5)]
     (case valilehti
-      :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
+      :materiaalit (and
+                     (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
                      (not (ur/vesivaylaurakkatyyppi? tyyppi)))
       :tehtavat (= tyyppi :teiden-hoito)
       :suola (#{:hoito :teiden-hoito} tyyppi)
-      :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
+      :muut (and
+              (not (ur/vesivaylaurakkatyyppi? tyyppi))
               (not= tyyppi :teiden-hoito))
       :kiintiot (= tyyppi :vesivayla-hoito)
       :kokonaishintaiset (not= tyyppi :teiden-hoito)
       :yksikkohintaiset (not= tyyppi :teiden-hoito)
       :kustannussuunnitelma (and
                               (= tyyppi :teiden-hoito)
-                              (not yli-5-vuotinen?)
                               (< (pvm/vuosi alkupvm) 2025))
       :uusi-kustannussuunnitelma (and
                                    (= tyyppi :teiden-hoito)

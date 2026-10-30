@@ -325,7 +325,7 @@
   (let [hoitovuosi (:hoitovuosi muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
         {:keys [tavoitehinta-indeksikorjattu-per-hoitovuosi]} budjettitavoitteet
-        hoitovuosi-lukittu? (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+        hoitovuosi-lukittu? (muutos-domain/muutos-hoitovuosi-lukittu?
                               tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet voimassa-alkaen hoitovuosi)
         voi-muokata? (and
                        ;; Voi muokata, jos "voimassa alkaen" osuu johonkin hoitovuoteen tai hoitovuosi on sen jälkeen
@@ -483,11 +483,9 @@
            ;; Jos voimassa-alkaen on validi, ja hoitovuosi on lukittu, näytetään info-laatikko lukituksesta
            (and
              (muutos-domain/voimassa-alkaen-hoitovuodella-tai-jalkeen? voimassa-alkaen hoitovuosi)
-             (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+             (muutos-domain/muutos-hoitovuosi-lukittu?
                tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet voimassa-alkaen hoitovuosi))
 
-           ;; TODO: Välikatselmuksen päätökset lukituksen tarkastus toteutetaan myöhemmin, HARJA-1767 / HARJA-2791
-           ;;       Välikatselmuksesta johtuvan lukituksen yhteydessä näytetään erilainen info-laatikko, ks. figma
            {:uusi-rivi? true
             :tyyppi :komponentti
             :komponentti (fn [_]
