@@ -39,6 +39,7 @@ SELECT
         JOIN liite l ON skl.liite = l.id
         WHERE skl.siltatarkastus = st.id
         AND skl.kohde = sk.kohde
+        AND l.poistettu IS NOT TRUE
       )
     )
   ) FROM siltatarkastuskohde sk WHERE sk.siltatarkastus = st.id) as tarkastuskohteet
@@ -99,6 +100,7 @@ SELECT
         JOIN liite l ON skl.liite = l.id
         WHERE skl.siltatarkastus = st.id
         AND skl.kohde = sk.kohde
+        AND l.poistettu IS NOT TRUE
       )
     )
   ) FROM siltatarkastuskohde sk WHERE sk.siltatarkastus = st.id) as tarkastuskohteet

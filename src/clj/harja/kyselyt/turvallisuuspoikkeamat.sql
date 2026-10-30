@@ -304,6 +304,14 @@ SELECT exists(
     FROM turvallisuuspoikkeama tp
     WHERE tp.ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
 
+-- name: hae-turvallisuuspoikkeama-ulkoisella-idlla-ja-urakalla
+-- Hakee aktiivisen turvallisuuspoikkeaman ulkoisella id:llä ja urakalla.
+SELECT id
+FROM turvallisuuspoikkeama
+WHERE ulkoinen_id = :ulkoinen-id
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
+
 -- name: liita-kommentti<!
 INSERT INTO turvallisuuspoikkeama_kommentti (turvallisuuspoikkeama, kommentti)
 VALUES (:turvallisuuspoikkeama, :kommentti);
@@ -323,6 +331,7 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN turvallisuuspoikkeama_liite hl ON l.id = hl.liite
  WHERE hl.turvallisuuspoikkeama = :turvallisuuspoikkeamaid
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
 
 --name: paivita-korjaava-toimenpide<!
