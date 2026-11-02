@@ -9,7 +9,6 @@
             [taoensso.timbre :as log]
             [harja.geo :as geo]
             [harja.palvelin.integraatiot.ilmatieteenlaitos :as ilmatieteenlaitos]
-            [harja.pvm :as pvm]
             [harja.domain.oikeudet :as oikeudet]
             [clojure.string :as str]))
 
@@ -142,7 +141,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-suola user urakka)
   (jdbc/with-db-transaction
     [db db]
-    (let [suolasakon-id (tallenna-suolasakko db user urakka
+    (let [_suolasakon-id (tallenna-suolasakko db user urakka
                                              hoitokauden-alkuvuosi suolasakko)]
       (doseq [{:keys [pohjavesialue tie talvisuolaraja]} pohjavesialue-talvisuola]
         (tallenna-pohjavesialue-talvisuola db user urakka

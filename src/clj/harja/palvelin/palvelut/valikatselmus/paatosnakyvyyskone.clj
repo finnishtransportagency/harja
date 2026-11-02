@@ -3,7 +3,7 @@
 
             [harja.pvm :as pvm]
             [harja.tyokalut.yleiset :refer [round2]]
-            [harja.kyselyt.urakat :as urakka-kyselyt]
+
             [harja.domain.lupaus-domain :as lupaus-domain]
             [harja.palvelin.palvelut.valikatselmus.apurit :as apurit]))
 
@@ -165,15 +165,6 @@
           paatokset (sort-by :jarjestys (conj paatokset tavoitehinnan-pysyva-muutospaatos))]
       paatokset)))
 
-
-(defn- laske-muutos-prosentteina [piste-keskiarvo alkuperainen-pisteluku]
-  (if (or (zero? piste-keskiarvo) (zero? alkuperainen-pisteluku))
-    0
-    (round2 1
-      (* (/ (- piste-keskiarvo alkuperainen-pisteluku)
-           piste-keskiarvo)
-        100))))
-
 (defn valmistele-hoitovuoden-lopun-indeksikorjauspaatos [validoinnit-kaytossa? paatokset hoitovuoden-lopun-indeksikorjaus-summa oikaistu-tavoitehinta tavoitehinnan-muutokset
                                                          taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-indeksikuukaudet alkuperainen-pisteluku hoitokauden-alkuvuosi
                                                          tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit]
@@ -213,7 +204,7 @@
           alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
           pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
           alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)
-          muutos-prosentteina (laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
+          muutos-prosentteina (apurit/laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
           ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
           indeksikorotuksen-prosenttiosuus (if (and muutos-prosentteina (> muutos-prosentteina 2)) (- muutos-prosentteina 2) 0)
           tavoitehinnan-oikaisut (apply + (map #(or (:summa %) 0) tavoitehinnan-muutokset))

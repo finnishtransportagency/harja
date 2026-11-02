@@ -70,6 +70,19 @@
   [sanktiotyypit tyyppi-id]
   (some #(when (= tyyppi-id (:id %)) %) sanktiotyypit))
 
+(defn- omailmoitus-kentta
+  [omailmoitus-sallittu?]
+  (when omailmoitus-sallittu?
+    {:otsikko ""
+     :nimi :omailmoitettu
+     :tyyppi :checkbox
+     :pieni-teksti? true
+     :uusi-rivi? true
+     ::lomake/col-luokka "col-xs-12"
+     :hae :omailmoitettu
+     :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
+     :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
+
 (defn sanktio-lomake
   [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
@@ -417,16 +430,7 @@
             :tyyppi :text :koko [80 3]
             :validoi [[:ei-tyhja "Anna perustelu"]]})
 
-         (when omailmoitus-sallittu?
-           {:otsikko ""
-            :nimi :omailmoitettu
-            :tyyppi :checkbox
-            :uusi-rivi? true
-            :label-luokka "fontti-12"
-            ::lomake/col-luokka "col-xs-12"
-            :hae :omailmoitettu
-            :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
-            :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"})
+         (omailmoitus-kentta omailmoitus-sallittu?)
 
          ;; Kun sanktiolajina on "Laskutusrajan ylitys" niin näytetään "Ylityksen määrä" -kenttä
          (when (= :laskutus_yli_laskutusrajan (:laji @muokattu))
@@ -503,6 +507,8 @@
                               :vihje (when c-ryhman-maaritys
                                        (str "-" (fmt/euro-opt false (:summa-euroina c-ryhman-maaritys))
                                          " " (:ohjeteksti c-ryhman-maaritys)))
+                              :vihje-ilman-ikonia? true
+                              :vihje-rivittamaton? true
                               :pakollinen? true :uusi-rivi? true
                               :validoi [[:ei-tyhja "Anna summa"]
                                         [:rajattu-numero 0 999999999 "Anna arvo väliltä 0 - 999 999 999"]]})

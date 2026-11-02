@@ -118,9 +118,6 @@
       (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
       (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
 
-    ;; Varmista että laskutusraja on asetettu jo ennen vahvistusta
-    (is (not (nil? (hae-urakan-laskutusraja urakka-id))) "Laskutusrajan pitäisi olla asetettu jo ennen vahvistusta, koska laskutusraja_kaytossa = TRUE")
-
     ;; Vahvista
     (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
 

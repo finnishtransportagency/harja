@@ -13,8 +13,8 @@
 
 (defn- ajoissa? [valitavoite alkupvm]
   (and (:takaraja valitavoite)
-       (:valmis-pvm valitavoite)
-       (pvm/sama-tai-ennen? (c/from-date (:valmis-pvm valitavoite))
+       (:valmispvm valitavoite)
+       (pvm/sama-tai-ennen? (c/from-date (:valmispvm valitavoite))
                             (c/from-date (:takaraja valitavoite)))
        (pvm/sama-tai-jalkeen? (c/from-date (:takaraja valitavoite))
                               (c/from-date alkupvm))))
@@ -22,8 +22,8 @@
 (defn- myohassa? [valitavoite alkupvm loppupvm]
   (let [onko-myohassa? (fn [haettava-paiva]
                          (and (:takaraja valitavoite)
-                           (:valmis-pvm valitavoite)
-                           (pvm/jalkeen? (c/from-date (:valmis-pvm valitavoite))
+                           (:valmispvm valitavoite)
+                           (pvm/jalkeen? (c/from-date (:valmispvm valitavoite))
                              (c/from-date (:takaraja valitavoite)))
                            (pvm/sama-tai-jalkeen? (c/from-date haettava-paiva)
                              (c/from-date alkupvm))
@@ -32,16 +32,16 @@
     ;; Palautetaan ne välitavoitteet, jotka ovat valmistuneet myöhässä ja
     ;; joiden joko takaraja tai valmistumispäivä on valitun aikarajan sisällä
     (or (onko-myohassa? (:takaraja valitavoite))
-        (onko-myohassa? (:valmis-pvm valitavoite)))))
+        (onko-myohassa? (:valmispvm valitavoite)))))
 
 (defn- kesken? [valitavoite]
   (and (:takaraja valitavoite)
        (pvm/ennen? (t/now) (c/from-date (:takaraja valitavoite)))
-       (not (:valmis-pvm valitavoite))))
+       (not (:valmispvm valitavoite))))
 
 (defn- toteutumatta? [valitavoite]
   (and (:takaraja valitavoite)
-       (not (:valmis-pvm valitavoite))
+       (not (:valmispvm valitavoite))
        (pvm/jalkeen? (t/now)
                      (c/from-date (:takaraja valitavoite)))))
 
@@ -50,14 +50,14 @@
   [valitavoite alkupvm loppupvm]
   (cond
     (ajoissa? valitavoite alkupvm)
-    (let [paivia-valissa (pvm/paivia-valissa (c/from-date (:valmis-pvm valitavoite))
+    (let [paivia-valissa (pvm/paivia-valissa (c/from-date (:valmispvm valitavoite))
                                              (c/from-date (:takaraja valitavoite)))]
       (when (pos? paivia-valissa)
         (str (fmt/kuvaile-paivien-maara paivia-valissa) " ennen")))
 
     (myohassa? valitavoite alkupvm loppupvm)
     (let [paivia-valissa (pvm/paivia-valissa (c/from-date (:takaraja valitavoite))
-                                             (c/from-date (:valmis-pvm valitavoite)))]
+                                             (c/from-date (:valmispvm valitavoite)))]
       (when (pos? paivia-valissa)
         (str (fmt/kuvaile-paivien-maara paivia-valissa) " myöhässä")))
     :default
@@ -100,7 +100,7 @@
                                       (if kuvaus
                                         (str " (" kuvaus ")")))
                                  "-"))
-                             (:valmis-kommentti valitavoite)
+                             (or (:valmis-kommentti valitavoite) "")
                              (str (:valmis-merkitsija-etunimi valitavoite) " " (:valmis-merkitsija-sukunimi valitavoite))]))]
     (when-not (empty? valitavoitteet)
       (into [] (concat (mapv valitavoiterivi valitavoitteet))))))

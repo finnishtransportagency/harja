@@ -4,4 +4,4 @@
 (defqueries "harja/kyselyt/pohjavesialueet.sql"
   {:positional? true})
 
-(declare paivita-pohjavesialue-kooste)
+(declare paivita-pohjavesialue-kooste hae-urakan-pohjavesialueet-teittain)
