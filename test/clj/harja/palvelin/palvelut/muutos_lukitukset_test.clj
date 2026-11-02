@@ -107,7 +107,7 @@
     (testing "Pysyvää muutosta ei voi luoda"
       (let [;; Vahvista kustannussuunnitelma, jolloin muutosta ei voi tehdä
             _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi true)
-            odotettu-poikkeus "Pysyvää muutosta ei voi luoda, koska sen vaikutukset kohdistuvat vahvistettuun tavoitehintaan"
+            odotettu-poikkeus "ei voi luoda, koska sen vaikutukset kohdistuvat vahvistettuun tavoitehintaan"
 
             ;; Tallennus ei mene läpi
             vastaus (try

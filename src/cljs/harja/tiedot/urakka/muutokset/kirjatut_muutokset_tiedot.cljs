@@ -239,11 +239,13 @@
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
   (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
     (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui")
+    (println "\n mk app: " (:muokattavat-hoitokaudet app))
 
     ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
     (let [mahdolliset-hoitovuodet (:urakan-hoitokaudet app)]
       (-> app
         (dissoc :muutoksen-tiedot-haku-kaynnissa?)
+        (assoc-in [:muokattava-muutos :muokattavat-hoitokaudet] (:muokattavat-hoitokaudet app))
         (assoc-in [:muokattava-muutos :toimenpiteiden-tiedot] (:toimenpiteiden-tiedot vastaus))
         (assoc-in [:muokattava-muutos :toimenpiteiden-tehtavat] (:toimenpiteiden-tehtavat vastaus))
         (assoc-in [:muokattava-muutos :mahdolliset-hoitovuodet-lomakkeella] mahdolliset-hoitovuodet)
@@ -357,6 +359,7 @@
   (process-event [{lahde-hk-alkuvuosi :lahde-hk-alkuvuosi
                    voimassa-alkaen :voimassa-alkaen
                    urakan-hoitovuodet :urakan-hoitovuodet} app]
+
     (log/debug "KopioiHoitovuodenMuutoksetTulevilleHoitovuosille, lähdehoitovuosi: " lahde-hk-alkuvuosi)
     (assert (int? lahde-hk-alkuvuosi))
     (assert (pvm/pvm? voimassa-alkaen))
@@ -368,8 +371,8 @@
           ;; Filtteröidään pois kohdehoitovuosista ne, joiden muokkaukset on lukittu pysyvässä muutoksessa
           ;; Eli, tavoitehinta on vahvistettu tai välikatselmuksen päätöksiä on tehty ko. hoitovuodelle
           lukitsemattomat-hoitovuodet (filterv
-                                        #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
-                                                tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen %))
+                                        #(not (muutos-domain/muutos-hoitovuosi-lukittu?
+                                                tavoitehinta-indeksikorjattu-per-hoitovuosi (:muokattavat-hoitokaudet app) voimassa-alkaen %))
                                         urakan-hoitovuodet)
           kohde-hk-alkuvuodet (map #(some-> % first pvm/vuosi) lukitsemattomat-hoitovuodet)]
       (-> app

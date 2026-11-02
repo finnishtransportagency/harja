@@ -936,7 +936,7 @@
             (let [kustannusvaikutukset (if tyyppi-pysyva?
                                          ;; Filtteröidään pois kustannusvaikutukset lukituilta hoitovuosilta
                                          ;; Varmistetaan, että lukitulle vuodelle ei tule muutoksia käyttöliittymältä
-                                         (filterv #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+                                         (filterv #(not (muutos-domain/muutos-hoitovuosi-lukittu?
                                                           tavoitehinta-indeksikorjattu-per-hoitovuosi
                                                           muokattavat-hoitokaudet
                                                           (:voimassa_alkaen muutos)
@@ -950,7 +950,7 @@
             (let [maaramuutokset (if tyyppi-pysyva?
                                    ;; Filtteröidään pois maaramuutokset lukituilta hoitovuosilta
                                    ;; Varmistetaan, että lukitulle vuodelle ei tule muutoksia käyttöliittymältä
-                                   (filterv #(not (muutos-domain/pysyva-muutos-hoitovuosi-lukittu?
+                                   (filterv #(not (muutos-domain/muutos-hoitovuosi-lukittu?
                                                     tavoitehinta-indeksikorjattu-per-hoitovuosi
                                                     muokattavat-hoitokaudet
                                                     (:voimassa_alkaen muutos)
