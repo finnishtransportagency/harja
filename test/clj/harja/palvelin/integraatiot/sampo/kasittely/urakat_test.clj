@@ -153,7 +153,6 @@
           urakan-toimenkuvat (toimenkuvat-kyselyt/hae-urakan-toimenkuvat db {:urakkaid urakkaid})
           toimenkuvien-nimet (set (map :toimenkuva urakan-toimenkuvat))
           odotetut-toimenkuvat #{"valmistelukausi ennen urakka-ajan alkua"
-                                 "sopimusvastaava"
                                  "vastuunalainen työnjohtaja"
                                  "2. työnjohtaja"}
           urakan-parametrit (first (urakat-q/hae-urakan-parametrit db {:urakkaid urakkaid}))]
@@ -176,8 +175,8 @@
       (is (= odotetut-toimenkuvat toimenkuvien-nimet)
         "Vesiväyläurakalle tallennetaan oikeat toimenkuvat.")
 
-      (is (= 4 (count urakan-toimenkuvat))
-        "Vesiväyläurakalle tallennetaan neljä toimenkuvaa."))
+      (is (= 3 (count urakan-toimenkuvat))
+        "Vesiväyläurakalle tallennetaan kolme toimenkuvaa."))
 
     (finally
       (poista-vesivaylaurakka))))
