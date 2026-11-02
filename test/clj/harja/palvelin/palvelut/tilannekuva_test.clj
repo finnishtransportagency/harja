@@ -571,10 +571,7 @@
         konsultti-ely-laadunvalvoja (assoc konsultti-tilaajan-laadunvalvoja :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"ELY_Laadunvalvoja"}})
         konsultti-tilaajan-rakennuttajakonsultti (assoc konsultti-tilaajan-laadunvalvoja :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"Tilaajan_Rakennuttajakonsultti"}})
         konsultti-ely-rakennuttajakonsultti (assoc konsultti-tilaajan-laadunvalvoja :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"Rakennuttajakonsultti"}})
-
-        hakuargumentit-tilannekuva {:urakat #{}, :nykytilanne? true, :alue {:xmin -1019000, :ymin 6488050, :xmax 1815400, :ymax 7905250}, :ilmoitukset {}, :alku #inst "2026-11-02T10:24:18.000-00:00", :loppu #inst "2026-11-02T12:24:18.000-00:00"}
-        hakuargumentit-historianakyma (assoc hakuargumentit-tilannekuva :nykytilanne? false)
-
+          
         hakuargumentit-tilannekuva oikeudet/tilannekuva-nykytilanne
         hakuargumentit-historianakyma oikeudet/tilannekuva-historia
 
