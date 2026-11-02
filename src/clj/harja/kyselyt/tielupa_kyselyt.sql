@@ -14,7 +14,8 @@ VALUES (:tielupa, :liite);
 SELECT
   *
 FROM liite l JOIN tielupa_liite t ON l.id = t.liite
-WHERE t.tielupa IN (:tielupa);
+WHERE t.tielupa IN (:tielupa)
+  AND l.poistettu IS NOT TRUE;
 
 -- name: hae-urakan-tieluvat
 SELECT *
