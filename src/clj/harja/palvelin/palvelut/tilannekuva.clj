@@ -180,7 +180,6 @@
         ;; Kasataan setti urakoita, joihin käyttäjällä on oikeus
         kayttajan-urakka-idt (cond
                                ;; Tilaajalla (ja jvh:lla) on oikeus kaikkiin urakoihin
-                               ;; TODO: miksi laadunvalvojakonsulttia ei rajata ulos tässä kohtaa? Siksi että niillä ei ole oma-ely oikeuksia?
                                (or (and (roolit/tilaajan-kayttaja? user)
                                      (not (roolit/roolissa? user roolit/tilaajan-rakennuttajakonsultti))
                                      (not (roolit/roolissa? user roolit/ely-rakennuttajakonsultti)))
