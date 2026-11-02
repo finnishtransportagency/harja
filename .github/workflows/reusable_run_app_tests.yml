@@ -257,12 +257,16 @@ jobs:
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 
-      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois
+      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois, lisäksi build tuotetaan mahdollisimman
+      # kevyellä prosessilla nopeuden varmistamiseksi. Täysi build tehdään mergen yhteydessä suoritettavien testien
+      # yhteydessä, tai myös manuaalisesti tekemällä deployment sopivilla asetuksilla valittuun testi-ympäristöön.
       - name: Build Harja Uberjar (Kevyt)
         if: ${{ inputs.build-harja == 'light' }}
         uses: $/.github/actions/build-harja-app
         with:
+          build-mode: 'dev-bundle'
           build-laadunseuranta: 'false'
+          build-uberjar: 'true'
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
