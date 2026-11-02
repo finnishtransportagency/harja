@@ -49,4 +49,4 @@ SELECT * FROM laske_kuukauden_indeksikorotus (:hoitokauden-alkuvuosi::INTEGER,9:
 SELECT * FROM hoitokauden_suolasakko(:urakka-id, :hoitokauden_alkupvm::DATE, :hoitokauden_loppupvm::DATE);
 
 -- name: hae-tyomaakokous-laskutusyhteenveto
-SELECT * FROM ly_raportti_tyomaakokous(:hk-alkupvm, :hk-loppupvm, :alkupvm, :loppupvm, :urakka-id);
+SELECT * FROM ly_raportti_tyomaakokous(:hk-alkupvm::DATE, :hk-loppupvm::DATE, :alkupvm::DATE, :loppupvm::DATE, :urakka-id::INTEGER);

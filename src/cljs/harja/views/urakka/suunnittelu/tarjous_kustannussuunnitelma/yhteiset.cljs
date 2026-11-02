@@ -48,16 +48,15 @@
          [:div.body-text (if tarjouksen-maara (fmt/euro-opt true tarjouksen-maara) "0,00 €")]])
 
       ;; -24 vuodesta eteenpäin näytetään pysyvät muutokset, jos tämä osio aiotaan näyttää
-      (when (and div2 (>= valittu-vuosi rajavuosi))
+      (if (and div2 (>= valittu-vuosi rajavuosi) (istunto/ominaisuus-kaytossa? :mhu-muutokset) (:muutosten-hallinta-kaytossa? kustannussuunnitelma))
         [:div.col-xs-12.col-md-3
          [:div.small-text.bold "Pysyvät muutokset"]
-         (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
-           [:div.body-text (if pysyvamuutos-maara (fmt/euro-opt true pysyvamuutos-maara) "Ei muutoksia")]
-           [:div.body-text "Ei muutoksia"])
+            [:div.body-text (if pysyvamuutos-maara (fmt/euro-opt true pysyvamuutos-maara) "Ei muutoksia")]
          [:div.body-text
           [yleiset/linkki "Siirry osioon"
            #(do
-              (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))]]])
+              (siirrin/siirry-elementin-id "pysyvat-muutokset-elementti" 200))]]]
+        [:div.col-xs-12.col-md-3])
 
       ;; -24 vuodesta eteenpäin näytetään tarjous + pysyvät muutokset, jos tämä osio aiotaan näyttää
       (when (and div3 (>= valittu-vuosi rajavuosi))

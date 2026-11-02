@@ -665,7 +665,7 @@
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
-      teksti]]))
+      [:span.lomake-checkbox-teksti teksti]]]))
 
 (defn kylla-ei-valinta
   "Kolmitilainen valinta: [✓] [?] [✗]"
@@ -818,11 +818,12 @@
 
 ;; vayla-tyylinen checkbox halutaan näyttää myös lomakkeella myös lukutilassa,
 ;; Pidetään muuntyylisillä default :nayta-arvo-toiminnallisuus.
-(defmethod nayta-arvo :checkbox [{:keys [teksti]} data]
+(defmethod nayta-arvo :checkbox [{:keys [teksti pieni-teksti?]} data]
   [:div.boolean
    (vayla-checkbox {:data data
                     :input-id (str "harja-checkbox" (gensym))
                     :teksti teksti
+                    :pieni-teksti? pieni-teksti?
                     :disabled? true
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
@@ -1675,14 +1676,18 @@
                   (and (false? lataa-piirrettaessa-koordinaatit?) (not= @vanha-osoite-atom @uusi-osoite-atom))
                   ;; Lataa koordinaatit, jos koordinaatit puuttuvat
                   (and lataa-piirrettaessa-koordinaatit? (nil? (:coordinates @uusi-osoite-atom))))
-            (tee-tr-haku @uusi-osoite-atom))))
+            ;; Renderaa nykyinen frame ennen TR-haun tekemistä, estää stack-overflow
+            (js/setTimeout #(tee-tr-haku @uusi-osoite-atom) 0))))
       (komp/kun-muuttuu
         (fn [{sijainti :sijainti} _]
-          (if-not sijainti
-            (tasot/poista-geometria! :tr-valittu-osoite)
-            (do (reset! alkuperainen-sijainti @sijainti)
-              (vreset! sijainti-atom sijainti)
-              (nayta-kartalla @sijainti)))))
+          ;; Renderaa nykyinen frame ennen sijainnin päivittämistä, estää stack-overflow
+          (js/setTimeout
+            #(if-not sijainti
+               (tasot/poista-geometria! :tr-valittu-osoite)
+               (do (reset! alkuperainen-sijainti @sijainti)
+                 (vreset! sijainti-atom sijainti)
+                 (nayta-kartalla @sijainti))) 
+            0)))
       (when voi-valita-kartalta?
         (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
                                                    (keskita-kartta! @sijainti-atom))))
@@ -1795,7 +1800,7 @@
                     :kun-valmis #(do
                                    (reset! data (normalisoi %))
                                    (reset! karttavalinta-kaynnissa? false)
-                                   (log "Saatiin tr-osoite! " (pr-str %))
+                                   (log "Saatiin tr-osoite!")
                                    (go (>! tr-osoite-ch %)))}]))
 
               (when-let [sijainti (and hae-sijainti sijainti @sijainti)]

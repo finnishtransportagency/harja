@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.valikatselmus.apurit
   (:require [harja.pvm :as pvm]
             [harja.kokoelmat :refer [distinct-by]]
+            [harja.tyokalut.yleiset :refer [round2] :as yleiset]
             [harja.kyselyt.lupaus-kyselyt :as lupaus-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.paatostyypit :refer [paatostyypit]]))
 
@@ -119,3 +120,11 @@
           (into tulos riippuvaiset)))
 
       tulos)))
+
+(defn laske-muutos-prosentteina [piste-keskiarvo alkuperainen-pisteluku]
+  (if (or (zero? piste-keskiarvo) (zero? alkuperainen-pisteluku))
+    0
+    (round2 1
+      (* (/ (- piste-keskiarvo alkuperainen-pisteluku)
+           piste-keskiarvo)
+        100))))
