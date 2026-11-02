@@ -228,15 +228,11 @@
                  (sampo-sanoma/lue-viesti +testi-vesivaylaurakka-sanoma+))]
     (urakat/kasittele-urakat testi/ds urakat)))
 
-(defn hae-vesivaylaurakka []
-  (first
-    (q-map
-      "SELECT id, nimi, tyyppi, alkupvm, loppupvm
-         FROM urakka
-        WHERE sampoid = 'TESTIURAKKA';")))
+(defn hae-vesivaylaurakka [sampoid]
+  (first (q-map (format "SELECT id, nimi, tyyppi, alkupvm, loppupvm FROM urakka WHERE sampoid = '%s';" sampoid))))
 
 (defn poista-vesivaylaurakka []
-  (let [urakkaid (:id (hae-vesivaylaurakka))]
+  (let [urakkaid (:id (hae-vesivaylaurakka "TESTIURAKKA"))]
     (when urakkaid
       ;; Poistetaan ensin hinnoitteluiden liitostaulu.
       (u (format

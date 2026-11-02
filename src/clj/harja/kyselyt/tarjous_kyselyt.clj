@@ -102,7 +102,8 @@
                                 :nimi (str/capitalize (:nimi toimenkuva))
                                 :toimenkuva-id (:id toimenkuva)
                                 :osio "johto-ja-hallintokorvaus"
-                                ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
+                                ;; Poistetaan muut paitsi ensimmäisen hoitovuoden hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
+                                ;; ja vesiväyläurakoiden toimenkuvilta 'Sopimusvastaava (ennen urakka-ajan alkua)' ja 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'
                                 :hoitovuosittaiset-arvot (if (or (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
                                                                (= "sopimusvastaava (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))
                                                                (= "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva)))
@@ -139,7 +140,7 @@
                        :yhteensa 0.00
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
 
-        ; haetaan urakan rahavaraukset
+        ; haetaan urakan rahavaraukset (vesiväyläurakoilla ei ole rahavarauksia)
         rahavaraukset (if vesivaylaurakka? [] (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id}))
         rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
                                    (vec (concat lopulliset [{:nimi (:nimi rahavaraus),

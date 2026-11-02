@@ -147,7 +147,7 @@
   (try
     (tuo-vesivaylaurakka)
 
-    (let [urakka (hae-vesivaylaurakka)
+    (let [urakka (hae-vesivaylaurakka "TESTIURAKKA")
           urakkaid (:id urakka)
           db (:db jarjestelma)
           urakan-toimenkuvat (toimenkuvat-kyselyt/hae-urakan-toimenkuvat db {:urakkaid urakkaid})
@@ -177,7 +177,7 @@
         "Vesiväyläurakalle tallennetaan oikeat toimenkuvat.")
 
       (is (= 4 (count urakan-toimenkuvat))
-        "Vesiväyläurakalle tallennetaan kuusi toimenkuvaa."))
+        "Vesiväyläurakalle tallennetaan neljä toimenkuvaa."))
 
     (finally
       (poista-vesivaylaurakka))))
