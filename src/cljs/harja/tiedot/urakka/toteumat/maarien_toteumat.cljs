@@ -202,23 +202,30 @@
 (defn- uusi-pvm-lomakkeelle [app]
   ;; huom: tälle logiikalle ei ole kiveenhakattua säännöstöä olemassa. Koetetaan kuitenkin auttaa
   ;; käyttäjää hyödyntämällä oletusta, että loppuvuonna (loka-joulukuu) syötetään usein edellisen hoitokauden määriä syyskuulle
-  ;; jos taas eletään tammi-syyskuuta, ei tehdä näitä oletuksia vaan käytetään tätä hetkeä
-  (let [nyt-tammi-syyskuu? (< (pvm/kuukausi (pvm/nyt)) 10)
-        vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+  ;; jos taas eletään tammi-syyskuuta, ei tehdä näitä oletuksia vaan käytetään tätä hetkeä.
+  ;; Välikatselmuksessa lukitulle hoitovuodelle ei siirretä oletuspäivää.
+  (let [nyt (pvm/nyt)
+        nyt-tammi-syyskuu? (< (pvm/kuukausi nyt) 10)
+        vuosi (if (>= (pvm/kuukausi nyt) 10)
                 ; Käytetään loppuvuonna valittua hoitokauden alkuvuotta
-                (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi nyt))
                   (inc (:hoitokauden-alkuvuosi app))        ;; Yritetään määritellä aina loppu hoitokausi
                   (:hoitokauden-alkuvuosi app))
                 ; Käytetään alkuvuonna valittua hoitokauden loppuvuotta
                 (+ 1 (:hoitokauden-alkuvuosi app)))
         kuukausi (if nyt-tammi-syyskuu?
-                   (- (pvm/kuukausi (pvm/nyt)) 1) ;; tammi-syyskuussa käytetään tätä hetkeä...
-                   8) ;; ... loppuvuonna tarjotaan kirjaamista syyskuulle
+                   (- (pvm/kuukausi nyt) 1) ;; tammi-syyskuussa käytetään tätä hetkeä...
+                   8) ;; ... loppuvuonna tarjotaan kirjaamista syyskuulle, 8 = syyskuu, koska luo-pvm käyttää eri indeksiä
         paiva (if nyt-tammi-syyskuu?
-                (pvm/paiva (pvm/nyt)) ;; tammi-syyskuussa käytetään tätä hetkeä...
+                (pvm/paiva nyt) ;; tammi-syyskuussa käytetään tätä hetkeä...
                 1)
-        uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)]
-    uusi-pvm))
+        uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)
+        lukittu-hoitovuosi? (contains? (:lukitut-toteumien-hoitovuodet app)
+                                      (pvm/hoitokauden-alkuvuosi uusi-pvm))]
+    (if (and (not nyt-tammi-syyskuu?)
+             lukittu-hoitovuosi?)
+      nyt
+      uusi-pvm)))
 
 (extend-protocol tuck/Event
 
