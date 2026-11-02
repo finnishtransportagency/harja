@@ -1,5 +1,6 @@
 (ns harja.views.urakka.kulut.kululomake
-  (:require [reagent.core :as r]
+  (:require [harja.tiedot.navigaatio :as nav]
+            [reagent.core :as r]
             [goog.string.format]
             [goog.string :as gstring]
             [clojure.string :as str]
@@ -503,6 +504,10 @@
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        erapaivan-hoitovuosinro (when erapaivan-hoitovuosi
+                                   (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm erapaiva))
+        lukitusotsikko (str "Kuluja ei voi kirjata " erapaivan-hoitovuosinro ". hoitovuodelle " erapaivan-hoitovuosi "-" (inc erapaivan-hoitovuosi))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
         tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
         kulu-lukittu? (or haku-menossa
@@ -613,7 +618,7 @@
            koontilaskun-kuukaudet)]
 
         (when (and kulu-lukittu? paatos-tehty?)
-          [yleiset/info-laatikko :vahva-ilmoitus "Et voi kirjata kuluja tälle hoitovuodelle"
+          [yleiset/info-laatikko :varoitus lukitusotsikko
            "Kuluja ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista
            on jo vahvistettu. Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja tälle hoitovuodelle."
            nil

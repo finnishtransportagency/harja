@@ -43,13 +43,15 @@
       hoitovuosi)))
 
 (defn hae-materiaalitoteuman-lukitustiedot
-  [db user {:keys [urakka-id toteuma-id alkanut]}]
+  [db user {:keys [urakka-id toteuma-id alkanut paattynyt] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-materiaalit user urakka-id)
   (let [alkuperainen-pvm (when (id/id-olemassa? toteuma-id)
                            (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
                            (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id}))]
-    {:alkuperainen (hae-toteuman-lukitustieto db urakka-id alkuperainen-pvm)
-     :valittu (hae-toteuman-lukitustieto db urakka-id alkanut)}))
+    (cond-> {:alkuperainen (hae-toteuman-lukitustieto db urakka-id alkuperainen-pvm)
+             :valittu (hae-toteuman-lukitustieto db urakka-id alkanut)}
+      (contains? tiedot :paattynyt)
+      (assoc :valittu-paattynyt (hae-toteuman-lukitustieto db urakka-id paattynyt)))))
 
 (defn hae-urakan-toteumat-materiaalille
   [db user urakka-id materiaali-id [alku loppu] sopimus]

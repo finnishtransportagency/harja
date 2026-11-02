@@ -146,7 +146,6 @@
              [:<>
               (if arvonvahennys-paatoksella-lukittu?
                 [:div
-                (js/console.log "@tiedot/valittu-sanktio" (pr-str @tiedot/valittu-sanktio))
                  ;; Näytetään ilmoitus lukituksesta aina, kun lukitus on olemassa
                  [:div {:style {:margin-bottom "1rem"}}
                   [yleiset/info-laatikko :neutraali
