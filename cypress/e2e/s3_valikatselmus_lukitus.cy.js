@@ -6,6 +6,7 @@ const urakanNimi = "POP MHU Kajaani 2025-2030";
 const urakanAlue = "Pohjois-Suomi";
 const hoitovuosiValinta = "1. hoitovuosi (01.10.2025 − 30.09.2026)";
 const lukitunHoitovuodenPvm = "15.03.2026";
+const lukitsemattomanHoitovuodenPvm = "15.03.2027";
 const sivupaneeli = ".ei-sulje-sivupaneelia";
 const palautustestinNimi = "Palauttaa testidatan alkuperäiseen tilaan";
 
@@ -56,10 +57,12 @@ function asetaInterceptit() {
 }
 
 function valitseHoitovuosi() {
-    cy.get("div.label-ja-alasveto.hoitokausi div.dropdown").eq(0).within(() => {
-        cy.get("button").click({force: true});
-    });
-    cy.contains("li", "1. hoitovuosi", {timeout}).click();
+    cy.contains("label.alasvedon-otsikko", /^Hoitovuosi$/)
+        .first()
+        .parent()
+        .find("button")
+        .click({force: true});
+    cy.contains("li.harja-alasvetolistaitemi", "1. hoitovuosi", {timeout}).click();
 }
 
 function lueTarjousarvot() {
@@ -300,7 +303,7 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         });
         cy.wait(100);
         cy.contains(".koontilaskun-kuukaudet-komp", "Syyskuu - 1. hoitovuosi", {timeout}).click();
-        cy.contains("Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty", {timeout})
+        cy.contains("Kuluja ei voi kirjata 1. hoitovuodelle 2025-2026", {timeout})
             .should("be.visible");
         cy.get(".kululomake").contains("button", "Tallenna").should("be.disabled");
         cy.get(".kululomake").contains("button", "Takaisin").click();
@@ -312,11 +315,28 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get("[data-cy=tabs-taso1-Toteumat]").click();
         cy.get("[data-cy=tabs-taso2-Tehtavat]").click();
         cy.wait("@hae-tehtavat", {timeout});
-        cy.get("#hoitokausi-valikko").click();
-        cy.contains("li", "1.10.2025-30.9.2026").click();
+        valitseHoitovuosi();
+        //cy.get("#hoitokausi-valikko").click();
+       // cy.contains("li", "1.10.2025-30.9.2026").click();
         cy.get("[data-cy=lisaa-toteuma-nappi]").click();
+        const tarkistaPaivamaaranValidoinnit = (otsikko) => {
+            const kentta = () => cy.get(".toteumamaarat-lomake")
+                .contains("label", otsikko)
+                .parents(".form-group");
+            kentta().find("input").first().clear().type(lukitsemattomanHoitovuodenPvm).blur();
+            kentta().find("input").first().clear();
+            kentta().contains("Anna päivämäärä").should("be.visible");
+            kentta().find("input").first().type(lukitunHoitovuodenPvm).blur();
+            kentta().contains("Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026")
+                .should("be.visible");
+        };
+        // Tarkista päivämäärävalidoinnit molemmissa toteumatyypeissä.
+        tarkistaPaivamaaranValidoinnit("Työ valmis");
+        cy.get(".toteumamaarat-lomake").contains("label", "Lisätyö").click();
+        tarkistaPaivamaaranValidoinnit("Pvm");
+        cy.get(".toteumamaarat-lomake").contains("label", "Määrämitattava tehtävä").click();
         cy.get(".toteumamaarat-lomake").contains("label", "Työ valmis")
-            .parents(".form-group").find("input").first().clear().type(lukitunHoitovuodenPvm);
+            .parents(".form-group").find("input").first().clear().type(lukitunHoitovuodenPvm).blur();
         cy.get('[data-cy="toimenpide-valikko"]').valinnatValitse({valinta: '4 PÄÄLLYSTEIDEN PAIKKAUS'});
         cy.wait(100);
         cy.get('[data-cy="tehtava-valikko-0"]').valinnatValitse({valinta: 'AB-paikkaus levittäjällä'});
@@ -328,7 +348,9 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get('input.tierekisteri.input-default.tr-alkuetaisyys').type('{selectall}0')
         cy.get('input.tierekisteri.input-default.tr-loppuosa').type('{selectall}420')
         cy.get('input.tierekisteri.input-default.tr-loppuetaisyys').type('{selectall}1000')
-        cy.contains("Välikatselmuksen päätös lukitsee hoitovuoden 2025, joten tälle hoitovuodelle ei voi tallentaa toteumaa.")
+        cy.contains("Et voi kirjata toteumaa 1. hoitovuodelle 2025-2026")
+            .should("be.visible");
+        cy.contains("Toteutumia ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu.")
             .should("be.visible");
         cy.get("[data-cy=Tallenna-toteuma-nappi]").click();
         odotaLukitusvirhe("@tallenna-tehtavatoteuma", "lukitsee hoitovuoden 2025");
@@ -402,7 +424,7 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.contains(".lisaa-nappi", "Lisää uusi").click();
         cy.get(sivupaneeli, {timeout}).should("be.visible");
         cy.get(sivupaneeli).contains("label", "Arvonvähennys").click();
-        cy.contains("Välikatselmuksessa päätös lukitsee tavoitehintaa alentavat arvonvähennykset.")
+        cy.contains("Et voi kirjata arvonvähennystä tälle hoitovuodelle")
             .should("be.visible");
         cy.get(sivupaneeli).contains("button", "Tallenna").should("not.exist");
     });
