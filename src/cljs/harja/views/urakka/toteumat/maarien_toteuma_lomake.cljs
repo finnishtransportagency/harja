@@ -310,6 +310,7 @@
                          (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
                      (e! (tiedot/->PaivitaSijainti data 0))
                      (e! (tiedot/->PaivitaLomake data nil 0))))
+       :nayta-validoinnit? @tiedot/nayta-validoinnit?
        :voi-muokata? true
        :luokka "toteumamaarat-lomake"
        :tarkkaile-ulkopuolisia-muutoksia? true
