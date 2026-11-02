@@ -232,6 +232,24 @@
               {:urakka-id urakka-id :alkanut alkanut}))))
     (is (= [[urakka-id 2005 :toteuma]] @tarkistetut))))
 
+(deftest hae-materiaalitoteuman-lukitustiedot-molemmille-paiville
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        alkanut (pvm/luo-pvm 2005 11 24)
+        paattynyt (pvm/luo-pvm 2006 10 1)
+        tarkistetut (atom [])]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                    (fn [_ urakka vuosi ominaisuus]
+                      (swap! tarkistetut conj [urakka vuosi ominaisuus])
+                      false)]
+      (is (= {:alkuperainen nil
+                :valittu {:hoitovuosi 2005 :lukittu? true}
+                :valittu-paattynyt {:hoitovuosi 2006 :lukittu? true}}
+              (kutsu-palvelua (:http-palvelin jarjestelma)
+                :hae-materiaalitoteuman-lukitustiedot
+                +kayttaja-jvh+
+                {:urakka-id urakka-id :alkanut alkanut :paattynyt paattynyt}))))
+    (is (= [[urakka-id 2005 :toteuma] [urakka-id 2006 :toteuma]] @tarkistetut))))
+
 (deftest tallenna-toteuma-materiaaleja-estaa-lukitun-hoitovuoden
   (let [urakka-id @oulun-alueurakan-2005-2010-id
         toteuma-id (ffirst

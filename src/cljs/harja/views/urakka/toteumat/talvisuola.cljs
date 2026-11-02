@@ -201,8 +201,15 @@
       {:otsikko "Pvm" :nimi :pvm :fmt pvm/pvm-opt :tyyppi :pvm :leveys 20
        :muokattava? (partial suolatoteuma-muokattavissa? muokattava?)
        :validoi [[:ei-tyhja "Anna päivämäärä"]
-                 [:hoitovuosi-lukittu lukitut-hoitovuodet
-                  "Välikatselmuksen päätös lukitsee hoitovuoden, tarkista päivämäärä."]]
+                 (fn [paivamaara _rivi _taulukko]
+                   (when-let [hoitovuosi (when paivamaara
+                                           (pvm/hoitokauden-alkuvuosi paivamaara))]
+                     (when (and (:alkupvm urakka)
+                             (contains? (set @lukitut-hoitovuodet) hoitovuosi))
+                       (str "Päivämäärää ei voida asettaa "
+                         (pvm/paivamaara->mhu-hoitovuosi-nro (:alkupvm urakka) paivamaara)
+                         ". hoitovuodelle " hoitovuosi "-" (inc hoitovuosi) ",
+                         koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]
        :huomauta [[:valitun-kkn-aikana-urakan-hoitokaudella]]}
       {:otsikko "Käytetty määrä (100% kuivatonni)" :nimi :maara :fmt #(fmt/desimaaliluku-opt % 3)
        :tyyppi :positiivinen-numero :desimaalien-maara 3 :leveys 30

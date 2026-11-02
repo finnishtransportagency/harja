@@ -67,7 +67,12 @@
                                          kuukausi (pvm/kuukausi perintapvm)
                                          hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
                                      (when (some #{hoitovuosi} hoitovuodet)
-                                       hoitovuosi))))]
+                                       hoitovuosi))))
+        hoitovuosi-lukittu? (fn [arvonvahennyksen-hoitovuosi]
+                              (some (fn [{:keys [vuosi lukittu?]}]
+                                      (and (= vuosi arvonvahennyksen-hoitovuosi)
+                                        lukittu?))
+                                (:lukitustiedot app)))]
 
 
 
@@ -267,7 +272,13 @@
                      true
                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm
-          :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                    (fn [paivamaara _rivi _taulukko]
+                      (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                        (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                          (str "Päivämäärää ei voida asettaa "
+                            (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                            ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
 
          ;; Laskutuskuukausi - muokkausmoodi
          (cond
