@@ -32,6 +32,7 @@
             [harja.palvelin.raportointi :as raportointi]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.kyselyt.sanktiot :as sanktiot-q]
+            [harja.kyselyt.urakat :as urakat]
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.laadunseuranta-tulosteet :as laadunseuranta-tulosteet]
@@ -2398,6 +2399,25 @@
         bonus (first (filter #(= :alihankkijatyytyvaisyyskyselybonus (:laji %)) vastaus))]
     (is (= "Bonus alihankkijatyytyväisyyden kyselytutkimuksen tuloksesta"
            (:laji-nimi bonus)))))
+
+(deftest hae-urakan-sanktiot-ja-bonukset-toimii-ilman-alkupaivamaaraa
+  (let [urakka-id 123
+        bonus {:laji :alihankkijatyytyvaisyyskyselybonus
+               :kasittelyaika (pvm/->pvm "15.10.2026")}
+        hae-bonukset (fn [_ _] [bonus])]
+    (with-redefs [sanktiot-q/hae-urakan-sanktiot (fn [_ _] [])
+                  sanktiot-q/hae-urakan-bonukset hae-bonukset
+                  urakat/hae-urakka (fn [_ _] [{:alkupvm (pvm/->pvm "01.10.2026")
+                                                 :tyyppi "teiden-hoito"}])]
+      (is (= [(assoc bonus
+            :bonus? true
+            :laji-nimi "Bonuksen nimi puuttuu aktiivisesta bonusprofiilista")]
+             (ls/hae-urakan-sanktiot-ja-bonukset
+               (:db jarjestelma)
+               +kayttaja-jvh+
+               {:urakka-id urakka-id
+                :alku nil
+                :loppu (pvm/->pvm "30.09.2027")}))))))
 
 (deftest hae-urakan-sanktiot-ja-bonukset-ratkaisee-bonusprofiilin-hoitovuoden-rivikohtaisesti
   (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")

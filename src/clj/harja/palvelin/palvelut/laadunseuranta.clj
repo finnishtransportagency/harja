@@ -158,8 +158,7 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
-        urakan-tiedot (when (and (seq urakan-bonukset) alku)
-                        (first (urakat/hae-urakka db {:id urakka-id})))
+        urakan-tiedot (first (urakat/hae-urakka db {:id urakka-id}))
         teiden-hoito? (= :teiden-hoito (keyword (:tyyppi urakan-tiedot)))
         bonusten-lajien-nimet (when teiden-hoito?
                                 (->> urakan-bonukset
