@@ -394,7 +394,9 @@
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi vuosi
          :toimenpiteet kilpailutettavat-hankinnat
-         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+         :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+         :kustannussuunnitelma (:kustannussuunnitelma app)}
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
          :paasta-virhe-lapi? true})
@@ -445,7 +447,9 @@
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :erillishankinnat erillishankinnat
-       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+       :kustannussuunnitelma (:kustannussuunnitelma app)}
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
        :paasta-virhe-lapi? true})
@@ -513,7 +517,9 @@
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :hoidonjohtopalkkiot hoidonjohtopalkkiot
-       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+       :kustannussuunnitelma (:kustannussuunnitelma app)}
       {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
        :epaonnistui ->TallennaHoidonjohtopalkkiotEpaonnistui
        :paasta-virhe-lapi? true})
@@ -599,7 +605,9 @@
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
          avain johto-ja-hallintokorvaukset
-         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+         :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+         :kustannussuunnitelma (:kustannussuunnitelma app)}
         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
          :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
          :paasta-virhe-lapi? true})
@@ -690,7 +698,8 @@
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :vahvista? vahvista?
-       :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)}
+       :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)
+       :yhteenlaskettu-tavoitehinta (:yhteenlaskettu-tavoitehinta app)}
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
        :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
        :paasta-virhe-lapi? true})

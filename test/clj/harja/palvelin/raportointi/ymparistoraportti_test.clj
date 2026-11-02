@@ -13,6 +13,7 @@
             [clj-time.coerce :as c]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
+            [harja.palvelin.raportointi.raportit.ymparisto :as ymparisto]
             [harja.palvelin.palvelut.raportit :as raportit]
             [harja.palvelin.raportointi.testiapurit :as apurit]
             [clojure.string :as str]))
@@ -887,4 +888,94 @@ VALUES
       (is (some? raportti) "Ympäristöraportti generoituu MHU-urakalle")
       (is (some? talvisuolat-taulukko) "Talvisuolat-taulukko löytyy raportista")
       (is (some? paikkausmateriaalit-taulukko) "Paikkausmateriaalit-taulukko löytyy raportista"))))
+
+(deftest murskeiden-yhteenvetorivin-suunniteltu-maara
+  (let [materiaali {:id 12 :nimi "Sorastusmurske" :yksikko "t" :tyyppi "murske"}
+        urakka-a {:id 101 :nimi "Urakka A"}
+        urakka-b {:id 102 :nimi "Urakka B"}
+        suunnitelmarivi (fn [urakka maara]
+                          {:maara maara
+                           :maarantyyppi "suunnitelma"
+                           :materiaali materiaali
+                           :urakka urakka
+                           :hoitokauden-alkuvuosi 2024
+                           :talvitieluokka nil
+                           :soratieluokka nil})
+        materiaalit-kannasta [[{:materiaali materiaali :urakka urakka-a}
+                               [(suunnitelmarivi urakka-a 100M)
+                                (suunnitelmarivi urakka-a 25M)
+                                (assoc (suunnitelmarivi urakka-a 900M) :maarantyyppi "toteuma")]]
+                              [{:materiaali materiaali :urakka urakka-b}
+                               [(suunnitelmarivi urakka-b 40M)]]]
+        suunnitelmat (fn [urakoittain?]
+                       (ymparisto/summaa-murskeiden-suunnitelmat urakoittain? materiaalit-kannasta))
+        taulukon-rivit (fn [urakoittain?]
+                         (let [yhteenveto (ymparisto/koosta-yhteensa-rivi
+                                            {}
+                                            ymparisto/materiaali-kaikki-murskeet-yhteensa
+                                            (suunnitelmat urakoittain?))]
+                           (apurit/taulukon-rivit
+                             (ymparisto/koosta-taulukko {:otsikko "Murskeet"
+                                                         :konteksti :koko-maa
+                                                         :kuukaudet []
+                                                         :hoitokaudet [2024]
+                                                         :urakoittain? urakoittain?
+                                                         :osamateriaalit yhteenveto
+                                                         :nayta-suunnittelu? true
+                                                         :koko-urakkaaika? true} :html))))
+        suunniteltu-summa (fn [{:keys [rivi]}]
+                            (:arvo (second (nth rivi (- (count rivi) 2)))))
+        urakkakohtaiset-maarat (into {}
+                                 (map (fn [{:keys [rivi] :as taulukkorivi}]
+                                        [(second rivi) (suunniteltu-summa taulukkorivi)]))
+                                 (taulukon-rivit true))]
+    (is (= 125M (get-in (suunnitelmat true) [urakka-a 0 :maara])))
+    (is (= 40M (get-in (suunnitelmat true) [urakka-b 0 :maara])))
+    (is (= 165M (suunniteltu-summa (first (taulukon-rivit false)))))
+    (is (= {"Urakka A" 125M "Urakka B" 40M} urakkakohtaiset-maarat))))
+
+(deftest formiaattien-yhteenvetorivin-suunniteltu-maara
+  (let [materiaali {:id 6 :nimi "Kaliumformiaattiliuos" :yksikko "t" :tyyppi "formiaatti"}
+        urakka-a {:id 201 :nimi "Urakka A"}
+        urakka-b {:id 202 :nimi "Urakka B"}
+        suunnitelmarivi (fn [urakka maara]
+                          {:maara maara
+                           :maarantyyppi "suunnitelma"
+                           :materiaali materiaali
+                           :urakka urakka
+                           :hoitokauden-alkuvuosi 2024
+                           :talvitieluokka nil
+                           :soratieluokka nil})
+        materiaalit-kannasta [[{:materiaali materiaali :urakka urakka-a}
+                               [(suunnitelmarivi urakka-a 50M)
+                                (suunnitelmarivi urakka-a 25M)
+                                (assoc (suunnitelmarivi urakka-a 900M) :maarantyyppi "toteuma")]]
+                              [{:materiaali materiaali :urakka urakka-b}
+                               [(suunnitelmarivi urakka-b 40M)]]]
+        suunnitelmat (fn [urakoittain?]
+                       (ymparisto/summaa-formiaattien-suunnitelmat urakoittain? materiaalit-kannasta))
+        taulukon-rivit (fn [urakoittain?]
+                         (let [yhteenveto (ymparisto/koosta-yhteensa-rivi
+                                            {}
+                                            ymparisto/materiaali-kaikki-formiaatit-yhteensa
+                                            (suunnitelmat urakoittain?))]
+                           (apurit/taulukon-rivit
+                             (ymparisto/koosta-taulukko {:otsikko "Formiaatit"
+                                                         :konteksti :koko-maa
+                                                         :kuukaudet []
+                                                         :hoitokaudet [2024]
+                                                         :urakoittain? urakoittain?
+                                                         :osamateriaalit yhteenveto
+                                                         :nayta-suunnittelu? true
+                                                         :koko-urakkaaika? true} :html))))
+        suunniteltu-summa (fn [{:keys [rivi]}]
+                            (:arvo (second (nth rivi (- (count rivi) 2)))))
+        urakkakohtaiset-maarat (into {}
+                                 (map (fn [{:keys [rivi] :as taulukkorivi}]
+                                        [(second rivi) (suunniteltu-summa taulukkorivi)]))
+                                 (taulukon-rivit true))]
+    (is (= 75M (get-in (suunnitelmat true) [urakka-a 0 :maara])))
+    (is (= 40M (get-in (suunnitelmat true) [urakka-b 0 :maara])))
+    (is (= 115M (suunniteltu-summa (first (taulukon-rivit false)))))
+    (is (= {"Urakka A" 75M "Urakka B" 40M} urakkakohtaiset-maarat))))
 

@@ -1568,20 +1568,32 @@ BEGIN
             RAISE NOTICE 'paatos_rivi.summa: %', paatos_rivi.summa;
         end loop;
 
-    -- Muut kulut yhteensä, ei tavoitehintaiset
+    -- Muut kulut yhteensä, ei tavoitehintaiset - Yhteensä rivinä Tavoitehinna ulkopuolset kustannukset taulukossa.
+    -- Näissä on ollut epäselvyyksiä vuonna 2026. Lisätyöt, bonukset ja sanktiot on palautettu laskutusyhteenvedossa näytettäväksi ei tavoitehintaisissa.
     muut_kulut_ei_tavoite_hoitokausi_yht := muut_kulut_ei_tavoite_hoitokausi + 
                                             paatos_tavoitepalkkio_hoitokausi_yht + 
                                             paatos_tavoiteh_ylitys_hoitokausi_yht + 
                                             paatos_kattoh_ylitys_hoitokausi_yht +
-                                            paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht;
+                                            paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht +
+                                            -- Lisätyöt, bonukset ja sanktiot
+                                            lisatyot_hoitokausi_yht +
+                                            bonukset_hoitokausi_yht +
+                                            sanktiot_hoitokausi_yht;
 
     muut_kulut_ei_tavoite_val_aika_yht := muut_kulut_ei_tavoite_val_aika +
                                           paatos_tavoitepalkkio_val_aika_yht + 
                                           paatos_tavoiteh_ylitys_val_aika_yht +
                                           paatos_kattoh_ylitys_val_aika_yht +
-                                          paatos_hoidonjohtopalkkion_muutos_val_aika_yht;
+                                          paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
+                                          -- Lisätyöt, bonukset ja sanktiot
+                                          lisatyot_val_aika_yht +
+                                          bonukset_val_aika_yht +
+                                          sanktiot_val_aika_yht;
 
-    -- Tavoitehinnan ulkopuoliset kustannukset yhteensä
+
+    -- Tavoitehinnan ulkopuoliset kustannukset yhteensä - Näytetään omassa osiossaan laskutusyhteenvedossa,
+    -- mutta ei Yhteensä rivillä Tavoitehinnan ulkopuoliset kustannukset taulukossa. Eli tämä summa on kahdesti
+    -- raportissa -- TODO: Korjaa jossain vaiheessa.
     muut_kustannukset_hoitokausi_yht := 0.0;
     muut_kustannukset_val_aika_yht := 0.0;
 
@@ -1590,14 +1602,20 @@ BEGIN
             paatos_tavoitepalkkio_hoitokausi_yht + paatos_tavoiteh_ylitys_hoitokausi_yht +
             paatos_kattoh_ylitys_hoitokausi_yht + paatos_hoidonjohtopalkkion_muutos_hoitokausi_yht +
             -- Ei tavoitehintaiset muut kulut
-            muut_kulut_ei_tavoite_hoitokausi;
+            muut_kulut_ei_tavoite_hoitokausi +
+            -- Bonukset ja sanktiot
+            bonukset_hoitokausi_yht +
+            sanktiot_hoitokausi_yht;
     
     muut_kustannukset_val_aika_yht :=
             muut_kustannukset_val_aika_yht + lisatyot_val_aika_yht + 
             paatos_tavoitepalkkio_val_aika_yht + paatos_tavoiteh_ylitys_val_aika_yht +
             paatos_kattoh_ylitys_val_aika_yht + paatos_hoidonjohtopalkkion_muutos_val_aika_yht +
             -- Ei tavoitehintaiset muut kulut
-            muut_kulut_ei_tavoite_val_aika;
+            muut_kulut_ei_tavoite_val_aika +
+            -- Bonukset ja sanktiot
+            bonukset_val_aika_yht +
+            sanktiot_val_aika_yht;
     
     ---------------------------------
     --------- Laskutusraja ----------
@@ -1671,24 +1689,6 @@ BEGIN
         laskutettavaa_kaikki_val_aika := laskutusraja_laskutettavaa_val_aika + muut_kustannukset_val_aika_yht;
     END IF;
 
-
-    -- MHU25 urakoille ei lasketa sanktioita & bonuksia
-    -- Jos laskutusrajaa ei ole, urakka ei ole MHU25 
-    IF NOT onko_laskutusraja_kaytossa THEN
-        muut_kustannukset_hoitokausi_yht :=
-            muut_kustannukset_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
-
-        muut_kustannukset_val_aika_yht :=
-            muut_kustannukset_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
-
-        muut_kulut_ei_tavoite_hoitokausi_yht :=
-            muut_kulut_ei_tavoite_hoitokausi_yht + bonukset_hoitokausi_yht + sanktiot_hoitokausi_yht;
-
-        muut_kulut_ei_tavoite_val_aika_yht :=
-            muut_kulut_ei_tavoite_val_aika_yht + bonukset_val_aika_yht + sanktiot_val_aika_yht;
-    END IF;
-    
-    
     -- Kaikki yhteensä
     yhteensa_kaikki_hoitokausi_yht := 0.0;
     yhteensa_kaikki_val_aika_yht := 0.0;
