@@ -182,8 +182,8 @@
          arvo))
 
      (defn syote-vastaa-snapshotia?
-       "Tosi, kun pyynnön raakasyöte on numeerisesti sama kuin tallennetun snapshotin syöte.
-       Muun kuin äärellisen skalaarisen numeron kohdalla epätosi, jolloin syöte validoidaan normaalisti."
+       "Tosi, jos pyynnössä tullut numero on sama kuin aiemmin tallennettu numero.
+       Jos arvo ei ole tavallinen äärellinen yksittäinen numero, epätosi, jolloin arvo tarkistetaan normaalisti."
        [snapshot syote]
        (let [vertailtava? (fn [x] (and (number? x) (not (ratio? x))
                                     (or (decimal? x) (integer? x) (Double/isFinite (double x)))))
