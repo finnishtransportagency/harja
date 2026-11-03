@@ -17,12 +17,12 @@
 # Lue ohjeet Dockerfilejen käyttöön Github Actions container jobeissa:
 # https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions
 
-# Käytetään pohjana virallista nodejs (24 LTS) Debian imagea.
+# Käytetään pohjana virallista nodejs (26 LTS) Debian imagea.
 # Tämänhetkinen Debianin stable-release on versio: 13 (trixie)
 # GH Actions: "It's recommended to use Docker images based on the Debian operating system."
 # https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
 
-FROM node:24-trixie-slim
+FROM node:26-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39
 
 # Yhdistä image harjan repositoryyn
 LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
