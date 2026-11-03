@@ -304,6 +304,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.wait('@sanktiot', {timeout: clickTimeout})
             .its('response.statusCode').should('be.within', 200, 299)
+        cy.get('tr').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout})
+            .closest('tr').should('contain.text', '7 000')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         cy.contains('B - Vakava laiminlyönti').should('be.visible')
         cy.contains(tyyppiMhu26B).should('be.visible')
@@ -323,6 +325,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.wait('@sanktiot', {timeout: clickTimeout})
             .its('response.statusCode').should('be.within', 200, 299)
+        cy.get('tr').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout})
+            .closest('tr').should('contain.text', '14 000')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         sanktionSuuruus().invoke('text').should('match', /14\s?000/)
         omailmoitus().should('not.be.checked')
@@ -338,6 +342,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.wait('@sanktiot', {timeout: clickTimeout})
             .its('response.statusCode').should('be.within', 200, 299)
+        cy.get('tr').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout})
+            .closest('tr').should('contain.text', '7 000')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         sanktionSuuruus().invoke('text').should('match', /7\s?000/)
         omailmoitus().should('be.checked')
@@ -351,6 +357,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.wait('@sanktiot', {timeout: clickTimeout})
             .its('response.statusCode').should('be.within', 200, 299)
+        cy.get('tr').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout})
+            .closest('tr').should('contain.text', '7 000')
         cy.get('td').contains(testiSanktioKuvausMhu26B, {timeout: clickTimeout}).should('be.visible').click()
         sanktionSuuruus().invoke('text').should('match', /7\s?000/)
     })
