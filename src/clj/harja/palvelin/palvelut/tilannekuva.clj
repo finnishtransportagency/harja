@@ -53,6 +53,7 @@
             [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
             [harja.kyselyt
              [konversio :as konv]
+             [kayttaja :as kayttaja-q]
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
              [tietyoilmoitukset :as tietyoilmoitukset-q]
@@ -122,7 +123,7 @@
   [db user oikeus-nakyma]
   (filter
     #(oikeudet/voi-lukea? oikeus-nakyma (:id %) user)
-    (q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})))
+    (kayttaja-q/urakoitsijan-urakat db {:organisaatio (get-in user [:organisaatio :id])})))
 
 (defn- urakat-joihin-lukuoikeus-roolin-kautta
   ;; On urakoita, joissa urakoitsijoita on useasta eri organisaatiosta. Tällöin käyttäjän organisaatioon
@@ -154,7 +155,7 @@
           (set
             (map
               :id
-              (q/elinvoimakeskusten-urakat-ilman-valaistus-urakoita
+              (kayttaja-q/elinvoimakeskusten-urakat-ilman-valaistus-urakoita
                 db
                 {:elinvoimakeskusnumerot (map
                                            :elinvoimakeskus_id
@@ -582,7 +583,7 @@
                  nil (:urakoitsija tiedot) nil
                  nil (:alku tiedot) (:loppu tiedot))
         saman-evkn-urakat (when (oikeudet/on-muu-oikeus? "oman-urakan-ely" oikeus-nakyma nil user)
-                            (->> (q/elinvoimakeskusten-urakat
+                            (->> (kayttaja-q/elinvoimakeskusten-urakat
                                    db {:elinvoimakeskukset
                                        (set
                                          (map

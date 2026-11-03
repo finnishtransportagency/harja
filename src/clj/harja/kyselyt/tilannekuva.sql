@@ -669,29 +669,6 @@ WHERE st.poistettu IS NULL
                                                             OR suorittava_tiemerkintaurakka IN (:urakat))
       AND ST_Intersects(ST_MakeEnvelope(:x1, :y1, :x2, :y2), st.envelope);
 
--- name: urakoitsijan-urakat
-SELECT
-  u.id, u.hallintayksikko, u.elinvoimakeskus_id
-FROM urakka u
-  LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
-WHERE urk.id = :organisaatio;
-
--- name: elinvoimakeskusten-urakat-ilman-valaistus-urakoita
-SELECT  
-  u.id, u.elinvoimakeskus_id
-FROM urakka u
-  LEFT JOIN organisaatio elv ON u.elinvoimakeskus_id = elv.id
-WHERE (elv.id IN (:elinvoimakeskusnumerot) OR
-       elv.id IN (SELECT elinvoimakeskus_id FROM urakka WHERE id IN (:urakat))
-           and elinvoimakeskus_id is NOT NULL)
-  AND u.tyyppi != 'valaistus';
-
--- name: elinvoimakeskusten-urakat
-SELECT u.id,
-       u.elinvoimakeskus_id AS elinvoimakeskus,
-       u.tyyppi
-FROM urakka u
-WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset);
 
 -- name: hae-viimeisin-toteuma
 -- Urakkakohtaisesti tarkasteltuna ajaudutaan patologisen hitaaseen kyselyyn
