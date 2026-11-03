@@ -535,19 +535,6 @@
                       #(reset! sivupaneeli-auki?-atom false)))
        :nappi napit/palvelinkutsu-nappi})))
 
-(defn- omailmoitus-kentta
-  [omailmoitus-sallittu?]
-  (when omailmoitus-sallittu?
-    {:otsikko ""
-     :nimi :omailmoitettu
-     :tyyppi :checkbox
-     :pieni-teksti? true
-     :uusi-rivi? true
-     ::lomake/col-luokka "col-xs-12"
-     :hae :omailmoitettu
-     :aseta (fn [rivi arvo] (assoc rivi :omailmoitettu (boolean arvo)))
-     :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
-
 (defn sanktio-lomake
   [_sivupaneeli-auki?-atom _lukutila? _voi-muokata? & [_asetukset]]
   (let [laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
