@@ -347,9 +347,14 @@
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktion-summamaaritys/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
+        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                             (get-in profiilirivi [:profiilirivi :id]))
         tilannekuvan-maaritystapa (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
                                     ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
-                                    (when-not (= :laskettu tallennettu) tallennettu))
+                                    ;; Tilannekuva koskee vain samaa profiiliriviä; riviä vaihdettaessa
+                                    ;; määritystapa ja normaalimäärä ratkaistaan uuden rivin mukaan.
+                                    (when (and sama-profiilirivi? (not= :laskettu tallennettu))
+                                      tallennettu))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
                             (if (= :C laji)
@@ -425,8 +430,7 @@
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
                 :normaalimaara normaalimaara
                 :omailmoitettu omailmoitettu
-                :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
-                                         (get-in profiilirivi [:profiilirivi :id]))
+                :sanktio_profiili_rivi (get-in profiilirivi [:profiilirivi :id])
                 :maaritystapa (some-> (if laskenta :laskettu (or tilannekuvan-maaritystapa maaritystapa)) name)
                 :laskennan_syote (some-> laskenta :laskennan-syote cheshire/generate-string)
                 :summa (when summa
