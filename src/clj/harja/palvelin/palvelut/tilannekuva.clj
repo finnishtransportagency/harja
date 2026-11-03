@@ -53,7 +53,7 @@
             [harja.domain.laadunseuranta.tarkastus :as tarkastus-domain]
             [harja.kyselyt
              [konversio :as konv]
-             [kayttaja :as kayttaja-q]
+             [kayttajat :as kayttaja-q]
              [tilannekuva :as q]
              [turvallisuuspoikkeamat :as turvallisuuspoikkeamat-q]
              [tietyoilmoitukset :as tietyoilmoitukset-q]
