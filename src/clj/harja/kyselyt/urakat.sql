@@ -1386,6 +1386,9 @@ WHERE
 -- name: aseta-tai-paivita-urakkaparametrit
 SELECT aseta_tai_paivita_urakka_parametrit_urakalle(:urakkaid);
 
+-- name: aseta-tai-paivita-vesivaylaurakan-parametrit
+SELECT aseta_tai_paivita_urakka_parametrit_vesivaylaurakalle(:urakkaid);
+
 -- name: hae-urakan-parametrit
 select *
   from urakka_parametrit
@@ -1393,6 +1396,9 @@ select *
 
 -- name: aseta-urakan-toimenkuvat
 SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
+
+-- name: aseta-vesivaylaurakan-toimenkuvat
+SELECT lisaa_vesivaylaurakan_toimenkuvat_urakalle(:alkupvm);
 
 -- name: hae-90pv-paattyneet-urakat
 -- Hakee urakat, jotka on päättyneet vähintään 90 päivää sitten, mutta vähemmän kuin 180 pv sitten,
