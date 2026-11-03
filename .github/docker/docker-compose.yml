@@ -49,7 +49,7 @@ services:
   # -- ActiveMQ --
   # Uusi ActiveMQ Artemis broker
   activemq-artemis-itmf:
-    image:  ghcr.io/finnishtransportagency/harja_activemq_artemis:2.57.0-alpine@sha256:89c42194901c4b7dac6e1033aa81b76d57acf4ed67739f551b545c883a25f172
+    image:  ghcr.io/finnishtransportagency/harja_activemq_artemis:latest@sha256:e70ee7ef8c6e34ed1ea9e5fdd86406e49e8892740729c44ca1cb77e29e20f485
     container_name: activemq-artemis-itmf
     networks:
       - harja_net
