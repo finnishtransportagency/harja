@@ -46,6 +46,32 @@ services:
   # NOTE: Testattavia imagen versiota varten voi tarvittaessa lisätä tähän omia compose konfiguraatioita, koska
   # imagen versioissa healthcheck, volumet ym. asetukset voivat muuttua. Tällöin image vaatii erilaisen konfiguraation.
 
+  # -- Cypress --
+  cypress-latest:
+    image: ghcr.io/finnishtransportagency/harja_cypress:latest@sha256:7eb79a7402ecaed788beadbc98602b7d88d8a26a83708a75ce6bd15ce1f2c375
+    # Harja käynnistetään runnerilla, joten localhost-yhteydet tarvitsevat host-verkon.
+    network_mode: host
+    user: node
+    working_dir: /harja
+    environment:
+      ELECTRON_EXTRA_LAUNCH_ARGS: "--disable-gpu"
+      CYPRESS_VIDEO: "false"
+      BROWSER: "${BROWSER:-chrome}"
+      SPEC: "${SPEC:-}"
+    volumes:
+      - "${GITHUB_WORKSPACE:-../..}:/harja"
+    command:
+      - bash
+      - -c
+      - |
+        echo -e "Chrome version:  $$(google-chrome --version)\nEdge version:  $$(edge --version)\n";
+        echo "-------------------";
+        if [ -n "$$SPEC" ]; then
+          cypress run --browser "$$BROWSER" --spec "$$SPEC";
+        else
+          cypress run --browser "$$BROWSER";
+        fi
+
   # -- ActiveMQ --
   # Uusi ActiveMQ Artemis broker
   activemq-artemis-itmf:

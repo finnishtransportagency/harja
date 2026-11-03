@@ -783,6 +783,7 @@ jobs:
       - name: Run cypress for ${{ matrix.browser }} (shard ${{ matrix.shard }})
         uses: $/.github/actions/start-cypress
         with:
+          service-name: cypress-latest
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}

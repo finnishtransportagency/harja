@@ -18,7 +18,8 @@ valitettavasti hyödyt:
    kopioimaan jobeihin missä niitä haluaa käyttää. Tämä hankaloittaa jobien ylläpitoa.
 3. Kaikkia containereita ei voi tai ei kannata ajaa serviceinä.
 
-Näiden haittapuolien ja ylläpidon vaikeuden takia, kaikki tarvittavat Docker kontit ajetaan suoraan Docker run komennoilla.  
+Näiden haittapuolien ja ylläpidon vaikeuden takia tarvittavat Docker-kontit käynnistetään jobien vaiheissa
+Docker Compose- tai Docker run -komennoilla.
 Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../actions/).  
 Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](./docker-compose.yml) -tiedostoon,
 jotta konttien hallinta olisi mahdollisimman yksinkertaista ja asetuksia voisi helpommin ylläpitää.
