@@ -51,6 +51,10 @@ until docker exec "${POSTGRESQL_NAME:-harjadb}" pg_isready; do
     sleep 0.5
 done
 
+echo "PostgreSQL versiotiedot:"
+docker exec --user postgres harjadb psql -c 'SELECT version();'
+docker exec --user postgres harjadb psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
+
 # shellcheck disable=SC2088
 docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
 # shellcheck disable=SC2088
