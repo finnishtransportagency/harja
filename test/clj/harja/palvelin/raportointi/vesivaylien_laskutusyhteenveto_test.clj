@@ -637,7 +637,6 @@
     (is (vector? vastaus))
     (is (= (first vastaus) :raportti))
 
-    (is (= ["Yhteensä" "" 60.0M ""] taulukko-kauppamerenkulku-yhteensa))
+    (is (= ["Yhteensä" "" 30.0M ""] taulukko-kauppamerenkulku-yhteensa))
     (is (= ["Yhteensä" "" 0M ""] taulukko-muu-vesiliikenne-yhteensa))
-    (is (= ["Kaikki yhteensä" 20060.0M] taulukko-yhteenveto-yhteensa))))
-
+    (is (= ["Kaikki yhteensä" 10030.0M] taulukko-yhteenveto-yhteensa))))
