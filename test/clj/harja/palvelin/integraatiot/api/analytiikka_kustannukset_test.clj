@@ -214,8 +214,10 @@
         sanktiolle-sopiva-toimenpideinstanssi-id (hae-toimenpideinstanssi-id urakka-id "23104") ;; "Oulumhun talvihoito" TODO: Kehittele näiden instanssien hallintaan joku muu tapa, kuin kaivella ne aina suoraa tietokannasta.
         sanktio-summa 123.12M
         sanktio-aika (pvm/nyt)
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 13"))
         laatupoikkeama (testidatan-generointi/luo-laatupoikkeama urakka-id)
-        uusi-sanktio (testidatan-generointi/uusi-sanktio (pvm/nyt) sanktio-summa sanktiolle-sopiva-toimenpideinstanssi-id)
+        uusi-sanktio (assoc (testidatan-generointi/uusi-sanktio (pvm/nyt) sanktio-summa sanktiolle-sopiva-toimenpideinstanssi-id)
+                       :tyyppi {:id sanktiotyyppi-id})
         uusi-paatos (testidatan-generointi/luo-sanktio-paatos sanktio-aika "Testi")
         laatupoikkeama (assoc laatupoikkeama
                          :paatos uusi-paatos
