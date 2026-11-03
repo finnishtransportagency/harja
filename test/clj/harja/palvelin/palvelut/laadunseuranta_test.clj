@@ -1252,6 +1252,186 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
+;; Apurit MHU26-sanktion tyypin- ja lajinvaihtotesteille. Tallennus kulkee julkisen palvelukutsun kautta,
+;; ja tilanne luetaan sekä tietokannasta että päälistan palvelusta.
+(defn- mhu26-vaihtotestin-tiedot [perustelu]
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))]
+    {:urakka-id urakka-id
+     :tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                          " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+     :laatupoikkeama {:tekijanimi "Max Power"
+                      :paatos {:paatos "sanktio"
+                               :kasittelyaika (pvm/->pvm-aika "5.10.2026 22:00:00")
+                               :kasittelytapa :kommentit
+                               :perustelu perustelu}
+                      :aika (pvm/->pvm-aika "5.10.2026 08:00:00")
+                      :urakka urakka-id}
+     :hk-alkupvm (pvm/->pvm "1.10.2026")
+     :hk-loppupvm (pvm/->pvm "30.9.2027")}))
+
+(defn- tallenna-mhu26-sanktio-vaihtotestissa
+  "Tallentaa uuden (ei :id) tai olemassa olevan (:id) sanktion. `muutokset` täydentää perussanktiota."
+  [{:keys [tpi-id laatupoikkeama hk-alkupvm hk-loppupvm]} laji tyyppi-koodi muutokset]
+  (palvelukutsu-tallenna-suorasanktio
+    +kayttaja-jvh+
+    (merge {:suorasanktio true
+            :laji laji
+            :summa 1
+            :toimenpideinstanssi tpi-id
+            :perintapvm #inst "2026-10-05T21:00:00.000-00:00"
+            :tyyppi {:id (ffirst (q (str "SELECT id FROM sanktiotyyppi WHERE koodi = " tyyppi-koodi)))}
+            :soveltuvuuskonteksti :urakka}
+      muutokset)
+    laatupoikkeama hk-alkupvm hk-loppupvm))
+
+(defn- lue-sanktion-tilanne
+  "Palauttaa tallennetun rivin ja päälistan summan samalta sanktiolta."
+  [{:keys [urakka-id hk-alkupvm hk-loppupvm]} sanktio-id]
+  (assoc (first (q-map (str "SELECT tyyppi, sakkoryhma::text AS laji, sanktio_profiili_rivi, maaritystapa, "
+                         "normaalimaara, omailmoitettu, maara FROM sanktio WHERE id = " sanktio-id)))
+    :listan-summa (:summa (first (filter #(= sanktio-id (:id %))
+                                   (kutsu-palvelua (:http-palvelin jarjestelma)
+                                     :hae-urakan-sanktiot-ja-bonukset
+                                     +kayttaja-jvh+
+                                     {:urakka-id urakka-id
+                                      :alku hk-alkupvm
+                                      :loppu hk-loppupvm}))))))
+
+(deftest tallenna-mhu26-a-sanktion-tyypin-vaihto-paivittaa-summan
+  (let [perustelu "HARJA-2862 A-sanktion tyypin vaihto"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {})
+            vanha (lue-sanktion-tilanne tiedot sanktio-id)]
+        (is (= {:normaalimaara 6000M :maara 6000M :maaritystapa "automaattinen"}
+               (select-keys vanha [:normaalimaara :maara :maaritystapa])))
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 17 {:id sanktio-id})
+        (let [uusi (lue-sanktion-tilanne tiedot sanktio-id)]
+          (is (not= (:sanktio_profiili_rivi vanha) (:sanktio_profiili_rivi uusi))
+            "Tallennettu profiilirivi vaihtuu uuden tyypin riviksi")
+          (is (= {:normaalimaara 3000M :maara 3000M :maaritystapa "automaattinen"}
+                 (select-keys uusi [:normaalimaara :maara :maaritystapa])))
+          (is (== -3000 (:listan-summa uusi))
+            "Päälista näyttää uuden profiilin summan, ei vanhaa tallennettua")))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-a-sanktion-tyypin-edestakainen-vaihto-palauttaa-alkuperaisen-summan
+  (let [perustelu "HARJA-2862 A-sanktion tyypin edestakainen vaihto"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {})
+            alku (lue-sanktion-tilanne tiedot sanktio-id)
+            _ (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 17 {:id sanktio-id})
+            valissa (lue-sanktion-tilanne tiedot sanktio-id)
+            _ (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {:id sanktio-id})
+            lopussa (lue-sanktion-tilanne tiedot sanktio-id)]
+        (is (= [6000M 3000M 6000M] (map :maara [alku valissa lopussa])))
+        (is (= [6000M 3000M 6000M] (map :normaalimaara [alku valissa lopussa])))
+        (is (= (:sanktio_profiili_rivi alku) (:sanktio_profiili_rivi lopussa)))
+        (is (== -6000 (:listan-summa lopussa))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-b-sanktion-tyypin-vaihto-puolittaa-uuden-normaalimaaran
+  (let [perustelu "HARJA-2862 B-sanktion tyypin vaihto omailmoituksella"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :B 18 {:omailmoitettu true})
+            vanha (lue-sanktion-tilanne tiedot sanktio-id)]
+        (is (= {:normaalimaara 14000M :omailmoitettu true :maara 7000M}
+               (select-keys vanha [:normaalimaara :omailmoitettu :maara])))
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :B 17 {:id sanktio-id :omailmoitettu true})
+        (let [uusi (lue-sanktion-tilanne tiedot sanktio-id)]
+          (is (= {:normaalimaara 6000M :omailmoitettu true :maara 3000M}
+                 (select-keys uusi [:normaalimaara :omailmoitettu :maara]))
+            "Uusi normaalimäärä puolitetaan kerran, vanhaa 14000 ei käytetä")
+          (is (== -3000 (:listan-summa uusi))))
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :B 17 {:id sanktio-id :omailmoitettu false})
+        (is (= {:normaalimaara 6000M :omailmoitettu false :maara 6000M}
+               (select-keys (lue-sanktion-tilanne tiedot sanktio-id)
+                 [:normaalimaara :omailmoitettu :maara]))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-sanktion-lajin-vaihto-paivittaa-summan-ja-profiilirivin
+  (let [perustelu "HARJA-2862 sanktion lajin vaihto"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {})
+            vanha (lue-sanktion-tilanne tiedot sanktio-id)]
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :B 18 {:id sanktio-id})
+        (let [uusi (lue-sanktion-tilanne tiedot sanktio-id)]
+          (is (= "B" (:laji uusi)))
+          (is (= (:tyyppi vanha) (:tyyppi uusi)) "Sanktiotyyppi pysyy samana, vain laji vaihtuu")
+          (is (not= (:sanktio_profiili_rivi vanha) (:sanktio_profiili_rivi uusi)))
+          (is (= {:normaalimaara 14000M :maara 14000M}
+                 (select-keys uusi [:normaalimaara :maara])))
+          (is (== -14000 (:listan-summa uusi)))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-sanktion-tyypin-uudelleentallennus-ilman-vaihtoa-ei-muuta-rivia
+  (let [perustelu "HARJA-2862 uudelleentallennus ilman tyypin vaihtoa"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 17 {})
+            ensin (lue-sanktion-tilanne tiedot sanktio-id)]
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 17 {:id sanktio-id :summa 99999})
+        (is (= ensin (lue-sanktion-tilanne tiedot sanktio-id))
+          "Samalla tyypillä tallennus ei muuta riviä, summaa eikä päälistaa"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-sanktion-vaihto-automaattisesta-manuaaliseen-vaihtaa-maaritystavan
+  (let [perustelu "HARJA-2862 A -> C vaihto"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {})]
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :C 18 {:id sanktio-id :summa 123.45M})
+        (let [uusi (lue-sanktion-tilanne tiedot sanktio-id)]
+          (is (= "manuaalinen" (:maaritystapa uusi))
+            "Tallennettu määritystapa seuraa uutta profiiliriviä")
+          (is (= {:normaalimaara 4000M :maara 123.45M :omailmoitettu false}
+                 (select-keys uusi [:normaalimaara :maara :omailmoitettu]))
+            "Normaalimäärä on C-rivin viitemäärä, ei vanhan A-rivin 6000")
+          (is (== -123.45 (:listan-summa uusi)))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-sanktion-vaihto-manuaalisesta-automaattiseen-ei-kayta-vanhaa-manuaalista-summaa
+  (let [perustelu "HARJA-2862 C -> A vaihto"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :C 18 {:summa 123.45M})]
+        (is (= "manuaalinen" (:maaritystapa (lue-sanktion-tilanne tiedot sanktio-id))))
+        (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {:id sanktio-id :summa 123.45M})
+        (let [uusi (lue-sanktion-tilanne tiedot sanktio-id)]
+          (is (= "automaattinen" (:maaritystapa uusi)))
+          (is (= {:normaalimaara 6000M :maara 6000M}
+                 (select-keys uusi [:normaalimaara :maara])))
+          (is (== -6000 (:listan-summa uusi)))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-mhu26-sanktion-kielletty-tyypin-vaihto-ei-muuta-tallennettua-sanktiota
+  (let [perustelu "HARJA-2862 kielletty tyypin vaihto"
+        tiedot (mhu26-vaihtotestin-tiedot perustelu)]
+    (try
+      (let [sanktio-id (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18 {})
+            ennen (lue-sanktion-tilanne tiedot sanktio-id)
+            kielletty-tyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 10"))]
+        (try+
+          (tallenna-mhu26-sanktio-vaihtotestissa tiedot :A 18
+            {:id sanktio-id :tyyppi {:id kielletty-tyyppi-id}})
+          (is false "Profiilin vastaisen tyypin vaihdon pitäisi hylätä")
+          (catch [:type :sanktio-kirjausvirhe] {:keys [sanktio-kirjausvirhe]}
+            (is (= :sanktiotyyppi-ei-sallittu (:koodi sanktio-kirjausvirhe)))))
+        (is (= ennen (lue-sanktion-tilanne tiedot sanktio-id))
+          "Hylätty tallennus ei saa muuttaa riviä, summaa eikä päälistaa"))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest tallenna-mhu26-a-sanktio-kayttaa-seuraavaa-kelvollista-automaattista-summaa
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         perustelu "HARJA-2611 seuraava kelvollinen automaattinen summa"
