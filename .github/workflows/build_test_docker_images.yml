@@ -25,7 +25,7 @@ on:
         default: false
         required: true
       tag:
-        description: "Julkaistava tag (esim. 13.11-3.3.2)"
+        description: "Julkaistava Docker-tag (esim. 13.11-3.3.2), ei välilyöntejä, enintään 128 merkkiä"
         type: string
         required: true
 
@@ -48,36 +48,43 @@ jobs:
       packages: write # Tarvitaan Docker imageiden päivitykseen GH Container Registryyn
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          # Estä turha kredentiaalien tallennus levylle (tietoturva)
-          persist-credentials: false
-
       # Tuottaa tagit, joilla julkaistava image merkitään
       # Imagen liittyvissä stepeissä "<image>"-string korvataan imageen viittaavalla stringillä: user/app
       # esim. finnishtransportagency/harja_cypress
-      # Esimerkki output: ghcr.io/<image>:latest,ghcr.io/<image>:13.11-3.3.2
+      # Esimerkki output: ghcr.io/<image>:13.11-3.3.2,ghcr.io/<image>:latest
       - name: Parse inputs
         id: parsed-inputs
         env:
           TAG: ${{ inputs.tag }}
           UPDATE_LATEST: ${{ inputs.update-latest }}
+          # Merkkien käsittely on locale-riippumaton (LC_ALL=C).
+          LC_ALL: C
         run: |
           echo "Processing inputs"
-          
-          tags=()
-          
-          if [[ -n "$TAG" ]]; then
-            tags+=("${GH_DOCKER_REGISTRY}/<image>:$TAG")
+
+          if [[ "$TAG" == "latest" || "$TAG" == "buildcache" ]]; then
+            echo "::error::Reserved tag '$TAG' cannot be used. Use 'update-latest'-option to update the 'latest' tag."
+            exit 1
           fi
-          
+
+          if [[ ! "$TAG" =~ ^[a-zA-Z0-9_][a-zA-Z0-9_.-]{0,127}$ ]]; then
+            echo "::error::Erroneous Docker-tag. Allowed 1–128 ASCII-symbols (letter, numbers, _, . ja -). First character: a letter, number or _. Spaces not allowed."
+            exit 1
+          fi
+
+          tags="${GH_DOCKER_REGISTRY}/<image>:$TAG"
+
           if [[ "$UPDATE_LATEST" == 'true' ]]; then
-            tags+=("${GH_DOCKER_REGISTRY}/<image>:latest")
+            tags+=",${GH_DOCKER_REGISTRY}/<image>:latest"
           fi
-          
-          echo "tags=${tags[*]}" | tr ' ' ',' >> $GITHUB_OUTPUT
-          
+
+          printf 'tags=%s\n' "$tags" >> "$GITHUB_OUTPUT"
+
+      - name: Checkout code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # Estä turha kredentiaalien tallennus levylle (tietoturva)
+          persist-credentials: false
 
         # Ota QEMU ja Buildx käyttöön multi-arch buildeja varten
         # https://github.com/docker/setup-qemu-action
