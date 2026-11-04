@@ -365,6 +365,11 @@
     (and (not= :yllapidon_bonus bonuslaji)
       (boolean (sanktio-domain/bonuslaji->teksti bonuslaji)))))
 
+(defn- bonuksen-lukitus-kaytossa?
+  [tyyppi]
+  (and (not= :lupausbonus (keyword tyyppi))
+    (bonus-write-path-validoitava? tyyppi)))
+
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
@@ -399,6 +404,15 @@
                       sopimus)
             urakan-tiedot (when mhu-bonus?
                             (first (urakat-q/hae-urakan-tiedot db urakka-id)))
+            olemassa-oleva-erilliskustannus (when (id/id-olemassa? id)
+                                               (first (erilliskustannus-kyselyt/hae-erilliskustannus
+                                                        db {:urakka-id urakka-id :id id})))
+            _ (when (bonuksen-lukitus-kaytossa? (:tyyppi olemassa-oleva-erilliskustannus))
+                (tarkistukset/vaadi-ominaisuuden-muokkaus-sallittu!
+                  db urakka-id (:pvm olemassa-oleva-erilliskustannus) :bonus "Bonusta"))
+            _ (when (bonuksen-lukitus-kaytossa? tyyppi)
+                (tarkistukset/vaadi-ominaisuuden-muokkaus-sallittu!
+                  db urakka-id pvm :bonus "Bonusta"))
             _ (when mhu-bonus?
                 (bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
                   db
@@ -468,9 +482,14 @@
 
     (jdbc/with-db-transaction
       [db db]
-      (let [poistettu (toteumat-q/poista-erilliskustannus<! db {:id erilliskustannus-id
-                                                               :muokkaaja (:id user)
-                                                               :urakka urakka-id})]
+      (let [erilliskustannus (first (erilliskustannus-kyselyt/hae-erilliskustannus
+                                      db {:urakka-id urakka-id :id erilliskustannus-id}))
+            _ (when (bonuksen-lukitus-kaytossa? (:tyyppi erilliskustannus))
+                (tarkistukset/vaadi-ominaisuuden-muokkaus-sallittu!
+                  db urakka-id (:pvm erilliskustannus) :bonus "Bonusta"))
+            poistettu (toteumat-q/poista-erilliskustannus<! db {:id erilliskustannus-id
+                                                                :muokkaaja (:id user)
+                                                                :urakka urakka-id})]
         (when (:toimenpideinstanssi poistettu)
           (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi poistettu)))
         erilliskustannus-id))

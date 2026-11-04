@@ -4,6 +4,7 @@
             [harja
              [pvm :as pvm]
              [testi :refer :all]]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.konversio :as konv]
             [harja.kyselyt.toteumat :as toteumat-q]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
@@ -254,13 +255,75 @@
     (is (= lisatieto (:lisatieto tallennettu)) "Sallittu bonus palautuu write-pathilta ennallaan")
     (u (format "DELETE FROM erilliskustannus WHERE id = %s" (:id tallennettu)))))
 
+(deftest mhu-bonuksen-kirjaus-muokkaus-ja-poisto-estyy-lukitussa-hoitovuodessa
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        lisatieto "Lukitun hoitovuoden bonustesti"
+        bonus (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id lisatieto "asiakastyytyvaisyysbonus" 4321.0)
+        db (:db jarjestelma)
+        kayttaja +kayttaja-jvh+
+        tarkistetut (atom [])
+        tallennettu (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? (fn [& _] true)]
+                      (toteumat/tallenna-erilliskustannus db kayttaja bonus))]
+    (try
+      (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                    (fn [_ tarkistettava-urakka hoitovuosi ominaisuus]
+                      (swap! tarkistetut conj [tarkistettava-urakka hoitovuosi ominaisuus])
+                      false)]
+        (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+              (toteumat/tallenna-erilliskustannus db kayttaja bonus)))
+        (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+              (toteumat/tallenna-erilliskustannus
+                db kayttaja
+                (assoc bonus :id (:id tallennettu) :pvm (pvm/->pvm "15.10.2022")))))
+        (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+              (toteumat/poista-erilliskustannus
+                db kayttaja {:id (:id tallennettu) :urakka-id urakka-id}))))
+      (is (= [[urakka-id 2021 :bonus]
+              [urakka-id 2021 :bonus]
+              [urakka-id 2021 :bonus]]
+            @tarkistetut))
+      (is (false? (ffirst (q (format "SELECT poistettu FROM erilliskustannus WHERE id = %s" (:id tallennettu)))))
+        "Lukitun bonuksen poisto ei saa muuttaa tietokantaa")
+      (finally
+        (u (format "DELETE FROM erilliskustannus WHERE id = %s" (:id tallennettu)))))))
+
+(deftest mhu-bonuksen-tallennus-estyy-poytakirjaraporttipaatoksen-jalkeen
+  (let [db (:db jarjestelma)
+        urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU ja HJU Hoidon johto")
+        hoitovuosi 2024
+        paatos (paatos-kyselyt/tee-poytakirjan-raporttipaatos
+                 db {:urakkaid urakka-id
+                     :hoitokauden_alkuvuosi hoitovuosi
+                     :tarkistettu (pvm/nyt)
+                     :luoja (:id +kayttaja-jvh+)})
+        bonus-pvm (pvm/->pvm "15.10.2024")
+        bonus (assoc (luo-testi-bonus urakka-id sopimus-id toimenpideinstanssi-id
+                       "Raporttipäätöksen lukitsema bonus" "asiakastyytyvaisyysbonus" 4321.0)
+                :pvm bonus-pvm
+                :laskutuskuukausi bonus-pvm)]
+    (try
+      (is (false? (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                    db urakka-id hoitovuosi :bonus)))
+      (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden"
+            (toteumat/tallenna-erilliskustannus db +kayttaja-jvh+ bonus)))
+      (finally
+        (paatos-kyselyt/poista-poytakirjan-raporttipaatos
+          db urakka-id (:id +kayttaja-jvh+) (:id paatos))
+        (u "DELETE FROM erilliskustannus WHERE lisatieto = 'Raporttipäätöksen lukitsema bonus'")))))
+
 (deftest bonus-write-path-validoitava-rajautuu-vain-mhu-bonuslajeihin
   (is (= true (#'toteumat/bonus-write-path-validoitava? "asiakastyytyvaisyysbonus"))
     "MHU-bonuslajin pitää mennä write-path-validoinnin läpi")
   (is (= false (#'toteumat/bonus-write-path-validoitava? "yllapidon_bonus"))
     "Ylläpidon bonus ei saa ajautua MHU-bonusten write-path-validointiin")
   (is (= false (#'toteumat/bonus-write-path-validoitava? "akillinen-hoitotyo"))
-    "Muiden erilliskustannustyyppien ei pidä ajautua bonusvalidointiin"))
+    "Muiden erilliskustannustyyppien ei pidä ajautua bonusvalidointiin")
+  (is (= false (#'toteumat/bonuksen-lukitus-kaytossa? "lupausbonus"))
+    "Sisäisen lupausbonuksen käsittelyä ei pidä estää sanktiolukituksella"))
 
 
 (deftest tallenna-muut-tyot-toteuma-testi
