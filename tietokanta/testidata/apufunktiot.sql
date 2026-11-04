@@ -23,7 +23,7 @@ BEGIN
       INTO indeksin_nimi, urakka_tyyppi, urakan_alkuvuosi, urakan_alkukuu;
 
     -- Vesiväyläurakoissa urakkavuosi määräytyy hoitokauden perusteella.
-    IF urakka_tyyppi = 'vesivayla-hoito' THEN
+    IF urakka_tyyppi = 'vesivayla-hoito' AND urakan_alkuvuosi >= 2023 THEN
             IF vuosi_ = urakan_alkuvuosi AND kuukausi_ >= urakan_alkukuu
             THEN
                 -- Ensimmäinen urakkavuosi.

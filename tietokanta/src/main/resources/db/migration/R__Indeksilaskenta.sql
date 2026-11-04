@@ -306,7 +306,7 @@ BEGIN
     -- Käytetään vertailukuukauden default-arvona syyskuuta.
     vertailukk := 9;
 
-    IF urakka_tyyppi = 'vesivayla-hoito' THEN
+    IF urakka_tyyppi = 'vesivayla-hoito' AND urakan_alkuvuosi >= 2023 THEN
     /*
      * Jonkin vesiväyläurakan aloituspäivänä voi olla 1.8. Siksi pitää hakea urakan_alkukuu
      * ja päätellä sen perusteella, että ollaanko ensimmäisessä urakkavuodessa.
