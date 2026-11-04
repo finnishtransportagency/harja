@@ -2,8 +2,10 @@
 (ns harja.views.hallinta.urakkatiedot.bonus-profiilit-nakyma
   (:require [clojure.string :as str]
             [tuck.core :refer [tuck]]
+            [harja.domain.oikeudet :as oikeudet]
             [harja.ui.komponentti :as komp]
             [harja.ui.grid :as grid]
+            [harja.ui.varmista-kayttajalta :refer [varmista-kayttajalta]]
             [harja.ui.yleiset :refer [ajax-loader-pieni] :as yleiset]
             [harja.tiedot.hallinta.urakkatiedot.bonus-profiilit-tiedot :as tiedot]
             [harja.views.hallinta.urakkatiedot.profiilit-yhteiset :as profiilit-yhteiset]))
@@ -44,27 +46,124 @@
     ohjeteksti (str maaritystapa ": " ohjeteksti)
     :else "-"))
 
-(defn- profiilirivit-grid [rivit]
-  [grid/grid
-   {:piilota-toiminnot? true
-    :voi-lisata? false
-    :voi-poistaa? (constantly false)
-    :reunaviiva? true
-    :tunniste :id}
-   [{:nimi :jarjestys :otsikko "Järjestys" :leveys 0.6 :muokattava? (constantly false)}
-    {:nimi :toimenpideinstanssi-teksti :otsikko "T2-koodi" :leveys 1.1 :muokattava? (constantly false)}
-    {:nimi :urakkarajausten-maara :otsikko "Urakkarajauksia" :leveys 1 :muokattava? (constantly false)
-     :fmt #(or % 0)}
-    {:nimi :urakat :otsikko "Rajatut urakat" :leveys 2.2 :muokattava? (constantly false)
-     :fmt #(if (seq %)
-             (str/join ", " %)
-             "-")}
-    {:nimi :summamaaritys :otsikko "Euromäärä" :leveys 2.2 :muokattava? (constantly false)
-     :hae identity
-     :fmt #(summamaaritys-teksti (:summamaaritys %))}]
-   rivit])
+(defn- rajatut-urakat
+  [urakat urakka-idt]
+  (let [urakka-idt (set urakka-idt)]
+    (filterv #(contains? urakka-idt (:id %)) urakat)))
 
-(defn- lajit-grid [lajit]
+(defn- suorita-urakkarajauksen-muutos!
+  [e! toiminto profiili-id profiilirivi-id urakka-id]
+  (e! (case toiminto
+        :lisaa (tiedot/->LisaaBonusProfiilirivinUrakkarajaus
+                 profiili-id profiilirivi-id urakka-id)
+        :poista (tiedot/->PoistaBonusProfiilirivinUrakkarajaus
+                  profiili-id profiilirivi-id urakka-id))))
+
+(defn- varmista-urakkarajauksen-muutos!
+  [e! profiili-id rivi urakka-id toiminto]
+  (let [urakkarajausten-maara (or (:urakkarajausten-maara rivi) 0)
+        kaikkien-urakoiden-rajaus? (zero? urakkarajausten-maara)
+        viimeisen-urakkarajauksen-poisto? (= 1 urakkarajausten-maara)
+        vahvistus-tarvitaan? (or (and (= :lisaa toiminto)
+                                     kaikkien-urakoiden-rajaus?)
+                                (and (= :poista toiminto)
+                                     viimeisen-urakkarajauksen-poisto?))
+        toiminto-fn #(suorita-urakkarajauksen-muutos!
+                       e! toiminto profiili-id (:id rivi) urakka-id)]
+    (if vahvistus-tarvitaan?
+      (varmista-kayttajalta
+        {:otsikko (if (= :lisaa toiminto)
+                    "Ensimmäisen urakkarajauksen lisääminen"
+                    "Viimeisen urakkarajauksen poistaminen")
+         :sisalto (if (= :lisaa toiminto)
+                    "Profiilirivi ei tämän jälkeen koske enää kaikkia urakoita. Jatketaanko?"
+                    "Profiilirivi alkaa tämän jälkeen koskea kaikkia urakoita. Jatketaanko?")
+         :hyvaksy "Kyllä"
+         :peruuta-txt "Peruuta"
+         :toiminto-fn toiminto-fn})
+      (toiminto-fn))))
+
+(defn- urakkarajaus-editori
+  [e! profiili-id rivi urakat valitut-urakat muokkaus? muokkaus-kaynnissa?]
+  (let [urakka-idt (or (:urakka-idt rivi) [])
+        rajatut (rajatut-urakat urakat urakka-idt)
+        valittavat-urakat (remove #(contains? (set urakka-idt) (:id %)) urakat)
+        valittu-urakka-id (get valitut-urakat (:id rivi))]
+    [:div {:class "bonus-profiilirivin-urakkarajaus"
+           :data-cy (str "bonus-urakkarajaus-" (:id rivi))}
+     [:div
+      [:strong "Urakkarajaus: "]
+      (if (seq rajatut)
+        (str/join ", " (map :nimi rajatut))
+        "Kaikki urakat")]
+     (when (seq rajatut)
+       [:div
+        (for [{urakka-id :id nimi :nimi} rajatut]
+          ^{:key urakka-id}
+          [:button.btn.btn-link.btn-xs
+           {:type "button"
+            :data-cy (str "bonus-urakkarajaus-poista-" (:id rivi) "-" urakka-id)
+            :disabled muokkaus-kaynnissa?
+            :on-click #(varmista-urakkarajauksen-muutos!
+                         e! profiili-id rivi urakka-id :poista)}
+            "Poista " nimi])])
+     (when muokkaus?
+       [:div.bonus-profiilirivin-urakkarajaus-muokkaus
+        [:div.bonus-profiilirivin-urakkarajaus-valinta
+         [:label {:for (str "bonus-urakkarajaus-valinta-" (:id rivi))}
+          "Valitse rajattava urakka"]
+         [:select.form-control
+          {:id (str "bonus-urakkarajaus-valinta-" (:id rivi))
+           :data-cy (str "bonus-urakkarajaus-valinta-" (:id rivi))
+           :value (or valittu-urakka-id "")
+           :disabled muokkaus-kaynnissa?
+           :on-change #(let [arvo (.. % -target -value)]
+                         (e! (tiedot/->ValitseBonusProfiilirivinUrakka
+                               (:id rivi)
+                               (when (seq arvo)
+                                 (js/parseInt arvo 10))))) }
+          [:option {:value ""} "Valitse urakka"]
+          (for [{urakka-id :id nimi :nimi} valittavat-urakat]
+            ^{:key urakka-id}
+            [:option {:value urakka-id} nimi])]]
+        [:div.bonus-profiilirivin-urakkarajaus-toiminto
+         [:button.btn.btn-primary.btn-xs
+          {:type "button"
+           :data-cy (str "bonus-urakkarajaus-lisaa-" (:id rivi))
+           :disabled (or muokkaus-kaynnissa? (nil? valittu-urakka-id))
+           :on-click #(varmista-urakkarajauksen-muutos!
+                        e! profiili-id rivi valittu-urakka-id :lisaa)}
+          "Lisää rajaus"]]])]))
+
+(defn- profiilirivit-grid
+  [e! profiili-id rivit urakat valitut-urakat muokkaus? muokkaus-kaynnissa?]
+  [:div
+   [grid/grid
+    {:piilota-toiminnot? true
+     :voi-lisata? false
+     :voi-poistaa? (constantly false)
+     :reunaviiva? true
+     :tunniste :id}
+    [{:nimi :jarjestys :otsikko "Järjestys" :leveys 0.6 :muokattava? (constantly false)}
+     {:nimi :toimenpideinstanssi-teksti :otsikko "T2-koodi" :leveys 1.1 :muokattava? (constantly false)}
+     {:nimi :urakkarajausten-maara :otsikko "Urakkarajauksia" :leveys 1 :muokattava? (constantly false)
+      :fmt #(or % 0)}
+     {:nimi :urakat :otsikko "Rajatut urakat" :leveys 2.2 :muokattava? (constantly false)
+      :fmt #(if (seq %)
+              (str/join ", " %)
+              "-")}
+     {:nimi :summamaaritys :otsikko "Euromäärä" :leveys 2.2 :muokattava? (constantly false)
+      :hae identity
+      :fmt #(summamaaritys-teksti (:summamaaritys %))}]
+    rivit]
+   (when muokkaus?
+     (for [rivi rivit]
+       ^{:key (:id rivi)}
+       [urakkarajaus-editori e! profiili-id rivi urakat valitut-urakat
+        muokkaus? muokkaus-kaynnissa?]))])
+
+(defn- lajit-grid
+  [e! profiili-id lajit urakat valitut-urakat muokkaus? muokkaus-kaynnissa?]
   [grid/grid
    {:piilota-toiminnot? true
     :voi-lisata? false
@@ -72,7 +171,11 @@
     :reunaviiva? true
     :tunniste :id
     :vetolaatikot (into {}
-                    (map (juxt :id (fn [laji] [profiilirivit-grid (:rivit laji)])))
+                    (map (juxt :id
+                           (fn [laji]
+                             [profiilirivit-grid
+                              e! profiili-id (:rivit laji) urakat valitut-urakat
+                              muokkaus? muokkaus-kaynnissa?])))
                     lajit)}
    [{:tyyppi :vetolaatikon-tila :leveys 0.4 :muokattava? (constantly false)}
     {:nimi :nimi :otsikko "Laji" :leveys 2 :muokattava? (constantly false)}
@@ -135,9 +238,12 @@
                          (reset! tiedot/nakymassa? true)
                          (e! (tiedot/->HaeBonusProfiilit)))
       #(reset! tiedot/nakymassa? false))
-    (fn [e! {:keys [haku-kaynnissa? detalji-haku-kaynnissa? valittu-profiili-id profiilin-detaljit suodattimet profiilit] :as app}]
+    (fn [e! {:keys [haku-kaynnissa? detalji-haku-kaynnissa? valittu-profiili-id
+                    profiilin-detaljit suodattimet profiilit valitut-urakat
+                    urakkarajauksen-muokkaus-kaynnissa?] :as app}]
       (let [suodatetut-profiilit (tiedot/suodata-profiilit app)
-            valitun-profiilin-detalji (get profiilin-detaljit valittu-profiili-id)]
+            valitun-profiilin-detalji (get profiilin-detaljit valittu-profiili-id)
+            muokkaus? (oikeudet/voi-kirjoittaa? oikeudet/hallinta-laadunseuranta-profiilit)]
         [:div.sanktio-profiilit-hallinta
          [:h3 "Bonus-profiilit"]
          [:p "Selaa bonus-profiileja profiilikeskeisesti. Vasemmalta valitaan profiili, oikealta näkyvät yhteenveto ja bonuslajeittain ryhmitelty sisältö."]
@@ -160,7 +266,14 @@
              [:div
               [profiilin-yhteenveto valitun-profiilin-detalji]
               [:h4 "Sisältö"]
-              [lajit-grid (:lajit valitun-profiilin-detalji)]]
+              [lajit-grid
+               e!
+               (get-in valitun-profiilin-detalji [:profiili :id])
+               (:lajit valitun-profiilin-detalji)
+               (:urakat valitun-profiilin-detalji)
+               valitut-urakat
+               muokkaus?
+               urakkarajauksen-muokkaus-kaynnissa?]]
 
              :else
              [yleiset/info-laatikko :varoitus "Bonus-profiilin detaljia ei saatu ladattua."])]]]))))
