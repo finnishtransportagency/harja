@@ -72,7 +72,7 @@ jobs:
 
       # Käynnistetään Harjan Fargate taskit uudelleen pakottamalla deployment
       - name: Restart Harja Fargate tasks
-        uses: ./.github/actions/restart-fargate-tasks
+        uses: $/.github/actions/restart-fargate-tasks
         timeout-minutes: 15
         with:
           cluster: ${{ vars.ECS_CLUSTER_NAME }}
