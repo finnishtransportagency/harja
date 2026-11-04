@@ -7,12 +7,20 @@
     "npm": "^11.18.0"
   },
   "devDependencies": {
+    "@testing-library/react": "12.1.5",
+    "big.js": "7.0.1",
     "cypress": "10.2.0",
+    "global-jsdom": "29.0.0",
+    "jsdom": "29.1.1",
     "less": "4.2.0",
-    "nodemon": "^3.1.11"
+    "nodemon": "^3.1.11",
+    "react": "17.0.2",
+    "react-dom": "17.0.2",
+    "shadow-cljs": "2.28.23"
   },
   "scripts": {
     "build-css": "lessc dev-resources/less/application.less resources/public/css/application.css && lessc dev-resources/less/laadunseuranta/laadunseuranta.less resources/public/css/laadunseuranta.css",
-    "less": "nodemon --watch dev-resources/less -e less --exec \"npm run build-css\""
+    "less": "nodemon --watch dev-resources/less -e less --exec \"npm run build-css\"",
+    "test:shadow-cljs": "node script/valmistele_shadow_openlayers.cjs && shadow-cljs compile fronttitestit && node --require global-jsdom/register --require ./test/shadow/jsdom_canvas.cjs target/shadow-cljs/fronttitestit.js"
   }
 }
