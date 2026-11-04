@@ -56,7 +56,8 @@
   ;; Jos kk on joko 8, 9, 10, 11 halutaan laskea uusiksi:
   ;; Elokuun indeksiä tarvitaan >=23 urakoihin
   ;; [syys, loka,  marras] indekseistä lasketaan taas perusluku
-  (when (#{8 9 10 11} kuukausi)
+  ;; Kesäkuun indeksiä tarvitaan vesiväyläurakoiden ensimmäisenä urakkavuotena
+  (when (#{6 8 9 10 11} kuukausi)
     (log/debug "Lasketaan indeksikorjaukset uusiksi")
     (log/debug
       "Kiinteähintaiset työt:"

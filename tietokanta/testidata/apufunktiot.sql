@@ -8,38 +8,69 @@ DECLARE
     -- Perusluku on urakalle sama riippumatta kuluvasta hoitokaudesta
     perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
     indeksin_nimi  TEXT;
+    urakka_tyyppi TEXT;
     urakan_alkuvuosi INTEGER;
+    urakan_alkukuu INTEGER;
+    urakkavuoden_alkuvuosi INTEGER;
     arvo NUMERIC;
     vertailuvuosi INTEGER;
     vertailukk INTEGER;
     indeksikerroin NUMERIC;
 BEGIN
-    SELECT indeksi, EXTRACT(YEAR FROM alkupvm)
+    SELECT indeksi, tyyppi, EXTRACT(YEAR FROM alkupvm), EXTRACT(MONTH FROM alkupvm)
       FROM urakka u
      WHERE u.id = urakka_id
-      INTO indeksin_nimi, urakan_alkuvuosi;
+      INTO indeksin_nimi, urakka_tyyppi, urakan_alkuvuosi, urakan_alkukuu;
 
-    -- Indeksikerroin on hoitokausikohtainen, katsotaan aina edellisen hoitokauden syyskuun indeksiä.
-    IF kuukausi_ BETWEEN 1 AND 9
-    THEN
-        vertailuvuosi := vuosi_ - 1;
+    -- Vesiväyläurakoissa urakkavuosi määräytyy hoitokauden perusteella.
+    IF urakka_tyyppi = 'vesivayla-hoito' THEN
+            IF vuosi_ = urakan_alkuvuosi AND kuukausi_ >= urakan_alkukuu
+            THEN
+                -- Ensimmäinen urakkavuosi.
+                -- Tämä kattaa esimerkiksi 1.8.2023–30.9.2024.
+                urakkavuoden_alkuvuosi := urakan_alkuvuosi;
+            ELSIF kuukausi_ >= 10 THEN
+                -- Lokakuusta alkaen alkaa uusi normaali urakkavuosi.
+                urakkavuoden_alkuvuosi := vuosi_;
+            ELSE
+                -- Tammi–syyskuu kuuluu edellisen lokakuussa alkaneen
+                -- urakkavuoden loppuosaan.
+                urakkavuoden_alkuvuosi := vuosi_ - 1;
+            END IF;
+
+            IF urakkavuoden_alkuvuosi = urakan_alkuvuosi THEN
+                -- Ensimmäinen urakkavuosi: käytetään aloitusvuoden kesäkuuta.
+                vertailuvuosi := urakan_alkuvuosi;
+                vertailukk := 6;
+            ELSE
+                -- Toinen ja sitä seuraavat urakkavuodet: käytetään elokuuta.
+                vertailuvuosi := urakkavuoden_alkuvuosi;
+                vertailukk := 8;
+            END IF;
+
     ELSE
-        vertailuvuosi := vuosi_;
-    END IF;
+            -- Muut urakkatyypit:
+            -- Indeksikerroin on hoitokausikohtainen, katsotaan aina edellisen hoitokauden syyskuun indeksiä.
+            IF kuukausi_ BETWEEN 1 AND 9 THEN
+                vertailuvuosi := vuosi_ - 1;
+            ELSE
+                vertailuvuosi := vuosi_;
+            END IF;
 
-    -- Käytetään vertailukuukauden default-arvona syyskuuta.
-    vertailukk := 9;
-    -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu
-    IF urakan_alkuvuosi >= 2023 THEN
-        vertailukk := 8;
-    END IF;
+            -- Käytetään vertailukuukauden default-arvona syyskuuta.
+            vertailukk := 9;
 
+            -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu
+            IF urakan_alkuvuosi >= 2023 THEN
+                vertailukk := 8;
+            END IF;
+    END IF;
 
     arvo := (SELECT i.arvo
                FROM indeksi i
               WHERE i.vuosi = vertailuvuosi
                 AND i.kuukausi = vertailukk
-                AND nimi = indeksin_nimi);
+                AND i.nimi = indeksin_nimi);
 
     -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
     indeksikerroin := round((arvo / perusluku), 3);
