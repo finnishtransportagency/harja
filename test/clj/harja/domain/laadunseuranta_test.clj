@@ -917,8 +917,8 @@
              :syoteavain "laskutusrajan_ylitys")))))
 
 (deftest laskettavan-sanktion-otsikot-palauttaa-laskutuskelvottomuuden-otsikot
-  (is (= {:syotteen-otsikko "Sanktion suuruus (20 % summasta, joka ei ollut laskutuskelpoinen)"
-          :tuloksen-otsikko "Sanktion suuruus"}
+  (is (= {:syotteen-otsikko "Laskutettu summa"
+          :tuloksen-otsikko "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"}
          (sanktion-laskenta/laskettavan-sanktion-otsikot
            (:laskentaparametrit prosenttiosuus-maaritys)))))
 

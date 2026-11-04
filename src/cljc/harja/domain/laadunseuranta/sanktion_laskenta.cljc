@@ -74,8 +74,8 @@
       {:syotteen-otsikko "Ylityksen määrä (€)"
        :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
       (= "laskutuskelvottomana_laskutettu_osuus" syoteavain)
-      {:syotteen-otsikko "Sanktion suuruus (20 % summasta, joka ei ollut laskutuskelpoinen)"
-       :tuloksen-otsikko "Sanktion suuruus"}
+      {:syotteen-otsikko "Laskutettu summa"
+       :tuloksen-otsikko "Sanktion suuruus (20% summasta, joka ei ole ollut laskutuskelpoinen)"}
       :else
       {:syotteen-otsikko (syotteen-otsikko laskentaparametrit)
        :tuloksen-otsikko "Sanktion suuruus"})))
