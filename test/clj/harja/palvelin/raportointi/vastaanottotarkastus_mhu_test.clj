@@ -1144,8 +1144,8 @@
         (is (some? taulukko))
         (is (= ["2021-2022" "2022-2023" "2023-2024" "2024-2025" "2025-2026"]
               (vuosilabelit taulukko)))
-        (is (= 0 (second (second (vuosirivit taulukko)))))
-        (is (= 0 (second (:rivi (yhteensarivi taulukko)))))))
+        (is (= 9M (second (second (vuosirivit taulukko)))))
+        (is (= 9M (second (:rivi (yhteensarivi taulukko)))))))
 
     (testing "Tavoitehintaan kuuluvat kustannukset -taulukko"
       (let [taulukko (hae-taulukko kajaanin-raportti "Urakan tavoitehintaan kuuluvat kustannukset")]
