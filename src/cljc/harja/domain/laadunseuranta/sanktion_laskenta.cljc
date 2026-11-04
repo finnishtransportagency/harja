@@ -71,7 +71,7 @@
   (when laskentaparametrit
     (cond
       (= "laskutusrajan_ylitys" syoteavain)
-      {:syotteen-otsikko "Ylityksen määrä (€)"
+      {:syotteen-otsikko "Ylityksen määrä"
        :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
       (= "laskutuskelvottomana_laskutettu_osuus" syoteavain)
       {:syotteen-otsikko "Laskutettu summa"

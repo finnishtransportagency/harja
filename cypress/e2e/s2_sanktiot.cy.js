@@ -140,8 +140,8 @@ describe('Sanktiot toimii - MHU25 (Kajaani)', function () {
         })
 
         // Ylityksen määrä -kenttä pitää löytyä
-        cy.contains('label', 'Ylityksen määrä (€)').should('be.visible')
-        cy.get('label').contains('Ylityksen määrä (€)').parent().parent().parent().find('input').first().should('be.visible')
+        cy.contains('label', 'Ylityksen määrä').should('be.visible')
+        cy.get('label').contains('Ylityksen määrä').parent().parent().parent().find('input').first().should('be.visible')
     })
 
     it('Avaa sanktio listasta MHU25', function () {

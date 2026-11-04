@@ -194,7 +194,7 @@
       (keep identity [(when laskettu-maaritys
                         {:otsikko (:syotteen-otsikko otsikot)
                          :nimi :laskettava-syote
-                         :tyyppi (if (:laskutus-ilman-laskutuskelpoisuutta? lomake) :euro :numero)
+                         :tyyppi :euro
                          :max-desimaalit (:desimaalit laskentaparametrit)
                          :data-cy "sanktio-laskettava-syote"
                          ::lomake/col-luokka "col-xs-3"

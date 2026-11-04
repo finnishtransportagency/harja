@@ -910,7 +910,7 @@
          (sanktion-laskenta/syotteen-otsikko (:laskentaparametrit prosenttiosuus-maaritys)))))
 
 (deftest laskettavan-sanktion-otsikot-palauttaa-laskutusrajan-ylityksen-otsikot
-  (is (= {:syotteen-otsikko "Ylityksen määrä (€)"
+  (is (= {:syotteen-otsikko "Ylityksen määrä"
           :tuloksen-otsikko "Sanktion suuruus (20% ylittävästä laskutuksesta)"}
          (sanktion-laskenta/laskettavan-sanktion-otsikot
            (assoc (:laskentaparametrit prosenttiosuus-maaritys)
