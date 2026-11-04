@@ -785,7 +785,7 @@
         tavoitehinnan-oikaisut (valikatselmus-kyselyt/hae-tavoitehinnan-muutokset-hoitokaudelle (:db jarjestelma) {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
         hoitovuoden-lopun-indeksikorjaus-summa (valikatselmukset/laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
-        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta
+        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-tavoitehinta-indeksipaatoksella
                                          (:db jarjestelma) +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
         ;; Haetaan urakan parametrit
         urakan-parametrit (first (urakka-kyselyt/hae-urakan-parametrit (:db jarjestelma) {:urakkaid urakkaid}))
@@ -863,7 +863,7 @@
         tavoitehinnan-oikaisut (valikatselmus-kyselyt/hae-tavoitehinnan-muutokset-hoitokaudelle (:db jarjestelma) {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
         hoitovuoden-lopun-indeksikorjaus-summa (valikatselmukset/laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
-        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta
+        hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-tavoitehinta-indeksipaatoksella
                                          (:db jarjestelma) +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
 
         ;; Haetaan urakan parametrit
@@ -1736,7 +1736,7 @@
                   (with-redefs [;; Feikataan vastaukset
                                 valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan (fn [a b c d ] tavoitehinnan_muutokset)
                                 valikatselmukset/laske-hoitovuoden-lopun-indeksikorjaus (fn [a b c d e] hoitokauden-lopun-indeksikorjaus)
-                                valikatselmukset/maarita-hv-lopun-indeksikorjattu-tavoitehinta (fn [a b c d e f g h] tavoitehinta_jalkeen)
+                                valikatselmukset/maarita-hv-lopun-tavoitehinta-indeksipaatoksella (fn [a b c d e f g h] tavoitehinta_jalkeen)
                                 budjettisuunnittelu-kyselyt/hae-budjettitavoite
                                 (fn [db hakuparametrit] [{:hoitokauden-alkuvuosi hoitokauden-alkuvuosi
                                                           :tavoitehinta-oikaistu tavoitehinta_jalkeen
