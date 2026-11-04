@@ -76,6 +76,11 @@
                          :uusi-rivi? true
                          ::lomake/col-luokka "col-xs-12"
                          :nimi :tyyppi
+                         :data-cy "sanktion-tyyppi"
+                         :hae (fn [rivi]
+                                (or (sanktion-lomake-domain/aktiivinen-sanktiotyyppi
+                                      tyyppi-valinnat (get-in rivi [:tyyppi :id]))
+                                  (:tyyppi rivi)))
                          :aseta (fn [sanktio tyyppi]
                                   (sanktion-lomake-domain/vaihda-sanktiotyyppia
                                     sanktio
@@ -97,10 +102,10 @@
                                               arvo)))
                          :validoi [[:ei-tyhja "Valitse sanktiotyyppi"]]}
            lukutilan-tyyppikentta (assoc (lukutilan-kenttakuvaus tyyppikentta)
-                                    :hae (fn [rivi]
+                                    :fmt (fn [tyyppi]
                                            (sanktiotyyppi-domain/sanktiotyypin-nimi
-                                             (tiedot/valitun-urakan-sanktiolajin-nimi (:laji rivi))
-                                             (:tyyppi rivi))))]
+                                             (tiedot/valitun-urakan-sanktiolajin-nimi (:laji sanktio))
+                                             tyyppi)))]
        (if lukutila? lukutilan-tyyppikentta tyyppikentta)))])
 
 (defn- yllapitokohde-kentta
