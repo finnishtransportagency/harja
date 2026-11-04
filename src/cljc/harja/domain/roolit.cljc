@@ -134,6 +134,10 @@ rooleista."
   [kayttaja]
   (= :tilaaja (osapuoli kayttaja)))
 
+(defn konsultti?
+  [kayttaja]
+  (= :konsultti (osapuoli kayttaja)))
+
 (defn urakoitsija?
   [kayttaja]
   (= :urakoitsija (osapuoli kayttaja)))

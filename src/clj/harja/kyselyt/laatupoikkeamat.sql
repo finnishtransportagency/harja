@@ -301,6 +301,7 @@ FROM liite l
       JOIN sanktio s ON s.laatupoikkeama = lp.id
 WHERE lp.urakka = :urakka 
   AND lp.luotu BETWEEN :alkupvm AND :loppupvm
+  AND l.poistettu IS NOT TRUE
 ORDER BY l.luotu ASC;
 
 
@@ -315,6 +316,7 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN laatupoikkeama_liite hl ON l.id = hl.liite
  WHERE hl.laatupoikkeama = :laatupoikkeamaid
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
 
 -- name: hae-bonuksen-liitteet
@@ -328,6 +330,7 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN erilliskustannus_liite el ON l.id = el.liite
  WHERE el.bonus = :bonus
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
 
 -- name: hae-laatupoikkeaman-tallennuksen-perustiedot
@@ -441,6 +444,14 @@ SELECT exists(
     SELECT laatupoikkeama.id
     FROM laatupoikkeama
     WHERE ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
+
+-- name: hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
+-- Hakee aktiivisen laatupoikkeaman ulkoisella id:lla ja urakalla.
+SELECT id
+FROM laatupoikkeama
+WHERE ulkoinen_id = :ulkoinen-id
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
 
 -- name: paivita-laatupoikkeama-ulkoisella-idlla<!
 -- Päivittää laatupoikkeaman annetuille perustiedoille.
