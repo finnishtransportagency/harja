@@ -23,6 +23,30 @@ FROM urakka u WHERE u.tyyppi = 'teiden-hoito' AND u.urakkanro IS NOT NULL ON CON
 
 UPDATE urakka SET lyhyt_nimi = 'Oulun lyhyt nimi' WHERE nimi = 'Aktiivinen Oulu Testi';
 
+-- Kalustoresurssit-alasivun testaamista varten tarvittava testidata.
+-- Luodaan MHU26-urakka (alkuvuosi 2026) Suunnittelu/Kalustoresurssit-alasivun testaamista varten.
+-- Kopioidaan hallintayksikkö, elinvoimakeskus ja urakoitsija Kittilän MHU 2025-2030 -urakalta.
+INSERT INTO urakka (sampoid,        hallintayksikko, elinvoimakeskus_id, nimi,                     alkupvm,      loppupvm,     tyyppi, urakkanro, urakoitsija, alue)
+SELECT              '1242141-KITT6', hallintayksikko, elinvoimakeskus_id, 'Sodankylän MHU 2026-2031', '2026-10-01', '2031-09-30', tyyppi, '1447',    urakoitsija, alue
+FROM urakka
+WHERE nimi = 'Kittilän MHU 2025-2030';
+
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Sodankylän MHU sopimus 26', '2026-10-01', '2031-09-30', '11333380-LAP2',
+        (SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'));
+
+-- Urakkakohtaisen rajauksen positiivinen MHU2026-testikohde ilman aluehaun urakkanumeroa.
+INSERT INTO urakka (sampoid, hallintayksikko, elinvoimakeskus_id, nimi,
+                    alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue, lyhyt_nimi)
+SELECT 'TEST-NUMMI26', hallintayksikko, elinvoimakeskus_id, 'Nummi 26 - liikennevahinkobonuksen kohdistus',
+       DATE '2026-10-01', DATE '2031-09-30', tyyppi, NULL, urakoitsija, alue, 'Nummi 26'
+FROM urakka
+WHERE nimi = 'Kittilän MHU 2025-2030';
+
+INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
+VALUES ('Nummi 26 liikennevahinkobonuksen kohdistussopimus', '2026-10-01', '2031-09-30', 'TEST-NUMMI26-SOP',
+        (SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'));
+
 -- Päivitetään urakka_parametrit
 select aseta_urakka_parametrit();
 
@@ -72,26 +96,4 @@ WHERE u.id = up.urakkaid
   AND u.tyyppi = 'teiden-hoito'
   AND u.sopimustyyppi = 'mhu+';
 
--- Kalustoresurssit-alasivun testaamista varten tarvittava testidata.
--- Luodaan MHU26-urakka (alkuvuosi 2026) Suunnittelu/Kalustoresurssit-alasivun testaamista varten.
--- Kopioidaan hallintayksikkö, elinvoimakeskus ja urakoitsija Kittilän MHU 2025-2030 -urakalta.
-INSERT INTO urakka (sampoid,        hallintayksikko, elinvoimakeskus_id, nimi,                     alkupvm,      loppupvm,     tyyppi, urakkanro, urakoitsija, alue)
-SELECT              '1242141-KITT6', hallintayksikko, elinvoimakeskus_id, 'Sodankylän MHU 2026-2031', '2026-10-01', '2031-09-30', tyyppi, '1447',    urakoitsija, alue
-  FROM urakka
- WHERE nimi = 'Kittilän MHU 2025-2030';
 
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
-VALUES ('Sodankylän MHU sopimus 26', '2026-10-01', '2031-09-30', '11333380-LAP2',
-        (SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'));
-
--- Urakkakohtaisen rajauksen positiivinen MHU2026-testikohde ilman aluehaun urakkanumeroa.
-INSERT INTO urakka (sampoid, hallintayksikko, elinvoimakeskus_id, nimi,
-                    alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue, lyhyt_nimi)
-SELECT 'TEST-NUMMI26', hallintayksikko, elinvoimakeskus_id, 'Nummi 26 - liikennevahinkobonuksen kohdistus',
-       DATE '2026-10-01', DATE '2031-09-30', tyyppi, NULL, urakoitsija, alue, 'Nummi 26'
-  FROM urakka
- WHERE nimi = 'Kittilän MHU 2025-2030';
-
-INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
-VALUES ('Nummi 26 liikennevahinkobonuksen kohdistussopimus', '2026-10-01', '2031-09-30', 'TEST-NUMMI26-SOP',
-        (SELECT id FROM urakka WHERE nimi = 'Nummi 26 - liikennevahinkobonuksen kohdistus'));

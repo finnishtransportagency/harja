@@ -40,6 +40,12 @@
 (defn hae-toteuman-materiaalitiedot [urakka-id toteuma-id]
   (k/post! :hae-toteuman-materiaalitiedot {:urakka-id urakka-id :toteuma-id toteuma-id}))
 
+(defn hae-materiaalitoteuman-lukitustiedot [urakka-id toteuma-id alkanut paattynyt]
+  (k/post! :hae-materiaalitoteuman-lukitustiedot {:urakka-id urakka-id
+                                                  :toteuma-id toteuma-id
+                                                  :alkanut alkanut
+                                                  :paattynyt paattynyt}))
+
 (defn tallenna-toteuma-ja-toteumamateriaalit! [toteuma toteumamateriaalit hoitokausi sopimus-id]
   (k/post! :tallenna-toteuma-ja-toteumamateriaalit {:toteuma toteuma
                                                     :toteumamateriaalit toteumamateriaalit

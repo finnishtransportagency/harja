@@ -99,7 +99,7 @@
 
 
 (defn valmistele-tavoitehinnan-muutospaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta kattohinta
-                                             muokkaa-kattohinta? kuluva-hoitovuosi]
+                                             muokkaa-kattohinta? kuluva-hoitovuosi tavoitehinta-vahvistettu?]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
   ;; Itse muutoksia (vanhalla kielellä oikaisuja) voi tehdä myös kesken hoitovuoden
@@ -108,6 +108,10 @@
     (let [virheet (cond-> []
                     (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken.")
+
+                    ;; Tavoitehinnan vahvistaminen on pakko lisätä, koska uutta kustista ei voi vahvistaa, jos muutospäätös on tehty.
+                    (and validoinnit-kaytossa? (not tavoitehinta-vahvistettu?))
+                    (conj "Kustannussuunnitelma vahvistamatta.")
 
                     (not oikaistu-tavoitehinta)
                     (conj "Tavoitehinta puuttuu.")
@@ -131,7 +135,7 @@
 (defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi
                                                     kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
                                                     jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa
-                                                    thv-arvonvahennykset-yht]
+                                                    thv-arvonvahennykset-yht tavoitehinta-vahvistettu?]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
 
@@ -141,7 +145,11 @@
     ;; Kokeillaan tähän erilaista lähestymistapaa. Kirjoitetaan validoinnit päätösmäppiin sisälle
     (let [virheet (cond-> []
                     (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
-                    (conj "Hoitovuosi on kesken."))
+                    (conj "Hoitovuosi on kesken.")
+
+                    ;; Tavoitehinnan vahvistaminen on pakko lisätä, koska uutta kustista ei voi vahvistaa, jos muutospäätös on tehty.
+                    (and validoinnit-kaytossa? (not tavoitehinta-vahvistettu?))
+                    (conj "Kustannussuunnitelma vahvistamatta."))
 
           toteumiin-perustuvat-muutokset (+ (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
           tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0)
@@ -571,7 +579,7 @@
 
           paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
           ;; Desimaalien tarkkuus on tärkeää. Käyttöliittymässä kuitenkin käytetään pyöristettyjä lukuja. Taustalla lasketaan raakaluvuilla.
-          muutosprosentti-raaka (if (and hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta)
+          muutosprosentti-raaka (if (and hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta (not= 0M tarjouksen-tavoitehinta))
                                   (.divide (bigdec hv-lopun-tavoitehinta-ilman-indeksia) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
                                   0)
           hoidonjohtopalkkio (or hoidonjohtopalkkio 0)

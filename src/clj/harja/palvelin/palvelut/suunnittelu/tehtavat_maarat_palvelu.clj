@@ -7,7 +7,8 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tehtavat-maarat-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
-            [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]))
+            [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]))
 
 (defn tallenna-tehtavat-ja-maarat
   "Tallennetaan sopimuksen tehtävät ja määrät.
@@ -17,6 +18,14 @@
   (jdbc/with-db-transaction [db db]
     (let [hk-alkuvuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
           vuodet (apurit/jasenna-tallennettavat-vuodet db urakka-id hk-alkuvuosi kopioi-tuleville-vuosille?)
+          lukitut-vuodet (set (keep
+                                (fn [vuosi]
+                                  (let [lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :tehtavat-ja-maarat))]
+                                    (when lukittu? vuosi)))
+                                vuodet))
+
+          ;; Poistetaan ne vuodet, jotka on lukittu, jotta niitä ei yritetä tallentaa
+          vuodet (remove #(contains? lukitut-vuodet %) vuodet)
           _ (doseq [vuosi vuodet]
               (tehtavat-maarat-kyselyt/tallenna-tarjouksen-tehtavat-ja-maarat db urakka-id (:id kayttaja) vuosi (:tehtavat tiedot)))
           ;; Merkitään sopimuksen tehtävämäärät tallennetuksi 
@@ -29,7 +38,13 @@
 (defn hae-tehtavat-ja-maarat [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
-    (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id (pvm/vuosi (first (:valittu-hoitokausi tiedot))))))
+    (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
+          tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id vuosi)
+          lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :tehtavat-ja-maarat))]
+      {:lukittu? lukittu?
+       :tehtavat (:tehtavat tehtavat-ja-maarat)
+       :viimeisin-muokkaus (:viimeisin_muokkaus tehtavat-ja-maarat)
+       :viimeisin-muokkaaja (:viimeisin_muokkaaja tehtavat-ja-maarat)})))
 
 (defn hae-tehtavaprofiilit
   "Lukee tehtävien pikatäytön arvot dev-resources-konfiguraatiosta."

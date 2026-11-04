@@ -20,6 +20,7 @@
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
 
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.kulut :as kulut-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -30,7 +31,6 @@
 
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
             [harja.palvelin.palvelut.valikatselmus.apurit :as v-apurit]
             [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
@@ -278,8 +278,8 @@
 
         ;; Valmistellaan päätökset ui:ta varten
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi tavoitehinta-vahvistettu?)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht tavoitehinta-vahvistettu?)
         mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset hoitovuoden-lopun-indeksikorjaus-summa oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinnan-oikaisut tavoitehinta-indeksikorjattu taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitovuoden-lopun-indeksikorjaus-summa lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos validoinnit-kaytossa? mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
@@ -575,8 +575,10 @@
                 {:id (:erilliskustannus_id paatos-tietokannasta) :urakka-id (:urakkaid paatos-tietokannasta)}))
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
-              (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                                                  :urakka-id (:urakkaid paatos-tietokannasta)}))
+              (laadunseuranta-palvelu/poista-sanktio db kayttaja
+                {:id (:sanktio_id paatos-tietokannasta)
+                 :urakka-id (:urakkaid paatos-tietokannasta)}
+                true))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -776,7 +778,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
 
           _ (paatos-kyselyt/poista-tavoitehinnan-alituspaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
@@ -840,7 +842,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
           _ (paatos-kyselyt/poista-tavoitehinnan-ylityspaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
       ;; Hae välikatselmuksen tiedot
@@ -967,7 +969,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
           _ (paatos-kyselyt/poista-kattohinnan-ylityspaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
 
@@ -1211,7 +1213,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
           _ (paatos-kyselyt/poista-hoidonjohtopalkkiomuutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
 
@@ -1352,7 +1354,6 @@
         ;; Muodostetaan vastaus
         vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
     vastaus))
-
 
 (defn hae-ketjutetusti-kumoutuvat-paatokset
   "Syötetään päätös, joka halutaan kumota.

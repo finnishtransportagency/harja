@@ -365,6 +365,11 @@
     (and (not= :yllapidon_bonus bonuslaji)
       (boolean (sanktio-domain/bonuslaji->teksti bonuslaji)))))
 
+(defn- bonuksen-lukitus-kaytossa?
+  [tyyppi]
+  (and (not= :lupausbonus (keyword tyyppi))
+    (bonus-write-path-validoitava? tyyppi)))
+
 (defn hae-urakan-erilliskustannukset [db user {:keys [urakka-id alkupvm loppupvm]}]
   (if (or (oikeudet/voi-lukea? oikeudet/urakat-toteumat-erilliskustannukset urakka-id user)
           (oikeudet/voi-lukea? oikeudet/urakat-toteumat-vesivaylaerilliskustannukset urakka-id user))
@@ -399,6 +404,15 @@
                       sopimus)
             urakan-tiedot (when mhu-bonus?
                             (first (urakat-q/hae-urakan-tiedot db urakka-id)))
+            olemassa-oleva-erilliskustannus (when (id/id-olemassa? id)
+                                               (first (erilliskustannus-kyselyt/hae-erilliskustannus
+                                                        db {:urakka-id urakka-id :id id})))
+            _ (when (bonuksen-lukitus-kaytossa? (:tyyppi olemassa-oleva-erilliskustannus))
+                (tarkistukset/vaadi-ominaisuuden-muokkaus-sallittu!
+                  db urakka-id (:pvm olemassa-oleva-erilliskustannus) :bonus "Bonusta"))
+            _ (when (bonuksen-lukitus-kaytossa? tyyppi)
+                (tarkistukset/vaadi-ominaisuuden-muokkaus-sallittu!
+                  db urakka-id pvm :bonus "Bonusta"))
             _ (when mhu-bonus?
                 (bonus-konfiguraatio/vaadi-sallittu-aktiivisessa-bonus-konfiguraatiossa
                   db
@@ -468,9 +482,14 @@
 
     (jdbc/with-db-transaction
       [db db]
-      (let [poistettu (toteumat-q/poista-erilliskustannus<! db {:id erilliskustannus-id
-                                                               :muokkaaja (:id user)
-                                                               :urakka urakka-id})]
+      (let [erilliskustannus (first (erilliskustannus-kyselyt/hae-erilliskustannus
+                                      db {:urakka-id urakka-id :id erilliskustannus-id}))
+            _ (when (bonuksen-lukitus-kaytossa? (:tyyppi erilliskustannus))
+                (tarkistukset/vaadi-ominaisuuden-muokkaus-sallittu!
+                  db urakka-id (:pvm erilliskustannus) :bonus "Bonusta"))
+            poistettu (toteumat-q/poista-erilliskustannus<! db {:id erilliskustannus-id
+                                                                :muokkaaja (:id user)
+                                                                :urakka urakka-id})]
         (when (:toimenpideinstanssi poistettu)
           (toteumat-q/merkitse-toimenpideinstanssin-maksuera-likaiseksi! db (:toimenpideinstanssi poistettu)))
         erilliskustannus-id))
@@ -503,6 +522,30 @@
                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     vastaus))
 
+(defn hae-toteumien-lukitukset
+  "Palauttaa urakan lukitut hoitovuodet toteumien syötön validointia varten."
+  [db user {:keys [urakka-id]}]
+  (oikeudet/vaadi-lukuoikeus
+    (if (oikeudet/voi-lukea? oikeudet/urakat-toteumat-kokonaishintaisettyot urakka-id user)
+      oikeudet/urakat-toteumat-kokonaishintaisettyot
+      oikeudet/urakat-toteumat-suola)
+    user
+    urakka-id)
+  (when-not urakka-id
+    (throw (IllegalArgumentException. "Urakka-id puuttuu")))
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db urakka-id))]
+    (when-not urakan-tiedot
+      (throw (IllegalArgumentException. (format "Urakkaa %s ei ole olemassa." urakka-id))))
+    (let [alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+          loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
+          urakan-vuodet (range alkuvuosi loppuvuosi)
+          lukitustiedot (tarkistukset/hae-vuosittaiset-lukitustiedot db urakka-id urakan-vuodet)
+          lukitut-vuodet (into #{}
+                          (keep (fn [[vuosi {:keys [lukittu?]}]]
+                                  (when lukittu? vuosi)))
+                          lukitustiedot)]
+      {:lukitut-hoitovuodet lukitut-vuodet})))
+
 (defn hae-urakan-tehtavaryhmaotsikot [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
   (tehtavaryhmat-q/tehtavaryhmaotsikot db))
@@ -516,6 +559,9 @@
   (do
     (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
     (jdbc/with-db-transaction [tx db]
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan tx toteuma-id urakka-id)
+      (tarkistukset/vaadi-toteuman-muokkaus-sallittu!
+        tx urakka-id (toteumat-q/hae-toteuman-alkanut-pvm-idlla tx {:id toteuma-id}))
       (toteumat-q/poista-toteuma! tx (:id user) toteuma-id)
       (toteumat-q/poista-toteuma-tehtava! tx {:kayttaja (:id user)
                                               :toteuma-id toteuma-id}))))
@@ -568,11 +614,16 @@
       (throw+ {:type "Error"
                :virheet [{:koodi "ERROR" :viesti "Tarkista määrä."}]})
       (jdbc/with-db-transaction [db db]
+        (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id loppupvm)
         (doall
           (for [{:keys [maara lisatieto tehtava toteuma-id toteuma-tehtava-id poistettu]
                  {:keys [numero alkuosa alkuetaisyys loppuosa loppuetaisyys] :as sijainti} :sijainti
                  :as _toteuma} toteumat]
             (do
+              ;; Varmistetaan, ettei muokata toteumaa, joka on lukitulla hoitovuodella
+              (when (id/id-olemassa? toteuma-id)
+                (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
+                (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})))
               (when (and
                       (tr-domain/tehtavat-joille-sijainti-pakollinen (:tehtava tehtava))
                       (not (tr-domain/validi-osoite? sijainti)))
@@ -810,6 +861,12 @@
                                   tr-osoite (:tierekisteriosoite t)
                                   reitti-viiva (when tr-osoite (tr-q/hae-tr-viiva c tr-osoite))
                                   toteuman-alkuperainen-pvm (toteumat-q/hae-toteuman-alkanut-pvm-idlla c {:id toteuma-id})
+                                  _alkuperaisen-paivamaaran-lukitus (when (id/id-olemassa? toteuma-id)
+                                                                      ;; Estä toteuman muokkaus, jos välikatselmuksen päätös lukitsee hoitokauden
+                                                                      (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id toteuman-alkuperainen-pvm))
+                                  _valitun-paivamaaran-lukitus (when-not (:poistettu t)
+                                                                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id (:alkanut t))
+                                                                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id (:paattynyt t)))
                                   toteuma (if (id/id-olemassa? toteuma-id)
                                             ;; Jos poistettu=true, halutaan toteuma poistaa.
                                             ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
@@ -1135,6 +1192,9 @@
       :tallenna-toteuma
       (fn [user tiedot]
         (tallenna-toteuma! db user tiedot))
+      :hae-toteumien-lukitukset
+      (fn [user tiedot]
+        (hae-toteumien-lukitukset db user tiedot))
       :hae-maarien-toteuma
       (fn [user tiedot]
         (hae-maarien-toteuma db-replica user tiedot))
@@ -1201,6 +1261,7 @@
       :urakan-toteumien-toimenpiteet
       :maarien-toteutumien-toimenpiteiden-tehtavat
       :tallenna-toteuma
+      :hae-toteumien-lukitukset
       :hae-maarien-toteuma
       :poista-toteuma
       :urakan-toteutuneet-muut-tyot

@@ -29,6 +29,7 @@
             [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
             [harja.palvelin.tyokalut.tyokalut :as tyokalut]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]])
   (:use [slingshot.slingshot :only [throw+]]))
@@ -204,41 +205,6 @@
                 kulut)]
     summa))
 
-(defn hae-kulu-kohdistuksineen
-  "Hakee yksittäisen kulun tiedot kohdistuksineen."
-  [db user {:keys [urakka-id id]}]
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (let [kulu (first (q/hae-kulu db {:urakka urakka-id
-                                    :id id}))
-        kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kulu)
-                                                   :urakka_id urakka-id})
-        ;; Poista nil rahavaraukset
-        kohdistukset (mapv (fn [kohdistus]
-                             (let [kohdistus (if (:rahavaraus_id kohdistus)
-                                               kohdistus
-                                               (dissoc kohdistus :rahavaraus_id :rahavaraus_nimi))
-                                   ;; Muutetaan tavoitehintainen keywordiksi
-                                   kohdistus (-> kohdistus
-                                               (update :tavoitehintainen #(keyword (str %)))
-                                               (update :tehtava konv/jsonb->clojuremap))]
-                               kohdistus))
-                       kohdistukset)
-        ;; Frontilla kulun muokkauksessa on olennaista, että kulun kohdistuksen rahavaraus sisältää kaikki mahdolliset tehtäväryhmät
-        kohdistukset (mapv (fn [kohdistus]
-                             (if (:rahavaraus_id kohdistus)
-                               (let [tehtavaryhmat (rahavaraus-kyselyt/hae-rahavarauksen-tehtavaryhmat db {:rahavarausid (:rahavaraus_id kohdistus)
-                                                                                                           :urakkaid urakka-id})]
-                                 (assoc-in kohdistus [:rahavaraus :tehtavaryhmat] tehtavaryhmat))
-                               kohdistus))
-                       kohdistukset)
-        kulun-kohdistukset (into []
-                             (map konv/alaviiva->rakenne)
-                             kohdistukset)
-        liitteet (into [] (q/hae-liitteet db {:kulu-id id}))]
-    (if-not (empty? kulu)
-      (assoc kulu :kohdistukset kulun-kohdistukset :liitteet liitteet)
-      kulu)))
-
 (defn- kohdistuksen-maksueratyyppi
   "Selvittää kulukohdistuksien maksueratyypin, jotta kulun summa lasketaan myöhemmin oikeaan Sampoon lähetettvään maksuerään.
   Yleensä tyyppi on kokonaishintainen. Jos tehtävä on Äkillinen hoitotyö, maksuerätyyppi on akillinen-hoitotyö.
@@ -259,7 +225,9 @@
     "kokonaishintainen"))
 
 (defn luo-tai-paivita-kulun-kohdistus
-  "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella."
+  "Luo uuden kohdistuksen kantaan tai päivittää olemassa olevan rivin. Rivi tunnistetaan kulun viitteen ja rivinumeron perusteella.
+  Kulun kohdistuksen osalta voi olla niin, että tehtävälle lisättävä osa kulusta on lukittu, koska välikatselmuksessa on tehty päätöksiä.
+  Jos näin on, niin käyttäjän tulee ymmärtää, että hän ei voi yhdellä kululla tehdä kulukohdistuksia määrämitattiviin tehtäviin ja muita kuluja."
   [db user urakka-id kulu-id kohdistus muutostyo]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [tehtava-id (or (:id (:tehtava kohdistus)) (:tehtava kohdistus))
@@ -329,7 +297,7 @@
                                  :kayttaja (:id user)})
   (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
                                              (:toimenpideinstanssi kohdistus)})
-  (hae-kulu-kohdistuksineen db user {:id id}))
+  (q/hae-kulu-kohdistuksineen db user {:id id}))
 
 (defn tarkista-saako-kulua-tallentaa
   "Kuluja voi lisätä ja muokata vain siihen asti, että hoitokauden välikatselmus on pidetty. Tarkistetaan siis
@@ -405,7 +373,8 @@
   (log/debug "luo-tai-paivita-kulukohdistukset :: tiedot:" (pr-str tiedot))
   (validoi-kulu db user tiedot urakka-id)
   (jdbc/with-db-transaction [db db]
-    (let [kulu {:erapaiva (konv/sql-date erapaiva)
+    (let [hoitokausi-lukittu? (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id (pvm/vuosi erapaiva) :kulu)
+          kulu {:erapaiva (konv/sql-date erapaiva)
                 :kokonaissumma kokonaissumma
                 :urakka urakka
                 :tyyppi tyyppi
@@ -436,14 +405,27 @@
 
       ;; Kannassa on kohdistuksia, joita ei lähetetty kulun päivityksen yhteydessä. Poistetaan ne.
       (doseq [puuttuva-kohdistus puuttuvat-kohdistukset]
-        (poista-kulun-kohdistus db user
-          {:id id
-           :urakka-id urakka-id
-           :kohdistuksen-id (:kohdistus-id puuttuva-kohdistus)
-           :kohdistus puuttuva-kohdistus}))
+        ;; Varmista ennen poistoa, että lukko ei ole voimassa
+        (if
+          ;; Jos lukitus on päällä
+          (and hoitokausi-lukittu?
+            ;; Niin tehtävä-id ei saa olla määritelty (-1 ei ole määritelty tehtäväid)
+            (and (not (nil? (:tehtava-id puuttuva-kohdistus))) (not= -1 (:tehtava-id puuttuva-kohdistus))))
+
+          ;; Annetaan virhe
+          (throw (IllegalArgumentException.
+                   "Kulua ei voi muokata, koska välikatselmuksessa on tehty päätös, joka lukitsee kulut."))
+          (poista-kulun-kohdistus db user
+            {:id id
+             :urakka-id urakka-id
+             :kohdistuksen-id (:kohdistus-id puuttuva-kohdistus)
+             :kohdistus puuttuva-kohdistus})))
 
       (doseq [kohdistusrivi kohdistukset]
-        (let [muutostyo (:valittu-muutostyo kohdistusrivi)
+        (let [kulun-vuosi (pvm/vuosi erapaiva)
+              ;; Tarkista onko määrämitattavien tehtävien syöttö mahdollista.
+              lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id kulun-vuosi :kulu))
+              muutostyo (:valittu-muutostyo kohdistusrivi)
               muutostyo (assoc muutostyo :muutos (:muutos kohdistusrivi))
               muutostyo-voimassa-alkaen (:voimassa_alkaen muutostyo)
 
@@ -540,9 +522,9 @@
                        :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                                   :viesti "Käsittelemätön virhe kulun kohdistusta päivittäessä."}]})))))
 
-      (hae-kulu-kohdistuksineen db user {:id (:id kuludb)}))))
+      (q/hae-kulu-kohdistuksineen db user {:id (:id kuludb)}))))
 
-(defn poista-kulu-tietokannasta
+#_ (defn poista-kulu-tietokannasta
   "Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id id]}]
   (log/debug "kulut :: poista-kulu-tietokannasta" id urakka-id)
@@ -568,7 +550,7 @@
   Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
   [db user {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
-  (poista-kulu-tietokannasta db user tiedot))
+  (q/poista-kulu-tietokannasta db user tiedot))
 
 (defn tallenna-kulu
   "Funktio tallentaa kulun kohdistuksineen. Käytetään teiden hoidon urakoissa (MHU)."
@@ -581,7 +563,7 @@
   [db user {:keys [urakka-id kulu-id liite-id]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (q/poista-kulun-ja-liitteen-linkitys! db {:kulu-id kulu-id :liite-id liite-id :kayttaja (:id user)})
-  (hae-kulu-kohdistuksineen db user {:id kulu-id}))
+  (q/hae-kulu-kohdistuksineen db user {:id kulu-id}))
 
 (defn- kulu-pdf
   [db user {:keys [urakka-id urakka-nimi alkupvm loppupvm]}]
@@ -599,7 +581,7 @@
       kulut-kuukausien-mukaan)))
 
 (defn hae-urakan-hintapaatokset
-  "Haetaan urakalle vuodet, joille on olemassa hintapäätös. Ja ui:lla voidaan sen mukaan näyttää päiviä,
+  "Haetaan urakalle vuodet, joille on olemassa päätös, joka lukitsee kulut. Ja ui:lla voidaan sen mukaan näyttää päiviä,
   joille kuluja voidaan lisäillä"
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
@@ -609,11 +591,11 @@
                      (str "Virheellinen urakka-id " urakka-id))))
         alkupvm (:alkupvm urakan-tiedot)
         loppupvm (:loppupvm urakan-tiedot)
-        hintapaatokset (map :hoitokauden-alkuvuosi (valikatselmus-kyselyt/hae-urakan-hintapaatokset db {:urakka-id urakka-id}))
+        urakan-vuodet (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm))
         vuosittaiset-hintapaatokset (reduce (fn [listaus vuosi]
                                               (conj listaus {:vuosi vuosi
-                                                             :paatos-tehty? (some #(= vuosi %) hintapaatokset)}))
-                                      [] (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm)))]
+                                                             :paatos-tehty? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :kulu))}))
+                                      [] urakan-vuodet)]
     vuosittaiset-hintapaatokset))
 
 (def db-vastaus->speqcl-avaimet
@@ -737,7 +719,7 @@
           (hae-urakan-kulut-kohdistuksineen db user hakuehdot)))
       (julkaise-palvelu http :hae-kulu
         (fn [user hakuehdot]
-          (hae-kulu-kohdistuksineen db user hakuehdot)))
+          (q/hae-kulu-kohdistuksineen db user hakuehdot)))
       (julkaise-palvelu http :tallenna-kulu
         (fn [user kulu-kohdistuksineen]
           (tallenna-kulu db user kulu-kohdistuksineen))

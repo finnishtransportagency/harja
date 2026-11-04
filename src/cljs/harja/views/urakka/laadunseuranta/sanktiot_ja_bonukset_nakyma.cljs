@@ -93,7 +93,19 @@
               arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
                        (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)]
+              arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)
+              sanktion-hoitovuosi (some-> @tiedot-urakka/valittu-hoitokausi first pvm/vuosi)
+              arvonvahennys-paatoksella-lukittu? (and arvonvahennyslomake-kaytossa?
+                                                   sanktion-hoitovuosi
+                                                   (some (fn [{:keys [vuosi arvonvahennys-lukittu?]}]
+                                                            (and (= vuosi sanktion-hoitovuosi)
+                                                              arvonvahennys-lukittu?))
+                                                      (:lukitustiedot app)))
+              sanktiot-paatoksella-lukittu? (and sanktion-hoitovuosi
+                                              (some (fn [{:keys [vuosi sanktio-lukittu?]}]
+                                                      (and (= vuosi sanktion-hoitovuosi)
+                                                        sanktio-lukittu?))
+                                                (:lukitustiedot app)))]
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
@@ -111,7 +123,7 @@
            (when-not muokataan-vanhaa?
              [bonus-sanktio-arvonvahennykset-valikko (r/cursor tila [:lomake]) mhu25? arvonvahennyslomake-kaytossa?])
 
-           (when (and lukutila? muokataan-vanhaa?)
+           (when (and lukutila? muokataan-vanhaa? (not (or arvonvahennys-paatoksella-lukittu? sanktiot-paatoksella-lukittu?)))
              [:div.flex-row.alkuun.valistys16
               [napit/yleinen-reunaton "Muokkaa" #(swap! tila update :lukutila not)
                ;; Muokkaus vaatii kirjoitusoikeuden (W). Lupaussanktioita ja -bonuksia ei voi muokata
@@ -119,6 +131,7 @@
                ;; TODO: Jos/kun lupaussanktio ja lupausbonus sanktio/bonus lajeille tehdään muokkausmahdollisuus tälle lomakkeelle
                ;;       niin, poista "lupaus?" ehto.
                {:disabled (or (not oikeus-muokata?) lupaus?)}]
+
               (cond
                 (not oikeus-muokata?)
                 [yleiset/vihje (oikeudet/oikeuden-puute-kuvaus :kirjoitus oikeudet/urakat-laadunseuranta-sanktiot) nil 18]
@@ -127,16 +140,62 @@
 
            ; Avaa oikea lomake - arvonvahennyslomake-kaytossa?
            (cond
+
+             ;; Bonuslomake
              bonusten-syotto?
-             [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu
-              ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
-              #(tiedot/paivita-sanktiot-ja-bonukset!)
-              lukutila? oikeus-muokata?]
+             [:<>
+              (if sanktiot-paatoksella-lukittu?
+                [:div
+                 [:div {:style {:margin-bottom "1rem"}}
+                  [yleiset/info-laatikko :neutraali
+                   "Et voi kirjata bonusta tälle hoitovuodelle"
+                   "Bonuksia ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös pöytäkirjaan merkityistä raporteista on jo vahvistettu."
+                   nil nil]]
+                 ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä bonusta on kirjattu
+                 (if (:id @tiedot/valittu-sanktio)
+                   [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu #(tiedot/paivita-sanktiot-ja-bonukset!) (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? (:lukitustiedot app)]
+                   [napit/peruuta "Sulje" #(reset! sivupaneeli-auki?-atom false)])]
+
+                 ;; Jos sanktioita ei ole lukittu, niin näytetään bonuslomake normaalisti
+                 [bonukset-lomake/bonus-lomake sivupaneeli-auki?-atom @muokattu
+                       ;; Kun bonuksen tallennus tai poisto onnistuu, niin haetaan S&B-listauksen tiedot uudelleen.
+                       #(tiedot/paivita-sanktiot-ja-bonukset!)
+                       (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? (:lukitustiedot app)])]
+
+             ;; Arvonvähennyslomake
              (and arvonvahennyslomake-kaytossa? arvonvahennys-syotto?)
-             [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom lukutila? oikeus-muokata? mhu25?]
+             [:<>
+              (if arvonvahennys-paatoksella-lukittu?
+                [:div
+                 ;; Näytetään ilmoitus lukituksesta aina, kun lukitus on olemassa
+                 [:div {:style {:margin-bottom "1rem"}}
+                  [yleiset/info-laatikko :neutraali
+                        "Et voi kirjata arvonvähennystä tälle hoitovuodelle"
+                        "Arvonvähennyksiä ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
+                        nil nil]]
+                 ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä arvonvähennystä on kirjattu
+                 (if (:id @tiedot/valittu-sanktio)
+                   [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?]
+                   [napit/peruuta "Sulje" #(reset! sivupaneeli-auki?-atom false)])]
+                ;; Jos lukitusta ei ole, niin näytetään lomake normaalisti
+                [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?])]
 
              :else
-             [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?])])))))
+             [:<>
+              (if sanktiot-paatoksella-lukittu?
+                [:div
+                 [:div {:style {:margin-bottom "1rem"}}
+                  [yleiset/info-laatikko :neutraali
+                   "Et voi kirjata sanktiota tälle hoitovuodelle"
+                   "Sanktioita ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös pöytäkirjaan merkityistä raporteista on jo vahvistettu."
+                   nil nil]]
+                 ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä bonusta on kirjattu
+                 (if (:id @tiedot/valittu-sanktio)
+                   [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? app]
+                   [napit/peruuta "Sulje" #(reset! sivupaneeli-auki?-atom false)])]
+
+                 ;; Jos sanktioita ei ole lukittu, niin näytetään sanktiolomake normaalisti
+                 [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? app])])])))))
 
 ;; --- Sanktioiden listaus ---
 
@@ -194,8 +253,8 @@
   (reset! sanktio-atom rivi)
   ;; TODO: Tässä on jotakin sanktioiden liitteiden hakua valinnan yhteydessä?
   ;;       Pitääkö tunnistaa lisäksi onko bonus valittu ja hakea myös bonuksen liitteet?
-  (if (= :virhe (tiedot/hae-sanktion-liitteet! (or 
-                                                 (get-in rivi [:laatupoikkeama :urakka]) 
+  (if (= :virhe (tiedot/hae-sanktion-liitteet! (or
+                                                 (get-in rivi [:laatupoikkeama :urakka])
                                                  (get-in rivi [:urakka :id]))
                                                (get-in rivi [:laatupoikkeama :id])
                                                sanktio-atom))
@@ -333,6 +392,7 @@
       (komp/lippu tiedot/nakymassa?)
       (komp/sisaan-ulos #(do
                            (e! (arvonvahennys-tiedot/->HaeKaikkiTehtavaryhmat))
+                           (e! (arvonvahennys-tiedot/->HaeLukitustiedot))
                            (reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? true
                                                                      :default nil}))
         #(reset! tiedot-urakka/default-hoitokausi {:ylikirjoita? false}))
