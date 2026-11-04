@@ -489,16 +489,24 @@ DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo
 -- name: hae-tehtava-maaramuutokset
 WITH urakan_tehtavat AS (
     SELECT
-        tt.toimenpidekoodi           AS toimenpidekoodi,
-        SUM(tt.maara)                AS maara,
-        :urakka                      AS urakka,
-        MAX(tt.toteuma)              AS toteuma_id,
-        MAX(tt.id)                   AS toteuma_tehtava_id
-      FROM toteuma_tehtava tt
-     WHERE tt.urakka_id = :urakka
-       AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-       AND tt.poistettu = FALSE
-     GROUP BY tt.toimenpidekoodi
+        tt.toimenpidekoodi AS toimenpidekoodi,
+        SUM(tt.maara)      AS maara,
+        :urakka            AS urakka,
+        MAX(tt.toteuma)    AS toteuma_id,
+        MAX(tt.id)         AS toteuma_tehtava_id
+    FROM toteuma_tehtava tt
+        JOIN kayttaja k ON k.id = tt.luoja
+        JOIN tehtava tk ON tk.id = tt.toimenpidekoodi
+    WHERE tt.urakka_id = :urakka
+      AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+      AND tt.poistettu = FALSE
+      -- Käsin kirjatut määrät lasketaan mukaan aina
+      -- Urakoitsijajärjestelmästä kirjatut määrät otetaan mukaan vain jos "laske-api-maara-mukaan?" on TRUE
+      AND (
+          k.jarjestelma IS NOT TRUE 
+          OR tk."laske-api-maara-mukaan?" IS TRUE
+      )
+    GROUP BY tt.toimenpidekoodi
 ),
  materiaalimaara AS NOT MATERIALIZED (
      -- Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)
@@ -543,8 +551,8 @@ maaramuutokset AS (
         mmt.valitun_yksikkohinnan_hoitokausi             AS yksikkohinnan_alkuvuosi,
         mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
         COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
-        -- toteutunut määrä: materiaalitoteuma -> muuten urakan_tehtavat
-        COALESCE(MAX(mm.maara), SUM(urakan_tehtavat.maara)) AS toteutunut_maara,
+        -- toteutunut määrä: urakan_tehtavat -> muuten materiaalitoteuma
+        COALESCE(SUM(urakan_tehtavat.maara), MAX(mm.maara)) AS toteutunut_maara,
         SUM(ut.maara)                                    AS suunniteltu_maara,
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
         tk.suunnitteluyksikko                            AS yksikko,
