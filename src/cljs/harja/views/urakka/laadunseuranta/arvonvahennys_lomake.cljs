@@ -69,9 +69,9 @@
                                      (when (some #{hoitovuosi} hoitovuodet)
                                        hoitovuosi))))
         hoitovuosi-lukittu? (fn [arvonvahennyksen-hoitovuosi]
-                              (some (fn [{:keys [vuosi lukittu?]}]
+                              (some (fn [{:keys [vuosi arvonvahennys-lukittu?]}]
                                       (and (= vuosi arvonvahennyksen-hoitovuosi)
-                                        lukittu?))
+                                        arvonvahennys-lukittu?))
                                 (:lukitustiedot app)))]
 
 

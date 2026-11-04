@@ -71,7 +71,7 @@
 
   HaeLukitustiedot
   (process-event [_ app]
-    (tuck-apurit/post! :hae-lukitustiedot
+    (tuck-apurit/post! :hae-sanktioiden-lukitustiedot
       {:urakka-id @nav/valittu-urakka-id}
       {:onnistui ->HaeLukitustiedotOnnistui
        :epaonnistui ->KutsuEpaonnistui

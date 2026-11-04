@@ -155,9 +155,7 @@
                  ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä arvonvähennystä on kirjattu
                  (if (:id @tiedot/valittu-sanktio)
                    [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?]
-                   [napit/peruuta "Sulje"
-                    #(do
-                       (reset! sivupaneeli-auki?-atom false))])]
+                   [napit/peruuta "Sulje" #(reset! sivupaneeli-auki?-atom false)])]
                 ;; Jos lukitusta ei ole, niin näytetään lomake normaalisti
                 [arvonvahennys-lomake/arvonvahennys-lomake e! app sivupaneeli-auki?-atom (or lukutila? arvonvahennys-paatoksella-lukittu?) oikeus-muokata? mhu25?])]
 
