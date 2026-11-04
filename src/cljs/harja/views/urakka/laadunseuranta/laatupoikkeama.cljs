@@ -16,6 +16,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.napit :as napit]
             [harja.asiakas.kommunikaatio :as k]
@@ -208,7 +209,7 @@
                     (:tyyppi %))
             :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
-           {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
+           {:otsikko "Määrä (€)" :nimi :summa :hae :summa :fmt #(fmt/euro-opt false %) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
           (or sanktiot-lista [])]]
           (case sanktio-konfiguraation-tila
             :haku-kaynnissa [ajax-loader "Ladataan..."]
