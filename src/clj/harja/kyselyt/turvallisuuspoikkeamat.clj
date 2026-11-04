@@ -6,7 +6,9 @@
 (defqueries "harja/kyselyt/turvallisuuspoikkeamat.sql"
   {:positional? true})
 
-(declare onko-olemassa-ulkoisella-idlla hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle)
+(declare onko-olemassa-ulkoisella-idlla
+         hae-turvallisuuspoikkeama-ulkoisella-idlla-ja-urakalla
+         hae-turvallisuuspoikkeamat-lahetettavaksi-analytiikalle)
 
 (def turvallisuuspoikkeama-xf
   (comp (map #(konv/string->keyword % :korjaavatoimenpide_tila))

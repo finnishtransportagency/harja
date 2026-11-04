@@ -35,4 +35,4 @@ runs:
         echo "Installed NPM version: $(npm -v)"
       shell: bash
     - name: Verify NPM security settings
-      uses: ./.github/actions/verify-npm-security
+      uses: $/.github/actions/verify-npm-security

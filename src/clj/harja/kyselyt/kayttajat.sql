@@ -48,13 +48,41 @@ WHERE lyhenne = :elinvoimakeskuslyhenne and tyyppi = 'elinvoimakeskus';
 SELECT id,nimi,tyyppi FROM organisaatio
  WHERE tyyppi in ('hallintayksikko', 'hallintayksikko-tilu') AND elynumero = :elynumero;
 
-
 -- name: hae-organisaation-urakat
 -- Palauttaa organisaation (hallintayksikkö tai urakoitsija) omien urakoiden id:t
 SELECT u.id
   FROM urakka u
  WHERE u.urakoitsija = :org OR u.hallintayksikko = :org OR u.elinvoimakeskus_id = :org;
 
+-- name: urakoitsijan-urakat
+-- Hakee urakoitsijaorganisaation urakat tilannekuvaa varten.
+SELECT
+    u.id, u.hallintayksikko, u.elinvoimakeskus_id
+FROM urakka u
+         LEFT JOIN organisaatio urk ON u.urakoitsija = urk.id
+WHERE urk.id = :organisaatio;
+
+-- name: elinvoimakeskusten-urakat
+-- Hakee elinvoimakeskusten urakat elinvoimakeskusnumeroilla tilannekuvaa varten.
+SELECT u.id,
+       u.elinvoimakeskus_id AS elinvoimakeskus,
+       u.tyyppi
+FROM urakka u
+WHERE u.elinvoimakeskus_id IN (:elinvoimakeskukset);
+
+-- name: elinvoimakeskusten-urakat-ilman-valaistus-urakoita
+-- Hakee tilannekuvaa varten elinvoimakeskusten urakat käyttäjän omien urakoiden ja niiden
+-- elinvoimakeskusten numeroilla, joihin käyttäjällä on lukuoukeus.
+-- Hyödyllinen kun käyttäjärooli sisältää oman-urakan-ely-oikeuden.
+-- Ei palauta valaistusurakoita, koksa oman-yrakan-ely-oikeus ei ulotu niihin.
+SELECT
+    u.id, u.elinvoimakeskus_id
+FROM urakka u
+         LEFT JOIN organisaatio elv ON u.elinvoimakeskus_id = elv.id
+WHERE (elv.id IN (:elinvoimakeskusnumerot) OR
+       elv.id IN (SELECT elinvoimakeskus_id FROM urakka WHERE id IN (:urakat))
+           and elinvoimakeskus_id is NOT NULL)
+  AND u.tyyppi != 'valaistus';
 
 -- name: hae-kayttaja
 -- Hakee yhden käyttäjän id:llä

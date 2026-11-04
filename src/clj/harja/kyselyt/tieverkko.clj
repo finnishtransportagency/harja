@@ -38,26 +38,32 @@
           (select-keys seuraava [:tr-numero :tr-ajorata :tr-kaista]))
        (or (and (= (:tr-loppuosa edellinen) (:tr-alkuosa seuraava))
                 (= (:tr-loppuetaisyys edellinen) (:tr-alkuetaisyys seuraava)))
-           (= (inc (:tr-loppuosa edellinen)) (:tr-alkuosa seuraava)))))
+           ;; Osan rajan yli vain, jos ajorata jatkuu osan lopusta seuraavan alkuun
+           (and (= (inc (:tr-loppuosa edellinen)) (:tr-alkuosa seuraava))
+                (= (:tr-loppuetaisyys edellinen) (:osan-pituus edellinen))
+                (zero? (:tr-alkuetaisyys seuraava))))))
 
 (defn- yhdista-yhtenaiset-tieosuudet [tieosuudet]
-  (reduce (fn [yhdistetyt tieosuus]
-            (if-let [edellinen (peek yhdistetyt)]
-              (if (sama-yhtenainen-tieosuus? edellinen tieosuus)
-                (conj (pop yhdistetyt)
-                      (assoc edellinen
-                             :tr-loppuosa (:tr-loppuosa tieosuus)
-                             :tr-loppuetaisyys (:tr-loppuetaisyys tieosuus)))
-                (conj yhdistetyt tieosuus))
-              [tieosuus]))
-          []
-          tieosuudet))
+  (->> tieosuudet
+       (reduce (fn [yhdistetyt tieosuus]
+                 (if-let [edellinen (peek yhdistetyt)]
+                   (if (sama-yhtenainen-tieosuus? edellinen tieosuus)
+                     (conj (pop yhdistetyt)
+                           (assoc edellinen
+                                  :tr-loppuosa (:tr-loppuosa tieosuus)
+                                  :tr-loppuetaisyys (:tr-loppuetaisyys tieosuus)
+                                  :osan-pituus (:osan-pituus tieosuus)))
+                     (conj yhdistetyt tieosuus))
+                   [tieosuus]))
+               [])
+       (mapv #(dissoc % :osan-pituus))))
 
 (defn hae-tieosuudet [db {:keys [rajoita-tieosuuksien-maara] :as params}]
   (let [raakatieosuudet (hae-tieosuudet-raakana db params)
         tieosuuksia-rajattu? (>= (count raakatieosuudet) rajoita-tieosuuksien-maara)
         osoiteavaimet [:tr-numero :tr-ajorata :tr-kaista
-                       :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys]
+                       :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys
+                       :osan-pituus]
         alkuperaiset-avaimet {:alkuperainen-tr-alkuosa :tr-alkuosa
                               :alkuperainen-tr-alkuetaisyys :tr-alkuetaisyys
                               :alkuperainen-tr-loppuosa :tr-loppuosa
@@ -69,7 +75,7 @@
                                                   (set/rename-keys
                                                     (select-keys % (keys alkuperaiset-avaimet))
                                                     alkuperaiset-avaimet)))
-                                   (map #(merge (select-keys % [:tr-numero :tr-ajorata :tr-kaista])
+                                   (map #(merge (select-keys % [:tr-numero :tr-ajorata :tr-kaista :osan-pituus])
                                                 (set/rename-keys
                                                   (select-keys % (keys alkuperaiset-avaimet))
                                                   alkuperaiset-avaimet))))]
