@@ -52,6 +52,81 @@
                       jarjestelma-fixture
                       urakkatieto-fixture))
 
+(deftest maarien-toteuman-poisto-tarkistaa-urakan
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        toinen-urakka-id @oulun-alueurakan-2014-2019-id
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id
+                                   " AND poistettu IS NOT TRUE LIMIT 1")))
+        poistettu? #(ffirst (q (str "SELECT poistettu FROM toteuma WHERE id = " toteuma-id)))]
+    (is (some? toteuma-id))
+    (is (thrown? SecurityException
+          (toteumat/poista-maarien-toteuma! (:db jarjestelma) +kayttaja-jvh+
+            {:urakka-id toinen-urakka-id :toteuma-id toteuma-id})))
+    (is (not (poistettu?)))
+    (toteumat/poista-maarien-toteuma! (:db jarjestelma) +kayttaja-jvh+
+      {:urakka-id urakka-id :toteuma-id toteuma-id})
+    (is (true? (poistettu?)))))
+
+(deftest maarien-toteuman-poisto-tarkistaa-lukituksen
+  (let [db (:db jarjestelma)
+        urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        kayttaja-id (:id +kayttaja-jvh+)
+        paiva (pvm/->pvm "15.02.2022")
+        toteuma-id (toteumat-q/luo-uusi-toteuma db
+                     {:urakka urakka-id :alkanut paiva :paattynyt paiva
+                      :tyyppi "kokonaishintainen" :kayttaja kayttaja-id :lahde "harja-ui"
+                      :sopimus (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+                      :suorittaja nil :ytunnus nil :lisatieto nil :ulkoinen_id nil :reitti nil
+                      :numero nil :alkuosa nil :alkuetaisyys nil :loppuosa nil :loppuetaisyys nil
+                      :tyokonetyyppi nil :tyokonetunniste nil :tyokoneen-lisatieto nil})
+        poistettu? #(ffirst (q (str "SELECT poistettu FROM toteuma WHERE id = " toteuma-id)))]
+    (u (str "INSERT INTO paatos_tavoitehinnan_muutos "
+         "(urakkaid, hoitokauden_alkuvuosi, tavoitehinta, luoja) VALUES ("
+         urakka-id ", 2021, 1000, " kayttaja-id ")"))
+    (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden 2021"
+          (toteumat/poista-maarien-toteuma! db +kayttaja-jvh+
+            {:urakka-id urakka-id :toteuma-id toteuma-id})))
+    (is (not (poistettu?)))
+    (u (str "UPDATE paatos_tavoitehinnan_muutos SET poistettu = TRUE WHERE urakkaid = " urakka-id
+         " AND hoitokauden_alkuvuosi = 2021"))
+    (toteumat/poista-maarien-toteuma! db +kayttaja-jvh+
+      {:urakka-id urakka-id :toteuma-id toteuma-id})
+    (is (true? (poistettu?)))))
+
+(deftest maarien-toteuman-muokkaus-tarkistaa-urakan
+  (let [urakka-id @oulun-alueurakan-2005-2010-id
+        toinen-urakka-id @oulun-alueurakan-2014-2019-id
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id
+                               " AND poistettu IS NOT TRUE LIMIT 1")))
+        tehtava-id (hae-toimenpidekoodin-id "Pysäkkikatoksen uusiminen" "20191")]
+    (is (some? toteuma-id))
+    (is (thrown? SecurityException
+          (toteumat/tallenna-toteuma! (:db jarjestelma) +kayttaja-jvh+
+            {:urakka-id toinen-urakka-id :loppupvm (pvm/->pvm "15.02.2016")
+             :tyyppi :maaramitattava
+             :toteumat [{:toteuma-id toteuma-id :tehtava {:id tehtava-id} :maara 1}]})))
+    (is (= urakka-id (ffirst (q (str "SELECT urakka FROM toteuma WHERE id = " toteuma-id)))))))
+
+(deftest materiaalitoteuman-lopetuspaivan-lukitus
+  (let [db (:db jarjestelma)
+        urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        sopimus-id (hae-iin-maanteiden-hoitourakan-2021-2026-sopimus-id)
+        toteuma {:id -1 :urakka urakka-id :sopimus sopimus-id
+                 :alkanut (pvm/->pvm "30.09.2022") :paattynyt (pvm/->pvm "01.10.2022")
+                 :tyyppi "materiaali" :lisatieto "Lopetuspäivän lukitustesti"}
+        tallennetut #(ffirst (q "SELECT count(*) FROM toteuma WHERE lisatieto = 'Lopetuspäivän lukitustesti' AND poistettu IS NOT TRUE"))]
+    (u (str "INSERT INTO paatos_tavoitehinnan_muutos "
+         "(urakkaid, hoitokauden_alkuvuosi, tavoitehinta, luoja) VALUES ("
+         urakka-id ", 2022, 1000, " (:id +kayttaja-jvh+) ")"))
+    (is (thrown-with-msg? IllegalArgumentException #"lukitsee hoitovuoden 2022"
+          (toteumat/tallenna-toteuma-ja-toteumamateriaalit db +kayttaja-jvh+
+            toteuma [] nil sopimus-id)))
+    (is (zero? (tallennetut)))
+    (u (str "UPDATE paatos_tavoitehinnan_muutos SET poistettu = TRUE WHERE urakkaid = " urakka-id
+         " AND hoitokauden_alkuvuosi = 2022"))
+    (toteumat/tallenna-toteuma-ja-toteumamateriaalit db +kayttaja-jvh+ toteuma [] nil sopimus-id)
+    (is (= 1 (tallennetut)))))
+
 ;; käyttää testidata.sql:stä tietoa
 (deftest erilliskustannukset-haettu-oikein
   (let [alkupvm (pvm/luo-pvm 2005 9 1)
@@ -656,6 +731,8 @@
 
 (deftest maarien-toteuman-muokkaus-estaa-lukitun-alkuperaisen-hoitovuoden
   (let [urakka-id @oulun-alueurakan-2005-2010-id
+        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE urakka = " urakka-id
+                               " AND poistettu IS NOT TRUE LIMIT 1")))
         alkuperainen-pvm (pvm/luo-pvm 2005 11 24)
         uusi-pvm (pvm/luo-pvm 2006 11 24)
         tarkistetut-hoitovuodet (atom [])]
@@ -671,7 +748,7 @@
                {:urakka-id urakka-id
                 :loppupvm uusi-pvm
                 :tyyppi :maaramitattava
-                :toteumat [{:toteuma-id 123
+                :toteumat [{:toteuma-id toteuma-id
                             :tehtava {:id 1}
                             :maara 1}]}))))
     (is (= [2006 2005] @tarkistetut-hoitovuodet))))

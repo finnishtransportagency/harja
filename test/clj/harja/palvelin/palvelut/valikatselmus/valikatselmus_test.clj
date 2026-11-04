@@ -752,3 +752,19 @@
     (is (= false (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 :kulu)))
     ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
     (is (= true (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2025 :kulu)))))
+
+(deftest vain-ominaisuuden-paatos-lukitsee-muokkauksen
+  (let [db (:db jarjestelma)
+        urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        paatokset (atom [])]
+    (with-redefs [paatos-kyselyt/hae-paatokset (fn [& _] @paatokset)]
+      (doseq [[ominaisuus lukitseva-paatos] [[:kulu "Tavoitehinnan muutokset"]
+                                             [:arvonvahennys "Tavoitehinnan pysyvät muutokset"]
+                                             [:sanktio "Välikatselmuspöytäkirjaan liitettävät raportit"]
+                                             [:bonus "Välikatselmuspöytäkirjaan liitettävät raportit"]]]
+        (reset! paatokset [])
+        (is (true? (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 ominaisuus)))
+        (reset! paatokset [{:id 1 :nimi "Lupaukset"}])
+        (is (true? (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 ominaisuus)))
+        (swap! paatokset conj {:id 2 :nimi lukitseva-paatos})
+        (is (false? (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 ominaisuus)))))))

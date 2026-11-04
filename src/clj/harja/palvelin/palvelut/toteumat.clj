@@ -559,6 +559,9 @@
   (do
     (log/debug "poista-maarien-toteuma! :: toteuma-id urakka-id" toteuma-id urakka-id)
     (jdbc/with-db-transaction [tx db]
+      (tarkistukset/vaadi-toteuma-kuuluu-urakkaan tx toteuma-id urakka-id)
+      (tarkistukset/vaadi-toteuman-muokkaus-sallittu!
+        tx urakka-id (toteumat-q/hae-toteuman-alkanut-pvm-idlla tx {:id toteuma-id}))
       (toteumat-q/poista-toteuma! tx (:id user) toteuma-id)
       (toteumat-q/poista-toteuma-tehtava! tx {:kayttaja (:id user)
                                               :toteuma-id toteuma-id}))))
@@ -619,6 +622,7 @@
             (do
               ;; Varmistetaan, ettei muokata toteumaa, joka on lukitulla hoitovuodella
               (when (id/id-olemassa? toteuma-id)
+                (tarkistukset/vaadi-toteuma-kuuluu-urakkaan db toteuma-id urakka-id)
                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! db urakka-id (toteumat-q/hae-toteuman-alkanut-pvm-idlla db {:id toteuma-id})))
               (when (and
                       (tr-domain/tehtavat-joille-sijainti-pakollinen (:tehtava tehtava))
@@ -861,7 +865,8 @@
                                                                       ;; Estä toteuman muokkaus, jos välikatselmuksen päätös lukitsee hoitokauden
                                                                       (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id toteuman-alkuperainen-pvm))
                                   _valitun-paivamaaran-lukitus (when-not (:poistettu t)
-                                                                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id (:alkanut t)))
+                                                                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id (:alkanut t))
+                                                                 (tarkistukset/vaadi-toteuman-muokkaus-sallittu! c urakka-id (:paattynyt t)))
                                   toteuma (if (id/id-olemassa? toteuma-id)
                                             ;; Jos poistettu=true, halutaan toteuma poistaa.
                                             ;; Molemmissa tapauksissa parametrina saatu toteuma tulee palauttaa
