@@ -14,6 +14,7 @@
   hae-selvitysta-odottavat-laatupoikkeamat hae-kasitellyt-laatupoikkeamat hae-poikkeamaraportilliset-laatupoikkeamat
   hae-laatupoikkeaman-urakka-id hae-laatupoikkeaman-liitteet hae-urakan-laatupoikkeama-liitteet
   hae-laatupoikkeaman-tiedot hae-laatupoikkeaman-kommentit liita-kommentti<! liita-liite<! kirjaa-laatupoikkeaman-paatos!
+  hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
   paivita-laatupoikkeama-ulkoisella-idlla<!
   peru-laatupoikkeaman-paatos! hae-laatupoikkeaman-tallennuksen-perustiedot)
 

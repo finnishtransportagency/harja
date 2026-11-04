@@ -1,17 +1,21 @@
 (ns harja.palvelin.raportointi.raportit.tyomaapaivakirja
   "Työmaapäiväkirja -näkymän raportti"
   (:require
-   [taoensso.timbre :as log]
-   [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
-   [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelut]
-   [harja.kyselyt.konversio :as konversio]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]
-   [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]))
+    [clojure.string :as str]
+    [taoensso.timbre :as log]
+
+    [harja.pvm :as pvm]
+    [harja.kyselyt.konversio :as konversio]
+    [harja.palvelin.raportointi.raportit.yleinen :as yleinen]
+    [harja.kyselyt.tyomaapaivakirja :as tyomaapaivakirja-kyselyt]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.kalusto :as kalusto]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.vahvuus :as vahvuus]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.yhteiset :as yhteiset]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.saatiedot :as saatiedot]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.keliolosuhteet :as keliolosuhteet]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.muut-toimenpiteet :as muut-toimenpiteet]
+    [harja.palvelin.palvelut.tyomaapaivakirja.tyomaapaivakirja-palvelu :as tyomaapaivakirja-palvelut]
+    [harja.palvelin.raportointi.raportit.tyomaapaivakirja.maastotoimeksiannot :as maastotoimeksiannot]))
 
 (defn tapahtumataulukot [tapahtumat otsikko ei-tapahtumia-teksti]
   (let [tapahtumarivit (reduce (fn [rivit onnettomuus]
@@ -20,7 +24,7 @@
                                    [:jakaja :poista-margin]
                                    (yhteiset/body-teksti (:kuvaus onnettomuus))))
                          [] tapahtumat)]
-    
+
     (into ()
       (conj
         ;; Jos kuvaus on tyhjä, näytetään <ei tietoja>
@@ -52,9 +56,17 @@
           liikenteenohjaukset (filter #(= "liikenteenohjausmuutos" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           yhteydenotot (filter #(contains? #{"tilaajan-yhteydenotto" "palaute"} (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
           muut-kirjaukset (filter #(= "muut_kirjaukset" (:tyyppi %)) (:tapahtumat tyomaapaivakirja))
-          otsikko "Työmaapäiväkirja"]
-      
+
+          pvm (:paivamaara valittu-rivi)
+          urakan-nimi-tai-lyhytnimi (yleinen/hae-urakan-lyhytnimet db :teiden-hoito (:urakka_id valittu-rivi))
+
+          otsikko (str/join " "
+                    (cond-> ["Työmaapäiväkirja"]
+                      (some? pvm) (conj (pvm/pvm pvm))
+                      (not (empty? urakan-nimi-tai-lyhytnimi)) (conj urakan-nimi-tai-lyhytnimi)))]
+
       [:raportti {:nimi otsikko
+                  :orientaatio :landscape
                   :piilota-otsikko? true}
 
        [:tyomaapaivakirja-header tyomaapaivakirja]
