@@ -240,21 +240,26 @@
        :laji laji
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
-(defn- tarkista-arvonvahnnyksen-lukitus
+(defn- tarkista-sanktion-lukitus
   [db urakka-id urakan-tiedot sanktio paivamaara]
   (let [laji (if (keyword? (:laji sanktio))
                (:laji sanktio)
                (some-> (:laji sanktio) keyword))
-        hoitovuosi (some-> paivamaara pvm/joda-timeksi pvm/hoitokauden-alkuvuosi)]
-    (when (and (= :arvonvahennyssanktio laji)
+        hoitovuosi (some-> paivamaara pvm/joda-timeksi pvm/hoitokauden-alkuvuosi)
+        lukittava-ominaisuus (when laji
+                               (if (= laji :arvonvahennyssanktio)
+                                 :arvonvahennys
+                                 :sanktio))]
+    (when (and lukittava-ominaisuus
             hoitovuosi
-            (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
-              urakan-tiedot (pvm/vuodesta-hoitokausi hoitovuosi)))
+            (or (= lukittava-ominaisuus :sanktio)
+              (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
+                urakan-tiedot (pvm/vuodesta-hoitokausi hoitovuosi))))
       (when-not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
-                  db urakka-id hoitovuosi :sanktio)
+                  db urakka-id hoitovuosi lukittava-ominaisuus)
         (throw+ {:type virheet/+viallinen-kutsu+
                  :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-                            :viesti "Välikatselmuksessa hoitovuodelle tehdyt päätökset lukitsevat tavoitehintaa alentavat arvonvähennykset."}]})))))
+                            :viesti "Välikatselmuksessa hoitovuodelle tehdyt päätökset estävät tallentamisen."}]})))))
 
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
@@ -267,7 +272,7 @@
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
         vanha-sanktio (when (id-olemassa? id)
                         (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
-        _ (tarkista-arvonvahnnyksen-lukitus
+        _ (tarkista-sanktion-lukitus
             db urakka urakan-tiedot vanha-sanktio (or (:perintapvm vanha-sanktio) (:maarattypvm vanha-sanktio)))
         summa (if (decimal? summa)
                 (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
@@ -284,7 +289,7 @@
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
         paivamaara (or paivamaara perintapvm)
-        _ (tarkista-arvonvahnnyksen-lukitus
+        _ (tarkista-sanktion-lukitus
             db urakka urakan-tiedot sanktio paivamaara)
         _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
@@ -535,7 +540,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
 
   (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))]
-    (tarkista-arvonvahnnyksen-lukitus
+    (tarkista-sanktion-lukitus
       db urakka-id (first (urakat/hae-urakka db urakka-id)) sanktio
       (or (:perintapvm sanktio) (:maarattypvm sanktio)))
     (laatupoikkeamat-q/poista-sanktio-tietokannasta db user urakka-id sanktio)))
@@ -550,8 +555,8 @@
                                (dec urakan-loppuvuosi))]
     (mapv (fn [vuosi]
             {:vuosi vuosi
-             :lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
-                             db (:urakka-id tiedot) vuosi :sanktio))})
+             :arvonvahennys-lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db (:urakka-id tiedot) vuosi :arvonvahennys))
+             :sanktio-lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db (:urakka-id tiedot) vuosi :sanktio))})
       (range urakan-alkuvuosi (inc viimeinen-hoitovuosi)))))
 
 (defrecord Laadunseuranta []
@@ -630,7 +635,7 @@
       (fn [user {:keys [urakka-id bonus-id]}]
         (hae-bonuksen-liitteet db user urakka-id bonus-id))
 
-      :hae-lukitustiedot
+      :hae-sanktioiden-lukitustiedot
       (fn [user tiedot]
         (hae-lukitustiedot db user tiedot)))
 
@@ -658,5 +663,5 @@
       :hae-urakan-laatupoikkeama-liitteet
       :hae-sanktion-liitteet
       :hae-bonuksen-liitteet
-      :hae-lukitustiedot)
+      :hae-sanktioiden-lukitustiedot)
     this))
