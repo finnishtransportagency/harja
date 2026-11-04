@@ -174,7 +174,7 @@
                          [tools.jackson.core/jackson-core "3.2.4"]
                          [com.fasterxml.jackson.core/jackson-core "2.22.4"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
-                         [com.google.code.gson/gson "2.14.0"]]
+                         [com.google.code.gson/gson "2.15.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant true}}
