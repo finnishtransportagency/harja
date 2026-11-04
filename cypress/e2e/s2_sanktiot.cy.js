@@ -259,8 +259,7 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
     const testiSanktioKuvausMhu26B = `CY-MHU26-B-omailmoitus-${Date.now()}`;
     const testiSanktioPerusteluMhu26B = "CY-MHU26-B-omailmoitus-idempotenssi-perustelu";
     const tyyppiMhu26B = 'Talvihoito Ise/Is/L';
-    const omailmoitus = () => cy.contains('label', 'Kyseessä on urakoitsijan itse ilmoittama')
-        .invoke('attr', 'for').then((id) => cy.get(`[id="${id}"]`));
+    const omailmoitus = () => cy.get('[data-cy="sanktion-omailmoitus"] input[type="checkbox"]');
     const sanktionSuuruus = () => cy.contains('label', 'Sanktion suuruus').closest('.form-group').find('.lomake-arvo');
 
     before(function () {
@@ -317,6 +316,8 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B2')
         cy.contains('button', 'Muokkaa').click()
+        cy.get('[data-cy="sanktion-tyyppi"]').contains('button', tyyppiMhu26B).should('be.visible')
+        sanktionSuuruus().invoke('text').should('match', /7\s?000/)
         omailmoitus().should('be.checked').uncheck().should('not.be.checked')
         sanktionSuuruus().invoke('text').should('match', /14\s?000/)
         cy.get('div.lomake-footer button').contains('Tallenna').click()
