@@ -382,7 +382,7 @@
 
           ;; Muokkaustila :: MHU25+ urakoilla bonuksen perintäpäivä laitetaan aina syyskuun 15 päiväksi
           (and mhu25? voi-muokata? (not lukutila?))
-          {:otsikko "Kohdistuu hoitovuodelle12"
+          {:otsikko "Kohdistuu hoitovuodelle"
            :nimi :perintapvm
            :pakollinen? true
            :tyyppi :valinta
@@ -394,12 +394,11 @@
                         (pvm/hoitokauden-alkupvm hoitovuosi))))
            :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
            ::lomake/col-luokka "col-xs-6"
-           :validoi [(fn [paivamaara _rivi _taulukko]
-                       (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
-                         (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
-                           (str "Päivämäärää ei voida asettaa "
-                             (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
-                             ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
+           :validoi [(fn [vuosi _rivi _taulukko]
+                       (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                         (str "Päivämäärää ei voida asettaa "
+                           (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/->pvm (str "01.10." vuosi)))
+                           ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.")))]}
 
           ;; Lukutila :: ennen -25 alkaneille
           (and (not mhu25?) lukutila?)
