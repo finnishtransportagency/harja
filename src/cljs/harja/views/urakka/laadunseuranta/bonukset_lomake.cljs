@@ -20,6 +20,7 @@
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as tiedot-sanktiot]
 
             [harja.ui.yleiset :refer [ajax-loader] :as yleiset]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
             [harja.ui.liitteet :as liitteet]
@@ -74,7 +75,7 @@
   "MH-urakoidan ja ylläpitourakoiden yhteinen bonuslomake.
   Huomioitavaa on, että ylläpidon urakoiden bonukset tallennetaankin oikeasti sanktioina, eikä bonuksina.
   Ylläpidon urakoiden bonuslomakkeessa on myös muita pieniä poikkeuksia."
-  [sulje-fn lukutila? voi-muokata? bonus-konfiguraatio e! app]
+  [sulje-fn lukutila? voi-muokata? bonus-konfiguraatio lukitustiedot e! app]
   (let [{lomakkeen-tiedot :lomake :keys [uusi-liite voi-sulkea? liitteet-haettu?]} app
         urakka-id (:id @nav/valittu-urakka)
         urakan-alkupvm (:alkupvm @nav/valittu-urakka)
@@ -117,7 +118,12 @@
                                          kuukausi (pvm/kuukausi perintapvm)
                                          hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
                                      (when (some #{hoitovuosi} hoitovuodet)
-                                       hoitovuosi))))]
+                                       hoitovuosi))))
+        hoitovuosi-lukittu? (fn [bonuksen-hoitovuosi]
+                              (some (fn [{:keys [vuosi sanktio-lukittu?]}]
+                                      (and (= vuosi bonuksen-hoitovuosi)
+                                        sanktio-lukittu?))
+                                lukitustiedot))]
     (when voi-sulkea? (e! (tiedot/->TyhjennaLomake sulje-fn)))
     (when-not liitteet-haettu? (e! (tiedot/->HaeLiitteet)))
     [lomake/lomake
@@ -136,7 +142,7 @@
                      [:div.col-xs-8 {:style {:padding-left "0"}}
                       (when-not lukutila?
                         [napit/yleinen-ensisijainen "Tallenna" #(e! (tiedot/->TallennaBonus))
-                         {:disabled (not (empty? (::lomake/puuttuvat-pakolliset-kentat bonus)))}])]
+                         {:disabled (not (lomake/voi-tallentaa? bonus))}])]
                      [:div.col-xs-4 {:style (merge
                                               {:text-align "end" :float "right"}
                                               (when (not lukutila?)
@@ -269,7 +275,13 @@
          :tyyppi :pvm
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"
-         :validoi [[:ei-tyhja "Valitse päivämäärä"]]
+         :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                   (fn [paivamaara _rivi _taulukko]
+                     (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                       (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                         (str "Päivämäärää ei voida asettaa "
+                           (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                           ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]
          :aseta (fn [rivi arvo]
                   (let [;; MHU25-urakoille laskutuskuukausi on aina 15.09. hoitokauden päättymisvuodelle
                         ;; Hoitokausi: 01.10.YYYY - 30.09.YYYY+1
@@ -313,6 +325,12 @@
            :tyyppi :komponentti
            ::lomake/col-luokka "col-xs-6"
            :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+           :validoi [(fn [paivamaara _rivi _taulukko]
+                       (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                         (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                           (str "Päivämäärää ei voida asettaa "
+                             (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                             ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]
            :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                           (if-not mhu25?
                             [:<>
@@ -341,8 +359,17 @@
                                                 :laskutuskuukausi-komp-tiedot %
                                                 ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
                                                 :perintapvm (:pvm %)))
-                               :format-fn :teksti}
+
+                               :format-fn (fn [{:keys [teksti pvm]}]
+                                            [:span {:style {:display "inline-flex"
+                                                            :align-items "center"
+                                                            :gap "0.5rem"}}
+                                             teksti
+                                             (when (hoitovuosi-lukittu?
+                                                     (some-> pvm pvm/hoitokauden-alkuvuosi))
+                                               [ikonit/locked-svg 14])])}
                               laskutuskuukaudet]
+
                              ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                              (when (not @tiedot-urakka/yllapitourakka?)
                                [:div.small-caption.padding-4 "Näkyy laskutusyhteenvedolla"])]
@@ -355,7 +382,7 @@
 
           ;; Muokkaustila :: MHU25+ urakoilla bonuksen perintäpäivä laitetaan aina syyskuun 15 päiväksi
           (and mhu25? voi-muokata? (not lukutila?))
-          {:otsikko "Kohdistuu hoitovuodelle"
+          {:otsikko "Kohdistuu hoitovuodelle12"
            :nimi :perintapvm
            :pakollinen? true
            :tyyppi :valinta
@@ -366,7 +393,13 @@
                       (when hoitovuosi
                         (pvm/hoitokauden-alkupvm hoitovuosi))))
            :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
-           ::lomake/col-luokka "col-xs-6"}
+           ::lomake/col-luokka "col-xs-6"
+           :validoi [(fn [paivamaara _rivi _taulukko]
+                       (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                         (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                           (str "Päivämäärää ei voida asettaa "
+                             (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                             ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
 
           ;; Lukutila :: ennen -25 alkaneille
           (and (not mhu25?) lukutila?)
@@ -450,7 +483,7 @@
                                            avattu-bonus)
                                          ;; tai alustetaan bonuslomakkeen tila
                                          (tiedot/uusi-bonus))})]
-    (fn [_ _ _ lukutila? voi-muokata?]
+    (fn [_ _ _ lukutila? voi-muokata? lukitustiedot]
       (let [urakka @nav/valittu-urakka
             urakka-id (:id urakka)
             urakan-alkupvm (:alkupvm urakka)
@@ -479,14 +512,14 @@
           (if yllapitourakka?
             [:<>
              [tuck/tuck bonukset-tila
-              (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]
+             (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio lukitustiedot)]]
             [ajax-loader "Ladataan..."])
 
           :haku-epaonnistui
           (if yllapitourakka?
             [:<>
              [tuck/tuck bonukset-tila
-              (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]
+             (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio lukitustiedot)]]
             [:div
              [:p "Bonuksia ei voitu ladata juuri nyt."]
              [:p "Yritä hetken kuluttua uudelleen. Jos ongelma jatkuu, ota yhteyttä Harja-tukeen."]])
@@ -495,11 +528,11 @@
           (if yllapitourakka?
             [:<>
              [tuck/tuck bonukset-tila
-              (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]]
+             (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio lukitustiedot)]]
             [:div
              [:p "Bonuksia ei ole määritelty tälle urakalle valitulla hoitokaudella ja toimenpideinstanssilla."]
              [:p "Ota yhteyttä Harja-tukeen jotta asia saadaan korjattua."]])
 
           [:<>
            [tuck/tuck bonukset-tila
-            (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio)]])))))
+            (r/partial bonus-lomake* sulje-fn lukutila? voi-muokata? @bonus-konfiguraatio lukitustiedot)]])))))
