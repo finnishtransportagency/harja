@@ -2166,7 +2166,7 @@
                         (if (and (= :C laji)
                               (= "teiden-hoito" (:tyyppi urakka))
                               (<= 2019 (pvm/vuosi (:alkupvm urakka)) 2025))
-                          [8 9 10 11 12]
+                          [8 9 10 12 11]
                           (mapv :koodi
                             (sanktio-domain/sanktiolaji->sanktiotyypit laji kaikki-sanktiotyypit (:alkupvm urakka)))))
         lajit (case soveltuvuuskonteksti
@@ -3271,15 +3271,15 @@
           (muodosta-odotettu-mhu25-yhteenveto [yhteenveto]
             (update yhteenveto :urakka
               (fn [lajit]
-                (let [lajit-ilman-testikeskiarvoa
-                      (->> lajit
-                        (remove #(= :testikeskiarvo-sanktio (:laji %)))
-                        vec)
-                      ilman-laskutusrajaa (remove #(= :laskutus_yli_laskutusrajan (:laji %))
-                                              lajit-ilman-testikeskiarvoa)]
-                  (conj (vec ilman-laskutusrajaa)
-                    {:laji :laskutus_yli_laskutusrajan
-                     :sanktiotyyppi-koodit [0]})))))]
+                (->> lajit
+                  (remove #(contains? #{:testikeskiarvo-sanktio :laskutus_yli_laskutusrajan} (:laji %)))
+                  (mapcat (fn [laji]
+                            (if (= :pohjavesisuolan_ylitys (:laji laji))
+                              [{:laji :laskutus_yli_laskutusrajan
+                                :sanktiotyyppi-koodit [0]}
+                               laji]
+                              [laji])))
+                  vec))))]
     (let [mhu21-24-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-2021-ja-uudemmat'"))
           mhu25-profiili-id (ffirst (q "SELECT id FROM sanktio_profiili WHERE nimi = 'teiden-hoito-mhu2025'"))
           mhu21-24-vastaus (when mhu21-24-profiili-id
@@ -3305,7 +3305,7 @@
         "MHU25-profiilin koko admin-palautuksen pitää vastata MHU21-24-profiilia ja sisältää lisäksi laskutusrajalaji vain urakkakontekstissa")
       (is (= [0] (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit laskutus-laji)))
         "MHU25-profiilin laskutusrajalajin pitää käyttää koodi-0-sanktiotyyppiä")
-      (is (= [8 9 10 11 12]
+      (is (= [8 9 10 12 11]
              (mapv #(get-in % [:sanktiotyyppi :koodi]) (:rivit mhu25-c-rivit)))
         "MHU19-25 C-ryhmän sanktiot pitää näyttää määrätyssä järjestyksessä")
       (is (not-any? #(= :testikeskiarvo-sanktio (:laji %)) (:lajit mhu25-urakka-konteksti))
@@ -3323,15 +3323,15 @@
         urakka-konteksti (first (filter #(= :urakka (:soveltuvuuskonteksti %)) (:sisalto vastaus)))]
     (is profiili-id "Seedatyn MHU2026-profiilin pitää olla olemassa järjestystestausta varten")
     (is (= [:muistutus :A :B :C
-            :pohjavesisuolan_ylitys
             :tyon_tekematta_jattaminen
             :asiakirjamerkintojen_paikkansa_pitamattomyys
             :muu_sopimuksen_vastainen_toiminta
-            :talvisuolan_kokonaiskayton_ylitys
+            :vastuuhenkilon_vaihto
+            :vastuuhenkilon_tenttipistemaara_alentuminen
             :laskutus_yli_laskutusrajan
             :laskutus_ilman_laskutuskelpoisuutta
-            :vastuuhenkilon_tenttipistemaara_alentuminen
-            :vastuuhenkilon_vaihto]
+            :pohjavesisuolan_ylitys
+            :talvisuolan_kokonaiskayton_ylitys]
            (mapv :laji (:lajit urakka-konteksti)))
       "MHU2026-lajien pitää ryhmitellä C-, vastuuhenkilö-, laskutus- ja suolalajit oikein")))
 
