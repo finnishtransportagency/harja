@@ -1,6 +1,7 @@
 (ns harja.kyselyt.toteumat
   "Toteumien ja toteuman reittien kyselyt"
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
             [specql.core :refer [upsert! delete!]]
@@ -62,8 +63,9 @@
 (defn luo-uusi-toteuma
   "Luo uuden toteuman ja palauttaa sen id:n"
   [db toteuma]
-  (luo-toteuma<! db toteuma)
-  (luodun-toteuman-id db))
+  (jdbc/with-db-transaction [tx db]
+   (luo-toteuma<! tx toteuma)
+   (luodun-toteuman-id tx)))
 
 (defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash ulkoinen-id]
   ;; Jos hashia ei löydy, ei ole lähetetty aiemmin
