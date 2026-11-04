@@ -1,0 +1,30 @@
+{
+    "$schema": "http://json-schema.org/draft-03/schema#",
+    "id": "urn:harja/liitteen-poisto-request",
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "otsikko": {
+            "id": "urn:harja/otsikko",
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/otsikko.schema.json",
+            "required": true
+        },
+        "liite-poisto": {
+            "id": "urn:harja/liite-poisto",
+            "type": "object",
+            "additionalProperties": false,
+            "properties": {
+                "tunniste": {
+                    "id": "urn:harja/liite-poisto/tunniste",
+                    "type": "object",
+                    "additionalProperties": false,
+                    "$ref": "file:resources/api/schemas/entities/tunniste.schema.json",
+                    "required": true
+                }
+            },
+            "required": true
+        }
+    }
+}

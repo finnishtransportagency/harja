@@ -38,6 +38,7 @@
         kirjallisesti-sovitut-muutokset (when muutosten-hallinta? (:kirjallisesti-sovitut-muutokset budjettitavoite))
         menneet-pysyvat-muutokset (when muutosten-hallinta? (:menneet-muutos-summa budjettitavoite))
         toteumiin-perustuvat-muutokset (when muutosten-hallinta? (:toteumiin-perustuvat-muutokset-yht yhteenveto))
+        muutokset-toteutunut (or (get-in yhteenveto [:kustannukset :muutokset-toteutunut]) 0)
         pysyvat-muutokset (+ (or kirjallisesti-sovitut-muutokset 0) (or toteumiin-perustuvat-muutokset 0))
         tavoitehintaan-vaikuttavat-arvonvahennykset (reduce + 0 (map :maara (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto)))
         hoitovuoden-lopun-tavoitehinta (+ (or (:hoitovuoden-lopun-tavoitehinta budjettitavoite) 0)
@@ -70,7 +71,7 @@
                                           (+ (or (:maara %) 0) (:indeksikorjaus %)) 0) (:sanktiot yhteenveto)))
         ;; Erotellaan sanktioiden arvonvähennykset, jotka näytetään, kun arvovähennykset eivät vaikuta tavoitehintaan
         sanktio-arvonvahennykset (reduce + 0 (map #(if (contains? #{"arvonvahennyssanktio"} (:sakkoryhma %))
-                                                    (+ (or (:maara %) 0) (:indeksikorjaus %)) 0) (:sanktiot yhteenveto)))
+                                                     (+ (or (:maara %) 0) (:indeksikorjaus %)) 0) (:sanktiot yhteenveto)))
         tavoitehinnan-ylityspaatos (ota-paatos paatokset :tavoitehinnan-ylitys)
         tavoitehinnan-alituspaatos (ota-paatos paatokset :tavoitehinnan-alitus)
         tavoitehinnan-ylitys (or (:ylityksen_maara tavoitehinnan-ylityspaatos) 0)
@@ -110,6 +111,7 @@
                             ["Erillishankinnat" (euro erillishankinnat)]
                             ["Johto- ja hallintokorvaus" (euro johto-ja-hallintokorvaus)]
                             ["Hoidonjohtopalkkio" (euro hoidonjohtopalkkio)]]
+                     muutosten-hallinta? (conj ["Muutostyöt (erillisrahoitetut)" (euro muutokset-toteutunut)])
                      arvonvah-vaikk-tavoitehintaan? (conj ["Arvonvähennykset" (euro tavoitehintaan-vaikuttavat-arvonvahennykset)])
                      (pos? muut-kulut) (conj ["Muut kulut" (euro muut-kulut)])
                      true (conj ["Toteutuma yhteensä" (euro toteuma-yht) true]))
