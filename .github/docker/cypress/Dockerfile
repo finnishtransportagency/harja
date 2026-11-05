@@ -38,6 +38,8 @@ USER root
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     xvfb \
+    # Cypressin binääripaketin purkaminen
+    unzip \
     libglib2.0-0 \
     libnss3 \
     libatk1.0-0 \

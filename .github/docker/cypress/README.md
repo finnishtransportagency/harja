@@ -4,6 +4,10 @@ Tämä on pohjaimage Cypress E2E testien ajamista varten.
 Imageen on esiasennettu kaikki Cypressin tarvitsemat depsut, Nodejs ja itse Cypress,
 Jos jokin E2E testi vaatii ylimääräisiä depsuja, ne asennetaan erikseen E2E-testit ajavassa jobissa.
 
+Cypressin binääripaketin purkamiseen asennetaan `unzip` virallisen Cypress-imagen tapaan.
+Ilman sitä Cypress 10.2.0:n Node-pohjainen purku voi Node 26:lla päättyä kesken ilman virhekoodia,
+jolloin `cypress verify` ilmoittaa binäärin puuttuvan.
+
 Imagen viittaus ja kontin asetukset määritellään [docker-compose.yml](../docker-compose.yml)-tiedoston
 `cypress-latest`-servicessä. `start-cypress`-action valitsee servicen `service-name`-inputilla,
 hakee imagen komennolla `docker compose pull` ja ajaa testit komennolla `docker compose run --rm --no-deps`.  
