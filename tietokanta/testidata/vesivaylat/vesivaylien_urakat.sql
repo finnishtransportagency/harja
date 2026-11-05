@@ -85,7 +85,7 @@ INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsi
 VALUES
   ('Rentoselän urakka',
     'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi',
-    '2023-01-01', '2028-12-31',
+    '2023-10-01', '2028-09-30',
     (SELECT id FROM organisaatio WHERE nimi = 'Sisävesiväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
     (SELECT id FROM hanke WHERE nimi = 'Rentoselän syvennyshanke'),

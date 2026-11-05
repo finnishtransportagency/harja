@@ -9,6 +9,7 @@
             [harja.domain.mhu :as mhu]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
+            [harja.palvelin.palvelut.indeksit-test :as indeksit-test]
             [slingshot.slingshot :refer [try+]]
             [taoensso.timbre :as log]))
 
@@ -243,6 +244,37 @@
 
     ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
     (is (= 1.052 (bs/indeksikerroin raahen-mhu-2023-indeksit 1)))))
+
+(deftest vesivaylaurakan-indeksikertoimien-haku
+  (let [db (:db jarjestelma)
+
+        urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksinimi "TESTI-VESIVAYLA-KERTOIMET"
+
+        ;; Muutetaan urakka alkamaan 1.10.2023.
+        _ (indeksit-test/muuta-vesivaylaurakka
+            urakka-id
+            {:alkupvm "2023-10-01"
+             :loppupvm "2028-09-30"
+             :indeksi indeksinimi})
+
+        ;; Perusluvun muodostamiseen tarvitaan vuoden 2022
+        ;; syys-, loka- ja marraskuun indeksit.
+        _ (indeksit-test/lisaa-indeksit
+            indeksinimi
+            [[2022 9  100]
+             [2022 10 100]
+             [2022 11 100]
+             [2023 6 110] ;; ensimmäinen urakkavuosi
+             [2024 8 120] ;; toinen urakkavuosi
+             [2025 8 130]]) ;; kolmas urakkavuosi
+
+        indeksikertoimet (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id urakka-id})]
+
+    (is (= 1.1 (:indeksikerroin (nth indeksikertoimet 0))))
+    (is (= 1.2 (:indeksikerroin (nth indeksikertoimet 1))))
+    (is (= 1.3 (:indeksikerroin (nth indeksikertoimet 2))))))
 
 (deftest indeksikorjauksen-laskenta
   (is (= 112.603394 (bs/indeksikorjaa 1.12345 100.230))))

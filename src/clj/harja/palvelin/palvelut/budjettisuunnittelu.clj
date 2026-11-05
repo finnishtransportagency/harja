@@ -272,27 +272,30 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
                             (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
-                                  {::ur/keys [alkupvm loppupvm indeksi]} (first (fetch db
+                                  {::ur/keys [alkupvm loppupvm indeksi tyyppi]} (first (fetch db
                                                                                        ::ur/urakka
-                                                                                       #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi}
+                                                                                       #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi ::ur/tyyppi}
                                                                                        {::ur/id urakka-id}))
                                   urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
                                   urakan-vuosien-maara (- urakan-loppuvuosi urakan-alkuvuosi)
-                                  vertailu-kk-mhu (fn [urakan-akuvuosi]
-                                                    (cond
-                                                      ;; HOX!!
-                                                      ;; Jos tähän tulee sopimusmuutoksia, tee samat muutokset sql funktioon: indeksikorjaa
-                                                      ;; 
-                                                      ;; 2023 ja jälkeen alkavilla urakoilla käytetään indeksin tarkastelukuukautena elokuuta
-                                                      (>= urakan-akuvuosi 2023) (pvm/kuukauden-numero "elokuu")
-                                                      ;; Muihin aikoihin alkavilla urakoilla käytetään tarkastelukuukautena syyskuuta
-                                                      :else (pvm/kuukauden-numero "syyskuu")))
+                                  vertailu-kk (fn [urakkatyyppi urakan-alkuvuosi vuosi]
+                                                (if (= "vesivayla-hoito" urakkatyyppi)
+                                                  ;; Vesiväylä: uusissa urakoissa urakkavuosi 1.10.-30.9 (aiemmin 1.8.–31.7.)
+                                                  ;; 1. urakkavuosi -> sitä edeltävä kesäkuu (= alkuvuoden 6. kk)
+                                                  ;; muut urakkavuodet -> urakkavuotta edeltävä elokuu
+                                                  (if (= vuosi urakan-alkuvuosi)
+                                                    (pvm/kuukauden-numero "kesäkuu")
+                                                    (pvm/kuukauden-numero "elokuu"))
+                                                  ;; MHU: 2023+ elokuu, muuten syyskuu
+                                                  (if (>= urakan-alkuvuosi 2023)
+                                                    (pvm/kuukauden-numero "elokuu")
+                                                    (pvm/kuukauden-numero "syyskuu"))))
                                   perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
                                   indeksiluvut-urakan-aikana (when perusluku
                                                                (sequence
                                                                  (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                                                 (and (= (vertailu-kk-mhu urakan-alkuvuosi) kuukausi)
+                                                                                 (and (= (vertailu-kk tyyppi urakan-alkuvuosi vuosi) kuukausi)
                                                                                    (>= vuosi urakan-alkuvuosi))))
                                                                    (remove (fn [{:keys [vuosi]}]
                                                                              (>= vuosi urakan-loppuvuosi)))
