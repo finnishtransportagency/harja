@@ -198,7 +198,8 @@
        (catch UnsupportedFormatException _ nil)))
 
 (defprotocol LiitteidenHallinta
-  (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma])
+  (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
+    [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma ulkoinen-id])
   (lataa-liite [this liitteen-id optiot])
   (lataa-pikkukuva [this liitteen-id]))
 
@@ -240,7 +241,8 @@
                           :luoja (:luoja liite-perustiedot)
                           :urakka (:urakka liite-perustiedot)
                           :kuvaus (:kuvaus liite-perustiedot)
-                          :lahdejarjestelma (:lahdejarjestelma liite-perustiedot)}
+                          :lahdejarjestelma (:lahdejarjestelma liite-perustiedot)
+                          :ulkoinen_id (:ulkoinen-id liite-perustiedot)}
                     data)))]
     (if liite
       (do
@@ -358,16 +360,19 @@
       (dissoc this :virustarkistus-thread-pool))
 
   LiitteidenHallinta
+  (luo-liite [this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
+    (luo-liite this luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma nil))
   (luo-liite [{db :db virustarkistus :virustarkistus tiedostopesula :tiedostopesula
                thread-pool :virustarkistus-thread-pool :as this}
-              luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma]
+              luoja urakka tiedostonimi tyyppi koko lahde kuvaus lahdejarjestelma ulkoinen-id]
     (let [liite-perustiedot {:luoja luoja
                              :urakka urakka
                              :tiedostonimi tiedostonimi
                              :tyyppi tyyppi
                              :koko koko
                              :kuvaus kuvaus
-                             :lahdejarjestelma lahdejarjestelma}]
+                             :lahdejarjestelma lahdejarjestelma
+                             :ulkoinen-id ulkoinen-id}]
       ; Tallennetaan liitteet s3:een vähemmillä vaiheilla
       (if (and (= :aws alusta) s3-url)
         (tallenna-liite-s3 db lahde s3-url thread-pool liite-perustiedot)
