@@ -59,7 +59,7 @@ RUN apt-get update && \
       \
       \
    # Muita aputyökaluja
-   && apt-get install -y \
+   && apt-get install --no-install-recommends -y \
     postgresql-client \
     fonts-liberation \
     libcurl4 \
@@ -88,21 +88,23 @@ RUN apt-get update && \
 RUN node -p "process.arch === 'arm64' ? 'Not downloading Chrome since we are on arm64: https://crbug.com/677140' : process.exit(1)" || \
     (wget --no-verbose -O /usr/src/google-chrome-stable_current_amd64.deb "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb" \
     && apt-get update &&  \
-    apt-get install -f -y /usr/src/google-chrome-stable_current_amd64.deb ; \
-  rm -f /usr/src/google-chrome-stable_current_amd64.deb)
-
-
-# Asenna uusin Edge
-# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Edgestä ei ole tarjolla ARM-arkkitehtuurin pakettia.
-RUN node -p "process.arch === 'arm64' ? 'Not downloading Edge since we are on arm64: https://techcommunity.microsoft.com/t5/discussions/edge-for-linux-arm64/m-p/1532272' : process.exit(1)" || \
+    apt-get install --no-install-recommends  -f -y /usr/src/google-chrome-stable_current_amd64.deb ; \
+    rm -f /usr/src/google-chrome-stable_current_amd64.deb) \
+    \
+    # Asenna uusin Edge
+    # HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Edgestä ei ole tarjolla ARM-arkkitehtuurin pakettia.
+    && node -p "process.arch === 'arm64' ? 'Not downloading Edge since we are on arm64: https://techcommunity.microsoft.com/t5/discussions/edge-for-linux-arm64/m-p/1532272' : process.exit(1)" || \
     (curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
     install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
-    sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge-dev.list' && \
+    sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list' && \
     rm microsoft.gpg && \
     apt-get update && \
-    apt-get install -y microsoft-edge-dev && \
+    apt-get install --no-install-recommends -y microsoft-edge-stable && \
     # Luo symbolinen linkki
-    ln -s /usr/bin/microsoft-edge /usr/bin/edge)
+    ln -s /usr/bin/microsoft-edge /usr/bin/edge) \
+    # siivoa
+    && rm -rf /var/lib/apt/lists/* \
+    && apt-get clean
 
 
 ### Env muuttujia liittyen NPM pakettien asentamiseen ja cypressin ajamisee ###
