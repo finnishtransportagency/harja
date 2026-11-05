@@ -128,11 +128,13 @@ RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" --ignore-scripts \
     && cypress info \
     && cypress version \
     # Tulosta polku mistä Node lataa tarvittavat moduulit
-    && node -p 'module.paths'
-
-# Annetaan kaikille käyttäjille luku- ja suoritusoikeus cypress cacheen,
-# jotta non-root käyttäjä (node) pääsee käsiksi cypressin binääreihin.
-RUN chmod -R a+rX /root/.cache
+    && node -p 'module.paths' \
+    \
+    # Annetaan kaikille käyttäjille luku- ja suoritusoikeus cypress cacheen,
+    # jotta non-root käyttäjä (node) pääsee käsiksi cypressin binääreihin.
+    # HUOM: Tehtävä samassa RUN:ssa asennuksen kanssa. Erillinen chmod-kerros kopioisi
+    #       oikeuksiltaan muuttuneet tiedostot uuteen kerrokseen (koko Cypress-cache, n. 500 MB).
+    && chmod -R a+rX /root/.cache
 
 # Huom, koska transit-js dependency on cypress-testien itsessään tarvitsema dependency, täytyy transit-js asentaa
 # erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.

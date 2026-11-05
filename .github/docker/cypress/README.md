@@ -12,9 +12,7 @@ Dockerfile on jaettu stageihin `base` (riippuvuudet ja Cypress), `chrome` (+ Chr
 Oletusbuildi tuottaa viimeisen stagen eli imagen, jossa on molemmat selaimet.
 Pelkän Chromen sisältävän, pienemmän imagen voi buildata `--target chrome` -optiolla.
 
-Build-workflow'n `zstd-compression`-optiolla imagen kerrokset pakataan zstd:llä gzipin sijaan.
-Zstd-kerrokset puretaan runnerilla nopeammin, mikä voi lyhentää imagen pullausaikaa.
-Paikallinen `build-image.sh` + `push-image.sh` tuottaa aina gzipattuja kerroksia.
+Build-workflow'n `zstd-compression`-optiosta: ks. [.github/docker/README.md](../README.md).
 
 Imagen viittaus ja kontin asetukset määritellään [docker-compose.yml](../docker-compose.yml)-tiedoston
 `cypress-latest`-servicessä. `start-cypress`-action valitsee servicen `service-name`-inputilla,

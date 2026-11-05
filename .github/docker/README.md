@@ -93,7 +93,9 @@ Workflow `Tools: Build test docker images for GH Actions and development`
 Tagin on oltava 1–128 ASCII-merkkiä pitkä: sallittuja ovat kirjaimet, numerot, `_`, `.` ja `-`.
 Ensimmäisen merkin on oltava kirjain, numero tai `_`.   
 Esimerkiksi `15.19-3.3.3-trixie` on kelvollinen tag. Virheellinen tag keskeyttää ajon ennen Docker-buildia.  
-Asetus `update-latest` julkaisee saman imagen `latest`-tagilla.
+Asetus `update-latest` julkaisee saman imagen `latest`-tagilla.  
+Asetus `zstd-compression` pakkaa imagen kerrokset zstd:llä gzipin sijaan, jolloin kerrokset puretaan pullauksessa
+nopeammin. Imagen pullaamiseen vaaditaan Docker >= 23. Apuscripteillä julkaistut imaget käyttävät aina gzipiä.
 
 ### Apuscriptit
 Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.sh``` apuscriptit.
