@@ -28,6 +28,11 @@ on:
         description: "Julkaistava Docker-tag (esim. 13.11-3.3.2), ei välilyöntejä, enintään 128 merkkiä"
         type: string
         required: true
+      zstd-compression:
+        description: "Pakkaa imagen kerrokset zstd:llä gzipin sijaan (vain harja_cypress, kokeellinen)"
+        type: boolean
+        default: false
+        required: false
 
 run-name: "Tools: Build & deploy GHA docker image '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }})"
 
@@ -198,6 +203,10 @@ jobs:
           # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
           provenance: false
           push: true
+          # Zstd-kerrokset puretaan runnerilla nopeammin kuin gzip, mikä lyhentää imagen pullaukseen menevää aikaa.
+          # Force-compression pakkaa uudelleen myös pohjaimagen ja build-cachen gzip-kerrokset.
+          # Vaatii pullaavalta Dockerilta version >= 23. Tyhjä asetus = oletus (gzip).
+          outputs: ${{ inputs.zstd-compression && 'type=image,push=true,compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true' || '' }}
           # HUOM: Annotaatiot kommentoitu pois. Ne toimivat ainoastaan multi-arch imageissa
           #       Tästä imagesta tehdään tällä hetkellä ainoastaan AMD64-build.
           #       Poista kommentit, jos teet myös ARM64 buildin.
