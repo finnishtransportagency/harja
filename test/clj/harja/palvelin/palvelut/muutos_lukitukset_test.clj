@@ -65,20 +65,19 @@
     tiedot))
 
 
-(def ^{:private true} +urakka+ (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030"))
-(def ^{:private true} +hoitokaudet+ (mapv (fn [vuosi]
-                                            [(pvm/hoitokauden-alkupvm vuosi)
-                                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2025 2030)))
-
-
 (deftest pysyvan-muutoksen-lukitukset-test
   (let [hoitovuoden-alkuvuosi 2025
-        _ (apurit/poista-tarjoukset-tietokannasta! +urakka+)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitokaudet (mapv (fn [vuosi]
+                            [(pvm/hoitokauden-alkupvm vuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))]) (range 2025 2030))
+
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
         _ (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
-            (:db jarjestelma) +kayttaja-jvh+ +urakka+ hoitovuoden-alkuvuosi
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
             (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
 
-        toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " +urakka+ " LIMIT 1")))
+        toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
         tehtava-id (ffirst (q "SELECT id FROM tehtava WHERE poistettu IS NOT TRUE LIMIT 1"))
         muutos-payload {:tyyppi "pysyva"
                         :nimi "Testipysyvä"
@@ -109,23 +108,23 @@
 
     (testing "Pysyvää muutosta ei voi luoda (kustannussuunnitelma vahvistettu)"
       (let [;; Vahvista kustannussuunnitelma, jolloin muutosta ei voi tehdä
-            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi true)
+            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
             odotettu-poikkeus "ei voi luoda, koska sen vaikutukset kohdistuvat vahvistettuun tavoitehintaan"
 
             ;; Tallennus ei mene läpi
             vastaus (try
-                      (tallenna-muutos! +urakka+ muutos-payload +hoitokaudet+)
+                      (tallenna-muutos! urakka-id muutos-payload hoitokaudet)
                       (catch Exception e e))
             _ (is
                 (true? (str/includes? vastaus odotettu-poikkeus))
                 "Odotettu virhe heitetään, muutosta ei voi luoda kun tavoitehinta on vahvistettu")
 
             ;; Kumoa vahvistus, muutos voidaan nyt luoda 
-            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi false)
+            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
 
             ;; Tallennus menee läpi
             vastaus (try
-                      (tallenna-muutos! +urakka+ muutos-payload +hoitokaudet+)
+                      (tallenna-muutos! urakka-id muutos-payload hoitokaudet)
                       (catch Exception e e))
             _ (is
                 (false? (str/includes? vastaus odotettu-poikkeus))
@@ -133,19 +132,19 @@
 
 
     (testing "Pysyvää muutosta ei voi poistaa (kustannussuunnitelma vahvistettu)"
-      (let [_ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi false)
+      (let [_ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
             max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
-            _ (tallenna-muutos! +urakka+ muutos-payload-aiempi-vuosi +hoitokaudet+)
+            _ (tallenna-muutos! urakka-id muutos-payload-aiempi-vuosi hoitokaudet)
             muutos-id (inc max-id-ennen-tallennusta)
-            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi true)
+            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
 
             odotettu-poikkeus "Muutoksen muuttamia päätöksiä on vahvistettu."
             vastaus-poiston-jalkeen (try
                                       (poista-muutos +kayttaja-jvh+
                                         {:muutos-id muutos-id
-                                         :urakka-id +urakka+
-                                         :valittu-hoitokausi (first +hoitokaudet+)
-                                         :hoitokaudet +hoitokaudet+
+                                         :urakka-id urakka-id
+                                         :valittu-hoitokausi (first hoitokaudet)
+                                         :hoitokaudet hoitokaudet
                                          :laskenta-automatiikka? true})
                                       (catch Exception e e))
 
@@ -155,10 +154,10 @@
 
 
     (testing "Pysyvää muutosta ei voi muokata (kustannussuunnitelma vahvistettu)"
-      (let [_ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi false)
-            _ (tallenna-muutos! +urakka+ muutos-payload-aiempi-vuosi +hoitokaudet+)
+      (let [_ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
+            _ (tallenna-muutos! urakka-id muutos-payload-aiempi-vuosi hoitokaudet)
             max-id-ennen-tallennusta (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;"))
-            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! +urakka+ hoitovuoden-alkuvuosi true)
+            _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
             odotettu-poikkeus "ei voi muuttaa, koska se on lukittu"
 
             muokkaa-payload {:id (inc max-id-ennen-tallennusta)
@@ -176,7 +175,7 @@
                                                    :hoitokauden_alkuvuosi 2024}]}
 
             vastaus (try
-                      (tallenna-muutos! +urakka+ muokkaa-payload +hoitokaudet+)
+                      (tallenna-muutos! urakka-id muokkaa-payload hoitokaudet)
                       (catch Exception e e))
             _ (is
                 (true? (str/includes? vastaus odotettu-poikkeus))
@@ -184,7 +183,7 @@
 
     (testing "Pysyvää muutosta ei voi luoda (välikatselmus päätetty)"
       (let [_ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
-                (:db jarjestelma) {:urakkaid +urakka+
+                (:db jarjestelma) {:urakkaid urakka-id
                                    :hoitokauden_alkuvuosi 2025
                                    :tavoitehinta 1
                                    :kattohinta 1
@@ -194,7 +193,7 @@
 
             odotettu-poikkeus "Pysyvää muutosta ei voi luoda, koska sen vaikutukset kohdistuvat vahvistettuun tavoitehintaan"
             vastaus (try
-                      (tallenna-muutos! +urakka+ muutos-payload +hoitokaudet+)
+                      (tallenna-muutos! urakka-id muutos-payload hoitokaudet)
                       (catch Exception e e))
             _ (is
                 (true? (str/includes? vastaus odotettu-poikkeus))
