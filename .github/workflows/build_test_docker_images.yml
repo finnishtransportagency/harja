@@ -155,7 +155,16 @@ jobs:
       - name: Get cypress version
         id: cypress-version
         if: ${{ inputs.dockerfile == 'harja_cypress' }}
-        run: echo "value=$(node -pe 'require("./package.json").devDependencies.cypress')" >> $GITHUB_OUTPUT
+        run: |
+          NPM_CYPRESS_VERSION=$(jq -r '.devDependencies.cypress' package.json)
+
+          if [[ ! "$NPM_CYPRESS_VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Erroneous Cypress-version: '${NPM_CYPRESS_VERSION}'." \
+              "package.json:n devDependencies.cypress must be an exact version in form of X.Y.Z (e.g. 10.2.0)." >&2
+            exit 1
+          fi
+
+          echo "value=${NPM_CYPRESS_VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Build and publish harja_cypress
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
