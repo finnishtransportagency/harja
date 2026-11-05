@@ -13,6 +13,10 @@ services:
   # Uusin saatavilla oleva testietiekannan konfiguraatio
   harjadb-latest:
     # Hae latest image GitHubin container registrystä
+    # TODO: Latest imagea ei voi vielä buildata, koska vanhat workflow eivät käytä digest-versiolukitusta
+    #       Julkaistaan ensin tämä workflow, ja buildataan latest sitten.
+    #       PR-testeihin liittyvien Timezone-asetusten muutosten johdosta uutta imagea ei voi julkaista vanhoille workfloweille,
+    #       vaan workflow pitää päivittää ensin
     image: ghcr.io/finnishtransportagency/harja_harjadb:15.18-3.3.3-trixie@sha256:c8600da7858e5fe857751c7d4b9dbde58680fb73c5d7c92de9064ed624ccbcca
 
     # Alla saatavilla olevia versioita
