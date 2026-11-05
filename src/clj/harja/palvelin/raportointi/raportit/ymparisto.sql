@@ -245,7 +245,7 @@ SELECT u.id AS urakka_id,
                    ELSE 0
              END)
    AND v.tehtava IN (SELECT id FROM paikkaustehtavat)
- GROUP BY u.id, u.nimi, materiaali_id, materiaali_nimi, materiaali_yksikko, materiaali_tyyppi, v.hoitokauden_alkuvuosi;
+GROUP BY u.id, u.nimi, materiaali_id, materiaali_nimi, materiaali_yksikko, materiaali_tyyppi, v.hoitokauden_alkuvuosi;
 
 
 -- name: hae-materiaalit
@@ -253,7 +253,7 @@ SELECT u.id AS urakka_id,
 -- Huomaa, että tämän kyselyn pitää palauttaa samat sarakkeet, kuin mitkä ympäristöraportissa haetaan
 -- "materiaali_*" nimeen
 SELECT id,nimi, yksikko, materiaalityyppi as tyyppi FROM materiaalikoodi
- WHERE materiaalityyppi != 'erityisalue';
+WHERE materiaalityyppi != 'erityisalue';
 
 -- name: hae-talvisuolan-kokonaiskayttoraja-raportille
 -- MHU urakoille Haetaan urakka_tehtavamaarat tauluun tallennettu Liukkauden torjunta suolaamalla - tehtävälle suunniteltu määrä.
@@ -276,7 +276,7 @@ SELECT ss.urakka as urakka_id,
        u.nimi as urakka_nimi,
        ss.talvisuolaraja
 FROM suolasakko ss
-         JOIN urakka u ON ss.urakka = u.id AND u.tyyppi = 'hoito'
+     JOIN urakka u ON ss.urakka = u.id AND u.tyyppi = 'hoito'
 WHERE ss.urakka in (:urakka_idt)
   AND ss.hoitokauden_alkuvuosi IN (:hoitokauden-alkuvuodet)
   AND ss.kaytossa IS TRUE
