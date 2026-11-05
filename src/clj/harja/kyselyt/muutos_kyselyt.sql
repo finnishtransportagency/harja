@@ -532,10 +532,15 @@ WITH urakan_tehtavat AS (
          AND t.poistettu IS FALSE
               JOIN materiaalikoodi mk ON ms.materiaalikoodi = mk.id
               JOIN tehtava teh
-                   ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
-                       AND teh."maaramitattava?" IS TRUE
-                       AND (teh.materiaalikoodi_id = ms.materiaalikoodi
-                           OR teh.materiaalikoodi_id IS NULL)
+                    ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
+                    AND teh."maaramitattava?" IS TRUE
+                    -- Lasketaan materiaalit pelkästään materiaaleina raportoitaville tehtäville
+                    -- Löytyy dokumentaatiosta: "Materiaaleina raportoitavat tehtävät"
+                    AND teh."materiaalina_raportoitava?" IS TRUE
+                    AND (
+                        teh.materiaalikoodi_id = ms.materiaalikoodi
+                        OR teh.materiaalikoodi_id IS NULL
+                    )
      GROUP BY teh.id, teh.nimi, mk.yksikko
  ),
 maaramuutokset AS (
@@ -551,8 +556,10 @@ maaramuutokset AS (
         mmt.valitun_yksikkohinnan_hoitokausi             AS yksikkohinnan_alkuvuosi,
         mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
         COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
-        -- toteutunut määrä: urakan_tehtavat -> muuten materiaalitoteuma
-        COALESCE(SUM(urakan_tehtavat.maara), MAX(mm.maara)) AS toteutunut_maara,
+        -- toteutunut määrä: materiaalitoteuma -> muuten urakan_tehtavat
+        -- Jos materiaali määrä olemassa, tarkoittaa että tehtävä on materiaalina raportoitava
+        -- Pidetään materiaali aina ensimmäisenä
+        COALESCE(MAX(mm.maara), SUM(urakan_tehtavat.maara)) AS toteutunut_maara,
         SUM(ut.maara)                                    AS suunniteltu_maara,
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
         tk.suunnitteluyksikko                            AS yksikko,
