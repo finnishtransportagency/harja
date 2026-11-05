@@ -40,6 +40,13 @@
     (muutos-kyselyt/paivita-muutostyo-kulukohdistus! db {:muutos (:id muutostyo)
                                                          :kohdistus-id kohdistus-id})))
 
+(defn- muodosta-muokattavat-hoitokaudet [db urakka-id hoitokaudet]
+  (into {}
+    (map (fn [hoitokausi]
+           (let [vuosi (pvm/vuosi (first hoitokausi))]
+             [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :muutos)]))
+      hoitokaudet)))
+
 (defn hae-hoitovuosien-yksikkohinnat
   [db _kayttaja {:keys [urakka-id hoitokaudet tehtava_id nakyma-valittu-hk] :as _tiedot}]
   (map-indexed (fn [idx valittu-hoitokausi]
@@ -243,7 +250,6 @@
         tarkistetut-rivit (fn-lisaa-valiotsikot tarkistetut-rivit)]
     tarkistetut-rivit))
 
-
 (defn tallenna-tehtava-maaramuutokset
   [db
    {:keys [id] :as kayttaja}
@@ -251,13 +257,7 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
   ;; Kutsutaan gridin tallenna painikkeesta 
   (let [hoitokauden-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        muokattavat-hoitokaudet (into {}
-                                  (map (fn [hoitokausi]
-                                         (let [vuosi (pvm/vuosi (first hoitokausi))]
-                                           [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
-                                                    db urakka-id vuosi :muutos)]))
-                                    hoitokaudet))
-
+        muokattavat-hoitokaudet (muodosta-muokattavat-hoitokaudet db urakka-id hoitokaudet)
         lukittu? (some (fn [[vuosi muokattava?]]
                          (and (= vuosi hoitokauden-alkuvuosi) (false? muokattava?)))
                    muokattavat-hoitokaudet)]
@@ -436,12 +436,7 @@
                                  kirjatut-muutokset-yht
                                  toteumiin-perustuvat-muutokset-yht)
 
-        muokattavat-hoitokaudet (into {}
-                                  (map (fn [hoitokausi]
-                                         (let [vuosi (pvm/vuosi (first hoitokausi))]
-                                           [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
-                                                    db urakka-id vuosi :muutos)]))
-                                    hoitokaudet))]
+        muokattavat-hoitokaudet (muodosta-muokattavat-hoitokaudet db urakka-id hoitokaudet)]
 
     {:muokattavat-hoitokaudet muokattavat-hoitokaudet
      ;; kirjatut muutokset jos hoitokausi 2025-2026 tai jälkeen
@@ -838,12 +833,7 @@
                 :kayttaja (:id kayttaja)
                 :alityyppi alityyppi}
 
-        muokattavat-hoitokaudet (into {}
-                                  (map (fn [hoitokausi]
-                                         (let [vuosi (pvm/vuosi (first hoitokausi))]
-                                           [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
-                                                    db urakka-id vuosi :muutos)]))
-                                    hoitokaudet))]
+        muokattavat-hoitokaudet (muodosta-muokattavat-hoitokaudet db urakka-id hoitokaudet)]
 
     ;; Validoi voimassa_alkaen päivämäärä
     (cond
@@ -1087,40 +1077,41 @@
   [db kayttaja {:keys [urakka-id valittu-hoitokausi hoitokaudet muutos-id laskenta-automatiikka?] :as tiedot}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu kayttaja urakka-id)
 
-  (let [_ (jdbc/with-db-transaction [conn db]
-            (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
-                  _ (when-not muutos
-                      (throw+ {:type virheet/+viallinen-kutsu+
-                               :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
-                                          :viesti "Muutosta ei löydy"}]}))
+  (jdbc/with-db-transaction [conn db]
+    (let [muutos (first (muutos-kyselyt/hae-muutos conn {:id muutos-id}))
+          _ (when-not muutos
+              (throw+ {:type virheet/+viallinen-kutsu+
+                       :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                                  :viesti "Muutosta ei löydy"}]}))
 
-                  muokattavat-hoitokaudet (into {}
-                                            (map (fn [hoitokausi]
-                                                   (let [vuosi (pvm/vuosi (first hoitokausi))]
-                                                     [vuosi (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
-                                                              db urakka-id vuosi :muutos)]))
-                                              hoitokaudet))
+          muokattavat-hoitokaudet (muodosta-muokattavat-hoitokaudet conn urakka-id hoitokaudet)
+          tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
 
-                  tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu conn urakka-id)
-                  ;; Tarkasta voiko muutoksen poistaa
-                  {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty?
-                                                 conn tavoitehinta-indeksikorjattu-per-hoitovuosi muokattavat-hoitokaudet muutos)
-                  hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-                  {:keys [hoitokausinro
-                          hoitovuoden-tavoitehinta
-                          laskutusraja
-                          laskutusraja_alkuperainen
-                          laskutusrajaa_nostettu?
-                          muutokset-yhteensa-kaikki
-                          muutokset-yhteensa-ilman-valittua]} (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi muutos-id)
+          ;; Tarkasta voiko muutoksen poistaa
+          {:keys [voi-poistaa? virhe]} (muutoksen-poisto-estetty?
+                                         conn
+                                         tavoitehinta-indeksikorjattu-per-hoitovuosi
+                                         muokattavat-hoitokaudet
+                                         muutos)
 
-                  tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
-                  tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
-                  poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
-                  prosenttiosuus (when (and hoitovuoden-tavoitehinta (pos? hoitovuoden-tavoitehinta))
-                                   (tyokalut/pyorista-kahteen-decimaaliin
-                                     (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))]
+          hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+          {:keys [hoitokausinro
+                  hoitovuoden-tavoitehinta
+                  laskutusraja
+                  laskutusraja_alkuperainen
+                  laskutusrajaa_nostettu?
+                  muutokset-yhteensa-kaikki
+                  muutokset-yhteensa-ilman-valittua]} (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi muutos-id)
 
+          tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
+          tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
+          poistettava-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
+          prosenttiosuus (when (and hoitovuoden-tavoitehinta (pos? hoitovuoden-tavoitehinta))
+                           (tyokalut/pyorista-kahteen-decimaaliin
+                             (* 100.00 (/ muutokset-yhteensa-ilman-valittua (double hoitovuoden-tavoitehinta)))))
+
+          ;; Suoritetaan poisto ensin
+          _ (do
               (when (not voi-poistaa?)
                 (throw+ {:type virheet/+sisainen-kasittelyvirhe+
                          :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
@@ -1149,23 +1140,24 @@
               ;; Merkitse muutos poistetuksi
               ;; Äiti-muutos poistetaan soft-deletellä ja linkitetyt taulut jätetään ennalleen
               (muutos-kyselyt/poista-muutos! conn {:id muutos-id
-                                                   :kayttaja (:id kayttaja)})))
+                                                   :kayttaja (:id kayttaja)}))
 
-        urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
-        hoitovuodet (range (pvm/vuosi (:alkupvm urakan-tiedot))
-                      (inc (- (pvm/vuosi (:loppupvm urakan-tiedot)) 1)))
+          urakan-tiedot (first (q-urakat/hae-urakan-tiedot conn urakka-id))
+          hoitovuodet (range
+                        (pvm/vuosi (:alkupvm urakan-tiedot))
+                        (inc (- (pvm/vuosi (:loppupvm urakan-tiedot)) 1)))
 
-        ;; Päivitä tavoite ja kattohinta 
-        _ (doseq [hoitovuosi hoitovuodet]
-            (when hoitovuosi
-              (ks-kyselyt/paivita-tavoite-ja-kattohinta db (:id kayttaja) urakka-id hoitovuosi
-                (hae-aiempien-vuosien-pysyvat-muutokset db urakka-id hoitovuosi true))))]
+          ;; Päivitä tavoite ja kattohinta 
+          _ (doseq [hoitovuosi hoitovuodet]
+              (when hoitovuosi
+                (ks-kyselyt/paivita-tavoite-ja-kattohinta conn (:id kayttaja) urakka-id hoitovuosi
+                  (hae-aiempien-vuosien-pysyvat-muutokset conn urakka-id hoitovuosi true))))]
 
-    ;; Onnistuneen poiston jälkeen palautetaan ajantasaiset tiedot
-    (hae-urakan-muutostiedot db kayttaja {:urakka-id urakka-id
-                                          :hoitokaudet hoitokaudet
-                                          :valittu-hoitokausi valittu-hoitokausi
-                                          :laskenta-automatiikka? laskenta-automatiikka?})))
+      ;; Onnistuneen poiston jälkeen palautetaan ajantasaiset tiedot
+      (hae-urakan-muutostiedot conn kayttaja {:urakka-id urakka-id
+                                              :hoitokaudet hoitokaudet
+                                              :valittu-hoitokausi valittu-hoitokausi
+                                              :laskenta-automatiikka? laskenta-automatiikka?}))))
 
 (defn hae-urakan-muutostyot
   "Hakee kululomakkeeseen laaditut muutostyöt, jotta näille voi kirjata kuluja"

@@ -46,7 +46,7 @@
 
 (defn kasittele-throw-virhe [vastaus]
   (let [raaka-virhe (or
-                      ;; Bäkäri voi throwaa erityyppisen virheen
+                      ;; Palvelin vastaa virheellä
                       (get-in vastaus [:response :virheet :viesti])
                       (get-in vastaus [:parse-error :original-text])
                       (:response vastaus)

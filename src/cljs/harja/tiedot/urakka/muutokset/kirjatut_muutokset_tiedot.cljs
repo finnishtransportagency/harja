@@ -239,8 +239,6 @@
   HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui
   (process-event [{valittu-hoitokausi :valittu-hoitokausi vastaus :vastaus} app]
     (log/debug "HaePysyvanMuutoksenPohjatiedotLomakkeelleOnnistui")
-    (println "\n mk app: " (:muokattavat-hoitokaudet app))
-
     ;; Pysyviä muutoksia voi kirjata vain 2025 alkaen
     (let [mahdolliset-hoitovuodet (:urakan-hoitokaudet app)]
       (-> app
