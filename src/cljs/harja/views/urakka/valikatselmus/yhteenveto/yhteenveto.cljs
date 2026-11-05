@@ -127,7 +127,7 @@
 
 
 (defn osio-toteutuneet-kustannukset
-  [{:keys [paatokset hoitokauden-alkuvuosi]}
+  [{:keys [paatokset hoitokauden-alkuvuosi urakan-parametrit]}
    {:keys [yhteenvedon-tiedot thv-arvonvahennykset-yht
            hoitovuoden-lopun-tavoitehinta hoitovuoden-lopun-kattohinta]}]
   (let [urakan-loppuvuosi (some-> @nav/valittu-urakka :loppupvm pvm/vuosi)
@@ -135,6 +135,7 @@
         ;; Toteutuneet kustannukset
         ;; Välikatselmuksessa käytetyt Hankintakustannukset ovat eri asia kuin Kustannusten Seurannan Hankintakustannukset/Suunnitellut Hankinnat.
         ;; Välikatselmuksessa Hankintakustannuksiin lisätään toteutuneet Rahavaraukset.
+        muutokset-toteutunut (or (get-in yhteenvedon-tiedot [:kustannukset :muutokset-toteutunut]) 0)
         hankintakustannukset (or
                                (+ (get-in yhteenvedon-tiedot [:kustannukset :hankintakustannukset-toteutunut])
                                  (get-in yhteenvedon-tiedot [:kustannukset :rahavaraukset-toteutunut]))
@@ -226,6 +227,11 @@
      [:div.flex-row.summa-rivi
       [:span "Hoidonjohtopalkkio"]
       [:span (fmt/euro-opt false hoidonjohtopalkkio)]]
+
+     (when (:muutosten_hallinta urakan-parametrit)
+       [:div.flex-row.summa-rivi-ylin
+        [:span "Muutostyöt (erillisrahoitetut)"]
+        [:span (fmt/euro-opt false muutokset-toteutunut)]])
 
      (when nayta-arvonvahennykset?
        [:div.flex-row.summa-rivi

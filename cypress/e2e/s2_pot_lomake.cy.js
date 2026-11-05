@@ -4,10 +4,14 @@ let odotaElementtia = 45000;
 let valitseVuosi = function (vuosi) {
     // Tämä rivi on estämässä taasen jo poistettujen elementtien käsittelyä. Eli odotellaan
     // paallystysilmoituksien näkymistä guilla ennen kuin valitaan 2017 vuosi.
-    cy.intercept('POST', '_/urakan-paallystysilmoitukset').as('hae-urakan-paallystysilmoitukset')
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader', {timeout: ajaxLoaderTimeout}).should('not.exist')
-    cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
-    cy.wait('@hae-urakan-paallystysilmoitukset', {timeout: ajaxLoaderTimeout});
+    cy.get('[data-cy=valinnat-vuosi] button').invoke('text').then(valittuVuosi => {
+        if (valittuVuosi.trim() !== vuosi.toString()) {
+            cy.intercept('POST', '**/_/urakan-paallystysilmoitukset').as('hae-urakan-paallystysilmoitukset')
+            cy.get('[data-cy=valinnat-vuosi]').valinnatValitse({valinta: vuosi.toString()})
+            cy.wait('@hae-urakan-paallystysilmoitukset', {timeout: ajaxLoaderTimeout});
+        }
+    })
     cy.get('[data-cy=paallystysilmoitukset-grid] .ajax-loader').should('not.exist')
 };
 
@@ -58,7 +62,7 @@ describe('Aloita päällystysilmoitus vanha', function () {
     it('Avaa vanha POT-lomake', function () {
 
         cy.viewport(1800, 2000)
-        cy.intercept('POST', '_/urakan-paallystysilmoitus-paallystyskohteella').as('avaa-ilmoitus')
+        cy.intercept('POST', '**/_/urakan-paallystysilmoitus-paallystyskohteella').as('avaa-ilmoitus')
 
         cy.visit("/")
 
@@ -287,6 +291,10 @@ describe('Aloita päällystysilmoitus uusi', function () {
 })
 
 describe("POT2", function() {
+    const solu = (rivi, otsikko) => cy.get('[data-cy=pot2-kulutuskerros]').gridOtsikot().then(({grid, otsikot}) => {
+        return cy.wrap(grid.find('tbody tr').eq(rivi).find('td').eq(otsikot.get(otsikko)));
+    });
+
     before(function () {
         cy.POTTestienAlustus(
             {
@@ -306,4 +314,89 @@ describe("POT2", function() {
         avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken', 'Muokkaa')
         cy.get('div.pot2-lomake')
     })
+
+    it('Tieosoitteen järjestysvirheessä on rivin osoiteotsikko ja erillinen kuvaus', function () {
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken', 'Muokkaa');
+        solu(0, 'Aosa').find('input').clear().type('2');
+        solu(0, 'Aet').find('input').clear().type('0');
+        solu(0, 'Losa').find('input').clear().type('1');
+        solu(0, 'Let').find('input').clear().type('625');
+
+        solu(0, 'Tie').find('input').invoke('val').then(tie => {
+            solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:first-child')
+                .should('have.text', `Kohteessa tie: ${tie}, 2/0 - 1/625 on virhe`);
+        });
+        solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
+            .should('contain.text', 'Alkuosa ei voi olla loppuosan jälkeen.');
+        solu(0, 'Losa').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
+            .should('contain.text', 'Loppuosa ei voi olla ennen alkuosaa.');
+
+        solu(0, 'Let').find('input').clear().type('624');
+        solu(0, 'Aosa').find('.info-laatikko .infolaatikon-teksti > div:first-child')
+            .should('contain.text', '2/0 - 1/624 on virhe');
+        cy.contains('Rivi 1:').should('exist');
+    });
+
+    it('Paikkavaroitus ohjaa tarkistamaan tieosuuden tiedot', function () {
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken', 'Muokkaa');
+        solu(0, 'Aosa').find('input').clear().type('1');
+        solu(0, 'Aet').find('input').clear().type('0');
+        solu(0, 'Losa').find('input').clear().type('1');
+        solu(0, 'Let').find('input').clear().type('1000000');
+
+        solu(0, 'Tie').find('input').invoke('val').then(tie => {
+            solu(0, 'Let').find('.info-laatikko .infolaatikon-teksti > div:first-child')
+                .should('have.text', `Kohteessa tie: ${tie}, 1/0 - 1/1000000 on virhe`);
+        });
+        solu(0, 'Let').find('.info-laatikko .infolaatikon-teksti > div:nth-child(2)')
+            .should('contain.text', 'Tarkista tieosuuden tiedot. Voit tarkastella tieosoitteen sisällä olevien kohteiden tietoja “Hae tieosuus”-toiminnossa.')
+            .and('not.contain.text', 'Tarkista kaista ja paaluväli');
+        cy.get('[data-cy=pot2-avaa-tieosuushaku]').should('be.visible');
+    });
+})
+
+describe("POT2 tieosuushaku", function() {
+    const solu = (rivi, otsikko) => cy.get('[data-cy=pot2-kulutuskerros]').gridOtsikot().then(({grid, otsikot}) => {
+        return cy.wrap(grid.find('tbody tr').eq(rivi).find('td').eq(otsikot.get(otsikko)));
+    });
+
+    before(function () {
+        cy.POTTestienAlustus(
+            {
+                yllapitoluokka: null,
+                ajorata: null,
+                kaista: null,
+                vuosi: 2018,
+                kvl: null
+            },
+            {
+                ajorata: 1,
+                kaista: 11
+            })
+    })
+
+    it('Hae tieosuus -toiminnolla lisätty rivi validoidaan heti lisättäessä', function () {
+        const rivit = () => cy.get('[data-cy=pot2-kulutuskerros] tbody tr.muokataan');
+
+        cy.intercept('POST', '**/_/urakan-paallystysilmoitus-paallystyskohteella').as('avaa-ilmoitus');
+        cy.intercept('POST', '**/_/hae-tr-pituudet').as('hae-tr-pituudet');
+        cy.intercept('POST', '**/_/hae-tr-tiedot').as('hae-tr-tiedot');
+        cy.intercept('POST', '**/_/hae-urakan-massat-ja-murskeet').as('hae-massat-ja-murskeet');
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken', 'Muokkaa');
+        cy.wait(['@avaa-ilmoitus', '@hae-tr-pituudet', '@hae-tr-tiedot', '@hae-massat-ja-murskeet'], {timeout: ajaxLoaderTimeout});
+        cy.get('div.pot2-lomake .ajax-loader').should('not.exist');
+        rivit().its('length').then(alussa => {
+            cy.intercept('POST', '**/_/hae-pot2-tieosuudet').as('hae-pot2-tieosuudet');
+            // Nappi renderöidään uudelleen taustahakujen jälkeen, joten klikataan juuri haettua elementtiä suoraan
+            cy.get('[data-cy=pot2-avaa-tieosuushaku]').should('be.visible').then($nappi => $nappi[0].click());
+            cy.wait('@hae-pot2-tieosuudet');
+            cy.get('[data-cy=pot2-tieosuushaku-tulokset] tbody tr').first().find('input[type=checkbox]').check({force: true});
+            cy.get('[data-cy=pot2-lisaa-valitut-tieosuudet]').should('not.be.disabled').click();
+            cy.get('[data-cy=pot2-sulje-tieosuushaku]').click();
+
+            rivit().should('have.length', alussa + 1);
+            // Tieosuushaulla lisätyltä riviltä puuttuu toimenpide, jonka virheen pitää näkyä ilman rivin klikkausta
+            solu(alussa, 'Toimenpide').should('have.class', 'sisaltaa-virheen');
+        });
+    });
 })

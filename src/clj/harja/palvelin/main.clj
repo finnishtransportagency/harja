@@ -142,6 +142,7 @@
     [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
     [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
     [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
+    [harja.palvelin.integraatiot.api.liitteet :as api-liitteet]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
@@ -700,6 +701,9 @@
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
+      :api-liitteet (component/using
+              (api-liitteet/->Liitteet)
+              [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])

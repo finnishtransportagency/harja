@@ -5,6 +5,7 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
             [harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma :as tehtavat-maarat-nakyma]
             [harja.views.urakka.suunnittelu.kalustoresurssit :as kalustoresurssit]
@@ -22,37 +23,31 @@
             [harja.domain.urakka :as ur]))
 
 (defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm loppupvm]}]
-  (let [yli-5-vuotinen? (> (pvm/hoitokausien-maara alkupvm loppupvm) 5)]
-    (case valilehti
-      :materiaalit (and
-                     (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
-                     (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-      :tehtavat (= tyyppi :teiden-hoito)
-      :suola (#{:hoito :teiden-hoito} tyyppi)
-      :muut (and
-              (not (ur/vesivaylaurakkatyyppi? tyyppi))
-              (not= tyyppi :teiden-hoito))
-      :kiintiot (= tyyppi :vesivayla-hoito)
-      :kokonaishintaiset (not= tyyppi :teiden-hoito)
-      :yksikkohintaiset (not= tyyppi :teiden-hoito)
-      :kustannussuunnitelma (and
-                              (= tyyppi :teiden-hoito)
-                              (< (pvm/vuosi alkupvm) 2025))
-      :uusi-kustannussuunnitelma (and
-                                   (= tyyppi :teiden-hoito)
-                                   ;; => 2025 alkaen sekä yli 5-vuotisilla
-                                   (or
-                                     yli-5-vuotinen?
-                                     (>= (pvm/vuosi alkupvm) 2025)
-                                     (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka)))
-      :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
-      :tarjous (and
-                 (= tyyppi :teiden-hoito)
-                 ;; => 2025 alkaen sekä yli 5-vuotisilla
-                 (or
-                   yli-5-vuotinen?
-                   (>= (pvm/vuosi alkupvm) 2025)
-                   (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka))))))
+  (case valilehti
+    :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
+                   (not (ur/vesivaylaurakkatyyppi? tyyppi)))
+    :tehtavat (= tyyppi :teiden-hoito)
+    :suola (#{:hoito :teiden-hoito} tyyppi)
+    :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
+            (not= tyyppi :teiden-hoito))
+    :kiintiot (= tyyppi :vesivayla-hoito)
+    :kokonaishintaiset (not= tyyppi :teiden-hoito)
+    :yksikkohintaiset (not= tyyppi :teiden-hoito)
+    :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
+    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (or (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka) (>= (pvm/vuosi alkupvm) 2025) (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6))) ;; => 2025 alkaen sekä yli 5-vuotisilla
+    :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
+    ;; tarjous-välilehti mhu-urakoille: => 2025 alkaen sekä yli 5-vuotisilla, lisäksi 2023 ja sen jälkeen alkaneille vesiväylä-hoito-urakoille
+    :tarjous (and
+                ;; Vesiväyläurakoiden Tarjouksen tiedot näkyvät toistaiseksi vain kehitysympäristössä.
+                (or (not= tyyppi :vesivayla-hoito)
+                  (k/kehitysymparistossa?))
+                (or
+                  (and (= tyyppi :vesivayla-hoito)
+                    (>= (pvm/vuosi alkupvm) 2023))
+                  (and (= tyyppi :teiden-hoito)
+                    (or (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka)
+                      (>= (pvm/vuosi alkupvm) 2025)
+                      (> (count (pvm/vuodet-valissa alkupvm loppupvm)) 6)))))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]

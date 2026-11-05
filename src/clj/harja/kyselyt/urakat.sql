@@ -361,7 +361,7 @@ SELECT
         WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
             THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
             ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
-        END                                     AS alueurakan_alue,
+    END                                         AS alueurakan_alue,
     up.laskutusraja_kaytossa                    AS laskutusraja_kaytossa,
     up.muutosten_hallinta                       AS muutostenhallinta_kaytossa,
     up.hoitovuoden_alun_tavoitehinta_kaytossa   AS hoitovuoden_alun_tavoitehinta_kaytossa
@@ -1386,6 +1386,9 @@ WHERE
 -- name: aseta-tai-paivita-urakkaparametrit
 SELECT aseta_tai_paivita_urakka_parametrit_urakalle(:urakkaid);
 
+-- name: aseta-tai-paivita-vesivaylaurakan-parametrit
+SELECT aseta_tai_paivita_urakka_parametrit_vesivaylaurakalle(:urakkaid);
+
 -- name: hae-urakan-parametrit
 select *
   from urakka_parametrit
@@ -1393,6 +1396,9 @@ select *
 
 -- name: aseta-urakan-toimenkuvat
 SELECT lisaa_toimenkuvat_urakalle(:alkupvm);
+
+-- name: aseta-vesivaylaurakan-toimenkuvat
+SELECT lisaa_vesivaylaurakan_toimenkuvat_urakalle(:alkupvm);
 
 -- name: hae-90pv-paattyneet-urakat
 -- Hakee urakat, jotka on päättyneet vähintään 90 päivää sitten, mutta vähemmän kuin 180 pv sitten,
