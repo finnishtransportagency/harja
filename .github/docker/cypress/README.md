@@ -8,6 +8,14 @@ Cypressin binääripaketin purkamiseen asennetaan `unzip` virallisen Cypress-ima
 Ilman sitä Cypress 10.2.0:n Node-pohjainen purku voi Node 26:lla päättyä kesken ilman virhekoodia,
 jolloin `cypress verify` ilmoittaa binäärin puuttuvan.
 
+Dockerfile on jaettu stageihin `base` (riippuvuudet ja Cypress), `chrome` (+ Chrome) ja `edge` (+ Edge).
+Oletusbuildi tuottaa viimeisen stagen eli imagen, jossa on molemmat selaimet.
+Pelkän Chromen sisältävän, pienemmän imagen voi buildata `--target chrome` -optiolla.
+
+Build-workflow'n `zstd-compression`-optiolla imagen kerrokset pakataan zstd:llä gzipin sijaan.
+Zstd-kerrokset puretaan runnerilla nopeammin, mikä voi lyhentää imagen pullausaikaa.
+Paikallinen `build-image.sh` + `push-image.sh` tuottaa aina gzipattuja kerroksia.
+
 Imagen viittaus ja kontin asetukset määritellään [docker-compose.yml](../docker-compose.yml)-tiedoston
 `cypress-latest`-servicessä. `start-cypress`-action valitsee servicen `service-name`-inputilla,
 hakee imagen komennolla `docker compose pull` ja ajaa testit komennolla `docker compose run --rm --no-deps`.  
