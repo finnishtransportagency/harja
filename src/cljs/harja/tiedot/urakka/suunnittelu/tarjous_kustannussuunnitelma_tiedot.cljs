@@ -715,10 +715,10 @@
   (process-event [{:keys [vastaus]} app]
     (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
       (viesti/nayta-toast!
-        "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
+        "Tavoite- ja kattohinnan tietojen päivitys epäonnistui!"
         :varoitus
         viesti/viestin-nayttoaika-pitka)
-      (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
+      (viesti/nayta-toast! "Tietojen päivitys onnistui."))
     (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
     (-> app
       (assoc :tallennus-kesken? false)
