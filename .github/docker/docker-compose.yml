@@ -48,7 +48,7 @@ services:
 
   # -- Cypress --
   cypress-latest:
-    image: ghcr.io/finnishtransportagency/harja_cypress:10.2.0-trixie-slim
+    image: ghcr.io/finnishtransportagency/harja_cypress:10.2.0-trixie-slim-zstd
     # Harja käynnistetään runnerilla, joten localhost-yhteydet tarvitsevat host-verkon.
     network_mode: host
     user: node
