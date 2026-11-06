@@ -291,6 +291,8 @@
                         :soveltuvuuskonteksti soveltuvuuskonteksti
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
+        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                              (get-in profiilirivi [:profiilirivi :id]))
         profiilin-summamaaritykset (:profiilirivi profiilirivi)
         maaritystapa (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa)
         profiilin-manuaalinen-viitemaara
@@ -317,7 +319,8 @@
                   (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
             (throw (IllegalArgumentException.
                      "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
-        normaalimaara (if (and tilannekuvan-automaattinen-maara?
+        normaalimaara (if (and sama-profiilirivi?
+                            tilannekuvan-automaattinen-maara?
                             (number? (:normaalimaara olemassa-oleva-sanktio))
                             (pos? (:normaalimaara olemassa-oleva-sanktio))
                             (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
@@ -354,8 +357,7 @@
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
                 :normaalimaara normaalimaara
                 :omailmoitettu omailmoitettu
-                :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
-                                         (get-in profiilirivi [:profiilirivi :id]))
+                :sanktio_profiili_rivi (get-in profiilirivi [:profiilirivi :id])
                 :maaritystapa (some-> (or tilannekuvan-maaritystapa maaritystapa) name)
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)

@@ -726,6 +726,47 @@
       (finally
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
+(deftest tallenna-mhu26-a-sanktion-tyypin-vaihto-paivittaa-summan
+  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+        perustelu "HARJA-2912 sanktion tyypin vaihto päivittää summan"
+        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
+                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        tyyppi-18-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
+        tyyppi-19-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 19"))
+        sanktio {:suorasanktio true
+                 :laji :A
+                 :summa 1
+                 :toimenpideinstanssi tpi-id
+                 :perintapvm #inst "2026-10-04T21:00:00.000-00:00"
+                 :tyyppi {:id tyyppi-18-id}
+                 :soveltuvuuskonteksti :urakka}
+        laatupoikkeama {:tekijanimi "Max Power"
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika (pvm/->pvm-aika "4.10.2026 22:00:00")
+                                 :kasittelytapa :kommentit
+                                 :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "4.10.2026 08:00:00")
+                        :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.10.2026")
+        hk-loppupvm (pvm/->pvm "30.9.2027")]
+    (try
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
+            ennen (first (q-map (str "SELECT normaalimaara, maara, sanktio_profiili_rivi FROM sanktio WHERE id = " sanktio-id)))]
+        (is (= {:normaalimaara 6000M :maara 6000M}
+               (select-keys ennen [:normaalimaara :maara])))
+        (palvelukutsu-tallenna-suorasanktio
+          +kayttaja-jvh+
+          (assoc sanktio :id sanktio-id :tyyppi {:id tyyppi-19-id} :summa 1)
+          laatupoikkeama hk-alkupvm hk-loppupvm)
+        (let [jalki (first (q-map (str "SELECT normaalimaara, maara, sanktio_profiili_rivi, tyyppi FROM sanktio WHERE id = " sanktio-id)))]
+          (is (= {:normaalimaara 5000M :maara 5000M}
+                 (select-keys jalki [:normaalimaara :maara])))
+          (is (not= (:sanktio_profiili_rivi ennen) (:sanktio_profiili_rivi jalki)))
+          (is (= tyyppi-19-id (:tyyppi jalki)))))
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest tallenna-mhu26-b-sanktio-sailyttaa-normaalimaaran-tilannekuvana
   (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
         perustelu "HARJA-2618 sanktion normaalimäärän tilannekuva"
