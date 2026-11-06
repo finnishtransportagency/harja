@@ -1,11 +1,30 @@
--- Luodaan tehtavaryhmaotsikko taululle kolumni, jossa määritellään, että mille urakkatyypille otsikko kuuluu
--- Oletuksena kaikille otsikoille urakkatyyppi on "teiden-hoito", mutta tarvittaessa voidaan luoda myös muita urakkatyyppejä, esim. "vesivayla-hoito"
-ALTER TABLE tehtavaryhmaotsikko
-    ADD COLUMN urakkatyyppi urakkatyyppi DEFAULT 'teiden-hoito' NOT NULL;
+ALTER TABLE sanktio
+    ADD COLUMN normaalimaara NUMERIC,
+    ADD COLUMN omailmoitettu BOOLEAN NOT NULL DEFAULT FALSE;
 
--- Lisää tehtäville kolumnit, joilla voidaan määritellä, onko tehtävä Vesiväylä-hoito-urakoissa relevantti ja onko tehtävän tavoitehintavaikutus aina vai ehdollinen
-ALTER TABLE tehtava
-    ADD COLUMN "vvh-tehtava?" BOOLEAN DEFAULT FALSE NOT NULL,
-    ADD COLUMN tavoitehintavaikutus_aina BOOLEAN DEFAULT FALSE NOT NULL,
-    ADD COLUMN tavoitehintavaikutus_ehdollinen NUMERIC DEFAULT NULL;
+COMMENT ON COLUMN sanktio.normaalimaara IS 'Sanktion profiilista ratkaistu normaalimäärä ennen mahdollista omailmoituspuolitusta.';
+COMMENT ON COLUMN sanktio.omailmoitettu IS 'Tapahtumaan tallennettu käyttäjän omailmoitusvalinta.';
 
+
+ALTER TABLE sanktio
+    ADD COLUMN sanktio_profiili_rivi INTEGER REFERENCES sanktio_profiili_rivi (id),
+    ADD COLUMN maaritystapa TEXT;
+
+ALTER TABLE sanktio
+    ADD CONSTRAINT sanktio_maaritystapa_check
+        CHECK (maaritystapa IS NULL OR maaritystapa IN ('automaattinen', 'manuaalinen'));
+
+UPDATE sanktio_profiili_rivi_summamaaritys sprsm
+SET maaritystapa = 'manuaalinen',
+    muokattu = CURRENT_TIMESTAMP
+FROM sanktio_profiili_rivi spr,
+     sanktio_profiili sp,
+     sanktio_laji sl,
+     sanktiotyyppi st
+WHERE sprsm.sanktio_profiili_rivi_id = spr.id
+  AND spr.sanktio_profiili_id = sp.id
+  AND spr.sanktio_laji_id = sl.id
+  AND spr.sanktiotyyppi_id = st.id
+  AND sp.nimi = 'teiden-hoito-mhu2026'
+  AND sl.koodi = 'C'
+  AND st.koodi IN (17, 18, 19, 20, 21);

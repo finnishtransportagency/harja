@@ -3,7 +3,7 @@
   (:require [clojure.spec.alpha :as s]
             [harja.pvm :as pvm]
             [harja.domain.muokkaustiedot :as m]
-            #?@(:clj [[harja.kyselyt.specql-db :refer [define-tables]]]
+            #?@(:clj  [[harja.kyselyt.specql-db :refer [define-tables]]]
                 :cljs [[specql.impl.registry]]))
   #?(:cljs (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
@@ -28,7 +28,7 @@
 ;; TODO: Tarkista lomakkeen valinna ja niiden nimitykset
 (defn tyyppi-fmt
   "Palauttaa muutostyypin tietokannasta tulevan enumin nimen käyttöliittymää varten selkokielisenä. Esim. 'pysyva' -> 'Pysyvä'."
-   [tyyppi urakan-sopimustyyppi]
+  [tyyppi urakan-sopimustyyppi]
   ({"pysyva" "Pysyvä muutos"
     "rahavaraus" "Rahavaraus"
     "johto-ja-hallintokorvaus" (if (= :mhu+ urakan-sopimustyyppi)
@@ -84,24 +84,52 @@
         indeksikorjaus-vahvistettu? (get tavoitehinta-indeksikorjattu-per-hoitovuosi hoitokauden-alkuvuosi false)]
     indeksikorjaus-vahvistettu?))
 
-(defn pysyva-muutos-hoitovuosi-lukittu?
+(defn pysyva-muutos-hoitovuoden-paatos-tehty?
+  [muokattavat-hoitokaudet hoitovuosi]
+  (let [alkuvuosi (pvm/vuosi (first hoitovuosi))]
+    (boolean
+      ;; Nykyinen hoitovuosi ei ole muokattava
+      (some (fn [[vuosi muokattava?]]
+              (and (= vuosi alkuvuosi) (false? muokattava?)))
+        muokattavat-hoitokaudet))))
+
+(defn muutos-hoitovuosi-lukittu?
   "Palauttaa true, jos hoitovuosi on lukittu muokkaukselta.
   Lukittu, jos:
-  - Hoitovuoden vaikutukset sisältyvät kyseisen hoitovuoden tavoitehintaan JA hoitovuoden alun tavoitehinta on vahvistettu
-  - TAI hoitovuoden välikatselmuksen päätöksiä on tehty
-  "
-  [tavoitehinta-indeksikorjattu-per-hoitovuosi voimassa-alkaen hoitovuosi]
-  (assert (map? tavoitehinta-indeksikorjattu-per-hoitovuosi))
+  - Muutos vaikuttaa kyseisen tai tulevan hoitokauden vahvistettuun tavoitehintaan 
+  - TODO: TAI hoitovuoden välikatselmuksen päätöksiä on tehty"
+  [indeksikorjattu muokattavat-hoitokaudet voimassa-alkaen hoitovuosi]
+  (assert (map? indeksikorjattu))
+  
+  (let [alkuvuosi (pvm/vuosi (first hoitovuosi))]
+    (boolean
+      (or
+        ;; Jokin tuleva hoitovuosi on vahvistettu
+        (some (fn [[vuosi vahvistettu?]]
+                (and (> vuosi alkuvuosi) (true? vahvistettu?)))
+          indeksikorjattu)
 
-  ;; TODO: Välikatselmuksen päätökset tarkastus toteutetaan myöhemmin, HARJA-1767
+        ;; Nykyinen hoitovuosi ei ole muokattava
+        (some (fn [[vuosi muokattava?]]
+                (and (= vuosi alkuvuosi) (false? muokattava?)))
+          muokattavat-hoitokaudet)
 
-  ;; Mikäli muutos alkaa kesken hoitokauden, sillä ei ole merkitystä kyseisen hoitovuoden alun tavoitehinnan kannalta
-  ;; Eli, muutosta ei ole tarpeen lukita vaikka tavoitehinta olisi vahvistettu
-  (and
-    (not (muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi))
+        ;; Nykyinen hoitovuosi on vahvistettu, eikä muutos ala kesken hoitokauden
+        (and
+          (not (muutos-voimassa-kesken-hoitokauden? voimassa-alkaen hoitovuosi))
+          (hoitovuoden-indeksikorjaus-vahvistettu? indeksikorjattu hoitovuosi))))))
 
-    ;; Jos muutoksen vaikutukset koskevat koko hoitovuotta, tarkistetaan onko hoitovuoden alun tavoitehinta vahvistettu
-    (hoitovuoden-indeksikorjaus-vahvistettu? tavoitehinta-indeksikorjattu-per-hoitovuosi hoitovuosi)))
+(defn pysyva-muutos-poisto-lukittu?
+  "Ei voida poistaa, jos poisto vaikuttaa vahvistettuun tavoitehintaan"
+  [indeksikorjattu voimassa-alkaen]
+  (assert (map? indeksikorjattu))
+  (boolean
+    (some (fn [[vuosi vahvistettu?]]
+            (and
+              (true? vahvistettu?)
+              (pvm/sama-tai-ennen?
+                voimassa-alkaen (pvm/hoitokauden-alkupvm vuosi))))
+      indeksikorjattu)))
 
 ;; Muutoksissa käytettävä talvisuolakerroin on kovakoodattu tähän.
 (def +talvisuolakerroin+ 0.7)
