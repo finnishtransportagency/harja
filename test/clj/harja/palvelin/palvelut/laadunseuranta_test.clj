@@ -727,28 +727,27 @@
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
 (deftest tallenna-mhu26-a-sanktion-tyypin-vaihto-paivittaa-summan
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
         perustelu "HARJA-2912 sanktion tyypin vaihto päivittää summan"
-        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
-                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        tpi-id (hae-toimenpideinstanssi-id-nimella "Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto")
         tyyppi-18-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
         tyyppi-19-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 19"))
         sanktio {:suorasanktio true
                  :laji :A
                  :summa 1
                  :toimenpideinstanssi tpi-id
-                 :perintapvm #inst "2026-10-04T21:00:00.000-00:00"
+                 :perintapvm (pvm/->pvm-aika "04.10.2026 21:00:00")
                  :tyyppi {:id tyyppi-18-id}
                  :soveltuvuuskonteksti :urakka}
         laatupoikkeama {:tekijanimi "Max Power"
                         :paatos {:paatos "sanktio"
-                                 :kasittelyaika (pvm/->pvm-aika "4.10.2026 22:00:00")
+                                 :kasittelyaika (pvm/->pvm-aika "04.10.2026 22:00:00")
                                  :kasittelytapa :kommentit
                                  :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "4.10.2026 08:00:00")
+                        :aika (pvm/->pvm-aika "04.10.2026 08:00:00")
                         :urakka urakka-id}
-        hk-alkupvm (pvm/->pvm "1.10.2026")
-        hk-loppupvm (pvm/->pvm "30.9.2027")]
+        hk-alkupvm (pvm/->pvm "01.10.2026")
+        hk-loppupvm (pvm/->pvm "30.09.2027")]
     (try
       (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
                          +kayttaja-jvh+ sanktio laatupoikkeama hk-alkupvm hk-loppupvm)
@@ -768,10 +767,9 @@
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
 (deftest tallenna-mhu26-a-sanktion-tyypin-vaihto-sailyttaa-omailmoituksen-puolituksen
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
         perustelu "HARJA-2912 tyypin vaihto omailmoituksella"
-        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
-                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        tpi-id (hae-toimenpideinstanssi-id-nimella "Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto")
         tyyppi-18-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
         tyyppi-19-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 19"))
         sanktio {:suorasanktio true
@@ -779,18 +777,18 @@
                  :summa 1
                  :omailmoitettu true
                  :toimenpideinstanssi tpi-id
-                 :perintapvm #inst "2026-10-04T21:00:00.000-00:00"
+                 :perintapvm (pvm/->pvm-aika "04.10.2026 21:00:00")
                  :tyyppi {:id tyyppi-18-id}
                  :soveltuvuuskonteksti :urakka}
         laatupoikkeama {:tekijanimi "Max Power"
                         :paatos {:paatos "sanktio"
-                                 :kasittelyaika (pvm/->pvm-aika "4.10.2026 22:00:00")
+                                 :kasittelyaika (pvm/->pvm-aika "04.10.2026 22:00:00")
                                  :kasittelytapa :kommentit
                                  :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "4.10.2026 08:00:00")
+                        :aika (pvm/->pvm-aika "04.10.2026 08:00:00")
                         :urakka urakka-id}
-        hk-alkupvm (pvm/->pvm "1.10.2026")
-        hk-loppupvm (pvm/->pvm "30.9.2027")
+        hk-alkupvm (pvm/->pvm "01.10.2026")
+        hk-loppupvm (pvm/->pvm "30.09.2027")
         lue (fn [sanktio-id]
               (first (q-map (str "SELECT normaalimaara, maara, omailmoitettu FROM sanktio WHERE id = " sanktio-id))))]
     (try
@@ -805,27 +803,26 @@
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
 (deftest tallenna-mhu26-a-sanktion-lajin-vaihto-paivittaa-maaritystavan
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
         perustelu "HARJA-2912 lajin vaihto päivittää määritystavan"
-        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
-                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        tpi-id (hae-toimenpideinstanssi-id-nimella "Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto")
         tyyppi-18-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
         sanktio {:suorasanktio true
                  :laji :A
                  :summa 1
                  :toimenpideinstanssi tpi-id
-                 :perintapvm #inst "2026-10-04T21:00:00.000-00:00"
+                 :perintapvm (pvm/->pvm-aika "04.10.2026 21:00:00")
                  :tyyppi {:id tyyppi-18-id}
                  :soveltuvuuskonteksti :urakka}
         laatupoikkeama {:tekijanimi "Max Power"
                         :paatos {:paatos "sanktio"
-                                 :kasittelyaika (pvm/->pvm-aika "4.10.2026 22:00:00")
+                                 :kasittelyaika (pvm/->pvm-aika "04.10.2026 22:00:00")
                                  :kasittelytapa :kommentit
                                  :perustelu perustelu}
-                        :aika (pvm/->pvm-aika "4.10.2026 08:00:00")
+                        :aika (pvm/->pvm-aika "04.10.2026 08:00:00")
                         :urakka urakka-id}
-        hk-alkupvm (pvm/->pvm "1.10.2026")
-        hk-loppupvm (pvm/->pvm "30.9.2027")
+        hk-alkupvm (pvm/->pvm "01.10.2026")
+        hk-loppupvm (pvm/->pvm "30.09.2027")
         lue (fn [sanktio-id]
               (first (q-map (str "SELECT maaritystapa, normaalimaara, maara FROM sanktio WHERE id = " sanktio-id))))]
     (try
@@ -840,10 +837,9 @@
         (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
 
 (deftest tallenna-mhu26-b-sanktio-sailyttaa-normaalimaaran-tilannekuvana
-  (let [urakka-id (ffirst (q "SELECT id FROM urakka WHERE nimi = 'Sodankylän MHU 2026-2031'"))
+  (let [urakka-id (hae-urakan-id-nimella "Sodankylän MHU 2026-2031")
         perustelu "HARJA-2618 sanktion normaalimäärän tilannekuva"
-        tpi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id
-                            " AND nimi = 'Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto'")))
+        tpi-id (hae-toimenpideinstanssi-id-nimella "Sodankylän MHU 2026-2031 MHU ja HJU Hoidon johto")
         sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 18"))
         sanktio {:suorasanktio true
                  :laji :B
