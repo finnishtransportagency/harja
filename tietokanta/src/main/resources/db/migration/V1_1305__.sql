@@ -1,10 +1,17 @@
--- Luodaan tehtavaryhmaotsikko taululle kolumni, jossa määritellään, että mille urakkatyypille otsikko kuuluu
--- Oletuksena kaikille otsikoille urakkatyyppi on "teiden-hoito", mutta tarvittaessa voidaan luoda myös muita urakkatyyppejä, esim. "vesivayla-hoito"
-ALTER TABLE tehtavaryhmaotsikko
-    ADD COLUMN urakkatyyppi urakkatyyppi DEFAULT 'teiden-hoito' NOT NULL;
+-- Lisätään tehtäville tieto, onko tehtävä materiaalina raportoitava
+ALTER TABLE tehtava 
+    ADD COLUMN "materiaalina_raportoitava?" BOOLEAN NOT NULL DEFAULT FALSE;
 
--- Lisää tehtäville kolumnit, joilla voidaan määritellä, onko tehtävä Vesiväylä-hoito-urakoissa relevantti ja onko tehtävän tavoitehintavaikutus aina vai ehdollinen
-ALTER TABLE tehtava
-    ADD COLUMN "vvh-tehtava?" BOOLEAN DEFAULT FALSE NOT NULL,
-    ADD COLUMN tavoitehintavaikutus_aina BOOLEAN DEFAULT FALSE NOT NULL,
-    ADD COLUMN tavoitehintavaikutus_ehdollinen NUMERIC DEFAULT NULL;
+-- Löytyy dokumentaatiosta: "Materiaaleina raportoitavat tehtävät"
+UPDATE tehtava
+   SET "materiaalina_raportoitava?" = TRUE
+ WHERE nimi IN (
+           'Liukkaudentorjunta suolaamalla (materiaali)',
+           'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)',
+           'Liukkaudentorjunta hiekoituksella (materiaali)',
+           'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)',
+           'Sorastus',
+           'Liikenteen varmistaminen kelirikkokohteessa (materiaali)',
+           'Reunantäyttö',
+           'Kesäsuola (CaCl2, materiaali)'
+);
