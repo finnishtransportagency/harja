@@ -257,12 +257,16 @@ jobs:
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 
-      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois
+      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois, lisäksi build tuotetaan mahdollisimman
+      # kevyellä prosessilla nopeuden varmistamiseksi. Täysi build tehdään mergen yhteydessä suoritettavien testien
+      # yhteydessä, tai myös manuaalisesti tekemällä deployment sopivilla asetuksilla valittuun testi-ympäristöön.
       - name: Build Harja Uberjar (Kevyt)
         if: ${{ inputs.build-harja == 'light' }}
         uses: $/.github/actions/build-harja-app
         with:
+          build-mode: 'dev-bundle'
           build-laadunseuranta: 'false'
+          build-uberjar: 'true'
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
@@ -387,7 +391,7 @@ jobs:
     name: "Backend-testit (shard ${{ matrix.shard }})"
     runs-on: ubuntu-latest
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     strategy:
       # fail-fast: false → kaikki shardit ajetaan, vaikka joku failaisi. Jos halutaan nopeampi feedback, vaihda true.
       fail-fast: false
@@ -457,7 +461,7 @@ jobs:
 #    name: "Backend-testit"
 #    runs-on: ubuntu-latest
 #    env:
-#      TZ: "EET"
+#      TZ: "Europe/Helsinki"
 #    permissions:
 #      contents: read # Tarvitaan checkout actionissa
 #      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
@@ -506,7 +510,7 @@ jobs:
     name: "Hitaat testit"
     runs-on: ubuntu-latest
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -556,7 +560,7 @@ jobs:
     name: "Front-end testit"
     runs-on: ubuntu-latest
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -599,7 +603,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
       HARJA_ITMF_BROKER_PORT: 61616
       HARJA_ITMF_BROKER_AI_PORT: 8161
 
@@ -661,7 +665,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     strategy:
       # fail-fast: false → kaikki shardit ajetaan, vaikka joku failaisi. Jos halutaan nopeampi feedback, vaihda true.
       fail-fast: false
@@ -779,6 +783,7 @@ jobs:
       - name: Run cypress for ${{ matrix.browser }} (shard ${{ matrix.shard }})
         uses: $/.github/actions/start-cypress
         with:
+          service-name: cypress-latest
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}

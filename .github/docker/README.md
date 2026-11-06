@@ -18,13 +18,20 @@ valitettavasti hyödyt:
    kopioimaan jobeihin missä niitä haluaa käyttää. Tämä hankaloittaa jobien ylläpitoa.
 3. Kaikkia containereita ei voi tai ei kannata ajaa serviceinä.
 
-Näiden haittapuolien ja ylläpidon vaikeuden takia, kaikki tarvittavat Docker kontit ajetaan suoraan Docker run komennoilla.  
+Näiden haittapuolien ja ylläpidon vaikeuden takia tarvittavat Docker-kontit käynnistetään jobien vaiheissa
+Docker Compose- tai Docker run -komennoilla.
 Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../actions/).  
 Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](./docker-compose.yml) -tiedostoon,
 jotta konttien hallinta olisi mahdollisimman yksinkertaista ja asetuksia voisi helpommin ylläpitää.
 
 Konttien käyttöön kannattaa tutustua etsimällä relevantit composite actionit ```.github/actions``` hakemistosta ja tutkia miten
 niitä on käytetty workfloweissa.
+
+`aja-testidata.sh` estää uudet yhteydet `harja`-kantaan ennen olemassa olevien yhteyksien katkaisua.
+Katkaisu peruuttaa keskeneräiset transaktiot. `harja`- ja `harjatest_template`-kantojen yhteydet sallitaan
+vasta testikantojen luomisen jälkeen tai virhetilanteen siivouksessa. Pakotettu lopetus (`SIGKILL`) ei suorita
+siivousta; silloin yhteydet on palautettava `postgres`-kannasta komennolla
+`ALTER DATABASE harja ALLOW_CONNECTIONS true;` ja tarvittaessa vastaavasti `harjatest_template`-kannalle.
 
 
 # GitHub Container Registry
@@ -84,6 +91,17 @@ Alla olevat seikat on syytä huomioida, jos on tarvetta toteuttaa uusi image.
 Imageiden Dockerfilet löytyvät polusta: ```.github/docker```.  
 Yleisesti, jokaiselle Dockerfilelle on määritelty "build-image.sh" ja "push-image.sh" scriptit, jotka ajamalla
 imaget voi helposti päivittää.
+
+### Päivitys GitHub Actionsilla
+
+Workflow `Tools: Build test docker images for GH Actions and development`
+(`.github/workflows/build_test_docker_images.yml`) julkaisee valitun imagen annetulla tagilla.  
+Tagin on oltava 1–128 ASCII-merkkiä pitkä: sallittuja ovat kirjaimet, numerot, `_`, `.` ja `-`.
+Ensimmäisen merkin on oltava kirjain, numero tai `_`.   
+Esimerkiksi `15.19-3.3.3-trixie` on kelvollinen tag. Virheellinen tag keskeyttää ajon ennen Docker-buildia.  
+Asetus `update-latest` julkaisee saman imagen `latest`-tagilla.  
+Asetus `zstd-compression` pakkaa imagen kerrokset zstd:llä gzipin sijaan, jolloin kerrokset puretaan pullauksessa
+nopeammin. Imagen pullaamiseen vaaditaan Docker >= 23. Apuscripteillä julkaistut imaget käyttävät aina gzipiä.
 
 ### Apuscriptit
 Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.sh``` apuscriptit.
