@@ -11,6 +11,7 @@
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
             [harja.kyselyt.urakat :as urakka-kyselyt]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
             [harja.tyokalut.yleiset :refer [round2]])
   (:import (clojure.lang ExceptionInfo)
@@ -379,7 +380,7 @@
       (is (some #(= (- vuoden-2024-arvonvahennys-maara) (:maara %)) (:sanktiot yhteenveto-2024))
         "Vuoden 2024 arvonvähennyksen pitää näkyä sanktioissa")
       (is (not-any? #(= (- vuoden-2024-arvonvahennys-maara) (:maara %))
-                    (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto-2024))
+            (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto-2024))
         "Vuoden 2024 arvonvähennys ei saa näkyä tavoitehintaan vaikuttavissa arvonvähennyksissä"))
     (lisaa-suorasanktio-urakalle vuoden-2026-arvonvahennys-maara "arvonvahennyssanktio" "2026-11-12"
       urakka-id toimenpideinstanssi-id sanktiotyyppi-id nil nil)
@@ -389,7 +390,7 @@
               (valikatselmukset/hae-valikatselmuksen-tiedot-hoitovuodelle (:db jarjestelma) testikayttaja
                 {:urakkaid urakka-id :hoitovuosi 2026})))]
       (is (some #(= (- vuoden-2026-arvonvahennys-maara) (:maara %))
-                (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto-2026))
+            (:tavoitehintaan-vaikuttavat-arvonvahennykset yhteenveto-2026))
         "Vuoden 2026 arvonvähennyksen pitää näkyä tavoitehintaan vaikuttavissa arvonvähennyksissä")
       (is (not-any? #(= (- vuoden-2026-arvonvahennys-maara) (:maara %)) (:sanktiot yhteenveto-2026))
         "Vuoden 2026 arvonvähennys ei saa näkyä sanktioissa"))))
@@ -606,35 +607,35 @@
         hoitokauden-loppupvm (pvm/hoitokauden-loppupvm (inc hoitokauden-alkuvuosi))
         kustannukset-jarjestettyna (valikatselmukset/hae-kustannukset-jarjestettyna (:db jarjestelma) urakka-id hoitokauden-alkuvuosi hoitokauden-alkupvm hoitokauden-loppupvm)
         toteutuneet-kustannukset (get-in kustannukset-jarjestettyna [:yhteensa :yht-toteutunut-summa])]
-        (doseq [[vastaus odotetut-paatokset]
-          [[vastaus-tavoitehinnan-alitus odotetut-paatokset-tavoitehinta-alittuu]
-           [vastaus-tavoitehinnan-ylitys odotetut-paatokset-tavoitehinta-ylittyy]]]
-          (let [pysyvat-muutokset (some :tavoitehinnan-pysyvat-muutokset (:paatokset vastaus))]
-            (is (every? #(some % (:paatokset vastaus))
-            (mapcat keys odotetut-paatokset))
+    (doseq [[vastaus odotetut-paatokset]
+            [[vastaus-tavoitehinnan-alitus odotetut-paatokset-tavoitehinta-alittuu]
+             [vastaus-tavoitehinnan-ylitys odotetut-paatokset-tavoitehinta-ylittyy]]]
+      (let [pysyvat-muutokset (some :tavoitehinnan-pysyvat-muutokset (:paatokset vastaus))]
+        (is (every? #(some % (:paatokset vastaus))
+              (mapcat keys odotetut-paatokset))
           "Vastauksessa ovat kaikki odotetut päätöstyypit")
-            (is (= (reduce + 0 (keep #(get pysyvat-muutokset %)
-                                     [:kirjallisesti_sovitut_muutokset
-                                      :pysyvat_muutokset
-                                      :muutostyo_muutokset
-                                      :johto_ja_hallintakorvaus_muutokset
-                                      :tehtava_ja_maaratoteumamuutokset
-                                      :rahavarausten_muutokset
-                                      :arvonvahennysten_muutokset]))
-                   (:tavoitehinnan_muutokset_yhteensa pysyvat-muutokset))
-                "Pysyvien muutosten yhteissummassa ovat mukana kaikki muutostyypit")))
-        (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
-            "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
-        (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
-            "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
-        (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
-            "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
-        (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
-              alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
-          (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
-              "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
-          (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
-              "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
+        (is (= (reduce + 0 (keep #(get pysyvat-muutokset %)
+                             [:kirjallisesti_sovitut_muutokset
+                              :pysyvat_muutokset
+                              :muutostyo_muutokset
+                              :johto_ja_hallintakorvaus_muutokset
+                              :tehtava_ja_maaratoteumamuutokset
+                              :rahavarausten_muutokset
+                              :arvonvahennysten_muutokset]))
+              (:tavoitehinnan_muutokset_yhteensa pysyvat-muutokset))
+          "Pysyvien muutosten yhteissummassa ovat mukana kaikki muutostyypit")))
+    (is (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))
+      "Tavoitehinnan alitus pitää palauttaa, kun kustannukset alittavat tavoitehinnan")
+    (is (nil? (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-alitus)))
+      "Tavoitehinnan ylitystä ei pidä palauttaa alitustilanteessa")
+    (is (nil? (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-ylitys)))
+      "Tavoitehinnan alitusta ei pidä palauttaa ylitystilanteessa")
+    (let [ylityspaatos (some :tavoitehinnan-ylitys (:paatokset vastaus-tavoitehinnan-ylitys))
+          alituspaatos (some :tavoitehinnan-alitus (:paatokset vastaus-tavoitehinnan-alitus))]
+      (is (= hoitokauden-alun-tavoitehinta (:hoitokauden_alun_tavoitehinta alituspaatos))
+        "Ylityspäätöksen tavoitehinnan pitää vastata hoitokauden lopun tavoitehintaa")
+      (is (= toteutuneet-kustannukset (:toteutuneet_kustannukset ylityspaatos))
+        "Ylityspäätöksen pitää sisältää ylityksen jälkeiset toteutuneet kustannukset"))))
 
 (deftest laske-lopullinen-hoitovuoden-lopun-kattohinta-test
   (let [vuoden-2024-urakan_alkuvuosi 2024
@@ -644,7 +645,7 @@
         hoitovuoden-alkuvuosi-2025 2025
         kuluvan-vuoden-muutosten-summa-25 200M ;; Alkaa 25 urakoilta
         kuluvan-vuoden-muutosten-summa-24 0M ;; Alkaa 25 urakoilta
-        tvh-arvonvahennysten-summa-24 0M  ;; Arvonvähennykset ei vaikuta tavoitehintaan -24 urakoissa (ennen vuotta 26)
+        tvh-arvonvahennysten-summa-24 0M ;; Arvonvähennykset ei vaikuta tavoitehintaan -24 urakoissa (ennen vuotta 26)
         tvh-arvonvahennysten-summa-25 50M
         kattohinta-ennen-indeksia-ja-muutoksia 1000M
         hoitovuoden-lopun-indeksikorjaus-summa 80M
@@ -653,7 +654,7 @@
         indeksikorjauspaatoksen-id 1
         kattohinnassa-mukana-indeksipaatos-24 (+ kattohinta-ennen-indeksia-ja-muutoksia (* hoitovuoden-lopun-indeksikorjaus-summa kattohintakerroin-24))
         odotettu-kattohinta-vuonna-2024 (+ kattohinta-ennen-indeksia-ja-muutoksia
-                                          (* kattohintakerroin-24 (+ tvh-arvonvahennysten-summa-24  kuluvan-vuoden-muutosten-summa-24 hoitovuoden-lopun-indeksikorjaus-summa)))
+                                          (* kattohintakerroin-24 (+ tvh-arvonvahennysten-summa-24 kuluvan-vuoden-muutosten-summa-24 hoitovuoden-lopun-indeksikorjaus-summa)))
         odotettu-kattohinta-vuonna-2025 (+ kattohinta-ennen-indeksia-ja-muutoksia
                                           (* kattohintakerroin-25 (+ tvh-arvonvahennysten-summa-25 kuluvan-vuoden-muutosten-summa-25 hoitovuoden-lopun-indeksikorjaus-summa)))
         odotettu-kattohinta-indeksikorjauspaatoksella-24 (+ kattohinta-ennen-indeksia-ja-muutoksia
@@ -696,7 +697,7 @@
         valittu-hoitovuosi-24 2024
         valittu-hoitovuosi-25 2025
         valittu-hoitovuosi-26 2026
-        muutosten-summa-24 0M  ;; -24 urakoilla ei ole muutoksia
+        muutosten-summa-24 0M ;; -24 urakoilla ei ole muutoksia
         muutosten-summa-25 200M
         hoitovuoden-arvonvahennysten-summa-24-2024 0M ;; -24 urakoilla ei ole arvonvähennykset eivät vaikuta tavoitehintaan - ennenkuin vuonna 26
         hoitovuoden-arvonvahennysten-summa-24-2026 50M ;; -24 urakoilla ei ole arvonvähennykset eivät vaikuta tavoitehintaan - ennenkuin vuonna 26
@@ -722,3 +723,36 @@
             (valikatselmukset/laske-muutosten-oikaisujen-arvonvahennyksen-vaikutukset-tavoitehintaan
               urakan-alkuvuosi-2025 valittu-hoitovuosi-25
               muutosten-summa-25 hoitovuoden-arvonvahennysten-summa-25))))))
+
+(deftest ominaisuuden-muokkaus-sallittu?-toimii
+  (let [db (:db jarjestelma)
+        urakka-id @iin-maanteiden-hoitourakan-2021-2026-id
+        kayttaja-id (:id +kayttaja-tero+)
+        vanhan-paatoksen-luonti (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
+                                  db {:urakkaid urakka-id
+                                      :hoitokauden_alkuvuosi 2024
+                                      :tavoitehinta 1
+                                      :kattohinta 1
+                                      :muokkaa_kattohinta false
+                                      :luoja kayttaja-id}
+                                  kayttaja-id)]
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 :tarjous)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2025 :tarjous)))
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 :uusi-kustannussuunnitelma)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2025 :uusi-kustannussuunnitelma)))
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 :tehtavat-ja-maarat)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2025 :tehtavat-ja-maarat)))
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 :kulu)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2025 :kulu)))
+    ;; Päätös vuodelle 2024 tehty, ei saa muokata
+    (is (= false (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2024 :muutos)))
+    ;; Päätöstä vuodelle 2025 ei ole tehty, saa muokata
+    (is (= true (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id 2025 :muutos)))))
