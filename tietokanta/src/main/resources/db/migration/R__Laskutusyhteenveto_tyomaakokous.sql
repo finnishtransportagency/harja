@@ -1287,7 +1287,7 @@ BEGIN
     FROM mhu_muutos mm
              JOIN mhu_muutos_kustannusvaikutus mmk ON mmk.muutos = mm.id
     WHERE mm.urakka = ur
-      AND mm.tyyppi IN ('pysyva'::MHU_MUUTOSTYYPPI, 'muutostyo'::MHU_MUUTOSTYYPPI)
+      AND mm.tyyppi = 'pysyva'::MHU_MUUTOSTYYPPI
       AND mm.poistettu IS FALSE
       AND mmk.hoitokauden_alkuvuosi = hk_alkuvuosi
       AND mm.voimassa_alkaen BETWEEN aikavali_alkupvm AND aikavali_loppupvm;
