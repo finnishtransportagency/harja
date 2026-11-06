@@ -5,6 +5,6 @@ ALTER TABLE tehtavaryhmaotsikko
 
 -- Lisää tehtäville kolumnit, joilla voidaan määritellä, onko tehtävä Vesiväylä-hoito-urakoissa relevantti ja onko tehtävän tavoitehintavaikutus aina vai ehdollinen
 ALTER TABLE tehtava
-    ADD COLUMN "vvh-tehtava?" BOOLEAN DEFAULT FALSE NOT NULL,
+    ADD COLUMN "vhu-tehtava?" BOOLEAN DEFAULT FALSE NOT NULL,
     ADD COLUMN tavoitehintavaikutus_aina BOOLEAN DEFAULT FALSE NOT NULL,
     ADD COLUMN tavoitehintavaikutus_ehdollinen NUMERIC DEFAULT NULL;

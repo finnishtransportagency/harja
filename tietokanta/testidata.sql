@@ -340,7 +340,7 @@ DO $$
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Kelluvien turvalaitteiden vuositarkastustyöt ajomatkoineen', 1, tehtavaryhmaotsikkoid1, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid1;
 
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -372,7 +372,7 @@ DO $$
 
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Kiinteiden turvalaitteiden vuositarkastustyöt ajomatkoineen', 2, tehtavaryhmaotsikkoid1, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid2;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -387,7 +387,7 @@ DO $$
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Kelluvien turvalaitteiden huoltotyöt ajomatkoineen', 3, tehtavaryhmaotsikkoid2, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid3;
 
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -421,7 +421,7 @@ DO $$
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Kiinteiden turvalaitteiden huoltotyöt ajomatkoineen', 4, tehtavaryhmaotsikkoid2, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid4;
 
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -436,7 +436,7 @@ DO $$
 
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Vesiliikennemerkkien huoltotyöt ajomatkoineen', 5, tehtavaryhmaotsikkoid2, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid5;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -447,7 +447,7 @@ DO $$
         INSERT INTO tehtavaryhmaotsikko (otsikko, urakkatyyppi, luotu, luoja) VALUES ('VIANKORJAUS', 'vesivayla-hoito', current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaotsikkoid3;
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Viankorjaus ajomatkoineen', 6, tehtavaryhmaotsikkoid3, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid6;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -492,7 +492,7 @@ DO $$
         INSERT INTO tehtavaryhmaotsikko (otsikko, urakkatyyppi, luotu, luoja) VALUES ('AVOKANAVIEN HOITO', 'vesivayla-hoito', current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaotsikkoid4;
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Avokanavien hoito', 7, tehtavaryhmaotsikkoid4, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid7;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -514,7 +514,7 @@ DO $$
         INSERT INTO tehtavaryhmaotsikko (otsikko, urakkatyyppi, luotu, luoja) VALUES ('MUUT ASENNUSTYÖT', 'vesivayla-hoito', current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaotsikkoid5;
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Muut asennustyöt ajomatkoineen', 8, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid8;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -536,7 +536,7 @@ DO $$
         INSERT INTO tehtavaryhmaotsikko (otsikko, urakkatyyppi, luotu, luoja) VALUES ('MATERIAALIT', 'vesivayla-hoito', current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaotsikkoid6;
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Materiaalit', 9, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid9;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -563,7 +563,7 @@ DO $$
 
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Aurinkoenergialaitteet asennustarvikkeineen esim. telineet, kaapelit ja kaapelikiinnikkeet', 10, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid10;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -578,7 +578,7 @@ DO $$
 
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Valolaitteet asennustarvikkeineen', 11, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid11;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -635,7 +635,7 @@ DO $$
 
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Kelluvien turvalaitteiden paristot', 12, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid12;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES
@@ -654,7 +654,7 @@ DO $$
 
         INSERT INTO tehtavaryhma (nimi, jarjestys, tehtavaryhmaotsikko_id, toimenpide_id, luotu, luoja) VALUES
             ('Turvalaitteiden paristot', 13, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid) RETURNING id INTO tehtavaryhmaid13;
-        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vvh-tehtava?",
+        INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?", "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES

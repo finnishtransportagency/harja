@@ -43,7 +43,7 @@ $$
         RETURNING id INTO tehtavaryhmaid1;
 
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Poijujen sijainnin ja asennon tarkastukset ml. vedenpäällisen osan silmämääräinen tarkastaminen ja heijastinkalvojen tarkastus ja tarvittaessa uusiminen',
@@ -82,7 +82,7 @@ $$
                 current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid2;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Kiinteiden valaistujen turvalaitteiden vuositarkastustyöt', toimenpideid, current_timestamp,
@@ -103,7 +103,7 @@ $$
         RETURNING id INTO tehtavaryhmaid3;
 
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Poijujen ja suurviittojen ankkuroinnin tarkastus', toimenpideid, current_timestamp, kayttajaid, 'kpl',
@@ -147,7 +147,7 @@ $$
         RETURNING id INTO tehtavaryhmaid4;
 
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Rakenteiden tarkastus, huolto ja korjaus', toimenpideid, current_timestamp, kayttajaid, 'kpl', 20,
@@ -165,7 +165,7 @@ $$
                 current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid5;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Näkemäalueiden raivaukset', toimenpideid, current_timestamp, kayttajaid, 'm2', 24,
@@ -179,7 +179,7 @@ $$
         VALUES ('Viankorjaus ajomatkoineen', 6, tehtavaryhmaotsikkoid3, toimenpideid, current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid6;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Rikkoutuneiden, tuhoutuneiden ja kadonneiden poijujen/suurviittojen uusiminen jääpeitteisenä aikana: työ ja ankkurointitarvikkeet',
@@ -245,7 +245,7 @@ $$
         VALUES ('Avokanavien hoito', 7, tehtavaryhmaotsikkoid4, toimenpideid, current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid7;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Avokanavien reunavalaistuksien tarkastus ja huolto', toimenpideid, current_timestamp, kayttajaid,
@@ -273,7 +273,7 @@ $$
                 kayttajaid)
         RETURNING id INTO tehtavaryhmaid8;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Uuden poijun asennustyö avovesikaudella', toimenpideid, current_timestamp, kayttajaid, 'kpl', 49,
@@ -297,7 +297,7 @@ $$
         VALUES ('Materiaalit', 9, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid9;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Uudet viitat mukaan lukien ankkurointitarvikkeet esim. kettingit, sakkelit ja painot', toimenpideid,
@@ -327,7 +327,7 @@ $$
                 tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid10;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Aurinkopaneeli', toimenpideid, current_timestamp, kayttajaid, 'kpl', 65,
@@ -344,7 +344,7 @@ $$
                 kayttajaid)
         RETURNING id INTO tehtavaryhmaid11;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('LED 155', toimenpideid, current_timestamp, kayttajaid, 'kpl', 69,
@@ -403,7 +403,7 @@ $$
                 kayttajaid)
         RETURNING id INTO tehtavaryhmaid12;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Isot pyöreät kelluviin turvalaitteisiin', toimenpideid, current_timestamp, kayttajaid, 'kpl', 94,
@@ -424,7 +424,7 @@ $$
         VALUES ('Turvalaitteiden paristot', 13, tehtavaryhmaotsikkoid5, toimenpideid, current_timestamp, kayttajaid)
         RETURNING id INTO tehtavaryhmaid13;
         INSERT INTO tehtava (nimi, emo, luotu, luoja, yksikko, jarjestys, hinnoittelu, tehtavaryhma, "mhu-tehtava?",
-                             "vvh-tehtava?",
+                             "vhu-tehtava?",
                              voimassaolo_alkuvuosi, voimassaolo_loppuvuosi,
                              "maaramitattava?", tavoitehintavaikutus_aina, tavoitehintavaikutus_ehdollinen)
         VALUES ('Isot pyöreät turvalaitteisiin', toimenpideid, current_timestamp, kayttajaid, 'kpl', 95,

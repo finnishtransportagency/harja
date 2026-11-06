@@ -59,10 +59,10 @@
   (hae-tehtavaryhmaotsikot db kayttaja tiedot
     tehtavaryhmat-kyselyt/hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat))
 
-(defn hae-vvh-tehtavaryhmaotsikot [db kayttaja tiedot]
-  (log/debug "hae-vvh-tehtavaryhmaotsikot :: tiedot:" (pr-str tiedot))
+(defn hae-vhu-tehtavaryhmaotsikot [db kayttaja tiedot]
+  (log/debug "hae-vhu-tehtavaryhmaotsikot :: tiedot:" (pr-str tiedot))
   (hae-tehtavaryhmaotsikot db kayttaja tiedot
-    tehtavaryhmat-kyselyt/hae-vvh-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat))
+    tehtavaryhmat-kyselyt/hae-vhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat))
 
 (defn hae-suoritettavat-tehtavat [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
@@ -87,8 +87,8 @@
 (defn tallenna-tehtavaryhmat [db kayttaja tiedot]
   (tallenna-tehtavaryhmat* db kayttaja tiedot hae-mhu-tehtavaryhmaotsikot))
 
-(defn tallenna-vvh-tehtavaryhmat [db kayttaja tiedot]
-  (tallenna-tehtavaryhmat* db kayttaja tiedot hae-vvh-tehtavaryhmaotsikot))
+(defn tallenna-vhu-tehtavaryhmat [db kayttaja tiedot]
+  (tallenna-tehtavaryhmat* db kayttaja tiedot hae-vhu-tehtavaryhmaotsikot))
 
 (defn- tallenna-tehtavat* [db kayttaja tiedot hae-otsikot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
@@ -108,8 +108,8 @@
 (defn tallenna-tehtavat [db kayttaja tiedot]
   (tallenna-tehtavat* db kayttaja tiedot hae-mhu-tehtavaryhmaotsikot))
 
-(defn tallenna-vvh-tehtavat [db kayttaja tiedot]
-  (tallenna-tehtavat* db kayttaja tiedot hae-vvh-tehtavaryhmaotsikot))
+(defn tallenna-vhu-tehtavat [db kayttaja tiedot]
+  (tallenna-tehtavat* db kayttaja tiedot hae-vhu-tehtavaryhmaotsikot))
 
 
 (defrecord TehtavatHallinta []
@@ -118,16 +118,16 @@
     (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
         (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
-    ;; vvh = vesivayla-hoito
-    (julkaise-palvelu http-palvelin :hae-vvh-tehtavaryhmaotsikot
+    ;; vhu = vesivayla-hoito
+    (julkaise-palvelu http-palvelin :hae-vhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
-        (hae-vvh-tehtavaryhmaotsikot db kayttaja tiedot)))
-    (julkaise-palvelu http-palvelin :hallinta-tallenna-vvh-tehtavaryhmat
+        (hae-vhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-vhu-tehtavaryhmat
       (fn [kayttaja tiedot]
-        (tallenna-vvh-tehtavaryhmat db kayttaja tiedot)))
-    (julkaise-palvelu http-palvelin :hallinta-tallenna-vvh-tehtavat
+        (tallenna-vhu-tehtavaryhmat db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-vhu-tehtavat
       (fn [kayttaja tiedot]
-        (tallenna-vvh-tehtavat db kayttaja tiedot)))
+        (tallenna-vhu-tehtavat db kayttaja tiedot)))
     (julkaise-palvelu http-palvelin :hae-suoritettavat-tehtavat
       (fn [kayttaja tiedot]
         (hae-suoritettavat-tehtavat db kayttaja tiedot)))
@@ -141,9 +141,9 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-mhu-tehtavaryhmaotsikot
-      :hae-vvh-tehtavaryhmaotsikot
-      :hallinta-tallenna-vvh-tehtavaryhmat
-      :hallinta-tallenna-vvh-tehtavat
+      :hae-vhu-tehtavaryhmaotsikot
+      :hallinta-tallenna-vhu-tehtavaryhmat
+      :hallinta-tallenna-vhu-tehtavat
       :hae-suoritettavat-tehtavat
       :hallinta-tallenna-tehtavaryhmat
       :hallinta-tallenna-tehtavat)

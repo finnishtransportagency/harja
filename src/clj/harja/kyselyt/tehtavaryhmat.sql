@@ -56,7 +56,7 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
  GROUP BY tro.id, tr.id, tro.otsikko, trtp.nimi, tr.jarjestys
  ORDER BY tro.otsikko ASC, tr.jarjestys ASC;
 
--- name: hae-vvh-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
+-- name: hae-vhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
 SELECT tro.id        AS tehtavaryhmaotsikko_id,
        tro.otsikko,
        tr.id         AS tehtavaryhma_id,
@@ -74,7 +74,7 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
            t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto, t."maaramitattava?", ttp.nimi))) AS tehtavat
 FROM tehtavaryhmaotsikko tro
          JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id
-         LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND t."vhh-tehtava?" = TRUE
+         LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND t."vhu-tehtava?" = TRUE
          LEFT JOIN toimenpide trtp ON tr.toimenpide_id = trtp.id -- Tehtäväryhmän toimenpide
          JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
 WHERE tro.urakkatyyppi = 'vesivayla-hoito'

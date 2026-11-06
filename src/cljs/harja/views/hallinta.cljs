@@ -94,7 +94,7 @@
       ^{:key "tehtavaryhmatjatehtavat"}
       [tehtava-nakyma/tehtavat])
 
-    "VVH tehtäväryhmät ja tehtävät"
+    "VHU tehtäväryhmät ja tehtävät"
     :vesivayla-tehtavaryhmatjatehtavat
     (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
             (oikeudet/hallinta-jarjestelmaasetukset))

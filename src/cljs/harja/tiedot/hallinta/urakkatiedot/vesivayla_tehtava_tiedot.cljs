@@ -45,7 +45,7 @@
 
   HaeTehtavaryhmaotsikot
   (process-event [_ app]
-    (tuck-apurit/post! :hae-vvh-tehtavaryhmaotsikot
+    (tuck-apurit/post! :hae-vhu-tehtavaryhmaotsikot
       {}
       {:onnistui ->HaeTehtavaryhmaotsikotOnnistui
        :epaonnistui ->HaeTehtavaryhmaotsikotEpaonnistui
@@ -59,12 +59,12 @@
   HaeTehtavaryhmaotsikotEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.error "HaeVvhTehtavaryhmaotsikotEpaonnistui :: error:" (pr-str vastaus))
+      (js/console.error "HaeVhuTehtavaryhmaotsikotEpaonnistui :: error:" (pr-str vastaus))
       (assoc app :tehtavaryhmaotsikot nil)))
 
   MuokkaaTehtavaryhmat
   (process-event [{rivit :rivit} app]
-    (tuck-apurit/post! :hallinta-tallenna-vvh-tehtavaryhmat
+    (tuck-apurit/post! :hallinta-tallenna-vhu-tehtavaryhmat
       {:muokatut-tehtavaryhmat rivit}
       {:onnistui ->MuokkaaTehtavaryhmatOnnistui
        :epaonnistui ->MuokkaaTehtavaryhmatEpaonnistui
@@ -78,12 +78,12 @@
   MuokkaaTehtavaryhmatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.error "MuokkaaVvhTehtavaryhmatEpaonnistui :: error:" (pr-str vastaus))
+      (js/console.error "MuokkaaVhuTehtavaryhmatEpaonnistui :: error:" (pr-str vastaus))
       (assoc app :tehtavaryhmaotsikot nil)))
 
   MuokkaaTehtavat
   (process-event [{rivit :rivit} app]
-    (tuck-apurit/post! :hallinta-tallenna-vvh-tehtavat
+    (tuck-apurit/post! :hallinta-tallenna-vhu-tehtavat
       {:muokatut-tehtavat rivit}
       {:onnistui ->MuokkaaTehtavatOnnistui
        :epaonnistui ->MuokkaaTehtavatEpaonnistui
@@ -97,5 +97,5 @@
   MuokkaaTehtavatEpaonnistui
   (process-event [{vastaus :vastaus} app]
     (do
-      (js/console.error "MuokkaaVvhTehtavatEpaonnistui :: error:" (pr-str vastaus))
+      (js/console.error "MuokkaaVhuTehtavatEpaonnistui :: error:" (pr-str vastaus))
       (assoc app :tehtavaryhmaotsikot nil))))
