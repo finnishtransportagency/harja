@@ -98,6 +98,16 @@
     (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
         (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    ;; vvh = vesivayla-hoito
+    (julkaise-palvelu http-palvelin :hae-vvh-tehtavaryhmaotsikot
+      (fn [kayttaja tiedot]
+        (hae-vvh-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-vvh-tehtavaryhmat
+      (fn [kayttaja tiedot]
+        (tallenna-vvh-tehtavaryhmat db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-vvh-tehtavat
+      (fn [kayttaja tiedot]
+        (tallenna-vvh-tehtavat db kayttaja tiedot)))
     (julkaise-palvelu http-palvelin :hae-suoritettavat-tehtavat
       (fn [kayttaja tiedot]
         (hae-suoritettavat-tehtavat db kayttaja tiedot)))
@@ -111,6 +121,9 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-mhu-tehtavaryhmaotsikot
+      :hae-vvh-tehtavaryhmaotsikot
+      :hallinta-tallenna-vvh-tehtavaryhmat
+      :hallinta-tallenna-vvh-tehtavat
       :hae-suoritettavat-tehtavat
       :hallinta-tallenna-tehtavaryhmat
       :hallinta-tallenna-tehtavat)

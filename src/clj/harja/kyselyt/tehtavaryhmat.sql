@@ -51,6 +51,30 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
            LEFT JOIN toimenpide trtp ON tr.toimenpide_id = trtp.id -- Tehtäväryhmän toimenpide
            JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
  GROUP BY tro.id, tr.id, tro.otsikko, trtp.nimi, tr.jarjestys
+
+-- name: hae-vvh-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
+SELECT tro.id        AS tehtavaryhmaotsikko_id,
+       tro.otsikko,
+       tr.id         AS tehtavaryhma_id,
+       tr.nimi,
+       tr.voimassaolo_alkuvuosi,
+       tr.voimassaolo_loppuvuosi,
+       tr.jarjestys,
+       tr.nakyva,
+       tr.versio,
+       tr.yksiloiva_tunniste,
+       trtp.nimi AS toimenpide,
+       JSONB_AGG(ROW_TO_JSON(ROW (t.id, t.nimi, t.yksikko, t.jarjestys, t.api_seuranta, t.suoritettavatehtava,
+           t.piilota, t.api_tunnus, t."mhu-tehtava?", t.yksiloiva_tunniste,
+           t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.kasin_lisattava_maara,
+           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto, t."maaramitattava?", ttp.nimi))) AS tehtavat
+FROM tehtavaryhmaotsikko tro
+         JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id
+         LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND t."mhu-tehtava?" = FALSE
+         LEFT JOIN toimenpide trtp ON tr.toimenpide_id = trtp.id -- Tehtäväryhmän toimenpide
+         JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
+WHERE tro.urakkatyyppi = 'vesivayla-hoito'
+GROUP BY tro.id, tr.id, tro.otsikko, trtp.nimi, tr.jarjestys
 ORDER BY tro.otsikko ASC, tr.jarjestys ASC;
 
 -- name: paivita-tehtavaryhma!
