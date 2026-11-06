@@ -1,6 +1,5 @@
 (ns harja.tiedot.urakka.laadunseuranta.sanktiot
-  (:require [clojure.string :as str]
-            [cljs.core.async :refer [<!]]
+  (:require [cljs.core.async :refer [<!]]
             [reagent.core :refer [atom]]
             [reagent.ratom :refer [reaction]]
 
@@ -14,7 +13,8 @@
             [harja.domain.tierekisteri :as tr]
             [harja.asiakas.kommunikaatio :as k]
             [harja.tiedot.urakka.laadunseuranta :as laadunseuranta]
-            [harja.domain.laadunseuranta.sanktio :as domain-sanktio])
+            [harja.domain.laadunseuranta.sanktio :as domain-sanktio]
+            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain])
   (:require-macros [harja.atom :refer [reaction<!]]
                    [cljs.core.async.macros :refer [go]]))
 
@@ -109,14 +109,6 @@
 (defn valitun-urakan-sanktiotyypit
   [laji]
   (domain-sanktio/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
-
-(defn sanktiotyypin-automaattinen-summa
-  [sanktiotyyppi]
-  (domain-sanktio/sanktiotyypin-kiintea-automaattinen-summa sanktiotyyppi))
-
-(defn sanktiotyypilla-kiintea-automaattinen-summa?
-  [sanktiotyyppi]
-  (domain-sanktio/sanktiotyypilla-kiintea-automaattinen-summamaaritys? sanktiotyyppi))
 
 (def valitun-urakan-sanktiolajit
   "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."
@@ -342,35 +334,11 @@
         #(valitut (domain-sanktio/rivin-tyyppi %))
         sanktiot-ja-bonukset))))
 
-(defn valittavat-kulun-kohdistukset [toimenpideinstanssit sanktion-tyyppi]
-  (case sanktion-tyyppi
-    "Muut hoitourakan tehtäväkokonaisuudet" (remove
-                                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
-                                              toimenpideinstanssit)
-    "Talvihoito, päätiet" (filter
-                            #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
-                            toimenpideinstanssit)
-    "Talvihoito, muut tiet" (filter
-                              #(str/includes? (str/lower-case (:tpi_nimi %)) "talvi")
-                              toimenpideinstanssit)
-    "Sorateiden hoito ja ylläpito" (filter
-                                     #(or (str/includes? (str/lower-case (:tpi_nimi %)) "soratie")
-                                        (str/includes? (str/lower-case (:tpi_nimi %)) "sorateiden"))
-                                     toimenpideinstanssit)
-    "Liikenneympäristön hoito" (filter
-                                 #(str/includes? (str/lower-case (:tpi_nimi %)) "liikenne")
-                                 toimenpideinstanssit)
-    toimenpideinstanssit))
-
 (defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi sanktio-atom]
-  (cond
-    ;; MHU25+: näytetään vain Hoidonjohtopalkkio sekä suorasanktiolle että laatupoikkeaman sanktiolle
-    (> urakan-alkuvuosi 2024)
-    (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
-
-    ;; MHU24 tai vanhempi: suodatetaan tyypin mukaan
-    :else
-    (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))))
+  (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+    @urakka/urakan-toimenpideinstanssit
+    urakan-alkuvuosi
+    (get-in @sanktio-atom [:tyyppi :nimi])))
 
 (defn sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]
   ;; Bonuksilla ei tällä hetkellä ole kuvausta.

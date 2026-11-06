@@ -620,3 +620,53 @@ SELECT bpr.id,
             ('POP MHU Suomussalmi 2024-2029', DATE '2026-04-15', 450)
           ) AS manuaalinen(urakan_nimi, pvm, maara)
           ON manuaalinen.urakan_nimi = tiedot.urakan_nimi;
+
+-- Määräystapa-lukutilan ja -muokkauksen selainvarmennukseen (MHU25, näkyvä urakka)
+WITH tiedot AS (
+    SELECT tpi.id AS toimenpideinstanssi,
+           u.id AS urakka,
+           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
+      FROM urakka u
+           JOIN toimenpideinstanssi tpi
+             ON tpi.urakka = u.id
+            AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+     WHERE u.nimi = 'POP MHU Kajaani 2025-2030'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Maaraystapa-testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-02-15',
+             DATE '2026-02-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Kajaanin maaraystapa-testisanktio'
+           FROM tiedot
+            RETURNING id
+)
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
+                     toimenpideinstanssi, tyyppi, suorasanktio, maaraystapa, luoja)
+SELECT 'A'::SANKTIOLAJI,
+       1000,
+       DATE '2026-02-15',
+       DATE '2026-02-15',
+       NULL,
+       uusi_laatupoikkeama.id,
+       toimenpideinstanssi,
+       (SELECT id FROM sanktiotyyppi WHERE koodi = 13),
+       FALSE,
+       'tyomaakokous',
+       kayttaja
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;
