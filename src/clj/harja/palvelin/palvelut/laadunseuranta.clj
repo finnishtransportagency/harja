@@ -305,7 +305,8 @@
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
-        tilannekuvan-maaritystapa (some-> olemassa-oleva-sanktio :maaritystapa keyword)
+        tilannekuvan-maaritystapa (when sama-profiilirivi?
+                                    (some-> olemassa-oleva-sanktio :maaritystapa keyword))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
                             (if (= :C laji)
@@ -319,8 +320,7 @@
                   (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
             (throw (IllegalArgumentException.
                      "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
-        normaalimaara (if (and sama-profiilirivi?
-                            tilannekuvan-automaattinen-maara?
+        normaalimaara (if (and tilannekuvan-automaattinen-maara?
                             (number? (:normaalimaara olemassa-oleva-sanktio))
                             (pos? (:normaalimaara olemassa-oleva-sanktio))
                             (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
