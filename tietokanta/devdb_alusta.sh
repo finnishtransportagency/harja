@@ -125,5 +125,9 @@ palauta_csrf_sessiot
 
 echo ""
 echo "Migraatiot ja testidata ajettu onnistuneesti."
-echo -e "Jos Harja REPL on käynnissä, palauta tarkkailijat toimintaan tarvittaessa komennolla (CLJ-replissä): \n
-(require 'harja.repl-tyokalut) (harja.repl-tyokalut/dev-restart)."
+printf '%b\n' \
+    "Jos Harja REPL on käynnissä, palauta tarkkailijat toimintaan" \
+    "suorittamalla (tarvittaessa) \033[1;36mClojure REPLissä:\033[0m" \
+    "  \033[32m(require 'harja.repl-tyokalut)\033[0m" \
+    "  \033[32m(harja.repl-tyokalut/dev-restart)\033[0m"
+echo ""
