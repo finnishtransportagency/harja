@@ -97,7 +97,8 @@
           [:div.padding-16.ei-sulje-sivupaneelia
            [:h2 (cond
                   (and lukutila? muokataan-vanhaa?)
-                  (str (sanktio-domain/sanktiolaji->teksti (:laji @muokattu)))
+                  (str (or (when (:bonus @muokattu) (:laji-nimi @muokattu))
+                           (sanktio-domain/sanktiolaji->teksti (:laji @muokattu))))
 
                   (and muokataan-vanhaa? (not bonusten-syotto?))
                   "Muokkaa sanktiota"
@@ -298,7 +299,10 @@
       [(if (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
          {:otsikko "Määrätty" :nimi :maarattypvm :fmt pvm/pvm-opt :leveys 1.3}
          {:otsikko "Käsitelty" :nimi :kasittelyaika :fmt pvm/pvm-opt :leveys 1.3})
-       {:otsikko "Laji" :nimi :laji :hae :laji :leveys 2.5 :fmt sanktio-domain/sanktiolaji->teksti}
+       {:otsikko "Laji" :nimi :laji
+        :hae (fn [rivi] (or (:laji-nimi rivi) (:laji rivi)))
+        :leveys 2.5
+        :fmt #(if (string? %) % (sanktio-domain/sanktiolaji->teksti %))}
        (when yllapitokohdeurakka?
          {:otsikko "Kohde" :nimi :kohde :leveys 2
           :hae (fn [rivi]
