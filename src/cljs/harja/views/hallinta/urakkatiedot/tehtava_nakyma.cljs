@@ -122,7 +122,7 @@
 
           [{:tyyppi :vetolaatikon-tila :leveys 0.5}
            {:nimi :otsikko
-            :leveys 3
+            :leveys 10
             :otsikko "Otsikko"
             :tyyppi :string}]
           tehtavaryhmaotsikot]

@@ -28,17 +28,16 @@
    :f17 :aluetieto,
    :f18 :maaramitattava?})
 
-(defn hae-mhu-tehtavaryhmaotsikot [db kayttaja tiedot]
+(defn- hae-tehtavaryhmaotsikot [db kayttaja tiedot haku]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
-  (log/debug "hae-mhu-tehtavaryhmaotsikot :: tiedot:" (pr-str tiedot))
-  (let [mhu-tehtavaryhmaotsikot (sort-by first
-                                  (group-by :otsikko
-                                    (tehtavaryhmat-kyselyt/hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat db)))
+  (let [tehtavaryhmaotsikot (sort-by first
+                              (group-by :otsikko (haku db)))
+        _ (println "hae-tehtavaryhmaotsikot :: tehtavaryhmaotsikot:" (pr-str tehtavaryhmaotsikot))
         otsikot-ja-ryhmat (reduce (fn [vastaus elementti]
                                     (let [tehtavaryhmat (->> (second elementti)
                                                           (mapv (fn [data]
-                                                                 (-> data
-                                                                   (update :tehtavat konversio/jsonb->clojuremap))))
+                                                                  (-> data
+                                                                    (update :tehtavat konversio/jsonb->clojuremap))))
 
                                                           (mapv #(update % :tehtavat
                                                                   (fn [rivit]
@@ -52,15 +51,25 @@
                                                 :otsikko (first elementti)
                                                 :tehtavaryhmat tehtavaryhmat}]
                                       (conj vastaus data)))
-                            [] mhu-tehtavaryhmaotsikot)]
+                            [] tehtavaryhmaotsikot)]
     otsikot-ja-ryhmat))
+
+(defn hae-mhu-tehtavaryhmaotsikot [db kayttaja tiedot]
+  (log/debug "hae-mhu-tehtavaryhmaotsikot :: tiedot:" (pr-str tiedot))
+  (hae-tehtavaryhmaotsikot db kayttaja tiedot
+    tehtavaryhmat-kyselyt/hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat))
+
+(defn hae-vhu-tehtavaryhmaotsikot [db kayttaja tiedot]
+  (log/debug "hae-vhu-tehtavaryhmaotsikot :: tiedot:" (pr-str tiedot))
+  (hae-tehtavaryhmaotsikot db kayttaja tiedot
+    tehtavaryhmat-kyselyt/hae-vhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat))
 
 (defn hae-suoritettavat-tehtavat [db kayttaja tiedot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (log/debug "hae-suoritettavat-tehtavat :: tiedot:" (pr-str tiedot))
   (toimenpidekoodit-kyselyt/hae-suoritettavat-tehtavat db))
 
-(defn tallenna-tehtavaryhmat [db kayttaja tiedot]
+(defn- tallenna-tehtavaryhmat* [db kayttaja tiedot hae-otsikot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (log/debug "tallenna-tehtavaryhmat :: tiedot:" (pr-str tiedot))
   (doseq [tehtavaryhma (:muokatut-tehtavaryhmat tiedot)
@@ -73,10 +82,15 @@
                   (tehtavaryhmat-kyselyt/paivita-tehtavaryhma! db tehtavaryhma))]]
 
     ;; Palauta kaikki tehtäväryhmäotsikot ja niihin liittyvät tehtävät - uudistukset tulevat samalla
-    (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (hae-otsikot db kayttaja tiedot)))
 
+(defn tallenna-tehtavaryhmat [db kayttaja tiedot]
+  (tallenna-tehtavaryhmat* db kayttaja tiedot hae-mhu-tehtavaryhmaotsikot))
 
-(defn tallenna-tehtavat [db kayttaja tiedot]
+(defn tallenna-vhu-tehtavaryhmat [db kayttaja tiedot]
+  (tallenna-tehtavaryhmat* db kayttaja tiedot hae-vhu-tehtavaryhmaotsikot))
+
+(defn- tallenna-tehtavat* [db kayttaja tiedot hae-otsikot]
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (log/debug "tallenna-tehtavat :: tiedot:" (pr-str tiedot))
   (doseq [tehtava (:muokatut-tehtavat tiedot)
@@ -89,7 +103,13 @@
                     (tehtavaryhmat-kyselyt/paivita-tehtava! db tehtava))]]
 
     ;; Palauta kaikki tehtäväryhmäotsikot ja niihin liittyvät tehtävät - uudistukset tulevat samalla
-    (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (hae-otsikot db kayttaja tiedot)))
+
+(defn tallenna-tehtavat [db kayttaja tiedot]
+  (tallenna-tehtavat* db kayttaja tiedot hae-mhu-tehtavaryhmaotsikot))
+
+(defn tallenna-vhu-tehtavat [db kayttaja tiedot]
+  (tallenna-tehtavat* db kayttaja tiedot hae-vhu-tehtavaryhmaotsikot))
 
 
 (defrecord TehtavatHallinta []
@@ -98,6 +118,16 @@
     (julkaise-palvelu http-palvelin :hae-mhu-tehtavaryhmaotsikot
       (fn [kayttaja tiedot]
         (hae-mhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    ;; vhu = vesivayla-hoito
+    (julkaise-palvelu http-palvelin :hae-vhu-tehtavaryhmaotsikot
+      (fn [kayttaja tiedot]
+        (hae-vhu-tehtavaryhmaotsikot db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-vhu-tehtavaryhmat
+      (fn [kayttaja tiedot]
+        (tallenna-vhu-tehtavaryhmat db kayttaja tiedot)))
+    (julkaise-palvelu http-palvelin :hallinta-tallenna-vhu-tehtavat
+      (fn [kayttaja tiedot]
+        (tallenna-vhu-tehtavat db kayttaja tiedot)))
     (julkaise-palvelu http-palvelin :hae-suoritettavat-tehtavat
       (fn [kayttaja tiedot]
         (hae-suoritettavat-tehtavat db kayttaja tiedot)))
@@ -111,6 +141,9 @@
   (stop [{:keys [http-palvelin] :as this}]
     (poista-palvelut http-palvelin
       :hae-mhu-tehtavaryhmaotsikot
+      :hae-vhu-tehtavaryhmaotsikot
+      :hallinta-tallenna-vhu-tehtavaryhmat
+      :hallinta-tallenna-vhu-tehtavat
       :hae-suoritettavat-tehtavat
       :hallinta-tallenna-tehtavaryhmat
       :hallinta-tallenna-tehtavat)
