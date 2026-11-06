@@ -27,6 +27,7 @@
             [harja.views.hallinta.palauteluokitukset :as pl]
             [harja.views.hallinta.viestitestaus-nakyma :as viestinakyma]
             [harja.views.hallinta.urakkatiedot.tehtava-nakyma :as tehtava-nakyma]
+            [harja.views.hallinta.urakkatiedot.vesivayla-tehtava-nakyma :as vesivayla-tehtava-nakyma]
             [harja.views.hallinta.tarjoushinnat :as tarjoushinnat]
             [harja.views.hallinta.rahavaraukset :as rahavaraukset]
             [harja.views.hallinta.urakkatiedot.toimenkuvat-nakyma :as toimenkuvat-nakyma]
@@ -92,6 +93,13 @@
     (when true
       ^{:key "tehtavaryhmatjatehtavat"}
       [tehtava-nakyma/tehtavat])
+
+    "VVH tehtäväryhmät ja tehtävät"
+    :vesivayla-tehtavaryhmatjatehtavat
+    (when (and (istunto/ominaisuus-kaytossa? :vesivayla)
+            (oikeudet/hallinta-jarjestelmaasetukset))
+      ^{:key "vesivayla-tehtavaryhmatjatehtavat"}
+      [vesivayla-tehtava-nakyma/vesivayla-tehtavat])
 
     "MHU tarjoushinnat"
     :mhu-tarjoushinnat
@@ -276,4 +284,3 @@
     (when true
       ^{:key "viestitestaus"}
       [viestinakyma/viestitestaus])]])
-
