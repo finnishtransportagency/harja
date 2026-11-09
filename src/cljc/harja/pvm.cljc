@@ -946,6 +946,11 @@
     {:alkupvm hoitokauden-alkupvm
      :loppupvm hoitokauden-loppupvm}))
 
+(defn hoitokausien-maara [alkupvm loppupvm]
+  (-
+    (vuosi loppupvm)
+    (vuosi alkupvm)))
+
 (defn tulevat-hoitovuodet
   "Palauttaa nykyvuosi ja loppupv välistä urakan hoitovuodet vectorissa tyyliin: [2020 2021 2022 2023 2024].
   Jos tuleville voisille ei kopioida mitään, palauttaa vectorissa vain nykyvuoden tyyliin: [2022]"

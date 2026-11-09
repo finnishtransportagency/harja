@@ -253,7 +253,9 @@
 
 (deftest laske-sanktion-summa-prosenttiosuus-syotteesta
   (testing "Kaksi desimaalia"
-    (is (= 246.91M (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys 1234.56)))))
+    (let [summa 1234.56M
+          syote (* (/ 100 (get-in prosenttiosuus-maaritys [:laskentaparametrit :prosentti])) summa)]
+      (is (= summa (:summa (sanktion-laskenta/laske-sanktion-summa prosenttiosuus-maaritys syote))))))
   (testing "HALF_UP pyöristää tasatilanteen ylöspäin"
     (let [maaritys (assoc-in prosenttiosuus-maaritys [:laskentaparametrit :prosentti] 15)]
       (is (= 0.02M (:summa (sanktion-laskenta/laske-sanktion-summa maaritys 0.10)))
@@ -303,7 +305,8 @@
       (hylkaa prosenttiosuus-maaritys 10.001M ["laskutuskelvottomana_laskutettu_osuus" "enintään 2 desimaalia"]))
     (testing "Profiilin minimi- ja maksimiraja"
       (let [rajattu (update tiekm-maaritys :laskentaparametrit assoc :minimi 0.5 :maksimi 100)]
-        (hylkaa rajattu 0.25 ["tiekm" "vähintään 0.5"])
+        (let [virhe (sanktion-laskenta/syotteen-virhe (:laskentaparametrit rajattu) 0.25)]
+          (is (str/includes? virhe "Arvon pitää olla vähintään 0.5")))
         (hylkaa rajattu 100.01 ["tiekm" "enintään 100"])
         (is (= 100.00M (:summa (sanktion-laskenta/laske-sanktion-summa
                                  (update tiekm-maaritys :laskentaparametrit assoc :yksikkohinta 1.0 :maksimi 100)

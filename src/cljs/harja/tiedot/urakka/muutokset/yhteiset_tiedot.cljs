@@ -35,6 +35,7 @@
                      :tavoitehinnan-muutokset nil
                      :suunniteltujen-maarien-muutokset nil
                      :budjettitavoitteet nil
+                     :muokattavat-hoitokaudet nil
                      :taulukko-nakyvissa? {:kirjatut-muutokset true
                                            :lasketut-muutokset false
                                            :rahavarausten-muutokset false
@@ -152,6 +153,7 @@
 
     (assoc app
       :haku-kaynnissa? false
+      :muokattavat-hoitokaudet (:muokattavat-hoitokaudet vastaus)
       :kirjatut-muutokset (:kirjatut-muutokset vastaus)
       :aiempien-hoitovuosien-pysyvat-muutokset (:aiempien-hoitovuosien-pysyvat-muutokset vastaus)
       :tehtava-maaramuutokset (:lasketut-muutokset vastaus)
