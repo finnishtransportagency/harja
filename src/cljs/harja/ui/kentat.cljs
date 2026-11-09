@@ -633,7 +633,7 @@
 
 (defn vayla-checkbox
   [{:keys [input-id lukutila? disabled? arvo data piilota-checkbox?
-           teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
+           teksti valitse! checkbox-style label-luokka label-id pieni-teksti? indeterminate]}]
   (let [arvo (or arvo false)
         input-id (or input-id
                    (gensym "checkbox-input-id-"))
@@ -660,11 +660,12 @@
                                       label-luokka
                                       (when disabled? "disabled")
                                       (when indeterminate "indeterminate")
-                                      (when piilota-checkbox? "autofill-teksti"))
+                                      (when piilota-checkbox? "autofill-teksti")
+                                      (when pieni-teksti? "lomake-checkbox-pieni"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
-      teksti]]))
+      [:span.lomake-checkbox-teksti teksti]]]))
 
 (defn kylla-ei-valinta
   "Kolmitilainen valinta: [✓] [?] [✗]"
@@ -773,7 +774,7 @@
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka piilota-checkbox?
-                                         vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
+                                         pieni-teksti? vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
   (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data) (instance? ratom/RCursor data)))
         input-id (or input-id (str "harja-checkbox-" (gensym)))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
@@ -782,7 +783,7 @@
     (komp/luo
       (when-not boolean-arvo? (komp/piirretty paivita-valitila))
       (when-not boolean-arvo? (komp/kun-muuttui paivita-valitila))
-      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue? valitse! label-luokka]} data]
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue? valitse! label-luokka pieni-teksti?]} data]
         (let [_ (when boolean-arvo? (assert (ifn? valitse!) "Jos checkboxin datan tyyppi on boolean atomin sijasta, valitse! pitää olla funktio"))
               arvo (cond
                      boolean-arvo? data
@@ -806,6 +807,7 @@
                                            :valitse! valitse!
                                            :arvo arvo
                                            :label-luokka label-luokka
+                                           :pieni-teksti? pieni-teksti?
                                            :indeterminate (= ::indeterminate data)}]]
              (if nayta-rivina?
                [:table.boolean-group
@@ -816,11 +818,12 @@
 
 ;; vayla-tyylinen checkbox halutaan näyttää myös lomakkeella myös lukutilassa,
 ;; Pidetään muuntyylisillä default :nayta-arvo-toiminnallisuus.
-(defmethod nayta-arvo :checkbox [{:keys [teksti]} data]
+(defmethod nayta-arvo :checkbox [{:keys [teksti pieni-teksti?]} data]
   [:div.boolean
    (vayla-checkbox {:data data
                     :input-id (str "harja-checkbox" (gensym))
                     :teksti teksti
+                    :pieni-teksti? pieni-teksti?
                     :disabled? true
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])

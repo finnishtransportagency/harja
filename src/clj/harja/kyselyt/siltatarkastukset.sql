@@ -183,9 +183,9 @@ SELECT st.id,
        tarkastaja,
        st.luotu,
        st.luoja,
-       muokattu,
-       muokkaaja,
-       poistettu,
+       st.muokattu,
+       st.muokkaaja,
+       st.poistettu,
        (SELECT array_agg(
                    concat(k.kohde, '=',
                           CASE
@@ -203,10 +203,10 @@ SELECT st.id,
        liite."virustarkastettu?"        AS "liite_virustarkastettu?"
 FROM siltatarkastus st
        LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
-       LEFT JOIN liite ON skl.liite = liite.id
-WHERE silta = :silta
-  AND NOT poistettu
-ORDER BY tarkastusaika DESC;
+       LEFT JOIN liite ON skl.liite = liite.id AND liite.poistettu IS NOT TRUE
+WHERE st.silta = :silta
+  AND st.poistettu IS NOT TRUE
+ORDER BY st.tarkastusaika DESC;
 
 -- name: hae-siltatarkastus
 -- Hakee yhden siltatarkastuksen id:n mukaan
@@ -217,9 +217,9 @@ SELECT st.id,
        tarkastaja,
        st.luotu,
        st.luoja,
-       muokattu,
-       muokkaaja,
-       poistettu,
+       st.muokattu,
+       st.muokkaaja,
+       st.poistettu,
        (SELECT array_agg(
                    concat(k.kohde, '=',
                           CASE
@@ -236,9 +236,9 @@ SELECT st.id,
        liite.liite_oid                  as liite_oid
 FROM siltatarkastus st
        LEFT JOIN siltatarkastus_kohde_liite skl ON st.id = skl.siltatarkastus
-       LEFT JOIN liite ON skl.liite = liite.id
+       LEFT JOIN liite ON skl.liite = liite.id AND liite.poistettu IS NOT TRUE
 WHERE st.id = :id
-  AND poistettu = FALSE;
+  AND st.poistettu = FALSE;
 
 -- name: hae-siltatarkastus-ulkoisella-idlla-ja-urakalla
 -- Hakee yhden siltatarkastuksen ulkoisella id:llä ja luojalla
@@ -253,7 +253,7 @@ SELECT id,
        muokkaaja,
        poistettu
 FROM siltatarkastus
-WHERE ulkoinen_id = :id
+WHERE ulkoinen_id = :id::TEXT
   AND urakka = :urakka-id
   AND poistettu = FALSE;
 

@@ -15,7 +15,7 @@
                  [org.clojure/core.async "1.7.701"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "1.1.363"]
+                 [com.cognitect/transit-clj "1.1.367"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -98,7 +98,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.11" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.12" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -174,7 +174,7 @@
                          [tools.jackson.core/jackson-core "3.2.4"]
                          [com.fasterxml.jackson.core/jackson-core "2.22.4"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
-                         [com.google.code.gson/gson "2.14.0"]]
+                         [com.google.code.gson/gson "2.15.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant true}}

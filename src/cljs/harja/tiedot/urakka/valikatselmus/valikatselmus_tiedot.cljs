@@ -27,7 +27,7 @@
             (let [[avain paatoksen-tiedot] (first paatos)]
               (when (:id paatoksen-tiedot)
                 avain)))
-          paatokset)))
+      paatokset)))
 
 (defn scrollaa-muutoksiin []
   ;; Kutsutaan kun käyttäjä tallentaa oikaisua 
@@ -45,13 +45,17 @@
         muutokset))))
 
 (defn kasittele-throw-virhe [vastaus]
-
-  (let [raaka-virhe (or (get-in vastaus [:parse-error :original-text]) (:response vastaus))
-        raaka-virhe (if (nil? raaka-virhe) "Palvelin palautti virheen!" raaka-virhe)
+  (let [raaka-virhe (or
+                      ;; Palvelin vastaa virheellä
+                      (get-in vastaus [:response :virheet :viesti])
+                      (get-in vastaus [:parse-error :original-text])
+                      (:response vastaus)
+                      ;; Fallback
+                      "Palvelin palautti virheen!")
+        raaka-virhe (str raaka-virhe)
         raaka-virhe (str/replace raaka-virhe #"\\" "")
-        raaka-virhe (str/replace raaka-virhe #"\"" "")
-        virheet (str/join " " (str/split raaka-virhe #" "))]
-    virheet))
+        raaka-virhe (str/replace raaka-virhe #"\"" "")]
+    (str/join " " (str/split raaka-virhe #" "))))
 
 ;; Oikaisut
 (defrecord TallennaOikaisu [oikaisu id])
@@ -138,7 +142,12 @@
   HaeValikatselmuksenTiedot
   (process-event [{urakkaid :urakkaid hoitovuosi :hoitovuosi} app]
     (hae-valikatselmuksen-tiedot urakkaid hoitovuosi)
-    (assoc app :haku-kaynnissa? true))
+    (assoc app
+      :haku-kaynnissa? true
+      :hoitokauden-alkuvuosi hoitovuosi
+      :valittu-hoitokausi [(pvm/hoitokauden-alkupvm hoitovuosi)
+                           (pvm/paivan-lopussa
+                             (pvm/hoitokauden-loppupvm (inc hoitovuosi)))]))
 
   HaeValikatselmuksenTiedotOnnistui
   (process-event [{vastaus :vastaus} app]
