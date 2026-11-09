@@ -332,6 +332,8 @@
                         :soveltuvuuskonteksti soveltuvuuskonteksti
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
+        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                              (get-in profiilirivi [:profiilirivi :id]))
         profiilin-summamaaritykset (:profiilirivi profiilirivi)
         laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys profiilin-summamaaritykset)
         maaritystapa (if laskettu-maaritys
@@ -348,13 +350,13 @@
         automaattinen-summa-raakana (sanktion-summamaaritys/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
         sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
-                             (get-in profiilirivi [:profiilirivi :id]))
-        tilannekuvan-maaritystapa (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
-                                    ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
-                                    ;; Tilannekuva koskee vain samaa profiiliriviä; riviä vaihdettaessa
-                                    ;; määritystapa ja normaalimäärä ratkaistaan uuden rivin mukaan.
-                                    (when (and sama-profiilirivi? (not= :laskettu tallennettu))
-                                      tallennettu))
+                              (get-in profiilirivi [:profiilirivi :id]))
+        tilannekuvan-maaritystapa (when sama-profiilirivi?
+                                    (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
+                                      ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
+                                      ;; Tilannekuva koskee vain samaa profiiliriviä; riviä vaihdettaessa
+                                      ;; määritystapa ja normaalimäärä ratkaistaan uuden rivin mukaan.
+                                      (when-not (= :laskettu tallennettu) tallennettu)))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
                             (if (= :C laji)

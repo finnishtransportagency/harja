@@ -98,6 +98,9 @@
                   :vastausosoite "harja-ala-vastaa@vayla.fi"
                   :sahkoposti-lahetys-url "/harja/api/sahkoposti/xml"
                   :sahkoposti-ja-liite-lahetys-url "/harja/api/sahkoposti-ja-liite/xml"
+                  :sahkopostilahetys-url #=(eval (harja.tyokalut.env/env "HARJA_API_SAHKOPOSTI_URL" ""))
+                  :apiavain #=(eval (harja.tyokalut.env/env "HARJA_API_SAHKOPOSTI_APIAVAIN" ""))
+                  :aktiivinen? #=(eval (harja.tyokalut.env/env "HARJA_API_SAHKOPOSTI_AKTIIVINEN" false))
                   ;; :palvelin "solita-service-1.solita.fi" ;; Kommentoitu, ettei mene vahinkomaileja (esim. db-singletonin käsittelyssä)
                   :palvelin "http://localhost:8084"
                   :kayttajatunnus "harja"
