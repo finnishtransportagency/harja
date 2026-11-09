@@ -17,7 +17,7 @@
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 
-(defn indeksi-grid [{:keys [indeksinimi koodi]}]
+(defn indeksi-grid [{:keys [indeksinimi koodi]} urakkatyyppi]
 
   (let [indeksit @i/indeksit
         tallennus-kaynnissa? (contains? @i/indeksin-tallennus-kaynnissa indeksinimi)
@@ -31,13 +31,14 @@
         platts? (str/includes? indeksinimi "Platts")
         tarkkuus (if platts? 2 1)
         formatter #(fmt/desimaaliluku-opt % tarkkuus)
-        vihje (when platts? "Plattsin indeksit syötettävä muodossa euroa / tonni.")]
+        vihje (when platts? "Plattsin indeksit syötettävä muodossa euroa / tonni.")
+        hoito-tyyppi (= :hoito (:arvo urakkatyyppi))]
     [y/himmennys {:himmenna?            tallennus-kaynnissa?
                   :himmennyksen-sisalto (when tallennus-kaynnissa?
                                           [y/ajax-loader])}
      [:span.indeksi-grid
       [grid/grid
-       {:otsikko            (str indeksinimi (when koodi (str " (koodi: " koodi ")")))
+       {:otsikko            (str indeksinimi (when hoito-tyyppi ", teiden ylläpidon osaindeksi") (when koodi (str " (koodi: " koodi ")")))
         :tyhja              (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")
         :tallenna           #(i/tallenna-indeksi indeksinimi %)
         :tunniste           :vuosi
@@ -75,7 +76,7 @@
        (for [i indeksit]
          ^{:key (:id i)}
          [:span
-          [indeksi-grid i]
+          [indeksi-grid i urakkatyyppi]
           [:hr]])]
       [:div "Ei indeksejä valitulle urakkatyypille"]))
 
@@ -95,4 +96,3 @@
       #(reset! yhteiset/valittu-urakkatyyppi %)]
 
      [indeksitaulukot urakkatyyppi indeksit]]))
-
