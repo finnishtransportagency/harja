@@ -214,15 +214,21 @@
                                     :lihavoi? true
                                     :rivi (rivi (:valiotsikko r) "" "" "" "" "" "" "")}
                                    ;; Normaali datarivi
-                                   (rivi (or (:tehtava r) "")
-                                     (or (:yksikko r) "")
-                                     (or (:syy r) "")
-                                     (:suunniteltu_maara r)
-                                     (or (:maara r) 0)
-                                     (or (:maaramuutos r) 0)
-                                     (or (:kirjatut_kulut_summa r) 0)
-                                     (or (:yksikkohinta r) 0)
-                                     (laske-tavoitehinnan-muutos r))))
+                                   (let [tavoitehinnan-muutos (laske-tavoitehinnan-muutos r)]
+                                     (rivi
+                                       (or (:tehtava r) "")
+                                       (or (:yksikko r) "")
+                                       (:suunniteltu_maara r)
+                                       (or (:maara r) 0)
+                                       (or (:maaramuutos r) 0)
+                                       (or (:kirjatut_kulut_summa r) 0)
+                                       (or (:yksikkohinta r) 0)
+                                       (if (= (bigdec tavoitehinnan-muutos) 0.0M)
+                                         ;; Käyttäjän mielestä on epäloogista, että tekemättömän tehtävän tavoitehintamuutoksena näytetään oletuksena nollaa. 
+                                         ;; Tekemättömän tehtävän tavoitehintamuutos ei voi olla koskaan nolla euroa, vaan se on aina miinusta.
+                                         "-"
+                                         tavoitehinnan-muutos)
+                                       (or (:syy r) "")))))
                            maaramuutokset)
         maaramuutokset-yhteensa (reduce + 0 (map laske-tavoitehinnan-muutos maaramuutokset))
         maaramuutokset-yhteensarivi [{:lihavoi? true
@@ -235,13 +241,13 @@
                 :ei-footer-muokkauspaneelia? true}
      [{:leveys 10 :otsikko "Tehtävä"}
       {:leveys 4 :otsikko "Yksikkö"}
-      {:leveys 8 :otsikko "Muutoksen syy / lisätieto"}
       {:leveys 4 :otsikko "Suunniteltu määrä" :fmt :numero-opt}
       {:leveys 4 :otsikko "Toteutunut määrä" :fmt :numero-opt}
       {:leveys 4 :otsikko "Määrämuutos (+/-)" :fmt :numero-opt}
       {:leveys 5 :otsikko "Kohdistetut kulut (€)" :fmt :raha}
       {:leveys 5 :otsikko "Yksikköhinnan keskiarvo (€)" :fmt :raha}
-      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
+      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}
+      {:leveys 8 :otsikko "Muutoksen syy / lisätieto"}]
      (into [] (concat maaramuutosrivit (when-not (empty? maaramuutokset) maaramuutokset-yhteensarivi)))]))
 
 (defn muodosta-rahavarausten-muutokset [db urakka-id hoitokauden-alkuvuosi kasittelija]
@@ -252,11 +258,12 @@
         rahavaraus-datarivit (filterv #(not= (:id %) :yhteenveto) rahavaraukset)
         rahavaraus-yhteenveto (first (filter #(= (:id %) :yhteenveto) rahavaraukset))
         rahavarausrivit (mapv (fn [r]
-                                (rivi (or (:nimi r) "")
-                                  (or (:syy r) "")
+                                (rivi
+                                  (or (:nimi r) "")
                                   (or (:summa-indeksikorjattu r) 0)
                                   (or (:toteumat r) 0)
-                                  (or (:tavoitehinnan-muutos r) 0)))
+                                  (or (:tavoitehinnan-muutos r) 0)
+                                  (or (:syy r) "")))
                           rahavaraus-datarivit)
         rahavaraukset-yhteensarivi [{:lihavoi? true
                                      :korosta-hennosti? true
@@ -271,10 +278,10 @@
                 :tyhja (when (empty? rahavaraukset) "Ei muutoksia.")
                 :excel-alkutekstit (when (= kasittelija :excel) [[:otsikko-heading "Rahavarausten muutokset"]])} ;; Näytä otsikko, jos excel
      [{:leveys 10 :otsikko "Rahavaraus"}
-      {:leveys 10 :otsikko "Muutoksen syy"}
       {:leveys 5 :otsikko "Suunniteltu määrä (€)" :fmt :raha}
       {:leveys 5 :otsikko "Toteutunut määrä (€)" :fmt :raha}
-      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}]
+      {:leveys 5 :otsikko "Tavoitehinnan muutos (€)" :fmt :raha}
+      {:leveys 10 :otsikko "Muutoksen syy"}]
      (into [] (concat rahavarausrivit (when-not (empty? rahavaraukset) rahavaraukset-yhteensarivi)))]))
 
 (defn muodosta-laskutusrajan-tarkistukset [db urakka-id hoitokauden-alkuvuosi _budjettitavoite
@@ -300,7 +307,7 @@
                                   (str "+" (fmt/desimaaliluku-opt laskutusrajan-tarkistus 2 true))
                                   0.00)
                                 (or tarkistettu-laskutusraja 0)])
-                          laskutusrajan-tarkistukset)]
+                         laskutusrajan-tarkistukset)]
 
     [[:taulukko {:otsikko "Laskutusrajan automaattiset tarkistukset"
                  :viimeinen-rivi-yhteenveto? false
@@ -389,12 +396,12 @@
        [:teksti "Ei tavoitehinnan muutoksia."]
        [:tyhja-rivi nil]]
       [[:taulukko {:viimeinen-rivi-yhteenveto? true
-                                                :sheet-nimi "Tavoitehinnan muutokset"
-                                                :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title ajankohtakuvaus])}
-                                     [{:leveys 7 :otsikko "Muutos"}
-                                      {:leveys 15 :otsikko "Perustelu"}
-                                      {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
-                                     (into [] (concat oikaisurivit (when-not (empty? oikaisut) oikaisut-yhteensarivi)))]])))
+                   :sheet-nimi "Tavoitehinnan muutokset"
+                   :excel-alkutekstit (when (= kasittelija :excel) [otsikko-title ajankohtakuvaus])}
+        [{:leveys 7 :otsikko "Muutos"}
+         {:leveys 15 :otsikko "Perustelu"}
+         {:leveys 5 :otsikko "Määrä (€)" :fmt :raha}]
+        (into [] (concat oikaisurivit (when-not (empty? oikaisut) oikaisut-yhteensarivi)))]])))
 
 (defn muodosta-lisatoiden-kulukohdistukset [db urakka-id alkupvm loppupvm urakka-nimi kasittelija]
   (let [lisatyot (hae-lisatoiden-kulukohdistukset db {:urakka-id urakka-id
@@ -450,9 +457,9 @@
         aikajakso (str (pvm/pvm alkupvm) " - " (pvm/pvm loppupvm))
         maaramuutokset (when urakka-id
                          (muutos-palvelu/hae-tehtava-maaramuutokset db user {:urakka-id urakka-id
-                                                                              :valittu-hoitokausi [alkupvm loppupvm]
-                                                                              :hoitokaudet urakan-hoitokaudet
-                                                                              :laskenta-automatiikka? true}))
+                                                                             :valittu-hoitokausi [alkupvm loppupvm]
+                                                                             :hoitokaudet urakan-hoitokaudet
+                                                                             :laskenta-automatiikka? true}))
         ;; Hoitovuoden alun indeksikorjattu tavoitehinta budjettisuunnittelun kautta
         budjettitavoite (budjetti-q/budjettitavoite-vuodelle db urakka-id hoitokauden-alkuvuosi)
         hoitovuoden-alun-indeksikorjattu-tavoitehinta (or (:tavoitehinta-indeksikorjattu budjettitavoite) 0)]

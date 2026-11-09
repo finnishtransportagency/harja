@@ -109,8 +109,8 @@
   (let [osoite (-> cell .getAddress)
         sarake (first (.toString osoite))]
     (.setCellFormula
-     cell
-     (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
+      cell
+      (str "SUM(" sarake (or alkurivi 1) ":" sarake (or loppurivi (.getRow osoite)) ")"))
     (evaluoi-kaava workbook cell)))
 
 (defmethod aseta-kaava! :summaa-vieressaolevat [[_ {:keys [alkusarake loppusarake]}] workbook cell]
@@ -118,8 +118,8 @@
         rivi (parsi-rivinumero osoite)
         loppusarake (or loppusarake (parsi-sarakekirjain osoite))]
     (.setCellFormula
-     cell
-     (str "SUM(" (or alkusarake "A") rivi ":" loppusarake rivi ")")))
+      cell
+      (str "SUM(" (or alkusarake "A") rivi ":" loppusarake rivi ")")))
   (evaluoi-kaava workbook cell))
 
 (defn- ilman-soft-hyphenia [data]
@@ -255,6 +255,12 @@
 
 (defmethod muodosta-solu :infopallura [_ _]
   nil)
+
+(defmethod muodosta-solu :teksti [[_ teksti] solun-tyyli]
+  (when (and
+          (string? teksti)
+          (not (str/blank? teksti)))
+    [teksti solun-tyyli]))
 
 (defmethod muodosta-solu :teksti-ja-info [[_ {:keys [arvo]}] solun-tyyli]
   [arvo solun-tyyli])
@@ -468,10 +474,10 @@
 
 (defn- excel-alkuteksti-tyyli [workbook tyyppi]
   (case tyyppi
-    :otsikko-title         (excel/create-cell-style! workbook {:font (font-otsikko 18)})
-    :otsikko-heading       (excel/create-cell-style! workbook {:font (font-otsikko 14)})
+    :otsikko-title (excel/create-cell-style! workbook {:font (font-otsikko 18)})
+    :otsikko-heading (excel/create-cell-style! workbook {:font (font-otsikko 14)})
     :otsikko-heading-small (excel/create-cell-style! workbook {:font (font-otsikko 12)})
-    :teksti                (excel/create-cell-style! workbook {:font (font-leipateksti 12)})
+    :teksti (excel/create-cell-style! workbook {:font (font-leipateksti 12)})
     (excel/create-cell-style! workbook {:font (font-leipateksti 12)})))
 
 (defmethod muodosta-excel :taulukko [[_ {:keys [nimi otsikko sheet-otsikko excel-alkutekstit raportin-tiedot
@@ -550,7 +556,7 @@
           (map-indexed
             (fn [rivi-nro rivi]
               (let [[tyyppi teksti] (excel-alkuteksti->elementti rivi)
-                    tyyli           (excel-alkuteksti-tyyli workbook tyyppi)]
+                    tyyli (excel-alkuteksti-tyyli workbook tyyppi)]
                 (tee-tekstirivi sheet (+ alkutekstien-alkurivi rivi-nro) teksti tyyli)))
             excel-alkutekstit)))
 
