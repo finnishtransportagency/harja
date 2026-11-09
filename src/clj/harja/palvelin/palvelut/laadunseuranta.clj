@@ -291,6 +291,8 @@
                         :soveltuvuuskonteksti soveltuvuuskonteksti
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
+        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                              (get-in profiilirivi [:profiilirivi :id]))
         profiilin-summamaaritykset (:profiilirivi profiilirivi)
         maaritystapa (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa)
         profiilin-manuaalinen-viitemaara
@@ -303,7 +305,8 @@
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
-        tilannekuvan-maaritystapa (some-> olemassa-oleva-sanktio :maaritystapa keyword)
+        tilannekuvan-maaritystapa (when sama-profiilirivi?
+                                    (some-> olemassa-oleva-sanktio :maaritystapa keyword))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
                             (if (= :C laji)
@@ -354,8 +357,7 @@
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
                 :normaalimaara normaalimaara
                 :omailmoitettu omailmoitettu
-                :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
-                                         (get-in profiilirivi [:profiilirivi :id]))
+                :sanktio_profiili_rivi (get-in profiilirivi [:profiilirivi :id])
                 :maaritystapa (some-> (or tilannekuvan-maaritystapa maaritystapa) name)
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)
