@@ -106,12 +106,12 @@ VALUES ((SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), TRUE, TRUE, 0
 -- Lisätään vanhalle vesiväyläurakalle toimenkuvia vesiväyläurakoiden uusien toimintojen kehittämistä varten
 insert into johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id", urakkakohtainen_nimi)
 VALUES
-    ('sopimusvastaava (ennen urakka-ajan alkua)', 60, 'Sopimusvastaava (ennen urakka-ajan alkua)'),
-    ('sopimusvastaava', 60, 'Sopimusvastaava'),
-    ('vastuunalainen työnjohtaja (ennen urakka-ajan alkua)', 60, 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'),
-    ('vastuunalainen työnjohtaja', 60, 'Vastuunalainen työnjohtaja'),
-    ('2. työnjohtaja', 60, '2. Työnjohtaja'),
-    ('työnjohtoharjoittelija', 60, 'Työnjohtoharjoittelija');
+    ('sopimusvastaava (ennen urakka-ajan alkua)', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Sopimusvastaava (ennen urakka-ajan alkua)'),
+    ('sopimusvastaava', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Sopimusvastaava'),
+    ('vastuunalainen työnjohtaja (ennen urakka-ajan alkua)', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'),
+    ('vastuunalainen työnjohtaja', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Vastuunalainen työnjohtaja'),
+    ('2. työnjohtaja', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), '2. Työnjohtaja'),
+    ('työnjohtoharjoittelija', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Työnjohtoharjoittelija');
 
 -- SOPIMUS
 INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)
