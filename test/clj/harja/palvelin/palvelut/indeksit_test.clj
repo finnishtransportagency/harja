@@ -7,6 +7,7 @@
             [com.stuartsierra.component :as component]
             [clojure.string :as str]
             [harja.domain.urakka :as urakka]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.palvelin.palvelut.indeksit :as indeksit]
             [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
 
@@ -603,6 +604,17 @@
     (is (= 144M
           (urakka-tavoite-kattohinta-indeksikorjattu
             tavoitehinta-2)))))
+
+(deftest testaa-hae-vertailu-kk-apufunktio
+  (testing "MHU-urakan vertailukuukausi"
+    (is (= 9 (indeksi-kyselyt/hae-vertailu-kk "hoito" 2019 2019)))
+    (is (= 8 (indeksi-kyselyt/hae-vertailu-kk "hoito" 2023 2023))))
+
+  (testing "vesiväyläurakan ensimmäinen urakkavuosi"
+    (is (= 6 (indeksi-kyselyt/hae-vertailu-kk "vesivayla-hoito" 2023 2023))))
+
+  (testing "vesiväyläurakan myöhemmät urakkavuodet"
+    (is (= 8 (indeksi-kyselyt/hae-vertailu-kk "vesivayla-hoito" 2023 2024)))))
 
 (deftest vahvistettua-indeksikorjausta-ei-muokata
   (let [db (:db jarjestelma)

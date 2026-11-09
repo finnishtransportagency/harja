@@ -9,8 +9,10 @@ DECLARE
     perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
     indeksin_nimi  TEXT;
     urakka_tyyppi TEXT;
-    urakan_alkuvuosi INTEGER;
-    urakan_alkukuu INTEGER;
+    urakan_aloitusvuosi INTEGER;
+    urakan_aloituskuu INTEGER;
+    -- Tämä "urakkavuoden_alkuvuosi" on vesiväylä-hoito-urakoissa vastaava asia kuin mhu-urakoissa "hoitokauden-alkuvuosi", mutta
+    -- vesiväyläurakoissa pitää käyttää termiä "urakkavuosi" niin siksi tämä nimetty "urakkavuoden_alkuvuosi"
     urakkavuoden_alkuvuosi INTEGER;
     arvo NUMERIC;
     vertailuvuosi INTEGER;
@@ -20,15 +22,15 @@ BEGIN
     SELECT indeksi, tyyppi, EXTRACT(YEAR FROM alkupvm), EXTRACT(MONTH FROM alkupvm)
       FROM urakka u
      WHERE u.id = urakka_id
-      INTO indeksin_nimi, urakka_tyyppi, urakan_alkuvuosi, urakan_alkukuu;
+      INTO indeksin_nimi, urakka_tyyppi, urakan_aloitusvuosi, urakan_aloituskuu;
 
     -- Vesiväyläurakoissa urakkavuosi määräytyy hoitokauden perusteella.
-    IF urakka_tyyppi = 'vesivayla-hoito' AND urakan_alkuvuosi >= 2023 THEN
-            IF vuosi_ = urakan_alkuvuosi AND kuukausi_ >= urakan_alkukuu
+    IF urakka_tyyppi = 'vesivayla-hoito' AND urakan_aloitusvuosi >= 2023 THEN
+            IF vuosi_ = urakan_aloitusvuosi AND kuukausi_ >= urakan_aloituskuu
             THEN
                 -- Ensimmäinen urakkavuosi.
                 -- Tämä kattaa esimerkiksi 1.8.2023–30.9.2024.
-                urakkavuoden_alkuvuosi := urakan_alkuvuosi;
+                urakkavuoden_alkuvuosi := urakan_aloitusvuosi;
             ELSIF kuukausi_ >= 10 THEN
                 -- Lokakuusta alkaen alkaa uusi normaali urakkavuosi.
                 urakkavuoden_alkuvuosi := vuosi_;
@@ -38,9 +40,9 @@ BEGIN
                 urakkavuoden_alkuvuosi := vuosi_ - 1;
             END IF;
 
-            IF urakkavuoden_alkuvuosi = urakan_alkuvuosi THEN
+            IF urakkavuoden_alkuvuosi = urakan_aloitusvuosi THEN
                 -- Ensimmäinen urakkavuosi: käytetään aloitusvuoden kesäkuuta.
-                vertailuvuosi := urakan_alkuvuosi;
+                vertailuvuosi := urakan_aloitusvuosi;
                 vertailukk := 6;
             ELSE
                 -- Toinen ja sitä seuraavat urakkavuodet: käytetään elokuuta.
@@ -61,7 +63,7 @@ BEGIN
             vertailukk := 9;
 
             -- 2023 tai sen jälkeen alkaville urakoille vertailuukausi on elokuu
-            IF urakan_alkuvuosi >= 2023 THEN
+            IF urakan_aloitusvuosi >= 2023 THEN
                 vertailukk := 8;
             END IF;
     END IF;

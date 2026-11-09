@@ -17,6 +17,20 @@
   hae-urakan-kuukauden-indeksiarvo listaa-indeksit
   paivita-indeksi! luo-indeksi<! poista-indeksi!)
 
+(defn hae-vertailu-kk
+  [urakkatyyppi urakan-alkuvuosi vuosi]
+  (if (= "vesivayla-hoito" urakkatyyppi)
+    ;; Vesiväylä: uusissa urakoissa urakkavuosi 1.10.-30.9 (aiemmin 1.8.–31.7.)
+    ;; 1. urakkavuosi -> sitä edeltävä kesäkuu (= alkuvuoden 6. kk)
+    ;; muut urakkavuodet -> urakkavuotta edeltävä elokuu
+    (if (= vuosi urakan-alkuvuosi)
+      (pvm/kuukauden-numero "kesäkuu")
+      (pvm/kuukauden-numero "elokuu"))
+    ;; MHU: 2023+ elokuu, muuten syyskuu
+    (if (>= urakan-alkuvuosi 2023)
+      (pvm/kuukauden-numero "elokuu")
+      (pvm/kuukauden-numero "syyskuu"))))
+
 ;; Osittain duplikaatti, kunnes vanha kustannussuunnitelma poistetaan
 (defn hae-urakan-indeksikertoimet
   "Jos teet tähän muutoksia, niin tee samat muutokset budjettisuunnittelu/hae-urakan-indeksikertoimet, kunnes vanha kustannussuunnitelma on poistettu."
@@ -30,23 +44,11 @@
           urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
           urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
           urakan-vuosien-maara (- urakan-loppuvuosi urakan-alkuvuosi)
-          vertailu-kk (fn [urakkatyyppi urakan-alkuvuosi vuosi]
-                        (if (= "vesivayla-hoito" urakkatyyppi)
-                          ;; Vesiväylä: uusissa urakoissa urakkavuosi 1.10.-30.9 (aiemmin 1.8.–31.7.)
-                          ;; 1. urakkavuosi -> sitä edeltävä kesäkuu (= alkuvuoden 6. kk)
-                          ;; muut urakkavuodet -> urakkavuotta edeltävä elokuu
-                          (if (= vuosi urakan-alkuvuosi)
-                            (pvm/kuukauden-numero "kesäkuu")
-                            (pvm/kuukauden-numero "elokuu"))
-                          ;; MHU: 2023+ elokuu, muuten syyskuu
-                          (if (>= urakan-alkuvuosi 2023)
-                            (pvm/kuukauden-numero "elokuu")
-                            (pvm/kuukauden-numero "syyskuu"))))
           perusluku (:perusluku (first (hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
           indeksiluvut-urakan-aikana (when perusluku
                                        (sequence
                                          (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                         (and (= (vertailu-kk tyyppi urakan-alkuvuosi vuosi) kuukausi)
+                                                         (and (= (hae-vertailu-kk tyyppi urakan-alkuvuosi vuosi) kuukausi)
                                                            (>= vuosi urakan-alkuvuosi))))
                                            (remove (fn [{:keys [vuosi]}]
                                                      (>= vuosi urakan-loppuvuosi)))
