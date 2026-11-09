@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.viestitestaus-nakyma
   "Työkalu toteumien lisäämiseksi testiurakoille."
   (:require [tuck.core :refer [tuck send-value! send-async!]]
+            [clojure.string :as string]
             [harja.ui.debug :as debug]
             [harja.ui.lomake :as lomake]
             [harja.ui.napit :as napit]
@@ -29,9 +30,12 @@
                                   (nil? (:viesti tekstiviesti)))
                               true
                               false)
+        vastaanottajat (:vastaanottajat ilmoitus-tiedot)
         disable-laheta-paivystajan-ilmoitus? (or
-                                               (and (nil? (:puhelinnumero ilmoitus-tiedot)) (nil? (:sahkoposti ilmoitus-tiedot)))
-                                               (nil? (:ilmoitus-id ilmoitus-tiedot)))]
+                       (nil? (:ilmoitus-id ilmoitus-tiedot))
+                       (some #(and (string/blank? (:puhelinnumero %)) (string/blank? (:sahkoposti %))) vastaanottajat)
+                       (not-any? #(or (not (string/blank? (:puhelinnumero %)))
+                                      (not (string/blank? (:sahkoposti %)))) vastaanottajat))]
     [:div
      [:h1 "Sähköpostin ja tekstiviestin lähetyksen testaustoiminnot"]
      [:p "Voit testata täällä eri ympäristöissä sähköpostin ja tekstiviestin lähettämistä."]
@@ -151,34 +155,39 @@
      [:p "Tämä lähettää päivystäjälle tarkoitetun ilmoitusviestin, kuten tapahtuisi uuden tieliikenneilmoituksen saapuessa."]
      [:p "Viesti lähetetään sähköpostina ja/tai tekstiviestinä, riippuen siitä, mitkä yhteystiedot on annettu."]
      [:p "Tällä voi testata viestintää ilman T-Loik-integraatiota. Tieliikenneilmoituksen tiedot haetaan Harjan tietokannasta ID:llä."]
+    [:p "Jokainen rivi lähetetään erikseen. Sama sähköposti tai puhelinnumero voi olla usealla rivillä duplikaattitestien tekemistä varten."]
      [lomake/lomake
       {:ei-borderia? true
        :tarkkaile-ulkopuolisia-muutoksia? true
-       :footer-fn (fn [t]
-                    [:div
-                     [napit/tallenna "Lähetä päivystäjän ilmoitus"
-                      #(e! (tiedot/->LahetaPaivystajanIlmoitus t))
-                      {:disabled disable-laheta-paivystajan-ilmoitus? :paksu? true}]])
        :muokkaa! #(e! (tiedot/->MuokkaaPaivystajanIlmoitus %))}
-      [(lomake/rivi
-         {:nimi :ilmoitus-id
-          :otsikko "Tieliikenneilmoituksen ID (ilmoitus-id)"
-          :placeholder "Tieliikenneilmoituksen ID (katso Ilmoitukset-näkymästä)"
-          :tyyppi :positiivinen-numero
-          :kokonaisluku? true
-          :pakollinen? true})
-       (lomake/rivi
-         {:nimi :sahkoposti
-          :otsikko "Sähköposti"
-          :tyyppi :email
-          :placeholder "Vastaanottajan sähköposti"
-          :pakollinen? false}
-         {:nimi :puhelinnumero
-          :otsikko "Puhelinnumero"
-          :tyyppi :puhelin
-          :placeholder "Vastaanottajan puhelinnumero"
-          :pakollinen? false})]
-      ilmoitus-tiedot]]))
+      [{:nimi :ilmoitus-id
+        :otsikko "Tieliikenneilmoituksen ID (ilmoitus-id)"
+        :placeholder "Tieliikenneilmoituksen ID (katso Ilmoitukset-näkymästä)"
+        :tyyppi :positiivinen-numero
+        :kokonaisluku? true
+        :pakollinen? true}]
+      ilmoitus-tiedot]
+     (doall
+       (map-indexed
+         (fn [indeksi vastaanottaja]
+           [lomake/lomake
+            {:ei-borderia? true
+             :muokkaa! #(e! (tiedot/->MuokkaaPaivystajanIlmoituksenVastaanottajaa indeksi %))}
+            [(lomake/rivi
+               {:nimi :sahkoposti :otsikko "Sähköposti" :tyyppi :email :placeholder "Vastaanottajan sähköposti" :pakollinen? false}
+               {:nimi :puhelinnumero :otsikko "Puhelinnumero" :tyyppi :puhelin :placeholder "Vastaanottajan puhelinnumero" :pakollinen? false})]
+            vastaanottaja])
+         vastaanottajat))
+     [:div {:style {:margin-top "1rem"}}
+      [napit/uusi "Lisää vastaanottajarivi" #(e! (tiedot/->LisaaPaivystajanIlmoituksenVastaanottaja))]]
+     (when (> (count vastaanottajat) 1)
+       [:div {:style {:margin-top "0.5rem"}}
+        [napit/poista "Poista viimeinen vastaanottajarivi"
+         #(e! (tiedot/->PoistaPaivystajanIlmoituksenVastaanottaja (dec (count vastaanottajat))))]])
+     [:div {:style {:margin-top "1rem"}}
+      [napit/tallenna "Lähetä päivystäjän ilmoitus"
+       #(e! (tiedot/->LahetaPaivystajanIlmoitus ilmoitus-tiedot))
+       {:disabled disable-laheta-paivystajan-ilmoitus? :paksu? true}]]]))
 
 (defn viestitestaus []
   [tuck tiedot/tila viestitestaus*])
