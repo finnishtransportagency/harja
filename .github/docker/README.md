@@ -27,12 +27,6 @@ jotta konttien hallinta olisi mahdollisimman yksinkertaista ja asetuksia voisi h
 Konttien käyttöön kannattaa tutustua etsimällä relevantit composite actionit ```.github/actions``` hakemistosta ja tutkia miten
 niitä on käytetty workfloweissa.
 
-`aja-testidata.sh` estää uudet yhteydet `harja`-kantaan ennen olemassa olevien yhteyksien katkaisua.
-Katkaisu peruuttaa keskeneräiset transaktiot. `harja`- ja `harjatest_template`-kantojen yhteydet sallitaan
-vasta testikantojen luomisen jälkeen tai virhetilanteen siivouksessa. Pakotettu lopetus (`SIGKILL`) ei suorita
-siivousta; silloin yhteydet on palautettava `postgres`-kannasta komennolla
-`ALTER DATABASE harja ALLOW_CONNECTIONS true;` ja tarvittaessa vastaavasti `harjatest_template`-kannalle.
-
 
 # GitHub Container Registry
 
