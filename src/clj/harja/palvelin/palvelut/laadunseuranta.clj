@@ -293,6 +293,8 @@
                         :soveltuvuuskonteksti soveltuvuuskonteksti
                         :laji laji
                         :sanktiotyyppi-id sanktiotyyppi})
+        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                              (get-in profiilirivi [:profiilirivi :id]))
         profiilin-summamaaritykset (:profiilirivi profiilirivi)
         laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys profiilin-summamaaritykset)
         maaritystapa (if laskettu-maaritys
@@ -308,9 +310,10 @@
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
-        tilannekuvan-maaritystapa (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
-                                    ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
-                                    (when-not (= :laskettu tallennettu) tallennettu))
+        tilannekuvan-maaritystapa (when sama-profiilirivi?
+                                    (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
+                                      ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
+                                      (when-not (= :laskettu tallennettu) tallennettu)))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
                             (if (= :C laji)
@@ -386,8 +389,7 @@
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
                 :normaalimaara normaalimaara
                 :omailmoitettu omailmoitettu
-                :sanktio_profiili_rivi (or (:sanktio_profiili_rivi olemassa-oleva-sanktio)
-                                         (get-in profiilirivi [:profiilirivi :id]))
+                :sanktio_profiili_rivi (get-in profiilirivi [:profiilirivi :id])
                 :maaritystapa (some-> (if laskenta :laskettu (or tilannekuvan-maaritystapa maaritystapa)) name)
                 :laskennan_syote (some-> laskenta :laskennan-syote cheshire/generate-string)
                 :summa (when summa

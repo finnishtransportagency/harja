@@ -121,31 +121,31 @@
        :valittu-hoitokausi valittu-hoitokausi
        :muutos muutos-payload})))
 
-#_ (defn- luo-jjh-muutos!
-  "Luo johto- ja hallintokorvauksen muutoksen kuluineen.
-   Malli: muutos_testidata.sql, Muutos 4."
-  [urakka-id syy voimassa-alkaen erapaiva summa]
-  (let [tpi-id (hae-toimenpideinstanssi-id urakka-id "23151")
-        urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
-        jjh-ryhma-id (ffirst (q "SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus'"))
-        ;; Luo muutos
-        muutos-id (i (str "INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, syy, luoja)
+#_(defn- luo-jjh-muutos!
+    "Luo johto- ja hallintokorvauksen muutoksen kuluineen.
+     Malli: muutos_testidata.sql, Muutos 4."
+    [urakka-id syy voimassa-alkaen erapaiva summa]
+    (let [tpi-id (hae-toimenpideinstanssi-id urakka-id "23151")
+          urakan-alkupvm (ffirst (q (str "SELECT alkupvm FROM urakka WHERE id = " urakka-id)))
+          jjh-ryhma-id (ffirst (q "SELECT id FROM tehtavaryhma WHERE nimi = 'J - Johto- ja hallintokorvaus'"))
+          ;; Luo muutos
+          muutos-id (i (str "INSERT INTO mhu_muutos (versio, urakka, voimassa_alkaen, tyyppi, syy, luoja)
                            VALUES (1, " urakka-id ", '" voimassa-alkaen "',
                                    'johto-ja-hallintokorvaus', '" syy "', " (:id +kayttaja-jvh+) ")"))
-        koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
-        ;; Luo kulu
-        kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, lisatieto, koontilaskun_kuukausi)
+          koontilaskun-kuukausi (domain-kulut/pvm->koontilaskun-kuukausi erapaiva urakan-alkupvm)
+          ;; Luo kulu
+          kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja, lisatieto, koontilaskun_kuukausi)
                          VALUES (%s, '%s', %s, %s, 'JJH-testikulu', '%s')"
-                     summa erapaiva urakka-id (:id +kayttaja-jvh+) koontilaskun-kuukausi))]
-    ;; Luo kulukohdistus äsken luodulle kululle
-    (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma,
+                       summa erapaiva urakka-id (:id +kayttaja-jvh+) koontilaskun-kuukausi))]
+      ;; Luo kulukohdistus äsken luodulle kululle
+      (u (str "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi, tehtavaryhma,
                                          maksueratyyppi, luoja, tyyppi, tavoitehintainen)
              VALUES (0, " kulu-id ", " summa ", " tpi-id ", " jjh-ryhma-id ",
                      'kokonaishintainen', " (:id +kayttaja-jvh+) ", 'jjh-muutos', true)"))
-    ;; Linkitä muutos aiemmin luotu muutos äsken luotuun kuluun
-    (u (str "INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
+      ;; Linkitä muutos aiemmin luotu muutos äsken luotuun kuluun
+      (u (str "INSERT INTO mhu_muutos_kulu (versio, muutos, kulu)
              VALUES (1, " muutos-id ", " kulu-id ")"))
-    muutos-id))
+      muutos-id))
 
 (defn- suorita-raportti
   "Suorittaa Muutos- ja lisätyöraportin kutsu-palvelua kautta."
@@ -316,7 +316,7 @@
         (is (>= (count rivit) 2) "Taulukossa on vähintään datarivi ja yhteensä-rivi")
         ;; Tehtävä löytyy raportista ja sen summa on oikein
         (is (some? tehtava-raporttirivi) "Tehtävä löytyy raportista")
-        (is (= (bigdec kulusumma) (some-> tehtava-raporttirivi (nth 6))) "Tehtävän summa on 800M")
+        (is (= (bigdec kulusumma) (some-> tehtava-raporttirivi (nth 5))) "Tehtävän summa on 800M")
 
         ;; Viimeinen rivi on yhteensä
         (let [viimeinen (last rivit)]
@@ -384,9 +384,9 @@
       (when (seq datarivit)
         (let [rivi (first datarivit)]
           (is (= "Testirahavaraus" (nth rivi 0)) "Rahavarauksen nimi on oikein")
-          (is (= 8000M (nth rivi 2)) "Suunniteltu määrä on 8000")
-          (is (= 6500M (nth rivi 3)) "Toteutunut määrä on 6500")
-          (is (= -1500M (nth rivi 4)) "Tavoitehinnan muutos on -1500")))
+          (is (= 8000M (nth rivi 1)) "Suunniteltu määrä on 8000")
+          (is (= 6500M (nth rivi 2)) "Toteutunut määrä on 6500")
+          (is (= -1500M (nth rivi 3)) "Tavoitehinnan muutos on -1500")))
       ;; Tarkista yhteensä
       (let [yht (:rivi yhteensarivi)]
         (is (= -1500M (nth yht 4)) "Yhteensä tavoitehinnan muutos on -1500")))))
