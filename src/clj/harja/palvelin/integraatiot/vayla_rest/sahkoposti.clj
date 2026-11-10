@@ -26,6 +26,24 @@
       (get-in asetukset [:api-sahkoposti :sahkoposti-ja-liite-lahetys-url])
       (get-in asetukset [:api-sahkoposti :sahkoposti-lahetys-url]))))
 
+(defn- muodosta-http-asetukset [asetukset http-otsikot liite?]
+  (let [api-sahkoposti (:api-sahkoposti asetukset)
+        uusi-api-kaytossa? (and (not liite?) (:aktiivinen? api-sahkoposti))
+        otsikot (merge {"Content-Type" "application/xml"}
+                       (when uusi-api-kaytossa?
+                         {"x-api-key" (:apiavain api-sahkoposti)})
+                       http-otsikot)
+        http-asetukset {:metodi :POST
+                        :url (if uusi-api-kaytossa?
+                               (:sahkopostilahetys-url api-sahkoposti)
+                               (muodosta-lahetys-uri asetukset liite?))
+                        :otsikot otsikot}]
+    (if uusi-api-kaytossa?
+      http-asetukset
+      (assoc http-asetukset
+        :kayttajatunnus (:kayttajatunnus api-sahkoposti)
+        :salasana (:salasana api-sahkoposti)))))
+
 (defn kasittele-sahkoposti-vastaus
   "Kun sähköposti lähetetään sähköpostipalvelu rest-apiin, niin sieltä tulee vastaukseksi kuittaus siitä, onnistuiko kaikki ihan ok.
    Kuittaus on ok, jos status on 200, muutoin logita virhe.
@@ -78,23 +96,16 @@
                                                       "sahkoposti-ja-liite-lahetys"
                                                       "sahkoposti-lahetys") nil
                     (fn [konteksti]
-                      (let [http-asetukset {:metodi :POST
-                                            :url (muodosta-lahetys-uri asetukset liite?)
-                                            :otsikot (merge
-                                                       {"Content-Type" "application/xml"}
-                                                       http-otsikot)
-                                            :kayttajatunnus (get-in asetukset [:api-sahkoposti :kayttajatunnus])
-                                            :salasana (get-in asetukset [:api-sahkoposti :salasana])}
-                            {body :body headers :headers status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
+                      (let [http-asetukset (muodosta-http-asetukset asetukset http-otsikot liite?)
+                            {body :body status :status} (integraatiotapahtuma/laheta konteksti :http http-asetukset sahkoposti-xml)]
                         (if liite?
                           (kasittele-sahkoposti-ja-liite-vastaus status body db)
                           (kasittele-sahkoposti-vastaus status body)))))
           _ (log/info "rest-api sähköpostin lähetys onnistui")]
       vastaus)
     (catch [:type virheet/+ulkoinen-kasittelyvirhe-koodi+] {:keys [virheet]}
-      (do
-        (log/error "rest-api sähköpostin lähetys epäonnistui! " virheet)
-        false))))
+      (log/error "rest-api sähköpostin lähetys epäonnistui! " virheet)
+      false)))
 
 (defn muodosta-kuittaus
   "Tee annetulle vastaanotetulle sähköpostiviestille kuittausviesti"

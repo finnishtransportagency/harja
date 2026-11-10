@@ -37,6 +37,7 @@
                :ilmoitus-tiedot {:puhelinnumero nil
                                  :sahkoposti nil
                                  :ilmoitus-id nil
+                                 :vastaanottajat [{:sahkoposti nil :puhelinnumero nil}]
                                  :lahetys-kaynnissa? false}})
 
 (def tila (atom alkutila))
@@ -65,6 +66,9 @@
 (defrecord LahetaPaivystajanIlmoitus [ilmoitus-tiedot])
 (defrecord LahetaPaivystajanIlmoitusOnnistui [vastaus])
 (defrecord LahetaPaivystajanIlmoitusEpaonnistui [vastaus])
+(defrecord LisaaPaivystajanIlmoituksenVastaanottaja [])
+(defrecord PoistaPaivystajanIlmoituksenVastaanottaja [indeksi])
+(defrecord MuokkaaPaivystajanIlmoituksenVastaanottajaa [indeksi vastaanottaja])
 
 (extend-protocol tuck/Event
 
@@ -187,11 +191,26 @@
   (process-event [{ilmoitus-tiedot :ilmoitus-tiedot} app]
     (assoc app :ilmoitus-tiedot ilmoitus-tiedot))
 
+  LisaaPaivystajanIlmoituksenVastaanottaja
+  (process-event [_ app]
+    (update-in app [:ilmoitus-tiedot :vastaanottajat] conj {:sahkoposti nil :puhelinnumero nil}))
+
+  PoistaPaivystajanIlmoituksenVastaanottaja
+  (process-event [{:keys [indeksi]} app]
+    (update-in app [:ilmoitus-tiedot :vastaanottajat]
+               (fn [vastaanottajat]
+                 (if (> (count vastaanottajat) 1)
+                   (vec (concat (subvec vastaanottajat 0 indeksi)
+                                (subvec vastaanottajat (inc indeksi))))
+                   vastaanottajat))))
+
+  MuokkaaPaivystajanIlmoituksenVastaanottajaa
+  (process-event [{:keys [indeksi vastaanottaja]} app]
+    (assoc-in app [:ilmoitus-tiedot :vastaanottajat indeksi] vastaanottaja))
+
   LahetaPaivystajanIlmoitus
   (process-event [{ilmoitus-tiedot :ilmoitus-tiedot} app]
-    (let [data (select-keys ilmoitus-tiedot [:puhelinnumero :sahkoposti :ilmoitus-id])]
-      (js/console.log "Lähetetään ilmoitus paivystajälle: " (pr-str data))
-
+    (let [data (select-keys ilmoitus-tiedot [:ilmoitus-id :vastaanottajat])]
       (tuck-apurit/post! :debug-laheta-paivystajan-ilmoitus data
         {:onnistui ->LahetaPaivystajanIlmoitusOnnistui
          :epaonnistui ->LahetaPaivystajanIlmoitusEpaonnistui})
