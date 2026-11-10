@@ -1072,7 +1072,9 @@
           hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
           hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
           hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-tavoitehinta-indeksipaatoksella db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
-          validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta_jalkeen paatos)))
+          laskettu-tavoitehinta (round2 2 hoitovuoden-lopun-tavoitehinta)
+          paatoksen-tavoitehinta (round2 2 (:tavoitehinta_jalkeen paatos))
+          validaatio (if-not (= laskettu-tavoitehinta paatoksen-tavoitehinta)
                        (conj validaatio (str "Hoitovuoden lopun tavoitehinta ei täsmää suunnitelman kanssa.
                        Hoitovuoden lopun tavoitehinta: " (fmt/euro-opt false false hoitovuoden-lopun-tavoitehinta) " €.
                        Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta_jalkeen paatos)) " €"))
