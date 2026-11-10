@@ -171,7 +171,6 @@
                 "Files:\n"
                 "tiedostopolkuja .edn tiedostoihin, jotka halutaan kirjoittaa uudestaan jonnekkin muualle\n\n"
                 "Esimerkit:\n"
-                "lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut figwheel_conf/dev-container.figwheel.edn\n"
                 "lein run -m harja.tyokalut.edn-eval -o figwheel_conf/luodut/ -- -foo.edn\n")))
 
 (defmethod suorita-toiminto :luo-tiedostot
