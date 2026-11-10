@@ -60,16 +60,6 @@
                             :HARJA_ITMF_BROKER_HOST "localhost"
                             :HARJA_ITMF_BROKER_AI_PORT 8171}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script" "laadunseuranta/cljc-src"]}
- :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
-                 :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
-                                            "dev-resources/tmp"
-                                            "resources"]
-                 :jvm-opts ["-Xverify:none"]
-                 :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
-                 :clean-targets ^{:protect false
-                                  :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
-                                                  "dev-resources/tmp"
-                                                  :target-path]}
  :dev-emacs {:plugins [[cider/cider-nrepl "0.57.0"]
                        [refactor-nrepl "3.11.0"]]}
  :repl {:dependencies [[cider/piggieback "0.6.0"]]

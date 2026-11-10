@@ -1,14 +1,5 @@
-# TODO: Toteuta cypress-image, jota ajetaan taustalla. Ota mallia .github/docker imageista.
-#
-#       Tallenna cypress image .github/docker polkuun ja lähetä image Harjan repon Container Registryyn
-#
-#       Cypressillä on myös hyviä omia pohja-imageita, joita voi käyttää: https://github.com/cypress-io/cypress-docker-images
-#
-#       Muista käyttää yhteistä docker-composessa määriteltyä harja_net verkkoa
-#          Katso: .github/docker-compose.yml
-
 name: 'Start Cypress'
-description: 'Käynnistää Cypress kontin ja ajaa komennon sen sisällä kerran'
+description: 'Ajaa Cypress-testit Docker Compose -servicen kertaluonteisessa kontissa'
 
 inputs:
   registry:
@@ -21,10 +12,10 @@ inputs:
   password:
     description: ''
     required: true
-  image:
-    description: 'Cypress kontin imagen nimi'
-    required: false
-    default: ghcr.io/finnishtransportagency/harja_cypress:latest
+  # Servicen image ja asetukset määritellään .github/docker/docker-compose.yml:ssä.
+  service-name:
+    description: 'Cypressin compose servicen nimi'
+    required: true
   GITHUB_WORKSPACE:
     description: 'Github jobin workspace path. Tämä mountataan cypress kontin sisälle.'
     required: true
@@ -50,20 +41,21 @@ runs:
 
     - name: Pull image
       env:
-        IMAGE_NAME: ${{ inputs.image }}
+        SERVICE_NAME: ${{ inputs.service-name }}
       run: |
-        echo "Pulling harja cypress image"
-        docker pull "$IMAGE_NAME"
+        cd .github/docker
+        echo "Docker Compose version: $(docker compose version --short)"
+        echo "Pulling Cypress-image for service: ${SERVICE_NAME}"
+        docker compose pull "${SERVICE_NAME}"
       shell: bash
 
     # Konttiin mountataan /harja workdirectoryyn GITHUB_WORKSPACE, joka sisältää jobin checkoutissa haetun sisällön
     # sekä myöhemmin jobissa ennen mounttia workspaceen lisätyn sisällön, kuten esimerkiksi asennetut NPM-paketit.
-    # NOTE: Disabloidaan GPU, käyttämällä ELECTRON_EXTRA_LAUNCH_ARGS asetusta (https://github.com/cypress-io/cypress/issues/25357)
     # GH Actions runner (UID 1001) omistaa workspacen tiedostot.
     # Cypress-kontti ajetaan node-käyttäjänä (UID 1000), joten output-hakemistot
     # täytyy luoda etukäteen kaikille kirjoitettavina.
     # Ks. https://github.com/cypress-io/cypress-docker-images/tree/master/examples/included-as-non-root
-    - name: Valmistele cypress output-hakemistot
+    - name: Prepare cypress output-directories
       env:
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
       run: |
@@ -75,33 +67,15 @@ runs:
 
     # Note: Cypress varoittaa, että wordir /harja ei ole writable: https://github.com/cypress-io/cypress/issues/30810
     #       Tämä ei ole haitallista, kunhan Cypressin tarvitsemat output-hakemistot on luotu writableksi
-    - name: Aja cypress-testit
+    - name: Run cypress-tests
       env:
-        IMAGE_NAME: ${{ inputs.image }}
+        SERVICE_NAME: ${{ inputs.service-name }}
         GITHUB_WORKSPACE: ${{ inputs.GITHUB_WORKSPACE }}
         BROWSER: ${{ inputs.browser }}
         SPEC: ${{ inputs.spec }}
       run: |
-        echo "Ajetaan cypress komento kontissa käyttäjänä: node"
+        echo "Running cypress command in the container as user: node"
 
-        docker run \
-          --network host \
-          -u node \
-          -e ELECTRON_EXTRA_LAUNCH_ARGS='--disable-gpu' \
-          -e CYPRESS_VIDEO=false \
-          -e SPEC="$SPEC" \
-          -e BROWSER="$BROWSER" \
-          -v $GITHUB_WORKSPACE:/harja \
-          -w /harja \
-          "$IMAGE_NAME" \
-          bash -c '
-            echo -e "Chrome version:  $(google-chrome --version)\nEdge version:  $(edge --version)\n";
-            echo "-------------------";
-            if [ -n "$SPEC" ]; then
-              cypress run --browser "$BROWSER" --spec "$SPEC";
-            else
-              cypress run --browser "$BROWSER";
-            fi
-          '
+        cd .github/docker
+        docker compose run --rm --no-deps "${SERVICE_NAME}"
       shell: bash
-
