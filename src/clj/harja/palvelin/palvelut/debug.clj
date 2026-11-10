@@ -253,17 +253,10 @@
 (defn- laheta-paivystajan-ilmoitus
   "Lähettää päivystäjän ilmoituksen jokaiselle annetulle vastaanottajariville."
   [db api-sahkoposti sms ilmoitus-tiedot]
-  (log/info "[Testi] Päivystäjän ilmoituksen käsittely alkoi"
-            " ilmoitus-id: " (:ilmoitus-id ilmoitus-tiedot)
-            " vastaanottajia: " (count (:vastaanottajat ilmoitus-tiedot)))
   (try
     (validoi-paivystajan-ilmoituksen-tiedot ilmoitus-tiedot)
-    (log/info "[Testi] Päivystäjän ilmoituksen payload validoitu"
-              " ilmoitus-id: " (:ilmoitus-id ilmoitus-tiedot))
     (let [{:keys [ilmoitus-id vastaanottajat]} ilmoitus-tiedot]
       (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
-        (log/info "[Testi] Päivystäjän ilmoitus löytyi"
-                  " ilmoitus-id: " ilmoitus-id)
         (let [;; Testivastaanottajat ovat aina vastuuhenkilöitä, jotta SMS-päätös noudattaa tuotannon sääntöä
               paivystajat (mapv (fn [{:keys [sahkoposti puhelinnumero]}]
                                   {:sahkoposti sahkoposti
@@ -281,9 +274,8 @@
                         " sähköposti: " email-sensuroitu
                         " puhelinnumero: " puh-sensuroitu
                         " lähetä sähköposti: " laheta-sahkoposti?
-                        " lähetä sms: " laheta-sms?)
-              (when duplikaatti-sahkoposti?
-                (log/info "[Testi] Sähköposti ohitettiin duplikaattina: " email-sensuroitu))
+                        " lähetä sms: " laheta-sms?
+                        " duplikaatti: " duplikaatti-sahkoposti?)
               (when (and laheta-sahkoposti? (not (string/blank? sahkoposti)))
                 (laheta-paivystaja-ilmoitus-sahkopostilla db api-sahkoposti sahkoposti ilmoitus))
               (when (and laheta-sms? (not (string/blank? matkapuhelin)))
