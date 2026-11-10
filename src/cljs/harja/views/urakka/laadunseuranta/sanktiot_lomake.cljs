@@ -475,9 +475,7 @@
            (if (and (not mhu25?) (not lukutila?))
              {:otsikko (toimenpide-valikon-nimi (get-in @muokattu [:tyyppi :nimi])) ; "Kulun kohdistus"
               :pakollinen? true
-              :disabled? (or (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
-                           (and (> urakan-alkuvuosi 2024)
-                             (<= (count mahdolliset-kulun-kohdistukset) 1)))
+              :disabled? (empty? @tiedot-urakka/urakan-toimenpideinstanssit)
               ::lomake/col-luokka "col-xs-12"
               :nimi :toimenpideinstanssi
               :tyyppi :valinta
