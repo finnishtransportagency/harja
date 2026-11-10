@@ -364,7 +364,7 @@
                               :tyyppi (::t/tyyppi lomake)}])
                          {:vayla-tyyli? true :teksti-nappi? true}])]
                      (when lukittu-hoitovuosi?
-                       [:div {:style {:padding-bottom "1rem"}}
+                       [:div {:style {:padding-bottom "1rem" :padding-left "15px"}}
                         [yleiset/info-laatikko :neutraali lukitusotsikko lukitusvaroitus nil nil]])])
        :footer-fn (fn [data]
                     [:div

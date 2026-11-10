@@ -176,23 +176,6 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
         (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
         ". hoitovuodelle " hoitovuosi "-" (inc hoitovuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))
 
-(defn lukitusvaroituksen-teksti
-  "Muodostaa varoituksen lukituista hoitovuosista, jos niitä on."
-  [lukitustiedot]
-  (let [lukitut-hoitovuodet (->> [(:alkuperainen lukitustiedot)
-                                  (:valittu lukitustiedot)
-                                  (:valittu-paattynyt lukitustiedot)]
-                                 (keep (fn [{:keys [hoitovuosi lukittu?]}]
-                                         (when lukittu? hoitovuosi)))
-                                 distinct
-                                 sort
-                                 vec)]
-    (when (seq lukitut-hoitovuodet)
-      (str "Materiaalitoteumaa ei voi tallentaa, koska välikatselmuksen päätös lukitsee "
-        (if (= 1 (count lukitut-hoitovuodet)) "hoitovuoden " "hoitovuodet ")
-        (str/join ", " lukitut-hoitovuodet)
-        "."))))
-
 (defn materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur]
@@ -228,12 +211,9 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                (some? @lukitustiedot)
                                (not (materiaalitoteuma-lukittu? @lukitustiedot))
                                (zero? (count @materiaalien-virheet)))
-              urakan-alkupvm (:alkupvm @nav/valittu-urakka)
-              lukitusvaroitus (lukitusvaroituksen-teksti @lukitustiedot)]
+              urakan-alkupvm (:alkupvm @nav/valittu-urakka)]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot nil)]
-         (when lukitusvaroitus
-           [yleiset/info-laatikko :varoitus lukitusvaroitus])
          [lomake {:otsikko (if (:id @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
                              "Muokkaa toteumaa"
                              "Luo uusi toteuma")

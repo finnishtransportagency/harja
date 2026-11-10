@@ -89,12 +89,15 @@
               muokataan-vanhaa? (some? (:id @muokattu))
               lupaus? (some #{:lupaussanktio :lupausbonus} #{(:laji @muokattu)})
               lukutila? (if (not muokataan-vanhaa?) false (:lukutila @tila))
+              urakan-alkupvm (:alkupvm @nav/valittu-urakka)
               bonusten-syotto? (= :bonukset (:lomake @tila))
               arvonvahennys-syotto? (= :arvonvahennys (:lomake @tila))
               mhu25? (and (= :teiden-hoito (:tyyppi @nav/valittu-urakka))
-                       (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                       (>= (pvm/vuosi urakan-alkupvm) 2025))
               arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)
               sanktion-hoitovuosi (some-> @tiedot-urakka/valittu-hoitokausi first pvm/vuosi)
+              vertailupaivamaara (pvm/->pvm (str "1.10." sanktion-hoitovuosi))
+              _ (js/console.log "vertailupaivamaara: " (pr-str vertailupaivamaara))
               arvonvahennys-paatoksella-lukittu? (and arvonvahennyslomake-kaytossa?
                                                    sanktion-hoitovuosi
                                                    (some (fn [{:keys [vuosi arvonvahennys-lukittu?]}]
@@ -148,7 +151,7 @@
                 [:div
                  [:div {:style {:margin-bottom "1rem"}}
                   [yleiset/info-laatikko :neutraali
-                   "Et voi kirjata bonusta tälle hoitovuodelle"
+                   (str "Bonuksia ei voi kirjata " (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm vertailupaivamaara) ". hoitovuodelle " sanktion-hoitovuosi "-" (inc sanktion-hoitovuosi))
                    "Bonuksia ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös pöytäkirjaan merkityistä raporteista on jo vahvistettu."
                    nil nil]]
                  ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä bonusta on kirjattu
@@ -170,7 +173,7 @@
                  ;; Näytetään ilmoitus lukituksesta aina, kun lukitus on olemassa
                  [:div {:style {:margin-bottom "1rem"}}
                   [yleiset/info-laatikko :neutraali
-                        "Et voi kirjata arvonvähennystä tälle hoitovuodelle"
+                   (str "Arvonvähennyksiä ei voi kirjata " (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm vertailupaivamaara) ". hoitovuodelle " sanktion-hoitovuosi "-" (inc sanktion-hoitovuosi))
                         "Arvonvähennyksiä ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
                         nil nil]]
                  ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä arvonvähennystä on kirjattu
@@ -186,7 +189,7 @@
                 [:div
                  [:div {:style {:margin-bottom "1rem"}}
                   [yleiset/info-laatikko :neutraali
-                   "Et voi kirjata sanktiota tälle hoitovuodelle"
+                   (str "Sanktioita ei voi kirjata " (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm vertailupaivamaara) ". hoitovuodelle " sanktion-hoitovuosi "-" (inc sanktion-hoitovuosi))
                    "Sanktioita ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös pöytäkirjaan merkityistä raporteista on jo vahvistettu."
                    nil nil]]
                  ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä bonusta on kirjattu
