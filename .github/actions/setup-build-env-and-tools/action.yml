@@ -78,7 +78,7 @@ runs:
 
     - name: Setup Node.js and NPM (versions defined in package.json "engines")
       if: ${{ inputs.setup-node == 'true' || inputs.install-node-deps == 'true' }}
-      uses: ./.github/actions/setup-node-and-npm
+      uses: $/.github/actions/setup-node-and-npm
       with:
         # Halutaan täysi kontrolli cachettamista, joten ei käytetä actionin omaa cachetusta
         package-manager-cache: false

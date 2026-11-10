@@ -26,6 +26,7 @@
                                                     (paatoskone/nimi->avain (:nimi paatos)))
                                                   (boolean (:id paatos))}) urakan-tehdyt-paatoset)]
 
+    ;; Jos ominaisuus alkaa olla riippuvainen myös jostain toisesta päätöksestä, niin lisää tuohon settiin lisää avaimia
     (case ominaisuus
       (:tarjous :uusi-kustannussuunnitelma :tehtavat-ja-maarat :kulu :arvonvahennys :muutos :toteuma)
       (not-any? #(true? (:tavoitehinnan-muutokset %)) urakan-tehdyt-paatoset)

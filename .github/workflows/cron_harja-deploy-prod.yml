@@ -194,7 +194,7 @@ jobs:
 
 
   deploy-to-production:
-    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    uses: $/.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     needs: [ get-env-vars, get-latest-successful-build ]
     if: ${{ !inputs.dry-run && needs.get-latest-successful-build.outputs.status == 'deploy' }}
 

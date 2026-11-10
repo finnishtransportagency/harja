@@ -320,10 +320,19 @@ with muuttuneet as (
              from kiinteahintainen_tyo kt
                       join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
                       join urakka u on tpi.urakka = u.id
-             where u.tyyppi = 'teiden-hoito'
-               and u.indeksi = :nimi
-               and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9) -- seuraavan hoitovuoden rivit
-               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
+             where u.indeksi = :nimi
+               and
+                 (-- MHU: hoitovuosi 10–9, triggerit 8–11
+                     (u.tyyppi = 'teiden-hoito'
+                         and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
+                         and :kuukausi in (8, 9, 10, 11))
+                 or
+                 -- vesiväylä-hoito: urakkavuosi 8–9 (14kk) tai 10-9, triggerit 6 ja 8
+                     (u.tyyppi = 'vesivayla-hoito'
+                         and :kuukausi in (6, 8, 9, 10, 11)
+                         and make_date(kt.vuosi, kt.kuukausi, 1) between u.alkupvm and u.loppupvm
+                     )
+                 )
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -347,10 +356,19 @@ with muuttuneet as (
                       join toimenpideinstanssi tpi ON kt.toimenpideinstanssi = tpi.id
                       join urakka u on tpi.urakka = u.id
                       left join tehtavaryhma tr ON kt.tehtavaryhma = tr.id
-             where u.tyyppi = 'teiden-hoito'
-               and u.indeksi = :nimi
-               and (kt.vuosi, kt.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
-               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
+             where u.indeksi = :nimi
+               and (
+                     (u.tyyppi = 'teiden-hoito'
+                             and (kt.vuosi, kt.kuukausi)
+                             between (:vuosi, 10) and (:vuosi + 1, 9)
+                             and :kuukausi in (8, 9, 10, 11)
+                     )
+                     or
+                     (u.tyyppi = 'vesivayla-hoito'
+                         and :kuukausi in (6, 8, 9, 10, 11)
+                         and make_date(kt.vuosi, kt.kuukausi, 1) between u.alkupvm and u.loppupvm
+                     )
+                   )
                and indeksikorjaus_vahvistettu is null
                -- Tilaajan rahavarauksille ei lasketa indeksikorjauksia
                and not (
@@ -378,10 +396,19 @@ with muuttuneet as (
                     indeksikorjaa(jk.tuntipalkka, jk.vuosi, jk.kuukausi, u.id) as uusi
              from johto_ja_hallintokorvaus jk
                       join urakka u on jk."urakka-id" = u.id
-             where u.tyyppi = 'teiden-hoito'
-               and u.indeksi = :nimi
-               and (jk.vuosi, jk.kuukausi) between (:vuosi, 10) and (:vuosi + 1, 9)
-               and :kuukausi in (8, 9, 10, 11) -- MAKU indeksin kuukausi 
+             where u.indeksi = :nimi
+               and (
+                     (u.tyyppi = 'teiden-hoito'
+                             and (jk.vuosi, jk.kuukausi)
+                             between (:vuosi, 10) and (:vuosi + 1, 9)
+                             and :kuukausi in (8, 9, 10, 11)
+                     )
+                    or
+                     (u.tyyppi = 'vesivayla-hoito'
+                             and :kuukausi in (6, 8, 9, 10, 11)
+                             and make_date(jk.vuosi, jk.kuukausi, 1) between u.alkupvm and u.loppupvm
+                     )
+                   )
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where vanha is distinct from uusi
@@ -418,10 +445,25 @@ with muuttuneet as (
                     ut.laskutusraja_alkuperainen              as laskutusraja_alkuperainen_vanha
              from urakka_tavoite ut
                       join urakka u on ut.urakka = u.id
-             where u.tyyppi = 'teiden-hoito'
-               and u.indeksi = :nimi
-               and EXTRACT(YEAR FROM u.alkupvm)::integer + hoitokausi - 1 between :vuosi and :vuosi + 1
-               and :kuukausi in (8, 9, 10, 11)  -- MAKU indeksin kuukausi 
+             where u.indeksi = :nimi
+               and (
+                     (u.tyyppi = 'teiden-hoito'
+                             and EXTRACT(YEAR FROM u.alkupvm)::INTEGER
+                            + ut.hoitokausi - 1 between :vuosi and :vuosi + 1
+                        and :kuukausi in (8, 9, 10, 11)
+                     )
+                         or
+                    (u.tyyppi = 'vesivayla-hoito'
+                        AND (
+                                (:kuukausi = 6 AND ut.hoitokausi = 1)
+                                OR
+                                (:kuukausi = 8 AND ut.hoitokausi > 1)
+                                OR
+                                (:kuukausi IN (9, 10, 11))
+                            )
+                        AND make_date(EXTRACT(YEAR FROM u.alkupvm)::INTEGER + ut.hoitokausi - 1, 10, 1) BETWEEN u.alkupvm AND u.loppupvm
+                    )
+                  )
                and indeksikorjaus_vahvistettu is null
          ) indeksikorjaus
     where tavoitehinta_indeksikorjattu_vanha is distinct from tavoitehinta_indeksikorjattu_uusi

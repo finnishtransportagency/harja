@@ -69,9 +69,12 @@
                                      :suora? s/Bool
                                      :sahkoposti-lahetys-url s/Str
                                      :sahkoposti-ja-liite-lahetys-url s/Str
+                                     :apiavain s/Str
+                                     :sahkopostilahetys-url s/Str
                                      :palvelin s/Str
                                      :kayttajatunnus s/Str
-                                     :salasana s/Str}
+                                     :salasana s/Str
+                                     :aktiivinen? s/Bool}
 
    (s/optional-key :ulkoinen-sahkoposti) {:vastausosoite s/Str
                                           (s/optional-key :palvelin/Str) s/Str}

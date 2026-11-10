@@ -36,7 +36,7 @@ permissions: {}
 # Testit ja build ajetaan rinnakkain, jotta ne suorituisivat mahdollisimman nopeasti
 jobs:
   tests:
-    uses: ./.github/workflows/reusable_run_app_tests.yml
+    uses: $/.github/workflows/reusable_run_app_tests.yml
     # Permissions
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
@@ -138,7 +138,7 @@ jobs:
 
       # Testitietokantaa tarvitaan buildin yhteydessä
       - name: Start test database
-        uses: ./.github/actions/start-test-db
+        uses: $/.github/actions/start-test-db
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -151,7 +151,7 @@ jobs:
 
       # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
       - name: Build Harja Uberjar
-        uses: ./.github/actions/build-harja-app
+        uses: $/.github/actions/build-harja-app
         with:
           build-laadunseuranta: 'false'
 
@@ -324,7 +324,7 @@ jobs:
         shell: bash
 
       - name: Run Trivy vulnerability scanner
-        uses: ./.github/actions/scan-docker-image
+        uses: $/.github/actions/scan-docker-image
         env:
           DOCKERFILE_PATH: 'aws/fargate/Dockerfile'
           TRIVY_IGNORES_PATH: 'aws/fargate/.trivyignore'
@@ -374,7 +374,7 @@ jobs:
   # -- Deployment -- #
 
   deploy-to-ecs-manually:
-    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    uses: $/.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'workflow_dispatch' }}
     # Deploy odottaa skannausta, mutta ei SARIF uploadia (SARIF upload on informatiivinen eikä estä deploymenttia)
     needs: [ tests, scan-docker-image ]
@@ -399,7 +399,7 @@ jobs:
 
   # Automaattinen matrix-deployment useaan testiympäristöön (Kun develop-branchiin on pushattu uusi muutos)
   deploy-to-ecs-matrix:
-    uses: ./.github/workflows/reusable_deploy-harja-image-to-ecs.yml
+    uses: $/.github/workflows/reusable_deploy-harja-image-to-ecs.yml
     if: ${{ github.event_name == 'push' }}
     # Deploy odottaa skannausta, mutta ei SARIF uploadia (SARIF upload on informatiivinen eikä estä deploymenttia)
     needs: [ tests, scan-docker-image ]
