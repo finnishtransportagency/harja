@@ -119,10 +119,13 @@
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
         fokus? (atom false)
+        nappaimisto-fokus? (atom false)
+        hiirella-fokusoitu? (atom false)
         hiiri? (atom false)
         ilmoitus-suljettu? (atom false)
         fokus-elementille #(do
                              (reset! fokus? true)
+                             (reset! nappaimisto-fokus? (not @hiirella-fokusoitu?))
                              (reset! ilmoitus-suljettu? false))
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
                                       fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
@@ -214,7 +217,7 @@
                               (not (empty? kentan-virheet)) " sisaltaa-virheen"
                               (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
                               (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen")
-                            (when (and (or @fokus? @hiiri?)
+                            (when (and (or @nappaimisto-fokus? @hiiri?)
                                     (not @ilmoitus-suljettu?))
                               " ilmoitus-nakyvissa"))
                    :on-click #(.stopPropagation %)
@@ -223,16 +226,29 @@
                                    fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
                                                                  (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
                                (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
-                                 (reset! fokus? (and uusi-fokusoitu-komponentti
-                                                  (.contains (.-currentTarget %) uusi-fokusoitu-komponentti)))))
+                                 (let [fokus-solussa? (and uusi-fokusoitu-komponentti
+                                                        (.contains (.-currentTarget %) uusi-fokusoitu-komponentti))]
+                                   (reset! fokus? fokus-solussa?)
+                                   (when-not fokus-solussa?
+                                     (reset! nappaimisto-fokus? false)
+                                     (reset! hiirella-fokusoitu? false)))))
+                   :on-mouse-down #(do
+                                     (reset! hiirella-fokusoitu? true)
+                                     (reset! nappaimisto-fokus? false)
+                                     (reset! ilmoitus-suljettu? false))
                    :on-mouse-enter #(do
                                       (reset! hiiri? true)
                                       (reset! ilmoitus-suljettu? false))
                    :on-mouse-leave #(reset! hiiri? false)
-                   :on-key-down #(when (dom/esc-nappain? %)
-                                   (reset! ilmoitus-suljettu? true))}
+                   :on-key-down #(cond
+                                   (dom/esc-nappain? %)
+                                   (reset! ilmoitus-suljettu? true)
+
+                                   (or (dom/tab+shift-nappaimet? %)
+                                     (dom/tab-nappain-ilman-shiftia? %))
+                                   (reset! hiirella-fokusoitu? false))}
               (when (case nayta-virheet?
-                      :fokus (or @fokus? @hiiri?)
+                      :fokus (or @nappaimisto-fokus? @hiiri?)
                       :aina true)
                 (cond
                   (not (empty? kentan-virheet)) (validointi-ilmoitus kentan-virheet :virhe

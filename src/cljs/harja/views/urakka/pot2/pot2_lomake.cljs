@@ -238,7 +238,7 @@
          (seq alustan-tekstit)
          (some? perustietojen-virheet))
       [yleiset/info-laatikko :varoitus
-        "Lomakkeessa on virheitä. Lomaketta ei voi lähettää tarkistettavaksi ennen virheiden korjausta. "
+        "Lomakkeessa on virheitä tai varoituksia. Virheet estävät lomakkeen tallentamisen ja varoitukset tarkistettavaksi lähettämisen. "
         [:<>
          (when (some? perustietojen-virheet)
            [:span
@@ -318,16 +318,16 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj [] (-> perustiedot ::lomake/virheet))
               puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
-              valmis-luonnokseksi? (and
-                                         (not= tila :lukittu)
-                                         (empty? (flatten (keep vals virheet)))
-                                         (empty? puuttuvat-pakolliset-kentat)
-                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
-                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
-              valmis-tarkistettavaksi? (and
-                                         valmis-luonnokseksi?
-                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-varoitukset-atom)))
-                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-varoitukset-atom))))
+              voi-tallentaa? (and
+                               (not= tila :lukittu)
+                               (empty? (flatten (keep vals virheet)))
+                               (empty? puuttuvat-pakolliset-kentat)
+                               (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
+                               (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
+              voi-lahettaa-tarkistettavaksi? (and
+                                               voi-tallentaa?
+                                               (empty? (keep identity (vals @pot2-tiedot/kohdeosat-varoitukset-atom)))
+                                               (empty? (keep identity (vals @pot2-tiedot/alustarivit-varoitukset-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
@@ -388,7 +388,7 @@
 
            [pot-yhteinen/tallenna e! perustiedot-app tallenna-app {:kayttaja kayttaja
                                                                    :urakka-id (:id urakka)
-                                                                   :valmis-luonnokseksi? valmis-luonnokseksi?
-                                                                   :valmis-tarkistettavaksi? valmis-tarkistettavaksi?
+                                                                   :voi-tallentaa? voi-tallentaa?
+                                                                   :voi-lahettaa-tarkistettavaksi? voi-lahettaa-tarkistettavaksi?
                                                                    :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))

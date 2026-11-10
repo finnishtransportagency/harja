@@ -18,6 +18,16 @@
     border-bottom: solid 2px @lemon-dark-saavutettava;
   }
 
+  // Yleinen gridi näyttää ilmoitukset td:hoverilla. POT-lomakkeella ilmoitukset näytetään vain
+  // muokkaus-gridin ilmoitus-nakyvissa-tilan mukaan (ks. grid.less), joten hover-sääntö kumotaan täällä.
+  .livi-grid table:not(.pvm-valinta) td:not(.ilmoitus-nakyvissa) {
+    > .varoitukset,
+    > .virheet,
+    > .huomautukset {
+      display: none;
+    }
+  }
+
   .virheet > .info-laatikko,
   .varoitukset > .info-laatikko {
     bottom: 5px;

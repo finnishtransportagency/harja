@@ -149,7 +149,21 @@
       (is (not (ilmoitus-nakyvissa?)))
       (is (nil? (solu 2 2 "div.virheet")))
 
+      "Hiirellä fokusoitu ilmoitus piiloutuu hiiren poistuessa"
+      (sim/mouse-enter (solu 2 2 "") nil)
+      (sim/mouse-down (solu 2 2 "input") nil)
+      (sim/focus (solu 2 2 "input") nil)
+      (sim/key-down (solu 2 2 "input") {:key "1"})
+      --
+      (is (ilmoitus-nakyvissa?))
+      (sim/mouse-leave (solu 2 2 "") nil)
+      --
+      (is (not (ilmoitus-nakyvissa?)))
+      (is (nil? (solu 2 2 "div.virheet")))
+
       "Näppäimistöfokus näyttää validointi-ilmoituksen"
+      (sim/key-down (solu 2 2 "input") {:key "Tab"})
+      (sim/blur (solu 2 2 "input") nil)
       (sim/focus (solu 2 2 "input") nil)
       --
       (is (ilmoitus-nakyvissa?))
