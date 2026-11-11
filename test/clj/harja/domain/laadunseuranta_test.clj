@@ -411,11 +411,52 @@
                                [nil toimenpideinstanssit]]]
       (is (= odotetut
              (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
-               toimenpideinstanssit 2024 tyyppi)))
+               toimenpideinstanssit 2024 :teiden-hoito tyyppi)))
       (is (= [johto]
              (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
-               toimenpideinstanssit 2025 tyyppi))))
-    (is (empty? (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset nil 2025 nil)))))
+               toimenpideinstanssit 2025 :teiden-hoito tyyppi))))
+    (is (empty? (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset nil 2025 :teiden-hoito nil)))))
+
+(deftest myohemmin-alkanut-muu-kuin-teiden-hoito-sailyttaa-kulun-kohdistukset
+  (let [talvi {:id 1 :tpi_id 101 :tpi_nimi "Talvihoito" :t2_koodi "23104"}
+        soratie {:id 2 :tpi_id 202 :tpi_nimi "Sorateiden hoito" :t2_koodi "23124"}
+        toimenpideinstanssit [talvi soratie]]
+    (is (= toimenpideinstanssit
+           (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+             toimenpideinstanssit 2025 :hoito nil)))))
+
+(deftest mhu25-ja-muut-urakat-erotellaan-kohdistuksissa
+  (let [paallystys {:id 1 :tpi_id 101 :tpi_nimi "Päällystys" :t2_koodi "20100"}
+        paallystys-sopimuskohtainen {:id 3 :tpi_id 103 :tpi_nimi "Päällystys" :t2_koodi "20170"}
+        hoidon-johto {:id 2 :tpi_id 202 :tpi_nimi "Hoidon johto" :t2_koodi "23150"}
+        toimenpideinstanssit [paallystys paallystys-sopimuskohtainen hoidon-johto]]
+    (is (= [hoidon-johto]
+           (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+             toimenpideinstanssit 2025 :teiden-hoito nil)))
+    (is (= toimenpideinstanssit
+           (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+             toimenpideinstanssit 2025 :paallystys nil)))))
+
+(deftest nakymakonteksti-valittaa-urakkatyypin-kohdistuspaatokseen
+  (let [urakka {:alkupvm (pvm/hoitokauden-alkupvm 2025)
+                :tyyppi :paallystys}
+        konteksti (sanktion-lomake-domain/kokoa-nakymakonteksti
+                    {:sanktio {:laji :A}
+                     :urakka urakka
+                     :hoitokauden-alkuvuosi 2025
+                     :yllapitourakka? true
+                     :yllapitokohdeurakka? false
+                     :vesivaylaurakka? false
+                     :sanktiolajit []
+                     :sanktiotyypit []
+                     :toimenpideinstanssit []
+                     :kulun-kohdistukset []
+                     :tehtavaryhmat []
+                     :laskutuskuukaudet []
+                     :laskutuskuukausi-id nil
+                     :indeksi-kaytossa? false
+                     :voi-muokata? true})]
+    (is (= :paallystys (:urakkatyyppi konteksti)))))
 
 (deftest sanktiotyypin-vaihto-kayttaa-uuden-tyypin-kulun-kohdistuksia
   (let [talvi {:id 1 :tpi_id 101 :tpi_nimi "Talvihoito" :t2_koodi "23110"}
@@ -427,7 +468,7 @@
               :toimenpideinstanssi nil}]
     (doseq [[vuosi odotettu] [[2024 202] [2025 303]]]
       (let [kohdistukset (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
-                           toimenpideinstanssit vuosi (:nimi tyyppi))
+                           toimenpideinstanssit vuosi :teiden-hoito (:nimi tyyppi))
             tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
                     rivi tyyppi vuosi toimenpideinstanssit kohdistukset)]
         (is (= tyyppi (:tyyppi tulos)))
