@@ -117,7 +117,7 @@
   "Sanktiolomakkeen kenttäkuvausfunktioiden yhteinen konteksti. Arvo voi olla nil, avain ei saa puuttua."
   [:sanktio :lomake :aikakausi :summa :lukutila? :voi-muokata?
    :sanktiolajit :tyyppi-valinnat :urakan-alkuvuosi :toimenpideinstanssit
-   :kulun-kohdistukset :hoidonjohtopalkkio-tr :laskutuskuukaudet :laskutuskuukausi-id
+   :urakkatyyppi :kulun-kohdistukset :hoidonjohtopalkkio-tr :laskutuskuukaudet :laskutuskuukausi-id
    :indeksi-kaytossa? :urakan-indeksi])
 
 (defn nakymakonteksti
@@ -184,11 +184,12 @@
       arvo)))
 
 (defn mahdolliset-kulun-kohdistukset
-  "Palauttaa sanktiotyypille valittavat kohdistukset urakan alkuvuoden perusteella.
-  Vuodesta 2025 alkaen kohdistus rajataan hoidon johtoon; sitä vanhemmilla urakoilla
-  vaihtoehdot suodatetaan sanktiotyypin nimen perusteella."
-  [toimenpideinstanssit urakan-alkuvuosi sanktion-tyyppi]
-  (if (> urakan-alkuvuosi 2024)
+  "Palauttaa sanktiotyypille valittavat kohdistukset urakan alkuvuoden ja tyypin perusteella.
+  MHU25-urakoissa kohdistus rajataan hoidon johtoon; muilla urakoilla vaihtoehdot
+  suodatetaan sanktiotyypin nimen perusteella."
+  [toimenpideinstanssit urakan-alkuvuosi urakkatyyppi sanktion-tyyppi]
+  (if (and (= :teiden-hoito urakkatyyppi)
+        (> urakan-alkuvuosi 2024))
     (filter #(= "23150" (:t2_koodi %)) toimenpideinstanssit)
     (case sanktion-tyyppi
       "Muut hoitourakan tehtäväkokonaisuudet" (remove
@@ -399,6 +400,7 @@
        :tyyppi-valinnat sanktiotyypit
        :urakan-alkuvuosi urakan-alkuvuosi
        :toimenpideinstanssit toimenpideinstanssit
+      :urakkatyyppi (:tyyppi urakka)
        :kulun-kohdistukset kulun-kohdistukset
        :hoidonjohtopalkkio-tr (hoidonjohtopalkkio-tehtavaryhma tehtavaryhmat)
        :laskutuskuukaudet laskutuskuukaudet

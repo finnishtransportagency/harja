@@ -334,10 +334,11 @@
         #(valitut (domain-sanktio/rivin-tyyppi %))
         sanktiot-ja-bonukset))))
 
-(defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi sanktio-atom]
+(defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi urakkatyyppi sanktio-atom]
   (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
     @urakka/urakan-toimenpideinstanssit
     urakan-alkuvuosi
+    urakkatyyppi
     (get-in @sanktio-atom [:tyyppi :nimi])))
 
 (defn sanktion-tai-bonuksen-kuvaus [{:keys [suorasanktio laatupoikkeama] :as sanktio-tai-bonus}]

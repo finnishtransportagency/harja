@@ -42,7 +42,7 @@
 
 (defn- sanktion-laji-ja-tyyppikentat
   [{:keys [sanktio lomake lukutila? sanktiolajit tyyppi-valinnat
-           urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]}]
+           urakan-alkuvuosi urakkatyyppi toimenpideinstanssit kulun-kohdistukset]}]
   [(when-not (:vesivaylaurakka? lomake) ;; Vesiväylässä lajeina on vain sakko
      {:otsikko "Sanktion laji" :tyyppi :valinta :pakollinen? true
       ::lomake/col-luokka "col-xs-12"
@@ -90,6 +90,7 @@
                                     (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
                                       toimenpideinstanssit
                                       urakan-alkuvuosi
+                                      urakkatyyppi
                                       (:nimi tyyppi))))
                          :valinta-arvo identity
                          :aseta-vaikka-sama? true
@@ -511,7 +512,7 @@
        ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin,
        ;; mhu -25 alkaen tehtäväryhmään "G - Hoidonjohtopalkkio".
        :kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset
-                             (:suorasanktio @muokattu) (pvm/vuosi (:alkupvm urakka)) muokattu)
+                             (:suorasanktio @muokattu) (pvm/vuosi (:alkupvm urakka)) (:tyyppi urakka) muokattu)
        :tehtavaryhmat @tiedot/valitun-urakan-tehtavaryhmat
        :laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
        :laskutuskuukausi-id laskutuskuukausi-id

@@ -156,7 +156,7 @@
 
 (defn- suodattimet-ja-toiminnot [sivupaneeli-auki?-atom lajisuodattimet]
   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
-        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi tiedot/valittu-sanktio)
+        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi (:tyyppi @nav/valittu-urakka) tiedot/valittu-sanktio)
         tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
               (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
     [:div.flex-row
