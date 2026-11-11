@@ -104,7 +104,7 @@ WHERE urakka = :urakka
   AND "hoitokauden-alkuvuosi" = :hoitokausi
   AND tehtava = :tehtava;
 
--- name: tehtavaryhmat-ja-toimenpiteet-urakalle
+-- name: hae-mhu-tehtavaryhmat-ja-toimenpiteet-urakalle
 -- Pois jätetyt lisätyöhön viittaavat tehtäväryhmät ovat ainoastaan toteumien kirjaamista varten.
 -- Nämä dummy-tehtäväryhmät ja niihin liitetyt tehtävät tarvitaan, koska toteumiin on pakko liittää tehtävä.
 -- Lisätöiden kulut voidaan kohdistaa ilman tehtävää ja tehtäväryhmää suoraan toimenpiteelle.
@@ -127,7 +127,22 @@ FROM tehtavaryhma tr
    AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= :urakka-voimassaolo-alkuvuosi::INTEGER)
  order by tr.jarjestys;
 
--- name: tehtavaryhman-tehtavat-urakalle
+-- name: hae-vhu-tehtavaryhmat-ja-toimenpiteet-urakalle
+SELECT tp.id        as "toimenpide-id",
+       tp.nimi      as "toimenpide",
+       tr.nimi      as "tehtavaryhma-nimi",
+       tr.id        as "tehtavaryhma-id",
+       tr.jarjestys as "jarjestys",
+       tpi.id       as "toimenpideinstanssi"
+FROM tehtavaryhmaotsikko tro
+         JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id AND tro.urakkatyyppi = 'vesivayla-hoito'
+         JOIN tehtava t ON tr.id = t.tehtavaryhma AND t."vhu-tehtava?" is true AND
+                           t.poistettu is not true AND t.piilota is not true
+         JOIN toimenpide tp ON t.emo = tp.id
+         JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakkaid
+order by tro.otsikko, tr.jarjestys;
+
+-- name: hae-mhu-tehtavaryhman-tehtavat-urakalle
 WITH maaramitattavat_tehtavat AS (
   SELECT
     tpk.id,
@@ -187,6 +202,18 @@ WHERE
       AND (t2.voimassaolo_loppuvuosi IS NULL OR t2.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
   )
 ORDER BY jarjestys, nimi;
+
+-- name: hae-vhu-tehtavaryhman-tehtavat-urakalle
+-- Haetaan vhu tehtäväryhmän tehtävät
+SELECT t.id, t.nimi, t.jarjestys, t.yksikko, tpi.id as toimenpideinstanssi, yth.yksikkohinta
+  FROM tehtava t
+       JOIN toimenpideinstanssi tpi on tpi.toimenpide = t.emo and tpi.urakka = :urakka-id
+       LEFT JOIN yksikkohintainen_tyo yth ON t.id = yth.tehtava AND yth.urakka = :urakka-id
+WHERE t.tehtavaryhma = :tehtavaryhma-id
+       -- Tehtävän täytyy olla voimassa urakan alkuvuonna -- Mutta lokaalisti tämä ei voi vielä toimia, joten jätetaan se nyt vielä pois
+  -- AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+  -- AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
+ORDER BY t.jarjestys;
 
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
