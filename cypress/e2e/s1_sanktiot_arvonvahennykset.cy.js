@@ -13,14 +13,16 @@ import {
     valitseSivupaneelissaPvm,
     valitseSivupaneelissaRadio
 } from '../support/apurit';
+import {evkLappi, testiurakkaMhu26} from '../support/sanktiotJaBonuksetFns';
 
 // Arvonvähennysten E2E-testit (Sanktiot ja bonukset -näkymä)
 //
-// Testataan arvonvähennyslomakkeen toiminta kolmella eri urakkatyypillä:
+// Testataan arvonvähennyslomakkeen toiminta neljällä eri urakkatyypillä:
 //  1) MHU25-urakka (Kajaani): "Vaikuttaa tavoitehintaan" + tehtäväryhmä & tehtävä
 //  2) MHU25-urakka (Kajaani): "Ei vaikuta tavoitehintaan" + Kulun kohdistus
 //  3) MHU24-urakka (Suomussalmi): tavoitehinta-radioiden näyttäminen 2026 hoitovuodesta alkaen
 //     ei tehtäväryhmä/tehtävä-valikoita, aina Kulun kohdistus + Laskutuskuukausi
+//  4) MHU26-urakka (Sodankylä): arvonvähennyksen tallennus MHU26-profiilin mukaan
 //
 // HUOM! Lomakkeen logiikka: src/cljs/harja/views/urakka/laadunseuranta/arvonvahennys_lomake.cljs
 
@@ -31,7 +33,7 @@ let testiArvonvahennysKuvaus1 = "CY-mhu25-tavoitehinta";    // MHU25, vaikuttaa 
 let testiArvonvahennysKuvaus2 = "CY-mhu25-ei-tavoitehinta"; // MHU25, ei vaikuta tavoitehintaan
 let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
 let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
-let testiArvonvahennysKuvausMhu26 = `CY-mhu26-minimitesti-${Date.now()}`;
+let testiArvonvahennysKuvausMhu26 = "CY-mhu26-arvonvahennys"; // MHU26
 
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
@@ -41,7 +43,6 @@ let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
 let testiurakka3 = "Oulun MHU 2019-2024";              // mhu19 urakka
 let evk = "Pohjois-Suomi";
 let evk2 = "Pohjois-Suomi";
-let evkMhu26 = "Lappi";
 
 // Havaittu- ja Määrätty/Käsitelty-päivämäärät.
 // Sekä Kajaanin (käynnissä 2025-10-01–2030-09-30) että Raahen
@@ -52,6 +53,9 @@ let havaittuPvm = "01.03.2026";
 let maarattyPvm = "15.03.2026";
 let havaittuPvmRaahe = "01.03.2027";
 let maarattyPvmRaahe = "5.03.2027";
+// Sodankylän MHU26-urakka alkaa 1.10.2026.
+let havaittuPvmMhu26 = "02.10.2026";
+let maarattyPvmMhu26 = "02.10.2026";
 let havaittuPvmOulu = "01.03.2021";
 let maarattyPvmOulu = "15.03.2021";
 
@@ -74,13 +78,13 @@ describe('Arvonvähennykset - MHU26-urakka', () => {
         siivoaTietokannastaSanktiot(testiArvonvahennysKuvausMhu26);
     });
 
-    it('lisää arvonvähennyksen', () => {
-        avaaSanktiotJaBonukset('Sodankylän MHU 2026-2031', evkMhu26);
+    it('Arvonvähennys mhu26 urakalle', () => {
+        avaaSanktiotJaBonukset(testiurakkaMhu26, evkLappi);
         avaaUusiArvonvahennys();
 
         cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
         kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvausMhu26);
-        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', 'CY-MHU26-arvonvähennyksen minimitesti');
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', 'CY-perustelu-mhu26');
         kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '100');
 
         cy.intercept('POST', '_/hae-tehtavaryhman-tehtavat-urakalle').as('haeTehtavatMhu26');
@@ -88,8 +92,8 @@ describe('Arvonvähennykset - MHU26-urakka', () => {
         cy.wait('@haeTehtavatMhu26', {timeout: clickTimeout});
         valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtävä');
 
-        valitseSivupaneelissaPvm('Havaittu', '02.10.2026');
-        valitseSivupaneelissaPvm('Määrätty', '02.10.2026');
+        valitseSivupaneelissaPvm('Havaittu', havaittuPvmMhu26);
+        valitseSivupaneelissaPvm('Määrätty', maarattyPvmMhu26);
 
         tallennaArvonvahennyslomake();
 
