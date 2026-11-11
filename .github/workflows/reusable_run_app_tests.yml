@@ -257,12 +257,16 @@ jobs:
 
        # Huom: Build-action tarvitsee testitietokannan taustalle ennen buildin ajoa
 
-      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois
+      # Kevyestä buildistä on jätetty laadunseurannan ja dokumentaation build pois, lisäksi build tuotetaan mahdollisimman
+      # kevyellä prosessilla nopeuden varmistamiseksi. Täysi build tehdään mergen yhteydessä suoritettavien testien
+      # yhteydessä, tai myös manuaalisesti tekemällä deployment sopivilla asetuksilla valittuun testi-ympäristöön.
       - name: Build Harja Uberjar (Kevyt)
         if: ${{ inputs.build-harja == 'light' }}
         uses: $/.github/actions/build-harja-app
         with:
+          build-mode: 'dev-bundle'
           build-laadunseuranta: 'false'
+          build-uberjar: 'true'
 
       - name: Build Harja Uberjar (Täysi build)
         if: ${{ inputs.build-harja == 'full' }}
@@ -339,7 +343,7 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
       - name: Log in to the Container registry
-        uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+        uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
         with:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
@@ -387,7 +391,7 @@ jobs:
     name: "Backend-testit (shard ${{ matrix.shard }})"
     runs-on: ubuntu-latest
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     strategy:
       # fail-fast: false → kaikki shardit ajetaan, vaikka joku failaisi. Jos halutaan nopeampi feedback, vaihda true.
       fail-fast: false
@@ -437,7 +441,7 @@ jobs:
         run: lein with-profile +ci test2junit ":shard-${SHARD}"
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@8a133bfa3ecb0ea9024c1e2ae788b4c25f6cdb9d # v6.6.2
+        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -457,7 +461,7 @@ jobs:
 #    name: "Backend-testit"
 #    runs-on: ubuntu-latest
 #    env:
-#      TZ: "EET"
+#      TZ: "Europe/Helsinki"
 #    permissions:
 #      contents: read # Tarvitaan checkout actionissa
 #      packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
@@ -488,7 +492,7 @@ jobs:
 #        run: lein test2junit
 #
 #      - name: Publish Test Report
-#        uses: mikepenz/action-junit-report@8a133bfa3ecb0ea9024c1e2ae788b4c25f6cdb9d # v6.6.2
+#        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
 #        env:
 #          NAME_PREFIX: ${{ inputs.artifact-prefix }}
 #        if: always()
@@ -506,7 +510,7 @@ jobs:
     name: "Hitaat testit"
     runs-on: ubuntu-latest
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -538,7 +542,7 @@ jobs:
         run: lein test2junit :hidas
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@8a133bfa3ecb0ea9024c1e2ae788b4c25f6cdb9d # v6.6.2
+        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -556,7 +560,7 @@ jobs:
     name: "Front-end testit"
     runs-on: ubuntu-latest
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -599,7 +603,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
       HARJA_ITMF_BROKER_PORT: 61616
       HARJA_ITMF_BROKER_AI_PORT: 8161
 
@@ -641,7 +645,7 @@ jobs:
         run: lein test2junit :integraatio
 
       - name: Publish Test Report
-        uses: mikepenz/action-junit-report@8a133bfa3ecb0ea9024c1e2ae788b4c25f6cdb9d # v6.6.2
+        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()
@@ -661,7 +665,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
-      TZ: "EET"
+      TZ: "Europe/Helsinki"
     strategy:
       # fail-fast: false → kaikki shardit ajetaan, vaikka joku failaisi. Jos halutaan nopeampi feedback, vaihda true.
       fail-fast: false
@@ -779,6 +783,7 @@ jobs:
       - name: Run cypress for ${{ matrix.browser }} (shard ${{ matrix.shard }})
         uses: $/.github/actions/start-cypress
         with:
+          service-name: cypress-latest
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
@@ -787,7 +792,7 @@ jobs:
           spec: cypress/e2e/s${{ matrix.shard }}_*.cy.js
 
       - name: Publish Test Report for ${{ matrix.browser }} shard ${{ matrix.shard }}
-        uses: mikepenz/action-junit-report@8a133bfa3ecb0ea9024c1e2ae788b4c25f6cdb9d # v6.6.2
+        uses: mikepenz/action-junit-report@a16be3a69023e9bd7e748ede768b3282ea7b30ce # v6.7.1
         env:
           NAME_PREFIX: ${{ inputs.artifact-prefix }}
         if: always()

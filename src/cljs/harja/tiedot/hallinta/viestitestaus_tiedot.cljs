@@ -210,7 +210,11 @@
 
   LahetaPaivystajanIlmoitus
   (process-event [{ilmoitus-tiedot :ilmoitus-tiedot} app]
-    (let [data (select-keys ilmoitus-tiedot [:ilmoitus-id :vastaanottajat])]
+    (let [data (-> (select-keys ilmoitus-tiedot [:ilmoitus-id :vastaanottajat])
+                   (update :vastaanottajat
+                           #(mapv (fn [vastaanottaja]
+                                    (select-keys vastaanottaja [:sahkoposti :puhelinnumero]))
+                                  %)))]
       (tuck-apurit/post! :debug-laheta-paivystajan-ilmoitus data
         {:onnistui ->LahetaPaivystajanIlmoitusOnnistui
          :epaonnistui ->LahetaPaivystajanIlmoitusEpaonnistui})

@@ -1,6 +1,5 @@
 (ns harja.palvelin.integraatiot.tloik.ilmoitukset
   (:require [taoensso.timbre :as log]
-            [clojure.string :as str]
             [hiccup.core :refer [html]]
             [clj-time.core :as time]
             [harja.palvelin.integraatiot.tloik.sanomat.ilmoitus-sanoma :as ilmoitus-sanoma]
@@ -81,16 +80,8 @@
   (if (empty? paivystajat)
     (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
     (let [ilmoitus-paivystajille (assoc ilmoitus :urakka-id urakka-id)]
-      (reduce (fn [kasitellyt-sahkopostit paivystaja]
-                (let [normalisoitu-sahkoposti (some-> (:sahkoposti paivystaja) str/trim str/lower-case)
-                      laheta-sahkoposti? (not (and (seq normalisoitu-sahkoposti) (contains? kasitellyt-sahkopostit normalisoitu-sahkoposti)))]
-                      (paivystajaviestit/laheta ilmoitusasetukset db ilmoitus-paivystajille paivystaja laheta-sahkoposti?)
-                  (if (seq normalisoitu-sahkoposti)
-                    (conj kasitellyt-sahkopostit normalisoitu-sahkoposti)
-                    kasitellyt-sahkopostit)))
-        #{}
-        paivystajat)
-      nil)))
+      (doseq [{:keys [paivystaja laheta-sahkoposti?]} (paivystajaviestit/lahetyspaatokset ilmoitus-paivystajille paivystajat)]
+        (paivystajaviestit/laheta ilmoitusasetukset db ilmoitus-paivystajille paivystaja laheta-sahkoposti?)))))
 
 (defn- ilmoituksen-kesto [sekunnit]
   (when sekunnit

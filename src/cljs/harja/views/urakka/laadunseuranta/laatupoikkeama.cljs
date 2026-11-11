@@ -159,7 +159,8 @@
                [napit/yleinen-toissijainen "Lisää uusi"
                 (fn []
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
-                   (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
+                   (let [mhu-25? (tila/mhu25-urakka? @nav/valittu-urakka)
+                         kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
                          uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))) {:suorasanktio false})
                                 (assoc :maarattypvm kasittelyaika)
                                 (assoc :perintapvm kasittelyaika)
@@ -169,7 +170,7 @@
                                 (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
                          uusi-sanktio-atom (atom uusi)
-                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) uusi-sanktio-atom)]
+                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false uusi-sanktio-atom mhu-25?)]
                     (reset! sivupaneeli-auki? true)
                     (reset! sanktiot/valittu-sanktio
                       (-> (uuden-sanktion-rivi uusi (:tyyppi @nav/valittu-urakka) @sanktiot/valitun-urakan-sanktiolajit mahdolliset-kulun-kohdistukset)

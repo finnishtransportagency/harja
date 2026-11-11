@@ -112,7 +112,7 @@
         laskutuskuukausi-id (str "laskutuskuukausi-dropdown-" (gensym))
         liitteet-id (str "liiteet-element-id-" (gensym))
         ;; mhu -24 alkaviin urakoihin asti sanktio kohdistuu toimenpideinstanssiin.
-        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? urakan-alkuvuosi muokattu)
+        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset suorasanktio? muokattu mhu25?)
         ;;mhu -25 alkaen, sanktio kohdistuu tehtäväryhmään "G - Hoindonjohtopalkkio" - Kaivetaan siis oikea tehtäväryhmä listasta
         tehtavaryhmat (map #(assoc % :id (:tehtavaryhma %) :nimi (:tehtavaryhma_nimi %)) @tiedot/valitun-urakan-tehtavaryhmat)
         ;; Muokataan tehtäväryhmien nimet sopivaksi alasvetovalikolle
