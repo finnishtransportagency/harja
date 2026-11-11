@@ -192,7 +192,15 @@
                                                 hoitovuoden-paatostyyppi (when tehtavaryhma
                                                                            (first (keep #(when (= (val %) (:tehtavaryhma tehtavaryhma))
                                                                                            (key %)) vuoden-paatoksen-tehtavaryhmien-nimet)))
-                                                kohdistustyyppi (keyword (:tyyppi kohdistus))]
+                                                kohdistustyyppi (keyword (:tyyppi kohdistus))
+                                                tehtava (if (and (nil? (:tehtava kohdistus))
+                                                              (:muu-tehtava-kaytossa kohdistus))
+                                                          muu-tehtava
+                                                          (:tehtava kohdistus))
+                                                tehtava (cond-> tehtava
+                                                          (and (map? tehtava)
+                                                            (some? (:yksikkohinta kohdistus)))
+                                                          (assoc :yksikkohinta (:yksikkohinta kohdistus)))]
                                             (-> kohdistus
                                               (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
                                               (assoc :tyyppi kohdistustyyppi)
@@ -200,10 +208,7 @@
                                               (assoc :tehtavaryhma tehtavaryhma)
                                               (assoc :valittu-muutostyo valittu-muutostyo)
                                               (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
-                                              (assoc :tehtava (if (and (nil? (:tehtava kohdistus))
-                                                                    (:muu-tehtava-kaytossa kohdistus))
-                                                                muu-tehtava
-                                                                (:tehtava kohdistus))))))
+                                              (assoc :tehtava tehtava))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))

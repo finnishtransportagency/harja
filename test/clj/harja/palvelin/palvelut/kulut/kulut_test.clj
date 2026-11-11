@@ -360,6 +360,55 @@
     (is (contains? tehtava :nimi) "Tehtavalla on nimi.")
     (is (contains? tehtava-map-muodossa :nimi) "Map muotoisena annetulla tehtavalla on nimi."))))
 
+(deftest tallenna-kulun-kohdistuksen-maara-ja-yksikkohinta
+  (with-redefs [pvm/nyt (constantly #inst "2024-12-16T00:00:00.000-00:00")]
+    (let [tehtava-id (hae-tehtavan-id-nimella "Poijujen ja suurviittojen ankkuroinnin tarkastus")
+          urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+          kulun-summa 37.02M
+          yksikkohinta 12.34M
+          maara 3M
+          uusi-kulu (assoc uusi-kulu
+                      :urakka urakka-id
+                      :erapaiva #inst "2024-12-15T21:00:00.000-00:00"
+                      :kokonaissumma kulun-summa
+                      :tyyppi "laskutettava"
+                      :viite "123456789"
+                      :koontilaskun-kuukausi "joulukuu/2-hoitovuosi")
+          kohdistus (-> (first (:kohdistukset uusi-kulu))
+                      (assoc :summa kulun-summa
+                        :maara maara
+                        :yksikkohinta yksikkohinta
+                        :tehtava {:id tehtava-id
+                                  :yksikkohinta yksikkohinta}))
+          paivitettava-kulu (assoc uusi-kulu
+                              :kokonaissumma kulun-summa
+                              :kohdistukset [kohdistus]
+                              :liitteet [])
+          tallennettu (kutsu-http-palvelua :tallenna-kulu
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :kulu-kohdistuksineen paivitettava-kulu})
+          paivitetty-yksikkohinta 15.11M
+          paivitetty-maara 4M
+          tallennettu-kohdistus (first (:kohdistukset tallennettu))
+          paivitetty-kohdistus (-> tallennettu-kohdistus
+                                 (assoc :maara paivitetty-maara
+                                   :summa 60.44M
+                                   :yksikkohinta paivitetty-yksikkohinta
+                                   :tehtava {:id tehtava-id
+                                             :yksikkohinta paivitetty-yksikkohinta}))
+          paivitetty (kutsu-http-palvelua :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen (-> tallennettu
+                                                (assoc :kokonaissumma 60.44M)
+                                                (assoc :kohdistukset [paivitetty-kohdistus]))})
+          paivitetty-kohdistus (first (:kohdistukset paivitetty))]
+      (is (= maara (:maara tallennettu-kohdistus)))
+      (is (= yksikkohinta (:yksikkohinta tallennettu-kohdistus)))
+      (is (= paivitetty-maara (:maara paivitetty-kohdistus)))
+      (is (= paivitetty-yksikkohinta (:yksikkohinta paivitetty-kohdistus))))))
+
 (defn- feilaa-tallenna-kulu-validointi [vaara-kulu odotettu-poikkeus]
   (try
     (kutsu-http-palvelua :tallenna-kulu (oulun-2019-urakan-urakoitsijan-urakkavastaava)

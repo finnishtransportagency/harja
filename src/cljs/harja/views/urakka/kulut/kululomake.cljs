@@ -121,14 +121,14 @@
       [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]])])
 
 (defn lisatieto
-  ([e! lisatieto lomake nro]
-   (lisatieto e! lisatieto lomake nro false))
-  ([e! lisatieto lomake nro monirivinen?]
+  ([e! lisatieto-arvo lomake nro]
+   (lisatieto e! lisatieto-arvo lomake nro false))
+  ([e! lisatieto-arvo lomake nro monirivinen?]
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Lisätieto"
      :vayla-tyyli? true
      :otsikon-luokka ""
-     :arvo-atom (r/wrap lisatieto
+     :arvo-atom (r/wrap lisatieto-arvo
                   #(e! (tiedot/->KohdistuksenLisatieto % nro)))
      :kentta-params (cond-> {:tyyppi :string
                              :vayla-tyyli? true
@@ -239,6 +239,13 @@
      [:div.row
       [:div.col-xs-12.col-md-3
        [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro true]]]
+     (when (and tehtava (nil? yksikkohinta))
+       [:div.row
+        [:div.col-xs-12.col-md-12
+         [yleiset/info-laatikko :varoitus
+          "Tehtävän yksikköhintaa ei löydy"
+          "Tehtävään liittyvää yksikköhintaa ei löydy Harjasta. Tehtävien yksikköhinnat tulee määritellä Harjan osiossa \"Kulut > Yksikköhinnat\"."
+          nil]]])
      [:div.row
       [:div.col-xs-12.col-md-2
        [kentat/tee-otsikollinen-kentta
@@ -247,24 +254,24 @@
          :tyylit {:width "110px"}
          :kentta-tyylit {:width "100%"}
          :kentta-params {:tyyppi :numero
-                        :vaadi-ei-negatiivinen? true
-                        ;:koko 30
-                        :yksikko (:yksikko tehtava)
-                        :vayla-tyyli? true
+                         :vaadi-ei-negatiivinen? true
+                         :yksikko (:yksikko tehtava)
+                         :vayla-tyyli? true
 
-                        :muokattu? true
-                        :virhe? (nayta-kohdistuksen-virhe? lomake nro :maara)
-                        :data-cy "vhu-hankintakulu-maara"}}]]
+                         :muokattu? true
+                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :maara)
+                         :data-cy "vhu-hankintakulu-maara"}}]]
       [:div.col-xs-12.col-md-2
        [kentat/nayta-otsikollinen-kentta
         {:otsikko "Yksikköhinta"
-        :kentta-params {:tyyppi :euro}
-        :arvo-atom (kentat/vain-luku-atomina yksikkohinta)}]]
+         :kentta-params {:tyyppi (if (nil? yksikkohinta) :string :euro)}
+         :arvo-atom (kentat/vain-luku-atomina
+                      (if (nil? yksikkohinta) "Ei saatavilla" yksikkohinta))}]]
       [:div.col-xs-12.col-md-2
        [kentat/nayta-otsikollinen-kentta
         {:otsikko "Yhteensä"
-        :kentta-params {:tyyppi :euro}
-        :arvo-atom (kentat/vain-luku-atomina yhteensa)}]]]]))
+         :kentta-params {:tyyppi :euro}
+         :arvo-atom (kentat/vain-luku-atomina yhteensa)}]]]]))
 
 
 
