@@ -12,7 +12,13 @@
 
 (declare hae-sopimuksen-tehtavamaarat-urakalle hae-urakan-suunniteltu-materiaalin-kaytto-tehtavamaarista-analytiikalle
   hae-mhurakan-suunnitellut-tehtavamaarat-analytiikalle hae-alueurakan-suunnitellut-tehtavamaarat-analytiikalle
-  mhu-suunniteltavat-tehtavat tehtavaryhman-tehtavat-urakalle hae-tehtavamaarat-ja-toteumat-aikavalilla)
+  mhu-suunniteltavat-tehtavat hae-mhu-tehtavaryhman-tehtavat-urakalle hae-vhu-tehtavaryhman-tehtavat-urakalle
+  hae-tehtavamaarat-ja-toteumat-aikavalilla
+  hae-suunnitellut-hoitokauden-tehtavamaarat-urakassa
+  hae-mhu-tehtavaryhmat-ja-toimenpiteet-urakalle hae-vhu-tehtavaryhmat-ja-toimenpiteet-urakalle
+  hae-validit-tehtava-idt
+  hae-sopimuksen-tehtavamaaran-maara lisaa-tehtavamaara<! paivita-tehtavamaara! poista-sopimuksen-tehtavamaara!
+  lisaa-urakka-tehtavamaara-mutta-ala-paivita<!)
 
 (defn hae-sopimuksen-tila
   [db {:keys [urakka-id sopimus-id]}]
