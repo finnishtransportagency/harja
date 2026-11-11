@@ -1,0 +1,101 @@
+import {
+    avaaSanktiotJaBonuksetNakyma,
+    clickTimeout,
+    siivoaSanktiotKannasta
+} from '../support/sanktiotJaBonuksetFns';
+import {SP, valitseSivupaneelissaEnsimmainenAlasvetoarvo} from '../support/apurit';
+
+const urakka = 'LOU tienpäällystysurakka ET1 2026,P';
+const evk = 'Varsinais-Suomi';
+const kuvaus = 'CY-yllapitourakka-20100-kohdistus';
+const perustelu = 'CY-yllapitourakka-20100-kohdistus-perustelu';
+const toimenpideinstanssi = 'LOU Päällyste T2 20100 TP';
+
+function valitsePvm(otsikko, arvo) {
+    cy.get(SP).find('label').contains(otsikko)
+        .parents('.form-group').first()
+        .find('input').first()
+        .clear()
+        .type(arvo)
+        .should('have.value', arvo);
+    // Päivämääräkalenteri peittää labelin, joten fokus siirretään pakotetusti pois kentästä.
+    cy.get(SP).find('label').contains(otsikko).click({force: true});
+}
+
+describe('Ei-MHU-ylläpitourakan sanktion kohdistus', () => {
+    before(() => {
+        siivoaSanktiotKannasta(kuvaus);
+    });
+
+    after(() => {
+        siivoaSanktiotKannasta(kuvaus);
+    });
+
+    it('säilyttää T2-kohdistuksen tallennuksessa ja uudelleenavauksessa', () => {
+        cy.viewport(1100, 1200);
+        cy.intercept('POST', '**/_/urakan-toimenpiteet').as('haeToimenpideinstanssit');
+        avaaSanktiotJaBonuksetNakyma(urakka, evk);
+        let fixtureToimenpideinstanssiId;
+        let tallennettuSanktioId;
+        cy.wait('@haeToimenpideinstanssit', {timeout: clickTimeout}).then(({response}) => {
+            expect(response && response.statusCode, JSON.stringify(response && response.body)).to.be.within(200, 299);
+            const fixtureInstanssi = response.body.find((instanssi) => instanssi.tpi_nimi === toimenpideinstanssi);
+            expect(fixtureInstanssi, `Fixture-instanssia ei löytynyt: ${toimenpideinstanssi}`).to.exist;
+            fixtureToimenpideinstanssiId = fixtureInstanssi.tpi_id;
+        });
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallenna');
+        cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('haeTallennuksenJalkeen');
+
+        cy.contains('button', 'Lisää uusi').click();
+        cy.get(SP).should('be.visible');
+        cy.get(SP).contains('label', 'Sanktio').click();
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Sanktion laji');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tyyppi');
+        cy.get(SP).contains('.form-group', 'Kulun kohdistus').should('be.visible')
+            .within(() => {
+                cy.get('.select-default').valinnatValitse({valinta: toimenpideinstanssi});
+            });
+        cy.get(SP).contains('.form-group', 'Tapahtumapaikka/kuvaus').find('input')
+            .clear().type(kuvaus);
+        cy.get(SP).contains('.form-group', 'Perustelu').find('textarea')
+            .clear().type(perustelu);
+        valitsePvm('Havaittu', '10.02.2026');
+        valitsePvm('Määrätty', '10.02.2026');
+
+        cy.get(SP).contains('button', 'Tallenna').click();
+        cy.wait('@tallenna', {timeout: clickTimeout}).then(({request, response}) => {
+            expect(response && response.statusCode, JSON.stringify(response && response.body)).to.be.within(200, 299);
+            expect(request.body).to.have.property('toimenpideinstanssi');
+            expect(request.body.toimenpideinstanssi).to.equal(fixtureToimenpideinstanssiId);
+        });
+        cy.wait('@haeTallennuksenJalkeen', {timeout: clickTimeout})
+            .then(({response}) => {
+                expect(response && response.statusCode, JSON.stringify(response && response.body)).to.be.within(200, 299);
+                const tallennettuSanktio = response.body.find((sanktio) => sanktio.kuvaus === kuvaus);
+                expect(tallennettuSanktio, `Tallennettua sanktiota ei löytynyt: ${kuvaus}`).to.exist;
+                expect(tallennettuSanktio).to.have.property('id');
+                tallennettuSanktioId = tallennettuSanktio.id;
+                expect(tallennettuSanktio.toimenpideinstanssi).to.equal(fixtureToimenpideinstanssiId);
+            });
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout})
+            .should('be.visible').and('contain.text', 'Sanktion tallennus onnistui');
+
+        cy.get('.sanktiot').contains('td', kuvaus).click();
+        cy.get(SP).should('be.visible');
+        cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('haeUudelleenAvattu');
+        avaaSanktiotJaBonuksetNakyma(urakka, evk);
+        cy.wait('@haeUudelleenAvattu', {timeout: clickTimeout})
+            .then(({response}) => {
+                expect(response && response.statusCode, JSON.stringify(response && response.body)).to.be.within(200, 299);
+                const uudelleenAvattuSanktio = response.body.find((sanktio) => sanktio.kuvaus === kuvaus);
+                expect(uudelleenAvattuSanktio, `Uudelleen avattua sanktiota ei löytynyt: ${kuvaus}`).to.exist;
+                expect(uudelleenAvattuSanktio.id).to.equal(tallennettuSanktioId);
+                expect(uudelleenAvattuSanktio.toimenpideinstanssi).to.equal(fixtureToimenpideinstanssiId);
+            });
+        cy.get('.sanktiot').contains('td', kuvaus).click();
+        cy.get(SP).should('be.visible');
+        cy.get(SP).contains('.form-group', 'Kulun kohdistus')
+            .should('contain.text', toimenpideinstanssi);
+    });
+});
