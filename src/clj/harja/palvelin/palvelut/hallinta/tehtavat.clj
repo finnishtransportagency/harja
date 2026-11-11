@@ -32,7 +32,6 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/hallinta-jarjestelmaasetukset kayttaja)
   (let [tehtavaryhmaotsikot (sort-by first
                               (group-by :otsikko (haku db)))
-        _ (println "hae-tehtavaryhmaotsikot :: tehtavaryhmaotsikot:" (pr-str tehtavaryhmaotsikot))
         otsikot-ja-ryhmat (reduce (fn [vastaus elementti]
                                     (let [tehtavaryhmat (->> (second elementti)
                                                           (mapv (fn [data]
