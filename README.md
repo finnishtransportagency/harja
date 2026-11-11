@@ -186,8 +186,8 @@ Integraatioiden testit ovat järjestelmittäin hakemistossa
 - [`figwheel_conf/`](figwheel_conf/) - Figwheel-mainin ClojureScript-buildien määritykset.
 - [`.github/workflows/`](.github/workflows/) - build-, testaus- ja julkaisu-workflow't.
 - [`.github/actions/`](.github/actions/) - workflowien käyttämät composite actionit.
-- [`.github/docker/`](.github/docker/) - paikallis- ja CI-käytön Docker-imaget ja Docker Compose-määritykset;
-  [Docker-ohje](.github/docker/README.md).
+- [`tools/docker/`](tools/docker/) - Docker image definitions and build/push scripts for images used by CI and local
+  development; [Docker documentation](tools/docker/README.md). The `docker-compose.ci.yml` file is currently CI-only.
 - [`aws/fargate/`](aws/fargate/) - AWS:ssä ajettavan sovelluskontin toteutus.
 - [`sh/`](sh/) - kehityksen ja testauksen apuskriptit.
 - [`script/`](script/) - REPL-käytön apukoodi.
@@ -291,7 +291,7 @@ oikeudet.
 
 ## GitHub Actions & Docker
 
-Lue: [.github/docker/README.md](.github/docker/README.md)
+Lue: [tools/docker/README.md](tools/docker/README.md)
 
 ## Kirjautuminen ja ModHeader
 
@@ -348,31 +348,41 @@ ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteytt
 Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
 
 * Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
-* ActiveMQ Artemis: `(cd .github/docker && docker compose up -d --wait activemq-artemis-itmf)` projektin juuresta
+* ActiveMQ Artemis: see the [local run instructions](#activemq-artemis). The CI-only Compose file is not for local
+  use.
 
 Kantaimagen päivitys: docker pull ghcr.io/finnishtransportagency/harja_harjadb:latest
 
 ## ActiveMQ Artemis
 
-Harja käyttää tieliikenneilmoituksiin ja toimenpidekuittausten välitykseen JMS-jonoja.
-Brokerina käytetään ActiveMQ Artemista.  
-CI-putken integraatiotesteissä käytetään dockeroitua ActiveMQ Artemis -palvelinta, jonka voi käynnistää myös
-paikallisesti yksikkötestien ajamista varten.
+Harja uses ActiveMQ Artemis for JMS queues. CI integration tests use the shared Docker image. The Compose configuration
+under `tools/docker` is CI-only and is not used for local development.
 
-1. Aja seuraavat komennot Harja-projektin juuressa.
-2. Käynnistä broker: `(cd .github/docker && docker compose up -d --wait activemq-artemis-itmf)`
-3. ActiveMQ Artemis on nyt käytettävissä osoitteessa ```tcp://localhost:61616```
-    * Web-konsoli on osoitteessa ```http://localhost:8161```
-    * Käyttäjätunnus: admin ja salasana: admin
-4. Ajaaksesi integraatiotestit paikallisesti, anna testejä varten oikeat ympäristömuuttujat:  
-   `HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio`
-5. Sammuta ActiveMQ Artemis:  
-   `(cd .github/docker && docker compose down activemq-artemis-itmf)`
+To run the image locally from the repository root:
 
-**Lisätietoja:**
+```bash
+docker run -d --name activemq-artemis-itmf \
+  --publish 127.0.0.1:61616:61616 \
+  --publish 127.0.0.1:8161:8161 \
+  --sysctl net.ipv6.conf.all.disable_ipv6=1 \
+  --env TZ=EET \
+  --env 'EXTRA_ARGS=--http-host 0.0.0.0 --relax-jolokia --default-port 61616 --http-port 8161' \
+  ghcr.io/finnishtransportagency/harja_activemq_artemis:latest
+```
 
-* [.github/docker/activemq-artemis/README.md](.github/docker/activemq-artemis/README.md)
-* [.github/docker/README.md](.github/docker/README.md)
+The broker is available at `tcp://localhost:61616`; the web console is at `http://localhost:8161` (admin/admin).
+Run local integration tests with:
+
+```bash
+HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio
+```
+
+Stop and remove the container with `docker rm -f activemq-artemis-itmf`.
+
+**Further reading:**
+
+* [tools/docker/activemq-artemis/README.md](tools/docker/activemq-artemis/README.md)
+* [tools/docker/README.md](tools/docker/README.md)
 
 ## Dokumentaatio
 

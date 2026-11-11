@@ -11,7 +11,7 @@ on:
   workflow_call:
     inputs:
       test-db-service:
-        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+        # Katso saatavilla olevat harjadb servicet tools/docker/docker-compose.ci.yml:stä (esim. harjadb-latest)
         description: 'Testeissä käytettävän testitietokannan docker compose servicen nimi'
         type: string
         required: true

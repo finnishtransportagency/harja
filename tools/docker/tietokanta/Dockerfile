@@ -1,5 +1,5 @@
 # Ohjeet imagen buildaamiseen ja ajaamiseen:
-# 1. Build: Lue .github/docker/README.md
+# 1. Build: Lue tools/docker/README.md
 # 2. Run:
 #   Tässä oletetaan, että olet Harjan projektihakemistossa ja haluat mountata harjan tietokanta-hakemiston containeriin.
 #   Tietokanta-hakemisto sisältää pom.xml tiedoston ja migraatiotiedostot, joita tarvitaan tietokannan alustamiseen.
