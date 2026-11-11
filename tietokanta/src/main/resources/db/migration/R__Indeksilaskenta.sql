@@ -21,19 +21,23 @@ BEGIN
     kilpailutusta_edeltava_vuosi := kilpailutusvuosi - 1;
 
     -- Tien hoito:
-      -- 1) ennen vuotta 2017 alkavien urakoiden indeksi MAKU 2005 ja perusluku on urakan kilpailuttamisvuotta
+      -- 1) ennen vuotta 2017 alkavien hoito/teiden-hoito -urakoiden indeksi MAKU 2005 ja perusluku on urakan kilpailuttamisvuotta
       -- ed. joulukuun ja kilp.vuoden tammi- ja helmikuun pistelukujen keskiarvo
-      -- 2) 2017 alkavien urakoiden indeksin perusluku on 2016 syys-, loka-, marraskuun
+      -- 2) 2017 alkavien hoito/teiden-hoito -urakoiden indeksin perusluku on 2016 syys-, loka-, marraskuun
       --pistelukujen keskiarvo.
     -- Vesiväyläurakoissa (maili Ismo Kohoselta Jarnolle ja Riitalle 11.1.2018 klo 8:50):
-      -- 3) Vuonna 2013 alkaneissa (alkaneet vuoden alusta 1.1.2013 ja päättyvät päättymisvuonna 31.7) urakoissa Kunnossapidon osaindeksi MAKU 2005 = 100
+      -- 3) Vuonna 2013 alkaneissa (alkaneet vuoden alusta 1.1.2013 ja päättyvät päättymisvuonna 31.7) vesiväylä-hoito-urakoissa Kunnossapidon osaindeksi MAKU 2005 = 100
       -- ja perusluku lasketaan vuoden 2012 touko-, kesä- ja heinäkuun keskiarvosta yhden desimaalin tarkkuudella (132,9).
-      -- 4) Vuonna 2014 – 2016 alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Kunnossapidon osaindeksi MAKU 2005 = 100
-      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
-      -- 5) Vuonna 2017 ja eteenpäin alkaneissa urakoissa (alkaneet 1.8. ja päättyvät 31.7) Maarakennuskustannukset, kokonaisindeksi MAKU 2010 = 100
-      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden indeksin tarkkuudella.
+      -- 4) Vuonna 2014 – 2016 alkaneissa vesiväylä-hoito-urakoissa (alkaneet 1.8. ja päättyvät 31.7) Kunnossapidon osaindeksi MAKU 2005 = 100
+      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden desimaalin tarkkuudella.
+      -- 5) Vuonna 2017 - 2022 alkaneissa vesiväylä-hoito-urakoissa (alkaneet 1.8. ja päättyvät 31.7) Maarakennuskustannukset, kokonaisindeksi MAKU 2010 = 100
+      -- ja perusluku lasketaan urakan alkamisvuoden tammi-, helmi- ja maaliskuun keskiarvosta yhden desimaalin tarkkuudella.
+      -- 6) Vuonna 2023 ja 2024 alkaneissa vesiväylä-hoito-urakoissa indeksinä: MAKU 2015, kokonaisindeksi
+      -- ja perusluku lasketaan urakan alkamisvuotta edeltävän vuoden syys-, loka- ja marraskuun keskiarvosta yhden desimaalin tarkkuudella.
+      -- 7) Vuonna 2025 ja sen jälkeen alkaneissa vesiväylä-hoito-urakoissa indeksinä: MAKU 2020, kokonaisindeksi
+      -- ja perusluku lasketaan urakan alkamisvuotta edeltävän vuoden syys-, loka- ja marraskuun keskiarvosta yhden desimaalin tarkkuudella.
     -- Kanavaurakoissa käytössä Palvelujen tuottajahintaindeksi PTHI
-      -- 6) TODO: tarkista sääntö
+      -- 8) TODO: tarkista sääntö
 
     SELECT INTO tulosrivi
       AVG(arvo) AS perusluku,
@@ -61,11 +65,19 @@ BEGIN
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 7)
 
                -- 4) ja 5)
-               WHEN urakkatyyppi = 'vesivayla-hoito'
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm >= DATE '2013-08-02'
+                                                     AND urakan_alkupvm < DATE '2023-01-01'
                  THEN (vuosi = kilpailutusvuosi AND kuukausi = 1) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 2) OR
                       (vuosi = kilpailutusvuosi AND kuukausi = 3)
-               -- 6)
+
+               -- 6) ja 7)
+               WHEN urakkatyyppi = 'vesivayla-hoito' AND urakan_alkupvm >= '2023-01-01'
+                 THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 10) OR
+                      (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 11)
+
+               -- 8)
                WHEN urakkatyyppi = 'vesivayla-kanavien-hoito'
                  THEN (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 8) OR
                       (vuosi = kilpailutusta_edeltava_vuosi AND kuukausi = 9) OR
@@ -224,8 +236,12 @@ BEGIN
   ELSEIF NEW.tyyppi = 'vesivayla-hoito' THEN
     IF EXTRACT(year FROM NEW.alkupvm) < 2017 THEN
       NEW.indeksi := 'MAKU 2005 kunnossapidon osaindeksi';
-    ELSE
+    ELSEIF EXTRACT(year FROM NEW.alkupvm) < 2023 THEN
       NEW.indeksi := 'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi';
+    ELSEIF EXTRACT(year FROM NEW.alkupvm) < 2025 THEN
+      NEW.indeksi := 'MAKU 2015, kokonaisindeksi';
+    ELSE
+      NEW.indeksi := 'MAKU 2020, kokonaisindeksi';
     END IF;
 
   ELSEIF NEW.tyyppi = 'vesivayla-kanavien-hoito' THEN
@@ -257,7 +273,8 @@ DECLARE
     indeksin_nimi TEXT;
     vertailuvuosi INTEGER;
     indeksikerroin NUMERIC;
-    urakan_alkuvuosi INTEGER;
+    urakan_aloitusvuosi INTEGER;
+    urakan_aloituskuu INTEGER;
 
     urakka_tyyppi TEXT := (
         SELECT tyyppi
@@ -269,12 +286,17 @@ DECLARE
        Alkuvuodesta edellisen vuoden syys, loka, marras indeksien keskiarvo
        Muissa tapauksissa voi katsoa funktiosta */
     perusluku      NUMERIC := indeksilaskennan_perusluku(urakka_id);
+    /* Vesiväyläurakoissa tarvitaan: */
+    urakan_alkukuu INTEGER;
+    -- Tämä "urakkavuoden_alkuvuosi" on vastaava asia kuin mhu-urakoissa "hoitokauden-alkuvuosi", mutta
+    -- vesiväyläurakoissa pitää käyttää termiä "urakkavuosi" niin siksi tämä nimetty "urakkavuoden_alkuvuosi"
+    urakkavuoden_alkuvuosi INTEGER;
 BEGIN
     -- Kaikilla 2019>= urakoilla indeksi yleensä 'MAKU 2015'
-    SELECT indeksi, EXTRACT(YEAR FROM alkupvm)
+    SELECT indeksi, EXTRACT(YEAR FROM alkupvm), EXTRACT(MONTH FROM alkupvm)
       FROM urakka u
      WHERE u.id = urakka_id
-      INTO indeksin_nimi, urakan_alkuvuosi;
+      INTO indeksin_nimi, urakan_aloitusvuosi, urakan_aloituskuu;
 
     -- Hoitokauden vertailuvuosi
     IF kuukausi_ BETWEEN 1 AND 9
@@ -286,12 +308,36 @@ BEGIN
 
     -- Käytetään vertailukuukauden default-arvona syyskuuta.
     vertailukk := 9;
-    
+
+    IF urakka_tyyppi = 'vesivayla-hoito' AND urakan_aloitusvuosi >= 2023 THEN
+    /*
+     * Jonkin vesiväyläurakan aloituspäivänä voi olla 1.8. Siksi pitää hakea urakan_aloituskuu
+     * ja päätellä sen perusteella, että ollaanko ensimmäisessä urakkavuodessa.
+     */
+        IF vuosi_ = urakan_aloitusvuosi AND kuukausi_ >= urakan_aloituskuu
+        THEN
+            urakkavuoden_alkuvuosi := urakan_aloitusvuosi;
+        ELSIF kuukausi_ >= 10 THEN
+            urakkavuoden_alkuvuosi := vuosi_;
+        ELSE
+            urakkavuoden_alkuvuosi := vuosi_ - 1;
+        END IF;
+
+        IF urakkavuoden_alkuvuosi = urakan_aloitusvuosi THEN
+            -- Ensimmäinen urakkavuosi: käytetään aloitusvuoden kesäkuuta.
+            vertailuvuosi := urakan_aloitusvuosi;
+            vertailukk := 6;
+        ELSE
+            -- Toinen ja sitä seuraavat urakkavuodet: käytetään urakkavuoden elokuuta.
+            vertailuvuosi := urakkavuoden_alkuvuosi;
+            vertailukk := 8;
+        END IF;
+
     /* Indeksikertoimen laskenta (teiden-hoito): 
       >= 2023 urakat: Kuluvan hk:n elokuun indeksi / perusluku  
       < 2023 urakat: Kuluvan hk:n syyskuun indeksi / perusluku */
-    IF  urakka_tyyppi = 'teiden-hoito' 
-    AND urakan_alkuvuosi >= 2023 THEN
+    ELSEIF  urakka_tyyppi = 'teiden-hoito'
+    AND urakan_aloitusvuosi >= 2023 THEN
         vertailukk := 8;
     END IF;
 
@@ -301,7 +347,7 @@ BEGIN
                FROM indeksi i
               WHERE i.vuosi = vertailuvuosi
                 AND i.kuukausi = vertailukk
-                AND nimi = indeksin_nimi);
+                AND i.nimi = indeksin_nimi);
 
     -- Indeksikerroin pyöristetään 3 desimaaliin CLJ-puolella (budjettisuunnittelu/hae-urakan-indeksikertoimet)
     -- Tämä sääntö myös asiakirjoissa 

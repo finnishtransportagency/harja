@@ -4,12 +4,15 @@
   (:require
     [tuck.core :as tuck]
 
+    [harja.fmt :as fmt]
+    [harja.pvm :as pvm]
     [harja.ui.napit :as napit]
     [harja.tiedot.urakka :as u]
     [harja.ui.yleiset :as yleiset]
     [harja.ui.komponentti :as komp]
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.urakka.urakka :as tila]
+    [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.valinnat :as urakka-valinnat]
     [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
 
@@ -19,15 +22,45 @@
 
     ;; Osiot / lomake
     [harja.views.urakka.muutokset.vaikutukset :as vaikutukset]
+    [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]
     [harja.views.urakka.muutokset.kirjatut-muutokset :as kirjatut-muutokset]
     [harja.views.urakka.muutokset.lasketut-muutokset :as lasketut-muutokset]
     [harja.views.urakka.muutokset.rahavarausten-muutokset :as rahavarausten-muutokset]
-    [harja.views.urakka.muutokset.laskutusrajan-tarkistukset :as laskutusrajan-tarkistukset]
-    [harja.views.urakka.muutokset.lomake.muutoslomake :as muutoslomake]))
+    [harja.views.urakka.muutokset.laskutusrajan-tarkistukset :as laskutusrajan-tarkistukset]))
 
 
-(defn muutoslistaus [e! {:keys [nakyma-uusi? nakyma-vanha? valittu-hoitokausi] :as app}]
+(defn muutoslistaus [e! {:keys [nakyma-uusi? nakyma-vanha?
+                                valittu-hoitokausi muokattavat-hoitokaudet] :as app}]
   [:div.muutoslistaus
+   ;; Infoa jos välikatselmuksen päätös on tehty
+   (when (and
+           nakyma-uusi?
+           valittu-hoitokausi
+           muokattavat-hoitokaudet
+           (muutos-domain/pysyva-muutos-hoitovuoden-paatos-tehty? muokattavat-hoitokaudet valittu-hoitokausi))
+
+     (let [hoitovuodet-map (map
+                             #(some-> % (first) (pvm/vuosi) (int))
+                             @u/valitun-urakan-hoitokaudet)
+
+           hk-alkuvuosi (some-> valittu-hoitokausi (first) (pvm/vuosi))
+
+           hoitovuosi-str (when (and
+                                  @u/valitun-urakan-hoitokaudet
+                                  valittu-hoitokausi)
+                            (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                              hk-alkuvuosi
+                              hoitovuodet-map
+                              "hoitovuoden"
+                              false))]
+
+       [yleiset/info-laatikko :neutraali
+        [:<>
+         [:p [:b "Osa tiedoista on lukittu"]]
+         [:div (str
+                 (or hoitovuosi-str "Valitun hoitovuoden") " tietoja ei voi muokata, koska "
+                 "välikatselmuksen päätös tavoitehinnan muutoksista on vahvistettu.")]]]))
+
    (if valittu-hoitokausi
      (cond
        nakyma-vanha?
