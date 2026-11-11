@@ -5,4 +5,6 @@
   {:positional? true})
 
 (declare hae-tehtavaryhma hae-tehtavaryhma-tunnisteella hae-tehtavaryhmat-joilla-tehtava-on-pakollinen
-  tehtavaryhmaotsikot tehtavat-tehtavaryhmaotsikoittain)
+  hae-mhu-tehtavaryhmaotsikot tehtavat-tehtavaryhmaotsikoittain hae-mhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
+  hae-vhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
+  paivita-tehtavaryhma! hae-tehtava paivita-tehtava!)

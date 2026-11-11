@@ -13,4 +13,6 @@
   paivita-kulun-kohdistus<! hae-pvm-laskun-numerolla poista-kulun-kohdistus!
   hae-tehtavaryhman-tiedot-tunnisteella hae-urakan-hoidon-johdon-toimenpideinstanssi
   hae-toteutuneet-kustannukset-analytiikalle hae-urakan-laskutusraja hae-urakan-alkuperainen-laskutusraja
-  paivita-urakan-laskutusraja! hae-kaikkien-tehtavaryhmien-nimet)
+  paivita-urakan-laskutusraja! hae-kaikkien-tehtavaryhmien-nimet
+  hae-urakan-johto-ja-hallintokorvaus-raporttiin-aikavalilla hae-urakan-hj-kulut-raporttiin-aikavalilla
+  hae-urakan-kulut-raporttiin-aikavalilla)
