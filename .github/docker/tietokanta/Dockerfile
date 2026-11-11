@@ -13,12 +13,12 @@
 # https://docs.aws.amazon.com/AmazonRDS/latest/AuroraPostgreSQLReleaseNotes/AuroraPostgreSQL.Extensions.html#AuroraPostgreSQL.Extensions.15
 # Muuta materiaalia:
 # https://github.com/postgis/docker-postgis
+# https://github.com/postgis/docker-postgis/blame/master/Dockerfile.master.template (PostGIS-riippuvuuksien säätöön)
 # https://postgis.net/docs/manual-3.3/postgis_installation.html#install_requirements
 
 # -- PostgreSQL pohjaimagen versio:
 # https://hub.docker.com/_/postgres/tag
-ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:15.18-bookworm
-#ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:13.23-bookworm
+ARG POSTGRESQL_DOCKER_IMAGE_VERSION=postgres:15.19-trixie@sha256:40e8c839f86c404f9bd1c456bb83f11b205f2cd95d753b34c2d074e89ecee786
 
 
 # -- Asennettava PostGIS-versio ja paketin MD5-hash
@@ -78,7 +78,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
       llvm-dev \
       libcurl4-gnutls-dev \
       libjson-c-dev \
-      libpcre3-dev \
+      libpcre2-dev \
       libprotobuf-c-dev \
       libsqlite3-dev \
       libtool \
@@ -119,14 +119,14 @@ RUN --mount=type=cache,target=/var/cache/apt \
     && apt-get update \
     && apt-get install -y --no-install-recommends \
       libgeos-c1v5 \
-      libgdal32 \
+      libgdal36 \
       libproj25 \
       libprotobuf-c1 \
       libjson-c5 \
       libxml2 \
       libcurl3-gnutls \
       libsqlite3-0 \
-      libpcre3 \
+      libpcre2-8-0 \
       wget \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
@@ -136,7 +136,7 @@ RUN --mount=type=cache,target=/var/cache/apt \
 #       Eli, mikäli buildaat tämän imagen uudestaan ja build kaatuu tähän, tarkista mikä on uusin saatavilla oleva maven:
 #       https://downloads.apache.org/maven/maven-3
 
-RUN apt-get update && apt-get install -y --no-install-recommends openjdk-17-jre-headless \
+RUN apt-get update && apt-get install -y --no-install-recommends openjdk-21-jre-headless \
     && wget "https://downloads.apache.org/maven/maven-3/${MAVEN_VERSIO}/binaries/apache-maven-${MAVEN_VERSIO}-bin.tar.gz" \
     && if [ "$MAVEN_SHA512" != "$(sha512sum apache-maven-${MAVEN_VERSIO}-bin.tar.gz | awk '{print $1}')" ]; then \
                echo "Downloaded Maven SHA512: $(sha512sum apache-maven-${MAVEN_VERSIO}-bin.tar.gz | awk '{print $1}')"; \

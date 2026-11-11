@@ -865,7 +865,10 @@
         hoitokauden-indeksikuukaudet (valikatselmukset/hae-hoitovuoden-indeksiluvut (:db jarjestelma) urakkaid hoitokauden-alkuvuosi)
         tavoitehinnan-oikaisut (valikatselmus-kyselyt/hae-tavoitehinnan-muutokset-hoitokaudelle (:db jarjestelma) {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
-        hoitovuoden-lopun-indeksikorjaus-summa (valikatselmukset/laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+        hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (valikatselmukset/maarita-hv-lopun-tavoitehinta
+                                                               (:db jarjestelma) +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi
+                                                               urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        hoitovuoden-lopun-indeksikorjaus-summa (valikatselmukset/laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
         hoitokauden-lopun-tavoitehinta (valikatselmukset/maarita-hv-lopun-tavoitehinta-indeksipaatoksella
                                          (:db jarjestelma) +kayttaja-jvh+ hoitokauden-alkuvuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
 

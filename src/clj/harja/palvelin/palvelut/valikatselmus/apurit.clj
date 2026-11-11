@@ -126,5 +126,5 @@
     0
     (round2 1
       (* (/ (- piste-keskiarvo alkuperainen-pisteluku)
-           piste-keskiarvo)
+           alkuperainen-pisteluku)
         100))))

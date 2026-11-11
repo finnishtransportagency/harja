@@ -216,8 +216,9 @@
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
 (defn- suodattimet-ja-toiminnot [sivupaneeli-auki?-atom lajisuodattimet]
-  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
-        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi tiedot/valittu-sanktio)
+  (let [mhu-25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
+        urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true tiedot/valittu-sanktio mhu-25?)
         tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
               (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
     [:div.flex-row

@@ -208,7 +208,8 @@
           ;; Laske pistelukujen muutos
           pisteet (apply + (map #(round2 1 (:indeksiluku %)) hoitokauden-indeksikuukaudet))
           piste-keskiarvo (if-not (empty? hoitokauden-indeksikuukaudet)
-                            (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet))) 0)
+                            (round2 1 (/ pisteet (count hoitokauden-indeksikuukaudet)))
+                            0)
           alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
           pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
           alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)
