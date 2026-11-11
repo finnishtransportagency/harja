@@ -503,9 +503,9 @@
                                                            :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})]
     vastaus))
 
-(defn hae-urakan-tehtavaryhmaotsikot [db user {:keys [urakka-id]}]
+(defn hae-mhu-urakan-tehtavaryhmaotsikot [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
-  (tehtavaryhmat-q/tehtavaryhmaotsikot db))
+  (tehtavaryhmat-q/hae-mhu-tehtavaryhmaotsikot db))
 
 (defn hae-tehtavat-tehtavaryhmaotsikoittain [db user {:keys [urakka-id tehtavaryhma otsikko]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-toteumat-kokonaishintaisettyot user urakka-id)
@@ -1128,7 +1128,7 @@
         (poista-erilliskustannus db user erilliskustannus))
       :urakan-toteumien-toimenpiteet
       (fn [user tiedot]
-        (hae-urakan-tehtavaryhmaotsikot db-replica user tiedot))
+        (hae-mhu-urakan-tehtavaryhmaotsikot db-replica user tiedot))
       :maarien-toteutumien-toimenpiteiden-tehtavat
       (fn [user tiedot]
         (hae-tehtavat-tehtavaryhmaotsikoittain db-replica user tiedot))

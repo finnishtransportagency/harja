@@ -453,7 +453,7 @@ FROM tehtava tk
          -- Alataso on linkitetty toimenpidekoodiin
          JOIN tehtavaryhma tr_alataso ON tr_alataso.id = tk.tehtavaryhma
          JOIN tehtavaryhmaotsikko o
-              ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+              ON tr_alataso.tehtavaryhmaotsikko_id = o.id AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma) AND o.urakkatyyppi = 'teiden-hoito'
          LEFT JOIN urakka_tehtavamaara_yhteenveto ut
                    ON ut.urakka = :urakka AND ut.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
                        AND tk.id = ut.tehtava
