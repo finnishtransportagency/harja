@@ -31,6 +31,7 @@ let testiArvonvahennysKuvaus1 = "CY-mhu25-tavoitehinta";    // MHU25, vaikuttaa 
 let testiArvonvahennysKuvaus2 = "CY-mhu25-ei-tavoitehinta"; // MHU25, ei vaikuta tavoitehintaan
 let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
 let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
+let testiArvonvahennysKuvausMhu26 = `CY-mhu26-minimitesti-${Date.now()}`;
 
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
@@ -40,6 +41,7 @@ let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
 let testiurakka3 = "Oulun MHU 2019-2024";              // mhu19 urakka
 let evk = "Pohjois-Suomi";
 let evk2 = "Pohjois-Suomi";
+let evkMhu26 = "Lappi";
 
 // Havaittu- ja Määrätty/Käsitelty-päivämäärät.
 // Sekä Kajaanin (käynnissä 2025-10-01–2030-09-30) että Raahen
@@ -60,6 +62,42 @@ function valitseHoitovuosi(hoitovuosi) {
     cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
 }
+
+// --- Testi: MHU26-urakka ---
+
+describe('Arvonvähennykset - MHU26-urakka', () => {
+    before(() => {
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvausMhu26);
+    });
+
+    after(() => {
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvausMhu26);
+    });
+
+    it('lisää arvonvähennyksen', () => {
+        avaaSanktiotJaBonukset('Sodankylän MHU 2026-2031', evkMhu26);
+        avaaUusiArvonvahennys();
+
+        cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvausMhu26);
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', 'CY-MHU26-arvonvähennyksen minimitesti');
+        kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '100');
+
+        cy.intercept('POST', '_/hae-tehtavaryhman-tehtavat-urakalle').as('haeTehtavatMhu26');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtäväryhmä');
+        cy.wait('@haeTehtavatMhu26', {timeout: clickTimeout});
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtävä');
+
+        valitseSivupaneelissaPvm('Havaittu', '02.10.2026');
+        valitseSivupaneelissaPvm('Määrätty', '02.10.2026');
+
+        tallennaArvonvahennyslomake();
+
+        cy.get('.sanktiot').contains('td', testiArvonvahennysKuvausMhu26).should('be.visible');
+        cy.get('.sanktiot').contains('tr', testiArvonvahennysKuvausMhu26)
+            .should('contain', '-100');
+    });
+});
 
 // --- Testit: MHU25-urakka (Kajaani) ---
 
