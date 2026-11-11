@@ -339,6 +339,25 @@
       {:tuck.effect/type :laukaise-event
        :event ->HaeUrakanHintapaatokset})))
 
+(defn- paivita-tehtavien-yksikkohinnat [app generoitu-tehtavat]
+  (let [yksikkohinnat (into {} (map (juxt :tehtava :yksikkohinta) generoitu-tehtavat))
+        paivita-tehtava (fn [tehtava]
+                          (if (contains? yksikkohinnat (:id tehtava))
+                            (assoc tehtava :yksikkohinta (get yksikkohinnat (:id tehtava)))
+                            tehtava))]
+    (update-in app [:lomake :kohdistukset]
+      (fn [kohdistukset]
+        (when kohdistukset
+          (mapv (fn [kohdistus]
+                  (-> kohdistus
+                    (update :tehtavaryhman-tehtavat
+                      (fn [tehtavat]
+                        (when tehtavat (mapv paivita-tehtava tehtavat))))
+                    (update :tehtava
+                      (fn [tehtava]
+                        (when tehtava (paivita-tehtava tehtava))))))
+            kohdistukset))))))
+
 (extend-protocol tuck/Event
 
   AsetaNykyhetki
@@ -803,6 +822,33 @@
         ;; Aseta ainoa tehtävä valinnaksi
         (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
         app)))
+
+  GeneroiVhuYksikkohinnat
+  (process-event [_ app]
+    (let [urakka (:urakka @tila/yleiset)
+          valittu-hoitokausi @urakka-tila/valittu-hoitokausi]
+      (tuck-apurit/post! :generoi-vhu-yksikkohinnat
+        {:urakka-id (:id urakka)
+         :valittu-hoitokausi valittu-hoitokausi}
+        {:onnistui ->GeneroiVhuYksikkohinnatOnnistui
+         :epaonnistui ->GeneroiVhuYksikkohinnatEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc-in app [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?] true)))
+
+  GeneroiVhuYksikkohinnatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [tehtavat (:tehtavat vastaus)
+          app (-> app
+                (paivita-tehtavien-yksikkohinnat tehtavat)
+                (assoc-in [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?] false))]
+      (viesti/nayta-toast! (str "Yksikköhintoja generoitiin " (count tehtavat) " tehtävälle.") :onnistui)
+      app))
+
+  GeneroiVhuYksikkohinnatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.error "VHU-yksikköhintojen generointi epäonnistui." (pr-str vastaus))
+    (viesti/nayta-toast! "VHU-yksikköhintojen generointi epäonnistui." :varoitus)
+    (assoc-in app [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?] false))
 
   HaeKaikkiTehtavaryhmat
   (process-event [{:keys [hakuparametrit]} app]

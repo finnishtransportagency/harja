@@ -498,6 +498,7 @@
         lomake (:lomake app)
         erapaiva (:erapaiva lomake)
         kohdistukset (:kohdistukset lomake)
+        urakan-tyyppi (-> @tila/yleiset :urakka :tyyppi)
         koontilaskun-kuukausi (:koontilaskun-kuukausi lomake)
         tehtavaryhma (:tehtavaryhma lomake)
         paatos-tehty? (:paatos-tehty? lomake)
@@ -507,6 +508,7 @@
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
         tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
+        vhu-yksikkohintojen-generointi-kaynnissa? (boolean (get-in app [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?]))
         kulu-lukittu? (or haku-menossa
                         (when erapaivan-hoitovuosi
                           (some #(and
@@ -700,6 +702,17 @@
           #(e! (tiedot/->KulujenSyotto (not syottomoodi)))
           {:disabled haku-menossa}]]
 
+        (when (and (= :vesivayla-hoito urakan-tyyppi)
+                (k/kehitysymparistossa?))
+          [:span
+           [napit/yleinen-toissijainen
+            "Generoi VHU-yksikköhinnat"
+            #(e! (tiedot/->GeneroiVhuYksikkohinnat))
+            {:vayla-tyyli? true
+             :teksti-nappi? true
+             :disabled (or haku-menossa tehtava-haku-menossa? vhu-yksikkohintojen-generointi-kaynnissa?)
+             :style {:margin-left "1rem"}}]])
+
         (when (and (not haku-menossa) (not tehtava-haku-menossa?) (not (nil? (:id lomake))))
           [:span
            [napit/poista "Poista kulu"
@@ -716,7 +729,10 @@
 
         (when haku-menossa
           [:span.kulu-ladataan
-           [yleiset/ajax-loader-pieni "Ladataan..."]])]]]
+           [yleiset/ajax-loader-pieni "Ladataan..."]])
+        (when vhu-yksikkohintojen-generointi-kaynnissa?
+          [:span.kulu-ladataan
+           [yleiset/ajax-loader-pieni "Generoidaan yksikköhintoja..."]])]]]
 
      [:div.row
       [:div.col-xs-12.col-md-6
