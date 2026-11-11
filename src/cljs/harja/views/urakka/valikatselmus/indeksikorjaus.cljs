@@ -53,8 +53,7 @@
      [:div.flex-row.laskenta-avattuna
       [:div (str "Pistelukujen muutos 0,1 % tarkkuudella") [:br]
        (str "(" (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)
-            " - " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) ") / "
-            (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")]
+            " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " - 1) * 100 ")]
       [:div (:pistelukujen_muutos_prosentteina paatos) " %"]]])
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
