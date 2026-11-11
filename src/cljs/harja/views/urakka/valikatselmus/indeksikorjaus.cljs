@@ -11,9 +11,7 @@
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
 (defn- laskenta-modaali [paatos]
-  (let [keskiarvo (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1) "," "."))
-        alkuperainen (js/parseFloat (str/replace (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) "," "."))]
-    [:div
+  [:div
      [:div.flex-row
       [:p.laskenta-rivi "Hoitovuoden päätyttyä lasketaan hoitovuotta edeltävän syyskuun ja hoitovuoden elokuun välisten
       kuukausien indeksin pistelukujen keskiarvo. Näin laskettua keskiarvoa verrataan hoitovuotta edeltävän elokuun
@@ -54,13 +52,9 @@
 
      [:div.flex-row.laskenta-avattuna
       [:div (str "Pistelukujen muutos 0,1 % tarkkuudella") [:br]
-       [:span "("]
-       (for [k (take (min (count (:hoitokauden_kuukaudet paatos)) 5) (:hoitokauden_kuukaudet paatos))]
-         ^{:key (str "indeksiluku-" (gensym))}
-         [:span (fmt/desimaaliluku-opt (:indeksiluku k) 1) " + "])
-       (str " ... / " (count (:hoitokauden_kuukaudet paatos)) ")")
-       (str " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " * 100")]
-      [:div (:pistelukujen_muutos_prosentteina paatos) " %"]]]))
+       (str "(" (fmt/desimaaliluku-opt (:kuukausien_keskiarvo paatos) 1)
+            " / " (fmt/desimaaliluku-opt (:alkuperainen_pisteluku paatos) 1) " - 1) * 100 ")]
+      [:div (:pistelukujen_muutos_prosentteina paatos) " %"]]])
 
 (defn paatos [e! paatos voi-muokata? tallennus-kesken? avatut-paatokset]
   (let [paatos-avain :hoitovuoden-lopun-indeksikorjaus
