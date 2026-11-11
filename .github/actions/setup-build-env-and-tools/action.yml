@@ -61,10 +61,13 @@ runs:
 
     - name: Download Clojure dependencies
       if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
+      shell: bash
       run: |
+        mkdir -p ~/.lein
+        printf '%s\n' '{:user {:repositories [["terrestris" {:url "https://nexus.terrestris.de/repository/public/"}]]}}' > ~/.lein/profiles.clj
+
         lein deps
         lein with-profile +test,+phantomjs deps
-      shell: bash
 
     # FIXME: delaguardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 is not allowed to be used in finnishtransportagency/harja.
     #        Actions in this workflow must be: within a repository that belongs to your Enterprise account, created by GitHub,
