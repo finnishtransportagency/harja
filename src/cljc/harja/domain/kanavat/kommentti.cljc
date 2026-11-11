@@ -13,12 +13,13 @@
   #?(:cljs
      (:require-macros [harja.kyselyt.specql-db :refer [define-tables]])))
 
-(define-tables
-  ["kommentin_tila" ::kommentin-tila (specql.transform/transform (specql.transform/to-keyword))]
-  ["kan_toimenpide_kommentti" ::toimenpiteen-kommentti
-   {::kayttaja (specql.rel/has-one ::kayttaja-id
-                                   :harja.domain.kayttaja/kayttaja
-                                   :harja.domain.kayttaja/id)}])
+#?(:clj
+   (define-tables
+     ["kommentin_tila" ::kommentin-tila (specql.transform/transform (specql.transform/to-keyword))]
+     ["kan_toimenpide_kommentti" ::toimenpiteen-kommentti
+      {::kayttaja (specql.rel/has-one ::kayttaja-id
+                                      :harja.domain.kayttaja/kayttaja
+                                      :harja.domain.kayttaja/id)}]))
 
 (def perustiedot
   #{::tila
