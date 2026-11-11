@@ -102,40 +102,44 @@
 (defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat]
   [:<>
    (when (or (seq tehtavat) valinta)
-     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
-      [:div.label-ja-alasveto {:style {:width "320px"}}
-       [:span.alasvedon-otsikko "Tehtävä*"]
-       [yleiset/livi-pudotusvalikko
-        {:data-cy "tehtava-dropdown"
-         :placeholder "Valitse tehtävä"
-         :valinta valinta
-         :format-fn format-fn
-         :pakollinen? true
-         :valitse-fn valitse-fn
-         :disabled disabled
-         :virhe? virhe?
-         :vayla-tyyli? true}
-        tehtavat]]])
+      #_ {:style {:width "100%"}}
+     [:div.label-ja-alasveto {:style {:width "100%"}}
+      [:span.alasvedon-otsikko "Tehtävä*"]
+      [yleiset/livi-pudotusvalikko
+       {:data-cy "tehtava-dropdown"
+        :placeholder "Valitse tehtävä"
+        :valinta valinta
+        :format-fn format-fn
+        :pakollinen? true
+        :valitse-fn valitse-fn
+        :disabled disabled
+        :virhe? virhe?
+        :vayla-tyyli? true}
+       tehtavat]])
    (when tehtava-haku-menossa
-     [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
-      [:div.margin-top-32
-       [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]]])])
+     [:div.margin-top-32
+      [yleiset/ajax-loader-pieni "Ladataan mahdollisia tehtäviä..."]])])
 
-(defn lisatieto [e! lisatieto lomake nro]
-  [:div.col-xs-12.col-md-3
+(defn lisatieto
+  ([e! lisatieto lomake nro]
+   (lisatieto e! lisatieto lomake nro false))
+  ([e! lisatieto lomake nro monirivinen?]
    [kentat/tee-otsikollinen-kentta
     {:otsikko "Lisätieto"
      :vayla-tyyli? true
      :otsikon-luokka ""
      :arvo-atom (r/wrap lisatieto
                   #(e! (tiedot/->KohdistuksenLisatieto % nro)))
-     :kentta-params {:tyyppi :string
-                     :vayla-tyyli? true
-                     :aputeksti "Kirjoita tähän halutessasi lisätietoa"
-                     :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]])
+     :kentta-params (cond-> {:tyyppi :string
+                             :vayla-tyyli? true
+                             :aputeksti "Kirjoita tähän halutessasi lisätietoa"
+                             :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}
+                      monirivinen? (assoc :tyyppi :text
+                                          :koko [80 3]
+                                          :pituus-rajoittamaton? true))}]))
 
-(defn- hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
-  (let [;; Hankintakululla ei saa olla kaikkia mahdollisia tehtäväryhmiä. Siivotaan väärät pois tässä
+(defn- mhu-hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
+  (let [;; Hankintakululla ei saa olla kaikkia mahdollisia tehtäväryhmiä. Siivotaan väärät pois tässä - Hox liittyy vain MH-urakoihin, ei VH-urakohin
         kielletyt-tehtavaryhmat #{"rahavaraus" "vahinkojen" "äkilliset" "hoidonjohtopalkkio"
                                   "erillishankinnat" "hallintokorvaus" "t4"}
         tehtavaryhmat (remove (fn [tr]
@@ -167,18 +171,100 @@
                                       :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
                                       :format-fn :tehtavaryhma
                                       :valitse-fn #(do
-                                                     ;; Hankintakulut on tavoitehintaisia 
+                                                     ;; Hankintakulut on tavoitehintaisia
                                                      (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
                                                      (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro)))}
          tehtavaryhmat]]]
-      [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
-                         :disabled tehtava-haku-menossa
-                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtava)
-                         :valinta (:tehtava kohdistus)
-                         :format-fn :nimi
-                         :tehtava-haku-menossa tehtava-haku-menossa}
-       tehtavat]
-      [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro]]]))
+      [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+       [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
+                          :disabled tehtava-haku-menossa
+                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtava)
+                          :valinta (:tehtava kohdistus)
+                          :format-fn :nimi
+                          :tehtava-haku-menossa tehtava-haku-menossa}
+        tehtavat]]
+      [:div.col-xs-12.col-md-3
+       [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro]]]]))
+
+(defn- vhu-hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
+  (let [;; VHU:n hankintakulunäkymän logiikka eriytetään MHU:sta myöhempiä muutoksia varten.
+        kielletyt-tehtavaryhmat #{"rahavaraus" "vahinkojen" "äkilliset" "hoidonjohtopalkkio"
+                                  "erillishankinnat" "hallintokorvaus" "t4"}
+        tehtavaryhmat (remove (fn [tr]
+                                (some
+                                  (fn [kielletty-tr]
+                                    (str/includes? (str/lower-case (:tehtavaryhma tr)) kielletty-tr))
+                                  kielletyt-tehtavaryhmat))
+                        tehtavaryhmat)
+        tehtavat (:tehtavaryhman-tehtavat kohdistus)
+        ;; Jos tehtävistä löytyy "Muu tehtävä" id -1, ja kohdistuksen "muu-tehtava-kaytossa" = true, niin aseta se käyttöön
+        ;; Kyseessä on ns. dummy tehtävä, jota ei voi valita normaalisti, mutta joka on olemassa tietokannassa, jotta käyttöliittymässä voi näyttää "Muu tehtävä" valinnan
+        trlla-on-muu-tehtava? (some #(= -1 (:id %)) tehtavat)
+        muu-tehtava-kaytossa? (:muu-tehtava-kaytossa kohdistus)
+        kohdistus (if (and trlla-on-muu-tehtava? muu-tehtava-kaytossa?)
+                    (assoc kohdistus :tehtava tiedot/muu-tehtava)
+                    kohdistus)
+        tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)
+        tehtava (:tehtava kohdistus)
+        maara (:maara kohdistus)
+        yksikkohinta (:yksikkohinta tehtava)
+        yhteensa (when (and (number? maara) (number? yksikkohinta))
+                   (* maara yksikkohinta))]
+    [:div
+     [:div.row
+      [:div.col-xs-12.col-md-6
+       [:div.label-ja-alasveto {:style {:width "100%"}}
+        [:span.alasvedon-otsikko "Tehtäväryhmä*"]
+        [yleiset/livi-pudotusvalikko {:data-cy "hankintakulu-tehtavaryhma-dropdown"
+                                      :vayla-tyyli? true
+                                      :muokattu? true
+                                      :pakollinen? true
+                                      :valinta (:tehtavaryhma kohdistus)
+                                      :skrollattava? true
+                                      :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtavaryhma)
+                                      :format-fn :tehtavaryhma
+                                      :valitse-fn #(do
+                                                     ;; Hankintakulut on tavoitehintaisia
+                                                     (e! (tiedot/->TavoitehintaanKuuluminen :true nro))
+                                                     (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro)))}
+         tehtavaryhmat]]]
+      [:div.col-xs-12.col-md-6
+       [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
+                          :disabled tehtava-haku-menossa
+                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtava)
+                          :valinta (:tehtava kohdistus)
+                          :format-fn :nimi
+                          :tehtava-haku-menossa tehtava-haku-menossa}
+        tehtavat]]]
+     [:div.row
+      [:div.col-xs-12.col-md-3
+       [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro true]]]
+     [:div.row
+      [:div.col-xs-12.col-md-2
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Määrä *"
+         :arvo-atom (r/wrap maara #(e! (tiedot/->KohdistuksenMaara % nro)))
+         :tyylit {:width "110px"}
+         :kentta-tyylit {:width "100%"}
+         :kentta-params {:tyyppi :numero
+                        :vaadi-ei-negatiivinen? true
+                        ;:koko 30
+                        :yksikko (:yksikko tehtava)
+                        :vayla-tyyli? true
+
+                        :muokattu? true
+                        :virhe? (nayta-kohdistuksen-virhe? lomake nro :maara)
+                        :data-cy "vhu-hankintakulu-maara"}}]]
+      [:div.col-xs-12.col-md-2
+       [kentat/nayta-otsikollinen-kentta
+        {:otsikko "Yksikköhinta"
+        :kentta-params {:tyyppi :euro}
+        :arvo-atom (kentat/vain-luku-atomina yksikkohinta)}]]
+      [:div.col-xs-12.col-md-2
+       [kentat/nayta-otsikollinen-kentta
+        {:otsikko "Yhteensä"
+        :kentta-params {:tyyppi :euro}
+        :arvo-atom (kentat/vain-luku-atomina yhteensa)}]]]]))
 
 
 
@@ -232,13 +318,14 @@
                                          :valitse-fn #(do
                                                         (e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro)))}
             tehtavaryhmat]]]
-         [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
-                            :disabled tehtava-haku-menossa
-                            :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtava)
-                            :valinta (:tehtava kohdistus)
-                            :format-fn :nimi
-                            :tehtava-haku-menossa tehtava-haku-menossa}
-          tehtavat]]
+         [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
+          [tehtavan-valinta {:valitse-fn #(e! (tiedot/->ValitseTehtavaKohdistukselle % nro))
+                             :disabled tehtava-haku-menossa
+                             :virhe? (nayta-kohdistuksen-virhe? lomake nro :tehtava)
+                             :valinta (:tehtava kohdistus)
+                             :format-fn :nimi
+                             :tehtava-haku-menossa tehtava-haku-menossa}
+           tehtavat]]]
         ;; Ei tavoitehintaisella muulla kululla on toimenpide
         [:div.col-xs-12.col-md-3 {:style {:width "350px"}}
          [:div.label-ja-alasveto {:style {:width "320px"}}
@@ -290,7 +377,8 @@
                                      :valitse-fn #(e! (tiedot/->ValitseTehtavaryhmaKohdistukselle % nro))}
         tehtavaryhmat]]]
 
-     [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro]]))
+     [:div.col-xs-12.col-md-3
+      [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro]]]))
 
 (defn- lisatyo-kohdistus [e! lomake kohdistus toimenpiteet nro]
   (let [lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)]
@@ -397,7 +485,7 @@
                          :uusi-rivi? true
                          :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
 
-(defn- nayta-kohdistus [e! lomake nro kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot]
+(defn- nayta-kohdistus [e! lomake nro kohdistus urakan-tyyppi tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot]
   (let [kohdistustyyppi (:tyyppi kohdistus)
         ;; Varmistetaan, että tehtäväryhmissä ei ole vääriä juttuja tälle kohdistukselle
         tehtavaryhmat (tiedot/kasittele-tehtavaryhmat tehtavaryhmat (:tehtavaryhma kohdistus))
@@ -405,9 +493,10 @@
         kaikki-kohdistustyypit (if (istunto/ominaisuus-kaytossa? :mhu-muutokset)
                                  [:hankintakulu :rahavaraus :lisatyo :muukulu :erillisrahoitettu-muutos]
                                  [:hankintakulu :rahavaraus :lisatyo :muukulu])
-        kohdistustyyppit (if (:vuoden-paatos-valittu? lomake)
-                           [:paatos]
-                           kaikki-kohdistustyypit)
+        kohdistustyyppit (cond
+                           (= :vesivayla-hoito urakan-tyyppi) [:muukulu :hankintakulu :lisatyo]
+                           (:vuoden-paatos-valittu? lomake) [:paatos]
+                           :else kaikki-kohdistustyypit)
         voiko-muokata? (cond
                          ;; Jos kohdistus on hoitovuoden päätös, sitä ei voi muokata
                          (= :paatos kohdistustyyppi) false
@@ -440,9 +529,12 @@
 
 
      ;; Kululle valitaan tehtäväryhmä, rahavaraus tai tavoitehintaan kuuluminen sen perusteella, että minkä tyyppinen kohdistus on kyseessä
+     ;; Kohdistustyypit on filtteröity aiemmin, niin tässä ei tarvitse tarkistaa
      (case kohdistustyyppi
        :muukulu [muukulu-kohdistus e! lomake kohdistus tehtavaryhmat toimenpiteet nro]
-       :hankintakulu [hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro]
+       :hankintakulu (if (= :vesivayla-hoito urakan-tyyppi)
+                       [vhu-hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro]
+                       [mhu-hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro])
        :rahavaraus [rahavaraus-kohdistus e! lomake kohdistus rahavaraukset nro]
        :lisatyo [lisatyo-kohdistus e! lomake kohdistus toimenpiteet nro]
        :paatos [hoitovuodenpaatos-kohdistus e! lomake kohdistus nro]
@@ -457,23 +549,25 @@
                              "ei ole käsitelty kululomakkeella."))
          nil))
 
-     ;; Kohdistuksen summa
-     [:div.row
-      [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
-       [:div
-        [kentat/tee-otsikollinen-kentta
-         {:otsikko "Määrä € *"
-          :otsikon-tag "span"
-          :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
-          :kentta-params {:elementin-id (str "kohdistuksen-summa-" nro)
-                          :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
-                          :tyyppi :euro
-                          :tyylit {:width "110px" :height "34px"}
-                          :vaadi-negatiivinen? urakoitsija-maksaa?
-                          :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
-                          ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
-                          :input-luokka "maara-input"
-                          :vayla-tyyli? true}}]]]]]))
+     (when (or (= :teiden-hoito urakan-tyyppi)
+               (and (= :vesivayla-hoito urakan-tyyppi)
+                    (not= :hankintakulu kohdistustyyppi)))
+       [:div.row
+        [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
+         [:div
+          [kentat/tee-otsikollinen-kentta
+           {:otsikko "Määrä € *"
+            :otsikon-tag "span"
+            :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
+            :kentta-params {:elementin-id (str "kohdistuksen-summa-" nro)
+                            :disabled? (or (not voiko-muokata?) (:lukittu? kohdistus))
+                            :tyyppi :euro
+                            :tyylit {:width "110px" :height "34px"}
+                            :vaadi-negatiivinen? urakoitsija-maksaa?
+                            :vaadi-positiivinen-numero? (not urakoitsija-maksaa?)
+                            ;; TODO: Kehitä validointi tähän :virhe? (not (validi-ei-tarkistettu-tai-ei-koskettu? summa-meta))
+                            :input-luokka "maara-input"
+                            :vayla-tyyli? true}}]]]])]))
 
 (defn testausvalinnat [e! app]
   (when (k/kehitysymparistossa?)
@@ -581,7 +675,7 @@
      (map-indexed
        (fn [index kohdistus]
          ^{:key (str "kohdistus-" index)}
-         [nayta-kohdistus e! lomake index kohdistus tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot])
+         [nayta-kohdistus e! lomake index kohdistus urakan-tyyppi tehtavaryhmat rahavaraukset toimenpiteet urakoitsija-maksaa? urakan-muutostyot])
        kohdistukset)
 
      (when (not kulu-lukittu?)

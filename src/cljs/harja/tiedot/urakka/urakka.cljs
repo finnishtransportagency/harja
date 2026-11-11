@@ -102,6 +102,7 @@
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/tehtava               [ei-nil ei-tyhja]
+                  :kulut/maara                 [ei-nil numero]
                   :kulut/rahavaraus            [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
@@ -282,6 +283,9 @@
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
    (let [onko-tehtava-validointi-kaytossa? true
+         vhu-urakka? (= :vesivayla-hoito
+                       (or (:urakan-tyyppi opts)
+                         (:tyyppi @nav/valittu-urakka)))
          kohdistusvalidoinnit (mapcat (fn [i]
                                         (let [kohdistus (get kohdistukset i)
                                               tehtavaryhman-tehtavat? (seq (:tehtavaryhman-tehtavat kohdistus))]
@@ -301,6 +305,10 @@
                                             (= :hankintakulu (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
+                                             (when vhu-urakka?
+                                               [:kohdistukset i :maara])
+                                             (when vhu-urakka?
+                                               (:kulut/maara validoinnit))
                                              (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
                                                [:kohdistukset i :tehtava])
                                              (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)

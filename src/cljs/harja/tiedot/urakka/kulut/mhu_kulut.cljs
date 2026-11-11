@@ -9,6 +9,7 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.istunto :as istunto]
     [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.tiedot.urakka :as urakka-tila]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
@@ -25,6 +26,7 @@
 (defrecord ValitseTehtavaKohdistukselle [tehtava nro])
 (defrecord KohdistuksenLisatieto [lisatieto nro])
 (defrecord KohdistuksenSumma [summa nro])
+(defrecord KohdistuksenMaara [maara nro])
 (defrecord KoontilaskunKuukausi [arvo])
 (defrecord ValitseErapaiva [erapaiva])
 (defrecord KoontilaskunNumero [koontilaskunnumero])
@@ -62,6 +64,9 @@
 (defrecord HaeTehtavatKaikilleKohdistuksille [lomake])
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanTehtavaryhmanTehtavat [urakka tehtavaryhma nro])
+(defrecord GeneroiVhuYksikkohinnat [])
+(defrecord GeneroiVhuYksikkohinnatOnnistui [vastaus])
+(defrecord GeneroiVhuYksikkohinnatEpaonnistui [vastaus])
 (defrecord HaeUrakanKulut [hakuparametrit])
 (defrecord HaeUrakanToimenpiteet [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
@@ -421,13 +426,17 @@
   ValitseTehtavaryhmaKohdistukselle
   (process-event [{:keys [nro tehtavaryhma]} app]
     (let [urakka (-> @tila/yleiset :urakka)
+          vhu-urakka? (= :vesivayla-hoito (:tyyppi urakka))
           ;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi tehtavaryhma))
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma)
                 (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
-                (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true))]
+                (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true))
+          app (cond-> app
+                vhu-urakka? (assoc-in [:lomake :kohdistukset nro :maara] nil)
+                vhu-urakka? (assoc-in [:lomake :kohdistukset nro :summa] nil))]
       ;; Haetaan tehtävät kun tehtäväryhmä valitaan
       (when (and tehtavaryhma (:id tehtavaryhma))
         ((tuck/current-send-function)
@@ -469,10 +478,14 @@
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
-    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)]
-      (-> app
-        (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
-        (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))))
+    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)
+          vhu-urakka? (= :vesivayla-hoito (-> @tila/yleiset :urakka :tyyppi))
+          app (-> app
+                (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
+                (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))]
+      (cond-> app
+        vhu-urakka? (assoc-in [:lomake :kohdistukset nro :maara] nil)
+        vhu-urakka? (assoc-in [:lomake :kohdistukset nro :summa] nil))))
 
   KohdistuksenLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]
@@ -481,6 +494,17 @@
   KohdistuksenSumma
   (process-event [{summa :summa nro :nro} app]
     (assoc-in app [:lomake :kohdistukset nro :summa] summa))
+
+  KohdistuksenMaara
+  (process-event [{maara :maara nro :nro} app]
+    (let [yksikkohinta (get-in app [:lomake :kohdistukset nro :tehtava :yksikkohinta])
+          maara (when-not (or (nil? maara) (and (string? maara) (str/blank? maara)))
+                  (parsi-summa maara))
+          summa (when (and (number? maara) (number? yksikkohinta))
+                  (* maara yksikkohinta))]
+      (-> app
+        (assoc-in [:lomake :kohdistukset nro :maara] maara)
+        (assoc-in [:lomake :kohdistukset nro :summa] summa))))
 
   KoontilaskunKuukausi
   (process-event [{arvo :arvo} app]
@@ -1049,7 +1073,7 @@
       (assoc :syottomoodi auki?))))
 
 (defn kasittele-tehtavaryhmat
-  "Lisättäessä tai muokatessa kuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita.
+  "Lisättäessä tai muokatessa kuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita. (Näin MH-urakoilla)
    Jos niitä on saatu kululle jotain muuta kautta, niin ne kuitenkin näytetään.
    Näitä on:
    Hoitovuoden päättäminen / Tavoitepalkkio, yksilöllinen tunniste: '55c920e7-5656-4bb0-8437-1999add714a3'

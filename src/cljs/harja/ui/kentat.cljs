@@ -273,12 +273,14 @@
 ;; Pitkä tekstikenttä käytettäväksi lomakkeissa, ei sovellu hyvin gridiin
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
-                                     disabled? pituus-max toiminta-f aputeksti elementin-id aria-label]} data]
+                                     disabled? pituus-max pituus-rajoittamaton? toiminta-f aputeksti
+                                     elementin-id aria-label]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
                       koko-rivit))
-        pituus-max (or pituus-max 256)
+        pituus-max (when-not pituus-rajoittamaton?
+                     (or pituus-max 256))
         muuta! (fn [data e]
                  ;; alla pientä workaroundia koska selaimen max-length -ominaisuus ei tue rivinvaihtoja
                  (let [teksti (-> e .-target .-value)]
@@ -289,7 +291,8 @@
                      (and (empty? teksti)
                        (nil? @data))
                      ;; jos copy-paste ylittäisi max-pituuden, eipä sallita sitä
-                     (let [teksti (if (< (count teksti) pituus-max)
+                     (let [teksti (if (or (nil? pituus-max)
+                                          (< (count teksti) pituus-max))
                                     teksti
                                     (subs teksti 0 pituus-max))]
                        (reset! data teksti)
@@ -326,7 +329,7 @@
                         {:aria-label aria-label}))]
          (when aputeksti [:div.aputeksti aputeksti])
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
-         (when (> (/ (count @data) pituus-max) 0.75)
+         (when (and pituus-max (> (/ (count @data) pituus-max) 0.75))
            [:div (- pituus-max (count @data)) " merkkiä jäljellä"])]))))
 
 (defn- normalisoi-numero [n salli-whitespace?]
@@ -1915,12 +1918,12 @@
         [:span.loppuosa loppuosa] " / "
         [:span.loppuetaisyys loppuetaisyys]])]))
 
-(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit
+(defn tee-otsikollinen-kentta [{:keys [otsikko kentta-params arvo-atom luokka tyylit kentta-tyylit
                                        otsikon-luokka otsikon-tag data-muokkaus-fn alaotsikko alaotsikon-luokka]}]
   [:span {:class (or luokka "label-ja-kentta")
           :style tyylit}
    [(or otsikon-tag :label) {:class (or otsikon-luokka "kentan-otsikko")} otsikko]
-   [:div.kentta
+   [:div.kentta {:style kentta-tyylit}
     (if data-muokkaus-fn
       ;; mahdollista 3-arity, joka paremmin Tuck-yhteensopiva. Siihen data-parametri ei saa olla atomi.
       [tee-kentta kentta-params arvo-atom data-muokkaus-fn]
