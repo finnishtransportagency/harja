@@ -140,7 +140,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.11"]
+                 [org.apache.xmlgraphics/fop "2.12"]
 
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
@@ -169,7 +169,7 @@
                          [org.apache.poi/poi-ooxml "5.5.1"]
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.22.1"]
+                         [commons-codec "1.23.0"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
                          [tools.jackson.core/jackson-core "3.2.4"]
                          [com.fasterxml.jackson.core/jackson-core "2.22.4"]
