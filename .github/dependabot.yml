@@ -87,7 +87,7 @@ updates:
   # Sisäisten CI-imageiden tagi- ja digest-päivitykset Docker Composeen.
   # Private GHCR-imaget vaativat repolle Read-oikeuden packagejen Manage Actions access -asetuksissa.
   - package-ecosystem: "docker-compose"
-    directory: "/.github/docker"
+    directory: "/tools/docker"
     schedule:
       interval: "daily"
       time: "06:00"
