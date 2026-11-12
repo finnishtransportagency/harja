@@ -53,16 +53,14 @@ runs:
 
     - name: Cache Clojure Dependencies
       id: cache-clojure-deps
-      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.install-clojure-deps == 'true' }}
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-leiningen-deps-${{ hashFiles('**/project.clj', '**/profiles.clj') }}
-        restore-keys: |
-          ${{ runner.os }}-leiningen-deps-
 
     - name: Download Clojure dependencies
-      if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-matched-key == '' }}
+      if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
       run: |
         lein deps
         lein with-profile +test,+phantomjs deps
