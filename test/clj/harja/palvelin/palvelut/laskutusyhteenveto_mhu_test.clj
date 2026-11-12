@@ -177,6 +177,33 @@
       (is (= (:bonukset_laskutettu hoidonjohto)
             (+ (:korotettuna lupaus-ja-asiakastyytyvaisyys-bonus-indeksilla) alihankinta-ja-tavoitepalkkio muu-bonus tav_ulk_rah))))))
 
+(defn- lisaa-liikennevahinkobonus
+  [sopimus-id urakka-id toimenpideinstanssi-id lisatieto]
+  (u (format "INSERT INTO erilliskustannus
+              (tyyppi, sopimus, urakka, toimenpideinstanssi, pvm, laskutuskuukausi,
+               rahasumma, indeksin_nimi, lisatieto, luotu, luoja)
+              VALUES ('liikennevahinkojen_aiheuttajien_selvitysbonus'::erilliskustannustyyppi,
+                      %s, %s, %s, '2020-03-15', '2020-03-15', 1000, 'MAKU 2015',
+                      '%s', '2020-03-13', (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))"
+        sopimus-id urakka-id toimenpideinstanssi-id lisatieto)))
+
+(deftest mhu-laskutusyhteenvedon-liikennevahinkobonus-sisaltyy-muu-bonus-summaan
+  (let [urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
+        sopimus-id @oulun-maanteiden-hoitourakan-2019-2024-sopimus-id
+        lisatieto "Liikennevahinkobonuksen laskentatesti"]
+    (u (format "DELETE FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+         lisatieto urakka-id))
+    (try
+      (let [ennen (first (filter #(= (:tuotekoodi %) "23150") (hae-2020-03-tiedot)))]
+        (lisaa-liikennevahinkobonus sopimus-id urakka-id hallinnolliset-toimenpiteet-tpi-id lisatieto)
+        (let [jälkeen (first (filter #(= (:tuotekoodi %) "23150") (hae-2020-03-tiedot)))]
+          (is (= (+ (:bonukset_laskutettu ennen) 1000M)
+                 (:bonukset_laskutettu jälkeen))
+            "Uuden liikennevahinkobonuksen pitää päätyä muu bonus -summaan ilman indeksikorotusta")))
+      (finally
+        (u (format "DELETE FROM erilliskustannus WHERE lisatieto = '%s' AND urakka = %s"
+             lisatieto urakka-id))))))
+
 
 (deftest mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot
   (testing "mhu-laskutusyhteenvedon-hoidonjohdon-sanktiot"
@@ -310,6 +337,7 @@
 (deftest mhu-korvausinvestointi
   (let [alkuaika "2022-10-01"
         loppuaika "2022-10-01"
+        sanktiopvm "2022-11-15"
         urakka-id @oulun-maanteiden-hoitourakan-2019-2024-id
 
         ;;Hae Korvausinvestoinnin toimenpideinstanssi
@@ -331,8 +359,7 @@
         ;; Hae hallinnolliset laiminlyönnit sanktiotyypin id
         sanktiotyyppi-id (:id (first (q-map (format "SELECT id FROM sanktiotyyppi st WHERE st.nimi = '%s';"
                                               "Hallinnolliset laiminlyönnit"))))
-        _ (lisaa-sanktio-urakalle 12 "C" alkuaika urakka-id (:id korvausinvestointi) sanktiotyyppi-id)
-
+        _ (lisaa-suorasanktio-urakalle 12 "C" sanktiopvm urakka-id (:id korvausinvestointi) sanktiotyyppi-id nil nil)
 
         _ (when (= (empty? @oulun-mhu-urakka-2022-2023))
             (reset! oulun-mhu-urakka-2022-2023 (hae-2022-2023-oulu-mhu-tiedot)))

@@ -50,4 +50,4 @@
 
   FiltteroiTienumerolla
   (process-event [{tie :tie} app]
-    (assoc app :filtteroidyt-tieosoitteet (filteroi-tieosoitteet (:tieosoitteet app) tie))))
+    (assoc app :tie tie :filtteroidyt-tieosoitteet (filteroi-tieosoitteet (:tieosoitteet app) tie))))

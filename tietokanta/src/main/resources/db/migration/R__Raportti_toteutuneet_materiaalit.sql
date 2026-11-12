@@ -1,3 +1,4 @@
+-- Päivitetään joka päivä ajastetulla tehtävällä
 DROP MATERIALIZED VIEW IF EXISTS raportti_toteutuneet_materiaalit;
 CREATE MATERIALIZED VIEW raportti_toteutuneet_materiaalit AS
 SELECT SUM(tm.maara)                AS kokonaismaara,

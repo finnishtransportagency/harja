@@ -9,16 +9,20 @@ networks:
     enable_ipv6: false
 
 services:
+  # -- Harjadb --
   # Uusin saatavilla oleva testietiekannan konfiguraatio
   harjadb-latest:
     # Hae latest image GitHubin container registrystä
-    image: ghcr.io/finnishtransportagency/harja_harjadb:latest
+    # TODO: Latest imagea ei voi vielä buildata, koska vanhat workflow eivät käytä digest-versiolukitusta
+    #       Julkaistaan ensin tämä workflow, ja buildataan latest sitten.
+    #       PR-testeihin liittyvien Timezone-asetusten muutosten johdosta uutta imagea ei voi julkaista vanhoille workfloweille,
+    #       vaan workflow pitää päivittää ensin
+    image: ghcr.io/finnishtransportagency/harja_harjadb:latest@sha256:d30c13b3a68f57a12a3dc9a1db4023c10c24312d2ae3fda17a1c3e59d4c81d36
 
     # Alla saatavilla olevia versioita
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.4-3.3.3 (uusin vakaa)
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.3-3.3.2
-    #image: ghcr.io/finnishtransportagency/harja_harjadb:13.11-3.3.2
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.18-3.3.3 (uusin vakaa)
+    #image: ghcr.io/finnishtransportagency/harja_harjadb:15.4-3.3.3
 
     container_name: harjadb
     networks:
@@ -38,61 +42,44 @@ services:
       interval: 10s
       retries: 5
       start_period: 20s
+      # Tarkista start_periodin aikana sekunnin välein, jotta 'docker compose up --wait' ei odota turhaan.
+      # Vaatii Docker Engine >= 25 ja Compose >= 2.20.2.
+      start_interval: 1s
       timeout: 10s
 
-  # Vanhempia testattavia imagen versiota varten on tehty tähän omia compose konfiguraatioita, koska
-  # 'latest' imagen versioissa healthcheck, volumet ym. asetukset voivat muuttua.
+  # NOTE: Testattavia imagen versiota varten voi tarvittaessa lisätä tähän omia compose konfiguraatioita, koska
+  # imagen versioissa healthcheck, volumet ym. asetukset voivat muuttua. Tällöin image vaatii erilaisen konfiguraation.
 
-  harjadb-13.13-3.3.3:
-    image: ghcr.io/finnishtransportagency/harja_harjadb:13.13-3.3.3
-
-    container_name: harjadb
-    networks:
-      - harja_net
+  # -- Cypress --
+  cypress-latest:
+    image: ghcr.io/finnishtransportagency/harja_cypress:latest@sha256:52efe1f966c6b2e86fe3471a46b112ca274e8b5a549168e101f2b9cd3d6f4eec
+    # Harja käynnistetään runnerilla, joten localhost-yhteydet tarvitsevat host-verkon.
+    network_mode: host
+    user: node
+    working_dir: /harja
     environment:
-      HARJA_TIETOKANTA_PORTTI: 5432
-    ports:
-      - "127.0.0.1:5432:5432"
-    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
-    sysctls:
-      - net.ipv6.conf.all.disable_ipv6=1
-    # Huom: Mountissa viitataan Harja-repon juuressa olevaan tietokanta-hakemistoon, jossa migraatiotiedostot ovat.
+      ELECTRON_EXTRA_LAUNCH_ARGS: "--disable-gpu"
+      CYPRESS_VIDEO: "false"
+      BROWSER: "${BROWSER:-chrome}"
+      SPEC: "${SPEC:-}"
     volumes:
-      - ../../tietokanta:/var/lib/postgresql/harja/tietokanta
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "harja", "-d", "harja" ]
-      interval: 10s
-      retries: 5
-      start_period: 20s
-      timeout: 10s
+      - "${GITHUB_WORKSPACE:-../..}:/harja"
+    command:
+      - bash
+      - -c
+      - |
+        echo -e "Chrome version:  $$(google-chrome --version)\nEdge version:  $$(edge --version)\n";
+        echo "-------------------";
+        if [ -n "$$SPEC" ]; then
+          cypress run --browser "$$BROWSER" --spec "$$SPEC";
+        else
+          cypress run --browser "$$BROWSER";
+        fi
 
-# Deprekoitu ActiveMQ Classic broker
-#  activemq-itmf:
-#    image: ghcr.io/finnishtransportagency/harja_activemq:latest
-#    container_name: activemq-itmf
-#    networks:
-#      - harja_net
-#    environment:
-#      TZ: "EET"
-#      TCP_PORT: 61616
-#      UI_PORT: 8161
-#    ports:
-#        - "127.0.0.1:61616:61616" # broker (admin:adminactivemq)(amq:amq)
-#        - "127.0.0.1:8161:8161"   # web    localhost:8161/admin/queues.jsp (admin:admin)
-#    # Estetään IPv6 käyttö, jotta testitietokannan migraatioiden ajossa ei tule yhteysongelmia
-#    sysctls:
-#      - net.ipv6.conf.all.disable_ipv6=1
-#    healthcheck:
-#     # https://stackoverflow.com/questions/52500782/how-to-check-if-activemq-is-working-properly
-#      test: /opt/activemq/bin/activemq query --objname type=Broker,brokerName=*,service=Health | grep Good
-#      interval: 10s
-#      retries: 5
-#      start_period: 20s
-#      timeout: 10s
-
+  # -- ActiveMQ --
   # Uusi ActiveMQ Artemis broker
   activemq-artemis-itmf:
-    image: ghcr.io/finnishtransportagency/harja_activemq_artemis:latest
+    image:  ghcr.io/finnishtransportagency/harja_activemq_artemis:latest@sha256:e70ee7ef8c6e34ed1ea9e5fdd86406e49e8892740729c44ca1cb77e29e20f485
     container_name: activemq-artemis-itmf
     networks:
       - harja_net

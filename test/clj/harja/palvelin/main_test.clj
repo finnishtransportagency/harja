@@ -103,7 +103,7 @@
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
-    :api-reittitoteuma :api-siltatarkastukset :api-tarkastukset
+    :api-reittitoteuma :api-siltatarkastukset :api-liitteet :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
@@ -148,6 +148,7 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
+    :kalustoresurssit
     :api-sampo
     :harja-status
     :rajoitusalue-pituudet
@@ -176,7 +177,8 @@
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
-    :tehtavat-maarat})
+    :tehtavat-maarat
+    :urakkaparametrit-hallinta})
 
 (def ei-statusta
   #{:metriikka
@@ -195,7 +197,7 @@
     :geometriapaivitykset :api-yhteysvarmistus :tilannekuva
     :tienakyma :karttakuvat :debug :api-jarjestelmatunnukset :geometria-aineistot
     :organisaatiot :api-urakat :api-laatupoikkeamat :api-paivystajatiedot :api-pistetoteuma
-    :api-reittitoteuma :api-siltatarkastukset :api-tarkastukset
+    :api-reittitoteuma :api-siltatarkastukset :api-liitteet :api-tarkastukset
     :api-tyokoneenseuranta :api-tyokoneenseuranta-puhdistus :api-turvallisuuspoikkeama
     :api-suolasakkojen-lahetys :api-varusteet :api-ilmoitukset :api-yllapitokohteet :api-ping
     :api-yhteystiedot :api-tiemerkintatoteuma :api-raportit :laskutusyhteenvetojen-muodostus :status
@@ -239,6 +241,7 @@
     :api-analytiikka
     :yleiset-ajastukset
     :suolarajoitukset
+    :kalustoresurssit
     :api-sampo
     :harja-status
     :info
@@ -268,7 +271,8 @@
     :tarjous
     :api-taitorakennerekisteri
     :uusi-kustannussuunnitelma
-    :tehtavat-maarat})
+    :tehtavat-maarat
+    :urakkaparametrit-hallinta})
 
 (def hidas-ok-status #{:itmf})
 

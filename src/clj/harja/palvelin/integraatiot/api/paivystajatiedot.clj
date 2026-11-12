@@ -62,14 +62,6 @@
            :viesti (format "Alkupäivämäärä: %s on päättymispäivämäärän: %s jälkeen." alkaen paattyen)})
         [alkaen paattyen]))))
 
-(defn- suodata-puhelinnumerolla [puhelinnumero paivystajatiedot]
-  (into [] (filter (fn [paivystys]
-                     (or (= (fmt/trimmaa-puhelinnumero (:tyopuhelin paivystys))
-                            (fmt/trimmaa-puhelinnumero puhelinnumero))
-                         (= (fmt/trimmaa-puhelinnumero (:matkapuhelin paivystys))
-                            (fmt/trimmaa-puhelinnumero puhelinnumero))))
-                   paivystajatiedot)))
-
 (defn- tarkista-sijaintihaun-parametrit [parametrit]
   (parametrivalidointi/tarkista-parametrit
     parametrit
@@ -151,17 +143,6 @@
         vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot)]
     vastaus))
 
-(defn- hae-paivystajatiedot-puhelinnumerolla [db parametrit kayttaja]
-  (log/debug "Haetaan päivystäjätiedot puhelinnumerolla parametreillä: " parametrit)
-  (parametrivalidointi/tarkista-parametrit parametrit {:puhelinnumero "Puhelinnumero puuttuu"})
-  (validointi/tarkista-rooli kayttaja roolit/liikennepaivystaja)
-  (let [{puhelinnumero :puhelinnumero alkaen :alkaen paattyen :paattyen} parametrit
-        pvm-vali (parsi-aikaparametrit alkaen paattyen)
-        kaikki-paivystajatiedot (yhteyshenkilot-q/hae-kaikki-paivystajat db (first pvm-vali) (second pvm-vali))
-        paivystajatiedot-puhelinnumerolla (suodata-puhelinnumerolla puhelinnumero kaikki-paivystajatiedot)
-        vastaus (paivystajatiedot-sanoma/muodosta-vastaus-paivystajatietojen-haulle paivystajatiedot-puhelinnumerolla)]
-    vastaus))
-
 (defn- poista-paivystykset [db data parametrit kayttaja]
   (let [{:keys [paivystysidt]} data
         urakka-id (Integer/parseInt (:id parametrit))]
@@ -217,15 +198,6 @@
     :vastaus-skeema json-skeemat/paivystajatietojen-haku-vastaus
     :kasittely-fn (fn [parametrit _ kayttaja-id db]
                     (hae-paivystajatiedot-sijainnilla db
-                      (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
-                      kayttaja-id))}
-   {:palvelu :hae-paivystajatiedot-puhelinnumerolla
-    :api-oikeus :luku
-    :polku "/api/paivystajatiedot/haku/puhelinnumerolla"
-    :tyyppi :GET
-    :vastaus-skeema json-skeemat/paivystajatietojen-haku-vastaus
-    :kasittely-fn (fn [parametrit _ kayttaja-id db]
-                    (hae-paivystajatiedot-puhelinnumerolla db
                       (apurit/muuta-mapin-avaimet-keywordeiksi parametrit)
                       kayttaja-id))}
    {:palvelu :lisaa-paivystajatiedot

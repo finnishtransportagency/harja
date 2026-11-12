@@ -1,48 +1,51 @@
 (ns harja.palvelin.integraatiot.api.analytiikka
   "Analytiikkaportaalille endpointit"
-  (:require [harja.fmt :as fmt]
-            [taoensso.timbre :as log]
-            [clojure.set :as set]
+  (:require [clojure.set :as set]
             [clojure.string :as str]
+            [taoensso.timbre :as log]
             [clojure.spec.alpha :as s]
             [compojure.core :refer :all]
             [compojure.route :refer :all]
-            [compojure.core :refer [GET]]
             [com.stuartsierra.component :as component]
 
+            [harja.fmt :as fmt]
             [harja.pvm :as pvm]
             [harja.domain.kulut :as kulut-domain]
-            [harja.kyselyt.konversio :as konversio]
-            [harja.kyselyt.konversio-optimoitu :as konv-opt]
-            [harja.kyselyt.toteumat :as toteuma-kyselyt]
-            [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
             [harja.domain.tierekisteri :as tr-domain]
             [harja.domain.paallystysilmoitus :as paallystysilmoitus]
             [harja.domain.paallystys-ja-paikkaus :as paallystys-ja-paikkaus]
-            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
-            [harja.kyselyt.urakat :as urakat-kyselyt]
+
             [harja.kyselyt.kulut :as kulu-kyselyt]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
+            [harja.kyselyt.toteumat :as toteuma-kyselyt]
             [harja.kyselyt.paikkaus :as paikkaus-kyselyt]
+            [harja.kyselyt.konversio-optimoitu :as konv-opt]
+            [harja.kyselyt.materiaalit :as materiaalit-kyselyt]
             [harja.kyselyt.valikatselmus :as valitavoite-kyselyt]
             [harja.kyselyt.rahavaraukset :as rahavaravaus-kyselyt]
             [harja.kyselyt.organisaatiot :as organisaatiot-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
-            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
             [harja.kyselyt.paallystys-kyselyt :as paallystys-kyselyt]
+            [harja.kyselyt.erilliskustannus-kyselyt :as bonus-kyselyt]
             [harja.kyselyt.toimenpidekoodit :as toimenpidekoodi-kyselyt]
             [harja.kyselyt.suolarajoitus-kyselyt :as suolarajoitus-kyselyt]
             [harja.kyselyt.turvallisuuspoikkeamat :as turvallisuuspoikkeamat]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-kyselyt]
+
+            [harja.palvelin.palvelut.valikatselmus.apurit :as v-apurit]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
-            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.integraatiot.api.tyokalut.parametrit :as parametrit]
             [harja.palvelin.integraatiot.api.tyokalut.json-skeemat :as json-skeemat]
             [harja.palvelin.palvelut.valikatselmus.paatosnakyvyyskone :as paatoskone]
+            [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
+            [harja.palvelin.integraatiot.api.validointi.parametrit :as parametrivalidointi]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmus-palvelu]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-reitti poista-palvelut]]
             [harja.palvelin.integraatiot.api.sanomat.analytiikka-sanomat :as analytiikka-sanomat]
             [harja.palvelin.integraatiot.api.tyokalut.kutsukasittely :refer [kasittele-kevyesti-get-kutsu kasittele-get-kutsu]])
+
   (:import (java.text SimpleDateFormat))
   (:use [slingshot.slingshot :only [throw+]]))
 
@@ -982,7 +985,7 @@
         urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         urakan-loppuvuosi (dec (-> urakan-tiedot :loppupvm pvm/vuosi)) ;; Viimeisen hoitovuoden alkuvuosi käytännössä
         mhu+urakka? (= "mhu+" (:sopimustyyppi urakan-tiedot))
-        mhu-tyyppi (paatoskone/urakan-hoitotyyppi mhu+urakka?)
+        mhu-tyyppi (v-apurit/urakan-hoitotyyppi mhu+urakka?)
         kulut (kulu-kyselyt/hae-toteutuneet-kustannukset-analytiikalle db {:urakka-id urakka-id})
         sanktiot (sanktio-kyselyt/hae-urakan-sanktiot-analytiikalle db urakka-id)
         bonukset (bonus-kyselyt/hae-urakan-bonukset-analytiikalle db urakka-id)

@@ -3,46 +3,101 @@
             [clojure.set :as set]))
 
 (def punainen (rgb 215 103 0))
-(def oranssi (rgb 235 180 0))
-(def keltainen (rgb 252 221 122))
-(def magenta (rgb 246 143 202))
 (def vihrea (rgb 50 203 50))
-(def tummanvihrea (rgb 39 180 39))
-(def turkoosi (rgb 148 237 216))
-(def syaani (rgb 109 201 253))
 (def sininen (rgb 39 132 224))
-(def tummansininen (rgb 0 77 153))
 (def violetti (rgb 133 74 160))
 (def lime (rgb 184 229 127))
 (def pinkki (rgb 199 41 131))
 (def musta (rgb 0 0 0))
 (def musta-raja (rgb 51 51 51))
 (def valkoinen (rgb 255 255 255))
-(def vaaleanharmaa (rgb 242 242 242))
 (def harmaa (rgb 140 140 140))
 (def tummanharmaa (rgb 77 77 77))
 
+(def syaani (rgb 45 128 176))
+
 ;; Näitä värejä käytetään hexoina vektori-ikoneiden värjäämiseen.
 ;; Värit figmasta.
-(def tarkastus-default "#94A7C2")
-(def fig-default "#00B0CC")
-(def lemon-default "#FFC300")
-(def eggplant-default "#A050A0")
-(def pitaya-default "#E50083")
-(def pea-default "#8DCB6D")
-(def black-light "#5C5C5C")
-(def red-default "#DE3618")
+(def tarkastus-default
+  #?(:clj  (rgb 148 167 194)
+     :cljs "#94A7C2"))
+
+(def fig-default
+  #?(:clj  (rgb 0 176 204)
+     :cljs "#00B0CC"))
+
+(def lemon-default
+  #?(:clj  (rgb 255 195 0)
+     :cljs "#FFC300"))
+
+(def pitaya-default
+  #?(:clj  (rgb 229 0 131)
+     :cljs "#E50083"))
+
+(def black-light
+  #?(:clj  (rgb 92 92 92)
+     :cljs "#5C5C5C"))
+
+(def red-default
+  #?(:clj  (rgb 222 54 24)
+     :cljs "#DE3618"))
+
+;; Kartalla näkyvien elyjen värit, Figmasta
+(def tummansininen
+  #?(:clj  (rgb 0 114 178)
+     :cljs "#0072B2"))
+
+(def vaaleanharmaa
+  #?(:clj  (rgb 153 153 153)
+     :cljs "#999999"))
+
+(def turkoosi
+  #?(:clj  (rgb 86 180 233)
+     :cljs "#56B4E9")) ;;"syaani" kanssa nyt sama, asetin syaania hieman tummemmaksi
+
+(def eggplant-default
+  #?(:clj  (rgb 38 32 131)
+     :cljs "#262083"))
+
+(def magenta
+  #?(:clj  (rgb 133 70 135)
+     :cljs "#854687")) ;; "violetti" kanssa nyt sama 
+
+(def oranssi
+  #?(:clj  (rgb 230 159 0)
+     :cljs "#E69F00"))
+
+(def keltainen
+  #?(:clj  (rgb 240 228 66)
+     :cljs "#F0E442")) ;; "lemon-default" kanssa nyt sama 
+
+(def tummanvihrea
+  #?(:clj  (rgb 69 116 92)
+     :cljs "#45745C"))
+
+(def pea-default
+  #?(:clj  (rgb 26 170 131)
+     :cljs "#1AAA83"))
+
+(def elinvoima-varit
+  ^{:doc
+    (str
+      "Elinvoimakeskusten värit, värit kierrätellään kannan ID:n mukaan:"
+      "defn- organisaation-geometria")}
+  [tummanvihrea vaaleanharmaa keltainen turkoosi
+   pea-default magenta tummansininen oranssi eggplant-default])
 
 (def kaikki
   ^{:doc "Vektori joka sisältää kaikki namespacen värit. Joudutaan valitettavasti rakentamaan
           käsin, koska .cljs puolelta puuttuu tarvittavat työkalut tämän luomiseen."
     :const true}
-  [punainen oranssi keltainen magenta vihrea tummanvihrea turkoosi syaani sininen tummansininen violetti lime pinkki
-   tarkastus-default fig-default lemon-default eggplant-default pitaya-default pea-default black-light red-default])
+  [punainen oranssi keltainen magenta vihrea
+   tarkastus-default tummanvihrea turkoosi tummansininen violetti lime syaani pinkki
+   fig-default lemon-default eggplant-default pitaya-default pea-default sininen black-light red-default])
 
 #?(:clj
    (defn- poista-testit [setti]
-     (disj setti 'varmenna-sisalto 'varmenna-kaikki-vektori)))
+     (disj setti 'varmenna-sisalto 'varmenna-kaikki-vektori 'elinvoima-varit)))
 
 #?(:clj
    (defn- poista-epavarit [setti]

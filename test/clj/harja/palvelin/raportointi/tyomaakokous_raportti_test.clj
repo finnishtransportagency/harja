@@ -42,7 +42,7 @@
                     :laatupoikkeamaraportti false,
                     :ilmoitusraportti false,
                     :alkupvm #inst "2021-12-31T22:00:00.000-00:00",
-                    :muutos-ja-lisatyot true,
+                    ; :muutos-ja-lisatyot true,
                     :urakkatyyppi :teiden-hoito}
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
@@ -56,20 +56,24 @@
         laskutusyhteenveto (take 15 raportit)
         perusluku (nth laskutusyhteenveto 2)
         indeksikerroin (nth laskutusyhteenveto 3)
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 17) second :otsikko)
-        sanktioraportin-otsikko (-> (nth raportit 20) second)]
+        sanktioyhteenveto (some #(when (= [:otsikko "Sanktioiden yhteenveto"] %)
+                 (second %))
+              raportit)
+        sanktioraportin-otsikko (some #(when (= :otsikko-title (first %)) (second %)) raportit)]
 
     (is (= raportin-nimi "Oulun MHU 2019-2024, Työmaakokousraportti tammikuussa 2022"))
     (is (= perusluku [:teksti "Indeksilaskennan perusluku: 110,8"]) "Peruslukuteksti")
     (is (= indeksikerroin [:teksti "Hoitokauden 2021-22 indeksikerroin: 1,261"]) "Laskutusyhteenvedon indeksikerroin")
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= "Oulun MHU 2019-2024, Muutos- ja lisätöiden raportti, kaikki työtyypit tammikuussa 2022, Toimenpide: kaikki" muutos-ja-lisatoiden-raportin-otsikko))
-    (is (= "Sanktiot, bonukset ja arvonvähennykset 01.01.2022 - 31.01.2022" sanktioraportin-otsikko))))
+    (is (= "Sanktiot, bonukset ja arvonvähennykset" sanktioraportin-otsikko))
+    (is (= "Sanktioiden yhteenveto" sanktioyhteenveto))))
 
 
 (deftest tyomaakokousraportin-suoritus-vanhalle-hoitourakalle-toimii
   (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
-        parametrit {:laskutusyhteenveto true, :sanktioraportti true, :tiestotarkastusraportti false, :loppupvm #inst "2014-10-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2014-09-30T21:00:00.000-00:00", :muutos-ja-lisatyot true, :urakkatyyppi :hoito}
+        parametrit {:laskutusyhteenveto true, :sanktioraportti true, :tiestotarkastusraportti false, :loppupvm #inst "2014-10-31T21:59:59.000-00:00", :laatupoikkeamaraportti false, :ilmoitusraportti false, :alkupvm #inst "2014-09-30T21:00:00.000-00:00",
+                    ;:muutos-ja-lisatyoraportti true, Ei tueta, koska muutos- ja lisätyöraportti toimii vain hoitovuosikohtaisesti tällä hetkellä.
+                    :urakkatyyppi :hoito}
 
         vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                   :suorita-raportti
@@ -82,19 +86,18 @@
         raportit (nth vastaus 2)
         laskutusyhteenveto (take 14 raportit)
         laskutusyhteenveto-taulukot (last (nth laskutusyhteenveto 6))
-        muutos-ja-lisatoiden-raportin-otsikko (-> (nth raportit 12) second :otsikko)]
+        sanktio-otsikko (some #(when (= :otsikko-title (first %)) (second %)) raportit)]
     (is (= raportin-nimi "Oulun alueurakka 2014-2019, Työmaakokousraportti lokakuussa 2014"))
     (is (= (-> laskutusyhteenveto first second) "Laskutusyhteenveto"))
-    (is (= [["Talvihoito (#82)"
+    (is (= [["Talvihoito (#89)"
              [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 3500.0M, :fmt :raha, :tyyli nil}]]
-            ["Soratien hoito (#98)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
+            ["Soratien hoito (#105)" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 10000.0M, :fmt :raha, :tyyli nil}]]
             ["Toimenpiteet yhteensä" [:varillinen-teksti {:arvo 0.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]
              [:varillinen-teksti {:arvo 13500.0M, :fmt :raha, :tyyli nil}]]]
           laskutusyhteenveto-taulukot))
-    (is (= "Oulun alueurakka 2014-2019, Muutos- ja lisätöiden raportti, kaikki työtyypit lokakuussa 2014, Toimenpide: kaikki"
-          muutos-ja-lisatoiden-raportin-otsikko))))
+    (is (= "Sanktiot, bonukset ja arvonvähennykset" sanktio-otsikko))))

@@ -39,9 +39,9 @@ $$
                     'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123,
                     kayttaja_id, NOW(), '2019-10-11 06:06.37', '2019-10-11 06:06.37', FALSE, FALSE, urakka_id,
                     'Sanktion sisältävä laatupoikkeama - MHU T1', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
-        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-            VALUES ('A'::SANKTIOLAJI, 1000.77, '2019-10-12 06:06.37', 'MAKU 2015',
+            VALUES ('A'::SANKTIOLAJI, 1000.77, '2019-10-12 06:06.37', '2019-10-11 06:06.37', 'MAKU 2015',
                     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU T1'),
                     toimenpideinstanssi_talvihoito_id, saktio_talvihoito, FALSE, kayttaja_id);
 
@@ -57,9 +57,9 @@ $$
                     'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123, kayttaja_id,
                     NOW(), '2020-03-16 06:06.37', '2020-03-16 06:06.37', FALSE, FALSE, urakka_id,
                     'Sanktion sisältävä laatupoikkeama - MHU T2', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
-        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-            VALUES ('A'::SANKTIOLAJI, 100.20, '2020-03-17 06:06.37', 'MAKU 2015',
+            VALUES ('A'::SANKTIOLAJI, 100.20, '2020-03-17 06:06.37', '2020-03-16 06:06.37', 'MAKU 2015',
                     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU T2'),
                     toimenpideinstanssi_talvihoito_id, saktio_talvihoito, FALSE, kayttaja_id);
 
@@ -73,9 +73,9 @@ $$
                     'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123,
                     kayttaja_id, NOW(), '2019-10-11 06:06.37', '2019-10-11 06:06.37', FALSE, FALSE, urakka_id,
                     'Sanktion sisältävä laatupoikkeama - MHU L1', 1, 2, 3, 4, point(418237, 7207744)::GEOMETRY, 5);
-        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-            VALUES ('A'::SANKTIOLAJI, 1000.77, '2019-10-12 06:06.37', 'MAKU 2015',
+            VALUES ('A'::SANKTIOLAJI, 1000.77, '2019-10-12 06:06.37', '2019-10-11 06:06.37', 'MAKU 2015',
                     (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU L1'),
                     toimenpideinstanssi_liikenneymp_id, saktio_talvihoito, FALSE, kayttaja_id);
 
@@ -124,9 +124,9 @@ $$
                     'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123, kayttaja_id, NOW(), '2020-03-16 06:06.37',
                     '2020-03-16 06:06.37', FALSE, FALSE, urakka_id,'Sanktion sisältävä laatupoikkeama - MHU HJ2', 1, 2,
                     3, 4, point(418237, 7207744)::GEOMETRY, 5);
-        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-        VALUES ('vaihtosanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+        VALUES ('vaihtosanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', '2020-03-16 06:06.37', 'MAKU 2015',
                 (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ2'),
                 toimenpideinstanssi_hoidonjohto_id, (SELECT id
                                                        FROM sanktiotyyppi
@@ -143,9 +143,9 @@ $$
                     'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI, 'Ei toimi', 123, kayttaja_id, NOW(), '2020-03-16 06:06.37',
                     '2020-03-16 06:06.37', FALSE, FALSE, urakka_id,'Sanktion sisältävä laatupoikkeama - MHU HJ3', 1, 2,
                     3, 4, point(418237, 7207744)::GEOMETRY, 5);
-        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama, toimenpideinstanssi, tyyppi,
                              suorasanktio, luoja)
-        VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', 'MAKU 2015',
+        VALUES ('arvonvahennyssanktio'::SANKTIOLAJI, 1000, '2019-10-12 06:06.37', '2020-03-16 06:06.37', 'MAKU 2015',
                 (SELECT id FROM laatupoikkeama WHERE kuvaus = 'Sanktion sisältävä laatupoikkeama - MHU HJ3'),
                 toimenpideinstanssi_hoidonjohto_id, (SELECT id
                                                        FROM sanktiotyyppi

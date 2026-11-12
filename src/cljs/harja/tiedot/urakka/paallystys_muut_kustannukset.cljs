@@ -62,6 +62,7 @@
                      (if (:bonus ks)
                        {:hinta (-> ks :summa)
                         :pvm (-> ks :perintapvm)
+                        :tyyppi :bonus
                         :selite (str (sanktio-domain/bonuslaji->teksti (-> ks :laji)) kohdetiedot)
                         :id (-> ks :id)}
 
@@ -69,6 +70,7 @@
                       {:hinta (-> ks :summa) ;; käännetään sanktioiden etumerkki ladattaessa (näitä ei tallenneta, ovat read-only gridissä)
                        :pvm (-> ks :laatupoikkeama :aika)
                        :selite (str (-> ks :tyyppi :nimi) kohdetiedot)
+                       :tyyppi :sanktio
                        :id (-> ks :id)})))]
     (concat
       (map #(assoc % :muokattava true :id (mk-id %)) muut-kustannukset-tiedot)

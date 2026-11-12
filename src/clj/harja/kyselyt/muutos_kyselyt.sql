@@ -172,22 +172,31 @@ INSERT INTO mhu_muutos_kustannusvaikutus AS kv (
     kustannuslaji,
     toimenpideinstanssi,
     hoitokauden_alkuvuosi,
-    summa
+    summa,
+    tehtavamaaramuutos_kirjattu,
+    syy
   ) VALUES (
     :versio,
     :muutos_id,
     :kustannuslaji::SUUNNITTELU_OSIO,
     :toimenpideinstanssi,
     :hoitokauden_alkuvuosi,
-    :summa
+    :summa,
+    :tehtavamaaramuutos-kirjattu?,
+    :syy
 ) ON CONFLICT (muutos, kustannuslaji, toimenpideinstanssi, hoitokauden_alkuvuosi)
 DO UPDATE SET
   versio               = EXCLUDED.versio,
   kustannuslaji        = EXCLUDED.kustannuslaji,
   toimenpideinstanssi  = EXCLUDED.toimenpideinstanssi,
-  summa                = EXCLUDED.summa
+  summa                = EXCLUDED.summa,
+  tehtavamaaramuutos_kirjattu = EXCLUDED.tehtavamaaramuutos_kirjattu,
+  syy                  = EXCLUDED.syy
 -- Päivitetään vain jos tulee uusi määrämuutos
-WHERE (kv.summa) IS DISTINCT FROM (excluded.summa);
+-- Tai jos halutaan tallentaa muutos ilman tehtävämääriä
+WHERE (kv.summa, kv.tehtavamaaramuutos_kirjattu, kv.syy)
+  IS DISTINCT FROM
+      (EXCLUDED.summa, EXCLUDED.tehtavamaaramuutos_kirjattu, EXCLUDED.syy);
 
 
 -- name: luo-tai-paivita-erillisrahoitettu-kustannusvaikutus<!
@@ -419,6 +428,8 @@ SELECT
                         'toimenpideinstanssi', kust.toimenpideinstanssi,
                         'summa', kust.summa,
                         'hoitokauden_alkuvuosi', kust.hoitokauden_alkuvuosi,
+                        'tehtavamaaramuutos-kirjattu?', kust.tehtavamaaramuutos_kirjattu,
+                        'syy', kust.syy,
                         'versio', kust.versio
                     )
                     ORDER BY kust.toimenpideinstanssi, kust.hoitokauden_alkuvuosi
@@ -478,16 +489,24 @@ DELETE FROM mhu_muutos_tehtava_ja_maaraluettelo
 -- name: hae-tehtava-maaramuutokset
 WITH urakan_tehtavat AS (
     SELECT
-        tt.toimenpidekoodi           AS toimenpidekoodi,
-        SUM(tt.maara)                AS maara,
-        :urakka                      AS urakka,
-        MAX(tt.toteuma)              AS toteuma_id,
-        MAX(tt.id)                   AS toteuma_tehtava_id
-      FROM toteuma_tehtava tt
-     WHERE tt.urakka_id = :urakka
-       AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
-       AND tt.poistettu = FALSE
-     GROUP BY tt.toimenpidekoodi
+        tt.toimenpidekoodi AS toimenpidekoodi,
+        SUM(tt.maara)      AS maara,
+        :urakka            AS urakka,
+        MAX(tt.toteuma)    AS toteuma_id,
+        MAX(tt.id)         AS toteuma_tehtava_id
+    FROM toteuma_tehtava tt
+        JOIN kayttaja k ON k.id = tt.luoja
+        JOIN tehtava tk ON tk.id = tt.toimenpidekoodi
+    WHERE tt.urakka_id = :urakka
+      AND tt.hoitokauden_alkuvuosi = :hoitokauden_alkuvuosi
+      AND tt.poistettu = FALSE
+      -- Käsin kirjatut määrät lasketaan mukaan aina
+      -- Urakoitsijajärjestelmästä kirjatut määrät otetaan mukaan vain jos "laske-api-maara-mukaan?" on TRUE
+      AND (
+          k.jarjestelma IS NOT TRUE 
+          OR tk."laske-api-maara-mukaan?" IS TRUE
+      )
+    GROUP BY tt.toimenpidekoodi
 ),
  materiaalimaara AS NOT MATERIALIZED (
      -- Aggregoi materiaalit ensin (vähemmän rivejä toteuma-joiniin)
@@ -513,10 +532,15 @@ WITH urakan_tehtavat AS (
          AND t.poistettu IS FALSE
               JOIN materiaalikoodi mk ON ms.materiaalikoodi = mk.id
               JOIN tehtava teh
-                   ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
-                       AND teh."maaramitattava?" IS TRUE
-                       AND (teh.materiaalikoodi_id = ms.materiaalikoodi
-                           OR teh.materiaalikoodi_id IS NULL)
+                    ON teh.materiaaliluokka_id = mk.materiaaliluokka_id
+                    AND teh."maaramitattava?" IS TRUE
+                    -- Lasketaan materiaalit pelkästään materiaaleina raportoitaville tehtäville
+                    -- Löytyy dokumentaatiosta: "Materiaaleina raportoitavat tehtävät"
+                    AND teh."materiaalina_raportoitava?" IS TRUE
+                    AND (
+                        teh.materiaalikoodi_id = ms.materiaalikoodi
+                        OR teh.materiaalikoodi_id IS NULL
+                    )
      GROUP BY teh.id, teh.nimi, mk.yksikko
  ),
 maaramuutokset AS (
@@ -533,18 +557,21 @@ maaramuutokset AS (
         mmt.kasin_syotetty_tavoitehintamuutos            AS syotetty_tavoitehintamuutos,
         COALESCE(kulut.summa, 0)                         AS kirjatut_kulut_summa,
         -- toteutunut määrä: materiaalitoteuma -> muuten urakan_tehtavat
+        -- Jos materiaali määrä olemassa, tarkoittaa että tehtävä on materiaalina raportoitava
+        -- Pidetään materiaali aina ensimmäisenä
         COALESCE(MAX(mm.maara), SUM(urakan_tehtavat.maara)) AS toteutunut_maara,
         SUM(ut.maara)                                    AS suunniteltu_maara,
         tk.kasin_lisattava_maara                         AS kasin_lisattava_maara,
         tk.suunnitteluyksikko                            AS yksikko,
         tr_alataso.yksiloiva_tunniste                    AS tr_tunniste, 
-        0.7 AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun 
+        :talvisuolakerroin AS talvisuola_kerroin -- ;; Kerrointa käytetään talvisuolalle, jos toteuma alle suunnitellun
       FROM tehtava tk
           JOIN tehtavaryhma tr_alataso
             ON tr_alataso.id = tk.tehtavaryhma
           JOIN tehtavaryhmaotsikko o 
             ON tr_alataso.tehtavaryhmaotsikko_id = o.id
            AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+           AND o.urakkatyyppi = 'teiden-hoito'
      LEFT JOIN urakka_tehtavamaara ut
             ON ut.urakka = :urakka
            AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi

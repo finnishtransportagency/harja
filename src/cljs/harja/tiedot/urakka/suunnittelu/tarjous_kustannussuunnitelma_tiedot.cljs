@@ -394,7 +394,9 @@
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi vuosi
          :toimenpiteet kilpailutettavat-hankinnat
-         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+         :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+         :kustannussuunnitelma (:kustannussuunnitelma app)}
         {:onnistui ->TallennaKilpailutettavatHankinnatOnnistui
          :epaonnistui ->TallennaKilpailutettavatHankinnatEpaonnistui
          :paasta-virhe-lapi? true})
@@ -445,7 +447,9 @@
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :erillishankinnat erillishankinnat
-       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+       :kustannussuunnitelma (:kustannussuunnitelma app)}
       {:onnistui ->TallennaErillishankinnatOnnistui
        :epaonnistui ->TallennaErillishankinnatEpaonnistui
        :paasta-virhe-lapi? true})
@@ -493,7 +497,7 @@
                                               {:summa summa
                                                :summa_indeksikorjattu summa-indeksikorjattu})))
                              erillishankinnat)]
-      (siirrin/siirry-elementin-id elementti 500)
+      (siirrin/siirry-elementin-id elementti 5)
       (-> app
         (assoc :onko-erillishankinnat-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :erillishankinnat] erillishankinnat))))
@@ -513,7 +517,9 @@
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :hoidonjohtopalkkiot hoidonjohtopalkkiot
-       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+       :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+       :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+       :kustannussuunnitelma (:kustannussuunnitelma app)}
       {:onnistui ->TallennaHoidonjohtopalkkiotOnnistui
        :epaonnistui ->TallennaHoidonjohtopalkkiotEpaonnistui
        :paasta-virhe-lapi? true})
@@ -562,7 +568,7 @@
                                                  {:summa summa
                                                   :summa_indeksikorjattu summa-indeksikorjattu})))
                                 hoidonjohtopalkkiot)]
-      (siirrin/siirry-elementin-id hoidonjohtopalkkio-elementti 500)
+      (siirrin/siirry-elementin-id hoidonjohtopalkkio-elementti 5)
       (-> app
         (assoc :onko-hoidonjohtopalkkio-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :hoidonjohtopalkkiot] hoidonjohtopalkkiot))))
@@ -599,7 +605,9 @@
         {:urakka-id (-> @tila/yleiset :urakka :id)
          :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
          avain johto-ja-hallintokorvaukset
-         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
+         :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?
+         :muutosten-hallinta-kaytossa? (get-in app [:kustannussuunnitelma :muutosten-hallinta-kaytossa?])
+         :kustannussuunnitelma (:kustannussuunnitelma app)}
         {:onnistui ->TallennaJohtoJaHallintokorvauksetOnnistui
          :epaonnistui ->TallennaJohtoJaHallintokorvauksetEpaonnistui
          :paasta-virhe-lapi? true})
@@ -648,7 +656,7 @@
                                                          {:summa summa
                                                           :summa_indeksikorjattu summa-indeksikorjattu})))
                                         johto-ja-hallintokorvaukset)]
-      (siirrin/siirry-elementin-id johto-ja-hallintokorvaukset-elementti 500)
+      (siirrin/siirry-elementin-id johto-ja-hallintokorvaukset-elementti 5)
       (-> app
         (assoc :onko-jjh-muutoksia? true :tallentamattomia-muutoksia? true)
         (assoc-in [:kustannussuunnitelma :johto-ja-hallintokorvaukset] johto-ja-hallintokorvaukset))))
@@ -690,7 +698,8 @@
       {:urakka-id (-> @tila/yleiset :urakka :id)
        :hoitovuoden-alkuvuosi (pvm/vuosi (first @u/valittu-hoitokausi))
        :vahvista? vahvista?
-       :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)}
+       :paivitetty-kattohinta (:paivitetty-hoitovuoden-alun-kattohinta app)
+       :yhteenlaskettu-tavoitehinta (:yhteenlaskettu-tavoitehinta app)}
       {:onnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaOnnistui
        :epaonnistui ->VahvistaTaiPeruutaTavoiteJaKattohintaEpaonnistui
        :paasta-virhe-lapi? true})
@@ -706,11 +715,11 @@
   (process-event [{:keys [vastaus]} app]
     (if (get-in vastaus [:kustannussuunnitelma :vahvistus-virhe])
       (viesti/nayta-toast!
-        "Tavoite- ja kattohinnan vahvistaminen epäonnistui!"
+        "Tavoite- ja kattohinnan tietojen päivitys epäonnistui!"
         :varoitus
         viesti/viestin-nayttoaika-pitka)
-      (viesti/nayta-toast! "Tavoite- ja kattohinta vahvistettiin."))
-    (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 500)
+      (viesti/nayta-toast! "Tietojen päivitys onnistui."))
+    (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
     (-> app
       (assoc :tallennus-kesken? false)
       (assoc :haku-kaynnissa? false)
@@ -725,7 +734,7 @@
                    "Tavoite- ja kattohinnan vahvistaminen epäonnistui!")
           kattohinta-virhe? (str/includes? viesti "Annettu kattohinta")]
       (viesti/nayta-toast! viesti :varoitus viesti/viestin-nayttoaika-pitka)
-      (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 500)
+      (siirrin/siirry-elementin-id "tavoite-ja-kattohinta-elementti" 5)
       (-> app
         (assoc :kattohinta-virhe (or kattohinta-virhe? false))
         (assoc :tallennus-kesken? false)

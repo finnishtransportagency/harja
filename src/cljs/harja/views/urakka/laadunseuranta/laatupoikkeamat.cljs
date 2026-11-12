@@ -41,6 +41,7 @@
         paikallinen-aikavali-atom (atom nil)
         urakka-id (-> @tila/yleiset :urakka :id)]
     [:div.laatupoikkeamat
+     ;; Wrapataan filtterit urakkavalinnat elementin sisään
      [valinnat/urakkavalinnat {:urakka urakka-id}
 
       ^{:key "urakkavalinnat"}
@@ -118,7 +119,8 @@
         {:otsikko "Tekijä" :nimi :tekija :leveys 1 :fmt laatupoikkeamat/kuvaile-tekija}
         {:otsikko "Päätös" :nimi :paatos :fmt laatupoikkeamat/kuvaile-paatos :leveys 2}
         {:otsikko "Poik\u00ADkeama\u00ADraport\u00ADti" :nimi :sisaltaa-poikkeamaraportin? :fmt fmt/totuus :tasaa :keskita :leveys 1}]
-       poikkeamat]]]))
+       poikkeamat]]
+     [debug/debug app]]))
 
 (defn paatos?
   "Onko annetussa laatupoikkeamassa päätös?"

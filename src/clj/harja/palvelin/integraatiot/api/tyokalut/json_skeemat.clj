@@ -8,6 +8,11 @@
 (def +kirjausvastaus+ "api/schemas/kirjaus-response.schema.json")
 (def kirjausvastaus (tee-validaattori "api/schemas/kirjaus-response.schema.json"))
 
+(def +liitteen-lahetys+ "api/schemas/liitteen-lahetys-request.schema.json")
+(def liitteen-lahetys (tee-validaattori +liitteen-lahetys+))
+(def +liitteen-poisto+ "api/schemas/liitteen-poisto-request.schema.json")
+(def liitteen-poisto (tee-validaattori +liitteen-poisto+))
+
 (def +urakan-haku-vastaus+ "api/schemas/urakan-haku-response.schema.json")
 (def urakan-haku-vastaus (tee-validaattori "api/schemas/urakan-haku-response.schema.json"))
 (def +urakoiden-haku-vastaus+ "api/schemas/urakoiden-haku-response.schema.json")
@@ -158,7 +163,6 @@
 (def +reikapaikkausten-poisto-request+ "api/schemas/reikapaikkausten-poisto-request.schema.json")
 (def reikapaikkausten-poisto-request (tee-validaattori +reikapaikkausten-poisto-request+))
 
-
 (def +paikkauskustannusten-kirjaus-request+ "api/schemas/paikkauskustannusten-kirjaus-request.schema.json")
 (def paikkauskustannusten-kirjaus-request (tee-validaattori +paikkauskustannusten-kirjaus-request+))
 
@@ -189,3 +193,7 @@
 (def talvihoitoreitti-paivitys-request (tee-validaattori +talvihoitoreitti-paivitys-request+))
 (def +talvihoitoreitti-poisto-request+ "api/schemas/talvihoitoreitti-poisto-request.schema.json")
 (def talvihoitoreitti-poisto-request (tee-validaattori +talvihoitoreitti-poisto-request+))
+
+;; Rajoitusalueet
+(def +rajoitusalue-haku-response+ "api/schemas/rajoitusalue-haku-response.schema.json")
+(def rajoitusalue-haku-response (tee-validaattori +rajoitusalue-haku-response+))

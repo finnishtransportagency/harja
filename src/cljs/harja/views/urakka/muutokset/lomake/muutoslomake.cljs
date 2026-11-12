@@ -46,7 +46,7 @@
 
 (defn- lomakkeen-footer [muutos tyyppi e!
                          {:keys [tallennus-kesken? voi-tallentaa?
-                                 tallenna-painettu? lomakkeella-virheita?
+                                 tallenna-painettu? lomakkeella-virheita? budjettitavoitteet
                                  lomake-virheet muutoksen-tiedot-haku-kaynnissa?] :as _app}]
   [:<>
    [:hr]
@@ -92,7 +92,12 @@
        {:ikoni [ikonit/livicon-trash] :paksu? true
         :disabled (or
                     tallennus-kesken?
-                    muutoksen-tiedot-haku-kaynnissa?)}])
+                    muutoksen-tiedot-haku-kaynnissa?
+                    (and
+                      (= tyyppi "pysyva")
+                      (muutos-domain/pysyva-muutos-poisto-lukittu?
+                        (:tavoitehinta-indeksikorjattu-per-hoitovuosi budjettitavoitteet)
+                        (:voimassa_alkaen muutos))))}])
 
     (when (or
             tallennus-kesken?

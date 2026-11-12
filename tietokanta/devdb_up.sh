@@ -10,9 +10,6 @@ IMAGE=ghcr.io/finnishtransportagency/harja_harjadb:latest
 
 # Alla saatavilla olevia versioita kokeiluja varten
 # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb
-#image: harja_harjadb:15.4-3.3.3 (uusin vakaa, Flyway v10 yhteensopiva)
-#image: ghcr.io/finnishtransportagency/harja_harjadb:13.13-3.3.3 (PR-testiversio, Flyway v10 yhteensopiva)
-
 
 devdb_image_lkm=$(docker image list -q --filter=reference=${IMAGE} 2>/dev/null | wc -l)
 if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen numeroa, siksi *1 glob
@@ -54,10 +51,11 @@ until docker exec "${POSTGRESQL_NAME:-harjadb}" pg_isready; do
     sleep 0.5
 done
 
-# shellcheck disable=SC2088
-docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
-# shellcheck disable=SC2088
-docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-testidata.sh"
+echo "PostgreSQL versiotiedot:"
+docker exec --user postgres "${POSTGRESQL_NAME:-harjadb}" psql -c 'SELECT version();'
+docker exec --user postgres "${POSTGRESQL_NAME:-harjadb}" psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
+
+"${DIR}"/devdb_alusta.sh
 
 echo ""
 echo "Harjan tietokanta käynnissä! Imagen tiedot:"

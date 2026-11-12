@@ -3,18 +3,12 @@
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.toimenpidekoodit :refer :all]
             [harja.palvelin.palvelut.urakat :refer :all]
-            [harja.kyselyt.urakat :as urk-q]
             [harja.testi :refer :all]
-            [taoensso.timbre :as log]
             [com.stuartsierra.component :as component]
-            [harja.pvm :as pvm]
-            [clj-time.core :as t]
-            [clj-time.coerce :as c]
             [clojure.core.match :refer [match]]
             [harja.palvelin.komponentit.pdf-vienti :as pdf-vienti]
             [harja.palvelin.raportointi :as raportointi]
-            [harja.palvelin.palvelut.raportit :as raportit]
-            [clojure.string :as str]))
+            [harja.palvelin.palvelut.raportit :as raportit]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -42,47 +36,39 @@
 
 
 (deftest raportin-suoritus-urakalle-toimii
-  (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+  (let [parametrit {:alkupvm #inst "2014-10-01T22:00:00.000-00:00"
+                    :loppupvm #inst "2015-09-30T21:59:59.000-00:00"}
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
                                 :suorita-raportti
                                 +kayttaja-jvh+
                                 {:nimi :valitavoiteraportti
                                  :konteksti "urakka"
-                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)})]
+                                 :urakka-id (hae-oulun-alueurakan-2014-2019-id)
+                                 :parametrit parametrit})
+        raportin-otsikko (-> vastaus second :nimi)
+        urakkakohtainen-taulukko (nth vastaus 4)
+        urakkakohtaiset-otsikot (nth urakkakohtainen-taulukko 2)
+        urakkakohtaiset-valitavoitteet (nth urakkakohtainen-taulukko 3)
+        kaikkien-urakoiden-valitavoitteiden-taulukko (nth vastaus 5)
+        kaikkien-urakoiden-valitavoitteiden-otsikot (nth kaikkien-urakoiden-valitavoitteiden-taulukko 2)
+        kaikkien-urakoiden-valitavoitteet (nth kaikkien-urakoiden-valitavoitteiden-taulukko 3)]
     (is (vector? vastaus))
-    (is (match vastaus
-               [:raportti
-                 {:nimi "Määräaikaan mennessä tehtävät työt"
-                  :orientaatio :landscape}
-                 [:taulukko
-                  {:otsikko (_ :guard #(str/starts-with? % "Oulun alueurakka 2014-2019, Määräaikaan mennessä tehtävät työt"))
-                   :sheet-nimi "Määräaikaan mennessä tehtävät työt"
-                   :tyhja nil}
-                  [{:leveys 10
-                    :otsikko "Työn kuvaus"}
-                   {:leveys 5
-                    :otsikko "Takaraja"}
-                   {:leveys 10
-                    :otsikko "Valmistunut"}
-                   {:leveys 10
-                    :otsikko "Kommentti"}]
-                  [{:otsikko "Ajoissa valmistuneet (25 %)"}
-                   ["Koko urakan alue aurattu"
-                    "29.05.2014"
-                    (_ :guard #(str/starts-with? % "01.05.2014"))
-                    "Homma hoidettu hyvästi ennen tavoitepäivää!"]
-                   {:otsikko "Myöhässä valmistuneet (25 %)"}
-                   ["Pelkosentie 678 suolattu"
-                    "23.09.2015"
-                    (_ :guard #(str/starts-with? % "25.09.2015"))
-                    "Aurattu, mutta vähän tuli myöhässä"]
-                   {:otsikko "Kesken (25 %)"}
-                   ["Oulaisten liikenneympyrä aurattu"
-                    (_ :guard #(str/starts-with? % "01.01.2050"))
-                    "-"
-                    nil]
-                   {:otsikko "Valmistumatta (25 %)"}
-                   ["Sepon mökkitie suolattu"
-                    (_ :guard #(str/starts-with? % "24.12.2014"))
-                    "-"
-                    nil]]]]
-               true))))
+    (is (= raportin-otsikko "Välitavoiteraportti"))
+    (is (= urakkakohtaiset-otsikot
+          [{:otsikko "Nimi", :leveys 10}
+           {:otsikko "Takaraja", :leveys 5}
+           {:otsikko "Tila", :leveys 5}
+           {:otsikko "Valmistumispäivä", :leveys 5}
+           {:otsikko "Kommentti valmistumisesta", :leveys 10}
+           {:otsikko "Valmiiksimerkitsijä", :leveys 5}]))
+    (is (= (count urakkakohtaiset-valitavoitteet) 2))
+    (is (= kaikkien-urakoiden-valitavoitteiden-otsikot)
+          [{:otsikko "Työn kuvaus", :leveys 8}
+           {:otsikko "Urakkakohtaiset tarkennukset", :leveys 8}
+           {:otsikko "Valtakunnallinen takaraja", :leveys 5}
+           {:otsikko "Takaraja urakassa", :leveys 5}
+           {:otsikko "Tila", :leveys 5}
+           {:otsikko "Valmistumispäivä", :leveys 5}
+           {:otsikko "Kommentti valmistumisesta", :leveys 8} {:otsikko "Merkitsijä", :leveys 5}])
+    (is (= (count urakkakohtaiset-valitavoitteet) 2))
+    (is (= (count kaikkien-urakoiden-valitavoitteet) 0))))

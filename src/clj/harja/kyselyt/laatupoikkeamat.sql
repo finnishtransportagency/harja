@@ -301,6 +301,7 @@ FROM liite l
       JOIN sanktio s ON s.laatupoikkeama = lp.id
 WHERE lp.urakka = :urakka 
   AND lp.luotu BETWEEN :alkupvm AND :loppupvm
+  AND l.poistettu IS NOT TRUE
 ORDER BY l.luotu ASC;
 
 
@@ -315,6 +316,7 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN laatupoikkeama_liite hl ON l.id = hl.liite
  WHERE hl.laatupoikkeama = :laatupoikkeamaid
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
 
 -- name: hae-bonuksen-liitteet
@@ -328,7 +330,18 @@ SELECT l.id                  AS id,
   FROM liite l
            JOIN erilliskustannus_liite el ON l.id = el.liite
  WHERE el.bonus = :bonus
+   AND l.poistettu IS NOT TRUE
  ORDER BY l.luotu ASC;
+
+-- name: hae-laatupoikkeaman-tallennuksen-perustiedot
+-- Hakee laatupoikkeaman ne kentät, joita sanktiolomake ei näytä/käsittele, mutta jotka
+-- päivitetään perustietojen tallennuksessa. Näitä tarvitaan, jotta laatupoikkeaman kautta
+-- tehdyn sanktion muokkaus ei tyhjennä kyseisiä kenttiä.
+SELECT lp.tekija                        AS tekija,
+       lp.selvitys_pyydetty             AS selvitys_pyydetty,
+       lp."sisaltaa-poikkeamaraportin?" AS "sisaltaa-poikkeamaraportin?"
+  FROM laatupoikkeama lp
+ WHERE lp.id = :id;
 
 -- name: paivita-laatupoikkeaman-perustiedot<!
 -- Päivittää aiemmin luodun laatupoikkeaman perustiedot
@@ -400,6 +413,19 @@ SET kasittelyaika   = :kasittelyaika,
   muokattu          = current_timestamp
 WHERE id = :id;
 
+-- name: peru-laatupoikkeaman-paatos!
+-- Peruu laatupoikkeaman päätöksen nollaamalla käsittelytiedot ja päätöksen. Tämä poistaa
+-- laatupoikkeaman lukituksen, jolloin laatupoikkeamaa voi taas muokata (vrt. HARJA-1954).
+UPDATE laatupoikkeama
+   SET kasittelyaika     = NULL,
+       paatos            = NULL,
+       perustelu         = NULL,
+       kasittelytapa     = NULL,
+       muu_kasittelytapa = NULL,
+       muokkaaja         = :muokkaaja,
+       muokattu          = current_timestamp
+ WHERE id = :id;
+
 -- name: liita-kommentti<!
 -- Liittää laatupoikkeamaon uuden kommentin
 INSERT INTO laatupoikkeama_kommentti (laatupoikkeama, kommentti) VALUES (:laatupoikkeama, :kommentti);
@@ -419,6 +445,14 @@ SELECT exists(
     FROM laatupoikkeama
     WHERE ulkoinen_id = :ulkoinen_id AND urakka = :urakka_id);
 
+-- name: hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
+-- Hakee aktiivisen laatupoikkeaman ulkoisella id:lla ja urakalla.
+SELECT id
+FROM laatupoikkeama
+WHERE ulkoinen_id = :ulkoinen-id
+  AND urakka = :urakka-id
+  AND poistettu IS NOT TRUE;
+
 -- name: paivita-laatupoikkeama-ulkoisella-idlla<!
 -- Päivittää laatupoikkeaman annetuille perustiedoille.
 UPDATE laatupoikkeama
@@ -432,6 +466,7 @@ SET
   tr_loppuosa      = :tr_loppuosa,
   tr_alkuetaisyys  = :tr_alkuetaisyys,
   tr_loppuetaisyys = :tr_loppuetaisyys,
+  yllapitokohde    = :yllapitokohde_id, -- kaikilla urakoilla ei ole ylläpitokohteita, joten voi olla null
   muokkaaja        = :muokkaaja,
   muokattu         = current_timestamp,
   "sisaltaa-poikkeamaraportin?" = :sisaltaa_poikkeamaraportin

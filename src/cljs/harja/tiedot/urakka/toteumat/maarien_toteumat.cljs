@@ -428,11 +428,7 @@
           uusi-app (if (or
                          (= ::t/toimenpide polku)
                          (= ::t/tyyppi polku))
-                     (-> uusi-app
-                         (assoc :tehtavat [])
-                         (update-in [:lomake ::t/toteumat]
-                                    (fn [tehtavat]
-                                      (mapv #(assoc % ::t/tehtava nil) tehtavat))))
+                     (assoc uusi-app :tehtavat [])
                      uusi-app)]
       uusi-app))
 

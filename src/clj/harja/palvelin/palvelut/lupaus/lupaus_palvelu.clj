@@ -783,6 +783,9 @@
     ;; MUUT VALIDOINNIT
     (assert (false? (valikatselmus-tehty-urakalle? db urakka-id (pvm/hoitokauden-alkuvuosi vuosi kuukausi)))
             "Vastauksia ei voi enää muuttaa välikatselmuksen jälkeen")
+    ;; Varmistetaan, että hoitovuosi ei ole tulevaisuudessa
+    (assert (not (pvm/jalkeen? (pvm/luo-pvm (:vuosi tiedot) (dec (:kuukausi tiedot)) 1) (pvm/nyt)))
+      "Tulevaisuudessa oleville hoitovuosille ei voi antaa vielä vastausta.")
     ;; Tarkista, että "yksittainen"-tyyppiselle lupaukselle on annettu boolean "vastaus",
     ;; ja muun tyyppiselle sallittu "lupaus-vaihtoehto-id".
     (tarkista-vastaus-ja-vaihtoehto db lupaus vastaus lupaus-vaihtoehto-id kustannusennuste)

@@ -41,7 +41,11 @@
   [:fo:block {:margin-top "10px"}
    (pdf-raportointi/muodosta-pdf
      [:display-flex
-      [:sininen-laatikko {:otsikko (if laskutusraja-kaytossa?
+      [:sininen-laatikko {:otsikko (if (and laskutusraja-kaytossa?
+                                         laskutusraja-ylittynyt?) ;; "Toteutuneet kustannukset yhteensä" näytetään silloin,
+                                         ;; kun on v. -25 tai myöhemmin alkanut mhu-urakka, jolla laskutusraja on ylittynyt.
+                                         ;; Muuten näytetään "Laskutettavaa yhteensä" eli kun uusilla urakoilla ei ole laskutusraja ylittynyt
+                                         ;; tai on kyseessä vanha urakka.
                                      "Toteutuneet kustannukset yhteensä"
                                      "Laskutettavaa yhteensä")
                           :layout :sarakkeet}
@@ -66,6 +70,11 @@
             {:fmt :raha
              :avain laskutetaan-str
              :arvo laskutettavaa_kaikki_val_aika})]])])])
+
+(defmethod pdf-raportointi/muodosta-pdf :laskutusyhteenveto-otsikko [[_ teksti]]
+  [:fo:block {:padding-top "5mm"
+              :font-size "10pt"
+              :font-weight 600} teksti])
 
 (defn liikenneyhteenveto-arvo-str [arvot tyyppi avain]
   (str (avain (get arvot tyyppi))))

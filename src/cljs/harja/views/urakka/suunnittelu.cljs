@@ -5,8 +5,10 @@
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.tiedot.istunto :as istunto]
+            [harja.asiakas.kommunikaatio :as k]
             [harja.views.urakka.suunnittelu.tehtavat :as tehtavat]
             [harja.views.urakka.suunnittelu.tehtavat-maarat-nakyma :as tehtavat-maarat-nakyma]
+            [harja.views.urakka.suunnittelu.kalustoresurssit :as kalustoresurssit]
             [harja.views.urakka.suunnittelu.yksikkohintaiset-tyot :as yksikkohintaiset-tyot]
             [harja.views.urakka.suunnittelu.kokonaishintaiset-tyot :as kokonaishintaiset-tyot]
             [harja.views.urakka.suunnittelu.muut-tyot :as muut-tyot]
@@ -20,20 +22,47 @@
             [harja.ui.komponentti :as komp]
             [harja.domain.urakka :as ur]))
 
-(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm]}]
-  (case valilehti
-    :materiaalit (and (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
-                   (not (ur/vesivaylaurakkatyyppi? tyyppi)))
-    :tehtavat (= tyyppi :teiden-hoito)
-    :suola (#{:hoito :teiden-hoito} tyyppi)
-    :muut (and (not (ur/vesivaylaurakkatyyppi? tyyppi))
-            (not= tyyppi :teiden-hoito))
-    :kiintiot (= tyyppi :vesivayla-hoito)
-    :kokonaishintaiset (not= tyyppi :teiden-hoito)
-    :yksikkohintaiset (not= tyyppi :teiden-hoito)
-    :kustannussuunnitelma (and (= tyyppi :teiden-hoito) (< (pvm/vuosi alkupvm) 2025))
-    :uusi-kustannussuunnitelma (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))
-    :tarjous (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2025))))
+(defn valilehti-mahdollinen? [valilehti {:keys [tyyppi alkupvm loppupvm]}]
+  (let [yli-5-vuotinen? (> (pvm/hoitokausien-maara alkupvm loppupvm) 5)]
+    (case valilehti
+      :materiaalit (and
+                     (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
+                     (not (ur/vesivaylaurakkatyyppi? tyyppi)))
+      :tehtavat (= tyyppi :teiden-hoito)
+      :suola (#{:hoito :teiden-hoito} tyyppi)
+      :muut (and
+              (not (ur/vesivaylaurakkatyyppi? tyyppi))
+              (not= tyyppi :teiden-hoito))
+      :kiintiot (= tyyppi :vesivayla-hoito)
+      :kokonaishintaiset (not= tyyppi :teiden-hoito)
+      :yksikkohintaiset (not= tyyppi :teiden-hoito)
+      :kustannussuunnitelma (and
+                              (= tyyppi :teiden-hoito)
+                              (< (pvm/vuosi alkupvm) 2025))
+      :uusi-kustannussuunnitelma (and
+                                   (= tyyppi :teiden-hoito)
+                                   ;; => 2025 alkaen sekä yli 5-vuotisilla
+                                   (or
+                                     yli-5-vuotinen?
+                                     (>= (pvm/vuosi alkupvm) 2025)
+                                     (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka)))
+      :kalustoresurssit (and (= tyyppi :teiden-hoito) (>= (pvm/vuosi alkupvm) 2026))
+      :tarjous (or
+                 ;; Vesiväyläurakoiden Tarjouksen tiedot 
+                 ;; toistaiseksi vain kehitysympäristössä
+                 (and
+                   (k/kehitysymparistossa?)
+                   (>= (pvm/vuosi alkupvm) 2023)
+                   (= tyyppi :vesivayla-hoito))
+
+                 ;; Hoitourakat
+                 ;; => 2025 alkaen sekä yli 5-vuotisilla
+                 (and
+                   (= tyyppi :teiden-hoito)
+                   (or
+                     yli-5-vuotinen?
+                     (>= (pvm/vuosi alkupvm) 2025)
+                     (:hoitovuoden_alun_tavoitehinta_kaytossa @nav/valittu-urakka)))))))
 
 (defn suunnittelu [ur]
   (let [valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
@@ -128,4 +157,13 @@
           (when (and (oikeudet/urakat-vesivaylasuunnittelu-kiintiot id)
                   (valilehti-mahdollinen? :kiintiot ur))
             ^{:key "kiintiöt"}
-            [kiintiot/kiintiot])]]))))
+            [kiintiot/kiintiot])
+
+          "Kalustoresurssit"
+          :kalustoresurssit
+          (when (and
+                  (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
+                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                  (valilehti-mahdollinen? :kalustoresurssit ur))
+            ^{:key "kalustoresurssit"}
+            [kalustoresurssit/kalustoresurssit])]]))))

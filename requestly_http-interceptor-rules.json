@@ -1,0 +1,590 @@
+[
+  {
+    "createdBy": null,
+    "creationDate": 1783674348622,
+    "currentOwner": null,
+    "description": "",
+    "extensionRules": [
+      {
+        "action": {
+          "requestHeaders": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "operation": "set",
+              "value": "jvh"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "operation": "set",
+              "value": "Jarjestelmavastaava"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "operation": "set",
+              "value": "Liikennevirasto"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "operation": "set",
+              "value": "Jarjestelmavastaava"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "operation": "set",
+              "value": "Mr. Vastaava"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "operation": "set",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "type": "modifyHeaders"
+        },
+        "condition": {
+          "excludedInitiatorDomains": [
+            "requestly.io"
+          ],
+          "excludedRequestDomains": [
+            "requestly.io"
+          ],
+          "isUrlFilterCaseSensitive": true,
+          "regexFilter": "^http://localhost:3000/(.*)$"
+        }
+      }
+    ],
+    "groupId": "Group_pctv2",
+    "id": "Headers_o3s8b",
+    "isModHeaderImport": true,
+    "isSample": false,
+    "lastModifiedBy": null,
+    "modificationDate": 1783674977815,
+    "name": "Järjestelmävastaava (headers)",
+    "objectType": "rule",
+    "pairs": [
+      {
+        "id": "fkz4g",
+        "modifications": {
+          "Request": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "type": "Add",
+              "value": "jvh"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "type": "Add",
+              "value": "Jarjestelmavastaava"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "type": "Add",
+              "value": "Liikennevirasto"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "type": "Add",
+              "value": "Jarjestelmavastaava"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "type": "Add",
+              "value": "Mr. Vastaava"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "type": "Add",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "Response": []
+        },
+        "source": {
+          "filters": [
+            {}
+          ],
+          "key": "Url",
+          "operator": "Wildcard_Matches",
+          "value": "http://localhost:3000/*"
+        }
+      }
+    ],
+    "ruleType": "Headers",
+    "schemaVersion": "3.0.0",
+    "status": "Inactive",
+    "version": 2
+  },
+  {
+    "createdBy": null,
+    "creationDate": 1783674472660,
+    "currentOwner": null,
+    "description": "",
+    "extensionRules": [
+      {
+        "action": {
+          "requestHeaders": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "operation": "set",
+              "value": "Päällystysurakan urakanvalvoja"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "operation": "set",
+              "value": "1337133-LAP1_ELY_Urakanvalvoja"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "operation": "set",
+              "value": "Lappi"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "operation": "set",
+              "value": "Alue"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "operation": "set",
+              "value": "Vastaava"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "operation": "set",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "type": "modifyHeaders"
+        },
+        "condition": {
+          "excludedInitiatorDomains": [
+            "requestly.io"
+          ],
+          "excludedRequestDomains": [
+            "requestly.io"
+          ],
+          "isUrlFilterCaseSensitive": true,
+          "regexFilter": "^http://localhost:3000/(.*)$"
+        }
+      }
+    ],
+    "groupId": "Group_pctv2",
+    "id": "Headers_coywd",
+    "isModHeaderImport": true,
+    "isSample": false,
+    "lastModifiedBy": null,
+    "modificationDate": 1783674995854,
+    "name": "Päällystysurakan urakanvalvoja (headers)",
+    "objectType": "rule",
+    "pairs": [
+      {
+        "id": "n9nhp",
+        "modifications": {
+          "Request": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "type": "Add",
+              "value": "Päällystysurakan urakanvalvoja"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "type": "Add",
+              "value": "1337133-LAP1_ELY_Urakanvalvoja"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "type": "Add",
+              "value": "Lappi"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "type": "Add",
+              "value": "Alue"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "type": "Add",
+              "value": "Vastaava"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "type": "Add",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "Response": []
+        },
+        "source": {
+          "filters": [
+            {}
+          ],
+          "key": "Url",
+          "operator": "Wildcard_Matches",
+          "value": "http://localhost:3000/*"
+        }
+      }
+    ],
+    "ruleType": "Headers",
+    "schemaVersion": "3.0.0",
+    "status": "Inactive",
+    "version": 2
+  },
+  {
+    "createdBy": null,
+    "creationDate": 1783674449283,
+    "currentOwner": null,
+    "description": "",
+    "extensionRules": [
+      {
+        "action": {
+          "requestHeaders": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "operation": "set",
+              "value": "Tiemerkinta"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "operation": "set",
+              "value": "133333-LAP1_vastuuhenkilo"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "operation": "set",
+              "value": "Lapin tiemerkintäurakka"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "operation": "set",
+              "value": "Tie"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "operation": "set",
+              "value": "Merkkari"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "operation": "set",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "type": "modifyHeaders"
+        },
+        "condition": {
+          "excludedInitiatorDomains": [
+            "requestly.io"
+          ],
+          "excludedRequestDomains": [
+            "requestly.io"
+          ],
+          "isUrlFilterCaseSensitive": true,
+          "regexFilter": "^http://localhost:3000/(.*)$"
+        }
+      }
+    ],
+    "groupId": "Group_pctv2",
+    "id": "Headers_tc6tv",
+    "isModHeaderImport": true,
+    "isSample": false,
+    "lastModifiedBy": null,
+    "modificationDate": 1783675020481,
+    "name": "Tiemerkkari (headers)",
+    "objectType": "rule",
+    "pairs": [
+      {
+        "id": "nole0",
+        "modifications": {
+          "Request": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "type": "Add",
+              "value": "Tiemerkinta"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "type": "Add",
+              "value": "133333-LAP1_vastuuhenkilo"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "type": "Add",
+              "value": "Lapin tiemerkintäurakka"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "type": "Add",
+              "value": "Tie"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "type": "Add",
+              "value": "Merkkari"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "type": "Add",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "Response": []
+        },
+        "source": {
+          "filters": [
+            {}
+          ],
+          "key": "Url",
+          "operator": "Wildcard_Matches",
+          "value": "http://localhost:3000/*"
+        }
+      }
+    ],
+    "ruleType": "Headers",
+    "schemaVersion": "3.0.0",
+    "status": "Inactive",
+    "version": 2
+  },
+  {
+    "createdBy": null,
+    "creationDate": 1783674328936,
+    "currentOwner": null,
+    "description": "",
+    "extensionRules": [
+      {
+        "action": {
+          "requestHeaders": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "operation": "set",
+              "value": "Urakanvalvoja"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "operation": "set",
+              "value": "1337133-LAP1_ELY_Urakanvalvoja"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "operation": "set",
+              "value": "Lappi"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "operation": "set",
+              "value": "Urakan"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "operation": "set",
+              "value": "Valvoja"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "operation": "set",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "type": "modifyHeaders"
+        },
+        "condition": {
+          "excludedInitiatorDomains": [
+            "requestly.io"
+          ],
+          "excludedRequestDomains": [
+            "requestly.io"
+          ],
+          "isUrlFilterCaseSensitive": true,
+          "regexFilter": "^http://localhost:3000/(.*)$"
+        }
+      }
+    ],
+    "groupId": "Group_pctv2",
+    "id": "Headers_v4beu",
+    "isModHeaderImport": true,
+    "isSample": false,
+    "lastModifiedBy": null,
+    "modificationDate": 1783675034100,
+    "name": "Urakan valvoja (headers)",
+    "objectType": "rule",
+    "pairs": [
+      {
+        "id": "98qu1",
+        "modifications": {
+          "Request": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "type": "Add",
+              "value": "Urakanvalvoja"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "type": "Add",
+              "value": "1337133-LAP1_ELY_Urakanvalvoja"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "type": "Add",
+              "value": "Lappi"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "type": "Add",
+              "value": "Urakan"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "type": "Add",
+              "value": "Valvoja"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "type": "Add",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "Response": []
+        },
+        "source": {
+          "filters": [
+            {}
+          ],
+          "key": "Url",
+          "operator": "Wildcard_Matches",
+          "value": "http://localhost:3000/*"
+        }
+      }
+    ],
+    "ruleType": "Headers",
+    "schemaVersion": "3.0.0",
+    "status": "Inactive",
+    "version": 2
+  },
+  {
+    "createdBy": null,
+    "creationDate": 1783674440049,
+    "currentOwner": null,
+    "description": "",
+    "extensionRules": [
+      {
+        "action": {
+          "requestHeaders": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "operation": "set",
+              "value": "Laadunvalvoja"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "operation": "set",
+              "value": "1337133-LAP1_vastuuhenkilo"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "operation": "set",
+              "value": "Urakoitsija"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "operation": "set",
+              "value": "vastuuhenkilo"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "operation": "set",
+              "value": "vastuuhenkilo"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "operation": "set",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "type": "modifyHeaders"
+        },
+        "condition": {
+          "excludedInitiatorDomains": [
+            "requestly.io"
+          ],
+          "excludedRequestDomains": [
+            "requestly.io"
+          ],
+          "isUrlFilterCaseSensitive": true,
+          "regexFilter": "^http://localhost:3000/(.*)$"
+        }
+      }
+    ],
+    "groupId": "Group_pctv2",
+    "id": "Headers_j2bqg",
+    "isModHeaderImport": true,
+    "isSample": false,
+    "lastModifiedBy": null,
+    "modificationDate": 1783675043993,
+    "name": "Vastuuhenkilö (headers)",
+    "objectType": "rule",
+    "pairs": [
+      {
+        "id": "fy308",
+        "modifications": {
+          "Request": [
+            {
+              "header": "OAM_REMOTE_USER",
+              "type": "Add",
+              "value": "Laadunvalvoja"
+            },
+            {
+              "header": "OAM_GROUPS",
+              "type": "Add",
+              "value": "1337133-LAP1_vastuuhenkilo"
+            },
+            {
+              "header": "OAM_ORGANIZATION",
+              "type": "Add",
+              "value": "Urakoitsija"
+            },
+            {
+              "header": "OAM_USER_FIRST_NAME",
+              "type": "Add",
+              "value": "vastuuhenkilo"
+            },
+            {
+              "header": "OAM_USER_LAST_NAME",
+              "type": "Add",
+              "value": "vastuuhenkilo"
+            },
+            {
+              "header": "OAM_USER_EMAIL",
+              "type": "Add",
+              "value": "erkki.esimerkki@esimerkkimaili.fi"
+            }
+          ],
+          "Response": []
+        },
+        "source": {
+          "filters": [
+            {}
+          ],
+          "key": "Url",
+          "operator": "Wildcard_Matches",
+          "value": "http://localhost:3000/*"
+        }
+      }
+    ],
+    "ruleType": "Headers",
+    "schemaVersion": "3.0.0",
+    "status": "Inactive",
+    "version": 2
+  },
+  {
+    "createdBy": null,
+    "creationDate": 1783675066745,
+    "currentOwner": null,
+    "description": "",
+    "id": "Group_pctv2",
+    "lastModifiedBy": null,
+    "modificationDate": 1783675066745,
+    "name": "Harja override-rulet",
+    "objectType": "group",
+    "status": "Active",
+    "children": []
+  }
+]

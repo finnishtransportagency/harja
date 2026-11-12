@@ -8,6 +8,7 @@
             [harja.ui.kentat :refer [tee-kentta nayta-arvo vain-luku-atomina]]
             [harja.ui.validointi :as validointi]
             [harja.ui.skeema :as skeema]
+            [harja.ui.dom :as dom]
             [goog.events.EventType :as EventType]
 
             [clojure.string :as str]
@@ -20,12 +21,31 @@
             [harja.fmt :as fmt])
   (:require-macros [harja.tyokalut.ui :refer [for*]]))
 
+(defn- validointi-ilmoitus [virheet tyyppi otsikko max-width]
+  (if otsikko
+    (let [laatikon-optiot {:luokka "pot2-tieosoite-validointi"
+                           :ikoni-fn #(ikonit/harja-icon-status-alert)}]
+      [:div {:class (case tyyppi
+                      :virhe "virheet"
+                      :varoitus "varoitukset")}
+       [yleiset/info-laatikko
+        :vahva-ilmoitus
+        otsikko
+        (str/join "\n" (distinct virheet))
+        max-width
+        laatikon-optiot]])
+    [virheen-ohje virheet tyyppi {:virheet-ulos? true :max-width max-width}]))
+
 (defn- muokkauspaneeli [{:keys [otsikko otsikko-tyyli voi-muokata? voi-kumota? muokatut virheet varoitukset huomautukset
                                 skeema peru! voi-lisata? ohjaus uusi-id opts paneelikomponentit historia
-                                virhe-viesti custom-toiminto custom-yla-panel]}]
+                                virhe-viesti custom-toiminto custom-yla-panel
+                                paneelikomponentit-ennen-custom-yla-panelia? custom-yla-panel-otsikon-alla?]}]
   [:div.panel-heading {:style (when (:keskita-ylos custom-toiminto) {:padding-top "0px"})}
    (when otsikko [:h2.panel-title (when otsikko-tyyli {:style otsikko-tyyli}) otsikko])
-   (when custom-yla-panel custom-yla-panel)
+   (when (and custom-yla-panel
+           (not custom-yla-panel-otsikon-alla?)
+           (not paneelikomponentit-ennen-custom-yla-panelia?))
+     custom-yla-panel)
    (when virhe-viesti [:span.tila-virhe {:style {:margin-left "5px"}} virhe-viesti])
    (when (not= false voi-muokata?)
      [:span {:class (if (:keskita-vasemmalle custom-toiminto) "pull-left muokkaustoiminnot" "pull-right muokkaustoiminnot")}
@@ -53,7 +73,11 @@
         (map-indexed (fn [i komponentti]
                        ^{:key i}
                        [komponentti])
-          paneelikomponentit))])])
+          paneelikomponentit))])
+   (when (and custom-yla-panel
+           (not custom-yla-panel-otsikon-alla?)
+           paneelikomponentit-ennen-custom-yla-panelia?)
+     custom-yla-panel)])
 
 (defmulti ei-muokattava-tyypillinen-fmt identity)
 
@@ -95,12 +119,23 @@
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
         fokus? (atom false)
-        fokus-elementille #(reset! fokus? true)
+        hiiri? (atom false)
+        ilmoitus-suljettu? (atom false)
+        ;; Ilmoitus näytetään vain näppäimistöfokuksella tai hoverilla. Hiirellä klikkaus
+        ;; antaa fokuksen, mutta se ei saa jättää ilmoitusta näkyviin hiiren poistuttua.
+        nappaimisto-fokus? (atom false)
+        hiiri-painettu? (atom false)
+        fokus-elementille #(do
+                             (reset! fokus? true)
+                             (when-not @hiiri-painettu?
+                               (reset! nappaimisto-fokus? true)
+                               (reset! ilmoitus-suljettu? false)))
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
                                       fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
                                                                     (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
                                   (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
-                                    (reset! fokus? false)))
+                                    (reset! fokus? false)
+                                    (reset! nappaimisto-fokus? false)))
         tayta-alas-key (str (gensym "tayta"))
         kentan-key (str (gensym "kentta"))
         seuranta-avain (keyword (str (gensym (str i nimi))))
@@ -172,8 +207,9 @@
                arvo (hae-fn rivi)
                tasaus-luokka (y/tasaus-luokka tasaa)
                tayta-alas (:tayta-alas? sarake)
-               elementin-id (if (fn? elementin-id) (elementin-id rivi) elementin-id)
-               elementin-id (str rivi-index elementin-id)]
+               validointi-otsikko (when-let [otsikko-fn (:validointi-otsikko-fn sarake)]
+                                    (otsikko-fn rivi))
+               elementin-id (if (fn? elementin-id) (elementin-id rivi) elementin-id)]
            (if (and (or (nil? muokattava?) (muokattava? rivi i))
                  voi-muokata?)
              [:td {:class (y/luokat
@@ -184,16 +220,42 @@
                             (cond
                               (not (empty? kentan-virheet)) " sisaltaa-virheen"
                               (not (empty? kentan-varoitukset)) " sisaltaa-varoituksen"
-                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen"))
-                   :on-click #(.stopPropagation %)}
+                              (not (empty? kentan-huomautukset)) " sisaltaa-huomautuksen")
+                            (when (and (or @nappaimisto-fokus? @hiiri?)
+                                    (not @ilmoitus-suljettu?))
+                              " ilmoitus-nakyvissa"))
+                   :on-click #(.stopPropagation %)
+                   :on-focus fokus-elementille
+                   :on-blur #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
+                                   fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
+                                                                 (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
+                               (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
+                                 (let [fokus-solussa? (boolean (and uusi-fokusoitu-komponentti
+                                                                 (.contains (.-currentTarget %) uusi-fokusoitu-komponentti)))]
+                                   (reset! fokus? fokus-solussa?)
+                                   (when-not fokus-solussa?
+                                     (reset! nappaimisto-fokus? false)))))
+                   :on-mouse-down #(reset! hiiri-painettu? true)
+                   :on-mouse-up #(reset! hiiri-painettu? false)
+                   :on-mouse-enter #(do
+                                      (reset! hiiri? true)
+                                      (reset! ilmoitus-suljettu? false))
+                   :on-mouse-leave #(do (reset! hiiri? false)
+                                      (reset! hiiri-painettu? false))
+                   :on-key-down #(when (dom/esc-nappain? %)
+                                   (reset! ilmoitus-suljettu? true))}
               (when (case nayta-virheet?
-                      :fokus @fokus?
+                      :fokus (or @nappaimisto-fokus? @hiiri?)
                       :aina true)
                 (cond
-                  (not (empty? kentan-virheet)) [virheen-ohje kentan-virheet :virhe {:virheet-ulos? true
-                                                                                     :max-width @virhelaatikon-max-koko}]
-                  (not (empty? kentan-varoitukset)) [virheen-ohje kentan-varoitukset :varoitus {:virheet-ulos? true
-                                                                                                :max-width @virhelaatikon-max-koko}]
+                  (not (empty? kentan-virheet)) (validointi-ilmoitus kentan-virheet :virhe
+                                                  validointi-otsikko
+                                                  @virhelaatikon-max-koko)
+                  (not (empty? kentan-varoitukset)) (if-let [info-laatikko (:info-laatikko sarake)]
+                                                      [:div.varoitukset info-laatikko]
+                                                      (validointi-ilmoitus kentan-varoitukset :varoitus
+                                                        validointi-otsikko
+                                                        @virhelaatikon-max-koko))
                   (not (empty? kentan-huomautukset)) [virheen-ohje kentan-huomautukset :huomautus {:virheet-ulos? true
                                                                                                    :max-width @virhelaatikon-max-koko}]))
 
@@ -357,11 +419,11 @@
                     (or (nil? voi-poistaa?) (voi-poistaa? rivi)))
               [napit/poista
                ""
-               #(do (.preventDefault %)
-                  (muokkaa! muokatut-atom
-                    virheet varoitukset huomautukset skeema
-                    id assoc
-                    :poistettu true))
+               (fn []
+                 (muokkaa! muokatut-atom
+                   virheet varoitukset huomautukset skeema
+                   id assoc
+                   :poistettu true))
                {:teksti-nappi? false
                 :vayla-tyyli? true
                 :tooltip "Poista rivi"
@@ -534,6 +596,7 @@
   :jarjesta-kun-kasketaan         Järjestetään tämän funktion mukaan, kun datalle annetaan {:jarjesta-gridissa true} metadata.
                                   Tämä metadata poistetaan jarjestämisen jälkeen.
   :paneelikomponentit             vector funktioita, jotka palauttavat komponentteja. Näytetään paneelissa.
+  :custom-yla-panel-otsikon-alla? Näyttää custom-yla-panelin otsikkorivin alapuolella ennen taulukon sisältöä.
   :piilota-toiminnot?             boolean, piilotetaan toiminnot sarake jos true
   :toimintonappi-fn               funktio, joka saa parametrikseen rivin, ja rivin muokkausfunktion.
                                   Jos palauttaa nil, näytetään oletustoiminto (roskakori).
@@ -546,8 +609,8 @@
   :uusi-id                        seuraavan uuden luotavan rivin id, jos ei anneta luodaan uusia id:tä
                                   sarjana -1, -2, -3, ...
   :nayta-virheet?                 :aina (oletus) tai :fokus.
-                                  Jos fokus, näytetään virheviesti vain fokusoidulle kentälle,
-                                  virheen indikoiva punainen viiva näytetään silti aina.
+                                  Jos fokus, näytetään virheviesti fokusoitaessa kenttä tai vietäessä hiiri
+                                  sen päälle. Virheen indikoiva punainen viiva näytetään silti aina.
 
   :valiotsikot                    mäppäys rivin tunnisteesta, jota ennen otsikko tulee näyttää, Otsikkoon
   :ulkoinen-validointi?           jos true, grid ei tee validointia muokkauksen yhteydessä.
@@ -584,6 +647,8 @@
            muokkaa-footer muutos uusi-rivi luokat ulkoinen-validointi? virheet-dataan? virheet-ylos? validoi-alussa?
            virhe-viesti toimintonappi-fn disabloi-rivi? luomisen-jalkeen muokkauspaneeli? rivi-validointi taulukko-validointi
            rivi-varoitus taulukko-varoitus rivi-huomautus taulukko-huomautus custom-toiminto
+           paneelikomponentit-ennen-custom-yla-panelia?
+           custom-yla-panel-otsikon-alla?
            sisalto-kun-rivi-disabloitu nayta-virheikoni? validoi-uusi-rivi? rivi-jalkeen] :as opts}
    skeema muokatut]
   (let [uusi-id (atom 0) ;; tästä dekrementoidaan aina uusia id:tä
@@ -732,7 +797,8 @@
                     vetolaatikot uusi-id paneelikomponentit disabloi-rivi? jarjesta-kun-kasketaan rivin-avaimet disable-input?
                     nayta-virheet? valiotsikot virheet-ylos? virhe-viesti toimintonappi-fn data-cy custom-toiminto
                     sisalto-kun-rivi-disabloitu on-rivi-blur on-rivi-focus vetolaatikko-optiot disabloi-autocomplete?
-                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel rivi-jalkeen] :as opts} skeema muokatut]
+                    piilota-table-header? piilota-rivi korostusrajaus? custom-yla-panel rivi-jalkeen
+                    paneelikomponentit-ennen-custom-yla-panelia? custom-yla-panel-otsikon-alla?] :as opts} skeema muokatut]
          (let [nayta-virheet? (or nayta-virheet? :aina)
                skeema (skeema/laske-sarakkeiden-leveys
                         (filterv some? skeema))
@@ -759,7 +825,11 @@
                                 :skeema skeema :voi-lisata? voi-lisata? :ohjaus ohjaus :uusi-id uusi-id
                                 :opts opts :paneelikomponentit paneelikomponentit :peru! peru!
                                 :virhe-viesti virhe-viesti :custom-toiminto custom-toiminto
-                                :custom-yla-panel custom-yla-panel}])
+                                :custom-yla-panel custom-yla-panel
+                                :paneelikomponentit-ennen-custom-yla-panelia? paneelikomponentit-ennen-custom-yla-panelia?
+                                :custom-yla-panel-otsikon-alla? custom-yla-panel-otsikon-alla?}])
+            (when custom-yla-panel-otsikon-alla?
+              custom-yla-panel)
             [:div.panel-body
              [:table.grid (merge {} (when korostusrajaus? {:class "grid-korostettu"}))
               (when-not (true? piilota-table-header?)

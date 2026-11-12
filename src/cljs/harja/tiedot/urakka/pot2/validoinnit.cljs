@@ -1,7 +1,24 @@
 (ns harja.tiedot.urakka.pot2.validoinnit
   (:require
-    [harja.domain.pot2 :as pot2-domain]))
+    [harja.domain.pot2 :as pot2-domain]
+    [harja.domain.paikkaus :as paikkaus]))
 
+(def massamenekin-ylarajan-virhe "Massamenekki saa olla maksimissaan 50 kg/m2")
+
+(defn validoi-rem-tas-massamenekki [arvo rivi _]
+  (when (and (number? arvo)
+             (= pot2-domain/+rem-tas-toimenpide+ (:toimenpide rivi))
+             (> arvo pot2-domain/+massamenekin-maksimi+))
+    massamenekin-ylarajan-virhe))
+
+(defn varoita-rem-massamenekista [arvo rivi _]
+  (let [massamenekki (paikkaus/massamaara-ja-pinta-ala->massamenekki
+                       (:kokonaismassamaara rivi)
+                       (:pinta_ala rivi))]
+  (when (and (number? massamenekki)
+             (= pot2-domain/+rem-toimenpide+ (:toimenpide rivi))
+             (> massamenekki pot2-domain/+massamenekin-maksimi+))
+    massamenekin-ylarajan-virhe)))
 
 (defn- pakolliset-runkoaineen-kentat [tyyppi]
   (case tyyppi

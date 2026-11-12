@@ -2,7 +2,6 @@ const { defineConfig } = require('cypress')
 
 module.exports = defineConfig({
   watchForFileChanges: false,
-  videoUploadOnPasses: false,
   reporter: 'junit',
   reporterOptions: {
     mochaFile: 'cypress/test-results/results-[hash].xml',

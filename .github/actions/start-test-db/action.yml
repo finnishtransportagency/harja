@@ -1,5 +1,5 @@
 name: 'Start test database'
-description: 'Käynnistää testitietokannan taustalle ja ajaa siihen migraatiot ja testidataa'
+description: 'Käynnistää testitietokannan taustalle ja ajaa migraatiot; testidatan lisäämisen voi ohittaa'
 
 inputs:
   registry:
@@ -18,12 +18,16 @@ inputs:
   service-name:
     description: 'Testitietokannan compose servicen nimi. Saatavilla olevat servicet on määritelty docker-compose.yml:ään'
     required: true
+  skip-testdata:
+    description: 'Ohita testidatan lisääminen testitietokantaan (nopeampi tietokannan alustus)'
+    required: false
+    default: 'false'
 
 runs:
   using: "composite"
   steps:
     - name: Log in to the Container registry
-      uses: docker/login-action@650006c6eb7dba73a995cc03b0b2d7f5ca915bee # v4.2.0
+      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
@@ -34,7 +38,7 @@ runs:
         SERVICE_NAME: ${{ inputs.service-name }}
       run: |
         cd .github/docker
-        echo "Docker Compose version: $(docker-compose version --short)"
+        echo "Docker Compose version: $(docker compose version --short)"
         
         echo "Pulling harja test database docker image for service: ${SERVICE_NAME}"
         docker compose pull "${SERVICE_NAME}"
@@ -57,9 +61,15 @@ runs:
         docker exec --user postgres harjadb psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
       shell: bash
 
-    - name: Run migrations and test data into harja-postgres service
+    - name: Run migrations into the test database
       run: |
-        echo "Running migrations and test data into harja-postgres service..."
+        echo "Running migrations..."
         docker exec --user postgres harjadb /bin/bash -c "~/aja-migraatiot.sh"
+      shell: bash
+
+    - name: Insert test data into the test database
+      if: ${{ inputs.skip-testdata != 'true' }}
+      run: |
+        echo "Inserting test data..."
         docker exec --user postgres harjadb /bin/bash -c "~/aja-testidata.sh"
       shell: bash

@@ -9,6 +9,7 @@
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
+            [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
             [harja.kyselyt.toimenkuvat-kyselyt :as toimenkuva-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
@@ -23,9 +24,9 @@
   tallenna-tarjouksen-johto-ja-hallintokorvaus<! paivita-tarjouksen-johto-ja-hallintokorvaus<!
   hae-tarjouksen-tiedot hae-tarjous-vuodella
   hae-kustannus-tarjoukselle hae-rahavaraus-tarjoukselle hae-toimenkuva-tarjoukselle poista-tarjouksen-johto-ja-hallintokorvaus<!
-  hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tarjous-tavoitehinnat
+  hae-tarjouksen-viimeisin-muokkaaja hae-urakan-tavoite-ja-kattohinnat
   lisaa-urakan-tavoite-tarjous<! paivita-rahavaraus-budjettiin<! lisaa-rahavaraus-budjettiin<!
-  paivita-urakan-tavoite-ja-kattohinta! lisaa-urakan-tavoite-ja-kattohinta<! hae-laskutusraja-kaytossa)
+  paivita-urakan-tavoite-ja-kattohinta! lisaa-urakan-tavoite-ja-kattohinta<!)
 
 (def osiojarjestys
   {"hankintakustannukset" 1
@@ -101,8 +102,11 @@
                                 :nimi (str/capitalize (:nimi toimenkuva))
                                 :toimenkuva-id (:id toimenkuva)
                                 :osio "johto-ja-hallintokorvaus"
-                                ;; Poistetaan hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
-                                :hoitovuosittaiset-arvot (if (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                ;; Poistetaan muut paitsi ensimmäisen hoitovuoden hoitovuosittaiset arvot kovakoodatusti 'Valmistelukausi ennen urakka-ajan alkua' -toimenkuvalta
+                                ;; ja vesiväyläurakoiden toimenkuvilta 'Sopimusvastaava (ennen urakka-ajan alkua)' ja 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'
+                                :hoitovuosittaiset-arvot (if (or (= "valmistelukausi ennen urakka-ajan alkua" (:toimenkuva toimenkuva))
+                                                               (= "sopimusvastaava (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva))
+                                                               (= "vastuunalainen työnjohtaja (ennen urakka-ajan alkua)" (:toimenkuva toimenkuva)))
                                                            [(first hoitovuosittaiset-arvot)] hoitovuosittaiset-arvot))))
                       toimenkuvat)
         toimenkuvat (sort-by :jarjestys toimenkuvat)]
@@ -110,6 +114,7 @@
 
 (defn luo-default-tarjous [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
+        vesivaylaurakka? (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
         urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
         vuodet (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot)))
@@ -117,7 +122,9 @@
         tehtava (first (tehtava-kyselyt/hae-tehtava-tunnisteella db {:tunniste "53647ad8-0632-4dd3-8302-8dfae09908c8"}))
         tehtavaryhma (first (tehtavaryhma-kyselyt/hae-tehtavaryhma-tunnisteella db {:yksiloiva_tunniste "37d3752c-9951-47ad-a463-c1704cf22f4c"}))
         ;; Lisätään default tarjoukseen Kilpailutettavat hankinnat, Erillishankinnat ja Hoidonjohtopalkkio
-        tarjousrivit [{:nimi "Kilpailutettavat hankinnat", :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
+        tarjousrivit [{:nimi (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+                               "Urakan hankinnat"
+                               "Kilpailutettavat hankinnat"), :osio "hankintakustannukset" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id nil :rahavaraus-id nil :jarjestys 1
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot :yhteensa 0.00}
                       {:nimi "Erillishankinnat", :osio "erillishankinnat" :toimenkuva-id nil :tehtava-id nil :tehtavaryhma-id (:id tehtavaryhma) :rahavaraus-id nil
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot, :yhteensa 0.00}
@@ -133,8 +140,8 @@
                        :yhteensa 0.00
                        :hoitovuosittaiset-arvot hoitovuosittaiset-arvot}]
 
-        ; haetaan urakan rahavaraukset
-        rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
+        ; haetaan urakan rahavaraukset (vesiväyläurakoilla ei ole rahavarauksia)
+        rahavaraukset (if vesivaylaurakka? [] (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id}))
         rahavaraus-rivit (reduce (fn [lopulliset rahavaraus]
                                    (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
                                                              :osio "tavoitehintaiset-rahavaraukset"
@@ -221,12 +228,8 @@
         _ (mapv (fn [rahavaraus]
                   (let [rahavaraus-id (:rahavaraus-id rahavaraus)
                         vuosittainen-summa (:summa (first (filter #(= (:hoitokauden_alkuvuosi vuositarjous) (:vuosi %)) (:hoitovuosittaiset-arvot rahavaraus))))
-
-                        ;; Jokaisella kustannusarvoitu_tyo -rivillä pitää olla toimenpideinstanssi.
-                        ;; Rahavaraukset eivät kuulu millekään tällä hetkellä tiedetylle toimenpideinstanssille.
-                        ;; Mutta yksinkertaisuuden vuoksi toimenpideinstanssin pakollisuutta ei lähdetty muuttamaan, vaan laitetaan
-                        ;; Rahavaraukselle vain jokin toimenpideinstanssi. Sen olemassaolo filtteröidään muualla pois.
-                        ensimmainen-toimenpideinstanssi-id (:id (first (rahavaraus-kyselyt/hae-rahavarauksen-toimenpideinstanssi db {:urakka_id urakka-id})))
+                        toimenpideinstanssi-id (budjettisuunnittelu/hae-rahavarauksen-toimenpideinstanssi db rahavaraus-id urakka-id)
+                        tehtavaryhma-id (budjettisuunnittelu/hae-rahavarauksen-tehtavaryhma db rahavaraus-id urakka-id)
 
                         ;; Päivitetään rahavarauksen summa ja indeksikorjattu summa kustannusarvioitu_työ tauluun
                         kt-rahavaraus-kuukaudet (ka-q/hae-rahavarauskustannus db {:rahavaraus_id rahavaraus-id
@@ -256,8 +259,9 @@
                                                      (lisaa-rahavaraus-budjettiin<! db {:vuosi vuosi
                                                                                         :kuukausi kk
                                                                                         :sopimus_id sopimus-id
-                                                                                        :toimenpideinstanssi_id ensimmainen-toimenpideinstanssi-id
+                                                                                        :toimenpideinstanssi_id toimenpideinstanssi-id
                                                                                         :tehtava_id nil
+                                                                                        :tehtavaryhma tehtavaryhma-id
                                                                                         :rahavaraus_id rahavaraus-id
                                                                                         :summa summa
                                                                                         :summa_indeksikorjattu (when summa
@@ -314,7 +318,9 @@
         sopimus-id (urakat-kyselyt/urakan-paasopimus-id db urakka-id)
         urakan-indeksit (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
         urakan-parametrit (first (urakat-kyselyt/hae-urakan-parametrit db {:urakkaid urakka-id}))
-        kattohintakerroin (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)
+        laskutusraja-kaytossa? (or (:laskutusraja-kaytossa urakan-parametrit) false)
+        muutosten-hallinta-kaytossa? (or (:muutosten_hallinta urakan-parametrit) false)
+        kattohintakerroin (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 1)
         vuodet (map (fn [vuosi]
                       {:vuosi vuosi}) (range (pvm/vuosi (:alkupvm urakan-tiedot)) (pvm/vuosi (:loppupvm urakan-tiedot))))
         sallitut-vuodet (filter
@@ -340,7 +346,7 @@
             (throw (IllegalArgumentException. (str "Tarjoukselle annettu kattohinta ei ole validi. Kattohinnan tulee olla vähintään yhtä suuri kuin tarjouksen tavoitehinta."))))
 
         ;; Haetaan urakan mahdolliset aiemmat tarjoushinnat urakka_tavoite -taulusta
-        urakan-tavoitteet-tietokannasta (hae-urakan-tarjous-tavoitehinnat db {:urakkaid urakka-id})
+        urakan-tavoitteet-tietokannasta (hae-urakan-tavoite-ja-kattohinnat db {:urakkaid urakka-id})
 
         ;; Muokkaa tietomallin vuosittaiset summat tarjous- ja kattohinnaksi
         vuosittaiset-tarjoushinnat (mapv
@@ -460,47 +466,48 @@
                                                                            :muokkaaja kayttaja-id
                                                                            :id (:id tarjousdb)))
                                                    (tallenna-tarjous<! db rivi))
-                               ;; Päivitetään tarjouksen tiedot myös urakka_tavoite -tauluun, jota muut Harjan osa-alueet käyttävät
+                               ;; Päivitetään tarjouksen tiedot myös urakka_tavoite-tauluun, jota muut Harjan osa-alueet käyttävät.
+                               ;; Jos urakassa ei ole muutostenhallinta käytössä, säilytetään kustannussuunnitelman pohjalta laskettu tavoitehinta, jos sellainen on.
+                               ;; TODO: Täällä täytyy myöhemmin huomioida muutostenhallinnan hoitovuosikohtaisuus #hoitovuosikohtainen-muutostenhallinta
                                urakka-tavoite-db (first (filter #(= kuluva-hoitovuosi-nro (:hoitovuosinro %)) urakan-tavoitteet-tietokannasta))
-                               tavoitehinta (:tarjous_tavoitehinta rivi)
-                               tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
-                                                              (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) tavoitehinta)
+                               tarjouksen-tavoitehinta (:tarjous_tavoitehinta rivi)
                                ;; Haetaan aiempien vuosien pysyvät muutokset ja lisätään ne laskutusrajaan jo ennen tavoite- ja kattohinnan vahvistusta
                                aiempien-vuosien-pysyvat-muutokset (muutos-palvelu/hae-aiempien-vuosien-pysyvat-muutokset db urakka-id (:hoitokauden_alkuvuosi rivi) true)
                                pysyvat-muutokset-maara (reduce + (map :tavoitehinnan-muutos aiempien-vuosien-pysyvat-muutokset))
-                               hoitovuoden-alun-tavoitehinta (+ (or tavoitehinta 0M) (or pysyvat-muutokset-maara 0M))
+                               hoitovuoden-alun-tavoitehinta (if muutosten-hallinta-kaytossa? (+ (or tarjouksen-tavoitehinta 0M) (or pysyvat-muutokset-maara 0M)) tarjouksen-tavoitehinta)
+                               hoitovuoden-alun-tavoitehinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
+                                                              (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro) hoitovuoden-alun-tavoitehinta)
                                laskutusraja-ennen-vahvistusta (indeksi-kyselyt/indeksikorjaa
                                                                 (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
                                                                 hoitovuoden-alun-tavoitehinta)
-                               laskutusraja-kaytossa? (-> (hae-laskutusraja-kaytossa db {:urakka-id urakka-id})
-                                                        first
-                                                        :laskutusraja-kaytossa)
                                _ (if urakka-tavoite-db
                                    (paivita-urakan-tavoite-ja-kattohinta! db {:urakka-id urakka-id
                                                                               :hoitokausinumero kuluva-hoitovuosi-nro
-                                                                              :tarjous_tavoitehinta tavoitehinta
-                                                                              :tavoitehinta tavoitehinta
-                                                                              :tavoitehinta_indeksikorjattu tavoitehinta_indeksikorjattu
+                                                                              :tarjous_tavoitehinta tarjouksen-tavoitehinta
+                                                                              :tarjous_kattohinta (* kattohintakerroin tarjouksen-tavoitehinta)
+                                                                              :tavoitehinta hoitovuoden-alun-tavoitehinta
+                                                                              :tavoitehinta_indeksikorjattu hoitovuoden-alun-tavoitehinta_indeksikorjattu
                                                                               :laskutusraja (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
                                                                               :laskutusraja_alkuperainen (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
-                                                                              :kattohinta (* (or kattohintakerroin 0) tavoitehinta)
+                                                                              :kattohinta (* kattohintakerroin hoitovuoden-alun-tavoitehinta)
                                                                               :kattohinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                             (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
-                                                                                                            (* (or kattohintakerroin 0) tavoitehinta))
+                                                                                                            (* kattohintakerroin hoitovuoden-alun-tavoitehinta))
                                                                               :muokkaaja kayttaja-id})
                                    ;; Ei lisätä 0 arvoja ollenkaan.
-                                   (when-not (zero? tavoitehinta)
+                                   (when-not (zero? tarjouksen-tavoitehinta)
                                      (lisaa-urakan-tavoite-ja-kattohinta<! db {:urakka-id urakka-id
                                                                                :hoitokausinumero kuluva-hoitovuosi-nro
-                                                                               :tarjous_tavoitehinta tavoitehinta
-                                                                               :tavoitehinta tavoitehinta
-                                                                               :tavoitehinta_indeksikorjattu tavoitehinta_indeksikorjattu
+                                                                               :tarjous_tavoitehinta tarjouksen-tavoitehinta
+                                                                               :tarjous_kattohinta (* kattohintakerroin tarjouksen-tavoitehinta)
+                                                                               :tavoitehinta hoitovuoden-alun-tavoitehinta
+                                                                               :tavoitehinta_indeksikorjattu hoitovuoden-alun-tavoitehinta_indeksikorjattu
                                                                                :laskutusraja (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
                                                                                :laskutusraja_alkuperainen (when laskutusraja-kaytossa? laskutusraja-ennen-vahvistusta)
-                                                                               :kattohinta (* (or kattohintakerroin 0) tavoitehinta)
+                                                                               :kattohinta (* kattohintakerroin hoitovuoden-alun-tavoitehinta)
                                                                                :kattohinta_indeksikorjattu (indeksi-kyselyt/indeksikorjaa
                                                                                                              (indeksi-kyselyt/indeksikerroin urakan-indeksit kuluva-hoitovuosi-nro)
-                                                                                                             (* (or kattohintakerroin 0) tavoitehinta))
+                                                                                                             (* kattohintakerroin hoitovuoden-alun-tavoitehinta))
                                                                                :luoja kayttaja-id})))
 
                                ;; Tallennetaan tarjouksen kustannukset, toimenkuvat ja rahavaraukset tietokantaan
@@ -509,7 +516,6 @@
                                ;; Rahavaraukset tallennetaan tarjouksen lisäksi myös kustannusarvioitu_tyo tauluun
                                _ (tallanna-rahavaraukset-kustannussuuunnitelmaan db rivi urakka-id sopimus-id urakan-indeksit kuluva-hoitovuosi-nro rahavaraukset-tarjouksesta kayttaja-id)
                                _ (tallenna-tarjouksen-toimenkuvat db rivi tietokantatarjous toimenkuvatlistaus tarjousdb urakka-id kayttaja-id)
-                               
                                _ (ks-kyselyt/paivita-tavoite-ja-kattohinta db kayttaja-id urakka-id (:hoitokauden_alkuvuosi rivi) aiempien-vuosien-pysyvat-muutokset)]
                            {:tarjousid (:id tietokantatarjous)}))
                        vuosittaiset-tarjoushinnat)]
@@ -603,6 +609,7 @@
 (defn hae-tarjous [db urakka-id]
   (let [urakan-tiedot (first (urakat-kyselyt/hae-urakka db {:id urakka-id}))
         urakan-alkuvuosi (pvm/vuosi (:alkupvm urakan-tiedot))
+        vesivaylaurakka? (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
         vuodet (map (fn [vuosi]
                       {:vuosi vuosi}) (range urakan-alkuvuosi (pvm/vuosi (:loppupvm urakan-tiedot))))
         hoitovuosittaiset-arvot (mapv (fn [vuosi] {:vuosi (:vuosi vuosi) :summa 0.00M}) vuodet)
@@ -639,10 +646,12 @@
                           kustannus-rivit)
         ;; Jos urakalle on lisätty rahavarauksia alkuperäisen tarjouksen tallentamisen jälkeen, niin niitä ei löydy tarjouksen tiedoista. Joten lisätään ne näin jälkikäteen
         kaikki-urakan-rahavaraukset (rahavaraus-kyselyt/hae-urakan-rahavaraukset db {:urakka_id urakka-id})
-        puuttuvat-rahavaraukset (filter
-                                  (fn [r]
-                                    (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
-                                  kaikki-urakan-rahavaraukset)
+        puuttuvat-rahavaraukset (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+                                  []
+                                  (filter
+                                       (fn [r]
+                                         (not (some #(= (:id r) (:rahavaraus_id %)) kustannus-rivit)))
+                                       kaikki-urakan-rahavaraukset))
         puuttuvat-rahavaraukset (reduce (fn [lopulliset rahavaraus]
                                           (vec (concat lopulliset [{:nimi (:nimi rahavaraus),
                                                                     :summa 0
@@ -715,7 +724,8 @@
                  :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)
                  :tarjous tarjousrivit}
         ;; Tarkistetaan, että tarjous ei ole tyhjä
-        tarjous (if (not= "Kilpailutettavat hankinnat" (:nimi (first (:tarjous tarjous))))
+        tarjous (if (not (#{"Kilpailutettavat hankinnat" "Urakan hankinnat"}
+                          (:nimi (first (:tarjous tarjous)))))
                   {:urakka-id urakka-id
                    :kaikki-toimenkuvat kaikki-toimenkuvat
                    :kattohintakerroin kattohintakerroin

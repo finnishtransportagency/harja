@@ -78,6 +78,7 @@ WITH kohdistukset_ajalla AS (
         tr.jarjestys    AS "jarjestys",
         tr.nimi         AS "nimi"
     FROM tehtavaryhma tr
+        JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id AND tro.urakkatyyppi = 'teiden-hoito'
         LEFT JOIN kohdistukset_ajalla kohd ON tr.id = kohd.tehtavaryhma,
         urakka u
     -- Ei ole tarkoituksenmukaista listata tehtäväryhmiä, jotka on poistettu tai jotka eivät ole voimassa, jos niihin ei ole raportoitu kuluja
@@ -163,6 +164,7 @@ SELECT m.numero                  AS "maksuera-numero",
        kk.maksueratyyppi         AS "maksueratyyppi",
        kk.rahavaraus_id          AS rahavaraus,
        kk.tyyppi                 AS tyyppi,
+       kk.tavoitehintainen       AS tavoitehintainen,
        kk.tehtava                AS "tehtava_id",
        t.nimi                    AS "tehtava_nimi",
        kk."muu-tehtava-kaytossa" AS "muu-tehtava-kaytossa",
@@ -429,5 +431,6 @@ SELECT NULL                       AS "maksuera-numero",
 -- Tarvitaan Kulujen kohdistus -näkymän generoitujen kulujen tehtäväryhmien nimien näyttämistä varten,
 -- jotta saadaan myös Johto- ja hallintokorvaus -tehtäväryhmän nimi näkyviin
 SELECT tr.id                      AS "tehtavaryhma",
-       tr.nimi                    AS "tehtavaryhma_nimi"
+       tr.nimi                    AS "tehtavaryhma_nimi",
+       tr.toimenpide_id           AS "tehtavaryhma_toimenpide_id"
 FROM tehtavaryhma tr;

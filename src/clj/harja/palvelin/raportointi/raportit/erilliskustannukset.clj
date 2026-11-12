@@ -13,12 +13,14 @@
 (defqueries "harja/palvelin/raportointi/raportit/erilliskustannukset.sql"
   {:positional? true})
 
+(declare hae-erilliskustannukset)
 
 (defn erilliskustannuksen-nimi
   [tyyppi]
   (case tyyppi
-    "alihankintabonus" "Alihankinta\u00ADbonus"
+    "alihankintabonus" "Bonus alihankintasopimusten maksuehdoista"
     "asiakastyytyvaisyysbonus" "As.tyyt.\u00ADbonus"
+    "liikennevahinkojen_aiheuttajien_selvitysbonus" "Bonus liikennevahinkojen aiheuttajien selvittämisestä"
     "lupausbonus" "Lupaus\u00ADbonus"
     "muu" "Muu"
     "muu-bonus" "Muu bonus"

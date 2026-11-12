@@ -157,8 +157,7 @@ maksimi-linnuntien-etaisyys 200)
   ;; Poistetaan reittipistedata: pisteet, tehtävät ja materiaalit
   (toteumat-q/poista-toteuman-reittipisteet-toteuma-idlla! db toteuma-id))
 
-(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash
-                                          reittipisteet-tallennettu-chan]
+(defn tallenna-yksittainen-reittitoteuma [db db-replica urakka-id kirjaaja {:keys [reitti toteuma tyokone]} jsonhash]
   (let [toteuma (assoc toteuma
                   ;; Reitti liitetään lopuksi
                   :reitti nil)
@@ -196,137 +195,26 @@ maksimi-linnuntien-etaisyys 200)
     (async/thread
       (try
         (luo-toteuman-reittipisteet db reitti toteuma-id)
-        (async/put! reittipisteet-tallennettu-chan true)
         (catch Throwable t
           (log/error t "Reittitoteuman reittipisteiden tallennus epäonnistui")
           ;; Lopetetaan reittipisteiden tallennuksen seuranta, mikäli tallennus epäonnistuu
-          (async/put! reittipisteet-tallennettu-chan false))))))
-
-(defn- materiaalicachen-paivitys-ajettava?
-  "Kertoo ajetaanko materiaalicachejen päivitys käsin. Kuluvan päivän toteumille menevät eräajoissa, muille kyllä.
-  Osaa käsitellä, jos syötteenä on useampi päivämäärä vektorissa ja yksittäisen päivämäärän."
-  [toteuma-alkanut]
-  (if (sequential? toteuma-alkanut)
-    (some #(not (pvm/tanaan? %)) toteuma-alkanut)
-    (not (pvm/tanaan? toteuma-alkanut))))
-
-(defn- paivita-materiaalicachet!
-  "Päivittää materiaalicachetaulut sopimuksen_materiaalin_kaytto ja urakan_materiaalin_kaytto_hoitoluokittain.
-  Jos toteumaa päivitetään, niin toteuman vanhat toteumapäivät tulee välittää, jotta cachet päivittyvät myös niille päiville, joilta
-  toteuma siirtyy."
-  [db urakka-id data vanhat-toteumapaivat]
-  (let [reittitoteumat (if (:reittitoteuma data)
-                         [data]
-                         (:reittitoteumat data))
-        materiaaleja-hyotykuormassa? (some #(not-empty (get-in % [:reittitoteuma :toteuma :materiaalit]))
-                                           reittitoteumat)
-        suolauksen-toimenpidekoodi (:id (first (materiaalit/hae-suolauksen-toimenpidekoodi db)))
-        tehtavissa-suolausta? (some #(some
-                                       (fn [tehtava]
-                                         (= (get-in tehtava [:tehtava :id]) suolauksen-toimenpidekoodi))
-                                       (get-in % [:reittitoteuma :toteuma :tehtavat]))
-                                    reittitoteumat)]
-    (assert (integer? urakka-id) "Oltava urakka-id kun päivitetään materiaalicachet.")
-    ;; Urakoitsijat joskus "poistavat" materiaalitoteumia lähettämällä toteuman uudestaan
-    ;; tehtävänä suolaus mutta kokonaan ilman materiaalit-payloadia. Tämä siksi käsiteltävä erikseen
-    ;; ja varmuuden vuoksi päivitettävä silloinkin materiaalicachet
-    (when (or materiaaleja-hyotykuormassa? tehtavissa-suolausta?)
-      (let [urakan-sopimus-idt (map :id (sopimukset-q/hae-urakan-sopimus-idt db {:urakka_id urakka-id}))
-            toteuma-paivat (reduce (fn [paiva toteuma]
-                                     (let [inst-toteuma (pvm/rajapinta-str-aika->sql-timestamp (get-in toteuma [:reittitoteuma :toteuma :alkanut]))
-                                           alkupvm (if (nil? (:alkupvm paiva))
-                                                     inst-toteuma
-                                                     (:alkupvm paiva))
-                                           alkupvm-aiempi (if (pvm/ennen? alkupvm inst-toteuma)
-                                                            alkupvm
-                                                            inst-toteuma)
-                                           loppupvm (if (nil? (:loppupvm paiva))
-                                                      inst-toteuma
-                                                      (:loppupvm paiva))
-                                           loppupvm-myohempi (if (pvm/ennen? loppupvm inst-toteuma)
-                                                               inst-toteuma
-                                                               loppupvm)]
-                                       (-> paiva
-                                         (assoc :alkupvm alkupvm-aiempi)
-                                         (assoc :loppupvm loppupvm-myohempi))))
-                             {:alkupvm nil :loppupvm nil} reittitoteumat)
-            alku-inst (:alkupvm toteuma-paivat)
-            loppu-inst (:loppupvm toteuma-paivat)
-            eri-paivat (map #(konversio/joda-datetime->sql-timestamp %) (pvm/paivat-aikavalissa alku-inst loppu-inst))
-            toteumien-eri-pvmt (into #{} (concat eri-paivat vanhat-toteumapaivat))]
-
-            ;; Öinen eräajo päivittää cachet niille toteumille, joissa t.alkanut on kuluvan päivän aikana (ns. normaalitilanne)
-            ;; Muille toteumille (esim. vanhan toteuman uudelleen lähetys, tai erittäin pitkän toteuman lähetys, joka alkaa klo 22 ja päätyy API:in aamulla klo 4) ajetaan yhä "käsin" cachejen päivitys
-            (when (or (materiaalicachen-paivitys-ajettava? alku-inst) (materiaalicachen-paivitys-ajettava? loppu-inst) (materiaalicachen-paivitys-ajettava? vanhat-toteumapaivat) )
-              (doseq [sopimus-id urakan-sopimus-idt]
-                (doseq [pvm toteumien-eri-pvmt]
-                  (materiaalit/paivita-sopimuksen-materiaalin-kaytto db {:sopimus sopimus-id
-                                                                         :alkupvm pvm
-                                                                         :urakkaid urakka-id})))
-              (materiaalit/paivita-urakan-materiaalin-kaytto-hoitoluokittain db {:urakka urakka-id
-                                                                                 :alkupvm alku-inst
-                                                                                 :loppupvm loppu-inst}))))))
+          )))))
 
 (defn tallenna-kaikki-pyynnon-reittitoteumat
-  "Materiaalicachen päivitys tehdään vasta, kun kaikki reittipisteet on tallennettu.
-  Cache päivitetään erillisessä säikeessä, jotta pääsäie ei jää odottamaan pitkään.
-  Cache päivitetään vain niille päiville, joille reittipisteet on tehty.
-  Eli toteuman muokkauksessa toteuman mahdolliset alkuperäiset päivät jäävät päivittymättä. Tästä syystä päivitetään ne
-  ottamalla ne talteen ja välittämällä materiaalicachen päivitykselle."
   [db db-replica urakka-id kirjaaja data]
-  (let [toteumapaivat (if (:reittitoteuma data)
-                         (let [tunnisteid (get-in data [:reittitoteuma :toteuma :tunniste :id])
-                               alkanut (:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db
-                                                          {:ulkoinen_id tunnisteid})))]
-                           (if alkanut [alkanut] []))
-                         (keep (fn [t]
-                                 (let [tunnisteid (get-in t [:reittitoteuma :toteuma :tunniste :id])]
-                                   (:alkanut (first (q-toteumat/hae-toteuman-perustiedot-ulkoisella-idlla db
-                                                      {:ulkoinen_id tunnisteid})))))
-                           (:reittitoteumat data)))
-        reittipisteet-tallennettu-chan (async/chan)
-        reittitoteumien-maara (if (:reittitoteuma data)
-                                1
-                                (count (:reittitoteumat data)))]
-    ;; Odotetaan, että kaikki reittipisteet on tallennettu. Jos on mennyt kymmenen minuuttia ilman tallennettuja
-    ;; reittipisteitä, luovutetaan ja lokitetaan virhe.
-    (async/thread
-      (jdbc/with-db-transaction [db db]
-        (loop [tallennettujen-maara 0]
-          (log/info "Odotetaan reittipisteiden tallennusta..." tallennettujen-maara "/" reittitoteumien-maara)
-          (if (= tallennettujen-maara reittitoteumien-maara)
-            (paivita-materiaalicachet! db urakka-id data toteumapaivat)
-            (let [[v _] (async/alts!! [reittipisteet-tallennettu-chan (async/timeout reittipisteet-timeout)])]
-              (log/debug (format "Reittipisteet tallennettu! %s/%s" (inc tallennettujen-maara) reittitoteumien-maara))
-              (cond
-                (true? v) (recur (inc tallennettujen-maara))
-                ;; Jos kanavasta palautuu false yksittäisen reittitoteuman tallennus on epäonnistunut
-                ;; Tallennuksen seuranta lopetetaan ja tulostaan tieto lokille
-                (false? v) (log/info
-                             (format "Reittitoteumien tallennuksen seuranta lopetettu. %s/%s reittitoteumaa tallennettu."
-                               tallennettujen-maara reittitoteumien-maara))
-                ;; Kanavasta palautuu nil, jos timeout on mennyt umpeen
-                :else (log/error "Reittipisteiden tallennus antoi virheen, tai kestänyt yli 10 minuuttia. Kanava suljettu.")))))))
+  (try
+    (when (:reittitoteuma data)
+      (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
+        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
+          (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash))))
 
-    (try
-      (when (:reittitoteuma data)
-        (let [jsonhash (konversio/string->md5 (pr-str (:reittitoteuma data)))]
-          (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in data [:reittitoteuma :toteuma :tunniste :id]))
-            (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma data) jsonhash
-              reittipisteet-tallennettu-chan)
-            (async/put! reittipisteet-tallennettu-chan true))))
+    (doseq [toteuma (:reittitoteumat data)]
+      (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
+        (when (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
+          (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash))))
 
-      (doseq [toteuma (:reittitoteumat data)]
-        (let [jsonhash (konversio/string->md5 (pr-str toteuma))]
-          (if (toteumat-q/ei-ole-lahetetty-aiemmin? db-replica jsonhash (get-in toteuma [:reittitoteuma :toteuma :tunniste :id]))
-            (tallenna-yksittainen-reittitoteuma db db-replica urakka-id kirjaaja (:reittitoteuma toteuma) jsonhash
-              reittipisteet-tallennettu-chan)
-            (async/put! reittipisteet-tallennettu-chan true))))
-      
-      ;; Sulje kanava heti jotta järjestelmä ei kiikun kaaku
-      (catch Exception e
-        (async/close! reittipisteet-tallennettu-chan)
-        (throw (Exception. (str "Epäonnistui: " (.getMessage e))))))))
+    (catch Exception e
+      (throw (Exception. (str "Epäonnistui: " (.getMessage e)))))))
 
 (defn tarkista-pyynto [db urakka-id kirjaaja data]
   (let [sopimus-idt (api-toteuma/hae-toteuman-kaikki-sopimus-idt :reittitoteuma :reittitoteumat data)]

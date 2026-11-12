@@ -48,9 +48,7 @@
 
 (def ^{:doc "Pienin mahdollinen zoom-taso, johon käyttäjä voi zoomata ulos"
        :const true}
-  min-zoom (if (or
-                 (k/kehitysymparistossa-localhost?)
-                 (k/kehitysymparistossa-gc?))
+  min-zoom (if (k/kehitysymparistossa-localhost?)
              4
              0))
 

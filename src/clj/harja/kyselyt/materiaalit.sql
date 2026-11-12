@@ -91,6 +91,9 @@ WHERE mat.maara != 0 OR mat.kokonaismaara != 0;
 -- name: paivita-sopimuksen-materiaalin-kaytto
 SELECT paivita_sopimuksen_materiaalin_kaytto(:sopimus :: INTEGER, :alkupvm :: DATE, :urakkaid :: INTEGER);
 
+-- name: paivita-sopimuksen-materiaalikaytto-muutospaivalla
+SELECT paivita_sopimuksen_materiaalikaytto_muutospaivalla(:sopimus :: INTEGER, :muutospvm :: DATE, :urakkaid :: INTEGER);
+
 -- name: paivita-koko-sopimuksen-materiaalin-kaytto
 SELECT paivita_koko_sopimuksen_materiaalin_kaytto(:sopimus :: INTEGER);
 
@@ -109,8 +112,8 @@ SELECT paivita_urakan_materiaalin_kaytto_hoitoluokittain(
     :alkupvm::DATE,
     :loppupvm::DATE);
 
---name: paivita-urakan-materiaalikaytto-hoitoluokittain-muutospaivalla
-SELECT paivita_urakan_materiaalikaytto_hoitoluokittain_muutospaivalla(
+--name: paivita-urakan-materiaalinkaytto-hoitoluokittain-muutospaivalla
+SELECT paivita_urakan_materiaalinkaytto_hoitoluokittain_muutospaivalla(
     :urakka::INTEGER,
     :muutospvm::DATE);
 
@@ -507,7 +510,7 @@ SELECT m.id                               AS materiaali_id,
 SELECT nimi as materiaaliluokka, yksikko as materiaaliluokka_yksikko, materiaalityyppi as materiaaliluokka_tyyppi
   FROM materiaaliluokka where nimi = 'Talvisuola';
 
--- name: hae-talvisuolan-hoitovuoden-kokonaismaara
+-- name: hae-talvisuolan-kokonaismaara
 SELECT SUM(kokonaismaara) as kokonaismaara
   FROM raportti_toteutuneet_materiaalit rtm
        JOIN materiaalikoodi mk ON rtm."materiaali-id" = mk.id

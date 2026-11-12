@@ -172,7 +172,7 @@
     (is (> (count (distinct (map :toimenpidekoodi (:selitteet (:toteumat vastaus))))) 1))
     (is (= (count (:turvallisuuspoikkeamat vastaus)) 7))
     (is (not (contains? vastaus :tarkastus)))
-    (is (= (count (:laatupoikkeamat vastaus)) 52))
+    (is (= (count (:laatupoikkeamat vastaus)) 66))
     (is (= (count (:paallystys vastaus)) 1))
     (is (= (count (:paikkaus vastaus)) 85))
     (is (= (count (:ilmoitukset vastaus)) 53))
@@ -416,7 +416,7 @@
     ;; Ei testata urakkatyyppejä, joita testiaineistosta löytyy, mutta jotka eivät ole aktiivisessa käytössä.
 
     ;; Määrä muuttuu jos testiurakoita lisätään tai vähennetään
-    (is (= (count urakat) 60) "JVH:n pitäisi nähdä kaikki urakat")))
+    (is (= (count urakat) 61) "JVH:n pitäisi nähdä kaikki urakat")))
 
 (deftest hae-urakat-tilannekuvaan-urakanvalvoja
   (let [vastaus (hae-urakat-tilannekuvaan +kayttaja-tero+ hakuargumentit-laaja-historia)
@@ -562,3 +562,52 @@
     (is (not (sallitut-urakat 432)) "Roolin puuttuessa oikeutta ei muodostu")
     (is (not (sallitut-urakat 423)) "Roolin puuttuessa oikeutta ei muodostu")
     (is (not (sallitut-urakat urakka-id-jossa-ei-roolia)) "Roolin puuttuessa oikeutta ei muodostu")))
+
+(deftest konsultin-urakat-palautuvat-oikein-tilannekuvaan
+    (let [konsultti-tilaajan-laadunvalvoja {:organisaation-urakat #{}, :sahkoposti "konsultti@konsulttiyritys.com", :kayttajanimi "LX1234569", :puhelin "0501234569",
+                  :sukunimi "Sukunimi", :roolit #{}, :organisaatioroolit {}, :id 129, :etunimi "Etunimi",
+                  :organisaatio {:id (hae-organisaatio-id-nimella "Esimerkkillinen Konsultti Oy"), :nimi "Esimerkkillinen Konsultti Oy", :tyyppi "konsultti"},
+                  :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"Tilaajan_laadunvalvoja"}}}
+        konsultti-ely-laadunvalvoja (assoc konsultti-tilaajan-laadunvalvoja :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"ELY_Laadunvalvoja"}})
+        konsultti-tilaajan-rakennuttajakonsultti (assoc konsultti-tilaajan-laadunvalvoja :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"Tilaajan_Rakennuttajakonsultti"}})
+        konsultti-ely-rakennuttajakonsultti (assoc konsultti-tilaajan-laadunvalvoja :urakkaroolit {(hae-urakan-id-nimella "Oulun MHU 2019-2024") #{"Rakennuttajakonsultti"}})
+
+        nakyma-tilannekuva oikeudet/tilannekuva-nykytilanne
+        nakyma-historianakyma oikeudet/tilannekuva-historia
+
+        oma-urakka #{(hae-urakan-id-nimella "Oulun MHU 2019-2024")}
+        saman-elinvoimakeskuksen-urakka #{(hae-urakan-id-nimella "Iin MHU 2021-2026")}
+        toisen-elinvoimakeskuksen-urakka #{(hae-urakan-id-nimella "Rovaniemen MHU testiurakka (1. hoitovuosi)")}
+        toisen-urakkatyypin-urakka #{(hae-urakan-id-nimella "Utajärven Tiemerkintäurakka POP ELY 2025–2027 (optiot 2028 ja 2029), P")}
+
+        vastaus-tilannekuva (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-tilaajan-laadunvalvoja nakyma-tilannekuva)
+        vastaus-historianakyma (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-tilaajan-laadunvalvoja nakyma-historianakyma)
+        _ (is (= oma-urakka vastaus-tilannekuva) "Konsultti näkee tilaajan laadunvalvojana vain oman urakkansa (tilannekuva).")
+        _ (is (= oma-urakka vastaus-historianakyma) "Konsultti näkee tilaajan laadunvalvojana vain oman urakkansa (historianäkymä).")
+
+        vastaus-tilannekuva (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-ely-laadunvalvoja nakyma-tilannekuva)
+        vastaus-historianakyma (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-ely-laadunvalvoja nakyma-historianakyma)
+        _ (is (= oma-urakka vastaus-tilannekuva) "Konsultti näkee ELY-laadunvalvojana vain oman urakkansa (tilannekuva).")
+        _ (is (= oma-urakka vastaus-historianakyma) "Konsultti näkee tilaajan ELY-laadunvalvojana vain oman urakkansa (historianäkymä).")
+
+        vastaus-tilannekuva (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-tilaajan-rakennuttajakonsultti nakyma-tilannekuva)
+        vastaus-historianakyma (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-tilaajan-rakennuttajakonsultti nakyma-historianakyma)
+        _ (is (some oma-urakka vastaus-tilannekuva) "Konsultti näkee tilaajan rakennuttajakonsulttina oman urakkansa (tilannekuva).")
+        _ (is (some oma-urakka vastaus-historianakyma) "Konsultti näkee tilaajan rakennuttajakonsulttina oman urakkansa (historianäkymä).")
+        _ (is (some saman-elinvoimakeskuksen-urakka vastaus-tilannekuva) "Konsultti näkee tilaajan rakennuttajakonsulttina oman elinvoimakeskuksensa urakat (tilannekuva).")
+        _ (is (some saman-elinvoimakeskuksen-urakka vastaus-historianakyma) "Konsultti näkee tilaajan rakennuttajakonsulttina elinvoimakeskuksensa urakat (historianäkymä).")
+        _ (is (not (some toisen-elinvoimakeskuksen-urakka vastaus-tilannekuva)) "Konsultti ei näe tilaajan rakennuttajakonsulttina muun maan urakoita (tilannekuva).")
+        _ (is (not (some toisen-elinvoimakeskuksen-urakka vastaus-historianakyma)) "Konsultti ei näe tilaajan rakennuttajakonsulttina muun maan urakoita (historianäkymä).")
+        _ (is (some toisen-urakkatyypin-urakka vastaus-tilannekuva) "Konsultti näkee tilaajan rakennuttajakonsulttina muiden urakkatyyppien urakat samassa elinvoimakeskuksessa (tilannekuva).")
+        _ (is (some toisen-urakkatyypin-urakka vastaus-historianakyma) "Konsultti näkee tilaajan rakennuttajakonsulttina muiden urakkatyyppien urakat samassa elinvoimakeskuksessa (historianäkymä).")
+
+        vastaus-tilannekuva (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-ely-rakennuttajakonsultti nakyma-tilannekuva)
+        vastaus-historianakyma (hae-urakoitsijan-tai-konsultin-urakat (:db jarjestelma) konsultti-ely-rakennuttajakonsultti nakyma-historianakyma)
+        _ (is (some oma-urakka vastaus-tilannekuva) "Konsultti näkee ELY-rakennuttajakonsulttina oman urakkansa (tilannekuva).")
+        _ (is (some oma-urakka vastaus-historianakyma) "Konsultti näkee tilaajan ELY-rakennuttajakonsulttina oman urakkansa (historianäkymä).")
+        _ (is (some saman-elinvoimakeskuksen-urakka vastaus-tilannekuva) "Konsultti näkee ELY-rakennuttajakonsulttina oman elinvoimakeskuksensa urakat (tilannekuva).")
+        _ (is (some saman-elinvoimakeskuksen-urakka vastaus-historianakyma) "Konsultti näkee tilaajan ELY-rakennuttajakonsulttina elinvoimakeskuksensa urakat (historianäkymä).")
+        _ (is (not (some toisen-elinvoimakeskuksen-urakka vastaus-tilannekuva)) "Konsultti ei näe ELY-rakennuttajakonsulttina muun maan urakoita (tilannekuva).")
+        _ (is (not (some toisen-elinvoimakeskuksen-urakka vastaus-historianakyma)) "Konsultti ei näe ELY-rakennuttajakonsulttina muun maan urakoita (historianäkymä).")
+        _ (is (some toisen-urakkatyypin-urakka vastaus-tilannekuva) "Konsultti näkee ELY-rakennuttajakonsulttina muiden urakkatyyppien urakat (tilannekuva).")
+        _ (is (some toisen-urakkatyypin-urakka vastaus-historianakyma) "Konsultti näkee tilaajan ELY-rakennuttajakonsulttina muiden urakkatyyppien urakat (historianäkymä).")]))

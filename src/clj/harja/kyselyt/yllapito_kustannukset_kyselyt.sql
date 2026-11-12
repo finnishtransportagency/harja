@@ -48,7 +48,7 @@ FROM (
     UNION ALL
     
     -- Muut paikkauskustannukset
-    SELECT CONCAT('kustannus-',id) AS id,
+    SELECT CONCAT('kustannus-',id)                  AS id,
 		   kustannustyyppi,
 		   SUM(summa)                               AS kokonaiskustannus,
 		   ''                                       AS tyomenetelma,
@@ -57,7 +57,7 @@ FROM (
           paikkauskustannukset
     WHERE
         urakka = :urakka-id
-        AND poistettu IS FALSE
+        AND poistettu IS NOT TRUE 
       -- Samalla kyselyllä haetaan yksittäisen vuoden kustannukset sekä useamman vuoden kustannukset
         AND (:vuosi::INTEGER IS NULL OR (:vuosi::INTEGER IS NOT NULL AND vuosi = :vuosi))
         AND (:alkuvuosi::INTEGER IS NULL AND :loppuvuosi::INTEGER IS NULL
@@ -72,22 +72,38 @@ ORDER BY tyomenetelma, id;
 
 -- name: tallenna-yllapito-kustannus!
 INSERT INTO paikkauskustannukset (
-    urakka, 
-    selite, 
-    kustannustyyppi, 
-    summa, 
-    vuosi,
-    luotu,
-    luoja
+      urakka,
+      selite,
+      kustannustyyppi,
+      summa,
+      vuosi,
+      luotu,
+      luoja,
+      poistettu 
 ) VALUES (
-    :urakka-id, 
-    :selite, 
-    :kustannustyyppi::mpu_kustannustyyppi_enum, 
-    :summa, 
-    :vuosi,
-    NOW(),
-    COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'))
+     :urakka-id,
+     :selite,
+     :kustannustyyppi::mpu_kustannustyyppi_enum,
+     :summa,
+     :vuosi,
+     NOW(),
+     COALESCE(:luoja, (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio')),
+     false
 );
+
+
+-- name: paivita-yllapito-kustannus!
+UPDATE paikkauskustannukset
+SET
+    selite = :selite,
+    kustannustyyppi = :kustannustyyppi::mpu_kustannustyyppi_enum,
+    summa = :summa,
+    vuosi = :vuosi,
+    poistettu = :poistettu,
+    muokattu = NOW(),
+    muokkaaja = :luoja
+WHERE id = :id
+  AND urakka = :urakka-id;
 
 
 -- name: hae-kustannusten-selitteet

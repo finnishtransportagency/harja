@@ -547,6 +547,7 @@
       (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
             urakan-alkuvuosi (pvm/vuosi alkupvm)
             urakan-loppuvuosi (pvm/vuosi loppupvm)
+            urakan-kesto (- (count (pvm/vuodet-valissa alkupvm loppupvm)) 1)
             rajoitusalueet (:suolarajoitukset app)
             lomake-auki? (:rajoitusalue-lomake-auki? app)
             urakka @nav/valittu-urakka
@@ -557,7 +558,7 @@
             valittu-vuosi (if (> valittu-vuosi urakan-loppuvuosi)
                             urakan-loppuvuosi
                             (:valittu-hoitovuosi app))
-            hoitovuodet (into [] (range urakan-alkuvuosi (+ 5 urakan-alkuvuosi)))
+            hoitovuodet (into [] (range urakan-alkuvuosi (+ urakan-alkuvuosi urakan-kesto)))
             saa-muokata? (oikeudet/voi-kirjoittaa? oikeudet/urakat-suunnittelu-suola (:id urakka))]
         [:div.urakan-suolarajoitukset
          [:h1 "Urakan suolarajoitukset hoitovuosittain"]

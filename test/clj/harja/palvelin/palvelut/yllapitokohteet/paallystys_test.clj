@@ -76,6 +76,86 @@
               urakkatieto-fixture
               jarjestelma-fixture)
 
+(deftest hae-pot2-tieosuudet-ei-rajaa-tulosta-paakohteen-etaisyyksilla
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (u (str "UPDATE yllapitokohde
+               SET tr_numero = 6666,
+                   tr_alkuosa = 1,
+                   tr_alkuetaisyys = 200,
+                   tr_loppuosa = 1,
+                   tr_loppuetaisyys = 2200
+             WHERE id = " paallystyskohde-id))
+    (u "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = 6666")
+    (u "INSERT INTO tr_osoitteet
+          (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+        VALUES
+          (6666, 1, 11, 1, 0, 1500, 1),
+          (6666, 1, 11, 1, 1500, 2500, 1)")
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-pot2-tieosuudet
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :paallystyskohde-id paallystyskohde-id})]
+      (is (= [{:tr-numero 6666
+               :tr-ajorata 1
+               :tr-kaista 11
+               :tr-alkuosa 1
+               :tr-alkuetaisyys 0
+               :tr-loppuosa 1
+               :tr-loppuetaisyys 2500}]
+             (:tieosuudet vastaus))))))
+
+(deftest hae-pot2-tieosuudet-rajaa-tulokset-endpointissa
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (u (str "UPDATE yllapitokohde
+               SET tr_numero = 6666,
+                   tr_alkuosa = 1,
+                   tr_alkuetaisyys = 0,
+                   tr_loppuosa = 201,
+                   tr_loppuetaisyys = 100
+             WHERE id = " paallystyskohde-id))
+    (u "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = 6666")
+    (u (str "INSERT INTO tr_osoitteet
+               (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+             SELECT 6666, 1, 1 + (osa % 2), osa, 0, 100, 1
+               FROM generate_series(1, 201) AS osa"))
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-pot2-tieosuudet
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :paallystyskohde-id paallystyskohde-id})]
+      (is (= 200 (count (:tieosuudet vastaus))))
+      (is (:tieosuuksia-rajattu? vastaus)))))
+
+(deftest hae-pot2-tieosuudet-kayttajan-hakurajauksella
+  (let [urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        paallystyskohde-id (yllapitokohteet-test/yllapitokohde-id-jolla-on-paallystysilmoitus)]
+    (u "DELETE FROM tr_osoitteet WHERE \"tr-numero\" = 6666")
+    (u "INSERT INTO tr_osoitteet
+          (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+        VALUES
+          (6666, 1, 11, 2, 100, 1500, 1),
+          (6666, 1, 11, 2, 1500, 2500, 1)")
+    (let [vastaus (kutsu-palvelua (:http-palvelin jarjestelma)
+                                  :hae-pot2-tieosuudet
+                                  +kayttaja-jvh+
+                                  {:urakka-id urakka-id
+                                   :paallystyskohde-id paallystyskohde-id
+                                   :haku {:tr-numero 6666
+                                          :tr-alkuosa 2
+                                          :tr-loppuosa 2}})]
+      (is (= [{:tr-numero 6666
+               :tr-ajorata 1
+               :tr-kaista 11
+               :tr-alkuosa 2
+               :tr-alkuetaisyys 100
+               :tr-loppuosa 2
+               :tr-loppuetaisyys 2500}]
+             (:tieosuudet vastaus)))
+      (is (empty? (:kohteen-ulkopuolelle-jatkuvat vastaus))))))
+
 (def pot-testidata
   {:versio 1
    :perustiedot {:aloituspvm (pvm/luo-pvm 2019 9 1)
@@ -1009,6 +1089,27 @@
                                                    urakka-id sopimus-id paallystyskohde-id paallystysilmoitus) 1 nil)]
     (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :materiaali])))
     (is (= kar-toimenpide (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :toimenpide])))))
+
+(deftest tallenna-pot2-paallystysilmoitus-nollaleveydella-ja-massalla
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        paallystysilmoitus (-> (pot2-testidata paallystyskohde-id)
+                               (assoc :paallystyskohde-id paallystyskohde-id)
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] false)
+                               (assoc-in [:paallystekerros 0 :leveys] 0)
+                               (assoc-in [:paallystekerros 0 :kokonaismassamaara] 0)
+                               (assoc-in [:paallystekerros 1 :leveys] 0)
+                               (update-in [:paallystekerros 0] dissoc :pinta_ala :massamenekki)
+                               (update-in [:paallystekerros 1] dissoc :pinta_ala :massamenekki))
+        paallystysilmoitus-kannassa-jalkeen (second (tallenna-pot2-testi-paallystysilmoitus
+                                                     urakka-id sopimus-id paallystyskohde-id paallystysilmoitus))]
+    (is (zero? (paallystys/pot2-massamenekki {:kokonaismassamaara 0.0M :pinta_ala 1M})))
+    (is (zero? (paallystys/pot2-massamenekki {:kokonaismassamaara 1M :pinta_ala 0.0M})))
+    (is (zero? (paallystys/pot2-massamenekki {:kokonaismassamaara 1M :leveys 0})))
+    (is (nil? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :pinta_ala])))
+    (is (zero? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 0 :massamenekki])))
+    (is (zero? (get-in paallystysilmoitus-kannassa-jalkeen [:paallystekerros 1 :massamenekki])))))
 
 (deftest tallenna-pot2-paallystysilmoitus-testaa-paallystys-hypyt
   (let [toimenpide pot2-domain/+masuunikuonan-sideainetyyppi-koodi+

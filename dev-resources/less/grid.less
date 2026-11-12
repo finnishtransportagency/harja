@@ -153,7 +153,7 @@
       }
     }
 
-    td:hover {
+    td.ilmoitus-nakyvissa {
       > .varoitukset,
       > .virheet,
       > .huomautukset {
@@ -818,6 +818,15 @@ tr.otsikko {
 
     .grid-valiotsikko-custom-komponentti {
       position: absolute;
+    }
+  }
+  &.tyhja-rivi {
+    background-color: @gray250;
+    color: @black-lighter;
+
+    > td {
+      text-align: center;
+      vertical-align: middle;
     }
   }
 }

@@ -9,6 +9,8 @@
             [harja.palvelin.integraatiot.api.tyokalut.validointi :as validointi]
             [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat]
             [harja.kyselyt.kommentit :as kommentit]
+            [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.yllapitokohteet :as q-yllapitokohteet]
             [harja.palvelin.komponentit.liitteet :refer [->Liitteet]]
             [harja.palvelin.integraatiot.api.tyokalut.liitteet :refer [tallenna-liitteet-laatupoikkeamalle]]
             [harja.palvelin.integraatiot.api.tyokalut.json :refer [aika-string->java-sql-date]]
@@ -20,43 +22,65 @@
   (tee-kirjausvastauksen-body {:ilmoitukset "Laatupoikkeama kirjattu onnistuneesti"
                                :varoitukset (when-not (empty? varoitukset) varoitukset)}))
 
-(defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria]
+(def yllapitokohdeurakkatyypit #{:paallystys :paikkaus :tiemerkinta})
+
+(defn yllapitokohdeurakka? [urakkatyyppi]
+  (contains? yllapitokohdeurakkatyypit urakkatyyppi))
+
+(defn hae-urakan-tyyppi [db urakka-id]
+  (keyword (:tyyppi (first (q-urakat/hae-urakan-tyyppi db urakka-id)))))
+
+(defn hae-laatupoikkeamalle-yllapitokohde
+  "Ylläpitourakalle etsitään ylläpitokohde annetun kohde kentän perusteella. Ylläpitokohde oletetaan löytyvän urakan ja nimen perusteella.
+  Jos tämä on huono, niin myöhemmi voidaan päivittää hakuun myös ylläpitokohdenumero, joka yksilöi kohteen tarkemmin.
+  Palauttaa ylläpitokohteen id:n, jos löytyy. Jos ei löydy, se ei haittaa. Kohde voi olla nil."
+  [db urakka-id kohde-nimi]
+  (let [tulos (first (q-yllapitokohteet/hae-yllapitokohde-urakan-nimella db {:urakka urakka-id :nimi kohde-nimi}))]
+    ;; Jätetaään virheellisen kohteen käsittely myöhemmäksi. Jos kohde ei löydy, niin se ei ole virhe, vaan kohde voi olla nil.
+    #_ (when-not tulos
+      (virheet/heita-viallinen-apikutsu-poikkeus
+        {:koodi virheet/+tuntematon-yllapitokohde+
+         :viesti (format "Kohdetta: %s ei löydy" kohde-nimi)}))
+    (:id tulos)))
+
+(defn tallenna-laatupoikkeama [db urakka-id kirjaaja data tr-osoite geometria yllapitokohde-id]
   (let [{:keys [tunniste kuvaus kohde aika sisaltaa-poikkeamaraportin]} data]
     (if (laatupoikkeamat/onko-olemassa-ulkoisella-idlla? db (:id tunniste) urakka-id)
       (:id (laatupoikkeamat/paivita-laatupoikkeama-ulkoisella-idlla<!
              db
-             (aika-string->java-sql-date aika)
-             kohde
-             kuvaus
-             geometria
-             (:tie tr-osoite)
-             (:aosa tr-osoite)
-             (:losa tr-osoite)
-             (:aet tr-osoite)
-             (:let tr-osoite)
-             (:id kirjaaja)
-             sisaltaa-poikkeamaraportin
-             (:id tunniste)
-             urakka-id))
+             {:aika (aika-string->java-sql-date aika)
+              :kohde kohde
+              :kuvaus kuvaus
+              :sijainti geometria
+              :tr_numero (:tie tr-osoite)
+              :tr_alkuosa (:aosa tr-osoite)
+              :tr_loppuosa (:losa tr-osoite)
+              :tr_alkuetaisyys (:aet tr-osoite)
+              :tr_loppuetaisyys (:let tr-osoite)
+              :yllapitokohde_id yllapitokohde-id
+              :muokkaaja (:id kirjaaja)
+              :sisaltaa_poikkeamaraportin sisaltaa-poikkeamaraportin
+              :ulkoinen_id (:id tunniste)
+              :urakka-id urakka-id}))
       (:id (laatupoikkeamat/luo-laatupoikkeama<!
              db
-             "harja-api"
-             urakka-id
-             (aika-string->java-sql-date aika)
-             "urakoitsija"
-             kohde
-             true
-             (:id kirjaaja)
-             kuvaus
-             geometria
-             (:numero tr-osoite)
-             (:aosa tr-osoite)
-             (:losa tr-osoite)
-             (:aet tr-osoite)
-             (:let tr-osoite)
-             nil
-             sisaltaa-poikkeamaraportin
-             (:id tunniste))))))
+             {:lahde "harja-api"
+              :urakka urakka-id,
+              :aika (aika-string->java-sql-date aika),
+              :tekija "urakoitsija",
+              :kohde kohde,
+              :selvitys true,
+              :luoja (:id kirjaaja),
+              :kuvaus kuvaus,
+              :sijainti geometria,
+              :tr_numero (:tie tr-osoite),
+              :tr_alkuosa (:aosa tr-osoite),
+              :tr_loppuosa (:losa tr-osoite),
+              :tr_alkuetaisyys (:aet tr-osoite),
+              :tr_loppuetaisyys (:let tr-osoite),
+              :yllapitokohde yllapitokohde-id,
+              :sisaltaa_laatupoikkeaman sisaltaa-poikkeamaraportin,
+              :ulkoinen_id (:id tunniste)})))))
 
 (defn tallenna-kommentit [db laatupoikkeama-id kirjaaja kommentit]
   (doseq [kommentin-data kommentit]
@@ -65,16 +89,19 @@
       (laatupoikkeamat/liita-kommentti<! db laatupoikkeama-id kommentti-id))))
 
 (defn tallenna [liitteiden-hallinta db urakka-id kirjaaja data]
-  (let [tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti data) (:loppusijainti data))
+  (let [urakkatyyppi (hae-urakan-tyyppi db urakka-id)
+        yllapitokohde-id (when (yllapitokohdeurakka? urakkatyyppi)
+                           (hae-laatupoikkeamalle-yllapitokohde db urakka-id (:kohde data)))
+        tr-osoite (sijainnit/hae-tierekisteriosoite db (:alkusijainti data) (:loppusijainti data))
         geometria (sijainnit/tee-geometria (:alkusijainti data) (:loppusijainti data))]
     (jdbc/with-db-transaction [db db]
-      (let [laatupoikkeama-id (tallenna-laatupoikkeama db urakka-id kirjaaja data tr-osoite geometria)
+      (let [laatupoikkeama-id (tallenna-laatupoikkeama db urakka-id kirjaaja data tr-osoite geometria yllapitokohde-id)
             kommentit (:kommentit data)
             liitteet (:liitteet data)]
         (tallenna-kommentit db laatupoikkeama-id kirjaaja kommentit)
         (tallenna-liitteet-laatupoikkeamalle db liitteiden-hallinta urakka-id laatupoikkeama-id kirjaaja liitteet)))
     (when-not tr-osoite (format "Annetulla sijainnilla ei voitu päätellä sijaintia tieverkolla (alku: %s, loppu %s)."
-                                (:alkusijainti data) (:loppusijainti data)))))
+                          (:alkusijainti data) (:loppusijainti data)))))
 
 (defn kirjaa-laatupoikkeama [liitteiden-hallinta db {id :id} data kirjaaja]
   (let [urakka-id (Integer/parseInt id)]
@@ -89,10 +116,10 @@
       http :lisaa-laatupoikkeama
       (POST "/api/urakat/:id/laatupoikkeama" request
         (kasittele-kutsu db integraatioloki
-                         :lisaa-laatupoikkeama request
-                         json-skeemat/laatupoikkeaman-kirjaus json-skeemat/kirjausvastaus
-                         (fn [parametrit data kayttaja db]
-                           (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja))
+          :lisaa-laatupoikkeama request
+          json-skeemat/laatupoikkeaman-kirjaus json-skeemat/kirjausvastaus
+          (fn [parametrit data kayttaja db]
+            (kirjaa-laatupoikkeama liitteiden-hallinta db parametrit data kayttaja))
           :kirjoitus)))
     this)
   (stop [{http :http-palvelin :as this}]

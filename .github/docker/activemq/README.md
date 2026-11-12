@@ -1,3 +1,0 @@
-## Activemq-imagen päivitys
-
-TBD

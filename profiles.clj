@@ -8,6 +8,12 @@
  ;; Näytä varoitukset, jos overrideja tai rangeja löytyy riippuvuuspuusta
  :pedantic-warn {:pedantic? :warn}
 
+
+ ;; CI-profiili: Yliajaa :jvm-opts suuremmalla heapilla ja G1GC:llä.
+ ;; Annetaan korkeahko 4g heap alkuun, jotta sitä ei tarvitse heti kasvattaa ajon aikana.
+ ;; GitHub Actions public repo runner (ubuntu-latest): 4 CPU / 16 GB RAM.
+ ;; Käytä CI:ssä: lein with-profile +ci ...
+ :ci {:jvm-opts ^:replace ["-Xms4g" "-Xmx8g" "-XX:+UseG1GC" "-XX:+TieredCompilation"]}
  :dev {:dependencies [
                       [com.bhauman/rebel-readline-cljs "0.1.5"]
                       [cider/piggieback "0.6.0"]
@@ -54,16 +60,6 @@
                             :HARJA_ITMF_BROKER_HOST "localhost"
                             :HARJA_ITMF_BROKER_AI_PORT 8171}}
  :dev-cljs {:source-paths ^:replace ["src/cljs" "src/cljc" "src/cljs-dev" "src/shared-cljc" "script" "laadunseuranta/cljc-src"]}
- :dev-container {:target-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target"))
-                 :resource-paths ^:replace [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
-                                            "dev-resources/tmp"
-                                            "resources"]
-                 :jvm-opts ["-Xverify:none"]
-                 :compile-path #=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/harja-target/classes"))
-                 :clean-targets ^{:protect false
-                                  :replace true} [#=(eval (str (System/getenv "DC_JAETTU_KANSIO") "/" (System/getenv "BRANCH") "/dev-resources"))
-                                                  "dev-resources/tmp"
-                                                  :target-path]}
  :dev-emacs {:plugins [[cider/cider-nrepl "0.57.0"]
                        [refactor-nrepl "3.11.0"]]}
  :repl {:dependencies [[cider/piggieback "0.6.0"]]
@@ -79,11 +75,7 @@
                        :timeout 120000
                        :nrepl-middleware [cider.piggieback/wrap-cljs-repl]}}
  ;; Test-dependencyt, joita ei tarvita dev-profiilissa
- :test {:dependencies [
-                       ;; Selenium + webdriver depsut pois käytöstä, koska niitä ei enää ajeta
-                       #_[clj-webdriver "0.7.2"]
-                       #_[org.seleniumhq.selenium/selenium-java "3.8.1"]
-                       #_[org.seleniumhq.selenium/selenium-firefox-driver "3.8.1"]]}
+ :test {:dependencies []}
 
  ;; TODO: Hankkiudu eroon PhantomJS:stä
  ;; Phantomjs testejä varten tarvitaan erillinen profiili, koska se ei tue enää uudempia kirjastoversioita ja JavaScriptin

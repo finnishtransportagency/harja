@@ -19,7 +19,7 @@
 migraatiot () {  
     local branch="${1}"
     local regex="V1_([0-9]+)__.*"
-    for f in $(git ls-tree --name-only -r origin/${branch})
+    for f in $(git ls-tree --full-tree --name-only -r origin/${branch} -- tietokanta/src/main/resources/db/migration/)
     do
         if [[ $f =~ $regex ]]
         then
@@ -38,7 +38,7 @@ viimeisin_migraatio () {
 
 
 branch_a="${1:-develop}"
-branch_b="${1:-$(git branch --show-current)}"
+branch_b="${2:-$(git branch --show-current)}"
 
 versio_a=$(viimeisin_migraatio $branch_a)
 versio_b=$(viimeisin_migraatio $branch_b)

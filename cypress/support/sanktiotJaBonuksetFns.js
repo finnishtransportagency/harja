@@ -1,0 +1,79 @@
+// Yhteiset apurit "Sanktiot ja bonukset" -näkymän testeille
+// (s2_sanktiot.cy.js ja s2_bonukset.cy.js).
+//
+// HUOM! apurit.js sisältää oman avaaSanktiotJaBonukset-funktion arvonvähennystesteille.
+// Tässä on erillinen toteutus, koska nämä testit asettavat viewportin itse
+// ja käyttävät valinnatValitse-komentoa urakkatyypin valintaan.
+
+export const clickTimeout = 12000;
+export const pageloadTimeout = 30000;
+
+// Testiurakat ja niiden elinkaaren vaiheet (ELY / "evk")
+export const testiurakkaMhu25 = "Rovaniemen MHU testiurakka (1. hoitovuosi)";
+export const testiurakkaMhu24 = "POP MHU Suomussalmi 2024-2029";
+export const testiurakkaMhu19 = "Oulun MHU 2019-2024";
+export const testiurakkaMhu26 = "Sodankylän MHU 2026-2031";
+export const testiurakkaMhu23 = "Raahen MHU 2023-2028";
+export const evkLappi = "Lappi";
+export const evkPohjoisSuomi = "Pohjois-Suomi";
+
+// Worktree-ajossa CYPRESS_tietokantaKontti osoittaa käytettävän tietokantakontin.
+export function siivoaSanktiotKannasta(kohde) {
+    const tietokantaKontti = Cypress.env('tietokantaKontti');
+    if (!tietokantaKontti && new URL(Cypress.config('baseUrl')).port !== '3000') {
+        throw new Error('Aseta CYPRESS_tietokantaKontti kohdeinstanssin tietokantakontin nimeksi');
+    }
+    if (tietokantaKontti && !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(tietokantaKontti)) {
+        throw new Error('Tietokantakontin nimi on virheellinen');
+    }
+
+    const komento = tietokantaKontti
+        ? cy.wrap(`/usr/local/bin/docker exec ${tietokantaKontti} `)
+        : cy.terminaaliKomento();
+    komento.then((terminaaliKomento) => {
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE lp.kohde = '" + kohde + "');\"");
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM laatupoikkeama WHERE kohde = '" + kohde + "';\"");
+    });
+}
+
+// Siivoa testidatan bonukset kannasta (erilliskustannus-taulusta)
+export function siivoaBonuksetKannasta(lisatieto) {
+    cy.terminaaliKomento().then((terminaaliKomento) => {
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM erilliskustannus WHERE lisatieto = '" + lisatieto + "';\"");
+    });
+}
+
+// Navigoi urakan Laadunseuranta > Sanktiot ja bonukset -näkymään
+export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
+    cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot')
+    cy.intercept('POST', '_/hae-urakan-sanktio-konfiguraatio').as('sanktiokonfiguraatio')
+
+    cy.visit("/")
+
+    cy.get('.ladataan-harjaa', {timeout: pageloadTimeout}).should('not.exist')
+    cy.get('.haku-lista-item', {timeout: pageloadTimeout})
+        .filter((_, element) => element.textContent.trim().endsWith(urakkaEvk))
+        .should('have.length', 1)
+        .click()
+    cy.get('.valittu-hallintayksikko', {timeout: pageloadTimeout})
+        .should('have.text', urakkaEvk + ' ')
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
+    cy.contains('label', 'Näytä päättyneet')
+        .parent()
+        .find('input[type="checkbox"]')
+        .check()
+        .should('be.checked');
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
+    cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
+    cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
+    cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
+    cy.wait('@sanktiot', {timeout: clickTimeout})
+        .its('response.statusCode').should('be.within', 200, 299)
+    cy.wait('@sanktiokonfiguraatio', {timeout: clickTimeout})
+        .its('response.statusCode').should('be.within', 200, 299)
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: clickTimeout}).should('not.exist')
+}

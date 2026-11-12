@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/usr/bin/env sh
 
 echo "Tuhotaan harjadb Docker-kontti"
 # Optiolla -f palautetaan exit-code 0 vaikka konttia ei ole olemassa

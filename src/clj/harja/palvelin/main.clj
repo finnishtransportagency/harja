@@ -69,6 +69,7 @@
     [harja.palvelin.palvelut.suunnittelu.suolarajoitus-palvelu :as suolarajoitus-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tarjous-palvelu :as tarjous-palvelu]
     [harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu :as tehtavat-maarat-palvelu]
+    [harja.palvelin.palvelut.suunnittelu.kalustoresurssit-palvelu :as kalustoresurssit-palvelu]
     [harja.palvelin.palvelut.suunnittelu.uusi-kustannussuunnitelma-palvelu :as uusi-kustannussuunnitelma-palvelu]
     [harja.palvelin.palvelut.materiaalit :as materiaalit]
     [harja.palvelin.palvelut.info :as info]
@@ -85,6 +86,7 @@
     [harja.palvelin.palvelut.hallinta.rahavaraukset :as rahavaraukset-hallinta]
     [harja.palvelin.palvelut.hallinta.toimenkuvat-palvelu :as toimenkuvat-hallinta]
     [harja.palvelin.palvelut.hallinta.urakkahenkilot :as urakkahenkilot-hallinta]
+    [harja.palvelin.palvelut.hallinta.urakkaparametrit :as urakkaparametrit-hallinta]
     [harja.palvelin.palvelut.urakkatilanne.kojelauta :as kojelauta-hallinta]
     [harja.palvelin.palvelut.selainvirhe :as selainvirhe]
     [harja.palvelin.palvelut.lupaus.lupaus-palvelu :as lupaus-palvelu]
@@ -141,6 +143,7 @@
     [harja.palvelin.integraatiot.api.pistetoteuma :as api-pistetoteuma]
     [harja.palvelin.integraatiot.api.reittitoteuma :as api-reittitoteuma]
     [harja.palvelin.integraatiot.api.siltatarkastukset :as api-siltatarkastukset]
+    [harja.palvelin.integraatiot.api.liitteet :as api-liitteet]
     [harja.palvelin.integraatiot.api.tarkastukset :as api-tarkastukset]
     [harja.palvelin.integraatiot.api.tyokoneenseuranta :as api-tyokoneenseuranta]
     [harja.palvelin.integraatiot.api.turvallisuuspoikkeama :as turvallisuuspoikkeama]
@@ -494,6 +497,9 @@
       :tehtavat-maarat (component/using
                          (tehtavat-maarat-palvelu/->TehtavatJaMaarat)
                          [:http-palvelin :db])
+      :kalustoresurssit (component/using
+                          (kalustoresurssit-palvelu/->Kalustoresurssit)
+                          [:http-palvelin :db])
       :materiaalit (component/using
                      (materiaalit/->Materiaalit)
                      [:http-palvelin :db])
@@ -540,7 +546,7 @@
 
       :tarkastukset (component/using
                       (tarkastukset/->Tarkastukset)
-                      [:http-palvelin :db :karttakuvat])
+                      [:http-palvelin :db :db-replica :karttakuvat])
 
       :talvihoitoreitit (component/using
                           (talvihoitoreitit/->Talvihoitoreitit)
@@ -572,7 +578,7 @@
 
       :valikatselmukset (component/using
                           (valikatselmukset/->Valikatselmukset)
-                          [:http-palvelin :db])
+                          [:http-palvelin :db :pdf-vienti])
 
       :integraatioloki-palvelu (component/using
                                  (integraatioloki-palvelu/->Integraatioloki)
@@ -698,6 +704,9 @@
       :api-siltatarkastukset (component/using
                                (api-siltatarkastukset/->Siltatarkastukset)
                                [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
+      :api-liitteet (component/using
+              (api-liitteet/->Liitteet)
+              [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
       :api-tarkastukset (component/using
                           (api-tarkastukset/->Tarkastukset)
                           [:http-palvelin :db :integraatioloki :liitteiden-hallinta])
@@ -889,6 +898,11 @@
       (component/using
         (urakkahenkilot-hallinta/->UrakkaHenkilotHallinta)
         [:http-palvelin :db :excel-vienti])
+
+      :urakkaparametrit-hallinta
+      (component/using
+        (urakkaparametrit-hallinta/->UrakkaParametritHallinta)
+        [:http-palvelin :db])
 
       :urakkatilanne
       (component/using

@@ -29,6 +29,7 @@
 (defn kuvaile-kasittelytapa [kasittelytapa]
   (case kasittelytapa
     :tyomaakokous "Työmaakokous"
+    :valikatselmus "Välikatselmus"
     :puhelin "Puhelimitse"
     :kommentit "Harja-kommenttien perusteella"
     :muu "Muu tapa"

@@ -15,3 +15,31 @@ VALUES
  ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2008-10-01', '2009-09-30', -5.2, -9.0, -9.3),
  ((SELECT id FROM urakka WHERE nimi='Pudasjärven alueurakka 2007-2012'), '2009-10-01', '2010-09-30', -5.2, -9.0, -9.3),
   ((SELECT id FROM urakka WHERE nimi='Porin alueurakka 2007-2012'), '2009-10-01', '2010-09-30', 1.2, -3.0, -3.9);
+
+
+-- Iin urakalle dataa
+DO
+$$
+    DECLARE
+        urakkaid INTEGER;
+    BEGIN
+
+        SELECT id INTO urakkaid FROM urakka WHERE nimi = 'Iin MHU 2021-2026';
+
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                       keskilampotila_1971_2000, keskilampotila_1991_2020)
+        VALUES (36, '2021-10-01', '2022-09-30', -9.20, -9.90, null, null);
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                       keskilampotila_1971_2000, keskilampotila_1991_2020)
+        VALUES (36, '2022-10-01', '2023-09-30', -6.30, -9.90, null, -8.80);
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                       keskilampotila_1971_2000, keskilampotila_1991_2020)
+        VALUES (36, '2023-10-01', '2024-09-30', -11.20, -9.90, null, -8.80);
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                       keskilampotila_1971_2000, keskilampotila_1991_2020)
+        VALUES (36, '2024-10-01', '2025-09-30', -6.80, -9.90, null, -8.80);
+        INSERT INTO lampotilat (urakka, alkupvm, loppupvm, keskilampotila, keskilampotila_1981_2010,
+                                       keskilampotila_1971_2000, keskilampotila_1991_2020)
+        VALUES (36, '2025-10-01', '2026-09-30', -12.10, -9.90, null, -8.80);
+    END
+$$;

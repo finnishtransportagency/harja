@@ -19,13 +19,13 @@
 ;; Testataan eri tyyppisten elementtien muodostus perustasolla
 
 (deftest otsikko
-  (is (= [:fo:block {:padding-top "5mm" :font-size "10pt" :font-weight 600} "TÄMÄ ON OTSIKKO"]
+  (is (= [:fo:block {:padding-top "5mm" :font-size "14pt" :font-weight 600} "TÄMÄ ON OTSIKKO"]
          (muodosta-pdf [:otsikko "TÄMÄ ON OTSIKKO"]))))
 
 (deftest teksti
   (is (= [:fo:block
           {:color nil
-           :font-size "10pt"}
+           :font-size "9pt"}
           "TEKSTIÄ"]
          (muodosta-pdf [:teksti "TEKSTIÄ"]))))
 
@@ -207,6 +207,14 @@
                [:fo:table-cell [:fo:block {:text-align "right" :font-weight "bold"} "toinen juttu:"]]
                [:fo:table-cell [:fo:block {:margin-left "5mm"} "4242"]]]))))
 
+(deftest sininen-laatikko-ei-piirra-estettya-divideria
+  (let [fo (muodosta-pdf [:sininen-laatikko {:otsikko "Yhteenveto"
+                                             :nayta-hr? false}
+                          [{:avain "Sanktiot" :arvo 100 :fmt :raha}
+                           {:avain "Arvovähennykset" :arvo 0 :fmt :raha}]])
+        tyylit (filter map? (tree-seq coll? seq fo))]
+    (is (not-any? #(= "solid 0.3mm gray" (:border-bottom %)) tyylit))))
+
 
 ;; Testataan koko raportti, eli täysi XSL-FO dokumentin luonti ja siitä PDF:n generointi
 
@@ -252,3 +260,13 @@
     (io/copy (luo-raportti-pdf-bytes)
              (java.io.File. "raportti.pdf"))
     (sh/sh "open" "raportti.pdf"))
+
+(deftest taulukon-otsikot-voi-piilottaa
+  (let [fo (muodosta-pdf [:taulukko {:otsikko "Taulukko"
+                                     :piilota-otsikot? true}
+                           [{:otsikko "Otsikko"}]
+                           [["Rivin data"]]])]
+    (is (not-any? #(and (vector? %)
+                        (= :fo:table-header (first %)))
+                   (tree-seq coll? seq fo)))
+    (is (= "Taulukko" (nth fo 2)))))

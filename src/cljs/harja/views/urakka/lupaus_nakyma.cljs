@@ -153,7 +153,8 @@
             (:id urakka))
           ;; Luvattuja pisteitä ei saa enää muokata, jos urakalle on tehty välikatselmus
           (false? (get-in app [:yhteenveto :valikatselmus-tehty-urakalle?])))
-        input-id (str "input-sitoutuminen-pisteet")]
+        input-id (str "input-sitoutuminen-pisteet")
+        kokonaismaksimi (reduce + 0 (map :pisteet-max (:lupausryhmat app)))]
     (when muokkaa?
       ;; Aseta focus input kenttään, jos muokkaustila on laitettu päälle
       (yleiset/fn-viiveella
@@ -172,10 +173,7 @@
                             :vayla-tyyli? true
                             :input-luokka "lupaus-sitoutumis-pisteet"
                             :kokonaisluku? true
-                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0
-                                                              ;; Asetetaan pisteiden yläraja 200 2025 alkaville urakoille ja 100 muille
-                                                              (if (= 2025 (pvm/vuosi (:alkupvm urakka))) 200 100)
-                                                              1))
+                            :validoi-kentta-fn (fn [numero] (validointi/validoi-numero numero 0 kokonaismaksimi 1))
                             :on-key-down #(when (or (= 13 (-> % .-keyCode)) (= 13 (-> % .-which)))
                                             (e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset))))
                             :on-blur #(e! (lupaus-tiedot/->TallennaLupausSitoutuminen (:urakka @tila/yleiset)))}
@@ -375,8 +373,22 @@
          [yhteenveto e! app urakka]
          [ennuste e! app]
          ;; Näytetään vuonna 2021 tai myöhemmin alkaville urakoille lupausryhmät
-         (when (>= (pvm/vuosi (:alkupvm urakka)) 2021)
-           (when-not (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
+         (let [valittu-hoitokausi-alkaa (first (:valittu-hoitokausi app))
+               nyt (or (:nykyhetki app) (pvm/nyt))
+               hoitovuosi-tuleva? (pvm/jalkeen? valittu-hoitokausi-alkaa nyt)
+               paivia-valissa (if valittu-hoitokausi-alkaa (pvm/paivia-valissa valittu-hoitokausi-alkaa nyt) 10000) ;; Valittu hoitokausi voi olla hetken null
+               lupausryhmat-naytetaan? (or
+                                         ;; Perustilanne, jossa ennuste on jo olemassa
+                                         (not= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
+                                         ;; Ennustetta ei näytetä, mutta hoitovuosi on tulossa ja välissä ei ole liikaa päiviä
+                                         (and
+                                           (= :ei-viela-ennustetta (get-in app [:yhteenveto :ennusteen-tila]))
+                                           hoitovuosi-tuleva?
+                                           (<= paivia-valissa 120)) ;; Noin neljö kuukautta kesä-, heinä-, elo-, syyskuu
+                                         ;; Jos hoitovuosi on mennyt, niin näytetään aina
+                                         (not hoitovuosi-tuleva?))]
+           (when (and (>= (pvm/vuosi (:alkupvm urakka)) 2021)
+                   lupausryhmat-naytetaan?)
              [:div.lupaukset-rivi {:style (merge {}
                                             (when (not (empty? (:lupausryhmat app)))
                                               {:border-top "1px solid #D6D6D6"}))}

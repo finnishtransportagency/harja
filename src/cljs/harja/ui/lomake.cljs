@@ -282,12 +282,13 @@ ja kaikki pakolliset kentät on täytetty"
                    (+ palstoja kentan-palstat)
                    skeemat)))))))
 
-(defn kentan-vihje-inline [vihje]
+(defn kentan-vihje-inline [vihje & {:keys [ilman-ikonia? rivittamaton?]}]
   (let [vihjeet (if (vector? vihje) vihje [vihje])]
-    [:div {:class
-           (str "inline-block yleinen-pikkuvihje")}
+    [:div {:class (str "inline-block yleinen-pikkuvihje lomake-vihje"
+                       (when rivittamaton? " lomake-vihje-rivittamaton"))}
      [:div.vihjeen-sisalto
-      (harja.ui.ikonit/livicon-info-sign)
+      (when-not ilman-ikonia?
+        (harja.ui.ikonit/livicon-info-sign))
       [:span (str " " (first vihjeet))]
       (map-indexed
         (fn [i vihje]
@@ -303,12 +304,14 @@ ja kaikki pakolliset kentät on täytetty"
          ^{:key (str "vihje-" i)}
          [:div vihje]) vihjeet)]))
 
-(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot tyyppi] :as skeema}]
+(defn kentan-vihje [{:keys [vihje vihje-leijuke vihje-leijuke-optiot vihje-ilman-ikonia? vihje-rivittamaton? tyyppi] :as skeema}]
   [:span
    (when vihje
      (if (or (= :checkbox tyyppi) (= :checkbox-group tyyppi))
        [checkboxin-vihje vihje]
-       [kentan-vihje-inline vihje]))
+       [kentan-vihje-inline vihje
+        :ilman-ikonia? vihje-ilman-ikonia?
+        :rivittamaton? vihje-rivittamaton?]))
    (when vihje-leijuke
      [leijuke/vihjeleijuke vihje-leijuke-optiot vihje-leijuke])])
 
@@ -374,15 +377,19 @@ ja kaikki pakolliset kentät on täytetty"
           (when (not= @arvo
                       data-arvo)
             (do
-              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo))
+              (loki/log "data on muuttunut ulkopuolisesta lähteestä" (pr-str @arvo) "->" (pr-str data-arvo) "nimi:" (pr-str nimi))
               (reset! init-arvo data-arvo)
               (reset! arvo data-arvo)))))
       (let [lomakkeen-opts (merge opts (assoc s :lomake? true))
             tyyppi-string? (= (get lomakkeen-opts :tyyppi) :string)
             aputeksti (get lomakkeen-opts :aputeksti)
             kentta (cond
-                     (= tyyppi :komponentti) [:div.komponentti (apply komponentti {:muokkaa-lomaketta (muokkaa s)
-                                                                                   :data              data} komponentti-args)]
+                     (= tyyppi :komponentti) (let [sisalto (apply komponentti {:muokkaa-lomaketta (muokkaa s)
+                                                                               :data              data} komponentti-args)]
+                                               (if muokattava?
+                                                 [:div.komponentti sisalto]
+                                                 [:div {:class (str "form-control-static lomake-arvo " kentan-arvon-luokka)}
+                                                  sisalto]))
                      (= tyyppi :reagent-komponentti) [:div.komponentti (vec (concat [komponentti {:muokkaa-lomaketta (muokkaa s)
                                                                                                   :data              data}]
                                                                               komponentti-args))]

@@ -514,7 +514,7 @@
 (defmethod nayta-arvo :positiivinen-numero [kentta data]
   [nayta-arvo (assoc kentta :tyyppi :numero) data])
 
-(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen? virhe?] :as kentta} data]
+(defmethod tee-kentta :euro [{:keys [fmt teksti-oikealla nayta-plus ei-yksikkoa? vaadi-ei-negatiivinen? vaadi-negatiivinen? virhe?] :as kentta} data]
   [tee-kentta (assoc kentta
                 :tyyppi :numero
                 :fmt (or fmt (partial fmt/euro-opt false nayta-plus))
@@ -523,6 +523,7 @@
                 :desimaalien-maara 2
                 :veda-oikealle? true
                 :vaadi-ei-negatiivinen? (or vaadi-ei-negatiivinen? false)
+                :vaadi-negatiivinen? (or vaadi-negatiivinen? false)
                 :virhe? virhe?)
    data])
 
@@ -632,7 +633,7 @@
 
 (defn vayla-checkbox
   [{:keys [input-id lukutila? disabled? arvo data piilota-checkbox?
-           teksti valitse! checkbox-style label-luokka label-id indeterminate]}]
+           teksti valitse! checkbox-style label-luokka label-id pieni-teksti? indeterminate]}]
   (let [arvo (or arvo false)
         input-id (or input-id
                    (gensym "checkbox-input-id-"))
@@ -659,11 +660,12 @@
                                       label-luokka
                                       (when disabled? "disabled")
                                       (when indeterminate "indeterminate")
-                                      (when piilota-checkbox? "autofill-teksti"))
+                                      (when piilota-checkbox? "autofill-teksti")
+                                      (when pieni-teksti? "lomake-checkbox-pieni"))
                              :on-key-down #()
                              :for input-id
                              :style (or checkbox-style {})}
-      teksti]]))
+      [:span.lomake-checkbox-teksti teksti]]]))
 
 (defn kylla-ei-valinta
   "Kolmitilainen valinta: [✓] [?] [✗]"
@@ -772,7 +774,7 @@
 
 ;; Boolean-tyyppinen checkbox, jonka arvo on true tai false
 (defmethod tee-kentta :checkbox [{:keys [teksti nayta-rivina? label-luokka piilota-checkbox?
-                                         vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
+                                         pieni-teksti? vayla-tyyli? disabled? iso-clickalue? label-id input-id]} data]
   (let [boolean-arvo? (not (or (instance? ratom/RAtom data) (instance? ratom/Wrapper data) (instance? ratom/RCursor data)))
         input-id (or input-id (str "harja-checkbox-" (gensym)))
         paivita-valitila #(when-let [node (.getElementById js/document input-id)]
@@ -781,7 +783,7 @@
     (komp/luo
       (when-not boolean-arvo? (komp/piirretty paivita-valitila))
       (when-not boolean-arvo? (komp/kun-muuttui paivita-valitila))
-      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue? valitse! label-luokka]} data]
+      (fn [{:keys [teksti nayta-rivina? disabled? iso-clickalue? valitse! label-luokka pieni-teksti?]} data]
         (let [_ (when boolean-arvo? (assert (ifn? valitse!) "Jos checkboxin datan tyyppi on boolean atomin sijasta, valitse! pitää olla funktio"))
               arvo (cond
                      boolean-arvo? data
@@ -805,6 +807,7 @@
                                            :valitse! valitse!
                                            :arvo arvo
                                            :label-luokka label-luokka
+                                           :pieni-teksti? pieni-teksti?
                                            :indeterminate (= ::indeterminate data)}]]
              (if nayta-rivina?
                [:table.boolean-group
@@ -815,11 +818,12 @@
 
 ;; vayla-tyylinen checkbox halutaan näyttää myös lomakkeella myös lukutilassa,
 ;; Pidetään muuntyylisillä default :nayta-arvo-toiminnallisuus.
-(defmethod nayta-arvo :checkbox [{:keys [teksti]} data]
+(defmethod nayta-arvo :checkbox [{:keys [teksti pieni-teksti?]} data]
   [:div.boolean
    (vayla-checkbox {:data data
                     :input-id (str "harja-checkbox" (gensym))
                     :teksti teksti
+                    :pieni-teksti? pieni-teksti?
                     :disabled? true
                     :lukutila? true ;; read only tilan ero vain disablediin: ei ole niin "harmaa". Kumpaakaan ei voi muokata
                     :arvo @data})])
@@ -1596,6 +1600,7 @@
 (def ^:const tr-osoite-domain-avaimet [::trd/tie ::trd/aosa ::trd/aet ::trd/losa ::trd/let])
 (def ^:const tr-osoite-raaka-avaimet [:numero :alkuosa :alkuetaisyys :loppuosa :loppuetaisyys])
 
+
 (defmethod tee-kentta :tierekisteriosoite [{:keys [ala-nayta-virhetta-komponentissa?
                                                    sijainti pakollinen? tyhjennys-sallittu?
                                                    avaimet voi-valita-kartalta? lataa-piirrettaessa-koordinaatit?]} data]
@@ -1672,14 +1677,18 @@
                   (and (false? lataa-piirrettaessa-koordinaatit?) (not= @vanha-osoite-atom @uusi-osoite-atom))
                   ;; Lataa koordinaatit, jos koordinaatit puuttuvat
                   (and lataa-piirrettaessa-koordinaatit? (nil? (:coordinates @uusi-osoite-atom))))
-            (tee-tr-haku @uusi-osoite-atom))))
+            ;; Renderaa nykyinen frame ennen TR-haun tekemistä, estää stack-overflow
+            (js/setTimeout #(tee-tr-haku @uusi-osoite-atom) 0))))
       (komp/kun-muuttuu
         (fn [{sijainti :sijainti} _]
-          (if-not sijainti
-            (tasot/poista-geometria! :tr-valittu-osoite)
-            (do (reset! alkuperainen-sijainti @sijainti)
-              (vreset! sijainti-atom sijainti)
-              (nayta-kartalla @sijainti)))))
+          ;; Renderaa nykyinen frame ennen sijainnin päivittämistä, estää stack-overflow
+          (js/setTimeout
+            #(if-not sijainti
+               (tasot/poista-geometria! :tr-valittu-osoite)
+               (do (reset! alkuperainen-sijainti @sijainti)
+                 (vreset! sijainti-atom sijainti)
+                 (nayta-kartalla @sijainti)))
+            0)))
       (when voi-valita-kartalta?
         (komp/kuuntelija :kartan-koko-vaihdettu #(when-let [sijainti-atom @sijainti-atom]
                                                    (keskita-kartta! @sijainti-atom))))
@@ -1743,66 +1752,63 @@
 
            (let [optiot {:pakollinen? pakollinen?
                          :alaotsikot? alaotsikot?}]
-             [:div {:style {:width "fit-content"}}
-              [tierekisterikentat
-               optiot
-               [tr-kentan-elementti lomake? muuta! blur
-                "Tie" numero numero-avain (or disabled?
-                                            @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
-               [tr-kentan-elementti lomake? muuta! blur
-                "aosa" alkuosa alkuosa-avain (or disabled?
-                                               @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
-               [tr-kentan-elementti lomake? muuta! blur
-                "aet" alkuetaisyys alkuetaisyys-avain (or disabled?
-                                                        @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
-               [tr-kentan-elementti lomake? muuta! blur
-                "losa" loppuosa loppuosa-avain (or disabled?
-                                                 @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
-               [tr-kentan-elementti lomake? muuta! blur
-                "let" loppuetaisyys loppuetaisyys-avain (or disabled?
-                                                          @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
-               tr-otsikot?
+             [tierekisterikentat
+              optiot
+              [tr-kentan-elementti lomake? muuta! blur
+               "Tie" numero numero-avain (or disabled?
+                                           @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "aosa" alkuosa alkuosa-avain (or disabled?
+                                              @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "aet" alkuetaisyys alkuetaisyys-avain (or disabled?
+                                                       @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "losa" loppuosa loppuosa-avain (or disabled?
+                                                @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+              [tr-kentan-elementti lomake? muuta! blur
+               "let" loppuetaisyys loppuetaisyys-avain (or disabled?
+                                                         @karttavalinta-kaynnissa?) vayla-tyyli? luokat]
+              tr-otsikot?
+              (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
+                [napit/poista nil
+                 #(do (tasot/poista-geometria! :tr-valittu-osoite)
+                    (reset! data {})
+                    (reset! @sijainti-atom nil)
+                    (reset! virheet nil))
+                 {:luokka "nappi-tyhjenna"
+                  :disabled (empty? @data)}])
 
-               (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
-                 (when (vkm/virhe? sijainti)
-                   [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))
-               piste?
-               vaadi-vali?]
+              (when (and (not piilota-nappi?) voi-valita-kartalta?)
+                (if-not @karttavalinta-kaynnissa?
+                  [napit/yleinen-toissijainen
+                   (tr-valintanapin-teksti osoite-alussa osoite)
+                   #(do
+                      (reset! osoite-ennen-karttavalintaa osoite)
+                      (when-let [sijainti @sijainti-atom]
+                        (reset! sijainti-ennen-karttavalintaa @sijainti))
+                      (reset! data {})
+                      (reset! karttavalinta-kaynnissa? true))
+                   {:ikoni (ikonit/map-marker)
+                    :disabled disabled?}]
+                  [tr/karttavalitsin
+                   {:kun-peruttu #(do
+                                    (reset! data @osoite-ennen-karttavalintaa)
+                                    (when-let [sijainti @sijainti-atom]
+                                      (reset! sijainti @sijainti-ennen-karttavalintaa))
+                                    (reset! karttavalinta-kaynnissa? false))
+                    :paivita #(swap! data merge (normalisoi %))
+                    :kun-valmis #(do
+                                   (reset! data (normalisoi %))
+                                   (reset! karttavalinta-kaynnissa? false)
+                                   (log "Saatiin tr-osoite!")
+                                   (go (>! tr-osoite-ch %)))}]))
 
-              [:div {:style {:padding "16px 0"}}
-               (when (and (not @karttavalinta-kaynnissa?) tyhjennys-sallittu? voi-valita-kartalta?)
-                 [napit/poista nil
-                  #(do (tasot/poista-geometria! :tr-valittu-osoite)
-                     (reset! data {})
-                     (reset! @sijainti-atom nil)
-                     (reset! virheet nil))
-                  {:luokka "nappi-tyhjenna"
-                   :disabled (empty? @data)}])
-
-               (when (and (not piilota-nappi?) voi-valita-kartalta?)
-                 (if-not @karttavalinta-kaynnissa?
-                   [napit/yleinen-toissijainen
-                    (tr-valintanapin-teksti osoite-alussa osoite)
-                    #(do
-                       (reset! osoite-ennen-karttavalintaa osoite)
-                       (when-let [sijainti @sijainti-atom]
-                         (reset! sijainti-ennen-karttavalintaa @sijainti))
-                       (reset! data {})
-                       (reset! karttavalinta-kaynnissa? true))
-                    {:ikoni (ikonit/map-marker)
-                     :disabled disabled?}]
-                   [tr/karttavalitsin
-                    {:kun-peruttu #(do
-                                     (reset! data @osoite-ennen-karttavalintaa)
-                                     (when-let [sijainti @sijainti-atom]
-                                       (reset! sijainti @sijainti-ennen-karttavalintaa))
-                                     (reset! karttavalinta-kaynnissa? false))
-                     :paivita #(swap! data merge (normalisoi %))
-                     :kun-valmis #(do
-                                    (reset! data (normalisoi %))
-                                    (reset! karttavalinta-kaynnissa? false)
-                                    (log "Saatiin tr-osoite! " (pr-str %))
-                                    (go (>! tr-osoite-ch %)))}]))]])])))))
+              (when-let [sijainti (and hae-sijainti sijainti @sijainti)]
+                (when (vkm/virhe? sijainti)
+                  [:div.virhe (vkm/pisteelle-ei-loydy-tieta sijainti)]))
+              piste?
+              vaadi-vali?])])))))
 
 (defmethod tee-kentta :sijaintivalitsin
   ;; Tekee napit paikannukselle ja sijainnin valitsemiselle kartalta.

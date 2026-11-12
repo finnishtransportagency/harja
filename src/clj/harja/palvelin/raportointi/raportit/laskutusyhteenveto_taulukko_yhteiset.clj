@@ -245,9 +245,9 @@
                 :gridin-luokka "laskutusraja-grid"
                 :raportin-tunniste :tyomaa-yhteenveto}
      (rivi
-       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}
+       {:otsikko " " :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :leveys-pdf 36 :tyyppi :varillinen-teksti}
        {:otsikko (if valittu-aikavali? (or vapaa-aikavali-teksti aikavali) laskutettu-teksti)
-        :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :tyyppi :varillinen-teksti}
+        :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 15 :leveys-pdf 29 :tyyppi :varillinen-teksti}
        (when kyseessa-kk-vali?
-         {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :tyyppi :varillinen-teksti}))
+         {:otsikko laskutetaan-teksti :otsikkorivi-luokka "otsikko-ei-taustaa" :leveys 33 :leveys-pdf 29 :tyyppi :varillinen-teksti}))
      rivit]))

@@ -146,9 +146,16 @@ div.valilehti {
   left: 48px;
   text-decoration: none;
 }
+
+
 .testiharja {
   background: @green-lighter;
 }
+
+.aws-testiharja {
+  background: @blue-lighter;
+}
+
 .selected {
   color: blue;
 }
@@ -329,6 +336,9 @@ tr.uusitehtavakoodi td {
       width: 18px;
     }
   }
+  &.reunan-voimakkuus-vahva {
+    border-color: @lemon-dark-data;
+  }
   > .infolaatikon-ikoni {
     font-size: 22px;
     padding: @valistys-8 0;
@@ -344,6 +354,9 @@ tr.uusitehtavakoodi td {
     margin-bottom: auto;
     margin-top: auto;
     font-size: 1.5rem;
+  }
+  &.koko-levea {
+    max-width: 100%;
   }
   padding-left: 16px;
   padding-right: 16px;

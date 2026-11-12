@@ -71,7 +71,7 @@ INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = 2 AND tyyppi = 'akillinen-hoitotyo'));
 INSERT INTO kustannussuunnitelma (maksuera) VALUES ((SELECT numero FROM maksuera WHERE toimenpideinstanssi = 2 AND tyyppi = 'muu'));
 
--- Lapin MHU urakat
+-- Lapin MHU urakat + kokkola24
 
 DO $$
 DECLARE
@@ -87,7 +87,8 @@ DECLARE
          'Pellon MHU testiurakka (3. hoitovuosi)', 
          'Kemin MHU testiurakka (5. hoitovuosi)',
          'POP MHU Kajaani 2025-2030',
-         'Kittilän MHU 2025-2030'
+         'Kittilän MHU 2025-2030',
+         'EPO MHU Kokkola 2024-2029, P'
          )
   );
   toimenpide_koodi_ TEXT;

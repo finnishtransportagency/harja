@@ -112,12 +112,16 @@ export function muokkaaLaajennaRivinArvoa(taulukonId, laajennaRivinIndex, rivinI
             if (blurEvent) {
                 cy.wrap($input).blur();
             }
+        })
+        .then(($input) => {
+            // Asetetaan focus takaisin, että "Kopioi allaoleviin" nappula tulee takaisin näkyviin.
+            cy.wrap($input).focus();
         });
 
     // Odota hetki, jotta tallennusfunktio triggeröityy varmasti.
     // Välillä tallennuksen triggeröityminen (blurrin tapahtuessa) vaikuttaisi olevan flaky.
     // FIXME: Katsotaan auttaako wait, vai pitääkö tutkia cypress blur-mekaniikkaa tarkemmin.
-    cy.wait(1000)
+    cy.wait(500)
 }
 
 export function summaaLuvut() {

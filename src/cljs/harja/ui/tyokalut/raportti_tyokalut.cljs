@@ -13,11 +13,9 @@
                                         laskutettu-str laskutetaan-str]]
   [raportointi/muodosta-html
    [:display-flex
-    [:sininen-laatikko {:otsikko (if (and
-                                       (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
-                                   "Laskutettavaa yhteensä"
-                                   ;; Vanhat urakat joilla ei ole laskutusrajaa
-                                   "Toteutuneet kustannukset yhteensä")
+    [:sininen-laatikko {:otsikko (if (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+                                   "Toteutuneet kustannukset yhteensä"
+                                   "Laskutettavaa yhteensä")
                         :layout :sarakkeet}
      [{:fmt :raha
        :arvo laskutettu
@@ -67,7 +65,9 @@
            esta-tiivis-grid? :esta-tiivis-grid?
            avattavat-rivit :avattavat-rivit
            sivuttain-rullattava? :sivuttain-rullattava?
-           ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-vasen]
+           ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?
+           ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?
+           piilota-otsikot? :piilota-otsikot?} optiot-vasen]
       [raportointi/grid
        otsikko
        gridin-luokka
@@ -84,7 +84,10 @@
        avattavat-rivit
        sivuttain-rullattava?
        ensimmainen-sarake-sticky?
-       otsikot-vasen rivit-vasen])]
+       ei-footer-muokkauspaneelia?
+       piilota-otsikot?
+       otsikot-vasen
+       rivit-vasen])]
    ;; Ei piirretä oikeaa elementtiä, jos sitä ei ole annettu.
    (if otsikko-oikea
      [:div.width-half
@@ -103,9 +106,11 @@
              esta-tiivis-grid? :esta-tiivis-grid?
              avattavat-rivit :avattavat-rivit
              sivuttain-rullattava? :sivuttain-rullattava?
-             ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?} optiot-oikea]
+             ensimmainen-sarake-sticky? :ensimmainen-sarake-sticky?
+             ei-footer-muokkauspaneelia? :ei-footer-muokkauspaneelia?
+             piilota-otsikot? :piilota-otsikot?} optiot-oikea]
         [raportointi/grid
-         otsikko 
+         otsikko
          gridin-luokka
          viimeinen-rivi-yhteenveto?
          rivi-ennen
@@ -120,7 +125,10 @@
          avattavat-rivit
          sivuttain-rullattava?
          ensimmainen-sarake-sticky?
-         otsikot-oikea rivit-oikea])]
+         ei-footer-muokkauspaneelia?
+         piilota-otsikot?
+         otsikot-oikea
+         rivit-oikea])]
      [:div.width-half])])
 
 (defmethod raportointi/muodosta-html :tyomaapaivakirjan-kommentit [[_ _]]

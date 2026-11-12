@@ -16,9 +16,9 @@
     laskutettavaa_kaikki_yht laskutettavaa_kaikki_val_aika
     laskutettu-str laskutetaan-str] workbook]
 
-  (let [otsikko-1 (if (and (not laskutusraja-ylittynyt?) laskutusraja-kaytossa?)
-                    "Laskutettavaa yhteensä"
-                    "Toteutuneet kustannukset yhteensä")
+  (let [otsikko-1 (if (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
+                    "Toteutuneet kustannukset yhteensä"
+                    "Laskutettavaa yhteensä")
         otsikko-2? (and laskutusraja-kaytossa? laskutusraja-ylittynyt?)
         sheet (last (excel/sheet-seq workbook))
         start-rivi (+ 2 (.getLastRowNum sheet))

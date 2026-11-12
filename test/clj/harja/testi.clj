@@ -84,11 +84,8 @@
   {:pre [(not (nil? *lisattavat-kuuntelijat*))]}
   (async/>!! *lisattavat-kuuntelijat* :ei-lisattavaa))
 
-(defn circleci? []
-  (not (nil? (env/env "CIRCLE_BRANCH"))))
 
-;; Ei täytetä Jenkins-koneen levytilaa turhilla logituksilla
-;; eikä tehdä traviksen logeista turhan pitkiä
+;; Testilokit tulostetaan oletuksena info-tasolla; HARJA_NOLOG=true hiljentää tulostusta fatal-tasolle.
 (log/merge-config!
   {:appenders
    {:println
@@ -1785,7 +1782,7 @@
                     Käytännössä, jos kyselyn voi ajaa samoilla parametreilla monta kertaa,
                     anna tämä luku. Jos joudut antamaan monta kyselyä eri parametreilla,
                     tätä ei ole tarpeen antaa.
-  - :aja-raportti?  Oletuksena vain jenkinsillä halutaan koostaa html-raportteja.
+  Raportointia ohjataan HARJA_AJA_GATLING_RAPORTTI-ympäristömuuttujalla.
 
   Kutsuja voi antaa niin monta kuin haluaa. Jos kutsuja antaa monta, ne ajetaan rinnakkain.
 
@@ -1962,8 +1959,8 @@
   Anna tpi-id muodossa integer
   Anna tryhma-id muodossa integer
   Anna maksueratyyppi kokonaishintainen/lisatyo"
-  [summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi]
-  (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
+  ([summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi]
+   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
         laskutuspvm (pvm/iso-8601->pvm erapaiva)
         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
         kohdistustyyppi (if (= maksueratyyppi "lisatyo")
@@ -1984,30 +1981,61 @@
                       VALUES (0, %s, %s, %s, %s, '%s', '%s', now());"
                kulu-id summa tpi-id tryhma-id maksueratyyppi kohdistustyyppi))]))
 
-(defn lisaa-sanktio-urakalle
-  "Anna sakkoryhma 'C'
-  Anna määrä integerina
-  pvm on perintäpäivämäärä
-  urakka-id on urakan id
+  ([summa erapaiva urakka-id tpi-id tryhma-id maksueratyyppi
+    {:keys [lisatieto lisatyon-lisatieto kulu-poistettu? kohdistus-poistettu?]
+     :or {kulu-poistettu? false
+          kohdistus-poistettu? false}}]
+   (let [urakan-tiedot (first (q-map (format "SELECT alkupvm FROM urakka WHERE id = %s" urakka-id)))
+         laskutuspvm (pvm/iso-8601->pvm erapaiva)
+         koontilaskun-kuukausi (kulut-domain/pvm->koontilaskun-kuukausi laskutuspvm (:alkupvm urakan-tiedot))
+         kohdistustyyppi (if (= maksueratyyppi "lisatyo")
+                           "lisatyo"
+                           "hankintakulu")
+         kulu-id (i (format "INSERT INTO kulu (kokonaissumma, erapaiva, urakka, luoja,
+                                              koontilaskun_kuukausi, lisatieto, poistettu)
+                              VALUES (%s, '%s'::DATE, %s, %s, '%s', '%s', %s)"
+                           summa
+                           erapaiva
+                           urakka-id
+                           (:id +kayttaja-jvh+)
+                           koontilaskun-kuukausi
+                           lisatieto
+                           (if kulu-poistettu? "TRUE" "FALSE")))]
+     (u (format "INSERT INTO kulu_kohdistus (rivi, kulu, summa, toimenpideinstanssi,
+                                              tehtavaryhma, maksueratyyppi, luoja, tyyppi,
+                                              lisatyon_lisatieto, poistettu)
+                 VALUES (0, %s, %s, %s, %s, '%s', %s, '%s', '%s', %s)"
+              kulu-id
+              summa
+              tpi-id
+              tryhma-id
+              maksueratyyppi
+              (:id +kayttaja-jvh+)
+              kohdistustyyppi
+              lisatyon-lisatieto
+              (if kohdistus-poistettu? "TRUE" "FALSE")))
+     kulu-id)))
+
+(defn lisaa-suorasanktio-urakalle
+  "Anna sakkoryhma (esim: 'A','C', 'arvonvahennyssanktio', 'vaihtosanktio'
+  Anna määrä integerina (Esim 5)
+  pvm on perintäpäivämäärä tekstinä - esim 2025-12-12
+  urakka-id on urakan id - integer
   tpi on toimenpideinstanssi, jolle sanktio laitetaan, anna integer.
-  sanktiotyyppi taulusta id, "
-  [maara sakkoryhma pvm urakka-id tpi sanktiotyyppi-id]
+  sanktiotyyppi taulusta id,
+  tehtavaryhma-id on arvonvähennyksille sopiva tehtäväryhmä, integer - ei ole pakko antaa,
+  tehtava-id on arvonvähennyksille sopiva tehtävä, integer - ei ole pakko antaa"
+  [maara sakkoryhma pvm-str urakka-id tpi sanktiotyyppi-id tehtavaryhma-id tehtava-id]
   (let [;; Lisätään ensin laatupoikkeama, jotta voidaan lisätä sanktio
-        aika (pvm/iso-8601->pvm pvm)
-        _ (u (format "INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, paatos, perustelu, luotu, aika,
+        aika (pvm/iso-8601->pvm pvm-str)
+        laatupoikkeama-id (i (format "INSERT INTO laatupoikkeama (kohde, tekija, kasittelytapa, paatos, perustelu, luotu, aika,
         kasittelyaika, urakka, lahde)
         VALUES ('xx', 'tilaaja','puhelin','sanktio', 'xx', now(), '%s', '%s', %s, 'harja-ui');"
-               aika aika urakka-id))
-
-        ;; HAetaan viimeisin id
-        laatupoikkeama-id (:id (first (q-map (format "SELECT id FROM laatupoikkeama
-                                            WHERE urakka = %s
-                                            ORDER BY ID DESC LIMIT 1" urakka-id))))
-
-        _ (u (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
-        luotu, sakkoryhma)
-        VALUES (%s, '%s', %s, %s, %s, true, now(), '%s');"
-               maara pvm laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma))]))
+                               aika aika urakka-id))
+        sanktio_id (i (format "INSERT INTO sanktio (maara, perintapvm, laatupoikkeama, toimenpideinstanssi, tyyppi, suorasanktio,
+        luotu, sakkoryhma, tehtavaryhma, tehtava)
+        VALUES (%s, '%s', %s, %s, %s, true, now(), '%s', %s, %s);"
+                        maara pvm-str laatupoikkeama-id tpi sanktiotyyppi-id sakkoryhma tehtavaryhma-id tehtava-id))]))
 
 (defn lahes-sama?
   "Laske Levenshtein Distance -arvon kahden tekstin välille ja kertoo, onko se sallitun thresholdin puitteissa.

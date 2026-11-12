@@ -58,13 +58,15 @@
 
 
 (defn- hae-kustannusten-seuranta [{:keys [urakka hoitokauden-alkuvuosi alkupvm loppupvm]}]
-  (kutsu-palvelua
-    (:http-palvelin jarjestelma) :urakan-kustannusten-seuranta-paaryhmittain
-    +kayttaja-jvh+
-    {:urakka-id urakka
-     :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
-     :alkupvm alkupvm
-     :loppupvm loppupvm}))
+  (-> (kutsu-palvelua
+        (:http-palvelin jarjestelma)
+        :urakan-kustannusten-seuranta-paaryhmittain
+        +kayttaja-jvh+
+        {:urakka-id urakka
+         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi
+         :alkupvm alkupvm
+         :loppupvm loppupvm})
+    :kustannukset))
 
 
 (defn- tarkista-muutos-kulu-on-validi "Tarkistaa että vastaus on validi, ja kulu tallennettiin"
@@ -176,6 +178,181 @@
       (is (= 1230M (:budjetoitu_summa_indeksikorjattu v1)))
       (is (= 1230M (:toteutunut_summa v1))))))
 
+(deftest erillisrahoitetun-muutostyon-kulut-yhdistyvat-yhdeksi-riviksi
+  (let [erillisrahoitettu-muutostyo (hae-muutostyot)
+        muutostyo (:muutostyo erillisrahoitettu-muutostyo)
+        muutostyo-syy "Tehdään lisäksi tämä isohko sorastus, ei ollut tiedossa ennen urakan alkua."
+        tallenna-kulu
+        (fn [summa erapaiva]
+          (kutsu-palvelua
+            (:http-palvelin jarjestelma)
+            :tallenna-kulu
+            +kayttaja-jvh+
+            {:urakka-id +urakka+
+             :kulu-kohdistuksineen
+             {:kokonaissumma summa
+              :erapaiva (pvm/->pvm erapaiva)
+              :kohdistukset [{:rivi 0
+                              :summa summa
+                              :tavoitehintainen :true
+                              :valittu-muutostyo muutostyo
+                              :lukittu? false
+                              :lisatyo? false
+                              :poistettu false
+                              :toimenpideinstanssi +tpi+
+                              :tyyppi :erillisrahoitettu-muutos}]
+              :urakka +urakka+
+              :liitteet []
+              :tyyppi "laskutettava"
+              :koontilaskun-kuukausi "lokakuu/5-hoitovuosi"}}))]
+
+    (tallenna-kulu 100 "02.10.2025")
+    (tallenna-kulu 150 "10.10.2025")
+
+    (let [kustannusten-seuranta
+          (hae-kustannusten-seuranta
+            {:urakka +urakka+
+             :alkupvm "2025-10-01"
+             :loppupvm "2026-09-30"
+             :hoitokauden-alkuvuosi 2025})
+
+          muutoksen-rivit
+          (filter
+            #(and (= "erillisrahoitettu-muutos" (:kulu_tyyppi %))
+               (= muutostyo-syy (:muutostyo_syy %)))
+            kustannusten-seuranta)]
+
+      (is (= 1 (count muutoksen-rivit))
+        "Kahden eri päivänä olevan kulun pitää näkyä yhtenä rivinä")
+
+      (is (= 250M (:toteutunut_summa (first muutoksen-rivit)))
+        "Yhden rivin summan pitää sisältää molemmat kulut"))))
+
+(defn- hae-uusin-muutostyo [nimi ennen-id]
+  (let [muutostyot (kutsu-palvelua
+                     (:http-palvelin jarjestelma)
+                     :hae-urakan-muutostyot
+                     +kayttaja-jvh+
+                     {:urakka-id +urakka+
+                      :valittu-hoitokausi (last +hoitokaudet+)})]
+    (first
+      (filter
+        #(and
+           (= nimi (:nimi %))
+           (> (:id %) ennen-id)
+           (= "erillisrahoitus" (:alityyppi %)))
+        muutostyot))))
+
+(defn- tallenna-erillisrahoitettu-muutostyo [syy nimi budjetoitu-summa]
+  (let [ennen-id (or (ffirst (q "SELECT MAX(id) FROM ONLY mhu_muutos;")) 0)
+        valittu-hoitokausi (last +hoitokaudet+)]
+
+    (kutsu-palvelua
+      (:http-palvelin jarjestelma)
+      :tallenna-muutos
+      +kayttaja-jvh+
+      {:urakka-id +urakka+
+       :valittu-hoitokausi valittu-hoitokausi
+       :muutos {:voimassa_alkaen (pvm/->pvm "01.10.2025")
+                :syy syy
+                :nimi nimi
+                :tavoitehinnan-muutos budjetoitu-summa
+                :tyyppi "muutostyo"
+                :alityyppi :erillisrahoitus}})
+
+    (or (hae-uusin-muutostyo nimi ennen-id)
+      (throw (ex-info "Uutta erillisrahoitettua muutostyötä ei löytynyt"
+               {:nimi nimi
+                :ennen-id ennen-id})))))
+
+(defn- tallenna-erillisrahoitetun-muutostyon-kulu
+  [muutostyo summa erapaiva]
+  (kutsu-palvelua
+    (:http-palvelin jarjestelma)
+    :tallenna-kulu
+    +kayttaja-jvh+
+    {:urakka-id +urakka+
+     :kulu-kohdistuksineen
+     {:kokonaissumma summa
+      :erapaiva (pvm/->pvm erapaiva)
+      :kohdistukset [{:rivi 0
+                      :summa summa
+                      :tavoitehintainen :true
+                      :valittu-muutostyo muutostyo
+                      :lukittu? false
+                      :lisatyo? false
+                      :poistettu false
+                      :toimenpideinstanssi +tpi+
+                      :tyyppi :erillisrahoitettu-muutos}]
+      :urakka +urakka+
+      :liitteet []
+      :tyyppi "laskutettava"
+      :koontilaskun-kuukausi "lokakuu/5-hoitovuosi"}}))
+
+(deftest eri-erillisrahoitetut-muutostyot-eivat-yhdisty
+  (let [muutostyo-nimi "Kustannusten seurannan yhdistymistesti"
+        budjetoitu-summa 3000M
+        muutostyo-syy "Erillisrahoitettu muutos"
+
+        muutos-1 (tallenna-erillisrahoitettu-muutostyo
+                   muutostyo-syy muutostyo-nimi budjetoitu-summa)
+
+        muutos-2 (tallenna-erillisrahoitettu-muutostyo
+                   muutostyo-syy muutostyo-nimi budjetoitu-summa)
+
+        _kulu-1 (tallenna-erillisrahoitetun-muutostyon-kulu
+                  muutos-1 100M "02.10.2025")
+
+        _kulu-2 (tallenna-erillisrahoitetun-muutostyon-kulu
+                  muutos-2 150M "10.10.2025")
+
+        kustannusten-seuranta (hae-kustannusten-seuranta
+                                {:urakka +urakka+ :alkupvm "2025-10-01" :loppupvm "2026-09-30" :hoitokauden-alkuvuosi 2025})
+
+        muutoksen-rivit (->> kustannusten-seuranta
+                          (filter #(and (= "erillisrahoitettu-muutos" (:kulu_tyyppi %)) (= muutostyo-syy (:muutostyo_syy %)))))
+
+        toteutuneet-summat (->> muutoksen-rivit (map :toteutunut_summa) sort vec)]
+
+    (is (not= (:id muutos-1) (:id muutos-2))
+      "Testissä pitää olla kaksi eri muutostyötä")
+
+    (is (= 2 (count muutoksen-rivit))
+      "Kahden eri muutostyön pitää näkyä kahtena eri rivinä")
+
+    (is (= [100M 150M] toteutuneet-summat)
+      "Kummankin muutostyön kulun pitää pysyä omalla rivillään")))
+
+(deftest kustannusten-seurannan-parametrit-haetaan-oikein
+  (let [vastaus
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :urakan-kustannusten-seuranta-paaryhmittain
+          +kayttaja-jvh+
+          {:urakka-id +urakka+
+           :hoitokauden-alkuvuosi 2025
+           :alkupvm "2025-10-01"
+           :loppupvm "2026-09-30"})
+        parametrit (:urakan-parametrit vastaus)]
+
+    (is (map? vastaus))
+    (is (contains? vastaus :kustannukset))
+    (is (sequential? (:kustannukset vastaus)))
+
+    (is (map? parametrit))
+    (is (contains? parametrit :muutosten_hallinta))
+    (is (boolean? (:muutosten_hallinta parametrit)))))
+
+(deftest kustannusten-seurannan-parametrit-vaativat-kustannusten-seurannan-oikeuden
+  (is (thrown? Exception
+        (kutsu-palvelua
+          (:http-palvelin jarjestelma)
+          :urakan-kustannusten-seuranta-paaryhmittain
+          +kayttaja-seppo+
+          {:urakka-id +urakka+
+           :hoitokauden-alkuvuosi 2025
+           :alkupvm "2025-10-01"
+           :loppupvm "2026-09-30"}))))
 
 (deftest muutos-kulun-tallennus-sekä-validointi-toimii
   (let [erillisrahoitettu-muutostyo (hae-muutostyot)

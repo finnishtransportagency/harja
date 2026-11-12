@@ -10,7 +10,13 @@
   {:positional? true})
 
 (declare onko-olemassa-ulkoisella-idlla paivita-laatupoikkeaman-perustiedot<! luo-laatupoikkeama<!
-  poista-laatupoikkeama! hae-bonuksen-liitteet)
+  poista-laatupoikkeama! hae-bonuksen-liitteet hae-omat-laatupoikkeamat hae-kaikki-laatupoikkeamat
+  hae-selvitysta-odottavat-laatupoikkeamat hae-kasitellyt-laatupoikkeamat hae-poikkeamaraportilliset-laatupoikkeamat
+  hae-laatupoikkeaman-urakka-id hae-laatupoikkeaman-liitteet hae-urakan-laatupoikkeama-liitteet
+  hae-laatupoikkeaman-tiedot hae-laatupoikkeaman-kommentit liita-kommentti<! liita-liite<! kirjaa-laatupoikkeaman-paatos!
+  hae-laatupoikkeama-ulkoisella-idlla-ja-urakalla
+  paivita-laatupoikkeama-ulkoisella-idlla<!
+  peru-laatupoikkeaman-paatos! hae-laatupoikkeaman-tallennuksen-perustiedot)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (:exists (first (onko-olemassa-ulkoisella-idlla db ulkoinen-id urakka-id))))

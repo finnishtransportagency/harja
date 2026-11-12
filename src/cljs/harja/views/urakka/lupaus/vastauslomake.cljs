@@ -390,9 +390,11 @@
         ;; Palvelimelle lähetetty vastaus, joka näytetään siihen asti, että uudet lupaustiedot on haettu
         lahetetty-vastaus (get-in app [:vastaus-lomake :lahetetty-vastaus])
         ladataan? (and (= (get-in app [:lupausta-lahetataan :kohdekuukausi]) kohdekuukausi) 
-                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus))) 
+                        (= (get-in app [:lupausta-lahetataan :lupaus-id]) (:lupaus-id lupaus)))
+        hoitokausi-tulevaisuudessa? (pvm/jalkeen? (first (:valittu-hoitokausi app)) (pvm/nyt))
         saa-vastata? (and (not ladataan?)
-                          (lupaus-domain/kayttaja-saa-vastata? 
+                          (not hoitokausi-tulevaisuudessa?)
+                          (lupaus-domain/kayttaja-saa-vastata?
                             @istunto/kayttaja 
                             lupaus-kuukausi
                             (:lupaustyyppi lupaus)

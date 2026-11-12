@@ -27,7 +27,8 @@
 
 (def taulukon-fonttikoko 8)
 (def taulukon-fonttikoko-yksikko "pt")
-(def otsikon-fonttikoko "10pt")
+(def otsikon-fonttikoko "14pt")
+(def otsikon-fonttikoko-pieni "12pt")
 (def taulukon-otsikon-fonttikoko "10pt")
 (def tekstin-fonttikoko "9pt")
 
@@ -48,12 +49,22 @@
     (str/replace val #" " "\u00A0")
     val))
 
+(defn- formatoi-numero
+  [arvo min-desimaalit max-desimaalit]
+  (if (and (number? arvo) (neg? arvo))
+    (str "-"
+      (lisaa-non-breaking-spacet
+        (fmt/desimaaliluku-opt (* -1 arvo) min-desimaalit max-desimaalit true)))
+    (lisaa-non-breaking-spacet
+      (fmt/desimaaliluku-opt arvo min-desimaalit max-desimaalit true))))
+
 (defn- formatoija-fmt-mukaan [fmt]
   (case fmt
     ;; Jos halutaan tukea erityyppisiä sarakkeita,
     ;; pitää tänne lisätä formatter.
     :kokonaisluku #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/kokonaisluku-opt) %)
-    :numero #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/desimaaliluku-opt) % 1 true)
+    :numero #(raportti-domain/yrita formatoi-numero % 1 1)
+    :numero-opt #(raportti-domain/yrita formatoi-numero % 0 2)
     :numero-3desim #(raportti-domain/yrita (comp lisaa-non-breaking-spacet fmt/pyorista-ehka-kolmeen) %)
     :prosentti-0desim #(raportti-domain/yrita fmt/prosentti-opt % 0)
     :prosentti #(raportti-domain/yrita fmt/prosentti-opt %)
@@ -265,6 +276,7 @@
                   [rivi {}])
                 lihavoi-rivi? (:lihavoi? optiot)
                 korosta-rivi? (:korosta? optiot)
+                himmennetty? (:himmennetty? optiot)
                 valkoinen? (:valkoinen? optiot)
                 korosta-harmaa? (:korosta-harmaa? optiot)
                 korosta-hennosti? (:korosta-hennosti? optiot)
@@ -334,7 +346,8 @@
                                (if (or korosta-hennosti? varoitus? huomio?)
                                  (first (filter #(not (nil? %)) (into #{} [korosta-hennosti? varoitus? huomio?])))
                                  (korosta-kolumni-arvosta arvo-datassa))
-                               lihavoi?)
+                               lihavoi?
+                               (when himmennetty? {:color harmaa-himmennys-vari}))
               (when korosta?
                 [:fo:block {:space-after "0.2em"}])
               [:fo:block (if (string? naytettava-arvo)
@@ -404,18 +417,24 @@
   (let [sarakkeet-lkm (count sarakkeet)]
     (str (float (- 1 (min 0.5 (* sarakkeet-lkm 0.025)))) "em")))
 
-(defn taulukko [otsikko sarakkeet data {{:keys [skaalaa-teksti?]} :pdf-optiot :as optiot}]
+(defn taulukko [otsikko sarakkeet data {{:keys [skaalaa-teksti?]} :pdf-optiot
+                                        :keys [leveysprosentti]
+                                        :as optiot}]
   (let [sarakkeet (skeema/laske-sarakkeiden-leveys (keep identity sarakkeet))]
-    [:fo:block {:space-before "1em" :font-size otsikon-fonttikoko :font-weight "bold"} otsikko
+    (let [taulukko [:fo:block {:space-before "1em" :font-size taulukon-otsikon-fonttikoko :font-weight "bold"} otsikko
      ;; Taulukon fonttikoko skaalataan parent block-elementin font-size arvon mukaan
      ;; Mitä enemmän sarakkeita, sitä pienempi fonttikoko. Lähtöarvona on parent block-elementin font-size.
      [:fo:table (when skaalaa-teksti?
                   {:font-size (skaalattu-fontin-koko sarakkeet)})
-      (for [{:keys [leveys]} sarakkeet]
-        [:fo:table-column {:column-width leveys}])
-      (taulukko-header optiot sarakkeet)
+      (for [{:keys [leveys leveys-pdf]} sarakkeet]
+        [:fo:table-column {:column-width (or leveys-pdf leveys)}])
+      (when-not (:piilota-otsikot? optiot)
+        (taulukko-header optiot sarakkeet))
       (taulukko-body sarakkeet data optiot)]
-     [:fo:block {:space-after "1em"}]]))
+                    [:fo:block {:space-after "1em"}]]]
+      (if leveysprosentti
+        [:fo:block-container {:width (str leveysprosentti "%")} taulukko]
+        taulukko))))
 
 (defmethod muodosta-pdf :taulukko [[_ {:keys [otsikko] :as optiot} sarakkeet data]]
   (taulukko otsikko sarakkeet data optiot))
@@ -437,11 +456,14 @@
               :font-size otsikon-fonttikoko
               :font-weight 600} teksti])
 
+(defmethod muodosta-pdf :otsikko-title [[_ teksti]]
+  [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko} teksti])
+
 (defmethod muodosta-pdf :otsikko-heading [[_ teksti]]
-  [:fo:block {:padding-top "5mm" :font-size "9pt"} teksti])
+  [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko-pieni} teksti])
 
 (defmethod muodosta-pdf :otsikko-heading-small [[_ teksti]]
-  [:fo:block {:padding-top "5mm" :font-size "8pt"} teksti])
+  [:fo:block {:padding-top "5mm" :font-size otsikon-fonttikoko-pieni} teksti])
 
 (defmethod muodosta-pdf :otsikko-kuin-pylvaissa [[_ teksti]]
   [:fo:block {:font-weight "bold"
@@ -449,9 +471,15 @@
               :margin-top "2mm"} teksti])
 
 
-(defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari]}]]
-  [:fo:block {:color (when vari vari)
-              :font-size otsikon-fonttikoko} teksti])
+(defmethod muodosta-pdf :teksti [[_ teksti {:keys [vari leveysprosentti]}]]
+  (if leveysprosentti
+    [:fo:block-container {:width (str leveysprosentti "%")}
+     [:fo:block {:color (when vari vari)
+                 :font-size tekstin-fonttikoko}
+      teksti]]
+    [:fo:block {:color (when vari vari)
+                :font-size tekstin-fonttikoko}
+     teksti]))
 
 (defmethod muodosta-pdf :osittain-boldattu-teksti
   ;; Joihinkin teksteihin halutaan osittain boldattu teksti. Tämä elementti mahdollistaa sen.
@@ -462,19 +490,30 @@
    [:fo:inline {:font-size tekstin-fonttikoko
                 :font-weight 100} teksti]])
 
-(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari]}]]
-  [:fo:block {:color (when vari vari)
-              :font-size otsikon-fonttikoko
-              :font-weight "bold"} teksti])
+(defmethod muodosta-pdf :teksti-paksu [[_ teksti {:keys [vari leveysprosentti]}]]
+  (if leveysprosentti
+    [:fo:block-container {:width (str leveysprosentti "%")}
+     [:fo:block {:color (when vari vari)
+                 :font-size tekstin-fonttikoko
+                 :font-weight "bold"}
+      teksti]]
+    [:fo:block {:color (when vari vari)
+                :font-size tekstin-fonttikoko
+                :font-weight "bold"}
+     teksti]))
 
 (defmethod muodosta-pdf :varoitusteksti [[_ teksti]]
   (muodosta-pdf [:teksti teksti {:vari varoitus-punainen-vari}]))
+
+(defmethod muodosta-pdf :tyhja-rivi [_]
+  [:fo:block {:space-after "0.5em"}])
 
 (defmethod muodosta-pdf :infolaatikko [[_ teksti {:keys [tyyppi toissijainen-viesti leveys rivita?]}]]
   ;; TODO: Infolaatikon renderöintiä ei toistaiseksi tueta. Toteutetaan, jos tarve ilmenee.
   nil)
 
-(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko layout]} data]]
+(defmethod muodosta-pdf :sininen-laatikko [[_ {:keys [otsikko layout nayta-hr?]
+                                             :or {nayta-hr? true}} data]]
   (let [data (vec (keep identity data))]
     [:fo:block {:background-color "#E0EDF9"
                 :border (str "solid 0.3mm " korostettu-vari)
@@ -500,7 +539,7 @@
                (map
                  (fn [rivi]
                    [:fo:table-cell {:padding "0.5mm"}
-                    [:fo:block {:font-size "7pt"} (:avain rivi)]
+                    [:fo:block {:font-size "9pt" :padding "0.5mm"} (:avain rivi)]
 
                     [:fo:block {:font-size "12pt"
                                 :font-weight "bold"}
@@ -523,7 +562,7 @@
                                    (fmt/euro-opt (:arvo rivi))
                                    (str (:arvo rivi)))]
                  (list
-                   (when (= i viimeinen-idx)
+                   (when (and nayta-hr? (= i viimeinen-idx))
                      [:fo:table-row
                       [:fo:table-cell {:number-columns-spanned 2
                                        :padding-top "1mm"
@@ -533,11 +572,78 @@
                    [:fo:table-row
                     (when (:lihavoi? rivi) {:font-weight "bold"})
 
-                    [:fo:table-cell {:padding "0.5mm"} [:fo:block (:avain rivi)]]
+                    [:fo:table-cell (cond-> {:padding "0.5mm"}
+                                      (:sisennetty? rivi) (assoc :padding-left "4mm"))
+                     (into [:fo:block]
+                       (concat
+                         (when (:luettelomerkki? rivi)
+                           [[:fo:inline {:font-weight "bold"
+                                         :padding-right "2mm"}
+                             "\u2022"]])
+                         [(:avain rivi)]))]
                     [:fo:table-cell {:padding "0.5mm"
                                      :text-align "right"}
                      [:fo:block arvo-teksti]]])))
              data)]]))]))
+
+(defmethod muodosta-pdf :yhteenveto-laatikko [[_ {:keys [otsikko]} data]]
+  (let [data (vec (keep identity data))]
+    [:fo:block-container {:width "60%"}
+     [:fo:block {:background-color "#E0EDF9"
+                 :border (str "solid 0.3mm " korostettu-vari)
+                 :padding "2mm"
+                 :margin-bottom "1mm"}
+
+      [:fo:block {:font-weight "bold"
+                  :font-size taulukon-otsikon-fonttikoko
+                  :margin-bottom "1mm"}
+       otsikko]
+
+      (let [viimeinen-idx (dec (count data))
+            toiseksi-viimeinen-idx (- (count data) 2)]
+        [:fo:table {:font-size tekstin-fonttikoko
+                    :table-layout "fixed"
+                    :width "100%"}
+         [:fo:table-column {:column-width "65%"}]
+         [:fo:table-column {:column-width "35%"}]
+         [:fo:table-body
+          (map-indexed
+            (fn [i rivi]
+              (list
+                (when (= i toiseksi-viimeinen-idx)
+                  [:fo:table-row
+                   [:fo:table-cell {:number-columns-spanned 2
+                                    :padding-top "1mm"
+                                    :padding-bottom "1mm"}
+                    [:fo:block {:border-bottom "solid 0.3mm gray"}]]])
+
+                (if (:infolaatikko? rivi)
+                  [:fo:table-row
+                   [:fo:table-cell {:number-columns-spanned 2
+                                    :padding "0.5mm"}
+                    [:fo:table {:table-layout "fixed"
+                                :width "100%"}
+                     [:fo:table-column {:column-width "65%"}]
+                     [:fo:table-column {:column-width "35%"}]
+                     [:fo:table-body
+                      [:fo:table-row
+                       [:fo:table-cell {:padding "0mm"}
+                        [:fo:block (:teksti rivi)]]
+                       [:fo:table-cell {:padding "0mm"
+                                        :text-align "right"}
+                        [:fo:block (:toissijainen-viesti rivi)]]]]]]]
+
+                  [:fo:table-row
+                   (when (:lihavoi? rivi) {:font-weight "bold"})
+                   [:fo:table-cell {:padding "0.5mm"}
+                    [:fo:block
+                     (if (= i viimeinen-idx)
+                       (str "• " (:avain rivi))
+                       (:avain rivi))]]
+                   [:fo:table-cell {:padding "0.5mm"
+                                    :text-align "right"}
+                    [:fo:block (:arvo rivi)]]])))
+            data)]])]]))
 
 (defmethod muodosta-pdf :display-flex [[_ & data]]
   (let [data (vec (keep identity data))
@@ -553,7 +659,7 @@
        (map-indexed
          (fn [i d]
            [:fo:table-cell {:padding-right (when-not (= i (dec (count data)))
-                                             "3mm")}
+                                             "6mm")}
             (muodosta-pdf d)])
          data)]]]))
 
@@ -573,14 +679,13 @@
                :value-font-size "4pt"
                :tick-font-size "3pt"
                :y-axis-font-size "4pt"
-               :legend legend
-               }
+               :legend legend}
       pylvaat)]
    [:fo:block {:space-after "1em"}]])
 
 (defmethod muodosta-pdf :yhteenveto [[_ otsikot-ja-arvot]]
   ;;[:yhteenveto [[otsikko1 arvo1] ... [otsikkoN arvoN]]] -> yhteenveto (kuten päällystysilmoituksen alla)
-  [:fo:table {:font-size otsikon-fonttikoko}
+  [:fo:table {:font-size tekstin-fonttikoko}
    [:fo:table-column {:column-width "25%"}]
    [:fo:table-column {:column-width "75%"}]
    [:fo:table-body
@@ -603,14 +708,14 @@
 
 (defn- luo-header [raportin-nimi]
   (let [nyt (.format (java.text.SimpleDateFormat. "dd.MM.yyyy HH:mm") (java.util.Date.))]
-    [:fo:table {:font-size otsikon-fonttikoko}
+    [:fo:table {:font-size otsikon-fonttikoko-pieni}
      [:fo:table-column {:column-width "40%"}]
      [:fo:table-column {:column-width "40%"}]
      [:fo:table-column {:column-width "20%"}]
      [:fo:table-body
       [:fo:table-row
        [:fo:table-cell [:fo:block {:font-weight "bold"} raportin-nimi]]
-       [:fo:table-cell [:fo:block "Ajettu " nyt]]
+       [:fo:table-cell [:fo:block {:margin-left "0.5mm"} "Ajettu " nyt]]
        [:fo:table-cell {:text-align "end"}
         [:fo:block
          "Sivu " [:fo:page-number]
@@ -618,7 +723,7 @@
          ]]]]]))
 
 (defmethod muodosta-pdf :checkbox-lista [[_ otsikot-ja-arvot]]
-  [:fo:table {:font-size otsikon-fonttikoko}
+  [:fo:table {:font-size tekstin-fonttikoko}
    [:fo:table-body
     [:fo:table-row
      (for [[otsikko vaihtoehto koko] otsikot-ja-arvot]

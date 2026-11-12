@@ -140,7 +140,8 @@ SELECT u.nimi                                     AS nimi,
  WHERE :vuosi = ANY (ypk.vuodet)
    AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
    AND ypk.poistettu IS NOT TRUE
- GROUP BY o.id, ypk.pkluokka, u.id, u.nimi;
+ GROUP BY o.id, ypk.pkluokka, u.id, u.nimi
+ ORDER BY o.id ASC, u.nimi ASC;
 
 -- name: pkluokkien-yotyot-hallintayksikoittain
 SELECT u.nimi                             AS nimi,
@@ -165,4 +166,4 @@ SELECT u.nimi                             AS nimi,
    AND (:elinvoimakeskus::INTEGER IS NULL OR u.elinvoimakeskus_id = :elinvoimakeskus)
    AND ypk.poistettu IS NOT TRUE
  GROUP BY o.id, u.id, ypk.pkluokka, ypk.yotyo
- ORDER BY o.id ASC;
+ ORDER BY o.id ASC, u.nimi ASC;

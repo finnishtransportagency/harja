@@ -2,7 +2,8 @@
   (:require [harja.tyokalut.versio :as versio]
             [jeesql.core :refer [defqueries]]))
 
-(declare hae-jarjestelman-tila toggle-valikatselmus-validoinnit! hae-jarjestelman-asetukset)
+(declare hae-jarjestelman-tila toggle-valikatselmus-validoinnit! toggle-arvonvahennys-validoinnit!
+  hae-jarjestelman-asetukset)
 
 (defqueries "harja/kyselyt/jarjestelman_tila.sql")
 

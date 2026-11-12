@@ -53,7 +53,8 @@
                                               pkluokkien-kustannukset)
         ;; Yhdistetään saman urakan pkluokkarivit samalle riville
         ;; Ota uniikki urakka_id, jotta niiden perusteella voidaan koota uusi lista
-        urakkalistaus (into #{} (map :urakka_id yllapitokohteet+kustannukset))
+        ;; Säilytetään järjestys (distinct säilyttää ensimmäisen esiintymän järjestyksen, into #{} ei)
+        urakkalistaus (distinct (map :urakka_id yllapitokohteet+kustannukset))
         urakkalistaus (mapv (fn [urakka_id]
                               (let [;; Muodostetaan urakkariville pohja, johon lasketaan pkluokat ja muut kustannukset yhteen
                                     uusi-urakkarivi {:hallintayksikko_id 0 :nimi "" :hallintayksikko_nimi "" :elynumero "" :urakka_id urakka_id :pk1 0 :pk2 0 :pk3 0 :eitiedossa 0 :muut-kustannukset 0}]
@@ -99,7 +100,8 @@
   "Muodostaa yötyörivit taulukolle sopivampaan muotoon."
   [rivit yllapitokohteet+kustannukset]
   (let [;; Mäppää yllapitokohtaiset rivit urakkakohtaisiksi
-        urakkalistaus (into #{} (map :urakka_id yllapitokohteet+kustannukset))
+        ;; Säilytetään järjestys (distinct säilyttää ensimmäisen esiintymän järjestyksen, into #{} ei)
+        urakkalistaus (distinct (map :urakka_id yllapitokohteet+kustannukset))
         urakkalistaus (mapv (fn [urakka_id]
                               (let [;; Muodostetaan urakkariville pohja, johon lasketaan pkluokat ja muut kustannukset yhteen
                                     uusi-urakkarivi {:nimi ""

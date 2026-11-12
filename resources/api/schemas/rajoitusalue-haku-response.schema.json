@@ -1,0 +1,24 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "id": "urn:harja",
+  "type": "object",
+  "additionalProperties": false,
+  "properties": {
+    "rajoitusalueet": {
+      "id": "urn:harja/rajoitusalueet",
+      "type": "array",
+      "items": {
+        "id": "urn:harja/rajoitusalueet/0",
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reikapaikkaus": {
+            "type": "object",
+            "additionalProperties": false,
+            "$ref": "file:resources/api/schemas/entities/rajoitusalue.schema.json"
+          }
+        }
+      }
+    }
+  }
+}

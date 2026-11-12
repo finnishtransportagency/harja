@@ -35,6 +35,75 @@
     (is (= odotettu-raaka-tulos raaka-tulos) "Raaka tulos täytyy olla kuin odotettu")
     (is (= odotettu-tulos tulos) "Tulos täytyy olla kuin odotettu")))
 
+    (deftest hae-tieosuudet-leikkaa-tuloksen-hakuvalille
+      (luo-tr-osoitteet [[1 0 1500 1 11]
+             [1 1500 2500 1 11]])
+      (let [tulos (tieverkko/hae-tieosuudet
+            (:db jarjestelma)
+            {:tr-numero tienumero
+             :tr-alkuosa 1
+             :tr-alkuetaisyys 200
+             :tr-loppuosa 1
+             :tr-loppuetaisyys 2200
+             :rajoita-tieosuuksien-maara 100})]
+        (is (= [{:tr-numero tienumero
+         :tr-ajorata 1
+         :tr-kaista 11
+         :tr-alkuosa 1
+         :tr-alkuetaisyys 200
+         :tr-loppuosa 1
+         :tr-loppuetaisyys 2200}]
+          (:tieosuudet tulos)))
+        (is (= [{:tr-numero tienumero
+         :tr-ajorata 1
+         :tr-kaista 11
+         :tr-alkuosa 1
+         :tr-alkuetaisyys 0
+         :tr-loppuosa 1
+         :tr-loppuetaisyys 2500}]
+          (:kohteen-ulkopuolelle-jatkuvat tulos)))))
+
+(deftest hae-tieosuudet-ei-yhdista-osien-yli-jos-ajorata-katkeaa
+  ;; Tien 815 osien 2/3 rakenne: vaihtumiskohta on vain ajoradoilla 1 ja 2
+  (luo-tr-osoitteet [[2 0 4598 0 11]
+                     [2 4598 4745 1 11]
+                     [2 4598 4745 2 21]
+                     [3 0 140 1 11]
+                     [3 0 140 2 21]
+                     [3 140 2570 0 11]])
+  (let [tulos (tieverkko/hae-tieosuudet
+                (:db jarjestelma)
+                {:tr-numero tienumero
+                 :tr-alkuosa 2
+                 :tr-alkuetaisyys 0
+                 :tr-loppuosa 3
+                 :tr-loppuetaisyys 2570
+                 :rajoita-tieosuuksien-maara 100})
+        osuus (fn [ajorata kaista aosa aet losa let]
+                {:tr-numero tienumero :tr-ajorata ajorata :tr-kaista kaista
+                 :tr-alkuosa aosa :tr-alkuetaisyys aet :tr-loppuosa losa :tr-loppuetaisyys let})]
+    (is (= [(osuus 0 11 2 0 2 4598)
+            (osuus 0 11 3 140 3 2570)
+            (osuus 1 11 2 4598 3 140)
+            (osuus 2 21 2 4598 3 140)]
+           (:tieosuudet tulos)))))
+
+(deftest hae-tieosuudet-rajaa-tulokset
+  (u (str "INSERT INTO tr_osoitteet
+           (\"tr-numero\", \"tr-ajorata\", \"tr-kaista\", \"tr-osa\", \"tr-alkuetaisyys\", \"tr-loppuetaisyys\", tietyyppi)
+           SELECT " tienumero ", 1, 1 + (osa % 2), osa, 0, 100, 1
+             FROM generate_series(1, 101) AS osa"))
+  (let [tulos (tieverkko/hae-tieosuudet
+                (:db jarjestelma)
+                {:tr-numero tienumero
+                 :tr-alkuosa 1
+                 :tr-alkuetaisyys 0
+                 :tr-loppuosa 1001
+                 :tr-loppuetaisyys 100
+                 :rajoita-tieosuuksien-maara 100})]
+    (is (= 100 (count (:tieosuudet tulos))))
+    (is (:tieosuuksia-rajattu? tulos))))
+
 (deftest eri-osat
   (luo-tr-osoitteet [[5 0 1500 1 11]
                      [2 1500 2500 1 11]

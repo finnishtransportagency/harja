@@ -79,8 +79,9 @@
 (defn- laheta-ilmoitus-paivystajille [db ilmoitus paivystajat urakka-id ilmoitusasetukset]
   (if (empty? paivystajat)
     (log/info "Urakalle " urakka-id " ei löydy yhtään tämänhetkistä päivystäjää!")
-    (doseq [paivystaja paivystajat]
-      (paivystajaviestit/laheta ilmoitusasetukset db (assoc ilmoitus :urakka-id urakka-id) paivystaja))))
+    (let [ilmoitus-paivystajille (assoc ilmoitus :urakka-id urakka-id)]
+      (doseq [{:keys [paivystaja laheta-sahkoposti?]} (paivystajaviestit/lahetyspaatokset ilmoitus-paivystajille paivystajat)]
+        (paivystajaviestit/laheta ilmoitusasetukset db ilmoitus-paivystajille paivystaja laheta-sahkoposti?)))))
 
 (defn- ilmoituksen-kesto [sekunnit]
   (when sekunnit

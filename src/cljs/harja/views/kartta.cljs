@@ -780,9 +780,7 @@
           :geometry-layers [{:id :tienumerot
                              :nakyvissa-atom tienumerot-kartalla/karttataso-nakyvissa?
                              :icon (ikonit/numero-taulu-24 16 16)}]
-          :layers (keep identity [(when (or
-                                          (k/kehitysymparistossa-localhost?)
-                                          (k/kehitysymparistossa-gc?))
+          :layers (keep identity [(when (k/kehitysymparistossa-localhost?)
                                     ;; Local kehitysympäristössä käytetään avointa kapsi rajapintaa
                                     {:type :wms
                                      :id :kapsi

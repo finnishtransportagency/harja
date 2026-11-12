@@ -504,32 +504,6 @@
 
       (poista-reittitoteuma toteuma-id ulkoinen-id urakka))))
 
-(deftest tallenna-yksittainen-reittitoteuma-ilman-sopimusta-paivittaa-cachen
-  (let [ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-        urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        sopimus-id (ffirst (q (str "SELECT id FROM sopimus WHERE urakka = " urakka-id " AND paasopimus IS NULL")))
-        _ (u (format "DELETE FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s;" sopimus-id))
-        aika-ennen (edellinen-materiaalin-kayton-paivitys sopimus-id)
-        sopimuksen_kaytetty_materiaali-maara-ennen (ffirst (q (str "SELECT count(*) FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id)))
-        kaytetty-talvisuolaliuos-odotettu 4.62M
-        _ (anna-kirjoitusoikeus kayttaja-yit)
-        vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti
-                         (-> "test/resurssit/api/reittitoteuma_yksittainen_ilman_sopimusta.json"
-                           slurp
-                           (.replace "__ID__" (str ulkoinen-id))
-                           (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
-        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-    (odota-reittipisteet toteuma-id)
-    (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen)
-    (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          sopimuksen_kaytetty_materiaali-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
-      (is (= 0 sopimuksen_kaytetty_materiaali-maara-ennen))
-      (is (= 1 (count sopimuksen_kaytetty_materiaali-jalkeen)))
-      (is (= kaytetty-talvisuolaliuos-odotettu (last (first sopimuksen_kaytetty_materiaali-jalkeen)))))))
-
-
 (deftest tallenna-usea-reittitoteuma
   (let [urakka (hae-oulun-alueurakan-2014-2019-id)
         ulkoiset-idt (tyokalut/hae-usea-vapaa-toteuma-ulkoinen-id 2)
@@ -628,51 +602,6 @@
                     (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")
                     (.replace "__PVM__" (json-tyokalut/json-pvm (java.util.Date.)))))]
     (is (= 200 (:status vastaus)) "Toteuman poisto onnistuu")))
-
-(deftest materiaalin-kaytto-paivittyy-oikein
-  (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
-        poistetaan-aluksi-materiaalit-cachesta (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id)
-        lasketaan-materiaalicache-uusiksi (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain(" urakka-id ",'2017-01-01'::DATE,'2100-12-31'::DATE);"))
-        ;; Vuonna 2017 ei pitäisi oulun urakalla olla toteumia kannassa
-        hae-materiaalit #(q-map "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND extract(year from pvm) = 2017 ")
-        materiaalin-kaytto-ennen (hae-materiaalit)]
-
-    (testing "Materiaalin käyttö on tyhjä aluksi"
-      (is (empty? materiaalin-kaytto-ennen)))
-
-    (testing "Uuden materiaalitoteuman lähetys lisää päivälle rivin"
-      (let [aika-ennen (edellinen-materiaalin-kayton-paivitys sopimus-id)
-            ulkoinen-id1 (laheta-yksittainen-reittitoteuma urakka-id kayttaja-yit "2017-01-30")
-            toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id1)))]
-        (odota-reittipisteet toteuma-id)
-        (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen)
-        (let [rivit1 (hae-materiaalit)
-              maara1 (:maara (first rivit1))]
-          (is (= 1 (count rivit1)))
-          (is (=marginaalissa? maara1 4.62) "Suolaa 4.62")
-
-          (testing "Uusi toteuma samalle päivälle, kasvattaa lukua"
-            ;; Lähetetään uusi toteuma, määrän pitää tuplautua ja rivimäärä olla sama
-            (let [aika-ennen2 (edellinen-materiaalin-kayton-paivitys sopimus-id)
-                  ulkoinen-id2 (laheta-yksittainen-reittitoteuma urakka-id kayttaja-jvh "2017-01-30")
-                  toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id2)))
-                  _ (odota-reittipisteet toteuma-id)
-                  _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen2)
-                  rivit2 (hae-materiaalit)
-                  maara2 (:maara (first rivit2))]
-              (is (= 1 (count rivit2)) "rivien määrä pysyy samana")
-              (is (=marginaalissa? maara2 (* 2 maara1)) "Määrä on tuplautunut")))
-
-          (testing "Ensimmäisen toteuman poistaminen vähentää määriä"
-            (poista-toteuma ulkoinen-id1 urakka-id kayttaja-yit)
-
-            (let [;; Koska suorituksen ajankohta muuttuu niin paljon, niin koko hoitoluokkahistoria pitää päivittää tälle yritykselle
-                  _ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain(" urakka-id ",'2017-01-01'::DATE,'2100-12-31'::DATE);"))
-                  rivit3 (hae-materiaalit)
-                  maara3 (:maara (first rivit3))]
-              (is (= 1 (count rivit3)) "Rivejä on sama määrä")
-              (is (=marginaalissa? maara3 4.62) "Määrä on laskenut takaisin"))))))))
 
 (defn laheta-yksittainen-reittitoteuma-materiaalilla [urakka-id kayttaja reittitoteuma-materiaali reittipiste1-materiaali reittipiste2-materiaali]
   (let [ulkoinen-id (str (tyokalut/hae-vapaa-toteuma-ulkoinen-id))
@@ -804,86 +733,13 @@
 
     (is (= 200 (:status toinen-vastaus-lisays)))))
 
-(deftest paivita-reittitoteuma-monesti-hoitoluokittaiset-summat-paivitetaan-oikein
-  (let [urakka (hae-oulun-alueurakan-2014-2019-id)
-        ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-        sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka)
-        _ (anna-kirjoitusoikeus kayttaja-yit)
-        reittototeumakutsu-joka-tehdaan-monesti (fn [urakka kayttaja-yit portti sopimus-id ulkoinen-id]
-                                                  (let [aika-ennen (edellinen-materiaalin-kayton-paivitys sopimus-id)
-                                                        vastaus (tyokalut/post-kutsu ["/api/urakat/" urakka "/toteumat/reitti"] kayttaja-yit portti
-                                                                  (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
-                                                                    slurp
-                                                                    (.replace "__LAHDE__" "koneellinen")
-                                                                    (.replace "__SOPIMUS_ID__" (str sopimus-id))
-                                                                    (.replace "__ID__" (str ulkoinen-id))
-                                                                    (.replace "__SUORITTAJA_NIMI__" "Tienpesijät Oy")))
-                                                        toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-                                                    (odota-reittipisteet toteuma-id)
-                                                    (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen)
-                                                    vastaus))
-        vastaus-lisays (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja-yit portti sopimus-id ulkoinen-id)
-        hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
-        sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
-        hoitoluokittaiset-toka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
-        sopimuksen-mat-kaytto-toka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-    (is (= 200 (:status vastaus-lisays)))
-    (let [toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
-      (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
-
-      ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-      (let [vastaus-paivitys (reittototeumakutsu-joka-tehdaan-monesti urakka kayttaja-yit portti sopimus-id ulkoinen-id)
-            hoitoluokittaiset-kolmannen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka))
-            sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-        (is (= 200 (:status vastaus-paivitys)))
-        (let [toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              testattava-apitunnus 987654
-              {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
-                                                          (columns ::rp/toteuman-reittipisteet)
-                                                          {::rp/toteuma-id toteuma-id}))
-              toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-              toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
-              toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
-              toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
-                                                    JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-                                                    WHERE toteuma = " toteuma-id)))]
-          (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
-          (is (= (count reittipisteet) 3))
-          (is (= (count toteuma-tehtava-idt) 3))
-          (is (= (some #(= % testattava-apitunnus) toteuma-tehtava-idt) nil) "Tehtävä-id:ksi ei ole tallennettu apitunnusta (987654) vaan toimenpidekoodin id.")
-          (is (= (count toteuma-materiaali-idt) 1))
-          (is (= toteuman-materiaali "Talvisuolaliuos NaCl"))
-
-          (doseq [reittipiste reittipisteet]
-            (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
-                  reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
-                  reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
-              (is (= (count reitti-tehtava-idt) 3))
-              (is (= (count reitti-materiaali-idt) 1))
-              (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
-
-          (poista-reittitoteuma toteuma-id ulkoinen-id urakka))
-        (is (= hoitoluokittaiset-eka-kutsun-jalkeen
-              hoitoluokittaiset-toka-kutsun-jalkeen
-              hoitoluokittaiset-kolmannen-kutsun-jalkeen) "hoitoluokittaiset samat kaikkien kutsujen jälkeen")
-        (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
-              sopimuksen-mat-kaytto-toka-kutsun-jalkeen
-              sopimuksen-mat-kaytto-kolmannen-kutsun-jalkeen) "sopimuksen mat käyttö samat kaikkien kutsujen jälkeen")))))
-
-;; testaa että update trigger toimii oikein
+;; Testaa että update_toteuma_check_partition-triggeri tallentaa materiaalivalimuisti_paivitystarve-rivin
+;; oikein kun toteuman alkanut-kenttä muuttuu. Cache-päivitys tapahtuu vasta yöeräajossa.
 (deftest paivita-reittitoteuman-alkupvm
   (let [urakka-id (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
-        ;; Poista urakan kaikki toteumat kannasta
-        _ (u (format "UPDATE toteuma SET poistettu = TRUE WHERE urakka = %s;" urakka-id))
-        ;; Poista kaikki materiaalicachet kannasta urakalta
-        _ (u "DELETE FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id)
         sopimus-id (hae-annetun-urakan-paasopimuksen-id urakka-id)
-
-        materiaalicache (q (format "SELECT * FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = %s" urakka-id))
-        _ (u (format "DELETE FROM sopimuksen_kaytetty_materiaali WHERE sopimus = %s;" sopimus-id))
         ulkoinen-id (tyokalut/hae-vapaa-toteuma-ulkoinen-id)
-        aika-ennen (edellinen-materiaalin-kayton-paivitys sopimus-id)
-        _ (anna-kirjoitusoikeus kayttaja)
+        _ (anna-kirjoitusoikeus kayttaja-yit)
         toteuma (-> "test/resurssit/api/toteumat/reittitoteuma_yksittainen.json"
                   slurp
                   (.replace "__LAHDE__" "koneellinen")
@@ -897,84 +753,38 @@
 
         ;; Tallennetaan toteuma aluksi kantaan
         vastaus-lisays (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti toteuma)
+        _ (is (= 200 (:status vastaus-lisays)))
 
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
         _ (odota-reittipisteet toteuma-id)
-        _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen)
-        hoitoluokittaiset-eka-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara
-        FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND pvm > '2014-01-01'::DATE AND pvm < '2016-09-30'::DATE"))
-        sopimuksen-mat-kaytto-eka-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
 
-        toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))]
+        muutos-ennen-paivitysta (q (str "SELECT id FROM materiaalivalimuisti_paivitystarve WHERE toteuma_id = " toteuma-id))
 
+        ;; Päivitetään toteuma uudella alkanut-ajalla — triggerin pitäisi luoda materiaalivalimuisti_paivitystarve-rivi
+        vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti toteuma-ajat-muokattu)
+        _ (is (= 200 (:status vastaus-paivitys)))
 
-    (is (= 200 (:status vastaus-lisays)))
-    ;; Varmista, että sopimuksen_kaytetty_materiaali taulun sisältö on päivittynyt toteuman lisäämisen jälkeen ja triggeri on toiminut
-    (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[sopimus-id #inst "2016-01-29T22:00:00.000-00:00" 1 4.62M]])
-      "sopimuksen-mat-kaytto-eka-kutsun-jalkeen")
-    ;; Varmista, että surakan_materiaalin_kaytto_hoitoluokittain taulun sisältö on päivittynyt toteuman lisäämisen jälkeen ja triggeri on toiminut
-    (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 2 urakka-id 4.62M]]))
+        toteuma-id-paivityksen-jalkeen (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
+        _ (odota-reittipisteet toteuma-id-paivityksen-jalkeen)
 
-    (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
+        muutos-paivityksen-jalkeen (first (q (str "SELECT toteuma_id, urakka_id, toteuma_alkanut_vanha::date
+                                                     FROM materiaalivalimuisti_paivitystarve
+                                                    WHERE toteuma_id = " toteuma-id-paivityksen-jalkeen)))]
 
-    ; Päivitetään toteumaa ja tarkistetaan, että se päivittyy
-    (let [aika-ennen2 (edellinen-materiaalin-kayton-paivitys sopimus-id)
-          ;; Muutetaan toteuma alkamaan vuoden verran aiemmin
-          vastaus-paivitys (tyokalut/post-kutsu ["/api/urakat/" urakka-id "/toteumat/reitti"] kayttaja-yit portti toteuma-ajat-muokattu)
-          toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-          _ (odota-reittipisteet toteuma-id)
-          _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen2)
-          aika-ennen3 (edellinen-materiaalin-kayton-paivitys sopimus-id)
-          _ (is (not= aika-ennen2 aika-ennen3) "Materiaalin käytön päivitysaika on muuttunut päivityksen jälkeen")
+    ;; Ennen päivitystä materiaalivalimuisti_paivitystarve-taulussa ei pitäisi olla riviä tälle toteumalle
+    (is (empty? muutos-ennen-paivitysta)
+      "materiaalivalimuisti_paivitystarve on tyhjä ennen alkanut-muutosta")
 
-          ;; Koska suorituksen ajankohta muuttuu niin paljon, niin koko hoitoluokkahistoria pitää päivittää tälle yritykselle
-          _ (q (str "select paivita_urakan_materiaalin_kaytto_hoitoluokittain(" urakka-id ",'2014-01-01'::DATE,'2100-12-31'::DATE);"))
-          hoitoluokittaiset-toisen-kutsun-jalkeen (q (str "SELECT pvm, materiaalikoodi, talvihoitoluokka, urakka, maara
-            FROM urakan_materiaalin_kaytto_hoitoluokittain WHERE urakka = " urakka-id " AND pvm > '2014-01-01'::DATE AND pvm < '2016-09-30'::DATE"))
+    ;; Päivityksen jälkeen triggerin pitää olla luonut materiaalivalimuisti_paivitystarve-rivi vanhalla pvm:llä
+    (is (some? muutos-paivityksen-jalkeen)
+      "materiaalivalimuisti_paivitystarve sisältää rivin alkanut-muutoksen jälkeen")
+    (is (= urakka-id (second muutos-paivityksen-jalkeen))
+      "materiaalivalimuisti_paivitystarve.urakka_id on oikein")
+    (is (= #inst "2016-01-29T22:00:00.000-00:00" (last muutos-paivityksen-jalkeen))
+      "materiaalivalimuisti_paivitystarve.toteuma_alkanut_vanha on alkuperäinen pvm ennen muutosta")
 
-          sopimuksen-mat-kaytto-toisen-kutsun-jalkeen1 (q-map (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))
-          sopimuksen-mat-kaytto-toisen-kutsun-jalkeen (q (str "SELECT sopimus, alkupvm, materiaalikoodi, maara FROM sopimuksen_kaytetty_materiaali WHERE sopimus = " sopimus-id))]
-
-      (is (= 200 (:status vastaus-paivitys)))
-      (let [testattava-apitunnus 987654
-            {reittipisteet ::rp/reittipisteet} (first (fetch ds ::rp/toteuman-reittipisteet
-                                                        (columns ::rp/toteuman-reittipisteet)
-                                                        {::rp/toteuma-id toteuma-id}))
-            toteuma-kannassa (first (q (str "SELECT ulkoinen_id, suorittajan_ytunnus, suorittajan_nimi FROM toteuma WHERE ulkoinen_id = " ulkoinen-id)))
-            toteuma-tehtava-idt (into [] (flatten (q (str "SELECT id FROM toteuma_tehtava WHERE toteuma = " toteuma-id))))
-            toteuma-materiaali-idt (into [] (flatten (q (str "SELECT id FROM toteuma_materiaali WHERE toteuma = " toteuma-id))))
-            toteuman-materiaali (ffirst (q (str "SELECT nimi FROM toteuma_materiaali
-                                                    JOIN materiaalikoodi ON materiaalikoodi.id = toteuma_materiaali.materiaalikoodi
-                                                    WHERE toteuma = " toteuma-id)))]
-        (is (= toteuma-kannassa [ulkoinen-id "8765432-1" "Tienpesijät Oy"]))
-        (is (= (count reittipisteet) 3))
-        (is (= (count toteuma-tehtava-idt) 3))
-        (is (= (some #(= % testattava-apitunnus) toteuma-tehtava-idt) nil) "Tehtävä-id:ksi ei ole tallennettu apitunnusta (987654) vaan toimenpidekoodin id.")
-        (is (= (count toteuma-materiaali-idt) 1))
-        (is (= toteuman-materiaali "Talvisuolaliuos NaCl"))
-
-        (doseq [reittipiste reittipisteet]
-          (let [reitti-tehtava-idt (into [] (map ::rp/toimenpidekoodi) (::rp/tehtavat reittipiste))
-                reitti-materiaali-idt (into [] (map ::rp/materiaalikoodi) (::rp/materiaalit reittipiste))
-                reitti-hoitoluokka (::rp/soratiehoitoluokka reittipiste)]
-            (is (= (count reitti-tehtava-idt) 3))
-            (is (= (count reitti-materiaali-idt) 1))
-            (is (= reitti-hoitoluokka 7)))) ; testidatassa on reittipisteen koordinaateille hoitoluokka
-
-        (poista-reittitoteuma toteuma-id ulkoinen-id urakka-id))
-      ;; hoitoluokittaisten ja sopparin matskun käyttöjen cachen päivittyessä oikein, eivät 1. ja 2. kutsun jälkeiset tilat ole samat
-      (is (not= hoitoluokittaiset-eka-kutsun-jalkeen
-            hoitoluokittaiset-toisen-kutsun-jalkeen))
-      (is (not= sopimuksen-mat-kaytto-eka-kutsun-jalkeen
-            sopimuksen-mat-kaytto-toisen-kutsun-jalkeen))
-
-      (is (= hoitoluokittaiset-eka-kutsun-jalkeen [[#inst "2016-01-29T22:00:00.000-00:00" 1 2 urakka-id 4.62M]]) "eka kutsun jälkeen")
-      ;; varmista että alkuperäiset on nollattu, ja uuteen pvm:ään puolestaan lisätty määrät
-      (is (= hoitoluokittaiset-toisen-kutsun-jalkeen [[#inst "2014-12-31T22:00:00.000-00:00" 1 2 urakka-id 4.62M]]) "toisen kutsun jälkeen")
-      (is (= sopimuksen-mat-kaytto-eka-kutsun-jalkeen [[sopimus-id #inst "2016-01-29T22:00:00.000-00:00" 1 4.62M]])
-        "sopimuksen-mat-kaytto-eka-kutsun-jalkeen")
-      (is (= sopimuksen-mat-kaytto-toisen-kutsun-jalkeen [[sopimus-id #inst "2014-12-31T22:00:00.000-00:00" 1 4.62M]])
-        "sopimuksen-mat-kaytto-toisen-kutsun-jalkeen"))))
+    (poista-reittitoteuma toteuma-id-paivityksen-jalkeen ulkoinen-id urakka-id)
+    (u (str "DELETE FROM materiaalivalimuisti_paivitystarve WHERE toteuma_id = " toteuma-id-paivityksen-jalkeen))))
 
 ;; Varmistetaan että suolatoteuma_reittipiste-taulu päivittyy oikein kun reittitoteumaa päivitetään.
 (deftest suolarajoitusalueen-toteumat-paivittyy-oikein
@@ -1005,7 +815,7 @@
 
         toteuma-id (ffirst (q (str "SELECT id FROM toteuma WHERE ulkoinen_id=" ulkoinen-id)))
         _ (odota-reittipisteet toteuma-id)
-        _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen)
+       ;; _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen)
         suolatoteuma-reittipiste-maara-fn #(ffirst (q (str "SELECT sum(maara) FROM suolatoteuma_reittipiste WHERE toteuma=" toteuma-id " AND rajoitusalue_id is not null")))
 
         reittipiste-suolamaara-fn #(ffirst (q (str "SELECT sum(mat.maara) FROM toteuman_reittipisteet trp"
@@ -1024,7 +834,7 @@
                      (.replace "\"maara\": 1.32" "\"maara\": 0.32")))
 
         _ (odota-reittipisteet toteuma-id)
-        _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen2)
+       ;; _ (odota-materiaalin-kaytto-paivittynyt sopimus-id aika-ennen2)
 
         suolatoteuma-reittipiste-suola-2 (suolatoteuma-reittipiste-maara-fn)
         toteuma-reittipiste-suola-2 (reittipiste-suolamaara-fn)]

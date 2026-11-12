@@ -5,9 +5,9 @@
   {:positional? true})
 
 (declare urakan-paasopimus-id hae-urakka hae-urakan-tiedot hae-urakan-tyyppi hae-urakan-sopimukset
-  hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely hae-urakan-parametrit aseta-tai-paivita-urakkaparametrit
-  hae-urakat-tyypilla-ja-hallintayksikolla urakan-hallintayksikko urakan-elinvoimakeskus
-  hae-id-sampoidlla hae-urakkatyyppi-sampoidlla aseta-urakan-toimenkuvat
+  hae-urakan-sampo-id hae-yksittainen-urakka hae-urakan-ely hae-urakan-parametrit aseta-tai-paivita-urakkaparametrit aseta-tai-paivita-vesivaylaurakan-parametrit
+  hae-urakat-tyypilla-ja-hallintayksikolla hae-urakat-joilla-voi-olla-parametreja urakan-hallintayksikko urakan-elinvoimakeskus
+  hae-id-sampoidlla hae-urakkatyyppi-sampoidlla aseta-urakan-toimenkuvat aseta-vesivaylaurakan-toimenkuvat
   hae-urakan-velho-oid
   hae-urakan-alkuvuosi onko-olemassa onko-urakalla-tehtavaa hae-urakka-sijainnilla listaa-kaikki-urakat-analytiikalle
   listaa-urakat-analytiikalle-hoitovuosittain hae-paallystysurakat-analytiikalle
@@ -24,7 +24,8 @@
   hae-kaikki-urakat-aikavalilla hae-elinvoimakeskuksen-urakat hae-urakoiden-tunnistetiedot
   hae-jarjestelmakayttajan-urakat hae-urakat-ytunnuksella hae-urakat-joihin-jarjestelmalla-erillisoikeus
   hae-elinvoimakeskuksen-kaynnissa-olevat-urakkatyypin-urakat hae-hallintayksikon-kaynnissa-olevat-urakat
-  hae-kaynnissa-olevat-urakkatyypin-urakat hae-kaynnissa-olevat-urakat hae-kaynnissa-olevat-hoitourakat)
+  hae-kaynnissa-olevat-urakkatyypin-urakat hae-kaynnissa-olevat-urakat hae-kaynnissa-olevat-hoitourakat
+  hae-aktiivisten-hoitourakoiden-urakkanumerot)
 
 (defn onko-olemassa? [db id]
   (:exists (first (onko-olemassa db id))))
