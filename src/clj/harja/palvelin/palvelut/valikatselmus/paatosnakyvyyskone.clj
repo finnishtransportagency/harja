@@ -293,7 +293,7 @@
                                    0)
           tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
           ;; Tavoitepalkkio on alituksesta max 3% tavoitehinnasta (prosentti tulee parametritaulusta) - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
-          maksuprosentti (/ tavoitepalkkion-maksuprosentti 100)
+          maksuprosentti (/ (or tavoitepalkkion-maksuprosentti 0) 100)
           laskennallinen-tavoitepalkkio (when tavoitehinnan-alitus (* maksuprosentti tavoitehinnan-alitus))
           ;; Viimeisenä vuotena maksetaan maksuprosentin mukaan. Eli esim 30% alituksesta. (-25 alkavilla 75%)
           ;; Muina vuosina siirrettäväksi summaksi ja tavoitepalkkioksi tulee maksimimaksuprosentin mukainen summa
@@ -371,7 +371,7 @@
 
           ;; Jäljelle jäänyt paatos
           tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
-          urakoitsijan-prosentti (- 100 tilaajan-prosentti)
+          urakoitsijan-prosentti (- 100 (or tilaajan-prosentti 0))
           viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
           tavoitehinnan-ylityspaatos (-> tavoitehinnan-ylityspaatos
                                        (assoc :urakkaid urakkaid)
@@ -381,7 +381,9 @@
                                        (assoc :ylityksen_maara tavoitehinnan-ylitys)
                                        (assoc :tilaajan_prosentti tilaajan-prosentti)
                                        (assoc :urakoitsijan_prosentti urakoitsijan-prosentti)
-                                       (assoc :tilaaja_maksaa (* (/ tilaajan-prosentti 100) (or tavoitehinnan-ylitys 0)))
+                                       (assoc :tilaaja_maksaa (*
+                                                                (/ (or tilaajan-prosentti 0) 100)
+                                                                (or tavoitehinnan-ylitys 0)))
                                        (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) (or tavoitehinnan-ylitys 0)))
                                        (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
                                        (assoc :virheet (when-not (empty? virheet) virheet)))
@@ -520,9 +522,15 @@
           ;; Lasketaan kattohinta -- Etsitään ensin indeksikorjauspäätös
           indeksikorjauspaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset))
 
-          hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
-                                         (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                         (* kattohinnan-hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+          kattohinta-kerroin (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 0)
+
+          indeksikorjaus (if (:id indeksikorjauspaatos)
+                           0
+                           (or hoitovuoden-lopun-indeksikorjaus-summa 0))
+
+          hoitovuoden-lopun-kattohinta (+ (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
+                                         (* indeksikorjaus kattohinta-kerroin)
+                                         (* (or kattohinnan-hintamuutos 0) kattohinta-kerroin))
 
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
