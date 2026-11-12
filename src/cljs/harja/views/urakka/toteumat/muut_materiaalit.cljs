@@ -176,6 +176,38 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
         (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
         ". hoitovuodelle " hoitovuosi "-" (inc hoitovuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))
 
+(defn paivita-toteuman-alkanut
+  "Asettaa aloituspäivän ja siirtää tarvittaessa sitä aiemman lopetuspäivän seuraavaan päivään."
+  [toteuma alkanut]
+  (let [paattynyt (:paattynyt toteuma)]
+    (assoc
+      (if (and (not (str/blank? alkanut))
+            (not (str/blank? paattynyt))
+            (pvm/ennen? paattynyt alkanut))
+        (assoc toteuma :paattynyt (pvm/ajan-muokkaus alkanut true 1 :paiva))
+        toteuma)
+      :alkanut alkanut)))
+
+(defn- lopetuspvm-jarjestysvirhe? [alkanut paattynyt]
+  (and (not (str/blank? alkanut))
+    (not (str/blank? paattynyt))
+    (pvm/ennen? paattynyt alkanut)))
+
+(defn materiaalitoteuman-paivamaaravirheet
+  "Palauttaa materiaalitoteuman aloitus- ja lopetuspäivämäärien validointivirheet."
+  [urakan-alkupvm toteuma lukitustiedot]
+  (let [alkanut (:alkanut toteuma)
+        paattynyt (:paattynyt toteuma)]
+    (cond-> []
+      (or (str/blank? alkanut)
+        (paivamaaran-lukitusvirhe urakan-alkupvm alkanut (:valittu lukitustiedot)))
+      (conj "Aloitus: Päivämäärä virheellinen")
+
+      (or (str/blank? paattynyt)
+        (lopetuspvm-jarjestysvirhe? alkanut paattynyt)
+        (paivamaaran-lukitusvirhe urakan-alkupvm paattynyt (:valittu-paattynyt lukitustiedot)))
+      (conj "Lopetus: Päivämäärä on virheellinen"))))
+
 (defn materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur]
@@ -211,9 +243,19 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                (some? @lukitustiedot)
                                (not (materiaalitoteuma-lukittu? @lukitustiedot))
                                (zero? (count @materiaalien-virheet)))
-              urakan-alkupvm (:alkupvm @nav/valittu-urakka)]
+              urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+              paivamaaravirheet (materiaalitoteuman-paivamaaravirheet
+                                  urakan-alkupvm
+                                  @materiaali-tiedot/valitun-materiaalitoteuman-tiedot
+                                  @lukitustiedot)]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot nil)]
+         (when (seq paivamaaravirheet)
+           [yleiset/info-laatikko
+            :varoitus
+            "Materiaalitoteumaa ei voi tallentaa, koska tiedoissa on virhe"
+            paivamaaravirheet
+            nil])
          [lomake {:otsikko (if (:id @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
                              "Muokkaa toteumaa"
                              "Luo uusi toteuma")
@@ -255,19 +297,14 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                         (paivamaaran-lukitusvirhe urakan-alkupvm paivamaara (:valittu @lukitustiedot)))]
             :huomauta [[:urakan-aikana-ja-hoitokaudella]]
             :muokattava? (constantly (not jarjestelman-luoma?))
-            :aseta (fn [rivi arvo]
-                     (assoc
-                       (if (or
-                             (not (:paattynyt rivi))
-                             (pvm/jalkeen? arvo (:paattynyt rivi)))
-                         (assoc rivi :paattynyt arvo)
-                         rivi)
-                       :alkanut arvo))}
+            :aseta paivita-toteuman-alkanut}
            {:otsikko "Lopetus" :nimi :paattynyt
             :pakollinen? true
             :tyyppi :pvm
             :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
-                      [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]
+                      (fn [paivamaara rivi _taulukko]
+                        (when (lopetuspvm-jarjestysvirhe? (:alkanut rivi) paivamaara)
+                          "Lopetuksen pitää olla aloituksen jälkeen"))
                       (fn [paivamaara _rivi _taulukko]
                         (paivamaaran-lukitusvirhe urakan-alkupvm paivamaara (:valittu-paattynyt @lukitustiedot)))]
             :muokattava? (constantly (not jarjestelman-luoma?))}
