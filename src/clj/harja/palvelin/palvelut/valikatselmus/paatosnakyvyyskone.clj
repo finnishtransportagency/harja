@@ -518,7 +518,18 @@
           hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
 
           hoitovuoden-lopun-indeksikorjaus-summa (or hoitovuoden-lopun-indeksikorjaus-summa 0)
-          hoitovuoden-lopun-tavoitehinta (+ (or tavoitehinta-indeksikorjattu 0) (or tavoitehinnan-hintamuutos 0) hoitovuoden-lopun-indeksikorjaus-summa)
+
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (round2 2
+                                                                  (+
+                                                                    (or tavoitehinta-indeksikorjattu 0)
+                                                                    (or tavoitehinnan-hintamuutos 0)))
+
+          hoitovuoden-lopun-tavoitehinta (bigdec
+                                           (round2 2
+                                             (+
+                                               hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta
+                                               hoitovuoden-lopun-indeksikorjaus-summa)))
+
           ;; Lasketaan kattohinta -- Etsitään ensin indeksikorjauspäätös
           indeksikorjauspaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset))
 
@@ -531,6 +542,7 @@
           hoitovuoden-lopun-kattohinta (+ (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
                                          (* indeksikorjaus kattohinta-kerroin)
                                          (* (or kattohinnan-hintamuutos 0) kattohinta-kerroin))
+
 
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
