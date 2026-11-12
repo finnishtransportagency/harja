@@ -186,8 +186,8 @@ Integraatioiden testit ovat järjestelmittäin hakemistossa
 - [`figwheel_conf/`](figwheel_conf/) - Figwheel-mainin ClojureScript-buildien määritykset.
 - [`.github/workflows/`](.github/workflows/) - build-, testaus- ja julkaisu-workflow't.
 - [`.github/actions/`](.github/actions/) - workflowien käyttämät composite actionit.
-- [`tools/docker/`](tools/docker/) - Docker image definitions and build/push scripts for images used by CI and local
-  development; [Docker documentation](tools/docker/README.md). The `docker-compose.ci.yml` file is currently CI-only.
+- [`tools/docker/`](tools/docker/) - CI:ssä ja paikallisessa kehityksessä käytettävien Docker-imagejen määrittelyt ja
+  build/push-skriptit; [Docker-ohje](tools/docker/README.md). Tiedosto `docker-compose.ci.yml` on vain CI-käyttöön.
 - [`aws/fargate/`](aws/fargate/) - AWS:ssä ajettavan sovelluskontin toteutus.
 - [`sh/`](sh/) - kehityksen ja testauksen apuskriptit.
 - [`script/`](script/) - REPL-käytön apukoodi.
@@ -348,17 +348,16 @@ ei ole päällä, sovellus logittaa virheitä jos JMS brokeriin ei saada yhteytt
 Jos testaat paikallisesti JMS-jonoja ja erityisesti ITMF:ään, katso lisäohjeita tiedostosta test/clj.harja.integraatio
 
 * Tietokanta: ks. `tietokanta/devdb_up.sh` ja `tietokanta/devdb_down.sh`
-* ActiveMQ Artemis: see the [local run instructions](#activemq-artemis). The CI-only Compose file is not for local
-  use.
+* ActiveMQ Artemis: katso [paikallisen käynnistyksen ohjeet](#activemq-artemis).
 
 Kantaimagen päivitys: docker pull ghcr.io/finnishtransportagency/harja_harjadb:latest
 
 ## ActiveMQ Artemis
 
-Harja uses ActiveMQ Artemis for JMS queues. CI integration tests use the shared Docker image. The Compose configuration
-under `tools/docker` is CI-only and is not used for local development.
+Harja käyttää ActiveMQ Artemista JMS-jonoihin. CI:n integraatiotesteissä käytetään yhteistä Docker-imageä.
+`tools/docker`-hakemiston Compose-määritys on vain CI-käyttöön, eikä sitä käytetä paikallisessa kehityksessä.
 
-To run the image locally from the repository root:
+Käynnistä image paikallisesti projektin juuresta:
 
 ```bash
 docker run -d --name activemq-artemis-itmf \
@@ -370,16 +369,16 @@ docker run -d --name activemq-artemis-itmf \
   ghcr.io/finnishtransportagency/harja_activemq_artemis:latest
 ```
 
-The broker is available at `tcp://localhost:61616`; the web console is at `http://localhost:8161` (admin/admin).
-Run local integration tests with:
+Broker on käytettävissä osoitteessa `tcp://localhost:61616` ja web-konsoli osoitteessa
+`http://localhost:8161` (admin/admin). Aja paikalliset integraatiotestit komennolla:
 
 ```bash
 HARJA_ITMF_BROKER_PORT=61616 HARJA_ITMF_BROKER_AI_PORT=8161 lein test :integraatio
 ```
 
-Stop and remove the container with `docker rm -f activemq-artemis-itmf`.
+Pysäytä ja poista kontti komennolla `docker rm -f activemq-artemis-itmf`.
 
-**Further reading:**
+**Lisätietoja:**
 
 * [tools/docker/activemq-artemis/README.md](tools/docker/activemq-artemis/README.md)
 * [tools/docker/README.md](tools/docker/README.md)

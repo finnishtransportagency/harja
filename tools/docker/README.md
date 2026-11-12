@@ -1,7 +1,7 @@
 # Harjan Workflowien käyttämät Docker-imaget
 
-This directory contains Docker image definitions and build/push scripts for images used by CI and local development. The
-`docker-compose.ci.yml` file is CI-only; it is not a local development Compose configuration.
+Tässä hakemistossa ovat CI:ssä ja paikallisessa kehityksessä käytettävien Docker-imagejen määrittelyt ja build/push-skriptit.
+Tiedosto `docker-compose.ci.yml` on tarkoitettu lähinnä CI-käyttöön, ei paikallisen kehitysympäristön Compose-määritykseksi.
 
 GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
 1. Testitietokanta (harjadb): [docker/tietokanta/Dockerfile](./tietokanta/Dockerfile)
@@ -80,8 +80,8 @@ Alla olevat seikat on syytä huomioida, jos on tarvetta toteuttaa uusi image.
     * Huomioi, että imaget ovat aina oletuksena privaatteja. Toistaiseksi ei ole tarvetta julkaista julkisia imageja.
 5. Docker containerin ajoon kannattaa tehdä uudelleenkäytettävä composite action: [.github/actions](../../.github/actions/)
     * Ota mallia olemassaolevista composite actioneista
-6. For CI-only networking and multi-container settings, update [docker-compose.ci.yml](./docker-compose.ci.yml).
-   This Compose file is not intended for local development.
+6. Muokkaa CI:n verkko- ja usean kontin asetuksia tiedostossa [docker-compose.ci.yml](./docker-compose.ci.yml).
+   Tiedostoa ei ole tarkoitettu paikalliseen kehitykseen.
 
 ## Imageiden päivitys
 
