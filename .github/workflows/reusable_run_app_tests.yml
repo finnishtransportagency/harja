@@ -593,6 +593,8 @@ jobs:
           phantom-js: 2.1.1
 
       - name: Front end tests
+        env:
+          OPENSSL_CONF: /dev/null
         run: |
           lein with-profile +phantomjs doo phantom test once
 

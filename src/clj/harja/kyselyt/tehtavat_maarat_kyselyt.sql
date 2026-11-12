@@ -1,4 +1,5 @@
 -- name: hae-maaramitattavat-tehtavat
+-- Haetaan MHU tyyppiset maaramitattavat tehtävät
 WITH rahavaraustehtava AS
     (
     SELECT rt.id, rt.tehtava_id
@@ -58,7 +59,7 @@ SELECT t.id as tehtava_id, t.nimi, t.tehtavaryhma as tehtavaryhmaid, t.yksikko, 
        v.muutossumma AS muutos_maaramuutos,
        v.laskettu_maara AS yhteensa
 FROM tehtavaryhma tr
-      JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
+      JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id AND tro.urakkatyyppi = 'teiden-hoito'
       JOIN tehtava t ON tr.id = t.tehtavaryhma
             AND t."mhu-tehtava?" IS TRUE
             AND t.poistettu IS NOT TRUE

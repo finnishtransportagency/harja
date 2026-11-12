@@ -35,16 +35,23 @@ runs:
       uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
       if: ${{ inputs.install-leiningen != 'false' }}
       with:
-        path: /usr/local/bin/lein
+        # Cachetetaan lein-skriptin lisäksi myös sen lataama standalone-jar, jotta sitä ei ladata joka ajossa uudelleen.
+        path: |
+          /usr/local/bin/lein
+          ~/.lein/self-installs
         key: ${{ runner.os }}-lein-${{ inputs.install-leiningen }}
 
     - name: Prepare Leiningen
       if: ${{ inputs.install-leiningen != 'false' && steps.cache-leiningen.outputs.cache-hit != 'true' }}
       env:
         LEIN_VERSION: ${{ inputs.install-leiningen }}
+        # Lein-skripti käyttää tätä komentoa standalone-jarin lataamiseen. Lisätään uudelleenyrityksiö verkkovirheiden varalta.
+        # Retry suoritetaan kaikkien verkkovirheiden yhteydessä
+        HTTP_CLIENT: 'curl --retry 5 --retry-all-errors --retry-delay 10 --connect-timeout 30 -f -L -o'
       run: |
         cd /tmp
-        wget -O /tmp/lein https://raw.githubusercontent.com/technomancy/leiningen/${LEIN_VERSION}/bin/lein
+        curl --retry 5 --retry-all-errors --retry-delay 10 --connect-timeout 30 -fsSL -o /tmp/lein \
+          "https://raw.githubusercontent.com/technomancy/leiningen/${LEIN_VERSION}/bin/lein"
         chmod +x /tmp/lein
         mv -f /tmp/lein /usr/local/bin/lein
         cd -
@@ -61,9 +68,49 @@ runs:
 
     - name: Download Clojure dependencies
       if: ${{ inputs.install-clojure-deps == 'true' && steps.cache-clojure-deps.outputs.cache-hit != 'true' }}
+      env:
+        # Lein-skripti käyttää tätä komentoa kyselyiden tekemiseen, lisätään uudelleenyrityksiö verkkovirheiden varalta.
+        # Retry suoritetaan kaikkien verkkovirheiden yhteydessä
+        HTTP_CLIENT: 'curl --retry 5 --retry-all-errors --retry-delay 10 --connect-timeout 30 -f -L -o'
+      # Maven-repot (esim. repo.osgeo.org) palauttavat joskus 5xx-virheitä, joten latausta yritetään uudelleen.
+      # Uusintayrityksissä käytetään Leiningenin sisäänrakennettua +update-profiilia (:update :always), jotta
+      # Maven-resolver ei ohita aiemmin epäonnistuneita latauksia (.lastUpdated-tiedostot ~/.m2:ssa).
+      # Profiilin määrittely: default-profiles, :update {:update :always}
+      # https://github.com/technomancy/leiningen/blob/2.12.0/leiningen-core/src/leiningen/core/project.clj
+      # Jo ladattuja release-artifakteja ei ladata uudelleen.
       run: |
-        lein deps
-        lein with-profile +test,+phantomjs deps
+        hae_riippuvuudet() {
+          local profiilit="$1"
+          local yrityksia=5
+          local odotus=15
+
+          for yritys in $(seq 1 "$yrityksia"); do
+            local kaytettavat_profiilit="$profiilit"
+            if [ "$yritys" -gt 1 ]; then
+              kaytettavat_profiilit="${profiilit:+${profiilit},}+update"
+            fi
+
+            if [ -z "$kaytettavat_profiilit" ]; then
+              lein deps && return 0
+            else
+              lein with-profile "$kaytettavat_profiilit" deps && return 0
+            fi
+
+            if [ "$yritys" -lt "$yrityksia" ]; then
+              echo "::warning::Dependency download failed (attempt ${yritys}/${yrityksia}). Retrying in ${odotus} s."
+              sleep "$odotus"
+              odotus=$((odotus * 2))
+            fi
+          done
+
+          echo "::error::Dependency download failed after ${yrityksia} attempts."
+          return 1
+        }
+
+        # Oletusprofiilien riippuvuudet
+        hae_riippuvuudet ""
+        # Testiprofiilit: PhantomJS-profiili korvaa osan oletusprofiilien kirjastoversioista vanhemmilla.
+        hae_riippuvuudet "+test,+phantomjs"
       shell: bash
 
     # FIXME: delaguardo/setup-clojure@1c76ab0e154379260d7a6ea16b413679abe46785 is not allowed to be used in finnishtransportagency/harja.
@@ -109,4 +156,3 @@ runs:
       run: |
         npm ci --ignore-scripts
       shell: bash
-

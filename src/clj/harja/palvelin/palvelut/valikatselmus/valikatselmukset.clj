@@ -123,6 +123,7 @@
                                        (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
                                        0)
         taman-vuoden-muutokset-summa (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+        taman-vuoden-muutokset-summa (or taman-vuoden-muutokset-summa 0)
 
         ;; 2025 vuodesta eteenpäin on käytössä vuosittaiset muutoset/pysyvät muutokset
         muutosvaikutus (if (>= 2024 urakan-alkuvuosi) 0 taman-vuoden-muutokset-summa)
@@ -136,10 +137,10 @@
                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
         hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta (+ (or hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta
-                                                               (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
-                                                               0)
-                                                            muutosvaikutus
-                                                            arvonvahennykset-yht)]
+                                                                   (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
+                                                                   0)
+                                                                muutosvaikutus
+                                                                arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
     (bigdec (round2 2 hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta))))
 
@@ -256,6 +257,7 @@
                                                                                               :loppupvm (second valittu-hoitokausi)
                                                                                               :hoitokauden-alkuvuosi valittu-hoitovuosi})
         thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        thv-arvonvahennykset-yht (or thv-arvonvahennykset-yht 0)
         ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
         alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid valittu-hoitovuosi 8))
         hoitokauden-indeksikuukaudet (hae-hoitovuoden-indeksiluvut db urakkaid valittu-hoitovuosi)
