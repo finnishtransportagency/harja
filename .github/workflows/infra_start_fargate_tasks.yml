@@ -26,7 +26,7 @@ permissions: {}
 jobs:
   start-fargate-tasks:
     name: "Start Fargate tasks"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     environment:
       name: ${{ inputs.environment }}
       # Käytä ympäristökohtaisia salaisuuksia, mutta estä GitHub deployment-objektin luonti, jotta ei synny turhaa kohinaa.

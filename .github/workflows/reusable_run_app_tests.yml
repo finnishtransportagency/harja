@@ -94,7 +94,7 @@ jobs:
   deps-tree:
     if: ${{ inputs.deps-tree == 'true' }}
     name: "Print Clojure deps tree"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
       contents: read
@@ -119,7 +119,7 @@ jobs:
   lint-clj:
     if: ${{ inputs.lint-clj == 'true' }}
     name: "Lint Clojure"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       # Contents read lupaa tarvitaan checkout actionissa
@@ -149,7 +149,7 @@ jobs:
   validate-oikeudet-edn:
     if: ${{ inputs.validate-oikeudet-edn == 'true' }}
     name: "Validoi oikeudet EDN-tiedostot"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read
 
@@ -198,7 +198,7 @@ jobs:
   validate-migrations:
     if: ${{ inputs.validate-migrations == 'true' && github.event_name == 'pull_request' }}
     name: "Validoi Flyway-migraatiot"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 5
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -228,7 +228,7 @@ jobs:
   build-harja:
     if: ${{ inputs.build-harja != 'false' }}
     name: "Prod build"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -313,7 +313,7 @@ jobs:
   scan-docker-image:
     if: ${{ inputs.scan-docker-image == 'true' }}
     name: "Scan Docker image"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs: build-harja
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -389,7 +389,7 @@ jobs:
   backend-tests:
     if: ${{ inputs.backend-tests == 'true' }}
     name: "Backend-testit (shard ${{ matrix.shard }})"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       TZ: "Europe/Helsinki"
     strategy:
@@ -459,7 +459,7 @@ jobs:
 #  backend-tests:
 #    if: ${{ inputs.backend-tests == 'true' }}
 #    name: "Backend-testit"
-#    runs-on: ubuntu-24.04
+#    runs-on: ubuntu-latest
 #    env:
 #      TZ: "Europe/Helsinki"
 #    permissions:
@@ -508,7 +508,7 @@ jobs:
   slow-tests:
     if: ${{ inputs.slow-tests == 'true' }}
     name: "Hitaat testit"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       TZ: "Europe/Helsinki"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -558,7 +558,7 @@ jobs:
   front-end-tests:
     if: ${{ inputs.front-end-tests == 'true' }}
     name: "Front-end testit"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       TZ: "Europe/Helsinki"
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -600,7 +600,7 @@ jobs:
   integration-tests:
     if: ${{ inputs.integration-tests == 'true' }}
     name: "integraatiotestit"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     timeout-minutes: 30
     env:
       TZ: "Europe/Helsinki"
@@ -662,7 +662,7 @@ jobs:
     if: ${{ inputs.e2e-tests == 'true' }}
     name: "e2e-testit (Cypress)"
     needs: build-harja
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     env:
       # Asetetaan Suomen aikavyöhyke testejä varten
       TZ: "Europe/Helsinki"

@@ -60,7 +60,7 @@ jobs:
     name: "Check test status and notify"
     needs: tests
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
         id: slack

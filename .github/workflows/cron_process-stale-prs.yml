@@ -34,7 +34,7 @@ jobs:
   # Note: https://github.com/actions/stale
   process-stale-prs:
     name: "Process stale PRs"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     permissions:
       contents: read # Vaaditaan oletusarvoinen lukuoikeus repoon
       pull-requests: write # Vaaditaan PR:ien kommentointiin ja sulkemiseen

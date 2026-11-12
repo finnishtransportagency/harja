@@ -73,7 +73,7 @@ jobs:
     name: "Check test status and notify"
     needs: tests
     if: always()
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
         uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
@@ -123,7 +123,7 @@ jobs:
 
   build-harja:
     name: "Build Harja"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -201,7 +201,7 @@ jobs:
 
   build-and-cache-test-image:
     name: "Build and cache test Docker image"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs: build-harja
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -286,7 +286,7 @@ jobs:
   # sillä ei ole pääsyä Docker-registryyn, salaisuuksiin tai SARIF uploadiin.
   scan-docker-image:
     name: "Scan Docker image (Trivy)"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs: build-and-cache-test-image
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -347,7 +347,7 @@ jobs:
 
   upload-scan-results:
     name: "Upload scan results to GitHub Security"
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     needs: scan-docker-image
     # Ajetaan kun scan-docker-image on suoritettu onnistuneesti tai epäonnistuneesti (mutta ei, jos skipattiin tai canceloitiin).
     # Jos scan-docker-image skipattiin (esim. build-jobi failasi), SARIF-artifactia ei ole olemassa.
