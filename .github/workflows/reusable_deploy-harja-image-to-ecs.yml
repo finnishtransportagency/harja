@@ -36,7 +36,7 @@ run-name: Deploy to '${{ inputs.environment }}' AWS env by @${{ github.actor }}
 jobs:
   deploy-image-to-ecs:
     name: "Deploy Harja image to ECS"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: ${{ inputs.environment }}
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
