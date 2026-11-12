@@ -159,21 +159,21 @@
     (bigdec (round2 2 hoitovuoden-lopun-tavoitehinta))))
 
 (defn laske-hoitovuoden-lopun-indeksikorjaus [urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku
-                                              tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta]
+                                              tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta]
   ;; Varmistetaan, että indeksikorjausta, ei tehdä ennenkuin 2024 ja sitä myöhemmille urakoille
   (if (>= urakan-alkuvuosi 2024)
     (let [;; Laske pistelukujen muutos
           pisteet (apply + (map #(round2 1 (:indeksiluku %)) hoitokauden-indeksikuukaudet))
           piste-keskiarvo (if-not (empty? hoitokauden-indeksikuukaudet)
-                            (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet))) 0)
+                            (round2 1 (/ pisteet (count hoitokauden-indeksikuukaudet)))
+                            0)
           alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
 
           muutos-prosentteina (v-apurit/laske-muutos-prosentteina piste-keskiarvo alkuperainen-pisteluku)
           ;; Prosenttiosuus otetaan laskentaan mukaan vain 2% ylittävältä osalta
           indeksikorotuksen-prosenttiosuus (if (and muutos-prosentteina (> muutos-prosentteina 2)) (- muutos-prosentteina 2) 0)
-          oikaistu-tavoitehinta (or oikaistu-tavoitehinta 0)
-          hv_alun_indkorj_tavoitehinta (- oikaistu-tavoitehinta tavoitehinnan-oikaisut-summa) ;; Meillä on harmillisesti tässä tärkeimmässä tavoitehinta haussa oikaisut mukana
-          hoitokauden-lopun-indeksikorjaus (* hv_alun_indkorj_tavoitehinta (/ indeksikorotuksen-prosenttiosuus 100))]
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (or hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta 0)
+          hoitokauden-lopun-indeksikorjaus (* hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (/ indeksikorotuksen-prosenttiosuus 100))]
       hoitokauden-lopun-indeksikorjaus)
     0))
 
@@ -268,6 +268,8 @@
                                                                                       :loppupvm (pvm/hoitokauden-loppupvm (inc valittu-hoitovuosi))})
         hoidonjohtopalkkio (:budjetoitu_summa_indeksikorjattu (first hjpalkkio))
 
+        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku
+                                                                          tavoitehinnan-oikaisut-summa hv-lopun-tavoitehinta-ilman-indeksia)
         hoitovuoden-lopun-indeksikorjattu-tavoitehinta (maarita-hv-lopun-tavoitehinta-indeksipaatoksella db kayttaja valittu-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
         ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid valittu-hoitovuosi)
@@ -400,8 +402,8 @@
         ;; Haetaan indeksikorjauksen vaatimat tavoitehinnan muutokset
         tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakkaid :hoitokauden_alkuvuosi hoitovuosi})
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
-        oikaistu-tavoitehinta (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
-        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+        hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
 
         paatokset (hae-paatokset db kayttaja urakkaid hoitovuosi budjettitavoite-vuodelle toteutuneet-pisteet luvatut-pisteet
                     toteutuneet-kustannukset urakan-parametrit urakan-tiedot tehtava-ja-maaramuutos-summa rahavarausmuutos-summa hoitovuoden-lopun-indeksikorjaus-summa)
@@ -743,7 +745,8 @@
           alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id hoitokauden-alkuvuosi 8))
           tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
           tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
-          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
+          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
           hoitokauden_lopun_tavoitehinta (maarita-hv-lopun-tavoitehinta-indeksipaatoksella db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
           validaatio (if-not (= (konversio/konvertoi->int hoitokauden_lopun_tavoitehinta) (konversio/konvertoi->int (:hoitokauden_lopun_tavoitehinta paatos)))
                        (conj validaatio (str "Päätöksen hoitokauden lopun tavoitehinta ei täsmää suunnitelman kanssa.
@@ -816,7 +819,8 @@
           alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id hoitokauden-alkuvuosi 8))
           tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
           tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
-          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
+          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
 
           hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-tavoitehinta-indeksipaatoksella db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
           validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta paatos)))
@@ -912,7 +916,8 @@
           mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi hoitokauden-alkuvuosi)
           ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
           tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakka-id hoitokauden-alkuvuosi)
-          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
+          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
           lopullinen-hoitovuoden-lopun-kattohinta (laske-lopullinen-hoitovuoden-lopun-kattohinta tietokanta-paatokset urakan-alkuvuosi
                                                     hoitokauden-alkuvuosi taman-vuoden-muutokset-summa thv-arvonvahennykset-yht
                                                     hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia hoitovuoden-lopun-indeksikorjaus-summa urakan-parametrit)
@@ -1067,9 +1072,12 @@
           alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakka-id hoitokauden-alkuvuosi 8))
           tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakka-id :hoitokauden_alkuvuosi hoitokauden-alkuvuosi})
           tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
-          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle)
+          hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
           hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-tavoitehinta-indeksipaatoksella db kayttaja hoitokauden-alkuvuosi valittu-hoitokausi urakka-id urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
-          validaatio (if-not (= (konversio/konvertoi->int hoitovuoden-lopun-tavoitehinta) (konversio/konvertoi->int (:tavoitehinta_jalkeen paatos)))
+          laskettu-tavoitehinta (round2 2 hoitovuoden-lopun-tavoitehinta)
+          paatoksen-tavoitehinta (round2 2 (:tavoitehinta_jalkeen paatos))
+          validaatio (if-not (= laskettu-tavoitehinta paatoksen-tavoitehinta)
                        (conj validaatio (str "Hoitovuoden lopun tavoitehinta ei täsmää suunnitelman kanssa.
                        Hoitovuoden lopun tavoitehinta: " (fmt/euro-opt false false hoitovuoden-lopun-tavoitehinta) " €.
                        Päätöksen mukainen tavoitehinta: " (fmt/euro-opt false false (:tavoitehinta_jalkeen paatos)) " €"))
@@ -1287,7 +1295,8 @@
         alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid kuluva-hoitovuosi 8))
         tavoitehinnan-oikaisut (valikatselmus-q/hae-tavoitehinnan-muutokset-hoitokaudelle db {:urakkaid urakkaid :hoitokauden_alkuvuosi kuluva-hoitovuosi})
         tavoitehinnan-oikaisut-summa (apply + (map #(or (:summa %) 0) tavoitehinnan-oikaisut))
-        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa oikaistu-tavoitehinta)
+        hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (maarita-hv-lopun-tavoitehinta db kayttaja kuluva-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle)
+        hoitovuoden-lopun-indeksikorjaus-summa (laske-hoitovuoden-lopun-indeksikorjaus urakan-alkuvuosi hoitokauden-indeksikuukaudet alkuperainen-pisteluku tavoitehinnan-oikaisut-summa hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta)
 
         hoitovuoden-lopun-tavoitehinta (maarita-hv-lopun-tavoitehinta-indeksipaatoksella db kayttaja kuluva-hoitovuosi valittu-hoitokausi urakkaid urakan-alkuvuosi budjettitavoite-vuodelle hoitovuoden-lopun-indeksikorjaus-summa)
         kaikki-mahdolliset-paatokset (v-apurit/kaikki-mahdolliset-paatokset mhu-tyyppi urakan-alkuvuosi urakan-loppuvuosi kuluva-hoitovuosi)
