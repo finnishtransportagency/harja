@@ -12,11 +12,12 @@ Dockerfile on jaettu stageihin `base` (riippuvuudet ja Cypress), `chrome` (+ Chr
 Oletusbuildi tuottaa viimeisen stagen eli imagen, jossa on molemmat selaimet.
 Pelkän Chromen sisältävän, pienemmän imagen voi buildata `--target chrome` -optiolla.
 
-Build-workflow'n `zstd-compression`-optiosta: ks. [.github/docker/README.md](../README.md).
+Build-workflow'n `zstd-compression`-optiosta: ks. [tools/docker/README.md](../README.md).
 
-Imagen viittaus ja kontin asetukset määritellään [docker-compose.yml](../docker-compose.yml)-tiedoston
+Imagen viittaus ja kontin asetukset määritellään [docker-compose.ci.yml](../docker-compose.ci.yml)-tiedoston
 `cypress-latest`-servicessä. `start-cypress`-action valitsee servicen `service-name`-inputilla,
-hakee imagen komennolla `docker compose pull` ja ajaa testit komennolla `docker compose run --rm --no-deps`.  
+hakee imagen komennolla `docker compose -f docker-compose.ci.yml pull` ja ajaa testit komennolla
+`docker compose -f docker-compose.ci.yml run --rm --no-deps`.  
 Kertaluonteinen ajo välittää testien exit coden workflowlle ja poistaa kontin ajon jälkeen.  
 Host-verkko säilyttää yhteyden runnerilla käynnistettyyn Harjaan.
 
@@ -29,4 +30,4 @@ Suorita ohjeistuksen mukainen imagen build ja julkaisu workflowlla, jotta uusimm
 otetaan mukaan imageen.
 Tätä on hyvä tehdä ajoittain, jotta testiympäristön selaimet pysyvät ajan tasalla.
 
-Imageiden päivitys: [.github/docker/README.md](../README.md)
+Imageiden päivitys: [tools/docker/README.md](../README.md)

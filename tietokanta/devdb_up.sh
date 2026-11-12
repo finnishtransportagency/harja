@@ -17,7 +17,7 @@ if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen nu
     if ! docker pull $IMAGE; then
         echo $IMAGE "ei ole GitHub Container Registryssä. Buildataan."
         (
-            cd ../.github/docker/tietokanta
+            cd ../tools/docker/tietokanta
             ./build-image.sh
         )
     fi
