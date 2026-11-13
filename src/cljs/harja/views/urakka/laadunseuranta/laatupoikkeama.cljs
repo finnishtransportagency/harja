@@ -120,7 +120,7 @@
         [napit/yleinen-reunaton "Muokkaa" #(swap! sanktiot/valittu-sanktio update :lukutila? not)]])
      ;; Käytetään sanktio-lomaketta ilman laji-valintaa (sanktio/bonus/arvonvähennys).
      ;; Lomakkeella voi syöttää vain sanktion.
-     [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?
+     [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata? nil
       {:tallenna-fn tallenna-fn}]]))
 
 (defn laatupoikkeaman-sanktiot

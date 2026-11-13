@@ -163,41 +163,110 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
   (boolean (some #(contains? pakolliset-materiaalit %)
              (map #(:nimi %) (map #(:materiaali %) (:toteumamateriaalit valitun-materiaalitoteuman-tiedot))))))
 
+(defn materiaalitoteuma-lukittu? [lukitustiedot]
+  (boolean (some :lukittu? (vals lukitustiedot))))
+
+(defn paivamaaran-lukitusvirhe [urakan-alkupvm paivamaara lukitustieto]
+  (let [hoitovuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+    (when (and urakan-alkupvm
+            hoitovuosi
+            (= hoitovuosi (:hoitovuosi lukitustieto))
+            (:lukittu? lukitustieto))
+      (str "Päivämäärää ei voida asettaa "
+        (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+        ". hoitovuodelle " hoitovuosi "-" (inc hoitovuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))
+
+(defn paivita-toteuman-alkanut
+  "Asettaa aloituspäivän ja siirtää tarvittaessa sitä aiemman lopetuspäivän seuraavaan päivään."
+  [toteuma alkanut]
+  (let [paattynyt (:paattynyt toteuma)]
+    (assoc
+      (if (and (not (str/blank? alkanut))
+            (not (str/blank? paattynyt))
+            (pvm/ennen? paattynyt alkanut))
+        (assoc toteuma :paattynyt (pvm/ajan-muokkaus alkanut true 1 :paiva))
+        toteuma)
+      :alkanut alkanut)))
+
+(defn- lopetuspvm-jarjestysvirhe? [alkanut paattynyt]
+  (and (not (str/blank? alkanut))
+    (not (str/blank? paattynyt))
+    (pvm/ennen? paattynyt alkanut)))
+
+(defn materiaalitoteuman-paivamaaravirheet
+  "Palauttaa materiaalitoteuman aloitus- ja lopetuspäivämäärien validointivirheet."
+  [urakan-alkupvm toteuma lukitustiedot]
+  (let [alkanut (:alkanut toteuma)
+        paattynyt (:paattynyt toteuma)]
+    (cond-> []
+      (or (str/blank? alkanut)
+        (paivamaaran-lukitusvirhe urakan-alkupvm alkanut (:valittu lukitustiedot)))
+      (conj "Aloitus: Päivämäärä virheellinen")
+
+      (or (str/blank? paattynyt)
+        (lopetuspvm-jarjestysvirhe? alkanut paattynyt)
+        (paivamaaran-lukitusvirhe urakan-alkupvm paattynyt (:valittu-paattynyt lukitustiedot)))
+      (conj "Lopetus: Päivämäärä on virheellinen"))))
+
 (defn materiaalit-tiedot
   "Valitun toteuman tietojen näkymä"
   [ur]
-  (komp/luo
-    (fn [ur]
-      (let [muokkaa! #(do (log "MATERIAALI: " (pr-str %)) (reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot %))
-            materiaalitoteumat-mapissa (wrap (into {}
-                                               (map (juxt :tmid identity))
-                                               (:toteumamateriaalit @materiaali-tiedot/valitun-materiaalitoteuman-tiedot))
-                                         (fn [rivit]
-                                           (swap! materiaali-tiedot/valitun-materiaalitoteuman-tiedot
-                                             assoc :toteumamateriaalit
-                                             (keep
-                                               (fn [[id rivi]]
-                                                 (when (not (and (neg? id)
-                                                              (:poistettu rivi)))
-                                                   (assoc rivi :tmid id)))
-                                               rivit))))
+  (let [lukitustiedot (reaction<! [urakka-id (:id @nav/valittu-urakka)
+                                  toteuma-id (:id @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+                                  alkanut (:alkanut @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+                                  paattynyt (:paattynyt @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)]
+                         {:nil-kun-haku-kaynnissa? true}
+                         (when urakka-id
+                           (materiaali-tiedot/hae-materiaalitoteuman-lukitustiedot
+                             urakka-id toteuma-id alkanut paattynyt)))]
+    (komp/luo
+      (fn [ur]
+        (let [muokkaa! #(do (log "MATERIAALI: " (pr-str %)) (reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot %))
+              materiaalitoteumat-mapissa (wrap (into {}
+                                                 (map (juxt :tmid identity))
+                                                 (:toteumamateriaalit @materiaali-tiedot/valitun-materiaalitoteuman-tiedot))
+                                           (fn [rivit]
+                                             (swap! materiaali-tiedot/valitun-materiaalitoteuman-tiedot
+                                               assoc :toteumamateriaalit
+                                               (keep
+                                                 (fn [[id rivi]]
+                                                   (when (not (and (neg? id)
+                                                                (:poistettu rivi)))
+                                                     (assoc rivi :tmid id)))
+                                                 rivit))))
 
-            materiaalien-virheet (wrap (::materiaalivirheet @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
-                                   #(swap! materiaali-tiedot/valitun-materiaalitoteuman-tiedot assoc ::materiaalivirheet %))
-            jarjestelman-luoma? (true? (:jarjestelmanlisaama @materiaali-tiedot/valitun-materiaalitoteuman-tiedot))
-            voi-tallentaa? (and (lomake/validi? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
-                             (> (count @materiaalitoteumat-mapissa) 0)
-                             (zero? (count @materiaalien-virheet)))]
+              materiaalien-virheet (wrap (::materiaalivirheet @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+                                     #(swap! materiaali-tiedot/valitun-materiaalitoteuman-tiedot assoc ::materiaalivirheet %))
+              jarjestelman-luoma? (true? (:jarjestelmanlisaama @materiaali-tiedot/valitun-materiaalitoteuman-tiedot))
+              voi-tallentaa? (and (lomake/validi? @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
+                               (> (count @materiaalitoteumat-mapissa) 0)
+                               (some? @lukitustiedot)
+                               (not (materiaalitoteuma-lukittu? @lukitustiedot))
+                               (zero? (count @materiaalien-virheet)))
+              urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+              paivamaaravirheet (materiaalitoteuman-paivamaaravirheet
+                                  urakan-alkupvm
+                                  @materiaali-tiedot/valitun-materiaalitoteuman-tiedot
+                                  @lukitustiedot)]
         [:div.toteuman-tiedot
          [napit/takaisin "Takaisin materiaaliluetteloon" #(reset! materiaali-tiedot/valitun-materiaalitoteuman-tiedot nil)]
+         (when (seq paivamaaravirheet)
+           [yleiset/info-laatikko
+            :varoitus
+            "Materiaalitoteumaa ei voi tallentaa, koska tiedoissa on virhe"
+            paivamaaravirheet
+            nil])
          [lomake {:otsikko (if (:id @materiaali-tiedot/valitun-materiaalitoteuman-tiedot)
                              "Muokkaa toteumaa"
                              "Luo uusi toteuma")
                   :luokka :horizontal
                   :voi-muokata? (and (oikeudet/voi-kirjoittaa? oikeudet/urakat-toteumat-materiaalit (:id @nav/valittu-urakka))
-                                  (not jarjestelman-luoma?))
+                                  (not jarjestelman-luoma?)
+                                  (some? @lukitustiedot)
+                                  (not (get-in @lukitustiedot [:alkuperainen :lukittu?])))
                   :muokkaa! muokkaa!
                   :validoi-alussa? true
+                  :nayta-validoinnit? true
                   :footer [napit/palvelinkutsu-nappi
                            "Tallenna toteuma"
                            #(tallenna-toteuma-ja-toteumamateriaalit!
@@ -222,21 +291,22 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
               :vihje toteumat/ilmoitus-jarjestelman-luoma-toteuma})
            {:otsikko "Sopimus" :nimi :sopimus :hae (fn [_] (second @u/valittu-sopimusnumero)) :muokattava? (constantly false)}
            {:otsikko "Aloitus" :pakollinen? true :uusi-rivi? true
-            :tyyppi :pvm :nimi :alkanut :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]]
+            :tyyppi :pvm :nimi :alkanut
+            :validoi [[:ei-tyhja "Anna aloituspäivämäärä"]
+                      (fn [paivamaara _rivi _taulukko]
+                        (paivamaaran-lukitusvirhe urakan-alkupvm paivamaara (:valittu @lukitustiedot)))]
             :huomauta [[:urakan-aikana-ja-hoitokaudella]]
             :muokattava? (constantly (not jarjestelman-luoma?))
-            :aseta (fn [rivi arvo]
-                     (assoc
-                       (if (or
-                             (not (:paattynyt rivi))
-                             (pvm/jalkeen? arvo (:paattynyt rivi)))
-                         (assoc rivi :paattynyt arvo)
-                         rivi)
-                       :alkanut arvo))}
+            :aseta paivita-toteuman-alkanut}
            {:otsikko "Lopetus" :nimi :paattynyt
             :pakollinen? true
-            :tyyppi :pvm :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
-                                   [:pvm-kentan-jalkeen :alkanut "Lopetuksen pitää olla aloituksen jälkeen"]]
+            :tyyppi :pvm
+            :validoi [[:ei-tyhja "Anna lopetuspäivämäärä"]
+                      (fn [paivamaara rivi _taulukko]
+                        (when (lopetuspvm-jarjestysvirhe? (:alkanut rivi) paivamaara)
+                          "Lopetuksen pitää olla aloituksen jälkeen"))
+                      (fn [paivamaara _rivi _taulukko]
+                        (paivamaaran-lukitusvirhe urakan-alkupvm paivamaara (:valittu-paattynyt @lukitustiedot)))]
             :muokattava? (constantly (not jarjestelman-luoma?))}
            (when jarjestelman-luoma?
              {:otsikko "Lähde" :nimi :luoja :tyyppi :string
@@ -271,7 +341,7 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
                                                                                          [:ytunnus]]}
            {:otsikko "Lisätietoja" :tyyppi :text :palstoja 2 :koko [80 :auto]
             :nimi :lisatieto :muokattava? (constantly (not jarjestelman-luoma?))}]
-          @materiaali-tiedot/valitun-materiaalitoteuman-tiedot]]))))
+          @materiaali-tiedot/valitun-materiaalitoteuman-tiedot]])))))
 
 (defn tarkastele-toteumaa-nappi [rivi urakka-id]
   [:button.nappi-toissijainen.nappi-grid {:on-click #(aseta-lomakkeen-tiedot rivi urakka-id)}
@@ -299,9 +369,18 @@ rivi on poistettu, poistetaan vastaava rivi toteumariveistä."
            :tyhja (if (nil? @tiedot) [ajax-loader "Ladataan toteumia"] "Ei toteumia")
            :tallenna @tallenna
            :voi-lisata? false
-           :esta-poistaminen? (comp :jarjestelmanlisaama :toteuma)
-           :esta-poistaminen-tooltip (fn [_] "Järjestelmän lisäämää toteumaa ei voi poistaa.")
-           :voi-muokata-rivia? (comp not :jarjestelmanlisaama :toteuma)
+           :esta-poistaminen? (fn [rivi]
+                                (or (get-in rivi [:toteuma :jarjestelmanlisaama])
+                                  (get-in rivi [:toteuma :lukittu?])))
+           :esta-poistaminen-tooltip (fn [rivi]
+                                       (cond
+                                         (get-in rivi [:toteuma :jarjestelmanlisaama])
+                                         "Järjestelmän lisäämää toteumaa ei voi poistaa."
+                                         (get-in rivi [:toteuma :lukittu?])
+                                         "Välikatselmuksen päätös lukitsee hoitovuoden; materiaalitoteumaa ei voi muokata."))
+           :voi-muokata-rivia? (fn [rivi]
+                                 (and (not (get-in rivi [:toteuma :jarjestelmanlisaama]))
+                                   (not (get-in rivi [:toteuma :lukittu?]))))
            :tunniste :tmid}
           [{:otsikko "Päivämäärä"
             :tyyppi :pvm
