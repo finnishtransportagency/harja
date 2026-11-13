@@ -74,6 +74,19 @@
                   [vuosi kuukausi]))
        last))
 
+(defn vastausten-keskiarvo [vastaukset]
+  "Funktio laskee lupauksen kuukausittaisten pisteiden keskiarvon ja pyöristää sen kokonaisluvuksi.
+  Pyöristys tehdään aina alaspäin, koska toteutumattomasta lupauksesta ei saa saada pisteitä.
+  Jos pisteiden summa on nil, keskiarvo on nolla."
+  (let [summa (->> vastaukset
+                (map :pisteet)
+                (remove nil?)
+                (reduce +))
+        lkm (count vastaukset)]
+    (if (and summa (> summa 0))
+      (int (Math/floor (/ summa lkm)))
+      0)))
+
 (defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
   (cond (paatos-hylatty? vastaukset joustovara-kkta)
         0
@@ -85,11 +98,11 @@
         nil))
 
 (defn monivalinta->toteuma [{:keys [vastaukset]}]
+  (vastausten-keskiarvo vastaukset))
+
+(defn kysely->toteuma [{:keys [vastaukset]}]
   (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
     (:pisteet paatos)))
-
-(defn kysely->toteuma [lupaus]
-  (monivalinta->toteuma lupaus))
 
 (defn yksittainen->ennuste [{:keys [vastaukset joustovara-kkta pisteet]}]
   (if (hylatty? vastaukset joustovara-kkta)
@@ -114,7 +127,7 @@
 (defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
     "yksittainen" (yksittainen->toteuma lupaus)
-    "kysely" (monivalinta->toteuma lupaus)
+    "kysely" (kysely->toteuma lupaus)
     "monivalinta" (monivalinta->toteuma lupaus)
     "kustannusennuste" (kustannusennuste-domain/kustannusennuste->toteuma lupaus)))
 

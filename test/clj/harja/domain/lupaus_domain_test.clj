@@ -549,4 +549,49 @@
     (is (nil? (lupaus-domain/paatos->bonus-tai-sanktio nil))
         "Palauttaa nil kun päätös on nil")))
 
+(deftest monivalinta->toteuma-test
+  (testing "Laskee ja pyöristää monivalinta-lupauksen toteuman eli kuukausittaisten lupauspisteiden keskiarvon oikein. Pyöristys aina kokonaisluvuksi ja alas."
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               {:vastaukset '({:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 2} {:paatos true :pisteet 3} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4})}))
+      "Keskiarvo lasketaan oikein ja pyöristetään kokonaisluvuksi.")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               {:vastaukset '({:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4})}))
+      "Pyöristys alas tapahtuu myös silloin, kun perinteinen pyöristyssääntö vaatisi ylöspäin pyöristämistä.")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               {:vastaukset '({:paatos true :pisteet nil} {:paatos true :pisteet nil} {:paatos true :pisteet 0} {:paatos true :pisteet 0} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4} {:paatos true :pisteet 4})}))
+      "Kokonaan kirjaamatta jääneet kuukaudet käsitellään nollana.")
+    (is (= 0 (lupaus-domain/monivalinta->toteuma
+               {:vastaukset '()}))
+      "Kun mitään ei ole kirjattu, keskiarvo on nolla (lista tyhjä).")
+    (is (= 0 (lupaus-domain/monivalinta->toteuma
+               {:vastaukset nil}))
+      "Kun mitään ei ole kirjattu, keskiarvo on nolla (lista nil).")
+    (is (= 0 (lupaus-domain/monivalinta->toteuma
+               nil))
+      "Kun mitään ei ole kirjattu, keskiarvo on nolla (vastaukset nil).")
+    (is (= 3 (lupaus-domain/monivalinta->toteuma
+               {:vastaukset '({:paatos true :pisteet 2} {:paatos true :pisteet 4})}))
+      "Kirjattujen kuukausien määrä huomioidaan keskiarvoa laskettaessa.")))
+
+
+(deftest kysely->toteuma-test
+  (testing "Päättelee kysely-lupauksen toteuman pistemäärän. Huom. Tämä ei testaa lasketaanko esim. lupaus 7 pistemäärä speksien mukaan oikein, koska siihen vaikuttaa miten kuukausipisteet ovat kirjautuneet."
+    (is (= 8 (lupaus-domain/kysely->toteuma
+               {:vastaukset '({:pisteet 8 :paatos true :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 1} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 8})}))
+      "Täydet eli viimeisen kuukauden pisteet.")
+    (is (= 0 (lupaus-domain/kysely->toteuma
+               {:vastaukset '({:pisteet 8 :paatos true :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 1} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 0 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 8})}))
+      "Nolla pistettä, koska viimeisessä kirjauksessa nolla.")
+    (is (= 0 (lupaus-domain/kysely->toteuma
+               {:vastaukset '({:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 0 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 8} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :vastaus 1  :vuosi 2026 :kuukausi 1})}))
+      "Logiikka päättelee viimeisen kirjauksen kuukaudesta ja vuodesta, ei järjestyksestä.")
+    (is (= 0 (lupaus-domain/kysely->toteuma
+               {:vastaukset '()}))
+      "Kun mitään ei ole kirjattu, toteuma on nolla (lista tyhjä).")
+    (is (= 0 (lupaus-domain/kysely->toteuma
+               {:vastaukset nil}))
+      "Kun mitään ei ole kirjattu, toteuma on nolla (lista nil).")
+    (is (= 0 (lupaus-domain/kysely->toteuma
+               nil))
+      "Kun mitään ei ole kirjattu, toteuma on nolla (vastaukset nil).")))
 
