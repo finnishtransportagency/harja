@@ -25,6 +25,7 @@
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -1650,7 +1651,7 @@
   (let [kohde-urakka (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         kuuluva-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 1000 AND perintapvm = '2016-10-12';")))
         kuulumaton-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 10000 AND perintapvm = '2011-10-12';")))
-        kutsu (partial ls/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
+        kutsu (partial laatupoikkeamat-q/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
     (testing "Olemattomat id:t"
       (is (nil? (kutsu -1)) "Uutta sanktiota ei pitäisi validoida")
       (is (nil? (kutsu nil)) "Uutta sanktiota ei pitäisi validoida"))

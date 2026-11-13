@@ -97,7 +97,6 @@
               arvonvahennyslomake-kaytossa? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? @nav/valittu-urakka @tiedot-urakka/valittu-hoitokausi)
               sanktion-hoitovuosi (some-> @tiedot-urakka/valittu-hoitokausi first pvm/vuosi)
               vertailupaivamaara (pvm/->pvm (str "1.10." sanktion-hoitovuosi))
-              _ (js/console.log "vertailupaivamaara: " (pr-str vertailupaivamaara))
               arvonvahennys-paatoksella-lukittu? (and arvonvahennyslomake-kaytossa?
                                                    sanktion-hoitovuosi
                                                    (some (fn [{:keys [vuosi arvonvahennys-lukittu?]}]
@@ -149,7 +148,7 @@
              [:<>
               (if sanktiot-paatoksella-lukittu?
                 [:div
-                 [:div {:style {:margin-bottom "1rem"}}
+                 [:div.margin-bottom-16
                   [yleiset/info-laatikko :neutraali
                    (str "Bonuksia ei voi kirjata " (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm vertailupaivamaara) ". hoitovuodelle " sanktion-hoitovuosi "-" (inc sanktion-hoitovuosi))
                    "Bonuksia ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös pöytäkirjaan merkityistä raporteista on jo vahvistettu."
@@ -171,7 +170,7 @@
               (if arvonvahennys-paatoksella-lukittu?
                 [:div
                  ;; Näytetään ilmoitus lukituksesta aina, kun lukitus on olemassa
-                 [:div {:style {:margin-bottom "1rem"}}
+                 [:div.margin-bottom-16
                   [yleiset/info-laatikko :neutraali
                    (str "Arvonvähennyksiä ei voi kirjata " (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm vertailupaivamaara) ". hoitovuodelle " sanktion-hoitovuosi "-" (inc sanktion-hoitovuosi))
                         "Arvonvähennyksiä ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu."
@@ -187,7 +186,7 @@
              [:<>
               (if sanktiot-paatoksella-lukittu?
                 [:div
-                 [:div {:style {:margin-bottom "1rem"}}
+                 [:div.margin-bottom-16
                   [yleiset/info-laatikko :neutraali
                    (str "Sanktioita ei voi kirjata " (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm vertailupaivamaara) ". hoitovuodelle " sanktion-hoitovuosi "-" (inc sanktion-hoitovuosi))
                    "Sanktioita ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös pöytäkirjaan merkityistä raporteista on jo vahvistettu."

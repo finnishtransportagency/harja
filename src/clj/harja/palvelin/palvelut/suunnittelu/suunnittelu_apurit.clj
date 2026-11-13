@@ -1,6 +1,7 @@
 (ns harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit
   "Apureita uuden kustannussuunnitelman ja tehtävät ja määrät -palveluille."
-  (:require [harja.pvm :as pvm]
+  (:require [clojure.set :as set]
+            [harja.pvm :as pvm]
             [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.tarjous-kyselyt :as tarjous-kyselyt]
             [harja.kyselyt.uusi-kustannussuunnitelma-kyselyt :as ks-kyselyt]
@@ -64,6 +65,6 @@
         vahvistetut-vuodet (into #{} (flatten (map (juxt :vuosi) (filter #(true? (:vahvistettu? %)) vahvistukset))))]
     (-> tarjous
       (assoc :muokkaa-kattohinta-kasin (:muokkaa_kattohinta_kasin urakan-parametrit))
-      (assoc :vahvistetut-vuodet (clojure.set/union
+      (assoc :vahvistetut-vuodet (set/union
                                    lukitut-vuodet
                                    vahvistetut-vuodet)))))

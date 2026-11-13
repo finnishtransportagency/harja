@@ -28,9 +28,9 @@
   [db user {:keys [urakka-id id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-kulut-laskunkirjoitus user urakka-id)
   (let [kulu (first (hae-kulu db {:urakka urakka-id
-                                    :id id}))
+                                  :id id}))
         kohdistukset (hae-kulun-kohdistukset db {:kulu (:id kulu)
-                                                   :urakka_id urakka-id})
+                                                 :urakka_id urakka-id})
         ;; Poista nil rahavaraukset
         kohdistukset (mapv (fn [kohdistus]
                              (let [kohdistus (if (:rahavaraus_id kohdistus)
