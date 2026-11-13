@@ -31,7 +31,7 @@ on:
       zstd-compression:
         description: "Pakkaa imagen kerrokset zstd:llä gzipin sijaan (pullaavalta Dockerilta vaaditaan versio >= 23)"
         type: boolean
-        default: false
+        default: true
         required: false
 
 run-name: "Tools: Build & deploy GHA docker image '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }}, zstd? ${{ inputs.zstd-compression }})"
