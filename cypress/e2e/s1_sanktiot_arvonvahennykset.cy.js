@@ -13,14 +13,16 @@ import {
     valitseSivupaneelissaPvm,
     valitseSivupaneelissaRadio
 } from '../support/apurit';
+import {evkLappi, testiurakkaMhu26} from '../support/sanktiotJaBonuksetFns';
 
 // Arvonvähennysten E2E-testit (Sanktiot ja bonukset -näkymä)
 //
-// Testataan arvonvähennyslomakkeen toiminta kolmella eri urakkatyypillä:
+// Testataan arvonvähennyslomakkeen toiminta neljällä eri urakkatyypillä:
 //  1) MHU25-urakka (Kajaani): "Vaikuttaa tavoitehintaan" + tehtäväryhmä & tehtävä
 //  2) MHU25-urakka (Kajaani): "Ei vaikuta tavoitehintaan" + Kulun kohdistus
 //  3) MHU24-urakka (Suomussalmi): tavoitehinta-radioiden näyttäminen 2026 hoitovuodesta alkaen
 //     ei tehtäväryhmä/tehtävä-valikoita, aina Kulun kohdistus + Laskutuskuukausi
+//  4) MHU26-urakka (Sodankylä): arvonvähennyksen tallennus MHU26-profiilin mukaan
 //
 // HUOM! Lomakkeen logiikka: src/cljs/harja/views/urakka/laadunseuranta/arvonvahennys_lomake.cljs
 
@@ -31,6 +33,7 @@ let testiArvonvahennysKuvaus1 = "CY-mhu25-tavoitehinta";    // MHU25, vaikuttaa 
 let testiArvonvahennysKuvaus2 = "CY-mhu25-ei-tavoitehinta"; // MHU25, ei vaikuta tavoitehintaan
 let testiArvonvahennysKuvaus3 = "CY-mhu24-raahe";     // MHU24, 2026
 let testiArvonvahennysKuvaus4 = "CY-mhu19-oulu";     // MHU19, 2021
+let testiArvonvahennysKuvausMhu26 = "CY-mhu26-arvonvahennys"; // MHU26
 
 let testiArvonvahennysPerustelu1 = "CY-perustelu1-vaikuttaa-tavoitehintaan";
 let testiArvonvahennysPerustelu3 = "CY-perustelu3";
@@ -50,6 +53,9 @@ let havaittuPvm = "01.03.2026";
 let maarattyPvm = "15.03.2026";
 let havaittuPvmRaahe = "01.03.2027";
 let maarattyPvmRaahe = "5.03.2027";
+// Sodankylän MHU26-urakka alkaa 1.10.2026.
+let havaittuPvmMhu26 = "02.10.2026";
+let maarattyPvmMhu26 = "02.10.2026";
 let havaittuPvmOulu = "01.03.2021";
 let maarattyPvmOulu = "15.03.2021";
 
@@ -60,6 +66,42 @@ function valitseHoitovuosi(hoitovuosi) {
     cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
     cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
 }
+
+// --- Testi: MHU26-urakka ---
+
+describe('Arvonvähennykset - MHU26-urakka', () => {
+    before(() => {
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvausMhu26);
+    });
+
+    after(() => {
+        siivoaTietokannastaSanktiot(testiArvonvahennysKuvausMhu26);
+    });
+
+    it('Arvonvähennys mhu26 urakalle', () => {
+        avaaSanktiotJaBonukset(testiurakkaMhu26, evkLappi);
+        avaaUusiArvonvahennys();
+
+        cy.get(SP).contains('.form-group', 'Arvonvähennys').should('exist');
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiArvonvahennysKuvausMhu26);
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', 'CY-perustelu-mhu26');
+        kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '100');
+
+        cy.intercept('POST', '_/hae-tehtavaryhman-tehtavat-urakalle').as('haeTehtavatMhu26');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtäväryhmä');
+        cy.wait('@haeTehtavatMhu26', {timeout: clickTimeout});
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtävä');
+
+        valitseSivupaneelissaPvm('Havaittu', havaittuPvmMhu26);
+        valitseSivupaneelissaPvm('Määrätty', maarattyPvmMhu26);
+
+        tallennaArvonvahennyslomake();
+
+        cy.get('.sanktiot').contains('td', testiArvonvahennysKuvausMhu26).should('be.visible');
+        cy.get('.sanktiot').contains('tr', testiArvonvahennysKuvausMhu26)
+            .should('contain', '-100');
+    });
+});
 
 // --- Testit: MHU25-urakka (Kajaani) ---
 
