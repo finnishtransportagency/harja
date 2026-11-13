@@ -419,7 +419,21 @@
                    (q/paivita-kulu<! db (assoc kulu :id id)))
 
           vanhat-kohdistukset (q/hae-kulun-kohdistukset db {:kulu (:id kuludb) :urakka_id urakka-id})
-          edellinen-maara (apply + (keep #(:summa %) vanhat-kohdistukset))
+          ;; Tämän laskun uudet kohdistukset ryhmiteltynä muutoksen id:n mukaan
+          uudet-muutos-summat (->> kohdistukset
+                                (remove #(true? (:poistettu %)))
+                                (filter :valittu-muutostyo)
+                                (group-by #(get-in % [:valittu-muutostyo :id]))
+                                (reduce-kv (fn [m k v] (assoc m k (reduce + 0M (keep :summa v)))) {}))
+
+          ;; Tämän laskun VANHAT kohdistukset samalle muutokselle (päivitystapaus)
+          vanhat-muutos-summat (->> vanhat-kohdistukset
+                                 (filter :muutos-id)
+                                 (group-by :muutos-id)
+                                 (reduce-kv
+                                   (fn [m k v]
+                                     (assoc m k (reduce + 0M (keep :summa v))))
+                                   {}))
           sisaan-tulevat-kohdistus-idt (into #{} (map :kohdistus-id kohdistukset))
           puuttuvat-kohdistukset (remove
                                    #(sisaan-tulevat-kohdistus-idt (:kohdistus-id %))
@@ -444,6 +458,7 @@
 
       (doseq [kohdistusrivi kohdistukset]
         (let [muutostyo (:valittu-muutostyo kohdistusrivi)
+              muutos-id (:id muutostyo)
               muutostyo (assoc muutostyo :muutos (:muutos kohdistusrivi))
               muutostyo-voimassa-alkaen (:voimassa_alkaen muutostyo)
 
@@ -452,14 +467,17 @@
                               kohdistusrivi)
 
               muutos-budjetoitu-summa (or (:budjetoitu_summa muutostyo) 0) ;; Muutostyölle kirjattu tavoitehinnan muutos 
-              muutos-kirjattu-summa (or (:kirjattu_summa muutostyo) 0) ;; Muutostyölle tähän mennessä kirjatut kulut yht 
-              muutos-lisatty-budjetti (- kokonaissumma edellinen-maara)
-              muutos-lisatty-budjetti (+ muutos-kirjattu-summa muutos-lisatty-budjetti) ;; Tällä kululla budjettiin lisättävä summa
+              muutos-kirjattu-summa (or (:kirjattu_summa muutostyo) 0) ;; Muutostyölle tähän mennessä kirjatut kulut yht
+              ;; Tämän laskun nettolisäys tälle muutostyölle:
+              ;; kaikki uudet rivit miinus kaikki vanhat rivit samalle muutokselle
+              muutos-lisatty-budjetti (+ muutos-kirjattu-summa
+                                        (- (get uudet-muutos-summat muutos-id 0M)
+                                          (get vanhat-muutos-summat muutos-id 0M)))
+
               budjettia-jaljella (- muutos-budjetoitu-summa muutos-lisatty-budjetti) ;; Muutostyölle jäljellä oleva budjetti tämän kulun jälkeen
 
-              muutos-budjetti-ylittyy? (if-not (:valittu-muutostyo kohdistusrivi) false
-                                         (boolean
-                                           (when budjettia-jaljella (< budjettia-jaljella 0M))))
+              muutos-budjetti-ylittyy? (boolean (and (:valittu-muutostyo kohdistusrivi)
+                                                  (< budjettia-jaljella 0M)))
 
               yhteensopiva? (:tarkista_t_tr_ti_yhteensopivuus
                               (first (q/tarkista-kohdistuksen-yhteensopivuus db
@@ -533,6 +551,7 @@
                                   :viesti (str
                                             "Tallennus epäonnistui. "
                                             "Erillisrahoitetun muutostyön budjetti ylittyy. "
+                                            "Muutostyö: "(get-in kohdistusrivi [:valittu-muutostyo :nimi]) "\n"
                                             "Budjetin ylitys: " (fmt/euro-opt (Math/abs (double budjettia-jaljella))))}]})
 
               :else
