@@ -1,4 +1,4 @@
-import {avaaHarjaTimeoutilla} from "../support/apurit.js";
+import {avaaHarjaTimeoutilla, valitseHoitovuosi, odotaOnnistunutVastausPalvelimelta} from "../support/apurit.js";
 
 const timeout = 30000;
 const clickTimeout = 10000;
@@ -39,12 +39,9 @@ const tavoitehintakentat = [
 let alkuperaisetTarjousarvot;
 let alkuperaisetTavoitehintaArvot;
 
-function odotaOnnistunutVastaus(alias) {
-    cy.wait(alias, {timeout}).its("response.statusCode").should("equal", 200);
-}
-
 function asetaInterceptit() {
     cy.intercept("POST", "**/hae-tarjouksen-tiedot").as("hae-tarjous");
+    cy.intercept("POST", "**/hae-kustannussuunnitelman-tiedot").as("hae-kustannussuunnitelma");
     cy.intercept("POST", "**/tallenna-tarjouksen-tiedot").as("tallenna-tarjous");
     cy.intercept("POST", "**/tallenna-kilpailutettavat-hankinnat").as("tallenna-kilpailutettavat-hankinnat");
     cy.intercept("POST", "**/tallenna-erillishankinnat").as("tallenna-erillishankinnat");
@@ -56,13 +53,20 @@ function asetaInterceptit() {
     cy.intercept("POST", "**/poista-paatokset-ketjutetusti").as("poista-paatos");
 }
 
-function valitseHoitovuosi() {
+function valitseKustannussuunnitelmanHoitovuosi() {
+    odotaOnnistunutVastausPalvelimelta("@hae-kustannussuunnitelma");
     cy.contains("label.alasvedon-otsikko", /^Hoitovuosi$/)
         .first()
         .parent()
-        .find("button")
-        .click({force: true});
-    cy.contains("li.harja-alasvetolistaitemi", "1. hoitovuosi", {timeout}).click();
+        .find("button .valittu")
+        .invoke("text")
+        .then((valittuHoitovuosi) => {
+            const hoitovuosiVaihtuu = !valittuHoitovuosi.includes("1. hoitovuosi");
+            valitseHoitovuosi(1);
+            if (hoitovuosiVaihtuu) {
+                odotaOnnistunutVastausPalvelimelta("@hae-kustannussuunnitelma");
+            }
+        });
 }
 
 function lueTarjousarvot() {
@@ -113,21 +117,21 @@ function kirjoitaTavoitehintaArvot(arvot) {
 
 function tallennaTavoitehintaosiot() {
     cy.get("#kilpailutettavat-hankinnat-elementti").contains("Tallenna tiedot").click();
-    odotaOnnistunutVastaus("@tallenna-kilpailutettavat-hankinnat");
+    odotaOnnistunutVastausPalvelimelta("@tallenna-kilpailutettavat-hankinnat");
     cy.contains("Kilpailutettavat hankinnat tallennettiin.", {timeout: clickTimeout}).should("be.visible");
 
     cy.get("#erillishankinnat-elementti").contains("Jaa tasan joka kuukaudelle").click();
     cy.get("#erillishankinnat-elementti").contains("Tallenna tiedot").click();
-    odotaOnnistunutVastaus("@tallenna-erillishankinnat");
+    odotaOnnistunutVastausPalvelimelta("@tallenna-erillishankinnat");
     cy.contains("Erillishankinnat tallennettiin onnistuneesti.", {timeout: clickTimeout}).should("be.visible");
 
     cy.get("#johto-ja-hallintokorvaus-elementti").contains("Jaa tasan joka kuukaudelle").click();
     cy.get("#johto-ja-hallintokorvaus-elementti").contains("Tallenna tiedot").click();
-    odotaOnnistunutVastaus("@tallenna-toimenkuvat-2025");
+    odotaOnnistunutVastausPalvelimelta("@tallenna-toimenkuvat-2025");
 
     cy.get("#hoidonjohtopalkkio-elementti").contains("Jaa tasan joka kuukaudelle").click();
     cy.get("#hoidonjohtopalkkio-elementti").contains("Tallenna tiedot").click();
-    odotaOnnistunutVastaus("@tallenna-hoidonjohtopalkkiot");
+    odotaOnnistunutVastausPalvelimelta("@tallenna-hoidonjohtopalkkiot");
     cy.contains("Hoidonjohtopalkkiot tallennettiin.", {timeout: clickTimeout}).should("be.visible");
 }
 
@@ -142,23 +146,25 @@ function avaaKajaaninUrakka() {
 
 function peruutaPaatosJosTarpeen() {
     cy.get("[data-cy=tabs-taso1-Valikatselmus]").click();
-    cy.wait(100);
+    odotaOnnistunutVastausPalvelimelta("@hae-valikatselmuksen-tiedot");
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: timeout}).should('not.exist');
 
     cy.get("[data-cy=hoitokausi-valinta]", {timeout}).should("be.visible");
     cy.get("[data-cy=hoitokausi-valinta]").valinnatValitse({valinta: hoitovuosiValinta});
+    odotaOnnistunutVastausPalvelimelta("@hae-valikatselmuksen-tiedot");
+    //cy.get('img[src="images/ajax-loader.gif"]', {timeout}).should("not.exist");
+    cy.get('img[src="images/ajax-loader.gif"]', {timeout: timeout}).should('not.exist');
 
-    cy.get("#tavhinnan-muutokset").then(($elementti) => {
-        const paatosTehty = $elementti.find(".paatos-badge").text().includes("Päätetty");
-        if (paatosTehty) {
-            const peruutaNappi = [...$elementti.find("button")]
-                .find((button) => button.textContent.includes("Peru päätös"));
-            if (!peruutaNappi) {
-                cy.get("#tavhinnan-muutokset .paatos-komponentti-otsikko-row").click();
-            }
-            cy.get("#tavhinnan-muutokset").contains("button", "Peru päätös").click();
+    cy.get("#tavhinnan-muutokset .paatos-badge", {timeout}).should(($badge) => {
+        expect(["Avoin", "Päätetty"]).to.include($badge.text().trim());
+    }).then(($badge) => {
+        if ($badge.text().trim() === "Päätetty") {
+            cy.get("#tavhinnan-muutokset .paatos-komponentti-otsikko-row").click();
+            cy.get("#tavhinnan-muutokset").contains("button", "Peru päätös")
+                .should("be.visible")
+                .click();
             cy.contains("button", "Kyllä, peru päätös").click();
-            odotaOnnistunutVastaus("@poista-paatos");
+            odotaOnnistunutVastausPalvelimelta("@poista-paatos");
         }
     });
 
@@ -166,12 +172,19 @@ function peruutaPaatosJosTarpeen() {
 }
 
 function peruutaVahvistusJosTarpeen() {
-    cy.get("#tavoite-ja-kattohinta-elementti").then(($elementti) => {
-        const peruutaNappi = [...$elementti.find("button")]
-            .find((button) => button.textContent.includes("Peruuta vahvistus"));
-        if (peruutaNappi) {
-            cy.get("#tavoite-ja-kattohinta-elementti").contains("button", "Peruuta vahvistus").click();
-            odotaOnnistunutVastaus("@vahvista-tavoite-ja-kattohinta");
+    cy.get("#tavoite-ja-kattohinta-elementti", {timeout}).should(($elementti) => {
+        const nappienTekstit = [...$elementti.find("button")].map((button) => button.textContent);
+        expect(nappienTekstit.some((teksti) =>
+            teksti.includes("Peruuta vahvistus") || teksti.includes("Vahvista tavoite- ja kattohinta")
+        )).to.equal(true);
+    }).then(($elementti) => {
+        const vahvistettu = [...$elementti.find("button")]
+            .some((button) => button.textContent.includes("Peruuta vahvistus"));
+        if (vahvistettu) {
+            cy.get("#tavoite-ja-kattohinta-elementti").contains("button", "Peruuta vahvistus")
+                .should("be.visible")
+                .click();
+            odotaOnnistunutVastausPalvelimelta("@vahvista-tavoite-ja-kattohinta");
         }
     });
     cy.get("#tavoite-ja-kattohinta-elementti")
@@ -188,7 +201,7 @@ function palautaTestidata() {
     cy.get("[data-cy=tabs-taso1-Suunnittelu]").click();
     cy.get("[data-cy='tabs-taso2-Hoitovuoden alun tavoitehinta']").click();
     cy.get("img[src='images/ajax-loader.gif']", {timeout}).should("not.exist");
-    valitseHoitovuosi();
+    valitseKustannussuunnitelmanHoitovuosi();
     peruutaVahvistusJosTarpeen();
 
     if (alkuperaisetTavoitehintaArvot) {
@@ -204,7 +217,7 @@ function palautaTestidata() {
         cy.get("img[src='images/ajax-loader.gif']", {timeout}).should("not.exist");
         kirjoitaTarjousarvot(alkuperaisetTarjousarvot);
         cy.contains("button", "Tallenna muutokset").click();
-        odotaOnnistunutVastaus("@tallenna-tarjous");
+        odotaOnnistunutVastausPalvelimelta("@tallenna-tarjous");
         lueTarjousarvot().then((arvot) => {
             expect(arvot).to.deep.equal(alkuperaisetTarjousarvot);
         });
@@ -263,11 +276,11 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
 
         kirjoitaTarjousarvot(["10", "20", "30", "40"]);
         cy.contains("button", "Tallenna muutokset").click();
-        odotaOnnistunutVastaus("@tallenna-tarjous");
+        odotaOnnistunutVastausPalvelimelta("@tallenna-tarjous");
 
         cy.get("[data-cy='tabs-taso2-Hoitovuoden alun tavoitehinta']").click();
         cy.get("img[src='images/ajax-loader.gif']", {timeout}).should("not.exist");
-        valitseHoitovuosi();
+        valitseKustannussuunnitelmanHoitovuosi();
         lueTavoitehintaArvot().then((arvot) => {
             alkuperaisetTavoitehintaArvot = arvot;
         });
@@ -278,19 +291,22 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get("#tavoite-ja-kattohinta-elementti")
             .contains("button", "Vahvista tavoite- ja kattohinta")
             .click();
-        odotaOnnistunutVastaus("@vahvista-tavoite-ja-kattohinta");
+        odotaOnnistunutVastausPalvelimelta("@vahvista-tavoite-ja-kattohinta");
         cy.get("#tavoite-ja-kattohinta-elementti").contains("button", "Peruuta vahvistus").should("be.visible");
 
         // Tee päätös välikatselmuksen tavoitehintaan
 
         cy.get("[data-cy=tabs-taso1-Valikatselmus]").click();
         cy.wait("@hae-valikatselmuksen-tiedot", {timeout});
-        cy.wait(100);
+        cy.get("[data-cy=hoitokausi-valinta] button")
+            .should("be.visible")
+            .and("be.enabled");
         cy.get("[data-cy=hoitokausi-valinta]").valinnatValitse({valinta: hoitovuosiValinta});
+        cy.wait("@hae-valikatselmuksen-tiedot", {timeout});
         cy.contains("1. hoitovuosi (01.10.2025 − 30.09.2026)").should("be.visible");
         cy.get("#tavhinnan-muutokset .paatos-badge").should("contain.text", "Avoin");
         cy.get("#tavhinnan-muutokset").contains("button", "Vahvista päätös").click();
-        odotaOnnistunutVastaus("@tee-tavoitehinnan-muutospaatos");
+        odotaOnnistunutVastausPalvelimelta("@tee-tavoitehinnan-muutospaatos");
         cy.get("#tavhinnan-muutokset .paatos-badge").should("contain.text", "Päätetty");
 
         // Kulujen kirjaus
@@ -299,10 +315,12 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get("[data-cy='tabs-taso2-Kulujen kohdistus']").click();
         cy.get("button").contains("Uusi kulu").click();
         cy.get("[data-cy=koontilaskun-kk-dropdown]").within(() => {
-            cy.get("button").click({force: true});
+            cy.get("button").click();
         });
-        cy.wait(100);
-        cy.contains(".koontilaskun-kuukaudet-komp", "Syyskuu - 1. hoitovuosi", {timeout}).click();
+        cy.contains(".koontilaskun-kuukaudet-komp", "Syyskuu - 1. hoitovuosi", {timeout})
+            .scrollIntoView()
+            .should("be.visible")
+            .click();
         cy.contains("Kuluja ei voi kirjata 1. hoitovuodelle 2025-2026", {timeout})
             .should("be.visible");
         cy.get(".kululomake").contains("button", "Tallenna").should("be.disabled");
@@ -315,18 +333,20 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get("[data-cy=tabs-taso1-Toteumat]").click();
         cy.get("[data-cy=tabs-taso2-Tehtavat]").click();
         cy.wait("@hae-tehtavat", {timeout});
-        valitseHoitovuosi();
-        //cy.get("#hoitokausi-valikko").click();
-       // cy.contains("li", "1.10.2025-30.9.2026").click();
+        valitseHoitovuosi(1);
         cy.get("[data-cy=lisaa-toteuma-nappi]").click();
         const tarkistaPaivamaaranValidoinnit = (otsikko) => {
             const kentta = () => cy.get(".toteumamaarat-lomake")
                 .contains("label", otsikko)
                 .parents(".form-group");
-            kentta().find("input").first().clear().type(lukitsemattomanHoitovuodenPvm).blur();
-            kentta().find("input").first().clear();
+            const paivamaarakentta = () => kentta().find("input").first();
+            paivamaarakentta().clear();
+            paivamaarakentta().type(lukitsemattomanHoitovuodenPvm);
+            paivamaarakentta().blur();
+            paivamaarakentta().clear();
             kentta().contains("Anna päivämäärä").should("be.visible");
-            kentta().find("input").first().type(lukitunHoitovuodenPvm).blur();
+            paivamaarakentta().type(lukitunHoitovuodenPvm);
+            paivamaarakentta().blur();
             kentta().contains("Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026")
                 .should("be.visible");
         };
@@ -335,13 +355,19 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get(".toteumamaarat-lomake").contains("label", "Lisätyö").click();
         tarkistaPaivamaaranValidoinnit("Pvm");
         cy.get(".toteumamaarat-lomake").contains("label", "Määrämitattava tehtävä").click();
-        cy.get(".toteumamaarat-lomake").contains("label", "Työ valmis")
-            .parents(".form-group").find("input").first().clear().type(lukitunHoitovuodenPvm).blur();
+        const tyovalmisPaivamaarakentta = () => cy.get(".toteumamaarat-lomake")
+            .contains("label", "Työ valmis")
+            .parents(".form-group").find("input").first();
+        tyovalmisPaivamaarakentta().clear();
+        tyovalmisPaivamaarakentta().type(lukitunHoitovuodenPvm);
+        tyovalmisPaivamaarakentta().blur();
         cy.get('[data-cy="toimenpide-valikko"]').valinnatValitse({valinta: '4 PÄÄLLYSTEIDEN PAIKKAUS'});
-        cy.wait(100);
+        cy.get('[data-cy="tehtava-valikko-0"]').should("be.visible");
         cy.get('[data-cy="tehtava-valikko-0"]').valinnatValitse({valinta: 'AB-paikkaus levittäjällä'});
-        cy.wait(100);
-        cy.get("[data-cy=maara-input-0]").clear().type("15");
+        cy.get("[data-cy=maara-input-0]").should("be.visible").and("be.enabled");
+        cy.get("[data-cy=maara-input-0]").clear();
+        cy.get("[data-cy=maara-input-0]").type("15");
+
         // Aseta tieosoite
         cy.get('input.tierekisteri.input-default.tr-numero').type('{selectall}4')
         cy.get('input.tierekisteri.input-default.tr-alkuosa').type('{selectall}404')
@@ -366,33 +392,51 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
 
         // Hae toteumat aikaväliltä
         cy.get("span.valinnat div.dropdown").eq(0).within(() => {
-            cy.get("button").click({force: true});
+            cy.get("button").click();
             cy.contains("ul li a", "Valittu aikaväli", {timeout}).click();
         });
 
-        cy.get(".suolatoteumat div.aikavali-valinnat input").eq(0).clear().type("01.01.2026");
-        cy.get(".suolatoteumat div.aikavali-valinnat input").eq(1).clear().type("01.11.2026");
+        cy.get(".suolatoteumat div.aikavali-valinnat input").eq(0).clear();
+        cy.get(".suolatoteumat div.aikavali-valinnat input").eq(0).type("01.01.2026");
+        cy.get(".suolatoteumat div.aikavali-valinnat input").eq(1).clear();
+        cy.get(".suolatoteumat div.aikavali-valinnat input").eq(1).type("01.11.2026");
         cy.get(".suolatoteumat button").contains("Hae").click();
         cy.wait("@hae-suolatoteumat", {timeout});
 
         cy.get(".suolatoteumat button").contains("Muokkaa").click();
-        cy.wait(100);
-        cy.get(".suolatoteumat button").contains("Lisää rivi").click();
-        cy.wait(100);
+        cy.get(".suolatoteumat table.grid tbody").then(($tbody) => {
+            const muokkausrivienMaara = $tbody.find("tr.muokataan").length;
+            cy.get(".suolatoteumat button.grid-lisaa", {timeout})
+                .should("be.visible")
+                .and("be.enabled")
+                .click();
+            cy.get(".suolatoteumat table.grid tbody tr.muokataan", {timeout})
+                .should("have.length", muokkausrivienMaara + 1);
+        });
 
-        cy.get(".suolatoteumat span.grid-kentta-wrapper input").eq(1).clear().type(1);
-        cy.get(".suolatoteumat span.grid-kentta-wrapper input").eq(2).clear().type(2);
+        const uusiSuolatoteumanRivi = () =>
+            cy.get(".suolatoteumat table.grid tbody tr.muokataan").last();
+        const kaytetynMaaranKentta = () =>
+            uusiSuolatoteumanRivi().find("td").eq(3).find("input");
+        const toteumienLukumaaraKentta = () =>
+            uusiSuolatoteumanRivi().find("td").eq(4).find("input");
+        kaytetynMaaranKentta().clear();
+        kaytetynMaaranKentta().type(1);
+        toteumienLukumaaraKentta().clear();
+        toteumienLukumaaraKentta().type(2);
 
 
 
-        cy.get(".suolatoteumat table.grid tbody tr").last().as("uusi-suolatoteuma");
-        cy.get("@uusi-suolatoteuma").find("td").eq(1).find("button").click();
+        uusiSuolatoteumanRivi().find("td").eq(1).find("button").click();
         cy.contains("ul li a", "Talvisuola, rakeinen NaCl", {timeout}).click();
         //Tarkistetaan, että tallenna -nappi on näkyvissä, koska päivämäärää ei ole asetettu ja toteuma ei voi olla vielä lukitulla vuodella
         cy.get(".suolatoteumat button.grid-tallenna").should("be.visible");
 
-        cy.get("@uusi-suolatoteuma").find("td").eq(2).find("input").clear().type(lukitunHoitovuodenPvm);
-        cy.get("@uusi-suolatoteuma").find("td").eq(2).find("input").type("{esc}");
+        const suolatoteumanPaivamaarakentta = () =>
+            uusiSuolatoteumanRivi().find("td").eq(2).find("input");
+        suolatoteumanPaivamaarakentta().clear();
+        suolatoteumanPaivamaarakentta().type(lukitunHoitovuodenPvm);
+        suolatoteumanPaivamaarakentta().type("{esc}");
         // Tarkistetaan, että tallenna -nappi on piilotettu, koska päivämäärä on asetettu lukitulle hoitovuodelle
         cy.get(".suolatoteumat button.grid-tallenna").should("be.disabled");
 
@@ -405,14 +449,19 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.wait("@hae-materiaalitoteuman-lukitus", {timeout});
         cy.get(".toteuman-tiedot").contains("label", "Aloitus")
             .parents(".form-group").find("input").first().type('{selectAll}'+lukitunHoitovuodenPvm);
+        cy.get(".toteuman-tiedot").contains("label", "Lopetus")
+            .parents(".form-group").find("input").first().focus();
+        cy.contains("Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026, koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.")
+            .should("be.visible");
 
         cy.get(".materiaalit-toteuma-grid").contains("button", "Lisää materiaali").click();
-        cy.get(".materiaalit-toteuma-grid table.grid tbody tr").last().as("uusi-materiaalirivi");
-        cy.get("@uusi-materiaalirivi").contains("button", "- valitse materiaali -").click();
+        const uusiMateriaalirivi = () =>
+            cy.get(".materiaalit-toteuma-grid table.grid tbody tr.muokataan").last();
+        uusiMateriaalirivi().contains("button", "- valitse materiaali -").click();
         cy.contains("ul li a", "Natriumformiaatti", {timeout}).click();
-        cy.get("@uusi-materiaalirivi").find("input").first().clear().type("1");
-        cy.contains("Materiaalitoteumaa ei voi tallentaa, koska välikatselmuksen päätös lukitsee hoitovuoden 2025.")
-            .should("be.visible");
+        uusiMateriaalirivi().find("input").first().clear();
+        uusiMateriaalirivi().find("input").first().type("1");
+
         cy.get(".toteuman-tiedot").contains("button", "Tallenna toteuma").should("be.disabled");
         cy.get(".toteuman-tiedot").contains("button", "Takaisin materiaaliluetteloon").click();
 
@@ -420,11 +469,11 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get("[data-cy=tabs-taso1-Laadunseuranta]").click();
         cy.get("[data-cy='tabs-taso2-Sanktiot ja bonukset']").click();
         cy.wait("@hae-sanktiot", {timeout});
-        valitseHoitovuosi();
+        valitseHoitovuosi(1);
         cy.contains(".lisaa-nappi", "Lisää uusi").click();
         cy.get(sivupaneeli, {timeout}).should("be.visible");
         cy.get(sivupaneeli).contains("label", "Arvonvähennys").click();
-        cy.contains("Et voi kirjata arvonvähennystä tälle hoitovuodelle")
+        cy.contains("Arvonvähennyksiä ei voi kirjata 1. hoitovuodelle 2025-2026")
             .should("be.visible");
         cy.get(sivupaneeli).contains("button", "Tallenna").should("not.exist");
     });
@@ -437,7 +486,7 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get("[data-cy=tabs-taso1-Suunnittelu]").click();
         cy.get("[data-cy='tabs-taso2-Hoitovuoden alun tavoitehinta']").click();
         cy.get("img[src='images/ajax-loader.gif']", {timeout}).should("not.exist");
-        valitseHoitovuosi();
+        valitseKustannussuunnitelmanHoitovuosi();
         peruutaVahvistusJosTarpeen();
         //palautaTestidata();
     });
