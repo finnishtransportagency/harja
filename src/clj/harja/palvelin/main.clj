@@ -904,7 +904,7 @@
       :urakkatilanne
       (component/using
         (kojelauta-hallinta/->KojelautaHallinta)
-        [:http-palvelin :db]))))
+        [:http-palvelin :db-replica]))))
 
 (defonce harja-jarjestelma nil)
 

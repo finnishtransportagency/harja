@@ -14,7 +14,7 @@
   hae-paallystysurakan-indeksin-urakka-id
   tallenna-paallystysurakan-indeksitiedot!
   hae-urakan-indeksin-perusluku hae-indeksi
-  hae-urakan-kuukauden-indeksiarvo listaa-indeksit
+  hae-urakan-kuukauden-indeksiarvo listaa-indeksit hae-indeksit-nimilla
   paivita-indeksi! luo-indeksi<! poista-indeksi!
   hae-urakoiden-indeksitiedot)
 

@@ -4,6 +4,13 @@ SELECT nimi, vuosi, kuukausi, arvo
   FROM indeksi
   	ORDER BY nimi, vuosi, kuukausi;
 
+-- name: hae-indeksit-nimilla
+-- Hakee indeksit annettujen nimien perusteella
+SELECT nimi, vuosi, kuukausi, arvo
+  FROM indeksi
+ WHERE nimi IN (:nimet)
+ ORDER BY nimi, vuosi, kuukausi;
+
 -- name: hae-indeksi
 -- Hakee indeksin nimellä
   SELECT nimi, vuosi, kuukausi, arvo
