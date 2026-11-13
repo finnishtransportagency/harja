@@ -206,15 +206,6 @@
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
                                    sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
-(defn vaadi-sanktio-kuuluu-urakkaan
-  "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
-  [db urakka-id sanktio-id]
-  (when (id-olemassa? sanktio-id)
-    (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
-      (when-not (= sanktion-urakka urakka-id)
-        (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
-                                     urakka-id " vaan urakkaan " sanktion-urakka)))))))
-
 (defn vaadi-talvisuolan-ylitys-ehto
   "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
   sanktion laji on talvisuolan ylitys

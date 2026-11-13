@@ -524,25 +524,6 @@
 
       (q/hae-kulu-kohdistuksineen db user {:id (:id kuludb)}))))
 
-#_ (defn poista-kulu-tietokannasta
-  "Merkitsee kulun sekä kaikki siihen liittyvät kohdistukset poistetuksi."
-  [db user {:keys [urakka-id id]}]
-  (log/debug "kulut :: poista-kulu-tietokannasta" id urakka-id)
-  (let [liitteet (into [] (q/hae-liitteet db {:kulu-id id}))
-        poistettu-kulu (hae-kulu-kohdistuksineen db user {:id id})]
-    (when (not (empty? liitteet))
-      (doseq [{liite-id :liite-id} liitteet]
-        (q/poista-kulun-ja-liitteen-linkitys! db {:kulu-id id :liite-id liite-id :kayttaja (:id user)})))
-    (q/poista-kulu! db {:urakka urakka-id
-                        :id id
-                        :kayttaja (:id user)})
-    (q/poista-kulun-kohdistukset! db {:urakka urakka-id
-                                      :id id
-                                      :kayttaja (:id user)})
-    (kust-q/merkitse-maksuerat-likaisiksi! db {:toimenpideinstanssi
-                                               (:toimenpideinstanssi poistettu-kulu)})
-    poistettu-kulu))
-
 (defn- poista-kulu
   "Wrapperi funktio välikatselmuksen päätökseen liittyvän kulun poistamiseksi ja kulut -sivun kulun poistamiseksi.
   Niillä on erilaiset käyttöoikeudet. Joudumme sallimaan erilaiset oikeudet eri tilanteiden hoitamiseksi.
