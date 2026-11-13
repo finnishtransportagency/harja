@@ -32,7 +32,7 @@ SELECT sp.id,
        JOIN sanktiotyyppi st
          ON st.koodi = 0
        CROSS JOIN integraatio
-       CROSS JOIN (VALUES ('urakka'), ('laatupoikkeama')) AS konteksti(soveltuvuuskonteksti)
+       CROSS JOIN (VALUES ('urakka')) AS konteksti(soveltuvuuskonteksti)
  WHERE sp.nimi = 'teiden-hoito-mhu2026'
 ON CONFLICT (sanktio_profiili_id, sanktio_laji_id, sanktiotyyppi_id, soveltuvuuskonteksti)
 DO NOTHING;
