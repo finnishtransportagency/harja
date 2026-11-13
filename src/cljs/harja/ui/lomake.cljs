@@ -115,6 +115,12 @@ Ryhmien otsikot lisätään väliin Otsikko record tyyppinä."
         (otsikko? s)
         (recur acc skeemat)
 
+        ;; Tämä jäi alkujaan pois, mutta on ehdottoman tarpeellinen, jotta validointi toimii kaksipalstaisessa lomakkeessa.
+        (palstoja? s)
+        (recur acc
+               (concat (mapcat second (partition 2 (:skeemat s)))
+                 skeemat))
+
         (ryhma? s)
         (recur acc
                (concat (remove nil? (:skeemat s)) skeemat))
@@ -442,7 +448,7 @@ ja kaikki pakolliset kentät on täytetty"
   [{:keys [palstoja nimi otsikko label-for-id tyyppi col-luokka yksikko pakollinen? sisallon-leveys? label-ja-kentta-samalle-riville?
            piilota-label? aseta-vaikka-sama? tarkkaile-ulkopuolisia-muutoksia? kaariva-luokka piilota-yksikko-otsikossa? tyhja-otsikko? virhe-optiot] :as s}
    data muokkaa-kenttaa-fn muokattava? muokkaa
-   muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata?] :as opts}]
+  muokattu? virheet varoitukset huomautukset {:keys [vayla-tyyli? voi-muokata? nayta-validoinnit?] :as opts}]
   (let [kentan-id (or label-for-id (str (when (and nimi (keyword? nimi)) (name nimi)) "-" (gensym)))]
     [:div.form-group {:class (str
                                ;; Korostaa input/tekstikentän reunat, jos on virhe
@@ -485,17 +491,17 @@ ja kaikki pakolliset kentät on täytetty"
          (assoc opts :muokattu? muokattu?)
          (if (not (empty? virheet)) (assoc opts :virhe? true) opts))]
 
-      (when (and muokattu?
+      (when (and (or muokattu? nayta-validoinnit?)
               (not (empty? virheet)))
         [virheen-ohje virheet :virhe virhe-optiot])
       (when (:virheteksti s)
         [virheen-ohje (if-not (vector? (:virheteksti s))
                         (conj [] (:virheteksti s))
                         (:virheteksti s)) :virhe virhe-optiot])
-      (when (and muokattu?
+      (when (and (or muokattu? nayta-validoinnit?)
               (not (empty? varoitukset)))
         [virheen-ohje varoitukset :varoitus virhe-optiot])
-      (when (and muokattu?
+      (when (and (or muokattu? nayta-validoinnit?)
               (not (empty? huomautukset)))
         [virheen-ohje huomautukset :huomautus virhe-optiot])
 
@@ -629,6 +635,9 @@ ja kaikki pakolliset kentät on täytetty"
   :validoi-alussa?  
                   validoidaanko lomake heti alussa, oletuksena false
 
+  :nayta-validoinnit?
+                  näytetäänkö kenttien validointipalautteet ilman, että kenttiä merkitään muokatuiksi
+
   :validoitavat-avaimet
                   vektori avaimia, jotka validoidaan. Jos annettu, validoidaan vain nämä kentät.
 
@@ -725,7 +734,7 @@ ja kaikki pakolliset kentät on täytetty"
       (-> data (validoi skeema) (assoc ::muokatut (into #{} (keep :nimi skeema))) muokkaa!))
     (fn [{:keys [otsikko otsikko-elementti otsikko-komp muokkaa! luokka footer footer-fn virheet varoitukset huomautukset header header-fn
                  voi-muokata? ei-borderia? validoitavat-avaimet data-cy vayla-tyyli? footer-luokka
-                 tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot blurrissa!] :as opts} skeema
+                 tarkkaile-ulkopuolisia-muutoksia? overlay ryhman-luokka virhe-optiot nayta-validoinnit? blurrissa!] :as opts} skeema
          {muokatut ::muokatut
           :as      data}]
       (when validoitavat-avaimet
@@ -796,6 +805,7 @@ ja kaikki pakolliset kentät on täytetty"
                                   (merge
                                    {:vayla-tyyli? vayla-tyyli?
                                     :virhe-optiot virhe-optiot
+                                    :nayta-validoinnit? nayta-validoinnit?
                                     :tarkkaile-ulkopuolisia-muutoksia? tarkkaile-ulkopuolisia-muutoksia?}
                                    (when (some? blurrissa!) {:on-blur blurrissa!}))]]
                      (if otsikko

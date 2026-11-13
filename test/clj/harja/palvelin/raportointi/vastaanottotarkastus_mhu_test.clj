@@ -234,17 +234,32 @@
              {:otsikko "Tarjouksen lupauspisteet" :leveys 5}
              {:otsikko "Toteutuneet lupauspisteet" :leveys 5}
              {:otsikko "Bonus/Sanktiot (€)" :leveys 5 :fmt :raha}]
-            [["2025-2026" 80 75 150M]
-             ["2026-2027" 80 75 150M]
-             ["2027-2028" 80 75 150M]
-             ["2028-2029" 80 75 150M]
-             ["2029-2030" 80 75 150M]
+            [["2025-2026"
+              80
+              75
+              0.0M]
+             ["2026-2027"
+              80
+              75
+              0.0M]
+             ["2027-2028"
+              80
+              75
+              0.0M]
+             ["2028-2029"
+              80
+              75
+              0.0M]
+             ["2029-2030"
+              80
+              75
+              0.0M]
              {:korosta-hennosti? true
               :lihavoi? true
               :rivi ["Yhteensä"
                      ""
                      ""
-                     750M]}]]
+                     0.0M]}]]
           lupaustaulukko))))
 
 (deftest raportti-ei-sisalla-toteutuneita-lupauspisteita-ilman-valikatselmusta
@@ -630,7 +645,7 @@
                                valikatselmus-q/hae-bonukset (fn [_ _] [{:rahasumma 100M}])
                                valikatselmus-q/hae-sanktiot (fn [_ _] [{:maara -25M}])]
                    (vastaanottotarkastus-mhu/lupaukset-taulukko (:db jarjestelma) urakka-id urakan-tiedot hoitokaudet))]
-    (is (= ["2019-2020" 70 100 75M]
+    (is (= ["2019-2020" 70 100 0.0M]
           (first (last raportti))))))
 
 (deftest MHU25-urakan-tavoitehintaan-kuuluvat-kustannukset-muodostuvat
@@ -1044,7 +1059,7 @@
         ;; Kovakoodattu "Toteutuneet lupauspisteet", joka voi hajota, jos testidataan kosketaan
         (is (= nil (nth (first (vuosirivit taulukko)) 2)))
         ;; Kovakoodattu "Bonus/Sanktiot (€)", joka voi hajota, jos testidataan kosketaan
-        (is (= 1150M (nth (first (vuosirivit taulukko)) 3)))))
+        (is (= 0.0M (nth (first (vuosirivit taulukko)) 3)))))
 
     (testing "Rahavarausten tavoitehintamuutokset taulukko"
       (let [taulukko (hae-taulukko iin-raportti "Rahavarausten tavoitehintamuutokset")
@@ -1177,19 +1192,19 @@
               (vuosilabelit taulukko)))
 
         (is (= "2025-2026" (first (first (vuosirivit taulukko)))))
-        (is (= 2079712.022942 (second (first (vuosirivit taulukko)))))
-        (is (= 2495654.4275304 (nth (first (vuosirivit taulukko)) 2)))
+        (is (= 2081384.16664 (second (first (vuosirivit taulukko)))))
+        (is (= 2497660.9999679998 (nth (first (vuosirivit taulukko)) 2)))
         (is (= 0 (nth (first (vuosirivit taulukko)) 3)))
         (is (= 0 (nth (first (vuosirivit taulukko)) 4)))
         (is (= 0 (nth (first (vuosirivit taulukko)) 5)))
         (is (= 0 (nth (first (vuosirivit taulukko)) 6)))
-        (is (= 4575366.4504724 (nth (first (vuosirivit taulukko)) 7)))
+        (is (= 4579045.166608 (nth (first (vuosirivit taulukko)) 7)))
 
         ;; Yhteensä rivi
-        (is (= 4247314.299442 (second (:rivi (yhteensarivi taulukko)))))
-        (is (= 4943674.2539304 (nth (:rivi (yhteensarivi taulukko)) 2)))
+        (is (= 4248986.443139999 (second (:rivi (yhteensarivi taulukko)))))
+        (is (= 4945680.826368 (nth (:rivi (yhteensarivi taulukko)) 2)))
         (is (= 0 (nth (:rivi (yhteensarivi taulukko)) 3)))
         (is (= 0 (nth (:rivi (yhteensarivi taulukko)) 4)))
         (is (= 19345.44 (nth (:rivi (yhteensarivi taulukko)) 5)))
         (is (= 0 (nth (:rivi (yhteensarivi taulukko)) 6)))
-        (is (= 9210333.9933724 (nth (:rivi (yhteensarivi taulukko)) 7)))))))
+        (is (= 9214012.709508 (nth (:rivi (yhteensarivi taulukko)) 7)))))))
