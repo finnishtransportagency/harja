@@ -17,6 +17,31 @@ echo "Ajetaan kaikki migraatiot."
 
 ## -- Aja kaikki migraatiot uusiksi --
 
+## Lataa flyway-plugin ja sen riippuvuudet ennen tietokannan muuttamista.
+## Komentoa retrytetään, mikäli esimerkiksi flyway-pluginin lataus epäonnistuu verkkovirheen vuoksi.
+##  -Dflyway.skip=true: Maven resolvoi pluginin, sen riippuvuudet ja projektin riippuvuudet,
+##                      mutta Flyway ei suorita 'goalia', eli tässä :info, eikä ota yhteyttä tietokantaan.
+##  -U: Ohittaa paikalliseen repoon (.lastUpdated) cachetetut epäonnistuneet lataukset.
+##      Ilman tätä retry ei yritä latausta uudelleen, vaan kaatuu heti samaan virheeseen.
+odotusajat=(5 15)
+for yritys in 1 2 3; do
+  echo "Ladataan Flyway-plugin ja sen riippuvuudet (yritys $yritys/3)."
+  if mvn -B -U -Dflyway.skip=true flyway:info; then
+    break
+  else
+    virhekoodi=$?
+  fi
+
+  if [[ "$yritys" -eq 3 ]]; then
+    echo "Flyway-pluginin lataus epäonnistui. Tietokantoja ei muutettu." >&2
+    exit "$virhekoodi"
+  fi
+
+  odotus="${odotusajat[$((yritys - 1))]}"
+  echo "Flyway-pluginin lataus epäonnistui. Yritetään uudelleen $odotus sekunnin kuluttua." >&2
+  sleep "$odotus"
+done
+
 psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest_template;"
 psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest;"
 
