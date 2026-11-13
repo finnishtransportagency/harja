@@ -143,6 +143,10 @@
                              (/ normaalimaara 2)
                              normaalimaara))
         tallennettava-sanktio (cond-> (lomake/ilman-lomaketietoja @muokattu)
+                                ;; MHU25+: kohdistus ei ole käyttäjän valinta. Johdetaan se aina kohdistuslistasta,
+                                ;; jotta lajin/tyypin vaihto ei jätä toimenpideinstanssia tyhjäksi.
+                                (and mhu25? (= 1 (count mahdolliset-kulun-kohdistukset)))
+                                (assoc :toimenpideinstanssi (:tpi_id (first mahdolliset-kulun-kohdistukset)))
                                 kiintea-profiilisumma?
                                 (assoc :normaalimaara normaalimaara
                                   :omailmoitettu omailmoitettu
