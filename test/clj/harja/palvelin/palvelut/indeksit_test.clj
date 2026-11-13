@@ -69,6 +69,40 @@
 
 
 
+(deftest indeksin-muokkaustiedot-tallennetaan
+  (let [db (:db jarjestelma)
+        luoja +kayttaja-jvh+
+        muokkaaja (assoc +kayttaja-tero+ :roolit #{"Jarjestelmavastaava"})
+        nimi "AUDITOINTI-TESTI"
+        indeksi {:nimi nimi
+                 :indeksit [{:kannassa? false
+                             :vuosi 2025
+                             1 123.45M}]}]
+    (indeksit/tallenna-indeksi db luoja indeksi)
+    (let [luotu (first (q-map (str "SELECT luoja, luotu, muokkaaja, muokattu
+                                      FROM indeksi
+                                     WHERE nimi = '" nimi "'
+                                       AND vuosi = 2025
+                                       AND kuukausi = 1")))]
+      (is (= (:id luoja) (:luoja luotu)))
+      (is (some? (:luotu luotu)))
+      (is (nil? (:muokkaaja luotu)))
+      (is (nil? (:muokattu luotu))))
+
+    (indeksit/tallenna-indeksi db muokkaaja
+                               (assoc indeksi :indeksit [{:kannassa? true
+                                                          :vuosi 2025
+                                                          1 234.56M}]))
+    (let [paivitetty (first (q-map (str "SELECT luoja, luotu, muokkaaja, muokattu
+                                          FROM indeksi
+                                         WHERE nimi = '" nimi "'
+                                           AND vuosi = 2025
+                                           AND kuukausi = 1")))]
+      (is (= (:id luoja) (:luoja paivitetty)))
+      (is (some? (:luotu paivitetty)))
+      (is (= (:id muokkaaja) (:muokkaaja paivitetty)))
+      (is (some? (:muokattu paivitetty))))))
+
 (deftest kuukauden-indeksikorotuksen-laskenta
   (let [korotus
         (ffirst (q (str "SELECT korotus from laske_kuukauden_indeksikorotus
