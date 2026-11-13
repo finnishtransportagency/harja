@@ -13,18 +13,6 @@
 ;; vuosi, jota ennen tavoite ja kattohinnan paatokset eivat olleet sidoksissa toisiinsa
 (def +kattohintapaatos-kynnysvuosi+ 2021)
 
-(defn tee-evkhaku [evkt]
-  (reify protokollat/Haku
-    (hae [_ teksti]
-      (go (let [itemit (if (< (count teksti) 1)
-                         evkt
-                         (filter #(and
-                                    (str (:evknumero %) " " (:nimi %))
-                                    (not= (.indexOf (.toLowerCase (str (:evknumero %) " " (:nimi %)))
-                                            (.toLowerCase teksti)) -1))
-                           evkt))]
-            (vec (sort-by :evknumero itemit)))))))
-
 (defn tee-urakkahaku [urakat]
   (reify protokollat/Haku
     (hae [_ teksti]
@@ -39,7 +27,7 @@
 
 (def tila (atom {:urakat []
                  :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
-                            :evknumerot #{}
+                            :evkt []
                             :urakat #{}
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
@@ -172,17 +160,12 @@
                                   "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm) 0) ")")]])]
     ks-tilojen-yhteenveto))
 
-(defrecord AlustaHallintayksikkoHaku [evkt])
 (defrecord AsetaSuodatin [avain valinta])
 (defrecord HaeUrakat [])
 (defrecord HaeUrakatOnnistui [vastaus])
 (defrecord HaeUrakatEpaonnistui [vastaus])
 
 (extend-protocol tuck/Event
-
-  AlustaHallintayksikkoHaku
-  (process-event [{:keys [evkt]} app]
-    (assoc app :evkhaku (tee-evkhaku evkt)))
 
   AsetaSuodatin
   (process-event [{:keys [avain valinta]} app]
