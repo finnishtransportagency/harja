@@ -549,4 +549,24 @@
     (is (nil? (lupaus-domain/paatos->bonus-tai-sanktio nil))
         "Palauttaa nil kun päätös on nil")))
 
+(deftest monivalinta->toteuma-test
+  (testing "Laskee ja pyöristää lupauksen toteuman eli kuukausittaisten lupauspisteiden keskiarvon oikein. Pyöristys aina kokonaisluvuksi ja alas."
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               ({:pisteet 0} {:pisteet 0} {:pisteet 0} {:pisteet 0} {:pisteet 2} {:pisteet 3} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4})))
+      "Keskiarvo lasketaan oikein ja pyöristetään kokonaisluvuksi.")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               ({:pisteet 0} {:pisteet 0} {:pisteet 0} {:pisteet 0} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4})))
+      "Pyöristys alas tapahtuu myös silloin, kun perinteinen pyöristyssääntö vaatisi ylöspäin pyöristämistä.")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               ({:pisteet nil} {:pisteet nil} {:pisteet 0} {:pisteet 0} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4})))
+      "Kokonaan kirjaamatta jääneet kuukaudet käsitellään nollana.")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               ()))
+      "Kun mitään ei ole kirjattu, keskiarvo on nolla (tyhjä lista).")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               nil))
+      "Kun mitään ei ole kirjattu, keskiarvo on nolla (nil lista).")
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               ({:pisteet nil}{:pisteet nil}{:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4} {:pisteet 4})))
+      "Kirjattujen kuukausien määrän ")))
 
