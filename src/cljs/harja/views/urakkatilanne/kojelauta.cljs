@@ -4,8 +4,9 @@
 
             [harja.pvm :as pvm]
             [harja.ui.kentat :as kentat]
+            [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
-            [harja.ui.komponentti :as komp]
+            [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.hallintayksikot :as hal]
             [harja.tiedot.palaute :as palaute-tiedot]
@@ -30,69 +31,72 @@
       (+ hoitokausia-eteenpain (pvm/vuosi pvm-nyt)))))
 
 
-(defn suodattimet [e! {:keys [valinnat evkhaku urakkahaku haku-kaynnissa?] :as app}]
-  [:div
-   [yleiset/pudotusvalikko
-    "Urakkatyyppi"
-    {:valitse-fn #(do
-                    (e! (tiedot/->AsetaSuodatin :urakkatyyppi %))
-                    (e! (tiedot/->HaeUrakat)))
-     :valinta (:urakkatyyppi valinnat)
-     :format-fn :nimi
-     :vayla-tyyli? true
-     :disabled haku-kaynnissa?}
-    (filter (fn [ut]
-              (#{:hoito :paallystys} (:arvo ut)))
-      nav/+urakkatyypit+)]
-   [:div
-    [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko {:for "evkhaku"} "Elinvoimakeskus"]
-     [kentat/tee-kentta
-      {:elementin-id "evkhaku" :tyyppi :haku
-       :nayta #(hal/evknumero-ja-nimi %)
-       :lahde evkhaku
-       :hakuikoni? true
-       :hae-kun-yli-n-merkkia 0
-       :tarkkaile-ulkopuolisia-muutoksia? true
-       :placeholder "Käytä suurennuslasia tai anna nimi"
-       :monivalinta? true
-       :monivalinta-teksti #(case (count %)
-                              0 "Kaikki"
-                              1 (hal/evknumero-ja-nimi (first %))
-                              (str (count %) " elinvoimakeskusta valittu"))
-       :disabled? haku-kaynnissa?}
-      (r/wrap (:evkt valinnat) #(do
-                                  (e! (tiedot/->AsetaSuodatin :evkt %))
-                                  (e! (tiedot/->HaeUrakat))))]]
-    [yleiset/pudotusvalikko
-     (if (= :paallystys (get-in valinnat [:urakkatyyppi :arvo]))
-       "Vuosi"
-       "Hoitokauden alkuvuosi")
-     {:valitse-fn #(do
-                     (e! (tiedot/->AsetaSuodatin :urakkavuosi %))
-                     (e! (tiedot/->HaeUrakat)))
-      :valinta (:urakkavuosi valinnat)
-      :vayla-tyyli? true
-      :disabled haku-kaynnissa?}
-     (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
+(defn suodattimet [e! {:keys [valinnat urakkahaku haku-kaynnissa?]}]
+  (let [valitut-evkt (:evkt valinnat)
+        valittavat-evkt (into [{:id 0 :nimi "Kaikki" :evknumero 0 :valittu? (empty? valitut-evkt)}]
+                          (map (fn [evk]
+                                 (assoc evk
+                                   :nimi (hal/evknumero-ja-nimi evk)
+                                   :valittu? (some #(= (:id evk) (:id %)) valitut-evkt)))
+                            (sort-by :evknumero @hal/vaylamuodon-hallintayksikot)))]
+    [:div
+     [yleiset/pudotusvalikko
+      "Urakkatyyppi"
+      {:valitse-fn #(do
+                      (e! (tiedot/->AsetaSuodatin :urakkatyyppi %)))
+       :valinta (:urakkatyyppi valinnat)
+       :format-fn :nimi
+       :vayla-tyyli? true
+       :disabled haku-kaynnissa?}
+      (filter (fn [ut]
+                (#{:hoito :paallystys} (:arvo ut)))
+        nav/+urakkatyypit+)]
+     [:div
+      [:div.label-ja-alasveto
+       [:label.alasvedon-otsikko "Elinvoimakeskus"]
+       [valinnat/checkbox-pudotusvalikko
+        valittavat-evkt
+        (fn [evk valittu?]
+          (let [valitut-evkt-uudet (cond
+                                     (= 0 (:id evk)) []
+                                     valittu? (conj (filterv #(not= (:id evk) (:id %)) valitut-evkt)
+                                                    (select-keys evk [:id :nimi :evknumero]))
+                                     :else (filterv #(not= (:id evk) (:id %)) valitut-evkt))]
+            (e! (tiedot/->AsetaSuodatin :evkt valitut-evkt-uudet))))
+        [" Elinvoimakeskus valittu" " Elinvoimakeskusta valittu"]
+        {:vayla-tyyli? true :disabled haku-kaynnissa?}]]
+      [yleiset/pudotusvalikko
+       (if (= :paallystys (get-in valinnat [:urakkatyyppi :arvo]))
+         "Vuosi"
+         "Hoitokauden alkuvuosi")
+       {:valitse-fn #(do
+                       (e! (tiedot/->AsetaSuodatin :urakkavuosi %)))
+        :valinta (:urakkavuosi valinnat)
+        :vayla-tyyli? true
+        :disabled haku-kaynnissa?}
+       (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
-    [:div.label-ja-alasveto
-     [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
-     [kentat/tee-kentta
-      {:elementin-id "urakkahaku" :tyyppi :haku
-       :nayta :nimi
-       :hae-kun-yli-n-merkkia 0
-       :lahde urakkahaku
-       :monivalinta? true
-       :tarkkaile-ulkopuolisia-muutoksia? true
-       :hakuikoni? true
-       :placeholder "Käytä suurennuslasia tai anna nimi"
-       :monivalinta-teksti #(case (count %)
-                              0 ""
-                              1 (:nimi (first %))
-                              (str (count %) " urakkaa valittu"))
-       :disabled? haku-kaynnissa?}
-      (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]])
+      [:div.label-ja-alasveto
+       [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
+       [kentat/tee-kentta
+        {:elementin-id "urakkahaku" :tyyppi :haku
+         :nayta :nimi
+         :hae-kun-yli-n-merkkia 0
+         :lahde urakkahaku
+         :monivalinta? true
+         :tarkkaile-ulkopuolisia-muutoksia? true
+         :hakuikoni? true
+         :placeholder "Käytä suurennuslasia tai anna nimi"
+         :monivalinta-teksti #(case (count %)
+                                0 ""
+                                1 (:nimi (first %))
+                                (str (count %) " urakkaa valittu"))
+         :disabled? haku-kaynnissa?}
+       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]
+      [:div {:style {:margin-top "1rem"}}
+       [napit/yleinen-ensisijainen "Hae"
+        #(e! (tiedot/->HaeUrakat))
+        {:disabled haku-kaynnissa?}]]]))
 
 
 (defn listaus
@@ -122,21 +126,13 @@
                                  :haku-kaynnissa? haku-kaynnissa?}])]))
 
 
-(defn kojelauta* [e! _app]
-  (komp/luo
-    (komp/sisaan #(do
-                    (e! (tiedot/->AlustaHallintayksikkoHaku
-                          (into []
-                            (map (fn [evk] (select-keys evk [:id :nimi :evknumero]))
-                              @hal/vaylamuodon-hallintayksikot))))
-                    (e! (tiedot/->HaeUrakat))))
-    (fn [e! app]
-      [:div.kojelauta-hallinta
-       [:h1 "Urakoiden tilanne"]
-       (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "7.12.2024"))
-         [yleiset/vihje vihjeteksti-uudesta-ominaisuudesta])
-       [suodattimet e! app]
-       [listaus e! app]])))
+(defn kojelauta* [e! app]
+  [:div.kojelauta-hallinta
+   [:h1 "Urakoiden tilanne"]
+   (when (pvm/ennen? (pvm/nyt) (pvm/->pvm "7.12.2024"))
+     [yleiset/vihje vihjeteksti-uudesta-ominaisuudesta])
+   [suodattimet e! app]
+   [listaus e! app]])
 
 
 (defn kojelauta []
