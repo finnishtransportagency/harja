@@ -189,3 +189,23 @@ export function avaaSivupaneelissaTallennettu(kuvaus) {
 export function siirrySivupaneelissaMuokkaustilaan() {
     cy.get(SP).contains('button', 'Muokkaa').click();
 }
+
+// Harjassa yleisimmin käytetyn hoitovuoden valinta pudotusvalikosta.
+export function valitseHoitovuosi(vuosi) {
+    const hoitovuodenValintapainike = () => cy.contains("label.alasvedon-otsikko", /^Hoitovuosi$/)
+        .first()
+        .parent()
+        .find("button");
+    hoitovuodenValintapainike().should("be.visible");
+    hoitovuodenValintapainike().click();
+
+    const hoitovuodenValintavaihtoehto = () =>
+        cy.contains("li.harja-alasvetolistaitemi", vuosi + ". hoitovuosi", {clickTimeout});
+    hoitovuodenValintavaihtoehto().should("be.visible");
+    hoitovuodenValintavaihtoehto().click();
+}
+
+/*Alias on interseptorin aslias nimi*/
+export function odotaOnnistunutVastausPalvelimelta(alias) {
+    cy.wait(alias, {pageloadTimeout}).its("response.statusCode").should("equal", 200);
+}

@@ -5,7 +5,8 @@
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
-            [harja.kyselyt.tehtavat-maarat-kyselyt :as tm-kyselyt]))
+            [harja.kyselyt.tehtavat-maarat-kyselyt :as tm-kyselyt]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -686,3 +687,92 @@
         (testing "WHERE-ehto estää epäjohdonmukaisen datan näkymisen"
           (is (not= loppu-muutossumma vaara-muutossumma)
               (str "VIEW:n tulos (" loppu-muutossumma ") ei saa olla sama kuin jos WHERE-ehto puuttuisi (" vaara-muutossumma ")")))))))
+
+(deftest tavoitehinnan-muutospaatos-lukitsee-tehtavien-tallennuksen
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
+        hoitovuosi 2024
+        kayttaja +kayttaja-jvh+
+        kayttaja-id (:id kayttaja)
+        parametrit {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm hoitovuosi)
+                                         (hoitokauden-loppu-pvm hoitovuosi)]}
+        _paatos (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
+                 db {:urakkaid urakka-id
+                     :hoitokauden_alkuvuosi hoitovuosi
+                     :tavoitehinta 1
+                     :kattohinta 1
+                     :muokkaa_kattohinta false
+                     :luoja kayttaja-id}
+                 kayttaja-id)]
+
+
+    (let [haettu (tm-palvelu/hae-tehtavat-ja-maarat db kayttaja parametrit)
+          tehtava (first (filter :tehtava_id (:tehtavat haettu)))]
+      (is (:lukittu? haettu) "Tehtävä- ja määräluettelon pitäisi ilmoittaa hoitovuosi lukituksi")
+      (is (some? tehtava) "Testidatasta löytyy tehtävä, jonka määrän tallennusta voidaan yrittää")
+
+      (when tehtava
+        (let [tehtava-id (:tehtava_id tehtava)
+              maara-ennen (:tarjous_maara tehtava)
+              uusi-maara (+ (or maara-ennen 0M) 1M)
+              muutetut-tehtavat (mapv (fn [rivi]
+                                        (if (= tehtava-id (:tehtava_id rivi))
+                                          (assoc rivi :tarjous_maara uusi-maara)
+                                          rivi))
+                                  (:tehtavat haettu))
+              tallennuksen-jalkeen (tm-palvelu/tallenna-tehtavat-ja-maarat
+                                     db kayttaja
+                                     (assoc parametrit :tehtavat muutetut-tehtavat))
+              maara-tallennuksen-jalkeen (:tarjous_maara
+                                           (first (filter #(= tehtava-id (:tehtava_id %))
+                                                    (:tehtavat tallennuksen-jalkeen))))]
+          (is (= maara-ennen maara-tallennuksen-jalkeen)
+              "Tehtävän määrä ei saa muuttua, kun tavoitehinnan muutospäätös on lukinnut hoitovuoden"))))))
+
+(deftest tavoitehinnan-muutospaatos-lukitsee-kajaanin-tehtavien-tallennuksen
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuosi 2025
+        kayttaja +kayttaja-jvh+
+        kayttaja-id (:id kayttaja)
+        parametrit {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm hoitovuosi)
+                                         (hoitokauden-loppu-pvm hoitovuosi)]}
+        _ (paatos-kyselyt/tee-tavoitehinnan-pysyva-muutospaatos
+            db {:urakkaid urakka-id
+                :hoitokauden_alkuvuosi hoitovuosi
+                :kirjallisesti_sovitut_muutokset 0M
+                :pysyvat_muutokset 0M
+                :johto_ja_hallintakorvaus_muutokset 0M
+                :muutostyo_muutokset 0M
+                :toteumiin_perustuvat_muutokset 0M
+                :tehtava_ja_maaratoteumamuutokset 0M
+                :rahavarausten_muutokset 0M
+                :arvonvahennysten_muutokset 0M
+                :tavoitehinnan_muutokset_yhteensa 0M
+                :luoja kayttaja-id}
+            kayttaja-id)]
+
+    (let [haettu (tm-palvelu/hae-tehtavat-ja-maarat db kayttaja parametrit)
+          tehtava (first (filter :tehtava_id (:tehtavat haettu)))]
+      (is (:lukittu? haettu) "Tehtävä- ja määräluettelon pitäisi ilmoittaa hoitovuosi lukituksi")
+      (is (some? tehtava) "Testidatasta löytyy tehtävä, jonka määrän tallennusta voidaan yrittää")
+
+      (when tehtava
+        (let [tehtava-id (:tehtava_id tehtava)
+              maara-ennen (:tarjous_maara tehtava)
+              uusi-maara (+ (or maara-ennen 0M) 1M)
+              muutetut-tehtavat (mapv (fn [rivi]
+                                        (if (= tehtava-id (:tehtava_id rivi))
+                                          (assoc rivi :tarjous_maara uusi-maara)
+                                          rivi))
+                                  (:tehtavat haettu))
+              tallennuksen-jalkeen (tm-palvelu/tallenna-tehtavat-ja-maarat
+                                     db kayttaja
+                                     (assoc parametrit :tehtavat muutetut-tehtavat))
+              maara-tallennuksen-jalkeen (:tarjous_maara
+                                           (first (filter #(= tehtava-id (:tehtava_id %))
+                                                    (:tehtavat tallennuksen-jalkeen))))]
+          (is (= maara-ennen maara-tallennuksen-jalkeen)
+              "Tehtävän määrä ei saa muuttua, kun tavoitehinnan muutospäätös on lukinnut hoitovuoden"))))))

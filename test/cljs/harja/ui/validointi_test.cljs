@@ -88,6 +88,15 @@
     (is (some? (validi-data? :ei-tyhja "\t")))
     (is (some? (validi-data? :ei-tyhja nil)))))
 
+(deftest hoitovuosi-lukittu
+  (let [hoitovuoden-alku (pvm/->pvm "01.10.2025")
+        hoitovuoden-loppu (pvm/->pvm "30.09.2026")
+        seuraavan-hoitovuoden-alku (pvm/->pvm "01.10.2026")]
+    (testing "Tarkistaa lukituksen hoitovuoden, ei kalenterivuoden perusteella"
+      (is (some? (validi-data? :hoitovuosi-lukittu hoitovuoden-alku #{2025})))
+      (is (some? (validi-data? :hoitovuosi-lukittu hoitovuoden-loppu #{2025})))
+      (is (nil? (validi-data? :hoitovuosi-lukittu seuraavan-hoitovuoden-alku #{2025}))))))
+
 (deftest ei-tyhja-jos-toinen-avain-ei-joukossa
   (testing "Täyttää säännön ei-tyhja-jos-toinen-avain-ei-joukossa"
     (is (nil? (validi-rivi? :ei-tyhja-jos-toinen-avain-ei-joukossa 1 {:id 1} :id [3 1])))
