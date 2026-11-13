@@ -19,13 +19,15 @@ SELECT arvo, nimi
 
 -- name: luo-indeksi<!
 -- Tekee uuden indeksin
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
-     VALUES (:nimi, :vuosi, :kuukausi, :arvo);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo, luoja, luotu)
+     VALUES (:nimi, :vuosi, :kuukausi, :arvo, :kayttaja, NOW());
 
 -- name: paivita-indeksi!
 -- Päivittää indeksin tiedot
 UPDATE indeksi
-   SET arvo=:arvo
+   SET arvo=:arvo,
+       muokkaaja=:kayttaja,
+       muokattu=NOW()
  WHERE nimi = :nimi AND vuosi = :vuosi AND kuukausi = :kuukausi
 
 -- name: poista-indeksi!
