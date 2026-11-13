@@ -51,7 +51,7 @@ jobs:
       fail-fast: false
       max-parallel: 2
       matrix:
-        # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+        # Katso saatavilla olevat harjadb servicet tools/docker/docker-compose.ci.yml:stä
         configs: [
           { testDBService: "harjadb-latest", e2eBrowsers: [ 'chrome' ], artifactPrefix: 'harjadb-latest_' }
         ]
@@ -143,7 +143,7 @@ jobs:
           registry: ${{ env.GH_DOCKER_REGISTRY }}
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+          # Katso saatavilla olevat harjadb servicet tools/docker/docker-compose.ci.yml:stä (esim. harjadb-latest)
           # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
           service-name: harjadb-latest
           # Build ei tarvitse testidataa

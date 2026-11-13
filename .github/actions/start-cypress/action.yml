@@ -12,7 +12,7 @@ inputs:
   password:
     description: ''
     required: true
-  # Servicen image ja asetukset määritellään .github/docker/docker-compose.yml:ssä.
+  # Servicen image ja asetukset määritellään tools/docker/docker-compose.ci.yml:ssä.
   service-name:
     description: 'Cypressin compose servicen nimi'
     required: true
@@ -43,10 +43,10 @@ runs:
       env:
         SERVICE_NAME: ${{ inputs.service-name }}
       run: |
-        cd .github/docker
+        cd tools/docker
         echo "Docker Compose version: $(docker compose version --short)"
         echo "Pulling Cypress-image for service: ${SERVICE_NAME}"
-        docker compose pull "${SERVICE_NAME}"
+        docker compose -f docker-compose.ci.yml pull "${SERVICE_NAME}"
       shell: bash
 
     # Konttiin mountataan /harja workdirectoryyn GITHUB_WORKSPACE, joka sisältää jobin checkoutissa haetun sisällön
@@ -76,6 +76,6 @@ runs:
       run: |
         echo "Running cypress command in the container as user: node"
 
-        cd .github/docker
-        docker compose run --rm --no-deps "${SERVICE_NAME}"
+        cd tools/docker
+        docker compose -f docker-compose.ci.yml run --rm --no-deps "${SERVICE_NAME}"
       shell: bash

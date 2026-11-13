@@ -25,10 +25,10 @@ runs:
 
     - name: Pull and start test activemq
       run: |
-        cd .github/docker
+        cd tools/docker
         echo "Pulling harja activemq image (Docker Compose version: $(docker compose version --short))"
-        docker compose pull activemq-artemis-itmf
+        docker compose -f docker-compose.ci.yml pull activemq-artemis-itmf
 
         echo "Starting harja activemq and waiting for it to start (Docker Compose version: $(docker compose version --short))"
-        docker compose up -d --wait --wait-timeout 60 activemq-artemis-itmf
+        docker compose -f docker-compose.ci.yml up -d --wait --wait-timeout 60 activemq-artemis-itmf
       shell: bash

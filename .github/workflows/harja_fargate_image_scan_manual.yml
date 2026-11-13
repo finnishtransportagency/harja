@@ -41,7 +41,7 @@ jobs:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-          # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+          # Katso saatavilla olevat harjadb servicet tools/docker/docker-compose.ci.yml:stä (esim. harjadb-latest)
           # Käytetään uusinta saatavilla olevaa testidb:tä AWS buildeissa.
           service-name: harjadb-latest
           # Build ei tarvitse testidataa
