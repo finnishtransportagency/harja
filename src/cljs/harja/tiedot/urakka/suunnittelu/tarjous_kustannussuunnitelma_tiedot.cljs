@@ -199,32 +199,71 @@
     {:onnistui ->HaeKustannussuunnitelmanTiedotOnnistui
      :epaonnistui ->HaeKustannussuunnitelmanTiedotEpaonnistui}))
 
-(defn parsi-kilpailutettavat-hankinnat-virhe [virhe toimenpiteet]
-  (let [virheen-rivi (when-let [matches (or (re-find #"\[:toimenpiteet (\d+) :loppukausi\]" virhe)
-                                          (re-find #"\[:toimenpiteet (\d+) :alkukausi\]" virhe))]
-                       (js/parseInt (second matches)))
-        loppukausi? (str/includes? virhe ":loppukausi")
-        toimenpide-rivi (nth toimenpiteet virheen-rivi)
-        rivin-nimi (:nimi toimenpide-rivi)]
-    (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi
-      (if loppukausi? "Tammi-syyskuun " "Loka-joulukuun ") "arvossa virhe. Anna positiivinen summa.")))
+(defn parsi-kilpailutettavat-hankinnat-virhe [vastaus toimenpiteet]
+  (let [virhe (cond
+                (get-in vastaus [:parse-error :original-text])
+                (get-in vastaus [:parse-error :original-text])
 
-(defn parsi-erillishankinnat-virhe [virhe erillishankinnat]
-  (let [virheen-rivi (when-let [matches (re-find #"\[:erillishankinnat (\d+) :summa\]" virhe)]
+                (get-in vastaus [:response :virhe])
+                (get-in vastaus [:response :virhe])
+
+                :else
+                vastaus)
+        virheteksti (if (string? virhe) virhe (pr-str virhe))
+        matches (or (re-find #"\[:toimenpiteet (\d+) :loppukausi\]" virheteksti)
+                  (re-find #"\[:toimenpiteet (\d+) :alkukausi\]" virheteksti))]
+    (if matches
+      (let [virheen-rivi (js/parseInt (second matches))
+            loppukausi? (str/includes? virheteksti ":loppukausi")
+            toimenpide-rivi (nth toimenpiteet virheen-rivi)
+            rivin-nimi (:nimi toimenpide-rivi)]
+        (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi
+          (if loppukausi? "Tammi-syyskuun " "Loka-joulukuun ") "arvossa virhe. Anna positiivinen summa."))
+      virheteksti)))
+
+(defn parsi-erillishankinnat-virhe [vastaus erillishankinnat]
+  (let [virhe (cond
+                (get-in vastaus [:parse-error :original-text])
+                [(get-in vastaus [:parse-error :original-text])]
+
+                (get-in vastaus [:response :virhe])
+                (get-in vastaus [:response :virhe])
+
+                :else
+                vastaus)
+        virheen-rivi (when-let [matches (re-find #"\[:erillishankinnat (\d+) :summa\]" virhe)]
                        (js/parseInt (second matches)))
         erillishankinta (nth erillishankinnat virheen-rivi)
         rivin-nimi (:kalenterikuukausi erillishankinta)]
     (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
 
-(defn parsi-hoidonjohtopalkkiot-virhe [virhe hoidonjohtopalkkiot]
-  (let [virheen-rivi (when-let [matches (re-find #"\[:hoidonjohtopalkkiot (\d+) :summa\]" virhe)]
+(defn parsi-hoidonjohtopalkkiot-virhe [vastaus hoidonjohtopalkkiot]
+  (let [virhe (cond
+                (get-in vastaus [:parse-error :original-text])
+                [(get-in vastaus [:parse-error :original-text])]
+
+                (get-in vastaus [:response :virhe])
+                (get-in vastaus [:response :virhe])
+
+                :else
+                vastaus)
+        virheen-rivi (when-let [matches (re-find #"\[:hoidonjohtopalkkiot (\d+) :summa\]" virhe)]
                        (js/parseInt (second matches)))
         hoidonjohtopalkkio (nth hoidonjohtopalkkiot virheen-rivi)
         rivin-nimi (:kalenterikuukausi hoidonjohtopalkkio)]
     (str "Rivillä " (inc virheen-rivi) ", " rivin-nimi " arvossa virhe. Anna positiivinen summa.")))
 
-(defn parsi-johto-ja-hallintokorvaus-virhe [virhe johto-ja-hallintokorvaukset]
-  (let [virheen-rivi (when-let [matches (re-find #"\[:johto-ja-hallintokorvaukset (\d+) :summa\]" virhe)]
+(defn parsi-johto-ja-hallintokorvaus-virhe [vastaus johto-ja-hallintokorvaukset]
+  (let [virhe (cond
+                (get-in vastaus [:parse-error :original-text])
+                [(get-in vastaus [:parse-error :original-text])]
+
+                (get-in vastaus [:response :virhe])
+                (get-in vastaus [:response :virhe])
+
+                :else
+                vastaus)
+        virheen-rivi (when-let [matches (re-find #"\[:johto-ja-hallintokorvaukset (\d+) :summa\]" virhe)]
                        (js/parseInt (second matches)))
         johto-ja-hallintokorvaus (nth johto-ja-hallintokorvaukset virheen-rivi)
         rivin-nimi (:kalenterikuukausi johto-ja-hallintokorvaus)]
@@ -345,6 +384,7 @@
       (assoc :tarjous (:tarjous vastaus))
       (assoc :tulevaisuudessa-arvoja? (:tulevaisuudessa-arvoja? vastaus))
       (assoc :viimeinen-hoitovuosi? (:viimeinen-hoitovuosi? vastaus))
+      (assoc :lukittu? (:lukittu? vastaus))
       (assoc :kustannussuunnitelma (:kustannussuunnitelma vastaus))
       (assoc :vanha-urakka? (:vanha-urakka? vastaus))
       (assoc :tallentamattomia-muutoksia? false)))
@@ -422,7 +462,8 @@
 
   TallennaKilpailutettavatHankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (let [parsitut-virheet (parsi-kilpailutettavat-hankinnat-virhe (get-in vastaus [:parse-error :original-text])
+    (let [_ (js/console.log "vastaus: " (pr-str vastaus))
+          parsitut-virheet (parsi-kilpailutettavat-hankinnat-virhe vastaus
                              (get-in app [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet]))]
       (viesti/nayta-toast!
         parsitut-virheet
@@ -473,8 +514,7 @@
 
   TallennaErillishankinnatEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (let [parsitut-virheet (parsi-erillishankinnat-virhe (get-in vastaus [:parse-error :original-text])
-                             (get-in app [:kustannussuunnitelma :erillishankinnat]))]
+    (let [parsitut-virheet (parsi-erillishankinnat-virhe vastaus (get-in app [:kustannussuunnitelma :erillishankinnat]))]
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
@@ -544,8 +584,7 @@
 
   TallennaHoidonjohtopalkkiotEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (let [parsitut-virheet (parsi-hoidonjohtopalkkiot-virhe (get-in vastaus [:parse-error :original-text])
-                             (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))]
+    (let [parsitut-virheet (parsi-hoidonjohtopalkkiot-virhe vastaus (get-in app [:kustannussuunnitelma :hoidonjohtopalkkiot]))]
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus
@@ -632,8 +671,7 @@
 
   TallennaJohtoJaHallintokorvauksetEpaonnistui
   (process-event [{:keys [vastaus]} app]
-    (let [parsitut-virheet (parsi-johto-ja-hallintokorvaus-virhe (get-in vastaus [:parse-error :original-text])
-                             (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))]
+    (let [parsitut-virheet (parsi-johto-ja-hallintokorvaus-virhe vastaus (get-in app [:kustannussuunnitelma :johto-ja-hallintokorvaukset]))]
       (viesti/nayta-toast!
         parsitut-virheet
         :varoitus

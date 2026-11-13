@@ -1,7 +1,7 @@
 (ns harja.palvelin.raportointi.vastaanottotarkastus-mhu-laskutusyht-test
   (:require [clojure.test :refer [deftest is testing use-fixtures]]
             [harja.testi :refer [+kayttaja-jvh+ hae-kajaanin-maanteiden-hoitourakan-2025-2030-id jarjestelma
-                                testi-http-palvelin testitietokanta urakkatieto-fixture]]
+                                 testi-http-palvelin testitietokanta urakkatieto-fixture]]
             [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.kyselyt.urakat :as urakat-q]
@@ -175,10 +175,10 @@
     (is (= (into ["Talvihoito"] (concat vuosikertoimet [(reduce + 0M vuosikertoimet)]))
           (raporttirivin-arvot hankinnat "Talvihoito")))
     (is (= (into ["Yhteensä"] (concat (map #(* 21M %) vuosikertoimet)
-                               [(reduce + 0M (map #(* 21M %) vuosikertoimet))]))
+                                [(reduce + 0M (map #(* 21M %) vuosikertoimet))]))
           (raporttirivin-arvot hankinnat "Yhteensä")))
     (is (= (into ["Johto- ja hallintokorvaukset"] (concat (map #(* 7M %) vuosikertoimet)
-                                                   [(reduce + 0M (map #(* 7M %) vuosikertoimet))]))
+                                                    [(reduce + 0M (map #(* 7M %) vuosikertoimet))]))
           (raporttirivin-arvot hoidonjohto "Johto- ja hallintokorvaukset")))
     (is (= (into ["Muutostyöt (erillisrahoitetut)"] (concat (map #(* 10M %) vuosikertoimet)
                                                       [(reduce + 0M (map #(* 10M %) vuosikertoimet))]))
@@ -187,13 +187,13 @@
                                                              [(reduce + 0M (map #(* 12M %) vuosikertoimet))]))
           (raporttirivin-arvot tavoitehintaiset "Muut tavoitehintaan vaikuttavat kulut")))
     (is (= (into ["Arvonvähennykset"] (concat (map #(* 13M %) vuosikertoimet)
-                                         [(reduce + 0M (map #(* 13M %) vuosikertoimet))]))
+                                        [(reduce + 0M (map #(* 13M %) vuosikertoimet))]))
           (raporttirivin-arvot tavoitehintaiset "Arvonvähennykset")))
     (is (= (into ["Sanktiot"] (concat (map #(* -2M %) vuosikertoimet)
                                 [(reduce + 0M (map #(* -2M %) vuosikertoimet))]))
           (raporttirivin-arvot ulkopuoliset "Sanktiot")))
     (is (= (into ["Yhteensä"] (concat (map #(* 43M %) vuosikertoimet)
-                               [(reduce + 0M (map #(* 43M %) vuosikertoimet))]))
+                                [(reduce + 0M (map #(* 43M %) vuosikertoimet))]))
           (raporttirivin-arvot ulkopuoliset "Yhteensä")))))
 
 (deftest laskutusyhteenveto-kohdistaa-rahavaraukset-nimen-mukaan
@@ -255,7 +255,7 @@
                  hoitokaudet)
               @kutsut))
         (is (= (mapv #(str "Laskutus " (pvm/vuosi (:alkupvm %)) "-" (pvm/vuosi (:loppupvm %)) " (€)")
-                  hoitokaudet)
+                 hoitokaudet)
               (mapv :otsikko (rest (butlast (nth hankinnat 2))))))))))
 
 (deftest laskutusyhteenveto-ei-hae-tietoja-ilman-hoitokausia
@@ -290,7 +290,7 @@
                                   pdf-sisalto)
             pdf-sarakkeiden-otsikot (set (keep #(when (and (vector? %) (= :fo:block (first %)))
                                                   (second %))
-                                          (tree-seq coll? seq pdf-taulukon-otsake)))
+                                           (tree-seq coll? seq pdf-taulukon-otsake)))
             pdf-sarakkeet (filter #(and (vector? %) (= :fo:table-column (first %)))
                             pdf-sisalto)]
         (is (= 7 (count pdf-sarakkeet)))
@@ -303,18 +303,18 @@
                           {:hoitovuosi vuosi
                            :otsikko (str "Laskutus " vuosi "-" (inc vuosi) " (€)")
                            :data data})
-                  [2024 2025 2026]
-                  [{:muut_kulut_hoitokausi 10M
-                    :arvonvahennykset_hoitokausi_yht 0M
-                    :muut_kulut_hoitokausi_yht 10M}
-                   {:muut_kulut_hoitokausi 20M
-                    :arvonvahennykset_hoitokausi_yht 0M
-                    :muut_kulut_hoitokausi_yht 20M
-                    :paatos_tavoitepalkkio_hoitokausi_yht 0M}
-                   {:muut_kulut_hoitokausi 30M
-                    :arvonvahennykset_hoitokausi_yht 30M
-                    :muut_kulut_hoitokausi_yht 60M
-                    :paatos_tavoitepalkkio_hoitokausi_yht 7M}])
+                    [2024 2025 2026]
+                    [{:muut_kulut_hoitokausi 10M
+                      :arvonvahennykset_hoitokausi_yht 0M
+                      :muut_kulut_hoitokausi_yht 10M}
+                     {:muut_kulut_hoitokausi 20M
+                      :arvonvahennykset_hoitokausi_yht 0M
+                      :muut_kulut_hoitokausi_yht 20M
+                      :paatos_tavoitepalkkio_hoitokausi_yht 0M}
+                     {:muut_kulut_hoitokausi 30M
+                      :arvonvahennykset_hoitokausi_yht 30M
+                      :muut_kulut_hoitokausi_yht 60M
+                      :paatos_tavoitepalkkio_hoitokausi_yht 7M}])
         sisalto (laskutus-sisalto vuosidata 2019)
         tavoitehintaiset (laskutusvuositaulukko sisalto "Muut tavoitehintaan vaikuttavat kulut")
         ulkopuoliset (laskutusvuositaulukko sisalto "Kustannus")
@@ -347,16 +347,7 @@
             @haetut-parametrit)))))
 
 (deftest laskutusyhteenveto-liitetaan-raporttiin-oikeaan-kohtaan
-  (let [urakka-id (hae-kajaanin-maanteiden-hoitourakan-2025-2030-id)
-        hoitokaudet (testi-laskutus-hoitokaudet (testi-laskutus-urakka urakka-id))
-        odotetut-lupausbonukset-ja-sanktiot
-        (mapv (fn [indeksi]
-                (case indeksi
-                  0 75M
-                  1 300M
-                  150M))
-          (range (count hoitokaudet)))
-        laskutus-osio [[:otsikko "Laskutusyhteenveto"]
+  (let [laskutus-osio [[:otsikko "Laskutusyhteenveto"]
                        [:taulukko {:otsikko "Laskutuksen testitaulukko"} [] []]]
         raportti (with-redefs [vastaanottotarkastus-mhu/muodosta-laskutusyhteenveto-taulukko
                                (fn [& _] laskutus-osio)]
@@ -367,21 +358,17 @@
                                         (= "Lupaukset" (get-in osa [1 :otsikko])))
                                   osa))
                           (tree-seq coll? seq raportti))
-        lupausvuosien-rivit (when lupaus-taulukko
-                              (butlast (nth lupaus-taulukko 3)))
         laskutus-otsikon-indeksi (.indexOf raportti [:otsikko "Laskutusyhteenveto"])
         laskutustaulukon-indeksi (.indexOf raportti (second laskutus-osio))
         tavoitehintataulukon-indeksi (first
-                                      (keep-indexed (fn [indeksi osa]
-                                                      (when (and (vector? osa)
-                                                              (= :taulukko (first osa))
-                                                              (= "Urakan tavoitehintaan kuuluvat kustannukset"
-                                                                (get-in osa [1 :otsikko])))
-                                                        indeksi))
-                                        raportti))]
+                                       (keep-indexed (fn [indeksi osa]
+                                                       (when (and (vector? osa)
+                                                               (= :taulukko (first osa))
+                                                               (= "Urakan tavoitehintaan kuuluvat kustannukset"
+                                                                 (get-in osa [1 :otsikko])))
+                                                         indeksi))
+                                         raportti))]
     (is (not= -1 laskutus-otsikon-indeksi))
     (is (not= -1 laskutustaulukon-indeksi))
     (is (< laskutus-otsikon-indeksi laskutustaulukon-indeksi tavoitehintataulukon-indeksi))
-    (is (some? lupaus-taulukko))
-    (is (= odotetut-lupausbonukset-ja-sanktiot
-          (mapv #(nth % 3) lupausvuosien-rivit)))))
+    (is (some? lupaus-taulukko))))

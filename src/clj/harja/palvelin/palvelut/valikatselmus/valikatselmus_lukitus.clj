@@ -8,7 +8,7 @@
 
 (defn ominaisuuden-muokkaus-sallittu?
   "Sisältää säännöstön ominaisuuksittain, onko ominaisuuden muokkaus sallittu vai ei. Jos ominaisuus on lukittu, palautetaan false.
-  Tukee ominaisuuksia: :tarjous, :uusi-kustannussuunnitelma, :tehtavat-ja-maarat, :kulu, :sanktio, :muutos ja :toteuma.
+  Tukee ominaisuuksia: :tarjous, :uusi-kustannussuunnitelma, :tehtavat-ja-maarat, :kulu, :arvonvahennys, :sanktio, :bonus, :muutos ja :toteuma.
   Jos ei tue ominaisuutta, palauttaa aina true."
   [db urakka-id kuluva-hoitovuosi ominaisuus]
   (let [urakan-tiedot (first (q-urakat/hae-urakan-tiedot db urakka-id))
@@ -28,8 +28,8 @@
 
     ;; Jos ominaisuus alkaa olla riippuvainen myös jostain toisesta päätöksestä, niin lisää tuohon settiin lisää avaimia
     (case ominaisuus
-      (:tarjous :uusi-kustannussuunnitelma :tehtavat-ja-maarat :kulu :sanktio :muutos :toteuma)
-      (if (empty? urakan-tehdyt-paatoset)
-        true
-        (every? (fn [k] (some #(false? (get % k)) urakan-tehdyt-paatoset)) #{:tavoitehinnan-muutokset}))
+      (:tarjous :uusi-kustannussuunnitelma :tehtavat-ja-maarat :kulu :arvonvahennys :muutos :toteuma)
+      (not-any? #(true? (:tavoitehinnan-muutokset %)) urakan-tehdyt-paatoset)
+      (:sanktio :bonus)
+      (not-any? #(true? (:valikatselmuspoytakirjaan-liitettavat-raportit %)) urakan-tehdyt-paatoset)
       :else true)))
