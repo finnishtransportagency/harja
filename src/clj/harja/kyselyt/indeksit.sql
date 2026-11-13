@@ -75,6 +75,16 @@ SELECT urakka
 -- name: hae-urakan-indeksin-perusluku
 SELECT indeksilaskennan_perusluku(:urakka-id::INTEGER) AS perusluku;
 
+-- name: hae-urakoiden-indeksitiedot
+SELECT u.id AS urakka_id,
+       u.alkupvm,
+       u.loppupvm,
+       u.indeksi,
+       u.tyyppi,
+       indeksilaskennan_perusluku(u.id) AS perusluku
+  FROM urakka u
+ WHERE u.id IN (:urakka-idt);
+
 -- name: hae-urakan-hoitovuoden-indeksit-kuukausinimilla
 -- Hae indeksi ja nimeä se kuukauden mukaan
 SELECT vuosi, kuukausi, arvo as indeksiluku

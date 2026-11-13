@@ -15,7 +15,8 @@
   tallenna-paallystysurakan-indeksitiedot!
   hae-urakan-indeksin-perusluku hae-indeksi
   hae-urakan-kuukauden-indeksiarvo listaa-indeksit
-  paivita-indeksi! luo-indeksi<! poista-indeksi!)
+  paivita-indeksi! luo-indeksi<! poista-indeksi!
+  hae-urakoiden-indeksitiedot)
 
 (defn hae-vertailu-kk
   [urakkatyyppi urakan-alkuvuosi vuosi]
