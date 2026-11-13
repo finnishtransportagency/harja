@@ -133,7 +133,7 @@ jobs:
           TAGS: ${{ steps.tietokanta-tags.outputs.tags }}
           BUILD_PLATFORMS: linux/arm64,linux/amd64
         with:
-          context: .github/docker/tietokanta
+          context: tools/docker/tietokanta
           platforms: ${{ env.BUILD_PLATFORMS }}
           tags: ${{ env.TAGS }}
           labels: |
@@ -197,7 +197,7 @@ jobs:
           #       [FAILED] Command was killed with SIGSEGV (Segmentation fault): /root/.cache/Cypress/10.2.0/Cypress/Cypress --no-sandbox --smoke-test --ping=485
           #BUILD_PLATFORMS: linux/arm64,linux/amd64
         with:
-          context: .github/docker/cypress
+          context: tools/docker/cypress
           platforms: ${{ env.BUILD_PLATFORMS }}
           build-args: |
             NPM_CYPRESS_VERSION=${{ env.CYPRESS_VERSION }}
@@ -248,7 +248,7 @@ jobs:
           TAGS: ${{ steps.activemq-artemis-tags.outputs.tags }}
           BUILD_PLATFORMS: linux/arm64,linux/amd64
         with:
-          context: .github/docker/activemq-artemis
+          context: tools/docker/activemq-artemis
           platforms: ${{ env.BUILD_PLATFORMS }}
           tags: ${{ env.TAGS }}
           labels: |

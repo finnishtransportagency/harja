@@ -743,3 +743,6 @@ $$
     END
 $$;
 
+-- Päivitä urakoiden parametrit
+-- Pidä tämä jossain viimeisenä testidatan jälkeen kun kaikki urakat on lisätty
+\i testidata/urakka_parametrit.sql
