@@ -1,10 +1,37 @@
 (ns harja.palvelin.palvelut.toteumat-tarkistukset
   (:require [harja.kyselyt.toteumat :as toteumat-q]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.pvm :as pvm]
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [taoensso.timbre :as log]
             [slingshot.slingshot :refer [throw+]]))
+
+(defn hae-vuosittaiset-lukitustiedot
+  "Palauttaa toteumien lukitustiedot hoitovuosittain. Hakee kunkin eri vuoden vain kerran."
+  [db urakka-id hoitovuodet]
+  (into {}
+    (map (fn [hoitovuosi]
+           [hoitovuosi
+            {:hoitovuosi hoitovuosi
+             :lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                             db urakka-id hoitovuosi :toteuma))}]))
+    (distinct hoitovuodet)))
+
+(defn vaadi-ominaisuuden-muokkaus-sallittu!
+  "Estää ominaisuuden muokkauksen, jos välikatselmuksen päätös lukitsee päivämäärän hoitovuoden."
+  [db urakka-id paivamaara ominaisuus kohde]
+  (when-let [hoitovuosi (some-> paivamaara pvm/joda-timeksi pvm/hoitokauden-alkuvuosi)]
+    (when-not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                db urakka-id hoitovuosi ominaisuus)
+      (throw (IllegalArgumentException.
+               (format "%s ei voi muokata, koska välikatselmuksen päätös lukitsee hoitovuoden %s."
+                 kohde hoitovuosi))))))
+
+(defn vaadi-toteuman-muokkaus-sallittu!
+  "Estää toteuman muokkauksen, jos välikatselmuksen päätös lukitsee päivämäärän hoitovuoden."
+  [db urakka-id paivamaara]
+  (vaadi-ominaisuuden-muokkaus-sallittu! db urakka-id paivamaara :toteuma "Toteumaa"))
 
 (defn vaadi-toteuma-urakan-aikana [db toteuma-alkanut urakka-id ulkoinen-id]  
   (when toteuma-alkanut  

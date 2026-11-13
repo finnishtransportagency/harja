@@ -19,6 +19,7 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
 
@@ -45,9 +46,11 @@
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
 
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]))
+            [harja.id :refer [id-olemassa?]]
+            [slingshot.slingshot :refer [throw+]]))
 
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
@@ -203,15 +206,6 @@
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
                                    sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
-(defn vaadi-sanktio-kuuluu-urakkaan
-  "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
-  [db urakka-id sanktio-id]
-  (when (id-olemassa? sanktio-id)
-    (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
-      (when-not (= sanktion-urakka urakka-id)
-        (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
-                                     urakka-id " vaan urakkaan " sanktion-urakka)))))))
-
 (defn vaadi-talvisuolan-ylitys-ehto
   "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
   sanktion laji on talvisuolan ylitys
@@ -237,6 +231,27 @@
        :laji laji
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
+(defn- tarkista-sanktion-lukitus
+  [db urakka-id urakan-tiedot sanktio paivamaara]
+  (let [laji (if (keyword? (:laji sanktio))
+               (:laji sanktio)
+               (some-> (:laji sanktio) keyword))
+        hoitovuosi (some-> paivamaara pvm/joda-timeksi pvm/hoitokauden-alkuvuosi)
+        lukittava-ominaisuus (when laji
+                               (if (= laji :arvonvahennyssanktio)
+                                 :arvonvahennys
+                                 :sanktio))]
+    (when (and lukittava-ominaisuus
+            hoitovuosi
+            (or (= lukittava-ominaisuus :sanktio)
+              (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
+                urakan-tiedot (pvm/vuodesta-hoitokausi hoitovuosi))))
+      (when-not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  db urakka-id hoitovuosi lukittava-ominaisuus)
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                            :viesti "Välikatselmuksessa hoitovuodelle tehdyt päätökset estävät tallentamisen."}]})))))
+
 (defn- vaadi-manuaalinen-maara
   [maara]
   (when-not (number? maara)
@@ -258,17 +273,22 @@
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
                    toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava
                    omailmoitettu] :as sanktio}
-   laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
+   laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti ohita-lukitus?]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
-  (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
+  (when (id-olemassa? id) (laatupoikkeamat-q/vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
         olemassa-oleva-sanktio (when (id-olemassa? id)
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
+        vanha-sanktio (when (id-olemassa? id)
+                        (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
+        _ (when-not ohita-lukitus?
+            (tarkista-sanktion-lukitus
+              db urakka urakan-tiedot vanha-sanktio (or (:perintapvm vanha-sanktio) (:maarattypvm vanha-sanktio))))
         pyynto-summa (if (decimal? summa)
-                       (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
-                       summa)
+                (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
+                summa)
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
         indeksi (when-not (and
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
@@ -281,6 +301,9 @@
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
         paivamaara (or paivamaara perintapvm)
+        _ (when-not ohita-lukitus?
+            (tarkista-sanktion-lukitus
+              db urakka urakan-tiedot sanktio paivamaara))
         _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
         profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
@@ -516,7 +539,7 @@
   [db user tiedot]
   (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm ohita-lukitus?]]
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
@@ -528,7 +551,7 @@
     (when laatupoikkeaman-sanktion-muokkaus?
       ;; Varmistetaan että muokattava sanktio kuuluu annettuun urakkaan. Varsinainen muokkausoikeus
       ;; tulee kirjoitusoikeudesta (W), joka on jo vaadittu ylhäällä.
-      (vaadi-sanktio-kuuluu-urakkaan db urakka (:id sanktio)))
+      (laatupoikkeamat-q/vaadi-sanktio-kuuluu-urakkaan db urakka (:id sanktio)))
     (jdbc/with-db-transaction [c db]
       ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
       ;; koska laatupoikkeamalla voi olla 0...n sanktiota
@@ -565,58 +588,46 @@
             sanktio-id (tallenna-laatupoikkeaman-sanktio
                          c user sanktio id urakka kasittelyaika
                          {:paivamaara hk-alkupvm
-                          :soveltuvuuskonteksti :urakka})
+                          :soveltuvuuskonteksti :urakka
+                          :ohita-lukitus? ohita-lukitus?})
             _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
         sanktio-id))))
-
-(defn poista-laatupoikkeaman-sanktio
-  "Poistaa laatupoikkeaman kautta määrätyn (ei-suora)sanktion. Palauttaa sanktion ID:n.
-
-  Toisin kuin suorasanktion poistossa, laatupoikkeamaa EI poisteta, koska laatupoikkeamalla voi
-  olla omaa arvoa ja se voi sisältää useita sanktioita. Sanktion poiston jälkeen laatupoikkeaman
-  päätös perutaan (käsittelytiedot ja päätös nollataan). Tämä poistaa laatupoikkeaman lukituksen ja
-  mahdollistaa laatupoikkeaman muokkauksen (vrt. HARJA-1954). Päätös perutaan silloinkin, kun
-  laatupoikkeamalle jää muita aktiivisia sanktioita — päätös tulee tällöin antaa uudelleen."
-  [db user {sanktio-id :id urakka-id :urakka-id} sanktio]
-  (oikeudet/vaadi-oikeus "poisto" oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (vaadi-sanktio-kuuluu-urakkaan db urakka-id sanktio-id)
-  (jdbc/with-db-transaction [c db]
-    (sanktiot/poista-sanktio! c {:id sanktio-id
-                                 :muokkaaja (:id user)})
-    ;; Perutaan laatupoikkeaman päätös, jotta lukitus poistuu ja laatupoikkeamaa voi taas muokata.
-    ;; Laatupoikkeamalle mahdollisesti jäävät muut aktiiviset sanktiot säilyvät ennallaan, ja päätös
-    ;; annetaan niille uudelleen laatupoikkeaman muokkauksen yhteydessä.
-    (when-let [laatupoikkeama-id (:laatupoikkeama_id sanktio)]
-      (laatupoikkeamat-q/peru-laatupoikkeaman-paatos! c {:id laatupoikkeama-id
-                                                         :muokkaaja (:id user)}))
-    (sanktiot/merkitse-maksuera-likaiseksi! c sanktio-id)
-    sanktio-id))
 
 (defn poista-sanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n.
 
   Laatupoikkeaman kautta määrätty (ei-suora)sanktio poistetaan poista-laatupoikkeaman-sanktio
-  -funktiolla, jolloin laatupoikkeamaa ei poisteta vaan sen päätös perutaan."
-  [db user {sanktio-id :id urakka-id :urakka-id :as tiedot}]
-  (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
-  (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
-  (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
+  -funktiolla, jolloin laatupoikkeamaa ei poisteta vaan sen päätös perutaan.
+  Valinnaisella ohitusparametrilla voidaan ohittaa hoitovuoden lukitus esimerkiksi lupauspäätöstä peruttaessa."
+  ([db user tiedot]
+   (poista-sanktio db user tiedot false))
+  ([db user {sanktio-id :id urakka-id :urakka-id} ohita-lukitus?]
+   (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
+   (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
+   (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
 
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
 
-  (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))]
-    (if-not (:suorasanktio sanktio)
-      ;; Laatupoikkeaman kautta määrätty sanktio: laatupoikkeamaa ei poisteta.
-      (poista-laatupoikkeaman-sanktio db user tiedot sanktio)
-      ;; Suorasanktio: poistetaan sekä sanktio että siihen liittyvä laatupoikkeama.
-      (jdbc/with-db-transaction [c db]
-        (when-let [laatupoikkeama-id (:laatupoikkeama_id sanktio)]
-          (laatupoikkeamat-q/poista-laatupoikkeama c user {:id laatupoikkeama-id
-                                                           :urakka-id urakka-id}))
-        (sanktiot/poista-sanktio! c {:id sanktio-id
-                                     :muokkaaja (:id user)})
-        (sanktiot/merkitse-maksuera-likaiseksi! c sanktio-id)
-        sanktio-id))))
+   (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))]
+     (when-not ohita-lukitus?
+       (tarkista-sanktion-lukitus
+         db urakka-id (first (urakat/hae-urakka db urakka-id)) sanktio
+         (or (:perintapvm sanktio) (:maarattypvm sanktio))))
+     (laatupoikkeamat-q/poista-sanktio-tietokannasta db user urakka-id sanktio))))
+
+(defn hae-lukitustiedot [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user (:urakka-id tiedot))
+  (let [urakan-tiedot (first (urakat/hae-urakka db {:id (:urakka-id tiedot)}))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
+        viimeinen-hoitovuosi (if (>= (pvm/kuukausi (:loppupvm urakan-tiedot)) 10)
+                               urakan-loppuvuosi
+                               (dec urakan-loppuvuosi))]
+    (mapv (fn [vuosi]
+            {:vuosi vuosi
+             :arvonvahennys-lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db (:urakka-id tiedot) vuosi :arvonvahennys))
+             :sanktio-lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db (:urakka-id tiedot) vuosi :sanktio))})
+      (range urakan-alkuvuosi (inc viimeinen-hoitovuosi)))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -692,7 +703,12 @@
 
       :hae-bonuksen-liitteet
       (fn [user {:keys [urakka-id bonus-id]}]
-        (hae-bonuksen-liitteet db user urakka-id bonus-id)))
+        (hae-bonuksen-liitteet db user urakka-id bonus-id))
+
+      :hae-sanktioiden-lukitustiedot
+      (fn [user tiedot]
+        (hae-lukitustiedot db user tiedot)))
+
     (when pdf-vienti
       (pdf-vienti/rekisteroi-pdf-kasittelija! pdf-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-pdf db)))
     (when excel-vienti
@@ -716,5 +732,6 @@
       :poista-sanktio
       :hae-urakan-laatupoikkeama-liitteet
       :hae-sanktion-liitteet
-      :hae-bonuksen-liitteet)
+      :hae-bonuksen-liitteet
+      :hae-sanktioiden-lukitustiedot)
     this))

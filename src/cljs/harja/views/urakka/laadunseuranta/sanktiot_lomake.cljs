@@ -83,7 +83,7 @@
      :teksti "Kyseessä on urakoitsijan itse ilmoittama laadunalitus tai tehtävän laiminlyönti, joka alentaa sanktiota 50 %"}))
 
 (defn sanktio-lomake
-  [sivupaneeli-auki?-atom lukutila? voi-muokata? & [{:keys [tallenna-fn]}]]
+  [sivupaneeli-auki?-atom lukutila? voi-muokata? app & [{:keys [tallenna-fn]}]]
   (let [muokattu tiedot/valittu-sanktio
         suorasanktio? (:suorasanktio @muokattu)
         ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
@@ -179,7 +179,12 @@
                                          kuukausi (pvm/kuukausi perintapvm)
                                          hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
                                      (when (some #{hoitovuosi} hoitovuodet)
-                                       hoitovuosi))))]
+                                       hoitovuosi))))
+        hoitovuosi-lukittu? (fn [sanktion-hoitovuosi]
+                              (some (fn [{:keys [vuosi sanktio-lukittu?]}]
+                                      (and (= vuosi sanktion-hoitovuosi)
+                                        sanktio-lukittu?))
+                                (:lukitustiedot app)))]
 
     ;; Vaadi tarvittavat tiedot ennen rendausta
     (if (and (seq mahdolliset-sanktiolajit)
@@ -187,6 +192,8 @@
             (and yllapitokohdeurakka? yllapitokohteet)))
 
       [:div
+       #_ [harja.ui.debug/debug @muokattu]
+
        [lomake/lomake
         {:otsikko "SANKTION TIEDOT"
          :otsikko-elementti :h4
@@ -523,7 +530,13 @@
                          (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
               :fmt pvm/pvm-opt :tyyppi :pvm
               :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                        (partial talvisuolan-validointi-fn)]}
+                        (partial talvisuolan-validointi-fn)
+                        (fn [paivamaara _rivi _taulukko]
+                          (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                            (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                              (str "Päivämäärää ei voida asettaa "
+                                (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
 
              {:otsikko "Määrätty" :nimi :maarattypvm
               :pakollinen? true
@@ -537,7 +550,13 @@
                          (kopioi-maarattypvm-ja-kasittelyaika rivi arvo)))
               :fmt pvm/pvm-opt :tyyppi :pvm
               :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                        (partial talvisuolan-validointi-fn)]})
+                        (partial talvisuolan-validointi-fn)
+                        (fn [paivamaara _rivi _taulukko]
+                          (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                            (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                              (str "Päivämäärää ei voida asettaa "
+                                (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]})
 
            ;; MHU25 urakoille ei näytetä laskutuskuukautta
            (if (<= urakan-alkuvuosi 2024)
@@ -549,6 +568,12 @@
                 :tyyppi :komponentti
                 ::lomake/col-luokka "col-xs-6"
                 :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+                :validoi [(fn [paivamaara _rivi _taulukko]
+                            (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                              (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                                (str "Päivämäärää ei voida asettaa "
+                                  (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                  ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]
                 :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                                (let [perintapvm (get-in data [:perintapvm])]
                                  [:<>
@@ -576,7 +601,14 @@
                                                      :laskutuskuukausi-komp-tiedot %
                                                      ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
                                                      :perintapvm (:pvm %)))
-                                    :format-fn :teksti}
+                                    :format-fn (fn [{:keys [teksti pvm]}]
+                                                 [:span {:style {:display "inline-flex"
+                                                                 :align-items "center"
+                                                                 :gap "0.5rem"}}
+                                                  teksti
+                                                  (when (hoitovuosi-lukittu?
+                                                          (some-> pvm pvm/hoitokauden-alkuvuosi))
+                                                    [ikonit/locked-svg 14])])}
                                    laskutuskuukaudet]
                                   ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                                   (when (not yllapitourakka?)
