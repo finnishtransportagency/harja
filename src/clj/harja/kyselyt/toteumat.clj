@@ -1,6 +1,7 @@
 (ns harja.kyselyt.toteumat
   "Toteumien ja toteuman reittien kyselyt"
-  (:require [jeesql.core :refer [defqueries]]
+  (:require [clojure.java.jdbc :as jdbc]
+            [jeesql.core :refer [defqueries]]
             [taoensso.timbre :as log]
             [harja.geo :as geo]
             [specql.core :refer [upsert! delete!]]
@@ -34,7 +35,8 @@
   merkitse-toteumatehtavien-maksuerat-likaisiksi! listaa-urakan-hoitokauden-erilliskustannukset
   paivita-erilliskustannus! tallenna-erilliskustannukselle-liitteet<! merkitse-toimenpideinstanssin-maksuera-likaiseksi!
   poista-erilliskustannus<! listaa-tehtavan-toteumat toteuman-tyyppi hae-urakan-toteuma hae-toteumien-tehtavien-summat
-  paivita-toteuman-muokattu! luo-toteuma-materiaali<! merkitse-toteuman-materiaalit-poistetuiksi!)
+  paivita-toteuman-muokattu! luo-toteuma-materiaali<! merkitse-toteuman-materiaalit-poistetuiksi!
+  erilliskustannuksen-urakka toteuma-jarjestelman-lisaama)
 
 (defn onko-olemassa-ulkoisella-idlla? [db ulkoinen-id urakka-id]
   (log/debug "Tarkistetaan onko olemassa toteuma ulkoisella id:llä " ulkoinen-id " ja urakka id:llä: " urakka-id)
@@ -61,8 +63,9 @@
 (defn luo-uusi-toteuma
   "Luo uuden toteuman ja palauttaa sen id:n"
   [db toteuma]
-  (luo-toteuma<! db toteuma)
-  (luodun-toteuman-id db))
+  (jdbc/with-db-transaction [tx db]
+   (luo-toteuma<! tx toteuma)
+   (luodun-toteuman-id tx)))
 
 (defn ei-ole-lahetetty-aiemmin? [db-replica jsonhash ulkoinen-id]
   ;; Jos hashia ei löydy, ei ole lähetetty aiemmin
