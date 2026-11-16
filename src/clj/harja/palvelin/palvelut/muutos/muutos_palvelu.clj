@@ -854,9 +854,17 @@
 
       (let [vanha-muutos (when paivitetaan?
                            (first (muutos-kyselyt/hae-muutos conn {:id (:id muutos)})))
-            tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)]
+
+            tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)
+            voimassa-alkaen-hoitokausi (some-> (:voimassa_alkaen muutos) (pvm/paivamaaran-hoitokausi))
+
+            tarkistettava-hoitokausi (if tyyppi-pysyva?
+                                       voimassa-alkaen-hoitokausi
+                                       valittu-hoitokausi)]
         (cond
-          (muutos-domain/pysyva-muutos-hoitovuoden-paatos-tehty? muokattavat-hoitokaudet valittu-hoitokausi)
+          (and
+            tarkistettava-hoitokausi
+            (muutos-domain/pysyva-muutos-hoitovuoden-paatos-tehty? muokattavat-hoitokaudet tarkistettava-hoitokausi))
           (throw+ {:type virheet/+viallinen-kutsu+
                    :virheet [{:koodi virheet/+sisainen-kasittelyvirhe+
                               :viesti (str

@@ -876,8 +876,8 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
          reunan-voimakkuus (if (= :vahva reunan-voimakkuus) :vahva :hillitty)]
      (when (or (nil? (get @infolaatikko-nakyvissa? sulje-nappi-id))
              (get @infolaatikko-nakyvissa? sulje-nappi-id))
-      [:div {:class (luokat "info-laatikko" (name tyyppi) luokka
-            (when (= :vahva reunan-voimakkuus) "reunan-voimakkuus-vahva"))
+       [:div {:class (luokat "info-laatikko" (name tyyppi) luokka
+                       (when (= :vahva reunan-voimakkuus) "reunan-voimakkuus-vahva"))
               :style {:max-width leveys :white-space "pre-line"}}
         [:div.infolaatikon-ikoni
          (case tyyppi
@@ -915,7 +915,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
    (assert
      (#{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto} tyyppi)
      "Laatikon tyypin oltava varoitus, onnistunut, neutraali tai vahva-ilmoitus")
-    [:div {:class (str/join " " (keep identity ["info-laatikko" (name tyyppi)]))
+   [:div {:class (str/join " " (keep identity ["info-laatikko" (name tyyppi)]))
           :style {:white-space "pre-line"}}
     [:div.infolaatikon-ikoni
      (case tyyppi
@@ -930,7 +930,7 @@ lisätään eri kokoluokka jokaiselle mäpissä mainitulle koolle."
                     :white-space "pre-line" :color +vari-black-default+}}
       [:div.body-text.strong otsikko]
       (doall (for* [v (distinct virheet)]
-               [:div.body-caption (str "- " v)]))]]]))
+               [:div.body-caption (str "• " v)]))]]]))
 
 (def +tehtavien-hinta-vaihtoehtoinen+ "Urakan tehtävillä voi olla joko yksikköhinta tai muutoshinta")
 
