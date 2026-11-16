@@ -856,6 +856,19 @@ button > .ajax-loader {
 }
 
 // Tallentamisen tatus-viestien tyylit
+.indeksi-grid {
+  display: block;
+  position: relative;
+
+  .indeksi-grid-status {
+    position: absolute;
+    top: 5px;
+    right: 120px;
+    z-index: 1;
+    margin-bottom: 0;
+  }
+}
+
 .grid-status-viestit {
   display: flex;
   justify-content: flex-end;
@@ -886,5 +899,12 @@ button > .ajax-loader {
       border-color: @gray220;
       color: @gray100;
     }
+  }
+}
+
+@media (max-width: 768px) {
+  .indeksi-grid .indeksi-grid-status {
+    position: static;
+    margin-bottom: 8px;
   }
 }

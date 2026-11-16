@@ -39,7 +39,7 @@
                   :himmennyksen-sisalto (when tallennus-kaynnissa?
                                           [y/ajax-loader])}
      [:span.indeksi-grid
-      [:div.grid-status-viestit
+      [:div.grid-status-viestit.indeksi-grid-status
        (if viimeksi-muokattu
          [:div.status-viesti.tallennettu
           (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeksi-muokattu))]
