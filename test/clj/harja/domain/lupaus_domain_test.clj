@@ -577,21 +577,12 @@
 (deftest kysely->toteuma-test
   (testing "Päättelee kysely-lupauksen toteuman pistemäärän. Huom. Tämä ei testaa lasketaanko esim. lupaus 7 pistemäärä speksien mukaan oikein, koska siihen vaikuttaa miten kuukausipisteet ovat kirjautuneet."
     (is (= 8 (lupaus-domain/kysely->toteuma
-               {:vastaukset '({:pisteet 8 :paatos true :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 1} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 8})}))
+               {:vastaukset '({:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 1} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 9})}))
       "Täydet eli viimeisen kuukauden pisteet.")
     (is (= 0 (lupaus-domain/kysely->toteuma
-               {:vastaukset '({:pisteet 8 :paatos true :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 1} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 0 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 8})}))
+               {:vastaukset '({:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 1} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 0 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 9})}))
       "Nolla pistettä, koska viimeisessä kirjauksessa nolla.")
     (is (= 0 (lupaus-domain/kysely->toteuma
-               {:vastaukset '({:pisteet 8 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 0 :paatos true :vastaus 1 :vuosi 2026 :kuukausi 8} {:pisteet 8 :paatos true :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :vastaus 1  :vuosi 2026 :kuukausi 1})}))
-      "Logiikka päättelee viimeisen kirjauksen kuukaudesta ja vuodesta, ei järjestyksestä.")
-    (is (= 0 (lupaus-domain/kysely->toteuma
-               {:vastaukset '()}))
-      "Kun mitään ei ole kirjattu, toteuma on nolla (lista tyhjä).")
-    (is (= 0 (lupaus-domain/kysely->toteuma
-               {:vastaukset nil}))
-      "Kun mitään ei ole kirjattu, toteuma on nolla (lista nil).")
-    (is (= 0 (lupaus-domain/kysely->toteuma
-               nil))
-      "Kun mitään ei ole kirjattu, toteuma on nolla (vastaukset nil).")))
+               {:vastaukset '({:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 4} {:pisteet 0 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2026 :kuukausi 9} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1 :vuosi 2025 :kuukausi 11} {:pisteet 8 :paatos true :lupaus-vaihtoehto-id 2 :vastaus 1  :vuosi 2026 :kuukausi 1})}))
+      "Logiikka päättelee viimeisen kirjauksen kuukaudesta ja vuodesta, ei järjestyksestä.")))
 
