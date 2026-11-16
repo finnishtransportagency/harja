@@ -2,18 +2,23 @@
   "Muutokset välilehden lomakkeet (Lisäys / Muokkaus)"
   (:require
     [taoensso.timbre :as log]
-    [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
-    [harja.ui.napit :as napit]
-    [harja.ui.lomake :as lomake]
-    [harja.ui.komponentti :as komp]
-    [harja.tiedot.navigaatio :as nav]
+
+    [harja.fmt :as fmt]
+    [harja.pvm :as pvm]
     [harja.tyokalut.tuck :as tuck-apurit]
     [harja.domain.muutos-domain :as muutos-domain]
     [harja.views.urakka.muutokset.yhteiset :as yhteiset]
-    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
-    [harja.ui.yleiset :as yleiset]
+
+    [harja.ui.napit :as napit]
+    [harja.ui.lomake :as lomake]
     [harja.ui.ikonit :as ikonit]
+    [harja.ui.yleiset :as yleiset]
+    [harja.ui.komponentti :as komp]
     [harja.ui.varmista-kayttajalta :as varmista-kayttajalta]
+
+    [harja.tiedot.navigaatio :as nav]
+    [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]
+    [harja.tiedot.urakka.muutokset.kirjatut-muutokset-tiedot :as t-kirjatut]
 
     ;; Lomake tyypit, näitä voi lisäillä tarvittaessa
     [harja.views.urakka.muutokset.lomake.lomake-pysyva :as pysyva]
@@ -45,15 +50,34 @@
         vahvistus-tiedot))))
 
 (defn- lomakkeen-footer [muutos tyyppi e!
-                         {:keys [tallennus-kesken? voi-tallentaa?
-                                 tallenna-painettu? lomakkeella-virheita? budjettitavoitteet
-                                 lomake-virheet muutoksen-tiedot-haku-kaynnissa?] :as _app}]
+                         {:keys [tallennus-kesken?
+                                 voi-tallentaa?
+                                 tallenna-painettu?
+                                 urakan-hoitokaudet
+                                 budjettitavoitteet
+                                 lomake-virheet
+                                 muutoksen-tiedot-haku-kaynnissa?] :as _app}]
   [:<>
    [:hr]
    (when (and
            tallenna-painettu?
            (seq lomake-virheet))
-     [yleiset/nayta-virheet :varoitus lomake-virheet])
+
+     (let [valittu-pvm-hoitovuosi (some-> (:hoitovuosi muutos) first (pvm/vuosi))
+           virheviesti (when (and
+                               urakan-hoitokaudet
+                               valittu-pvm-hoitovuosi)
+                         (str
+                           "Muutoksia ei voi kirjata "
+                           (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                             valittu-pvm-hoitovuosi
+                             (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet)
+                             "hoitovuodelle"
+                             false)))]
+
+       [yleiset/nayta-virheet :varoitus lomake-virheet (or
+                                                         virheviesti
+                                                         "Muutoksia ei voi kirjata valitulle hoitovuodelle")]))
 
    ;; Muutostyö lomakkeeseen design mukaan infolaatikko
    (when (= tyyppi "muutostyo")
@@ -183,7 +207,6 @@
                    (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
                    (when muutoksen-tiedot-haku-kaynnissa?
                      [yleiset/ajax-loader-pieni])]
-         :validoi-alussa? true
          :nayta-validoinnit? true
          :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (t-yhteiset/->PaivitaLomake %))

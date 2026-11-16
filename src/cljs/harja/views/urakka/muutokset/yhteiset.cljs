@@ -117,7 +117,6 @@
                                                    (first valittu-hoitokausi)
                                                    (second valittu-hoitokausi))))
 
-                      ;; Päivämäärää ei voida asettaa 1.hoitovuodelle 2025-2026, koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.
                       paatos-virheviesti (when
                                            (and
                                              urakan-hoitokaudet
@@ -129,6 +128,7 @@
                                                valittu-pvm-hoitovuosi
                                                (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet)
                                                "hoitovuodelle"
+                                               true
                                                true)
 
                                              ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))]
@@ -137,6 +137,7 @@
                     ;; Välikatselmuksen päätös on tehty valitulle voimassa-alkaen hk:lle 
                     (and
                       valittu-pvm
+                      voi-muokata?
                       valittu-vuosi-lukittu?)
                     (or
                       paatos-virheviesti
@@ -145,6 +146,7 @@
                     ;; Katsotaan että voimassa alkaen osuu valittuun hoitokauteen
                     ;; Erityisesti tärkeä muutostyö kirjauksissa 
                     (and
+                      voi-muokata?
                       pakota-valittuun-hoitokauteen?
                       valittu-hoitokausi
                       (not pvm-hk-valissa?))
