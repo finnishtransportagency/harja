@@ -1,8 +1,14 @@
 -- name: listaa-indeksit
 -- Hakee kaikki indeksit
-SELECT nimi, vuosi, kuukausi, arvo
-  FROM indeksi
-  	ORDER BY nimi, vuosi, kuukausi;
+SELECT i.nimi,
+       i.vuosi,
+       i.kuukausi,
+       i.arvo,
+       (SELECT MAX(COALESCE(i2.muokattu, i2.luotu))
+          FROM indeksi i2
+         WHERE i2.nimi = i.nimi) AS viimeksi_muokattu
+  FROM indeksi i
+ ORDER BY i.nimi, i.vuosi, i.kuukausi;
 
 -- name: hae-indeksi
 -- Hakee indeksin nimellä

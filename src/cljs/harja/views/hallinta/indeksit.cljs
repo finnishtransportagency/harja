@@ -20,12 +20,14 @@
 (defn indeksi-grid [{:keys [indeksinimi koodi]} urakkatyyppi]
 
   (let [indeksit @i/indeksit
+        viimeksi-muokattu (get indeksit [indeksinimi :viimeksi-muokattu])
         tallennus-kaynnissa? (contains? @i/indeksin-tallennus-kaynnissa indeksinimi)
         rivit (reverse (sort-by :vuosi
                                 (map #(assoc (second %) :kannassa? true)
-                                     (filter (fn [[[nimi _] _]]
-                                               (= nimi indeksinimi)
-                                               ) indeksit))))
+                                     (filter (fn [[[nimi vuosi] _]]
+                                               (and (= nimi indeksinimi)
+                                                    (not= vuosi :viimeksi-muokattu)))
+                                             indeksit))))
         varatut-vuodet (into #{} (map :vuosi rivit))
         ;; Ylläpidossa käytettävien Platssin indeksien tarkkuus on 2 ja arvot ovat euroa per tonni
         platts? (str/includes? indeksinimi "Platts")
@@ -37,6 +39,12 @@
                   :himmennyksen-sisalto (when tallennus-kaynnissa?
                                           [y/ajax-loader])}
      [:span.indeksi-grid
+      [:div.grid-status-viestit
+       (if viimeksi-muokattu
+         [:div.status-viesti.tallennettu
+          (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeksi-muokattu))]
+         [:div.status-viesti.ei-muutoksia
+          "Ei tallennettuja muutoksia"])]
       [grid/grid
        {:otsikko            (str indeksinimi (when hoito-tyyppi ", teiden ylläpidon osaindeksi") (when koodi (str " (koodi: " koodi ")")))
         :tyhja              (if (nil? indeksit) [yleiset/ajax-loader "Indeksejä haetaan..."] "Ei indeksitietoja")

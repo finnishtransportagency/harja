@@ -6,7 +6,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
@@ -26,11 +25,16 @@
                  indeksit)))
 
 (defn- zippaa [indeksit-vuosittain]
-  (zipmap (map first indeksit-vuosittain)
-          (map (fn [[_ kuukaudet]]
-                 (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
-                        :vuosi (:vuosi (first kuukaudet))))
-               indeksit-vuosittain)))
+  (let [indeksit (zipmap (map first indeksit-vuosittain)
+                         (map (fn [[_ kuukaudet]]
+                                (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
+                                       :vuosi (:vuosi (first kuukaudet))))
+                              indeksit-vuosittain))]
+    (merge indeksit
+           (into {}
+                 (for [[[nimi _] kuukaudet] indeksit-vuosittain]
+                   [[nimi :viimeksi-muokattu]
+                    (:viimeksi_muokattu (first kuukaudet))])))))
 
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
