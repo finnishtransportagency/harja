@@ -33,6 +33,15 @@ on:
         type: boolean
         default: true
         required: false
+      compression-level:
+        description: "Zstd-pakkaustaso. Suurempi taso hidastaa pakkausta. BuildKit mappaa arvot sisäisiin tasoihin: Default (3-6) , Better (7-8), Best (9-22)."
+        type: choice
+        default: '3'
+        required: true
+        options:
+          - '3'
+          - '7'
+          - '9'
 
 run-name: "Tools: Build & deploy GHA docker image '${{ inputs.dockerfile }}' with tag ${{ inputs.tag }} (Update latest-tag? ${{ inputs.update-latest }}, zstd? ${{ inputs.zstd-compression }})"
 
@@ -63,6 +72,7 @@ jobs:
           TAG: ${{ inputs.tag }}
           UPDATE_LATEST: ${{ inputs.update-latest }}
           ZSTD_COMPRESSION: ${{ inputs.zstd-compression }}
+          COMPRESSION_LEVEL: ${{ inputs.compression-level }}
           # Merkkien käsittely on locale-riippumaton (LC_ALL=C).
           LC_ALL: C
         run: |
@@ -93,7 +103,12 @@ jobs:
           compression_opts=""
 
           if [[ "$ZSTD_COMPRESSION" == 'true' ]]; then
-            compression_opts=",compression=zstd,compression-level=3,force-compression=true,oci-mediatypes=true"
+            if [[ ! "$COMPRESSION_LEVEL" =~ ^([0-9]|1[0-9]|2[0-2])$ ]]; then
+              echo "::error::Zstd-compression-level must be an integer between values 0–22."
+              exit 1
+            fi
+
+            compression_opts=",compression=zstd,compression-level=${COMPRESSION_LEVEL},force-compression=true,oci-mediatypes=true"
           fi
 
           printf 'compression-opts=%s\n' "$compression_opts" >> "$GITHUB_OUTPUT"
