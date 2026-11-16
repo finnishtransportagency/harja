@@ -7,6 +7,7 @@
             [com.stuartsierra.component :as component]
             [clojure.string :as str]
             [harja.domain.urakka :as urakka]
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.palvelin.palvelut.indeksit :as indeksit]
             [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]))
 
@@ -25,7 +26,30 @@
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
+(defn muuta-vesivaylaurakka
+  [urakka-id {:keys [alkupvm loppupvm indeksi]}]
+  (u (format
+       "UPDATE urakka
+           SET tyyppi = 'vesivayla-hoito',
+               alkupvm = DATE '%s',
+               loppupvm = DATE '%s',
+               indeksi = '%s'
+         WHERE id = %s"
+       alkupvm
+       loppupvm
+       indeksi
+       urakka-id)))
 
+(defn lisaa-indeksit
+  [indeksinimi indeksit]
+  (doseq [[vuosi kuukausi arvo] indeksit]
+    (i (format
+         "INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
+          VALUES ('%s', %s, %s, %s)"
+         indeksinimi
+         vuosi
+         kuukausi
+         arvo))))
 
 
 (use-fixtures :each (compose-fixtures tietokanta-fixture jarjestelma-fixture))
@@ -78,6 +102,54 @@
           korotettu (ffirst (q (str "SELECT * FROM indeksikorjaa(1, 2023, 9, " urakka-id ")")))
           testidata-korotettu (ffirst (q (str "SELECT * FROM testidata_indeksikorjaa(1, 2023, 9, " urakka-id ")")))]
       (is (= 0.986M korotettu testidata-korotettu)))))
+
+(deftest indeksikorjaa-apufunktion-vesivaylaurakan-logiikka
+  (let [urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksinimi "TESTI-VESIVAYLA-TESTIDATA"]
+
+    (muuta-vesivaylaurakka
+      urakka-id
+      {:alkupvm "2023-10-01"
+       :loppupvm "2028-09-30"
+       :indeksi indeksinimi})
+
+    ;; Perusluku: vuoden 2022 syys-, loka- ja marraskuun keskiarvo = 100.
+    ;; Ensimmäinen urakkavuosi: kesäkuu 2023 = 110.
+    ;; Toinen urakkavuosi: elokuu 2024 = 120.
+    (lisaa-indeksit
+      indeksinimi
+      [[2022 9  100]
+       [2022 10 100]
+       [2022 11 100]
+       [2023 6  110]
+       [2024 8  120]])
+
+    (testing "Ensimmäinen urakkavuosi käyttää kesäkuuta"
+      (let [sql-tulos (ffirst
+                        (q (format
+                             "SELECT indeksikorjaa(1, 2023, 10, %s)"
+                             urakka-id)))
+            testidata-tulos (ffirst
+                              (q (format
+                                   "SELECT testidata_indeksikorjaa(1, 2023, 10, %s)"
+                                   urakka-id)))]
+        ;; 110 / 100 = 1.100
+        (is (= 1.100M sql-tulos))
+        (is (= sql-tulos testidata-tulos))))
+
+    (testing "Toinen urakkavuosi käyttää elokuuta"
+      (let [sql-tulos (ffirst
+                        (q (format
+                             "SELECT indeksikorjaa(1, 2024, 10, %s)"
+                             urakka-id)))
+            testidata-tulos (ffirst
+                              (q (format
+                                   "SELECT testidata_indeksikorjaa(1, 2024, 10, %s)"
+                                   urakka-id)))]
+        ;; 120 / 100 = 1.200
+        (is (= 1.200M sql-tulos))
+        (is (= sql-tulos testidata-tulos))))))
 
 (deftest urakkatyypin-indeksien-haku
   (let [indeksit (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -328,6 +400,222 @@
       (is (nil? (urakka-tavoite-kattohinta-indeksikorjattu urakka-tavoite))
         "urakka_tavoite.kattohinta_indeksikorjattu on poistettu indeksin poistamisen jälkeen"))))
 
+(deftest vesivaylaurakan-indeksikorjaukset-paivitetaan-indeksin-muutoksessa
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksi "TESTI-VESIVAYLA-INTEGRAATIO"
+        toimenpideinstanssi (ffirst
+                              (q (format
+                                   "SELECT id
+                                      FROM toimenpideinstanssi
+                                     WHERE urakka = %s
+                                     LIMIT 1"
+                                   urakka-id)))
+
+        ;; Ensimmäisen vesiväyläurakkavuoden lokakuun kustannusrivit.
+        kiinteahintainen-tyo-1 (lisaa-kiinteahintainen-tyo
+                                {:vuosi 2023
+                                 :kuukausi 10
+                                 :summa 100M
+                                 :toimenpideinstanssi toimenpideinstanssi})
+
+        kustannusarvioitu-tyo-1 (lisaa-kustannusarvioitu-tyo
+                                  {:vuosi 2023
+                                   :kuukausi 10
+                                   :summa 100M
+                                   :toimenpideinstanssi toimenpideinstanssi})
+
+        johto-ja-hallintokorvaus-1 (lisaa-johto-ja-hallintokorvaus
+                                    {:vuosi 2023
+                                     :kuukausi 10
+                                     :tuntipalkka 100M
+                                     :urakka urakka-id})
+
+        ;; Toisen vesiväyläurakkavuoden lokakuun kustannusrivit.
+        kiinteahintainen-tyo-2 (lisaa-kiinteahintainen-tyo
+                                {:vuosi 2024
+                                 :kuukausi 10
+                                 :summa 100M
+                                 :toimenpideinstanssi toimenpideinstanssi})
+
+        kustannusarvioitu-tyo-2 (lisaa-kustannusarvioitu-tyo
+                                  {:vuosi 2024
+                                   :kuukausi 10
+                                   :summa 100M
+                                   :toimenpideinstanssi toimenpideinstanssi})
+
+        johto-ja-hallintokorvaus-2 (lisaa-johto-ja-hallintokorvaus
+                                    {:vuosi 2024
+                                     :kuukausi 10
+                                     :tuntipalkka 100M
+                                     :urakka urakka-id})
+
+        ;; Ensimmäinen urakkavuosi: 1.10.2023–30.9.2024.
+        tavoitehinta-1 (lisaa-urakka-tavoite
+                        {:urakka urakka-id
+                         :hoitokausi 1
+                         :tavoitehinta 100M
+                         :kattohinta 120M})
+
+        ;; Toinen urakkavuosi: 1.10.2024–30.9.2025.
+        tavoitehinta-2 (lisaa-urakka-tavoite
+                        {:urakka urakka-id
+                         :hoitokausi 2
+                         :tavoitehinta 100M
+                         :kattohinta 120M})]
+
+    (is (some? toimenpideinstanssi)
+      "Vesiväyläurakalle pitää löytyä toimenpideinstanssi")
+
+    (u (format
+         "UPDATE urakka
+             SET tyyppi = 'vesivayla-hoito',
+                 alkupvm = DATE '2023-10-01',
+                 loppupvm = DATE '2028-09-30',
+                 indeksi = '%s'
+           WHERE id = %s"
+         indeksi
+         urakka-id))
+
+    ;; Ennen indeksitietojen lisäämistä mitään indeksikorjausta ei voida laskea.
+    (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu
+                kiinteahintainen-tyo-1)))
+    (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu
+                kiinteahintainen-tyo-2)))
+    (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu
+                tavoitehinta-1)))
+    (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu
+                tavoitehinta-2)))
+
+    ;; Perusluku = (100 + 100 + 100) / 3 = 100.
+    ;; Vertailukuukaudet puuttuvat vielä, joten kustannuksia ei voida korjata.
+    (indeksit/tallenna-indeksi
+      db
+      +kayttaja-jvh+
+      {:nimi indeksi
+       :indeksit [{:kannassa? false
+                   :vuosi 2022
+                   9 100
+                   10 100
+                   11 100}]})
+
+    (is (= 100M
+          (indeksilaskennan-perusluku urakka-id)))
+
+    (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu
+                kiinteahintainen-tyo-1)))
+    (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu
+                kiinteahintainen-tyo-2)))
+    (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu
+                tavoitehinta-1)))
+    (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu
+                tavoitehinta-2)))
+
+    ;; Ensimmäisen urakkavuoden vertailuindeksi on kesäkuu 2023.
+    ;; 110 / 100 = 1.100.
+    (indeksit/tallenna-indeksi
+      db
+      +kayttaja-jvh+
+      {:nimi indeksi
+       :indeksit [{:kannassa? false
+                   :vuosi 2023
+                   6 110}]})
+
+    ;; Ensimmäisen hoitokauden kaikki kustannustyypit päivittyvät.
+    (is (= 110M
+          (kiinteahintainen-tyo-summa-indeksikorjattu
+            kiinteahintainen-tyo-1)))
+
+    (is (= 110M
+          (kustannusarvioitu-tyo-summa-indeksikorjattu
+            kustannusarvioitu-tyo-1)))
+
+    (is (= 110M
+          (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu
+            johto-ja-hallintokorvaus-1)))
+
+    (is (= 110M
+          (urakka-tavoite-tavoitehinta-indeksikorjattu
+            tavoitehinta-1)))
+
+    (is (= 132M
+          (urakka-tavoite-kattohinta-indeksikorjattu
+            tavoitehinta-1)))
+
+    ;; Toinen hoitokausi ei vielä saa indeksikorjausta, koska elokuun 2024
+    ;; vertailuindeksiä ei ole tallennettu.
+    (is (nil? (kiinteahintainen-tyo-summa-indeksikorjattu
+                kiinteahintainen-tyo-2)))
+
+    (is (nil? (kustannusarvioitu-tyo-summa-indeksikorjattu
+                kustannusarvioitu-tyo-2)))
+
+    (is (nil? (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu
+                johto-ja-hallintokorvaus-2)))
+
+    (is (nil? (urakka-tavoite-tavoitehinta-indeksikorjattu
+                tavoitehinta-2)))
+
+    ;; Toisen urakkavuoden vertailuindeksi on elokuu 2024.
+    ;; 120 / 100 = 1.200.
+    (indeksit/tallenna-indeksi
+      db
+      +kayttaja-jvh+
+      {:nimi indeksi
+       :indeksit [{:kannassa? false
+                   :vuosi 2024
+                   8 120}]})
+
+    ;; Ensimmäisen hoitokauden arvot säilyvät ennallaan.
+    (is (= 110M
+          (kiinteahintainen-tyo-summa-indeksikorjattu
+            kiinteahintainen-tyo-1)))
+
+    (is (= 110M
+          (kustannusarvioitu-tyo-summa-indeksikorjattu
+            kustannusarvioitu-tyo-1)))
+
+    (is (= 110M
+          (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu
+            johto-ja-hallintokorvaus-1)))
+
+    (is (= 110M
+          (urakka-tavoite-tavoitehinta-indeksikorjattu
+            tavoitehinta-1)))
+
+    ;; Toisen hoitokauden kustannukset käyttävät elokuun 2024 indeksiä.
+    (is (= 120M
+          (kiinteahintainen-tyo-summa-indeksikorjattu
+            kiinteahintainen-tyo-2)))
+
+    (is (= 120M
+          (kustannusarvioitu-tyo-summa-indeksikorjattu
+            kustannusarvioitu-tyo-2)))
+
+    (is (= 120M
+          (johto-ja-hallintokorvaus-tuntipalkka-indeksikorjattu
+            johto-ja-hallintokorvaus-2)))
+
+    (is (= 120M
+          (urakka-tavoite-tavoitehinta-indeksikorjattu
+            tavoitehinta-2)))
+
+    (is (= 144M
+          (urakka-tavoite-kattohinta-indeksikorjattu
+            tavoitehinta-2)))))
+
+(deftest testaa-hae-vertailu-kk-apufunktio
+  (testing "MHU-urakan vertailukuukausi"
+    (is (= 9 (indeksi-kyselyt/hae-vertailu-kk "hoito" 2019 2019)))
+    (is (= 8 (indeksi-kyselyt/hae-vertailu-kk "hoito" 2023 2023))))
+
+  (testing "vesiväyläurakan ensimmäinen urakkavuosi"
+    (is (= 6 (indeksi-kyselyt/hae-vertailu-kk "vesivayla-hoito" 2023 2023))))
+
+  (testing "vesiväyläurakan myöhemmät urakkavuodet"
+    (is (= 8 (indeksi-kyselyt/hae-vertailu-kk "vesivayla-hoito" 2023 2024)))))
+
 (deftest vahvistettua-indeksikorjausta-ei-muokata
   (let [db (:db jarjestelma)
         urakka (hae-urakan-id-nimella "Kittilän MHU 2019-2024")
@@ -364,3 +652,185 @@
 (deftest maku-2015-laitetaan-2023-urakalle
   (let [urakka (first (q-map "SELECT * FROM urakka WHERE nimi = 'Raahen MHU 2023-2028'"))]
     (is (= (:indeksi urakka) "MAKU 2015"))))
+
+(deftest indeksilaskennan-perusluku-2023-alkavalle-vesivaylaurakalle
+  (let [urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksinimi "TESTI-VESIVAYLA-PERUSLUKU-2023"]
+
+    ;; Muutetaan urakka alkamaan vuonna 2023.
+    (muuta-vesivaylaurakka
+      urakka-id
+      {:alkupvm "2023-10-01"
+       :loppupvm "2028-09-30"
+       :indeksi indeksinimi})
+
+    ;; Vuonna 2023 alkavan vesiväyläurakan perusluku:
+    ;; vuoden 2022 syys-, loka- ja marraskuun keskiarvo.
+    (lisaa-indeksit
+      indeksinimi
+      [[2022 9  100]
+       [2022 10 110]
+       [2022 11 120]])
+
+    ;; (100 + 110 + 120) / 3 = 110
+    (is (= 110.0M
+          (indeksilaskennan-perusluku urakka-id)))))
+
+(deftest indeksikorjaa-1.8.-alkava-vesivayla-urakka
+  (let [urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksinimi "TESTI-VESIVAYLA-2023"]
+
+    ;; Muutetaan testissä urakka alkamaan 1.8.2023.
+    ;; Loppupäivä on aina 30.9.
+    (muuta-vesivaylaurakka
+      urakka-id
+      {:alkupvm "2023-08-01"
+       :loppupvm "2028-09-30"
+       :indeksi indeksinimi})
+
+    ;; Perusluku: 2022 syys-, loka- ja marraskuu.
+    ;; Keskiarvo = 100.
+    (lisaa-indeksit
+      indeksinimi
+      [[2022 9  100]   ;; perusluku
+       [2022 10 100]
+       [2022 11 100]
+       [2023 6  110]   ;; ensimmäinen urakkavuosi
+       [2024 8  120]])  ;; toinen urakkavuosi
+
+    (testing "Elokuu 2023 kuuluu ensimmäiseen urakkavuoteen"
+      (let [sql-tulos
+            (ffirst
+              (q (format
+                   "SELECT indeksikorjaa(1, 2023, 8, %s)"
+                   urakka-id)))
+
+            testidata-tulos
+            (ffirst
+              (q (format
+                   "SELECT testidata_indeksikorjaa(1, 2023, 8, %s)"
+                   urakka-id)))]
+
+        ;; 110 / 100 = 1.100
+        (is (= 1.100M sql-tulos))
+        (is (= sql-tulos testidata-tulos))))
+
+    (testing "Syyskuu 2024 kuuluu edelleen ensimmäiseen urakkavuoteen"
+      (let [sql-tulos
+            (ffirst
+              (q (format
+                   "SELECT indeksikorjaa(1, 2024, 9, %s)"
+                   urakka-id)))
+
+            testidata-tulos
+            (ffirst
+              (q (format
+                   "SELECT testidata_indeksikorjaa(1, 2024, 9, %s)"
+                   urakka-id)))]
+
+        ;; 1.8.2023 alkaneen urakan ensimmäinen vuosi jatkuu
+        ;; seuraavan vuoden syyskuun loppuun.
+        ;; 110 / 100 = 1.100
+        (is (= 1.100M sql-tulos))
+        (is (= sql-tulos testidata-tulos))))
+
+    (testing "Lokakuu 2024 aloittaa toisen urakkavuoden"
+      (let [sql-tulos
+            (ffirst
+              (q (format
+                   "SELECT indeksikorjaa(1, 2024, 10, %s)"
+                   urakka-id)))
+
+            testidata-tulos
+            (ffirst
+              (q (format
+                   "SELECT testidata_indeksikorjaa(1, 2024, 10, %s)"
+                   urakka-id)))]
+
+        ;; Toinen urakkavuosi käyttää elokuuta 2024.
+        ;; 120 / 100 = 1.200
+        (is (= 1.200M sql-tulos))
+        (is (= sql-tulos testidata-tulos))))))
+
+(deftest indeksikorjaa-1.10.-alkava-vesivaylaurakka
+  (let [urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksinimi "TESTI-VESIVAYLA-2025-10"]
+
+    ;; Muutetaan testissä urakka alkamaan 1.10.2025.
+    (muuta-vesivaylaurakka
+      urakka-id
+      {:alkupvm "2025-10-01"
+       :loppupvm "2030-09-30"
+       :indeksi indeksinimi})
+
+    ;; Vuoden 2024 syys-, loka- ja marraskuu tarvitaan peruslukuun.
+    ;; Keskiarvo = 100.
+    (lisaa-indeksit
+      indeksinimi
+      [[2024 9  100]   ; perusluku
+       [2024 10 100]
+       [2024 11 100]
+       [2025 6  110]   ; ensimmäinen urakkavuosi
+       [2026 8  120]   ; toinen urakkavuosi
+       [2027 8  130]])
+
+    (testing "1.10.2025 alkaneen urakan ensimmäinen urakkavuosi käyttää kesäkuuta 2025"
+      ;; Lokakuu 2025 kuuluu ensimmäiseen urakkavuoteen.
+      (is (= 1.100M
+            (ffirst
+              (q (format
+                   "SELECT indeksikorjaa(1, 2025, 10, %s)"
+                   urakka-id)))))
+
+      ;; Syyskuu 2026 kuuluu edelleen ensimmäiseen urakkavuoteen.
+      (is (= 1.100M
+            (ffirst
+              (q (format
+                   "SELECT indeksikorjaa(1, 2026, 9, %s)"
+                   urakka-id))))))
+
+    (testing "Toinen urakkavuosi käyttää elokuuta 2026"
+      ;; Lokakuu 2026 aloittaa toisen urakkavuoden.
+      (is (= 1.200M
+            (ffirst
+              (q (format
+                   "SELECT indeksikorjaa(1, 2026, 10, %s)"
+                   urakka-id))))))))
+
+(deftest hae-urakan-indeksikertoimet-vesivaylaurakalle
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella
+                    "Helsingin väyläyksikön väylänhoito ja -käyttö, Itäinen SL")
+        indeksinimi "TESTI-VESIVAYLA-KERTOIMET"]
+
+    ;; Muutetaan urakka alkamaan 1.10.2023.
+    (muuta-vesivaylaurakka
+      urakka-id
+      {:alkupvm "2023-10-01"
+       :loppupvm "2028-09-30"
+       :indeksi indeksinimi})
+
+    ;; Perusluvun muodostamiseen tarvitaan vuoden 2022
+    ;; syys-, loka- ja marraskuun indeksit.
+    (lisaa-indeksit
+      indeksinimi
+      [[2022 9  100]
+       [2022 10 100]
+       [2022 11 100]
+       [2023 6  110]   ; ensimmäinen urakkavuosi
+       [2024 8  120]   ; toinen urakkavuosi
+       [2025 8  130]])
+
+    (let [indeksikertoimet (harja.kyselyt.indeksit/hae-urakan-indeksikertoimet
+                             db urakka-id)]
+
+      ;; Perusluku = (100 + 100 + 100) / 3 = 100.
+      ;; Ensimmäinen kerroin = 110 / 100 = 1.100.
+      ;; Toinen kerroin = 120 / 100 = 1.200.
+      ;; Kolmas kerroin = 130 / 100 = 1.300.
+      (is (= 1.1 (:indeksikerroin (nth indeksikertoimet 0))))
+      (is (= 1.2 (:indeksikerroin (nth indeksikertoimet 1))))
+      (is (= 1.3 (:indeksikerroin (nth indeksikertoimet 2)))))))

@@ -73,6 +73,7 @@
   hallinta-lampotilat
   hallinta-valitavoitteet
   hallinta-tehtavat
+  hallinta-jarjestelmaasetukset
 
   urakat-suunnittelu-tehtava-ja-maaraluettelo
   urakat-suunnittelu-kokonaishintaisettyot

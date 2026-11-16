@@ -1,12 +1,15 @@
 # Harjan Workflowien käyttämät Docker-imaget
 
+Tässä hakemistossa ovat CI:ssä ja paikallisessa kehityksessä käytettävien Docker-imagejen määrittelyt ja build/push-skriptit.
+Tiedosto `docker-compose.ci.yml` on tarkoitettu lähinnä CI-käyttöön, ei paikallisen kehitysympäristön Compose-määritykseksi.
+
 GitHub Actions workflowit käyttävät seuraavia Docker-kontteja:
 1. Testitietokanta (harjadb): [docker/tietokanta/Dockerfile](./tietokanta/Dockerfile)
     * Tarvitaan Harjan buildaamisessa (Specql-kirjasto tarvitsee kantayhteyden) ja testien ajamisessa
     * Sama image on käytössä paikallisessa kehityksessä. Sen käynnistää [tietokanta/devdb_up.sh](../../tietokanta/devdb_up.sh), joka ajaa myös migraatiot ja testidatan.
-2. ActiveMQ Artemis: [.github/docker/activemq-artemis/Dockerfile](./activemq-artemis/Dockerfile)
+2. ActiveMQ Artemis: [tools/docker/activemq-artemis/Dockerfile](./activemq-artemis/Dockerfile)
     * Tarvitaan integraatiotestien ajamisessa
-3. Cypress: [.github/docker/cypress/Dockerfile](./cypress/Dockerfile)
+3. Cypress: [tools/docker/cypress/Dockerfile](./cypress/Dockerfile)
     * Tarvitaan E2E-testien ajamisesssa
 
 GitHub Actionsissa on konsepti nimeltä ["Service containers"](https://docs.github.com/en/actions/using-containerized-services/about-service-containers),
@@ -18,9 +21,10 @@ valitettavasti hyödyt:
    kopioimaan jobeihin missä niitä haluaa käyttää. Tämä hankaloittaa jobien ylläpitoa.
 3. Kaikkia containereita ei voi tai ei kannata ajaa serviceinä.
 
-Näiden haittapuolien ja ylläpidon vaikeuden takia, kaikki tarvittavat Docker kontit ajetaan suoraan Docker run komennoilla.  
-Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../actions/).  
-Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.yml](./docker-compose.yml) -tiedostoon,
+Näiden haittapuolien ja ylläpidon vaikeuden takia tarvittavat Docker-kontit käynnistetään jobien vaiheissa
+Docker Compose- tai Docker run -komennoilla.
+Jokaisen Docker-kontin käynnistämiseen on luotu uudelleenkäytettävät composite action määritykset: [.github/actions/](../../.github/actions/).  
+Joillekin konteille on luotu myös konfiguraatiot ja verkkoasetukset [docker-compose.ci.yml](./docker-compose.ci.yml) -tiedostoon,
 jotta konttien hallinta olisi mahdollisimman yksinkertaista ja asetuksia voisi helpommin ylläpitää.
 
 Konttien käyttöön kannattaa tutustua etsimällä relevantit composite actionit ```.github/actions``` hakemistosta ja tutkia miten
@@ -74,16 +78,27 @@ Alla olevat seikat on syytä huomioida, jos on tarvetta toteuttaa uusi image.
 3. Julkaistaan image pushaamalla se normaalisti githubin container registryyn
 4. Julkaistut imaget löytyvät täältä: https://github.com/orgs/finnishtransportagency/packages?repo_name=harja
     * Huomioi, että imaget ovat aina oletuksena privaatteja. Toistaiseksi ei ole tarvetta julkaista julkisia imageja.
-5. Docker containerin ajoon kannattaa tehdä uudelleenkäytettävä composite action: [.github/actions](../actions)
+5. Docker containerin ajoon kannattaa tehdä uudelleenkäytettävä composite action: [.github/actions](../../.github/actions/)
     * Ota mallia olemassaolevista composite actioneista
-6. Jos konttien täytyy viestiä keskenään tai on tarvetta monimutkaisemmille verkkoasetuksille tms,  
-   kannattaa harkita asetuksien säätämistä uudelle kontille [.github/docker-compose.yml](./docker-compose.yml) tiedostoon.
+6. Muokkaa CI:n verkko- ja usean kontin asetuksia tiedostossa [docker-compose.ci.yml](./docker-compose.ci.yml).
+   Tiedostoa ei ole tarkoitettu paikalliseen kehitykseen.
 
 ## Imageiden päivitys
 
-Imageiden Dockerfilet löytyvät polusta: ```.github/docker```.  
+Dockerfiles are located under `tools/docker`.  
 Yleisesti, jokaiselle Dockerfilelle on määritelty "build-image.sh" ja "push-image.sh" scriptit, jotka ajamalla
 imaget voi helposti päivittää.
+
+### Päivitys GitHub Actionsilla
+
+Workflow `Tools: Build test docker images for GH Actions and development`
+(`.github/workflows/build_test_docker_images.yml`) julkaisee valitun imagen annetulla tagilla.  
+Tagin on oltava 1–128 ASCII-merkkiä pitkä: sallittuja ovat kirjaimet, numerot, `_`, `.` ja `-`.
+Ensimmäisen merkin on oltava kirjain, numero tai `_`.   
+Esimerkiksi `15.19-3.3.3-trixie` on kelvollinen tag. Virheellinen tag keskeyttää ajon ennen Docker-buildia.  
+Asetus `update-latest` julkaisee saman imagen `latest`-tagilla.  
+Asetus `zstd-compression` pakkaa imagen kerrokset zstd:llä gzipin sijaan, jolloin kerrokset puretaan pullauksessa
+nopeammin. Imagen pullaamiseen vaaditaan Docker >= 23. Apuscripteillä julkaistut imaget käyttävät aina gzipiä.
 
 ### Apuscriptit
 Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.sh``` apuscriptit.
@@ -104,7 +119,7 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
 
      **Lisäoptiot docker buildille**  
      Build-image.sh tukee lisäoptioiden syöttöä ```docker build``` komennolle.
-     Katso esimerkkiä ```.github/docker/cypress/build-image.sh``` tiedostosta.
+     Katso esimerkkiä ```tools/docker/cypress/build-image.sh``` tiedostosta.
 
      Lisäoptioita voi syöttää antamalla argumetiksi "--".  
      Kaikki "--" jälkeen tulevat optiot annetaan sellaisenaan 'docker build' komennolle build-image.sh scriptin sisällä.
@@ -129,7 +144,7 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
     ```
 
 ### Cypress-imagen päivitys
-1. Navigoi polkuun: ```.github/docker/cypress/```
+1. Navigoi polkuun: ```tools/docker/cypress/```
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh```
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
@@ -137,14 +152,14 @@ Jokaisen Dockerfile kansion sisällä on ```build-image.sh``` ja ```push-image.s
 
 
 ### ActiveMQ Artemis -imagen päivitys
-1. Navigoi polkuun: ```.github/docker/activemq-artemis/```
+1. Navigoi polkuun: ```tools/docker/activemq-artemis/```
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh```
 4. Kirjaudu sisään Github Container Registryyn classic tokenilla (Lue: "Kehittäjän kirjautuminen Container Registryyn" yllä)
 5. Aja scripti: ```./push-image.sh --update-latest```
 
 ### Tietokanta-imagen päivitys
-1. Navigoi polkuun: ```.github/docker/tietokanta/```
+1. Navigoi polkuun: ```tools/docker/tietokanta/```
 2. Tutustu scriptiin: build-image.sh
 3. Aja scripti: ```./build-image.sh --tag xx-y.y``` 
    * Harkitse minkä tagin luot/päivität (<postgresql-versio>-<postgis-versio>)

@@ -4,7 +4,6 @@
   Lisätöistä, Kirjallisista muistutuksista, sanktioista, arvonvähennyksistä ja poikkeamaraporteista, Tehtävämääristä,
   ja Laskutusyhteenvedosta."
   (:require [jeesql.core :refer [defqueries]]
-            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.kyselyt.rahavaraukset :as rahavaraus-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
             [harja.kyselyt.valikatselmus :as valikatselmus-q]
@@ -23,25 +22,16 @@
 (defqueries "harja/palvelin/raportointi/raportit/vastaanottotarkastus_mhu.sql"
   {:positional? true})
 
+(defqueries "harja/kyselyt/paatos_kyselyt.sql"
+  {:positional? true})
+
 (declare hae-viranomaistehtavamaarat hae-bonukset-vastaanottotarkastusraportille hae-sanktiot-vastaanottotarkastusraportille
-  hae-sakottomat-poikkeamaraportilliset-laatupoikkeamamaarat)
+  hae-sakottomat-poikkeamaraportilliset-laatupoikkeamamaarat hae-lupauspaatokset)
 
 (def oletus-kattohintakerroin 1.1)
 
 (defn- summa [rivit avain]
   (reduce + 0 (keep avain rivit)))
-
-(defn- hae-bonus-sanktiot [db urakka-id hoitokausi hoitovuosi]
-  (let [[alkupvm loppupvm] hoitokausi
-        bonukset (valikatselmus-q/hae-bonukset db {:urakka-id urakka-id
-                                                   :alkupvm alkupvm
-                                                   :loppupvm loppupvm})
-        sanktiot (valikatselmus-q/hae-sanktiot db {:urakka-id urakka-id
-                                                   :alkupvm alkupvm
-                                                   :loppupvm loppupvm
-                                                   :hoitokauden-alkuvuosi hoitovuosi})]
-    (+ (summa bonukset :rahasumma)
-      (summa sanktiot :maara))))
 
 (defn- lupausrivi [db urakka-id vanha-urakka? {:keys [alkupvm loppupvm]}]
   (let [hoitovuosi (pvm/vuosi alkupvm)
@@ -52,12 +42,27 @@
         lupaustiedot (if vanha-urakka?
                        (lupaus-palvelu/hae-kuukausittaiset-pisteet-hoitokaudelle db lupaus-parametrit)
                        (lupaus-palvelu/hae-urakan-lupaustiedot-hoitokaudelle db lupaus-parametrit))
-        valikatselmus-tehty? (get-in lupaustiedot [:yhteenveto :valikatselmus-tehty-urakalle?])]
+        valikatselmus-tehty? (get-in lupaustiedot [:yhteenveto :valikatselmus-tehty-urakalle?])
+        lupauspaatos (hae-lupauspaatokset db {:urakkaid urakka-id
+                                              :hoitokauden_alkuvuosi (some-> alkupvm (pvm/vuosi))})
+        lupaus-sanktio (-> lupauspaatos first :lupaussanktio)
+        lupaus-bonus (-> lupauspaatos first :lupausbonus)
+        ;; Bonukset sekä sanktiot ovat kannassa positiivisia lukuja
+        lupauspaatos-maara (cond
+                             (and
+                               (some? lupaus-sanktio)
+                               (not (zero? lupaus-sanktio)))
+                             (* lupaus-sanktio -1)
+
+                             (some? lupaus-bonus)
+                             lupaus-bonus
+
+                             :else 0.0M)]
     [(str hoitovuosi "-" (pvm/vuosi loppupvm))
      (get-in lupaustiedot [:lupaus-sitoutuminen :pisteet])
      ;; Ei näytetä toteutuneita pisteitä, vaikka ne olisi tiedossa, ennenkuin päätös on tehty ja välikatselmus on lopullinen
      (when valikatselmus-tehty? (get-in lupaustiedot [:yhteenveto :pisteet :toteuma]))
-     (hae-bonus-sanktiot db urakka-id hoitokausi hoitovuosi)]))
+     lupauspaatos-maara]))
 
 (defn lupaukset-taulukko [db urakka-id urakan-tiedot hoitokaudet]
   (let [vanha-urakka? (lupaus-domain/urakka-19-20? urakan-tiedot)
@@ -614,7 +619,7 @@
                                                             (when (and (vector? osa)
                                                                     (= :taulukko (first osa)))
                                                               indeksi))
-                                                  ymparistoraportti))
+                                              ymparistoraportti))
         ;; Aloita ensimmäinen taulukko omalle sheetilleen, vaikka sitä edeltäisi tekstiä.
         ymparistoraportti (if (some? ensimmaisen-taulukon-indeksi)
                             (update-in ymparistoraportti [ensimmaisen-taulukon-indeksi 1]

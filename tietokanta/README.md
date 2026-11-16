@@ -68,4 +68,9 @@ Suorita komennot projektin juurihakemistosta.
 - Sammuta kanta komennolla `./tietokanta/devdb_down.sh`. Kontin poistaminen poistaa myös paikallisen tietokannan.
 - Luo kanta uudelleen tyhjästä komennolla `./tietokanta/devdb_restart.sh`. Skripti poistaa vanhan kontin ja käynnistää
   uuden, minkä jälkeen migraatiot ja testidata alustetaan uudelleen.
+- Aja migraatiot ja testidata uudelleen käynnissä olevaan konttiin komennolla `./tietokanta/devdb_alusta.sh`.
+  * TÄRKEÄÄ: Tietokantaa ei tarvitse sammuttaa `devdb_restart.sh` tai `devdb_down.sh` komennolla tätä varten!
+  * Ajon ajaksi kanta asetetaan huoltotilaan, jossa hostilta tulevat yhteydet (esim. Harja REPL) estetään ja katkaistaan.
+  * Harjan REPL saa olla käynnissä ajon aikana: backendin yhteyspooli yhdistää automaattisesti uudelleen. 
+  * Palauta tarkkailijat tarvittaessa komennolla (clj repl): `(require 'harja.repl-tyokalut) (harja.repl-tyokalut/dev-restart)`
 

@@ -11,6 +11,7 @@
             [harja.domain.tehtavamaarat :as tm-domain]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
             [harja.domain.muokkaustiedot :as muokkaustiedot]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [clojure.set :as set]))
 
 
@@ -486,3 +487,24 @@
             :hae-tehtavaryhman-tehtavat-urakalle
             +kayttaja-jvh+
             {:tehtavaryhma-id 1})) "Urakka-id:n puuttuminen aiheuttaa poikkeuksen")))
+
+(deftest hae-tehtavamaarien-lukitukset-testi
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        hoitovuosi 2024
+        kayttaja-id (:id +kayttaja-jvh+)]
+    (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
+      db {:urakkaid urakka-id
+          :hoitokauden_alkuvuosi hoitovuosi
+          :tavoitehinta 1
+          :kattohinta 1
+          :muokkaa_kattohinta false
+          :luoja kayttaja-id}
+      kayttaja-id)
+    (is (= [hoitovuosi]
+          (:lukitut-hoitovuodet
+            (kutsu-palvelua (:http-palvelin jarjestelma)
+              :hae-mhu-tehtavamaarien-lukitukset
+              +kayttaja-jvh+
+              {:urakka-id urakka-id})))
+      "Palvelu palauttaa päätöksellä lukitun vuoden, mutta ei lukitse muita hoitovuosia")))

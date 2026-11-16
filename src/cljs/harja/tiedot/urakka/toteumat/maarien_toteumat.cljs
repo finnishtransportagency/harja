@@ -37,6 +37,9 @@
 (defrecord ToteumaHakuOnnistui [vastaus])
 (defrecord ToteumaHakuEpaonnistui [vastaus])
 (defrecord ToteumanSyotto [auki tehtava toimenpide])
+(defrecord HaeMaarienToteumienLukitukset [])
+(defrecord MaarienToteumienLukituksetHaettu [vastaus])
+(defrecord MaarienToteumienLukitustenHakuEpaonnistui [vastaus])
 (defrecord TallennaToteuma [])
 (defrecord TallennaToteumaOnnistui [vastaus])
 (defrecord TallennaToteumaEpaonnistui [vastaus])
@@ -199,23 +202,30 @@
 (defn- uusi-pvm-lomakkeelle [app]
   ;; huom: tälle logiikalle ei ole kiveenhakattua säännöstöä olemassa. Koetetaan kuitenkin auttaa
   ;; käyttäjää hyödyntämällä oletusta, että loppuvuonna (loka-joulukuu) syötetään usein edellisen hoitokauden määriä syyskuulle
-  ;; jos taas eletään tammi-syyskuuta, ei tehdä näitä oletuksia vaan käytetään tätä hetkeä
-  (let [nyt-tammi-syyskuu? (< (pvm/kuukausi (pvm/nyt)) 10)
-        vuosi (if (>= (pvm/kuukausi (pvm/nyt)) 10)
+  ;; jos taas eletään tammi-syyskuuta, ei tehdä näitä oletuksia vaan käytetään tätä hetkeä.
+  ;; Välikatselmuksessa lukitulle hoitovuodelle ei siirretä oletuspäivää.
+  (let [nyt (pvm/nyt)
+        nyt-tammi-syyskuu? (< (pvm/kuukausi nyt) 10)
+        vuosi (if (>= (pvm/kuukausi nyt) 10)
                 ; Käytetään loppuvuonna valittua hoitokauden alkuvuotta
-                (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi (pvm/nyt)))
+                (if (< (:hoitokauden-alkuvuosi app) (pvm/vuosi nyt))
                   (inc (:hoitokauden-alkuvuosi app))        ;; Yritetään määritellä aina loppu hoitokausi
                   (:hoitokauden-alkuvuosi app))
                 ; Käytetään alkuvuonna valittua hoitokauden loppuvuotta
                 (+ 1 (:hoitokauden-alkuvuosi app)))
         kuukausi (if nyt-tammi-syyskuu?
-                   (- (pvm/kuukausi (pvm/nyt)) 1) ;; tammi-syyskuussa käytetään tätä hetkeä...
-                   8) ;; ... loppuvuonna tarjotaan kirjaamista syyskuulle
+                   (- (pvm/kuukausi nyt) 1) ;; tammi-syyskuussa käytetään tätä hetkeä...
+                   8) ;; ... loppuvuonna tarjotaan kirjaamista syyskuulle, 8 = syyskuu, koska luo-pvm käyttää eri indeksiä
         paiva (if nyt-tammi-syyskuu?
-                (pvm/paiva (pvm/nyt)) ;; tammi-syyskuussa käytetään tätä hetkeä...
+                (pvm/paiva nyt) ;; tammi-syyskuussa käytetään tätä hetkeä...
                 1)
-        uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)]
-    uusi-pvm))
+        uusi-pvm (pvm/luo-pvm vuosi kuukausi paiva)
+        lukittu-hoitovuosi? (contains? (:lukitut-toteumien-hoitovuodet app)
+                                      (pvm/hoitokauden-alkuvuosi uusi-pvm))]
+    (if (and (not nyt-tammi-syyskuu?)
+             lukittu-hoitovuosi?)
+      nyt
+      uusi-pvm)))
 
 (extend-protocol tuck/Event
 
@@ -345,7 +355,9 @@
           app (assoc app ::ui-lomake/viimeksi-muokattu-kentta nil)
           useampi-aiempi? (get-in app [:lomake ::t/useampi-toteuma])
           tyyppi-aiempi (get-in app [:lomake ::t/tyyppi])
-          app (assoc app :lomake lomake)
+          app (-> app
+                  (assoc :lomake lomake)
+                  (dissoc :toteuman-lukitusvirhe))
           vain-eka (fn [ts]
                      [(first ts)])
           maara-pois (fn [ts]
@@ -435,11 +447,13 @@
   TyhjennaLomake
   (process-event [_ app]
     (hae-tehtavat nil)
-    (assoc app :syottomoodi false
+    (-> app
+        (dissoc :toteuman-lukitusvirhe)
+        (assoc :syottomoodi false
                :tehtavat []
                :lomake (-> tila/toteumat-default-arvot
                            :maarien-toteumat
-                           :lomake)))
+                           :lomake))))
 
   PoistaToteuma
   (process-event [{id :id} app]
@@ -553,6 +567,25 @@
                         :paasta-virhe-lapi? true})
     (assoc app :toimenpiteet-lataa true))
 
+  HaeMaarienToteumienLukitukset
+  (process-event [_ app]
+    (tuck-apurit/post! :hae-toteumien-lukitukset
+      {:urakka-id (-> @tila/yleiset :urakka :id)}
+      {:onnistui ->MaarienToteumienLukituksetHaettu
+       :epaonnistui ->MaarienToteumienLukitustenHakuEpaonnistui
+       :paasta-virhe-lapi? true})
+    (assoc app :lukitut-toteumien-hoitovuodet #{}))
+
+  MaarienToteumienLukituksetHaettu
+  (process-event [{vastaus :vastaus} app]
+    (assoc app :lukitut-toteumien-hoitovuodet
+      (set (:lukitut-hoitovuodet vastaus))))
+
+  MaarienToteumienLukitustenHakuEpaonnistui
+  (process-event [_ app]
+    (viesti/nayta! "Määrätoteumien hoitovuoden lukitustietojen haku epäonnistui." :danger)
+    (assoc app :lukitut-toteumien-hoitovuodet #{}))
+
   HaeKaikkiTehtavat
   (process-event [_ app]
     (hae-tehtavat nil)
@@ -572,7 +605,8 @@
 
   ToteumanSyotto
   (process-event [{auki :auki tehtava :tehtava toimenpide :toimenpide} app]
-    (let [app
+    (let [app (dissoc app :toteuman-lukitusvirhe)
+          app
           (cond-> app
                   ;; Avaa syöttömoodi
                   true (assoc-in [:syottomoodi] auki)
@@ -622,6 +656,7 @@
     ;; Päivitä määrät välittömästi lisäyksen jälkeen
     (hae-toteutuneet-maarat (:id @nav/valittu-urakka) (:valittu-toimenpide app) (get-in app [:hoitokauden-alkuvuosi]))
     (-> app
+        (dissoc :toteuman-lukitusvirhe)
         (assoc :syottomoodi false
                :tehtavat [])
         (assoc :toteutuneet-maarat-lataa true)
@@ -629,8 +664,11 @@
 
   TallennaToteumaEpaonnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta! (str "Toteuman tallennus epäonnistui! " (get-in vastaus [:response :virhe])) :danger)
-    app))
+    (let [virhe (get-in vastaus [:response :virhe])]
+      (viesti/nayta! (str "Toteuman tallennus epäonnistui! " virhe) :danger)
+      (cond-> app
+        (and (string? virhe) (str/includes? virhe "lukitsee hoitovuoden"))
+        (assoc :toteuman-lukitusvirhe virhe)))))
 
 (defn hae-toteutuneet-maarat [urakka-id toimenpide hoitokauden-alkuvuosi]
   (tuck-apurit/post! :hae-mhu-toteumatehtavat

@@ -17,12 +17,19 @@
 # Lue ohjeet Dockerfilejen käyttöön Github Actions container jobeissa:
 # https://docs.github.com/en/actions/creating-actions/dockerfile-support-for-github-actions
 
-# Käytetään pohjana virallista nodejs (24 LTS) Debian imagea.
+# Käytetään pohjana virallista nodejs (26 LTS) Debian imagea.
 # Tämänhetkinen Debianin stable-release on versio: 13 (trixie)
 # GH Actions: "It's recommended to use Docker images based on the Debian operating system."
 # https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
 
-FROM node:24-trixie-slim
+# Multi-stage rakenne:
+#   base   -> Cypressin riippuvuudet, aputyökalut ja Cypress
+#   chrome -> base + Chrome
+#   edge   -> chrome + Edge (viimeinen stage, eli oletus-target)
+# Oletusbuildi (ilman --target) tuottaa imagen, jossa on sekä Chrome että Edge.
+# Pelkän Chromen sisältävän imagen voi tarvittaessa buildata: docker build --target chrome ...
+
+FROM node:26-trixie-slim@sha256:e4db4c914bf8ad241bd24804fc25d272d89bad97e68cdc8a1414862790a02c39 AS base
 
 # Yhdistä image harjan repositoryyn
 LABEL org.opencontainers.image.source=https://github.com/finnishtransportagency/harja
@@ -35,9 +42,12 @@ USER root
 
 
 ###  Asenna Cypressin riippuuvudet ja muut riippuvuudet ###
+# Vertailukohta: https://github.com/cypress-io/cypress-docker-images/blob/master/factory/factory.Dockerfile
 RUN apt-get update && \
     apt-get install --no-install-recommends -y \
     xvfb \
+    # Cypressin binääripaketin purkaminen
+    unzip \
     libglib2.0-0 \
     libnss3 \
     libatk1.0-0 \
@@ -51,25 +61,18 @@ RUN apt-get update && \
     ca-certificates \
     # Nopea lossless kompressioalgoritmi -> GitHub @actions/cache suosima
     zstd \
-    # Edge riippuvuuksia
-    gnupg \
-    dirmngr \
       \
       \
-   # Muita aputyökaluja
-   && apt-get install -y \
+    # Muita aputyökaluja
+    # Testit ajavat psql-komentoja cy.exec:llä
     postgresql-client \
+    # Chromen ja Edgen riippuvuuksia (asentuisivat selainten mukana joka tapauksessa)
     fonts-liberation \
     libcurl4 \
     libcurl3-gnutls \
     xdg-utils \
     wget \
     curl \
-    nano \
-    # Chrome dep
-    libu2f-udev \
-    # Firefox dep
-    bzip2 \
       \
     # Asenna emoji fontti
     fonts-noto-color-emoji \
@@ -78,29 +81,6 @@ RUN apt-get update && \
     # Siivoa
     && rm -rf /var/lib/apt/lists/* \
     && apt-get clean
-
-
-# Asenna uusin Chrome selain
-# Apt-get update täytyy ajaa ennen chromen asennusta, jotta chromen asennuksen yhteydessä löytyy tarvittavat depsut
-# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Chrome:sta ei ole tarjolla ARM-arkkitehtuurin pakettia.
-RUN node -p "process.arch === 'arm64' ? 'Not downloading Chrome since we are on arm64: https://crbug.com/677140' : process.exit(1)" || \
-    (wget --no-verbose -O /usr/src/google-chrome-stable_current_amd64.deb "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb" \
-    && apt-get update &&  \
-    apt-get install -f -y /usr/src/google-chrome-stable_current_amd64.deb ; \
-  rm -f /usr/src/google-chrome-stable_current_amd64.deb)
-
-
-# Asenna uusin Edge
-# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Edgestä ei ole tarjolla ARM-arkkitehtuurin pakettia.
-RUN node -p "process.arch === 'arm64' ? 'Not downloading Edge since we are on arm64: https://techcommunity.microsoft.com/t5/discussions/edge-for-linux-arm64/m-p/1532272' : process.exit(1)" || \
-    (curl https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg && \
-    install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ && \
-    sh -c 'echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge-dev.list' && \
-    rm microsoft.gpg && \
-    apt-get update && \
-    apt-get install -y microsoft-edge-dev && \
-    # Luo symbolinen linkki
-    ln -s /usr/bin/microsoft-edge /usr/bin/edge)
 
 
 ### Env muuttujia liittyen NPM pakettien asentamiseen ja cypressin ajamisee ###
@@ -148,17 +128,42 @@ RUN npm install -g "cypress@${NPM_CYPRESS_VERSION}" --ignore-scripts \
     && cypress info \
     && cypress version \
     # Tulosta polku mistä Node lataa tarvittavat moduulit
-    && node -p 'module.paths'
-
-# Annetaan kaikille käyttäjille luku- ja suoritusoikeus cypress cacheen,
-# jotta non-root käyttäjä (node) pääsee käsiksi cypressin binääreihin.
-RUN chmod -R a+rX /root/.cache
+    && node -p 'module.paths' \
+    \
+    # Annetaan kaikille käyttäjille luku- ja suoritusoikeus cypress cacheen,
+    # jotta non-root käyttäjä (node) pääsee käsiksi cypressin binääreihin.
+    # HUOM: Tehtävä samassa RUN:ssa asennuksen kanssa. Erillinen chmod-kerros kopioisi
+    #       oikeuksiltaan muuttuneet tiedostot uuteen kerrokseen (koko Cypress-cache, n. 500 MB).
+    && chmod -R a+rX /root/.cache
 
 # Huom, koska transit-js dependency on cypress-testien itsessään tarvitsema dependency, täytyy transit-js asentaa
 # erikseen WORKDIRin sisällä GH actions checkoutin jälkeen, jotta node löytää transit-js:n testien ajon aikana.
 # Tämä image tarjoaa vain cypressin ja siihen suoraan liittyvät dependencyt ja työkalut.
 
 COPY entrypoint.sh /usr/local/bin
+
+ENTRYPOINT ["entrypoint.sh"]
+
+
+### Chrome ###
+FROM base AS chrome
+
+# Asenna uusin Chrome selain
+# Apt-get update täytyy ajaa ennen chromen asennusta, jotta chromen asennuksen yhteydessä löytyy tarvittavat depsut
+# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Chrome:sta ei ole tarjolla ARM-arkkitehtuurin pakettia.
+RUN if [ "$(dpkg --print-architecture)" != "amd64" ]; then \
+      echo "Not downloading Chrome since we are not on amd64: https://crbug.com/677140"; \
+    else \
+      wget --no-verbose -O /usr/src/google-chrome-stable_current_amd64.deb \
+        "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb" \
+      && apt-get update \
+      && apt-get install --no-install-recommends -f -y /usr/src/google-chrome-stable_current_amd64.deb \
+      && rm -f /usr/src/google-chrome-stable_current_amd64.deb \
+      && rm -rf /var/lib/apt/lists/* \
+      && apt-get clean \
+      # Varmista, että asennus onnistui
+      && google-chrome --version; \
+    fi
 
 # Vaihda non-root käyttäjään
 # https://github.com/cypress-io/cypress-docker-images/tree/master/examples/included-as-non-root
@@ -169,8 +174,45 @@ RUN echo  " Node version:    $(node -v) \n" \
     "NPM version:     $(npm -v) \n" \
     "Debian version:  $(cat /etc/debian_version) \n" \
     "Chrome version:  $(google-chrome --version) \n" \
-    "Edge version:    $(edge --version) \n" \
     "User:          $(whoami) \n" \
     "User ID: $(id -u) \n"
 
-ENTRYPOINT ["entrypoint.sh"]
+
+### Edge ###
+FROM chrome AS edge
+
+USER root
+
+# Asenna uusin Edge
+# gnupg ja dirmngr tarvitaan vain avaimen käsittelyyn, joten ne poistetaan samassa kerroksessa asennuksen jälkeen.
+# HUOM: Estetään asennus ARM-arkkitehtuurilla, koska Edgestä ei ole tarjolla ARM-arkkitehtuurin pakettia.
+RUN if [ "$(dpkg --print-architecture)" != "amd64" ]; then \
+      echo "Not downloading Edge since we are not on amd64: https://techcommunity.microsoft.com/t5/discussions/edge-for-linux-arm64/m-p/1532272"; \
+    else \
+      apt-get update \
+      && apt-get install --no-install-recommends -y gnupg dirmngr \
+      && curl -fsSL https://packages.microsoft.com/keys/microsoft.asc | gpg --dearmor > microsoft.gpg \
+      && install -o root -g root -m 644 microsoft.gpg /etc/apt/trusted.gpg.d/ \
+      && rm microsoft.gpg \
+      && echo "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main" > /etc/apt/sources.list.d/microsoft-edge.list \
+      && apt-get update \
+      && apt-get install --no-install-recommends -y microsoft-edge-stable \
+      # Luo symbolinen linkki
+      && ln -s /usr/bin/microsoft-edge /usr/bin/edge \
+      && apt-get purge -y --auto-remove gnupg dirmngr \
+      && rm -rf /var/lib/apt/lists/* \
+      && apt-get clean \
+      # Varmista, että Edge on yhä asennettuna gnupg:n poiston jälkeen
+      && edge --version; \
+    fi
+
+USER node
+
+# Työkalujen versiot ja käyttäjätiedot
+RUN echo  " Node version:    $(node -v) \n" \
+    "NPM version:     $(npm -v) \n" \
+    "Debian version:  $(cat /etc/debian_version) \n" \
+    "Chrome version:  $(google-chrome --version) \n" \
+    "Edge version:    $(edge --version) \n" \
+    "User:          $(whoami) \n" \
+    "User ID: $(id -u) \n"

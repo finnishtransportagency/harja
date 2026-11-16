@@ -571,6 +571,7 @@ maaramuutokset AS (
           JOIN tehtavaryhmaotsikko o 
             ON tr_alataso.tehtavaryhmaotsikko_id = o.id
            AND (:tehtavaryhma::TEXT IS NULL OR o.otsikko = :tehtavaryhma)
+           AND o.urakkatyyppi = 'teiden-hoito'
      LEFT JOIN urakka_tehtavamaara ut
             ON ut.urakka = :urakka
            AND ut."hoitokauden-alkuvuosi" = :hoitokauden_alkuvuosi
