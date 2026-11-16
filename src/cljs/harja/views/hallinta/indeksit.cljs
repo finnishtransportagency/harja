@@ -16,6 +16,12 @@
             [harja.ui.yleiset :as y])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
+(defn- viimeksi-muokattu-teksti [arvo]
+  (cond
+    (pvm/pvm? arvo) (pvm/pvm-aika-klo arvo)
+    (instance? js/Date arvo) (pvm/js-date->pvm arvo)
+    (string? arvo) arvo
+    :else (str arvo)))
 
 (defn indeksi-grid [{:keys [indeksinimi koodi]} urakkatyyppi]
 
@@ -42,7 +48,7 @@
       [:div.grid-status-viestit.indeksi-grid-status
        (if viimeksi-muokattu
          [:div.status-viesti.tallennettu
-          (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeksi-muokattu))]
+          (str "Viimeksi tallennettu: " (viimeksi-muokattu-teksti viimeksi-muokattu))]
          [:div.status-viesti.ei-muutoksia
           "Ei tallennettuja muutoksia"])]
       [grid/grid
