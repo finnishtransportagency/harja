@@ -8,6 +8,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.liitteet :as liitteet]
             [harja.tiedot.navigaatio :as nav]
+            [harja.domain.muutos-domain :as muutos-domain]
             [harja.tiedot.urakka.muutokset.yhteiset-tiedot :as t-yhteiset]))
 
 
@@ -85,11 +86,16 @@
 
 
 (defn +rivi-muutos-voimassa+
-  ([urakan-hoitokaudet valittu-hoitokausi]
-   (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi {}))
-  ([urakan-hoitokaudet valittu-hoitokausi {:keys [pakota-valittuun-hoitokauteen? voi-muokata?]
-                                           :or {pakota-valittuun-hoitokauteen? true
-                                                voi-muokata? true} :as opts}]
+  ([app]
+   (+rivi-muutos-voimassa+ app {}))
+  ([{:keys [urakan-hoitokaudet
+            muokattava-muutos
+            valittu-hoitokausi
+            muokattavat-hoitokaudet] :as _app}
+    {:keys [pakota-valittuun-hoitokauteen? voi-muokata?] :or {pakota-valittuun-hoitokauteen? true
+                                                              voi-muokata? true} :as opts}]
+
+
    {:otsikko "Voimassa alkaen"
     :nimi :voimassa_alkaen
     :tyyppi :pvm
@@ -97,28 +103,65 @@
     :pakollinen? true
     ;; Rajoita valinta hoitokaudelle 
     :validoi [(fn [valittu-pvm]
-                (if pakota-valittuun-hoitokauteen?
-                  ;; Katsotaan että voimassa alkaen osuu valittuun hoitokauteen
-                  ;; Erityisesti tärkeä muutostyö kirjauksissa 
-                  (let [pvm-hk-valissa? (boolean (when valittu-hoitokausi
-                                                   (pvm/valissa?
-                                                     valittu-pvm
-                                                     (first valittu-hoitokausi)
-                                                     (second valittu-hoitokausi))))]
-                    (when (and
-                            valittu-hoitokausi
-                            (not pvm-hk-valissa?))
-                      (str
-                        "Voimassa alkaen täytyy kohdistua valittuun hoitokauteen "
-                        "("
-                        (pvm/pvm (first valittu-hoitokausi)) " - "
-                        (pvm/pvm (second valittu-hoitokausi))
-                        ").")))
+                (let [valittu-pvm-hoitokausi (some-> valittu-pvm (pvm/paivamaaran-hoitokausi))
+                      valittu-pvm-hoitovuosi (some-> valittu-pvm-hoitokausi first (pvm/vuosi))
 
-                  ;; Esimerkiksi pysyvässä muutoksessa kevyempi validointi riittää,
-                  ;; koska pysyvässä muutoksessa valitaan hoitokausi erikseen ja voimassa-alkaen
-                  ;; saa osua mihin tahansa hoitokauteen
-                  (when (nil? valittu-pvm) "Syötä muutoksen voimassaolo pvm")))]
+                      valittu-vuosi-lukittu? (and
+                                               valittu-pvm-hoitovuosi
+                                               muokattavat-hoitokaudet
+                                               (muutos-domain/pysyva-muutos-hoitovuoden-paatos-tehty? muokattavat-hoitokaudet valittu-pvm-hoitokausi))
+
+                      pvm-hk-valissa? (boolean (when valittu-hoitokausi
+                                                 (pvm/valissa?
+                                                   valittu-pvm
+                                                   (first valittu-hoitokausi)
+                                                   (second valittu-hoitokausi))))
+
+                      ;; Päivämäärää ei voida asettaa 1.hoitovuodelle 2025-2026, koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.
+                      paatos-virheviesti (when
+                                           (and
+                                             urakan-hoitokaudet
+                                             valittu-pvm-hoitovuosi)
+                                           (str
+                                             "Päivämäärää ei voida asettaa "
+
+                                             (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                                               valittu-pvm-hoitovuosi
+                                               (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet)
+                                               "hoitovuodelle"
+                                               true)
+
+                                             ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))]
+
+                  (cond
+                    ;; Välikatselmuksen päätös on tehty valitulle voimassa-alkaen hk:lle 
+                    (and
+                      valittu-pvm
+                      valittu-vuosi-lukittu?)
+                    (or
+                      paatos-virheviesti
+                      "Valittua päivämäärää ei voida asettaa, koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.")
+
+                    ;; Katsotaan että voimassa alkaen osuu valittuun hoitokauteen
+                    ;; Erityisesti tärkeä muutostyö kirjauksissa 
+                    (and
+                      pakota-valittuun-hoitokauteen?
+                      valittu-hoitokausi
+                      (not pvm-hk-valissa?))
+                    (str
+                      "Voimassa alkaen täytyy kohdistua valittuun hoitokauteen "
+                      "("
+                      (pvm/pvm (first valittu-hoitokausi)) " - "
+                      (pvm/pvm (second valittu-hoitokausi))
+                      ").")
+
+                    ;; Esimerkiksi pysyvässä muutoksessa kevyempi validointi riittää,
+                    ;; koska pysyvässä muutoksessa valitaan hoitokausi erikseen ja voimassa-alkaen
+                    ;; saa osua mihin tahansa hoitokauteen
+                    :else
+                    (when (nil? valittu-pvm)
+                      "Syötä muutoksen voimassaolo pvm"))))]
+
     ;; Pysyvän muutoksen lomakkeella valitaan hoitokausi mistä eteenpäin muutos vaikuttaa. Se ei saa olla
     ;; pienempi kuin voimassa alkaen, joten kutsuttava :aseta funktiota. Ei vaikuta ainakaan vielä muissa muutostyypeissä
     :aseta (fn [rivi arvo]
@@ -139,11 +182,10 @@
    ::lomake/col-luokka "perustiedot col-xs-6"})
 
 
-(defn lomake-yhteinen [e!
-                       {:keys [urakan-hoitokaudet valittu-hoitokausi] :as app}]
+(defn lomake-yhteinen [e! app]
   (concat
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (+rivi-muutoksen-syy+)
-       (+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
+       (+rivi-muutos-voimassa+ app)
        (+rivi-muutos-tavoitehinta+))]
     (liite-kentta e! app)))

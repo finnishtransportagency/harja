@@ -170,7 +170,7 @@
                               [:hr]])}]))))))
 
 
-(defn muutoslomake [e! {:keys [muokattava-muutos muutoksen-tiedot-haku-kaynnissa?] :as _app}]
+(defn muutoslomake [e! {:keys [muokattava-muutos] :as _app}]
   (komp/luo
     (komp/sisaan-ulos
       #(e! (t-yhteiset/->HaeMuutoksenTiedot muokattava-muutos))
@@ -183,6 +183,8 @@
                    (if (:id muokattava-muutos) "Muokkaa muutosta" "Lisää uusi muutos")
                    (when muutoksen-tiedot-haku-kaynnissa?
                      [yleiset/ajax-loader-pieni])]
+         :validoi-alussa? true
+         :nayta-validoinnit? true
          :tarkkaile-ulkopuolisia-muutoksia? true
          :muokkaa! #(e! (t-yhteiset/->PaivitaLomake %))
          :footer-fn (fn [muutos] (lomakkeen-footer muutos (:tyyppi muokattava-muutos) e! app))
