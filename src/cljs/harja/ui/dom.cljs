@@ -198,11 +198,11 @@
 
 (defn siirra-fokus-nakymaan [nakyma siirra-fokus-elementtiin]
   (let [focusable-elementit (hae-nakyman-elementit nakyma)]
-    (when focusable-elementit
-      (cond
-        (= siirra-fokus-elementtiin :last) (.focus (last focusable-elementit))
-        (= siirra-fokus-elementtiin :second) (.focus (second focusable-elementit))
-        :else (.focus (first focusable-elementit))))))
+    (when-let [elementti (cond
+                           (= siirra-fokus-elementtiin :last) (last focusable-elementit)
+                           (= siirra-fokus-elementtiin :second) (second focusable-elementit)
+                           :else (first focusable-elementit))]
+      (.focus elementti))))
 
 (defn tee-fokus-ansa
   "Fokusoidaan elementti, mutta jos käyttäjä yrittää siirtää fokusta pois, se palautetaan takaisin."

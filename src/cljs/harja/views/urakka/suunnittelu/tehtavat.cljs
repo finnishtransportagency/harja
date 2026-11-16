@@ -21,10 +21,23 @@
   [koll]
   (= 0 (count koll)))
 
+(defn- urakan-hoitovuodet []
+  (range
+    (-> @tila/yleiset :urakka :alkupvm pvm/vuosi)
+    (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)))
+
+(defn- suunnittelun-kohdevuodet
+  [{:keys [valinnat]}]
+  (let [hoitokausi (:hoitokausi valinnat)
+        loppuvuosi (-> @tila/yleiset :urakka :loppupvm pvm/vuosi)]
+    (if (:samat-tuleville valinnat)
+      (range hoitokausi loppuvuosi)
+      [hoitokausi])))
+
 (defn valitaso-filtteri
   [_ _]
   (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka)]
-    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?]} :valinnat :keys [sopimukset-syotetty?] :as _app}]
+    (fn [e! {{:keys [toimenpide-valikko-valinnat samat-tuleville toimenpide hoitokausi noudetaan nayta-aluetehtavat? nayta-suunniteltavat-tehtavat?]} :valinnat :keys [sopimukset-syotetty?] :as app}]
       (let [vuosi (pvm/vuosi alkupvm)
             loppuvuosi (pvm/vuosi loppupvm)
             hoitokaudet (into [] (range vuosi loppuvuosi))]
@@ -61,7 +74,11 @@
             {:type "checkbox"
              :checked samat-tuleville
              :on-change #(e! (t/->SamatTulevilleMoodi (not samat-tuleville)))
-             :disabled (not sopimukset-syotetty?)}]
+             :disabled (or (not sopimukset-syotetty?)
+                           (not (t/lukitustiedot-valmiit? app))
+                           (and (not samat-tuleville)
+                                (t/lukittuja-hoitovuosia? app (suunnittelun-kohdevuodet
+                                                               (assoc-in app [:valinnat :samat-tuleville] true)))))}]
            [:label
             {:for "kopioi-tuleville-vuosille"}
             "Samat suunnitellut määrät tuleville hoitokausille"]]]
@@ -149,10 +166,14 @@
        [:div.vetolaatikko-ruksi 
         [kentat/tee-kentta {:tyyppi :checkbox 
                             :teksti "Haluan syöttää joka vuoden erikseen"
+                            :disabled? (or (not (t/lukitustiedot-valmiit? app))
+                                           (if @joka-vuosi-erikseen?
+                                             (t/lukittuja-hoitovuosia? app (urakan-hoitovuodet))
+                                             (not-any? #(not (t/lukitus-estaa-muokkauksen? app [%]))
+                                                 (urakan-hoitovuodet))))
                             :valitse!
                             (fn [v]
                               (let [ruksittu? (.. v -target -checked)]
-                                (swap! t/taulukko-tila assoc-in [:maarat vanhempi id :joka-vuosi-erikseen?] ruksittu?)
                                 (e! (t/->JokaVuosiErikseenKlikattu ruksittu? vanhempi id))))}
          joka-vuosi-erikseen?]]
        [:div.flex-row.tasaa-alas.loppuun
@@ -165,7 +186,9 @@
              [:label (str "Vuosi " vuosi "-" (inc vuosi))]
              [kentat/tee-kentta {:tyyppi :numero
                                  :elementin-id (str "vetolaatikko-input-" (vali->viiva nimi) "-" vuosi)
-                                 :disabled? (or (not @joka-vuosi-erikseen?) (:rahavaraus? _rivi))
+                                 :disabled? (or (not @joka-vuosi-erikseen?)
+                                                 (:rahavaraus? _rivi)
+                                                 (t/lukitus-estaa-muokkauksen? app [vuosi]))
                                  :on-blur #(tallenna! e!
                                              (:sopimukset-syotetty? app)
                                              :maarat
@@ -270,11 +293,15 @@
                :muokattava? #(and
                                ;; Tallennuksen ajaksi laita sarakkeet kiinni
                                (not tallennetaan?)
+                               (not (t/lukitus-estaa-muokkauksen? app (urakan-hoitovuodet)))
                                (or (partial rahavarausperustainen-muokattava?) (partial yksikkoperustainen-muokattava?)))
                :tasaa :oikea :veda-oikealle? true})
             ;; urakan ajan suunnittelu -moodi         
             (when sopimukset-syotetty?
-              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/desimaaliluku-opt-ilman-nollia %) :muokattava? (comp kun-yksikko kun-ei-rahavaraus) :leveys "180px" :tasaa :oikea :veda-oikealle? true})
+              {:otsikko "Muuttunut määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
+               :muokattava? #(and ((comp kun-yksikko kun-ei-rahavaraus) %)
+                                  (not (t/lukitus-estaa-muokkauksen? app (suunnittelun-kohdevuodet app))))
+               :leveys "180px" :tasaa :oikea :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            aluetiedot-tila]])
        (when (and (> maara-tehtavia 0) nayta-suunniteltavat-tehtavat?)
@@ -312,7 +339,9 @@
             (when (not sopimukset-syotetty?)
               {:otsikko "Tarjouksen määrä vuodessa" :nimi :sopimus-maara :tyyppi :numero :fmt #(fmt/desimaaliluku-opt-ilman-nollia %) :leveys "180px"
                :validoi [[:ei-tyhja]]
-               :muokattava? (comp kun-yksikko kun-kaikki-samat kun-ei-rahavaraus) :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
+               :muokattava? #(and ((comp kun-yksikko kun-kaikki-samat kun-ei-rahavaraus) %)
+                                  (not (t/lukitus-estaa-muokkauksen? app (urakan-hoitovuodet))))
+               :sarake-disabloitu-arvo-fn sarake-disabloitu-arvo
                :veda-oikealle? true :tasaa :oikea})
             ;; urakan ajan suunnittelu -moodi
             (when sopimukset-syotetty? 
@@ -322,7 +351,11 @@
               {:otsikko "Koko urakka-ajan määrää jäljellä" :nimi :sovittuja-jaljella :tyyppi :string :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
                :muokattava? (constantly false) :leveys "160px" :tasaa :oikea :veda-oikealle? true})
             (when sopimukset-syotetty? 
-              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero :fmt #(fmt/desimaaliluku-opt-ilman-nollia %) :tasaa :oikea :muokattava? kun-yksikko :leveys "180px" :veda-oikealle? true})
+              {:otsikko "Hoitovuoden suunniteltu määrä" :nimi :maara-muuttunut-tarjouksesta :tyyppi :numero
+               :fmt #(fmt/desimaaliluku-opt-ilman-nollia %) :tasaa :oikea
+               :muokattava? #(and (kun-yksikko %)
+                                  (not (t/lukitus-estaa-muokkauksen? app (suunnittelun-kohdevuodet app))))
+               :leveys "180px" :veda-oikealle? true})
             {:otsikko "Yksikkö" :nimi :yksikko :tyyppi :string :muokattava? (constantly false) :leveys "140px"}]
            maarat-tila]])])))
 
@@ -341,9 +374,10 @@
        [yleiset/keltainen-vihjelaatikko "Näytettäviä tietoja/määriä ei valittu, tarkista valinnat"])]))
 
 (defn sopimuksen-tallennus-boksi
-  [e! tallennetaan?]
+  [e! tallennetaan? app]
   (let [aluetietoja-puuttuu? (t/aluetietoja-puuttuu?)
-        maaratietoja-puuttuu? (t/maaratietoja-puuttuu?)]
+        maaratietoja-puuttuu? (t/maaratietoja-puuttuu?)
+        lukitus-estaa-tallennuksen? (t/lukitus-estaa-muokkauksen? app (urakan-hoitovuodet))]
     [:div.table-default-even.col-xs-12
      [:div.flex-row
       [:h3 "Syötä tarjouksen määrät"]
@@ -352,7 +386,7 @@
         [ajax-loader-pieni "Tallennetaan tietoja..." {:luokka "ajax-loader-valistys-kustannukset"}])
 
       [napit/yleinen-ensisijainen "Tallenna" (comp (vieritys/vierita ::top) #(e! (t/->TallennaSopimus true)))
-       {:disabled (or tallennetaan? aluetietoja-puuttuu? maaratietoja-puuttuu?)}]]
+       {:disabled (or tallennetaan? aluetietoja-puuttuu? maaratietoja-puuttuu? lukitus-estaa-tallennuksen?)}]]
      
      (when (or aluetietoja-puuttuu? maaratietoja-puuttuu?)
        [yleiset/info-laatikko :neutraali
@@ -380,7 +414,7 @@
                       (e! (t/->HaeSopimuksenTila))
                       (e! (t/->HaeTehtavat
                             {:hoitokausi :kaikki}))))
-    (fn [e! {:keys [sopimukset-syotetty? tallennetaan?] :as app}]
+    (fn [e! {:keys [sopimukset-syotetty? tallennetaan? lukitut-hoitovuodet lukitustietojen-haku-kaynnissa? lukitustietojen-haku-epaonnistui?] :as app}]
       [:div#vayla
        [vieritys/majakka ::top]
        [:div.flex-row
@@ -395,6 +429,17 @@
        ;[debug/debug @t/taulukko-virheet]
        [:div "Tehtävät ja määrät suunnitellaan urakan alussa ja tarkennetaan urakan kuluessa. Osalle tehtävistä kertyy toteuneita määriä automaattisesti urakoitsijajärjestelmistä. Osa toteutuneista määristä täytyy kuitenkin kirjata manuaalisesti Toteuma-puolelle."]
        [:div "Yksiköttömiin tehtäviin ei tehdä kirjauksia."]
+       (when lukitustietojen-haku-kaynnissa?
+         [ajax-loader-pieni "Tarkistetaan hoitovuoden lukitustietoja..." {:luokka "ajax-loader-valistys-kustannukset"}])
+       (when lukitustietojen-haku-epaonnistui?
+         [yleiset/info-laatikko :varoitus
+          "Lukitustietojen haku epäonnistui. Tehtävien ja määrien muokkaus on estetty, kunnes lukitustiedot saadaan."
+          "" "100%" {:luokka "ala-margin-16"}])
+       (when (t/lukitusvaroitus-naytetaan? app)
+         [yleiset/info-laatikko :varoitus
+          (str "Välikatselmuksen tavoitehinnan muutospäätös lukitsee tehtävien ja määrien muokkauksen hoitovuodelta "
+            (str/join ", " (sort lukitut-hoitovuodet)))
+          "" "100%" {:luokka "ala-margin-16"}])
        (when (not sopimukset-syotetty?)
          [yleiset/keltainen-vihjelaatikko
           [:<>
@@ -403,7 +448,7 @@
           :info])
 
        (when (not sopimukset-syotetty?)
-         [sopimuksen-tallennus-boksi e! tallennetaan?])
+         [sopimuksen-tallennus-boksi e! tallennetaan? app])
        ;; Vain pääkäyttäjille testiympäristössä mahdollisuus luoda nopeasti arvot kaikille tehtäville
        (when (and (k/kehitysymparistossa?)
                (roolit/roolissa? @istunto/kayttaja roolit/jarjestelmavastaava)
@@ -413,7 +458,7 @@
          [valitaso-filtteri e! app])
        [tehtava-maarat-taulukko-kontti e! app]
        (when (not sopimukset-syotetty?)
-         [sopimuksen-tallennus-boksi e!])])))
+         [sopimuksen-tallennus-boksi e! tallennetaan? app])])))
 
 (defn tehtavat []
   (tuck/tuck tila/suunnittelu-tehtavat tehtavat*))
