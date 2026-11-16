@@ -24,6 +24,8 @@
             [harja.palvelin.integraatiot.vayla-rest.sahkoposti :as sahkoposti-api]
             [harja.palvelin.integraatiot.sms.sms-komponentti :as sms]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
+            [harja.kyselyt.laatupoikkeamat :as laatupoikkeamat-q]
             [harja.palvelin.palvelut.laadunseuranta :as ls]
             [harja.palvelin.palvelut.karttakuvat :as karttakuvat]
             [harja.palvelin.raportointi.raportit.laskutusyhteenveto-yhteiset :as lyv-yhteiset]
@@ -35,6 +37,7 @@
             [harja.kyselyt.bonus-konfiguraatio :as bonus-konfig-q]
             [harja.palvelin.palvelut.laadunseuranta.bonus-konfiguraatio :as ls-bonus-konfiguraatio]
             [harja.palvelin.palvelut.laadunseuranta.sanktio-konfiguraatio :as ls-sanktio-konfiguraatio]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.kyselyt.konversio :as konv])
   (:import (java.util UUID)
            (clojure.lang ExceptionInfo)
@@ -1102,6 +1105,122 @@
         (is false (str "Väärä virhetyyppi vuoti ulos legacy-validoinnista: " (.getMessage virhe)))))
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
+(deftest tavoitehintaan-vaikuttavan-arvonvahennyksen-poisto-estyy-paatosvuonna
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
+        kayttaja-id (:id +kayttaja-jvh+)
+        toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " ORDER BY id LIMIT 1")))
+        sanktiotyyppi-id (ffirst (q "SELECT id FROM sanktiotyyppi WHERE koodi = 0 LIMIT 1"))
+        _ (paatos-kyselyt/tee-tavoitehinnan-muutospaatos
+            db {:urakkaid urakka-id
+                :hoitokauden_alkuvuosi 2026
+                :tavoitehinta 1
+                :kattohinta 1
+                :muokkaa_kattohinta false
+                :luoja kayttaja-id}
+            kayttaja-id)
+        lukitustiedot (kutsu-palvelua (:http-palvelin jarjestelma)
+                        :hae-sanktioiden-lukitustiedot +kayttaja-jvh+ {:urakka-id urakka-id})
+        _ (lisaa-suorasanktio-urakalle
+                987654321 "arvonvahennyssanktio" "2026-11-12"
+                urakka-id toimenpideinstanssi-id sanktiotyyppi-id nil nil)
+        sanktio-id (ffirst (q "SELECT id FROM sanktio "
+                              "WHERE sakkoryhma = 'arvonvahennyssanktio' "
+                              "AND maara = 987654321 "
+                              "AND perintapvm::date = '2026-11-12' "
+                              "ORDER BY id DESC LIMIT 1"))
+        perintapvm (pvm/->pvm "12.11.2026")]
+    (is (vector? lukitustiedot))
+    (is (true? (:arvonvahennys-lukittu?
+                 (some #(when (= 2026 (:vuosi %)) %) lukitustiedot))))
+    (is (thrown? ExceptionInfo
+          (ls/tallenna-laatupoikkeaman-sanktio
+            db +kayttaja-jvh+
+            {:laji :arvonvahennyssanktio :perintapvm perintapvm :summa 1}
+            nil urakka-id perintapvm {:paivamaara perintapvm :soveltuvuuskonteksti :urakka})))
+    (is (thrown? ExceptionInfo
+          (ls/tallenna-laatupoikkeaman-sanktio
+            db +kayttaja-jvh+
+            {:id sanktio-id :laji :arvonvahennyssanktio :perintapvm perintapvm :summa 1}
+            nil urakka-id perintapvm {:paivamaara perintapvm :soveltuvuuskonteksti :urakka})))
+    (is (thrown? ExceptionInfo
+          (palvelukutsu-poista-sanktio +kayttaja-jvh+ sanktio-id urakka-id)))
+    (is (= 1 (ffirst (q (str "SELECT COUNT(*) FROM sanktio WHERE id = " sanktio-id " AND poistettu IS NOT TRUE")))))))
+
+(deftest tallenna-sanktio-ja-bonus-estyy-lukitussa-hoitovuodessa
+  (let [db (:db jarjestelma)
+        urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        paivamaara (pvm/->pvm "15.10.2024")
+        tarkistetut (atom [])]
+    (with-redefs [sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? (fn [& _] false)
+                  valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ tarkistettava-urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [tarkistettava-urakka hoitovuosi ominaisuus])
+                    false)]
+      (doseq [laji [:A :yllapidon_sakko :yllapidon_bonus]]
+        (is (thrown? ExceptionInfo
+              (ls/tallenna-laatupoikkeaman-sanktio
+                db +kayttaja-jvh+
+                {:laji laji :perintapvm paivamaara :summa 1}
+                nil urakka-id paivamaara {:paivamaara paivamaara :soveltuvuuskonteksti :urakka})))))
+    (is (= [[urakka-id 2024 :sanktio]
+            [urakka-id 2024 :sanktio]
+            [urakka-id 2024 :sanktio]]
+          @tarkistetut))))
+
+(deftest sanktion-tallennuspalvelut-estavat-lukitun-hoitovuoden
+  (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        paivamaara (pvm/->pvm-aika "15.10.2024 08:00:00")
+        hoitovuoden-alku (pvm/->pvm "01.10.2024")
+        hoitovuoden-loppu (pvm/->pvm "30.09.2025")
+        tarkistetut (atom [])
+        sanktio {:laji :A :perintapvm paivamaara :summa 1 :suorasanktio true}
+        laatupoikkeama {:tekijanimi "Lukitustesti"
+                        :aika paivamaara
+                        :urakka urakka-id
+                        :tekija :tilaaja
+                        :kuvaus "Lukitustesti"
+                        :kohde "Lukitustesti"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :kommentit
+                                 :kasittelyaika paivamaara
+                                 :perustelu "Lukitustesti"}
+                        :sanktiot [(assoc sanktio :suorasanktio false)]}]
+    (with-redefs [valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ tarkistettava-urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [tarkistettava-urakka hoitovuosi ominaisuus])
+                    false)]
+      (is (thrown? ExceptionInfo
+            (palvelukutsu-tallenna-suorasanktio
+              +kayttaja-jvh+ sanktio laatupoikkeama hoitovuoden-alku hoitovuoden-loppu)))
+      (is (thrown? ExceptionInfo
+            (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama))))
+    (is (= [[urakka-id 2024 :sanktio]
+            [urakka-id 2024 :sanktio]]
+          @tarkistetut))))
+
+(deftest poista-sanktio-ja-bonus-estyy-lukitussa-hoitovuodessa
+  (let [db (:db jarjestelma)
+        urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
+        paivamaara (pvm/->pvm "15.10.2024")
+        tarkistetut (atom [])]
+    (with-redefs [sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan? (fn [& _] false)
+                  sanktiot-q/hae-suorasanktion-tiedot
+                  (fn [& _] [{:id 2147483647 :perintapvm paivamaara}])
+                  valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  (fn [_ tarkistettava-urakka hoitovuosi ominaisuus]
+                    (swap! tarkistetut conj [tarkistettava-urakka hoitovuosi ominaisuus])
+                    false)]
+      (doseq [laji [:A :yllapidon_bonus]]
+        (with-redefs [sanktiot-q/hae-suorasanktion-tiedot
+                      (fn [& _] [{:id 2147483647 :laji laji :perintapvm paivamaara}])]
+          (is (thrown? ExceptionInfo
+                (ls/poista-sanktio db +kayttaja-jvh+
+                  {:id 2147483647 :urakka-id urakka-id}))))))
+    (is (= [[urakka-id 2024 :sanktio]
+            [urakka-id 2024 :sanktio]]
+          @tarkistetut))))
+
 (deftest tallenna-laatupoikkeama-hylkaa-profiilin-vastaisen-yhdistelman-domain-virheena
   (let [urakka-id (hae-iin-maanteiden-hoitourakan-2021-2026-id)
         perustelu "ABC profiilin vastainen laatupoikkeama"
@@ -1532,7 +1651,7 @@
   (let [kohde-urakka (hae-urakan-id-nimella "Oulun alueurakka 2014-2019")
         kuuluva-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 1000 AND perintapvm = '2016-10-12';")))
         kuulumaton-sanktio (ffirst (q (str "SELECT id FROM sanktio where maara = 10000 AND perintapvm = '2011-10-12';")))
-        kutsu (partial ls/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
+        kutsu (partial laatupoikkeamat-q/vaadi-sanktio-kuuluu-urakkaan (:db jarjestelma) kohde-urakka)]
     (testing "Olemattomat id:t"
       (is (nil? (kutsu -1)) "Uutta sanktiota ei pitäisi validoida")
       (is (nil? (kutsu nil)) "Uutta sanktiota ei pitäisi validoida"))

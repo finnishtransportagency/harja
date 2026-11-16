@@ -1,5 +1,6 @@
 (ns harja.views.urakka.toteumat.maarien-toteuma-lomake
   (:require [harja.domain.tierekisteri :as tr-domain]
+            [harja.tiedot.navigaatio :as nav]
             [harja.ui.viesti :as viesti]
             [harja.ui.yleiset :as yleiset]
             [tuck.core :as tuck]
@@ -20,6 +21,11 @@
 
 (defn- tyhjenna! [e! data]
   (e! (tiedot/->TyhjennaLomake data)))
+
+(defn hoitovuosi-lukittu?
+  "Tarkistaa, kuuluuko hoitovuosi backendistä haettujen lukittujen vuosien joukkoon."
+  [app hoitovuosi]
+  (contains? (:lukitut-toteumien-hoitovuodet app) hoitovuosi))
 
 (defn- toteuman-poiston-varmistus-modaali [{:keys [varmistus-fn pvm tehtava maara tyyppi] :as mod}]
   [:div.row
@@ -232,6 +238,16 @@
          toteumat     ::t/toteumat
          validius     ::tila/validius
          lomake-validi? ::tila/validi?} lomake
+        tyovalmispvm (::t/pvm lomake)
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        hoitovuosi (some-> tyovalmispvm pvm/hoitokauden-alkuvuosi)
+        erapaivan-hoitovuosinro (when hoitovuosi
+                                  (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm tyovalmispvm))
+        lukitusotsikko (when hoitovuosi
+                         (str "Et voi kirjata toteumaa " erapaivan-hoitovuosinro ". hoitovuodelle " hoitovuosi "-" (inc hoitovuosi)))
+        lukittu-hoitovuosi? (hoitovuosi-lukittu? app hoitovuosi)
+        lukitusvaroitus (or (:toteuman-lukitusvirhe app)
+                          "Toteutumia ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu.")
         {ei-sijaintia ::t/ei-sijaintia
          pakota-sijainti? ::t/pakota-sijainti?
          toteuma-id   ::t/toteuma-id
@@ -245,7 +261,14 @@
                                 :pakollinen? true
                                 :muokattu? true
                                 :virhe? (kentassa-virhe? [::t/pvm] validius)
-                                :tyyppi :pvm}
+                                :tyyppi :pvm
+                                :validoi [[:ei-tyhja "Anna päivämäärä"]
+                                          (fn [paivamaara _rivi _taulukko]
+                                            (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                                              (when (and urakan-alkupvm (hoitovuosi-lukittu? app vuosi))
+                                                (str "Päivämäärää ei voida asettaa "
+                                                  (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                                  ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
                                {:nimi ::t/toteumat
                                 ::ui-lomake/col-luokka ""
                                 :tyyppi :komponentti
@@ -258,7 +281,14 @@
                          ::ui-lomake/col-luokka ""
                          :virhe? (kentassa-virhe? [::t/pvm] validius)
                          :tyyppi :pvm
-                         :pakollinen? true}
+                         :pakollinen? true
+                         :validoi [[:ei-tyhja "Anna päivämäärä"]
+                                   (fn [paivamaara _rivi _taulukko]
+                                     (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                                       (when (and urakan-alkupvm (hoitovuosi-lukittu? app vuosi))
+                                         (str "Päivämäärää ei voida asettaa "
+                                           (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                           ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
                         {:otsikko "Tehtävä"
                          :nimi [::t/toteumat 0 ::t/tehtava]
                          ::ui-lomake/col-luokka ""
@@ -305,6 +335,7 @@
                          (= (second (::ui-lomake/viimeksi-muokattu-kentta data)) :tierekisteriosoite))
                      (e! (tiedot/->PaivitaSijainti data 0))
                      (e! (tiedot/->PaivitaLomake data nil 0))))
+       :nayta-validoinnit? @tiedot/nayta-validoinnit?
        :voi-muokata? true
        :luokka "toteumamaarat-lomake"
        :tarkkaile-ulkopuolisia-muutoksia? true
@@ -331,7 +362,10 @@
                               :tehtava (get-in lomake [::t/toteumat 0 ::t/tehtava]) ;; Voi käyttää kova koodattua indeksiä, koska tämä ei ole käytössä, jos toteumia on useampi
                               :maara (get-in lomake [::t/toteumat 0 ::t/maara])
                               :tyyppi (::t/tyyppi lomake)}])
-                         {:vayla-tyyli? true :teksti-nappi? true}])]])
+                         {:vayla-tyyli? true :teksti-nappi? true}])]
+                     (when lukittu-hoitovuosi?
+                       [:div {:style {:padding-bottom "1rem" :padding-left "15px"}}
+                        [yleiset/info-laatikko :neutraali lukitusotsikko lukitusvaroitus nil nil]])])
        :footer-fn (fn [data]
                     [:div
                      (when (and @tiedot/nayta-validoinnit?
