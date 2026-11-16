@@ -17,7 +17,7 @@ services:
     #       Julkaistaan ensin tämä workflow, ja buildataan latest sitten.
     #       PR-testeihin liittyvien Timezone-asetusten muutosten johdosta uutta imagea ei voi julkaista vanhoille workfloweille,
     #       vaan workflow pitää päivittää ensin
-    image: ghcr.io/finnishtransportagency/harja_harjadb:latest@sha256:d30c13b3a68f57a12a3dc9a1db4023c10c24312d2ae3fda17a1c3e59d4c81d36
+    image: ghcr.io/finnishtransportagency/harja_harjadb:latest@sha256:c74f41ae6c617f0cab6ea48608d475a130ff7e40a54de6f6041c7dda7b18fe47
 
     # Alla saatavilla olevia versioita
     # https://github.com/finnishtransportagency/harja/pkgs/container/harja_harjadb/versions
