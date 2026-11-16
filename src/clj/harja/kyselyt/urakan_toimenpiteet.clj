@@ -20,9 +20,14 @@
              {:id (:t2_id rivi) :nimi (:t2_nimi rivi) :koodi (:t2_koodi rivi) :taso 2}
              {:id (:t3_id rivi) :nimi (:t3_nimi rivi) :koodi (:t3_koodi rivi) :taso 3}
              {:id (:t4_id rivi) :nimi (:t4_nimi rivi) :taso 4 :yksikko (:t4_yksikko rivi)
-              :hinnoittelu (if-let [a (get rivi :t4_hinnoittelu)]
-                             (vec (.getArray a))
-                             [])}]))
+              :hinnoittelu (if-let [arvo (:t4_hinnoittelu rivi)]
+                             (vec (.getArray arvo))
+                             [])
+              :jarjestys (:t4_jarjestys rivi)
+              :tehtavaryhma-id (:tehtavaryhma_id rivi)
+              :tehtavaryhma-nimi (:tehtavaryhma_nimi rivi)
+              :tehtavaryhmaotsikko-id (:tehtavaryhmaotsikko_id rivi)
+              :tehtavaryhmaotsikko (:tehtavaryhmaotsikko rivi)}]))
      (case tyyppi
        :kokonaishintaiset (hae-urakan-kokonaishintaiset-toimenpiteet-ja-tehtavat db urakka)
        :yksikkohintaiset (hae-urakan-yksikkohintaiset-toimenpiteet-ja-tehtavat db urakka)
