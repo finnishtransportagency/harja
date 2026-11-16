@@ -23,62 +23,14 @@ FROM urakka u WHERE u.tyyppi = 'teiden-hoito' AND u.urakkanro IS NOT NULL ON CON
 
 UPDATE urakka SET lyhyt_nimi = 'Oulun lyhyt nimi' WHERE nimi = 'Aktiivinen Oulu Testi';
 
--- Päivitetään urakka_parametrit
-select aseta_urakka_parametrit();
-
-UPDATE urakka_parametrit
-SET hoitokauden_lopun_kattohinta_kerroin                = NULL
-WHERE urakkaid IN (SELECT id
-                   FROM urakka
-                   WHERE alkupvm IN ('2019-10-01', '2020-10-01')
-                     AND tyyppi = 'teiden-hoito');
-
--- Lisätään kaikille -25 alkaneille urakalle tieto, että muutosten hallinta on käytössä
--- Hox. Tuotannossa on urakka, joka alkaa -25 vuonna, mutta Sampon virheellisen syötön takia se alkaa 1.1. eikä 1.10.
-UPDATE urakka_parametrit
-SET muutosten_hallinta = true
-WHERE urakkaid IN (SELECT id FROM urakka WHERE alkupvm >= '2025-01-01' AND tyyppi = 'teiden-hoito');
-
--- Asetetaan laskutusraja käyttöön "POP MHU Kajaani 2025-2030" -urakalle
-UPDATE urakka_parametrit
-SET laskutusraja_kaytossa = true
-WHERE urakkaid = (SELECT id FROM urakka WHERE nimi = 'POP MHU Kajaani 2025-2030');
-
--- Asetetaan hoitovuoden alun tavoitehinta käyttöön kaikille urakoille, jotka alkavat vuonna 2025 tai sen jälkeen
--- -25 alkavilla urakoilla on virhe tavoitehinnan ylityksen maksuprosenteissa. Korjataan ne tässä
-UPDATE urakka_parametrit up
-   SET hoitovuoden_alun_tavoitehinta_kaytossa = true,
-       tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti = 75.00,
-       tavoitehinnan_ylityksen_tilaajan_maksuprosentti = 25.00
-  FROM urakka u
- WHERE u.id = up.urakkaid
-   AND EXTRACT(YEAR FROM u.alkupvm) >= 2025
-   AND u.tyyppi = 'teiden-hoito';
-
--- Myös -24 alkavilla urakoilla on kattohintaylityksen siirron prosenttirajoitus käytössä.
-UPDATE urakka_parametrit up SET kattohintaylityksen_siirron_prosenttirajoitus = 0.03
-FROM urakka u
-WHERE u.id = up.urakkaid
-  AND EXTRACT (YEAR FROM u.alkupvm) = 2024;
-
--- Testiaineistossa on mhu+ urakka vuodelle -25, jolle menee defaulttina virheelliset prosentit. Säädetään se tässä kuntoon. Koskee siis vain lokaalikantaa
--- ja tästä ei tarvitse huolehtia tuotannossa
-UPDATE urakka_parametrit up
-SET tavoitehinnan_ylityksen_urakoitsijan_maksuprosentti = 50.00,
-    tavoitehinnan_ylityksen_tilaajan_maksuprosentti = 50.00
-FROM urakka u
-WHERE u.id = up.urakkaid
-  AND EXTRACT(YEAR FROM u.alkupvm) >= 2025
-  AND u.tyyppi = 'teiden-hoito'
-  AND u.sopimustyyppi = 'mhu+';
 
 -- Kalustoresurssit-alasivun testaamista varten tarvittava testidata.
 -- Luodaan MHU26-urakka (alkuvuosi 2026) Suunnittelu/Kalustoresurssit-alasivun testaamista varten.
 -- Kopioidaan hallintayksikkö, elinvoimakeskus ja urakoitsija Kittilän MHU 2025-2030 -urakalta.
 INSERT INTO urakka (sampoid,        hallintayksikko, elinvoimakeskus_id, nimi,                     alkupvm,      loppupvm,     tyyppi, urakkanro, urakoitsija, alue)
 SELECT              '1242141-KITT6', hallintayksikko, elinvoimakeskus_id, 'Sodankylän MHU 2026-2031', '2026-10-01', '2031-09-30', tyyppi, '1447',    urakoitsija, alue
-  FROM urakka
- WHERE nimi = 'Kittilän MHU 2025-2030';
+FROM urakka
+WHERE nimi = 'Kittilän MHU 2025-2030';
 
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Sodankylän MHU sopimus 26', '2026-10-01', '2031-09-30', '11333380-LAP2',
@@ -89,8 +41,8 @@ INSERT INTO urakka (sampoid, hallintayksikko, elinvoimakeskus_id, nimi,
                     alkupvm, loppupvm, tyyppi, urakkanro, urakoitsija, alue, lyhyt_nimi)
 SELECT 'TEST-NUMMI26', hallintayksikko, elinvoimakeskus_id, 'Nummi 26 - liikennevahinkobonuksen kohdistus',
        DATE '2026-10-01', DATE '2031-09-30', tyyppi, NULL, urakoitsija, alue, 'Nummi 26'
-  FROM urakka
- WHERE nimi = 'Kittilän MHU 2025-2030';
+FROM urakka
+WHERE nimi = 'Kittilän MHU 2025-2030';
 
 INSERT INTO sopimus (nimi, alkupvm, loppupvm, sampoid, urakka)
 VALUES ('Nummi 26 liikennevahinkobonuksen kohdistussopimus', '2026-10-01', '2031-09-30', 'TEST-NUMMI26-SOP',

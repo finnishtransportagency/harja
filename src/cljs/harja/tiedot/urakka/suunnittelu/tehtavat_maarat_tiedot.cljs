@@ -108,6 +108,7 @@
     (let [app (validoi-ja-filtteroi-tehtavat (:haku app) (:tehtavat vastaus) app)]
       (-> app
         (assoc :haku-kaynnissa? false)
+        (assoc :lukittu? (:lukittu? vastaus))
         (assoc :haku (:haku app))
         (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))
         (assoc :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus)))))

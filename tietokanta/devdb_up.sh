@@ -17,7 +17,7 @@ if [[ "${devdb_image_lkm}" != *1 ]]; then # wc tulostaa välilyöntejä ennen nu
     if ! docker pull $IMAGE; then
         echo $IMAGE "ei ole GitHub Container Registryssä. Buildataan."
         (
-            cd ../.github/docker/tietokanta
+            cd ../tools/docker/tietokanta
             ./build-image.sh
         )
     fi
@@ -51,10 +51,11 @@ until docker exec "${POSTGRESQL_NAME:-harjadb}" pg_isready; do
     sleep 0.5
 done
 
-# shellcheck disable=SC2088
-docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-migraatiot.sh"
-# shellcheck disable=SC2088
-docker exec --user postgres -e HARJA_TIETOKANTA_HOST=localhost -e HARJA_TIETOKANTA_PORTTI=5432 "${POSTGRESQL_NAME:-harjadb}" /bin/bash -c "~/aja-testidata.sh"
+echo "PostgreSQL versiotiedot:"
+docker exec --user postgres "${POSTGRESQL_NAME:-harjadb}" psql -c 'SELECT version();'
+docker exec --user postgres "${POSTGRESQL_NAME:-harjadb}" psql -U harja -c 'SELECT extname, extversion FROM pg_extension;'
+
+"${DIR}"/devdb_alusta.sh
 
 echo ""
 echo "Harjan tietokanta käynnissä! Imagen tiedot:"

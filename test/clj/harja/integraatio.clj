@@ -4,8 +4,8 @@
             [harja.tyokalut.env :as env]))
 
 ;; Jos haluat ajaa paikallisesti ITMF-testejä, tee seuraava:
-;; 1. Käynnistä Apache Artemis broker, joka on määritelty .github/docker/docker-compose.yml tiedostoon
-;;   $ cd .github/docker && docker-compose up -d --wait activemq-artemis-itmf
+;; 1. Käynnistä Apache Artemis broker, joka on määritelty tools/docker/docker-compose.yml tiedostoon
+;;   $ cd tools/docker && docker compose -f docker-compose.ci.yml up -d --wait --wait-timeout 60 activemq-artemis-itmf
 ;; 2. Odottele, että broker-container on käynnistynyt ja healthy
 ;; 3. Varmista, että Harjan asetukset.edn:ssä :itmf ei ole :pois-kytketyt-ominaisuudet listalla
 ;; 3. Aseta REPL:lle seuraavat ympäristömuuttujat:

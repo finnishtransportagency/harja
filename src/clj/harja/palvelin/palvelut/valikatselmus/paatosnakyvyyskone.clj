@@ -99,7 +99,7 @@
 
 
 (defn valmistele-tavoitehinnan-muutospaatos [validoinnit-kaytossa? paatokset oikaistu-tavoitehinta kattohinta
-                                             muokkaa-kattohinta? kuluva-hoitovuosi]
+                                             muokkaa-kattohinta? kuluva-hoitovuosi tavoitehinta-vahvistettu?]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
   ;; Itse muutoksia (vanhalla kielellä oikaisuja) voi tehdä myös kesken hoitovuoden
@@ -108,6 +108,10 @@
     (let [virheet (cond-> []
                     (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
                     (conj "Hoitovuosi on kesken.")
+
+                    ;; Tavoitehinnan vahvistaminen on pakko lisätä, koska uutta kustista ei voi vahvistaa, jos muutospäätös on tehty.
+                    (and validoinnit-kaytossa? (not tavoitehinta-vahvistettu?))
+                    (conj "Kustannussuunnitelma vahvistamatta.")
 
                     (not oikaistu-tavoitehinta)
                     (conj "Tavoitehinta puuttuu.")
@@ -131,7 +135,7 @@
 (defn valmistele-tavoitehinnan-pysyva-muutospaatos [validoinnit-kaytossa? paatokset kuluva-hoitovuosi
                                                     kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
                                                     jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa
-                                                    thv-arvonvahennykset-yht]
+                                                    thv-arvonvahennykset-yht tavoitehinta-vahvistettu?]
   ;; Edeltävät vaatimukset päätöksen tallentamiselle:
   ;; - Hoitotovuoden pitää olla päättynyt
 
@@ -141,7 +145,11 @@
     ;; Kokeillaan tähän erilaista lähestymistapaa. Kirjoitetaan validoinnit päätösmäppiin sisälle
     (let [virheet (cond-> []
                     (and validoinnit-kaytossa? (not (apurit/hoitovuosi-paattynyt? kuluva-hoitovuosi)))
-                    (conj "Hoitovuosi on kesken."))
+                    (conj "Hoitovuosi on kesken.")
+
+                    ;; Tavoitehinnan vahvistaminen on pakko lisätä, koska uutta kustista ei voi vahvistaa, jos muutospäätös on tehty.
+                    (and validoinnit-kaytossa? (not tavoitehinta-vahvistettu?))
+                    (conj "Kustannussuunnitelma vahvistamatta."))
 
           toteumiin-perustuvat-muutokset (+ (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
           tavoitehinna-muutokset-yhteensa (+ (or kirjallisesti-sovitut-muutokset 0)
@@ -200,7 +208,8 @@
           ;; Laske pistelukujen muutos
           pisteet (apply + (map #(round2 1 (:indeksiluku %)) hoitokauden-indeksikuukaudet))
           piste-keskiarvo (if-not (empty? hoitokauden-indeksikuukaudet)
-                            (with-precision 4 (/ pisteet (count hoitokauden-indeksikuukaudet))) 0)
+                            (round2 1 (/ pisteet (count hoitokauden-indeksikuukaudet)))
+                            0)
           alkuperainen-pisteluku (or alkuperainen-pisteluku 0)
           pistelukujen-muutos (round2 1 (- piste-keskiarvo alkuperainen-pisteluku))
           alkuperaisen-pisteluvun-kuukausi (str "elokuu " hoitokauden-alkuvuosi)
@@ -292,7 +301,7 @@
                                    0)
           tavoitepalkkion-maksuprosentti (:tavoitepalkkion_maksuprosentti urakan-parametrit)
           ;; Tavoitepalkkio on alituksesta max 3% tavoitehinnasta (prosentti tulee parametritaulusta) - Mutta viimeisenä vuotena maksetaan kaikki eli 100% alituksesta
-          maksuprosentti (/ tavoitepalkkion-maksuprosentti 100)
+          maksuprosentti (/ (or tavoitepalkkion-maksuprosentti 0) 100)
           laskennallinen-tavoitepalkkio (when tavoitehinnan-alitus (* maksuprosentti tavoitehinnan-alitus))
           ;; Viimeisenä vuotena maksetaan maksuprosentin mukaan. Eli esim 30% alituksesta. (-25 alkavilla 75%)
           ;; Muina vuosina siirrettäväksi summaksi ja tavoitepalkkioksi tulee maksimimaksuprosentin mukainen summa
@@ -370,7 +379,7 @@
 
           ;; Jäljelle jäänyt paatos
           tilaajan-prosentti (:tavoitehinnan_ylityksen_tilaajan_maksuprosentti urakan-parametrit)
-          urakoitsijan-prosentti (- 100 tilaajan-prosentti)
+          urakoitsijan-prosentti (- 100 (or tilaajan-prosentti 0))
           viimeinen-hoitokausi? (boolean (= kuluva-hoitovuosi urakan-loppuvuosi))
           tavoitehinnan-ylityspaatos (-> tavoitehinnan-ylityspaatos
                                        (assoc :urakkaid urakkaid)
@@ -380,7 +389,9 @@
                                        (assoc :ylityksen_maara tavoitehinnan-ylitys)
                                        (assoc :tilaajan_prosentti tilaajan-prosentti)
                                        (assoc :urakoitsijan_prosentti urakoitsijan-prosentti)
-                                       (assoc :tilaaja_maksaa (* (/ tilaajan-prosentti 100) (or tavoitehinnan-ylitys 0)))
+                                       (assoc :tilaaja_maksaa (*
+                                                                (/ (or tilaajan-prosentti 0) 100)
+                                                                (or tavoitehinnan-ylitys 0)))
                                        (assoc :urakoitsija_maksaa (* (/ urakoitsijan-prosentti 100) (or tavoitehinnan-ylitys 0)))
                                        (assoc :viimeinen_hoitokausi viimeinen-hoitokausi?)
                                        (assoc :virheet (when-not (empty? virheet) virheet)))
@@ -515,13 +526,31 @@
           hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
 
           hoitovuoden-lopun-indeksikorjaus-summa (or hoitovuoden-lopun-indeksikorjaus-summa 0)
-          hoitovuoden-lopun-tavoitehinta (+ (or tavoitehinta-indeksikorjattu 0) (or tavoitehinnan-hintamuutos 0) hoitovuoden-lopun-indeksikorjaus-summa)
+
+          hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta (round2 2
+                                                                  (+
+                                                                    (or tavoitehinta-indeksikorjattu 0)
+                                                                    (or tavoitehinnan-hintamuutos 0)))
+
+          hoitovuoden-lopun-tavoitehinta (bigdec
+                                           (round2 2
+                                             (+
+                                               hoitovuoden-lopun-tavoitehinta-ennen-indeksikorjausta
+                                               hoitovuoden-lopun-indeksikorjaus-summa)))
+
           ;; Lasketaan kattohinta -- Etsitään ensin indeksikorjauspäätös
           indeksikorjauspaatos (first (filter #(when (= (:nimi %) "Hoitovuoden lopun indeksikorjaus") %) tietokanta-paatokset))
 
-          hoitovuoden-lopun-kattohinta (+ hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia
-                                         (* (if (and indeksikorjauspaatos (:id indeksikorjauspaatos)) 0 hoitovuoden-lopun-indeksikorjaus-summa) (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit))
-                                         (* kattohinnan-hintamuutos (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit)))
+          kattohinta-kerroin (or (:hoitokauden_lopun_kattohinta_kerroin urakan-parametrit) 0)
+
+          indeksikorjaus (if (:id indeksikorjauspaatos)
+                           0
+                           (or hoitovuoden-lopun-indeksikorjaus-summa 0))
+
+          hoitovuoden-lopun-kattohinta (+ (or hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia 0)
+                                         (* indeksikorjaus kattohinta-kerroin)
+                                         (* (or kattohinnan-hintamuutos 0) kattohinta-kerroin))
+
 
           ;; Täytetään pakolliset tiedot
           hintapaatos (-> hintapaatos
@@ -571,7 +600,7 @@
 
           paatos (first (filter #(= (:nimi %) "Hoidonjohtopalkkion muutos") paatokset))
           ;; Desimaalien tarkkuus on tärkeää. Käyttöliittymässä kuitenkin käytetään pyöristettyjä lukuja. Taustalla lasketaan raakaluvuilla.
-          muutosprosentti-raaka (if (and hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta)
+          muutosprosentti-raaka (if (and hv-lopun-tavoitehinta-ilman-indeksia tarjouksen-tavoitehinta (not= 0M tarjouksen-tavoitehinta))
                                   (.divide (bigdec hv-lopun-tavoitehinta-ilman-indeksia) (bigdec tarjouksen-tavoitehinta) 10 BigDecimal/ROUND_HALF_UP)
                                   0)
           hoidonjohtopalkkio (or hoidonjohtopalkkio 0)

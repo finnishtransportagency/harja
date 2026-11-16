@@ -127,6 +127,15 @@
   (when (str-clj/blank? data)
     (or viesti "Anna arvo")))
 
+(defmethod validoi-saanto :hoitovuosi-lukittu [_ _ data _ _ & [lukitut-hoitovuodet viesti]]
+  (let [lukitut-hoitovuodet (if (satisfies? IDeref lukitut-hoitovuodet)
+                              @lukitut-hoitovuodet
+                              lukitut-hoitovuodet)]
+    (when (and (not (nil? data))
+            (contains? (set lukitut-hoitovuodet)
+              (pvm/hoitokauden-alkuvuosi data)))
+      (or viesti "Hoitovuosi on lukittu."))))
+
 (defmethod validoi-saanto :ei-negatiivinen-jos-avaimen-arvo [_ _ data rivi _ & [avain arvo viesti]]
   (when (and (= (avain rivi) arvo)
              (< data 0))
