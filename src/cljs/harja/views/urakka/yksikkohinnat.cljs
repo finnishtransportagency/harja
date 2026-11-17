@@ -90,66 +90,61 @@
 
 (defn tehtava-taulukko
   [e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat]
-  (let [_ (prn "yksikkohinnat-nakyman tehtava-taulukko, parametrina tulleet grid-rivit: " (pr-str grid-rivit))
-        _ (prn "yksikkohinnat-nakyman tehtava-taulukko, avatut-tehtavaryhmat: " (pr-str avatut-tehtavaryhmat))
-        grid-rivit
-        (filter (fn [rivi]
-                  (or (nil? (:tehtava rivi))
-                    (contains? avatut-tehtavaryhmat
-                      (:tehtavaryhmaotsikko-id rivi))))
-          grid-rivit)
-        solun-luokka-fn
-        (fn [_ rivi]
-          (when (:valiotsikko rivi)
-            "valiotsikko-tausta korkea"))
-        sarakkeet
-        [{:otsikko ""
-          :leveys "2%"
-          :tyyppi :komponentti
-          :komponentti
-          (fn [rivi]
-            (if (:valiotsikko rivi)
-              (piirra-valiotsikko-caret e!
-                (:tehtavaryhmaotsikko-id rivi)
-                avatut-tehtavaryhmat)
-              [:span]))
-          :solun-luokka solun-luokka-fn}
-         {:otsikko "Tehtävä"
-          :leveys "50%"
-          :nimi :tehtavan_nimi
-          :tyyppi :komponentti
-          :solun-luokka solun-luokka-fn
-          :komponentti
-          (fn [rivi]
-            (if (:valiotsikko rivi)
-              [:div.body-text.strong
-               (:valiotsikko rivi)]
-              [:span
-               (:tehtavan_nimi rivi)]))
-          :muokattava? (constantly false)}
-         {:otsikko "Indeksi"
-          :leveys "18%"
-          :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
-          :nimi :indeksi
-          :tyyppi :string
-          :tasaa :oikea
-          :solun-luokka solun-luokka-fn
-          :muokattava? (constantly false)}
-         {:otsikko "Hinta ilman indeksikorjausta\u2028€ / yksikkö" :leveys "15%"
-          :nimi :yksikkohinta
-          :tasaa :oikea
-          :tyyppi :numero
-          :desimaalien-maara 2
-          :solun-luokka solun-luokka-fn
-          :muokattava? (fn [rivi]
-                         (and tallennustila?
-                           (:tehtava rivi)))}
-         {:otsikko "Indeksikorjattu hinta\u2028€ / yksikkö" :leveys "15%" :nimi :indeksikorjattu-yksikkohinta
-          :tyyppi :numero
-          :desimaalien-maara 2
-          :solun-luokka solun-luokka-fn
-          :muokattava? (constantly false)
-          :tasaa :oikea}]]
+  (let [grid-rivit (filter (fn [rivi]
+                            (or (nil? (:tehtava rivi))
+                              (contains? avatut-tehtavaryhmat
+                                (:tehtavaryhmaotsikko-id rivi))))
+                     grid-rivit)
+        solun-luokka-fn (fn [_ rivi]
+                          (when (:valiotsikko rivi)
+                            "valiotsikko-tausta korkea"))
+        sarakkeet [{:otsikko ""
+                    :leveys "2%"
+                    :tyyppi :komponentti
+                    :komponentti
+                    (fn [rivi]
+                      (if (:valiotsikko rivi)
+                        (piirra-valiotsikko-caret e!
+                          (:tehtavaryhmaotsikko-id rivi)
+                          avatut-tehtavaryhmat)
+                        [:span]))
+                    :solun-luokka solun-luokka-fn}
+                   {:otsikko "Tehtävä"
+                    :leveys "50%"
+                    :nimi :tehtavan_nimi
+                    :tyyppi :komponentti
+                    :solun-luokka solun-luokka-fn
+                    :komponentti
+                    (fn [rivi]
+                      (if (:valiotsikko rivi)
+                        [:div.body-text.strong
+                         (:valiotsikko rivi)]
+                        [:span
+                         (:tehtavan_nimi rivi)]))
+                    :muokattava? (constantly false)}
+                   {:otsikko "Indeksi"
+                    :leveys "18%"
+                    :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
+                    :nimi :indeksi
+                    :tyyppi :string
+                    :tasaa :oikea
+                    :solun-luokka solun-luokka-fn
+                    :muokattava? (constantly false)}
+                   {:otsikko "Hinta ilman indeksikorjausta\u2028€ / yksikkö" :leveys "15%"
+                    :nimi :yksikkohinta
+                    :tasaa :oikea
+                    :tyyppi :numero
+                    :desimaalien-maara 2
+                    :solun-luokka solun-luokka-fn
+                    :muokattava? (fn [rivi]
+                                   (and tallennustila?
+                                     (:tehtava rivi)))}
+                   {:otsikko "Indeksikorjattu hinta\u2028€ / yksikkö" :leveys "15%" :nimi :indeksikorjattu-yksikkohinta
+                    :tyyppi :numero
+                    :desimaalien-maara 2
+                    :solun-luokka solun-luokka-fn
+                    :muokattava? (constantly false)
+                    :tasaa :oikea}]]
     [grid/grid
      {:otsikko ""
       :tyhja "Ei tietoja."

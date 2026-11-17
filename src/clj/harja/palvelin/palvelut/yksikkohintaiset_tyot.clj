@@ -2,6 +2,7 @@
   (:require [com.stuartsierra.component :as component]
             [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelu]]
             [taoensso.timbre :as log]
+            [harja.pvm :as pvm]
             [clojure.set :refer [intersection difference]]
             [clojure.java.jdbc :as jdbc]
             [clj-time.core :as t]
@@ -32,15 +33,17 @@
   (jdbc/with-db-transaction [c db]
                             (let [urakkatyyppi (u-q/hae-urakan-tyyppi db {:urakka urakka-id})
                                   nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)
-                                  valitut-pvmt (into #{} (map (juxt :alkupvm :loppupvm) tyot))
+                                  normalisoi-pvm (fn [pvm-arvo] (when pvm-arvo
+                                                                    (java.sql.Date/valueOf (pvm/sql-aika->pvm-str pvm-arvo))))
                                   tyo-avain (if (= "teiden-hoito" urakkatyyppi)
                                               (fn [rivi] [(:vuosi rivi) (:kuukausi rivi) (:tehtava rivi)])
-                                              (fn [rivi] [(:alkupvm rivi) (:loppupvm rivi) (:tehtava rivi)]))
-                                  tyot-kannassa (into #{} (map tyo-avain
-                                                               (filter #(and
-                                                                          (= (:sopimus %) sopimusnumero)
-                                                                          (valitut-pvmt [(:alkupvm %) (:loppupvm %)]))
-                                                                       nykyiset-arvot)))
+                                              (fn [rivi] [(normalisoi-pvm (:alkupvm rivi))
+                                                          (normalisoi-pvm (:loppupvm rivi))
+                                                          (:tehtava rivi)]))
+                                  tyot-kannassa (into #{} (comp
+                                                            (filter #(= (:sopimus %) sopimusnumero))
+                                                            (map tyo-avain))
+                                                  nykyiset-arvot)
                                   uniikit-tehtavat (into #{} (map #(:tehtava %) tyot))]
                               (doseq [tyo tyot]
                                 (let [sql {:maara              (:maara tyo)

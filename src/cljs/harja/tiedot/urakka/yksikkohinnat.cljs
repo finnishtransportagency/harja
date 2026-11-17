@@ -58,6 +58,27 @@
           tyot)
     (into [] tyot)))
 
+(defn- yksikkohinnan-avain [rivi]
+  [(:tehtava rivi)
+   (:alkupvm rivi)
+   (:loppupvm rivi)
+   (:sopimus rivi)])
+
+(defn- poista-yksikkohintojen-duplikaatit [rivit]
+  (reduce
+    (fn [tulos rivi]
+      (let [avain (yksikkohinnan-avain rivi)
+            indeksi (some (fn [[i olemassa-oleva]]
+                            (when (= avain
+                                    (yksikkohinnan-avain olemassa-oleva))
+                              i))
+                      (map-indexed vector tulos))]
+        (if (some? indeksi)
+          (assoc tulos indeksi rivi)
+          (conj tulos rivi))))
+    []
+    rivit))
+
 (extend-protocol tuck/Event
 
   Alusta
@@ -131,36 +152,31 @@
     (let [[alkupvm loppupvm] valittu-hoitokausi
           sopimus (first @urakka-tiedot/valittu-sopimusnumero)
           nykyiset-rivit (vec (:yksikkohintaiset-tyot app))
-          muokatut-rivit
-          (->> tehtavat
-            (filter :tehtava)
-            (map (fn [rivi]
-                   (merge rivi
-                     {:urakka (:id urakka)
-                      :sopimus sopimus
-                      :alkupvm (or (:alkupvm rivi) alkupvm)
-                      :loppupvm (or (:loppupvm rivi) loppupvm)}))))]
-      (-> app
-        (assoc :yksikkohintaiset-tyot
+          muokatut-rivit (->> tehtavat
+                           (filter :tehtava)
+                           (map #(merge %
+                                   {:urakka (:id urakka)
+                                    :sopimus sopimus
+                                    :alkupvm (or (:alkupvm %) alkupvm)
+                                    :loppupvm (or (:loppupvm %) loppupvm)})))
+          paivitetyt-rivit
           (reduce
             (fn [rivit uusi-rivi]
-              (let [avain [(:tehtava uusi-rivi)
-                           (:alkupvm uusi-rivi)
-                           (:loppupvm uusi-rivi)]
-                    olemassa-oleva-indeksi
-                    (some (fn [[indeksi rivi]]
-                            (when (= avain
-                                    [(:tehtava rivi)
-                                     (:alkupvm rivi)
-                                     (:loppupvm rivi)])
-                              indeksi))
-                      (map-indexed vector rivit))]
-                (if (some? olemassa-oleva-indeksi)
-                  (assoc rivit olemassa-oleva-indeksi uusi-rivi)
+              (let [avain (yksikkohinnan-avain uusi-rivi)
+                    indeksi (some (fn [[i rivi]]
+                                    (when (= avain
+                                            (yksikkohinnan-avain rivi))
+                                      i))
+                              (map-indexed vector rivit))]
+                (if (some? indeksi)
+                  (assoc rivit indeksi uusi-rivi)
                   (conj rivit uusi-rivi))))
             nykyiset-rivit
-            muokatut-rivit))
-        (assoc :tallentamattomia-muutoksia? true))))
+            muokatut-rivit)]
+      (-> app
+        (assoc :yksikkohintaiset-tyot
+          (poista-yksikkohintojen-duplikaatit paivitetyt-rivit)
+          :tallentamattomia-muutoksia? true))))
 
   TallennaYksikkohinnat
   (process-event [{yksikkohintaiset-tyot :yksikkohintaiset-tyot} {:keys [urakka] :as app}]
