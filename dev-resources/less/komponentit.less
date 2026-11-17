@@ -1,0 +1,77 @@
+// Harjan shared-komponentit (harja.ui.komponentit).
+// Komponentit omistavat vain sisäiset välinsä. Ulkoreunat kuuluvat vanhemmalle (.ui-pino).
+
+.ui-pino {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.ui-suodatinrivi {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: 1rem;
+}
+
+.ui-suodatin,
+.ui-kenttaryhma,
+.ui-valintaryhma {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+
+  label {
+    margin: 0;
+  }
+}
+
+.ui-kenttaryhma label,
+.ui-valintaryhma label {
+  font-weight: 700;
+}
+
+.ui-pakollinen {
+  color: @red-dark;
+}
+
+.ui-ohje,
+.ui-virhe,
+.ui-tilaviesti {
+  margin: 0;
+}
+
+.ui-ohje,
+.ui-virhe {
+  font-size: 0.875rem;
+}
+
+.ui-ohje {
+  color: @gray100;
+}
+
+.ui-virhe {
+  color: @red-dark;
+}
+
+.ui-toimintoryhma {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+.ui-tilaviesti {
+  font-weight: 700;
+}
+
+.ui-tilaviesti-onnistui {
+  color: @green-dark;
+}
+
+.ui-tilaviesti-lataus {
+  color: @gray100;
+}
+
+.ui-tilaviesti-virhe {
+  color: @red-dark;
+}

@@ -1,0 +1,163 @@
+// UI-komponenttien tarkastelusivun oma runko. Shared-komponenttien tyylit ovat tiedostossa komponentit.less.
+
+.ui-tarkastelu {
+  padding: 2rem;
+  background: @gray245;
+
+  h1,
+  h2 {
+    margin-top: 0;
+  }
+
+  h1 {
+    margin-bottom: 0.5rem;
+  }
+}
+
+.ui-tarkastelu-ylaotsikko {
+  margin: 0 0 0.4rem;
+  color: @gray100;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ui-tarkastelu-tila {
+  display: inline-flex;
+  padding: 0.25rem 0.65rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: @blue-darker;
+  background: @blue-lighter;
+}
+
+.ui-tarkastelu-tila-riippuvainen,
+.ui-tarkastelu-tila-osittain-riippuvainen {
+  color: @lemon-dark;
+  background: @lemon-light;
+}
+
+.ui-tarkastelu-tila-ei-riippuvuutta {
+  color: @green-darker;
+  background: @green-lighter;
+}
+
+.ui-tarkastelu-tyopoyta {
+  display: grid;
+  grid-template-columns: 14rem minmax(0, 1fr) 16rem;
+  align-items: start;
+  gap: 1rem;
+  margin-top: 2rem;
+}
+
+.ui-tarkastelu-navigaatio,
+.ui-tarkastelu-sopimus,
+.ui-tarkastelu-sisalto {
+  min-width: 0;
+  padding: 1rem;
+  background: @white-default;
+  border: 1px solid @gray220;
+  border-radius: 0.25rem;
+}
+
+.ui-tarkastelu-navigaatio {
+  max-height: calc(100vh - 14rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  .ui-tarkastelu-ryhma {
+    margin: 1rem 0 0.4rem;
+    color: @gray100;
+    font-size: 0.8rem;
+    font-weight: 700;
+  }
+
+  button {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+    width: 100%;
+    padding: 0.65rem 0.75rem;
+    background: transparent;
+    border: 0;
+    border-left: 3px solid transparent;
+    text-align: left;
+    cursor: pointer;
+
+    &:hover,
+    &.aktiivinen {
+      background: @blue-lighter;
+      border-left-color: @blue-default;
+    }
+  }
+}
+
+.ui-tarkastelu-kortti {
+  margin-top: 1.5rem;
+  background: @white-default;
+  border: 1px solid @gray220;
+  border-radius: 0.25rem;
+
+  h3 {
+    margin: 0;
+    padding: 1rem;
+    border-bottom: 1px solid @gray220;
+  }
+}
+
+.ui-tarkastelu-kortin-sisalto {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.ui-tarkastelu-sopimus {
+  dl {
+    margin: 1rem 0 0;
+  }
+
+  dt {
+    margin-top: 1rem;
+    color: @gray100;
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0.25rem 0 0;
+  }
+}
+
+@media (max-width: 60rem) {
+  .ui-tarkastelu-tyopoyta {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+
+  .ui-tarkastelu-sopimus {
+    grid-column: 1 / -1;
+  }
+}
+
+@media (max-width: 42rem) {
+  .ui-tarkastelu {
+    padding: 1rem;
+  }
+
+  .ui-tarkastelu-tyopoyta {
+    display: block;
+  }
+
+  .ui-tarkastelu-navigaatio {
+    max-height: 16rem;
+  }
+
+  .ui-tarkastelu-sisalto,
+  .ui-tarkastelu-sopimus {
+    margin-top: 1rem;
+  }
+}
