@@ -37,9 +37,8 @@ describe('Osion vahvistaminen', function () {
             .find('[data-cy="vahvista-osio-btn"]')
             .click();
 
-        // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
-            .find('.alert-success')
+        // Pitäisi tulla esiin onnistumis-viesti, joka piilotetaan klikkaamalla.
+        cy.get('[data-cy="flash-viesti-sisalto"]')
             .click();
 
 
@@ -64,9 +63,8 @@ describe('Osion vahvistaminen', function () {
             .find('[data-cy="vahvista-osio-btn"]')
             .click();
 
-        // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
-            .find('.alert-success')
+        // Pitäisi tulla esiin onnistumis-viesti, joka piilotetaan klikkaamalla.
+        cy.get('[data-cy="flash-viesti-sisalto"]')
             .click();
 
         // Varmista, että tallennuskyselyt menevät läpi
@@ -91,9 +89,8 @@ describe('Osion vahvistaminen', function () {
             .find('[data-cy="kumoa-osion-vahvistus-btn"]')
             .click();
 
-        // Pitäisi tulla esiin onnistumis-alert, joka piilotetaan klikkaamalla.
-        cy.get('.modal')
-            .find('.alert-success')
+        // Pitäisi tulla esiin onnistumis-viesti, joka piilotetaan klikkaamalla.
+        cy.get('[data-cy="flash-viesti-sisalto"]')
             .click();
 
         // Varmista, että tallennuskyselyt menevät läpi

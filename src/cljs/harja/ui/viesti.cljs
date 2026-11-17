@@ -5,7 +5,8 @@
             [harja.pvm :as pvm]
             [harja.ui.ikonit :as ikonit]
             [cljs.core.async :refer [<! timeout]]
-            [harja.ui.saavutettavuus :as saavutettavuus])
+            [harja.ui.saavutettavuus :as saavutettavuus]
+            [harja.ui.primitiivit.viesti :as viesti-primitiivit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 (def viestin-nayttoaika-lyhyt 2500)
@@ -15,7 +16,7 @@
 (def viestin-nayttoaika-aareton 0)
 
 ;; Viesti on reagent komponentti, joka näytetään.
-;; Luokka on jokin bootstrapin alert-* luokista (ilman etuliitettä)
+;; Luokka on :success, :info, :warning tai :danger
 (defonce viesti-sisalto (atom {:viesti nil
                                :luokka nil
                                :nakyvissa? false
@@ -26,11 +27,6 @@
                                      :nakyvissa? false
                                      :kesto nil}))
 
-
-(def +bootstrap-alert-classes+ {:success "alert-success"
-                                :info "alert-info"
-                                :warning "alert-warning"
-                                :danger "alert-danger"})
 
 (defn +toast-viesti-luokat+ [luokka]
   (case luokka
@@ -47,15 +43,20 @@
     (if nakyvissa?
       (do (go (<! (timeout kesto))
               (swap! viesti-sisalto assoc :nakyvissa? false))
-          ^{:key "viesti"}
-          [:div.modal {:style {:display "block"}}
-           ;; PENDING: viestilläkin backdrop, ehkä joku drop shadow olisi riittävä?
-           [:div.modal-backdrop.in {:style {:height @dom/korkeus}
-                                    :on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}]
-           [:div.flash-viesti {:on-click #(swap! viesti-sisalto assoc :nakyvissa? false)}
-            [:div.alert {:class (when luokka
-                                  (+bootstrap-alert-classes+ luokka))}
-             viesti]]])
+          (let [{:keys [overlay tausta runko sisalto variantti]} (viesti-primitiivit/flash-viestin-luokat luokka)
+                sulje #(swap! viesti-sisalto assoc :nakyvissa? false)]
+            [:div {:key "viesti"
+                   :class overlay
+                   :data-cy "flash-viesti-overlay"}
+             [:div {:class tausta
+                    :style {:height @dom/korkeus}
+                    :on-click sulje}]
+             [:div {:class runko
+                    :data-cy "flash-viesti"
+                    :on-click sulje}
+              [:div {:class (str sisalto " " variantti)
+                     :data-cy "flash-viesti-sisalto"}
+               viesti]]]))
       ^{:key "ei-viestia"}
       [:div.ei-viestia-nyt])))
 

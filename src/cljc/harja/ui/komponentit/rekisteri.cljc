@@ -115,7 +115,18 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Navigaation yhteensopiva navbar-wrapper Harjan omilla luokilla."
-    :api "harja.ui.bootstrap/navbar: options + header + itemit, :right erottaa oikean reunan"}])
+    :api "harja.ui.bootstrap/navbar: options + header + itemit, :right erottaa oikean reunan"}
+   {:id :viesti
+    :nimi "Viesti"
+    :ryhma :portatut
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :slotit #{:sisalto}
+    :tilat #{:onnistuminen :info :varoitus :vaara}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Flash-viesti ilman Bootstrapin modal- ja alert-luokkia. Variantit tulevat Harjan omista luokista."
+    :api "harja.ui.viesti/nayta!: viesti [luokka] [kesto], luokka :success, :info, :warning tai :danger"}])
 
 (defn ankkuri
   "Komponentin vakaa juuriankkuri (data-cy). Johdetaan id:stä, ei tallenneta erikseen."
