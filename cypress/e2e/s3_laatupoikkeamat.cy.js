@@ -135,9 +135,9 @@ describe('Laatupoikkeamat latautuu oikein', function () {
         cy.contains('label', 'Sanktion suuruus').closest('.form-group')
             .find('.lomake-arvo').invoke('text').should('match', /4\s?000/);
 
-        // Käsittely ja laskutus
-        cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittely ja laskutus');
-        cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittely ja laskutus').parents('.form-group')
+        // Käsittelytapa
+        cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittelytapa');
+        cy.get('.ei-sulje-sivupaneelia').find('label').contains('Käsittelytapa').parents('.form-group')
             .first().find('.lomake-arvo').contains('Välikatselmus');
 
 
