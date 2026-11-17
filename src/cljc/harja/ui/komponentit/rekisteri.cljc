@@ -31,6 +31,10 @@
     :nimi "Livi-pudotusvalikko"
     :ryhma :alasvedot
     :luonne :shared-komponentti
+      :rooli :syote
+      :slotit #{:arvo :vaihtoehdot}
+      :tilat #{:normaali :tyhja :virhe :estetty}
+      :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :riippuvainen
     :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus."
     :api "harja.ui.yleiset/pudotusvalikko: otsikko + asetuskartta + vaihtoehtovektori"}
@@ -38,6 +42,10 @@
     :nimi "Nappi"
     :ryhma :toiminnot
     :luonne :shared-komponentti
+      :rooli :toiminto
+      :slotit #{:toiminto}
+      :tilat #{:normaali :estetty :lataus}
+      :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :maarittelematta
     :kuvaus "Yhteinen toimintopainike, jonka käyttöpaikka välittää tekstin ja toiminnon."
     :api "harja.ui.napit/nappi: teksti + callback + optiot (:data-cy, :disabled, :luokka)"}
@@ -45,6 +53,10 @@
     :nimi "Suodatin"
     :ryhma :lomakkeet
     :luonne :shared-komponentti
+      :rooli :syote
+      :slotit #{:kentta}
+      :tilat #{:normaali :tyhja :virhe}
+      :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Suodattimen label ja kenttä. Käytössä tarjoushintojen näkymässä."
     :api "harja.ui.komponentit/suodatin, suodatinrivi: {:otsikko :id :data-cy} + kenttä (hiccup tai fn)"}
@@ -52,6 +64,10 @@
     :nimi "Valintaryhmä"
     :ryhma :lomakkeet
     :luonne :shared-komponentti
+      :rooli :syote
+      :slotit #{:arvo :vaihtoehdot}
+      :tilat #{:normaali :tyhja :virhe :estetty}
+      :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
     :api "harja.ui.komponentit/valintaryhma: {:otsikko :id :vaihtoehdot :arvo :vaihda-fn :tyhja-valinta :ohje :virhe :pakollinen? :disabled?}"}
@@ -59,6 +75,10 @@
     :nimi "Lomake"
     :ryhma :lomakkeet
     :luonne :shared-rakenne
+      :rooli :lomake
+      :slotit #{:kentat :toiminnot :tila}
+      :tilat #{:normaali :lataus :virhe :onnistui}
+      :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :api "harja.ui.komponentit: pino + kenttaryhma + valintaryhma + toimintoryhma + tilaviesti"}])

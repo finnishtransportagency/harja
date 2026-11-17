@@ -9,7 +9,8 @@
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot :as alasvedot]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.lomakkeet :as lomakkeet]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.toiminnot :as toiminnot]))
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.toiminnot :as toiminnot]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.simulaattori :as simulaattori]))
 
 (def ^:private esikatselut
   (merge alasvedot/esikatselut
@@ -17,7 +18,8 @@
          lomakkeet/esikatselut))
 
 (defn ui-komponenttien-tarkastelu []
-  (r/with-let [valittu (r/atom (-> rekisteri/komponentit first :id))]
+  (r/with-let [valittu (r/atom (-> rekisteri/komponentit first :id))
+               valittu-nakyma (r/atom :komponentit)]
     (let [ryhmat (rekisteri/ryhmittele)
           komponentti (rekisteri/hae @valittu)
           ryhman-nimi (some #(when (= (:id %) (:ryhma komponentti)) (:nimi %)) rekisteri/ryhmat)
@@ -25,10 +27,28 @@
       [kehys/kehys
        {:otsikko "UI-komponenttien tarkastelu"
         :kuvaus "Shared-komponenttien API:n, tilojen ja Bootstrap-riippuvuuden tarkistussivu."}
-       [kehys/navigaatio
-        {:otsikko "Komponentit"
-         :ryhmat ryhmat
-         :valittu @valittu
-         :valitse-fn #(reset! valittu %)}]
-       [kehys/sisalto komponentti ryhman-nimi [esikatselu komponentti]]
-       [kehys/sopimus komponentti]])))
+       [:div
+        [kehys/navigaatio
+         {:otsikko "Näkymät"
+          :ryhmat [{:id :nakyma :nimi "Työkalut"
+                    :komponentit [{:id :komponentit :nimi "Komponentit"}
+                                  {:id :simulaattori :nimi "Sivusimulaattori"}]}]
+          :valittu @valittu-nakyma
+          :valitse-fn #(reset! valittu-nakyma %)}]
+        [kehys/navigaatio
+         {:otsikko "Komponentit"
+          :ryhmat ryhmat
+          :valittu @valittu
+          :valitse-fn #(do (reset! valittu %)
+                           (reset! valittu-nakyma :komponentit))}]]
+       (if (= :simulaattori @valittu-nakyma)
+         [kehys/sisalto {:nimi "Sivusimulaattori"
+                         :kuvaus "Rajattu deklaratiivinen sivurakenne rekisteröidyistä komponenteista."}
+                        "Työkalut"
+                        [simulaattori/sivu]]
+         [kehys/sisalto komponentti ryhman-nimi [esikatselu komponentti]])
+       (if (= :simulaattori @valittu-nakyma)
+         [kehys/sopimus {:api "Deklaratiivinen puu: komponentti + asetukset + lapset"
+                         :bootstrap-tila :ei-riippuvuutta
+                         :id :simulaattori}]
+         [kehys/sopimus komponentti])])))
