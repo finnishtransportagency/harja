@@ -126,7 +126,18 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Flash-viesti ilman Bootstrapin modal- ja alert-luokkia. Variantit tulevat Harjan omista luokista."
-    :api "harja.ui.viesti/nayta!: viesti [luokka] [kesto], luokka :success, :info, :warning tai :danger"}])
+    :api "harja.ui.viesti/nayta!: viesti [luokka] [kesto], luokka :success, :info, :warning tai :danger"}
+   {:id :modal
+    :nimi "Modal"
+    :ryhma :portatut
+    :luonne :shared-komponentti
+    :rooli :overlay
+    :slotit #{:otsikko :sisalto}
+    :tilat #{:avoin :suljettu}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Modaali näytetään sivun päätason modal-kontissa. Avaamisen ehdot ja sulkemisen seuraukset omistaa näkymä."
+    :api "harja.ui.modal/nayta!: {:otsikko :sulje-fn :leveys} + sisältö. Sulkeminen kutsuu :sulje-fn-funktiota."}])
 
 (defn ankkuri
   "Komponentin vakaa juuriankkuri (data-cy). Johdetaan id:stä, ei tallenneta erikseen."
