@@ -7,6 +7,32 @@
             [clojure.string :as clj-str]))
 
 
+(defn- tabin-otsikko-teksti [title]
+  (if (map? title)
+    (:teksti title)
+    title))
+
+(defn- tabin-otsikko-sisalto [title]
+  (if (map? title)
+    (or (:sisalto title) (:teksti title))
+    title))
+
+(defn- tabin-data-cy [title classes]
+  (or (when (map? title) (:data-cy title))
+      (let [tabs-taso (re-find #"tabs-taso\\d" (str classes))
+            cy-title (-> (tabin-otsikko-teksti title)
+                       str
+                       (clj-str/replace #"ä" "a")
+                       (clj-str/replace #"ö" "o"))]
+        (if tabs-taso
+          (str tabs-taso "-" cy-title)
+          cy-title))))
+
+(defn- tabs-tyyliluokka [style]
+  (case (or style :tabs)
+    :pills "harja-tabs-tyyli-pills"
+    :tabs "harja-tabs-tyyli-tabs"))
+
 
 (defn tabs
   "A tabbed panel. Takes a map of configuration parameters and alternating tab titles and tab components.
@@ -33,9 +59,7 @@ The following keys are supported in the configuration:
       (komp/kun-muuttuu (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
                           (tarkista-aktiivinen-tabi active alternating-title-and-component)))
       (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
-        (let [style-class (case (or style :tabs)
-                            :pills "nav-pills"
-                            :tabs (str "nav-tabs " classes))
+        (let [style-class (tabs-tyyliluokka style)
               tabs (filter #(not (nil? (nth % 2)))
                      (partition 3 alternating-title-and-component))
               [active-tab-title active-tab-keyword active-component]
@@ -49,71 +73,67 @@ The following keys are supported in the configuration:
           (if (empty? tabs)
             [:span "Ei käyttöoikeutta."]
             [:span
-             [:ul.nav {:class style-class}
+             [:ul {:class (clj-str/join " " (remove nil? ["harja-tabs" style-class classes]))
+                   :role "tablist"}
               (for [[title keyword] tabs]
-                ^{:key title}
-                [:li {:class (when (= keyword active-tab-keyword)
-                               "active")}
-                 [:a.klikattava (merge
-                                  {:tabIndex "0"
-                                   :on-click #(vaihda-aktiivinen-tabi keyword %)
-                                   :on-key-down #(when (dom/enter-nappain? %)
-                                                   (vaihda-aktiivinen-tabi keyword %))}
-                                  (let [tabs-taso (re-find #"tabs-taso\d" (str classes))
-                                        cy-title (-> title
-                                                   str
-                                                   (clj-str/replace #"ä" "a")
-                                                   (clj-str/replace #"ö" "o"))]
-                                    (if tabs-taso
-                                      {:data-cy (str tabs-taso "-" cy-title)}
-                                      {:data-cy cy-title})))
-                  title]])]
-             [:div.valilehti active-component]]))))))
+                ^{:key (str (tabin-otsikko-teksti title) "-" keyword)}
+                [:li {:class (clj-str/join " " (remove nil? ["harja-tabs-valilehti"
+                                                              (when (= keyword active-tab-keyword)
+                                                                "harja-tabs-valittu")]))}
+                 [:a.harja-tabs-linkki.klikattava (merge
+                                                   {:tabIndex "0"
+                                                    :role "tab"
+                                                    :aria-selected (str (= keyword active-tab-keyword))
+                                                    :on-click #(vaihda-aktiivinen-tabi keyword %)
+                                                    :on-key-down #(when (dom/enter-nappain? %)
+                                                                    (vaihda-aktiivinen-tabi keyword %))}
+                                                   {:data-cy (tabin-data-cy title classes)})
+                  (tabin-otsikko-sisalto title)]])]
+             [:div.valilehti.harja-tabs-sisalto {:role "tabpanel"}
+              active-component]]))))))
 
 (defn navbar
-  "A Bootstrap navbar component"
+  "Yhteensopiva navbar-komponentti ilman Bootstrapin navbar-markupia."
   [options header & items]
-  (let [collapse-state (atom "collapse.in")
-        toggle! #(swap! collapse-state
-                   (fn [s]
-                     (if (= s "collapse")
-                       "collapse.in"
-                       "collapse")))]
+  (let [valikko-avattu? (atom false)
+        toggle! #(swap! valikko-avattu? not)]
     (fn [options header & items]
-      [:nav.navbar.navbar-default {:role "navigation"
-                                   :class (:luokka options)}
-       [:div.container-fluid
-
-        ;; Brand and toggle get grouped for better mobile display
-        [:div.navbar-header
-         [:button.navbar-toggle.collapsed {:type "button"
-                                           :on-click toggle!} ;; toggle collapse:  data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
-          [:span.sr-only "Toggle navigation"]
-          [:span.icon-bar]
-          [:span.icon-bar]
-          [:span.icon-bar]]
-         [:a {:href "#"} header]]
-
-        ;; Collect the nav links, forms, and other content for toggling
-        (let [[left-items _ right-items] (partition-by #(= :right %) items)]
-          [:div.navbar-collapse {:class @collapse-state}
+      (let [[left-items _ right-items] (partition-by #(= :right %) items)
+            data-cy (:data-cy options)
+            sisalto-luokka (clj-str/join " " (remove nil? ["harja-navbar-sisalto"
+                                                            (when @valikko-avattu?
+                                                              "harja-navbar-sisalto-avoin")]))]
+        [:nav {:role "navigation"
+               :class (clj-str/join " " (remove nil? ["harja-navbar" (:luokka options)]))
+               :data-cy data-cy}
+         [:div.harja-navbar-runko
+          [:div.harja-navbar-otsake
+           [:button {:type "button"
+                     :class "harja-navbar-vaihtaja"
+                     :data-cy (when data-cy (str data-cy "-vaihtaja"))
+                     :aria-expanded (str @valikko-avattu?)
+                     :on-click toggle!}
+            [:span.sr-only "Vaihda navigaatio"]
+            [:span.harja-navbar-vaihtaja-viiva]
+            [:span.harja-navbar-vaihtaja-viiva]
+            [:span.harja-navbar-vaihtaja-viiva]]
+           [:a.harja-navbar-brandi {:href "#"} header]]
+          [:div {:class sisalto-luokka
+                 :data-cy (when data-cy (str data-cy "-sisalto"))}
            (when left-items
-             [:ul.nav.navbar-nav
+             [:ul.harja-navbar-lista {:data-cy (when data-cy (str data-cy "-vasen"))}
               (for [item left-items]
-                ;;<li class="active"><a href="#">Link <span class="sr-only">(current)</span></a></li>
                 ^{:key (hash item)}
-                [:li {:class (str (when false "active")
-                               " "
-                               (:context (meta (first item))))} ;; context meta is for adapting parent container depending on child type
+                [:li {:class (clj-str/join " " (remove nil? ["harja-navbar-item"
+                                                              (:context (meta (first item)))]))}
                  item])])
            (when right-items
-             [:ul.nav.navbar-nav.navbar-right
+             [:ul.harja-navbar-lista.harja-navbar-lista-oikea {:data-cy (when data-cy (str data-cy "-oikea"))}
               (for [item right-items]
                 ^{:key (hash item)}
-                [:li {:class (str (when false "active")
-                               " "
-                               (:context (meta (first item))))}
-                 item])])])]])))
+                [:li {:class (clj-str/join " " (remove nil? ["harja-navbar-item"
+                                                              (:context (meta (first item)))]))}
+                 item])])]]]))))
 
 (defn ^{:context "dropdown"}
   dropdown
@@ -156,10 +176,10 @@ Opts can have the following keys:
 (defn panel
   ([options content] (panel options nil content))
   ([options title content]
-   [:div.panel {:class (str
-                         (:class options) " panel-default")}
+   [:div.harja-panel {:class (:class options)
+                      :data-cy (:data-cy options)}
     (when title
-      [:div.panel-heading
+      [:div.harja-panel-otsake
        [:h1.musta title]])
-    [:div.panel-body
+    [:div.harja-panel-runko
      content]]))

@@ -9,13 +9,15 @@
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot :as alasvedot]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.lomakkeet :as lomakkeet]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.portatut :as portatut]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.toiminnot :as toiminnot]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.simulaattori :as simulaattori]))
 
 (def ^:private esikatselut
   (merge alasvedot/esikatselut
          toiminnot/esikatselut
-         lomakkeet/esikatselut))
+         lomakkeet/esikatselut
+         portatut/esikatselut))
 
 (defn ui-komponenttien-tarkastelu []
   (r/with-let [valittu (r/atom (-> rekisteri/komponentit first :id))

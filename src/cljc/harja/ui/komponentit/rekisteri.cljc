@@ -13,7 +13,8 @@
   "Navigaation ryhmät esitysjärjestyksessä."
   [{:id :alasvedot :nimi "Alasvedot"}
    {:id :toiminnot :nimi "Toiminnot"}
-   {:id :lomakkeet :nimi "Lomakkeet"}])
+   {:id :lomakkeet :nimi "Lomakkeet"}
+   {:id :portatut :nimi "Portatut Bootstrap-komponentit"}])
 
 (def luonteet
   "Mikä komponentti on: yksittäinen shared-komponentti vai niistä koottu kokonaisuus."
@@ -81,7 +82,40 @@
       :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
-    :api "harja.ui.komponentit: pino + kenttaryhma + valintaryhma + toimintoryhma + tilaviesti"}])
+    :api "harja.ui.komponentit: pino + kenttaryhma + valintaryhma + toimintoryhma + tilaviesti"}
+   {:id :panel
+    :nimi "Panel"
+    :ryhma :portatut
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :slotit #{:otsikko :sisalto}
+    :tilat #{:normaali :tyhja}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Yhteensopiva panel-wrapper ilman Bootstrapin panel-markupia."
+    :api "harja.ui.bootstrap/panel: [options content] tai [options title content]"}
+   {:id :tabs
+    :nimi "Tabs"
+    :ryhma :portatut
+    :luonne :shared-komponentti
+    :rooli :navigaatio
+    :slotit #{:otsikot :sisallot}
+    :tilat #{:normaali :ei-kayttooikeutta}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Välilehtien public API säilyy, mutta rakenne ei enää nojaa Bootstrapin nav-luokkiin."
+    :api "harja.ui.bootstrap/tabs: {:active :style :classes :on-change} + otsikko/avain/sisältö"}
+   {:id :navbar
+    :nimi "Navbar"
+    :ryhma :portatut
+    :luonne :shared-komponentti
+    :rooli :navigaatio
+    :slotit #{:header :vasen :oikea}
+    :tilat #{:normaali :suljettu :avoin}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Navigaation yhteensopiva navbar-wrapper Harjan omilla luokilla."
+    :api "harja.ui.bootstrap/navbar: options + header + itemit, :right erottaa oikean reunan"}])
 
 (defn ankkuri
   "Komponentin vakaa juuriankkuri (data-cy). Johdetaan id:stä, ei tallenneta erikseen."

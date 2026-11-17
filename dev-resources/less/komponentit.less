@@ -75,3 +75,160 @@
 .ui-tilaviesti-virhe {
   color: @red-dark;
 }
+
+.harja-panel {
+  margin-block-end: 1.25rem;
+  background: @white-default;
+  border-radius: 0.25rem;
+  box-shadow: 0 0.25rem 1rem fade(@black-default, 8%);
+}
+
+.harja-panel-otsake {
+  padding: 0.1875rem 0.9375rem;
+  background: @white-default;
+}
+
+.harja-panel-runko {
+  padding: 0.1875rem 0.9375rem 0.9375rem;
+}
+
+.harja-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.harja-tabs-valilehti {
+  display: block;
+}
+
+.harja-tabs-linkki {
+  display: block;
+  padding: 0.5rem 0.75rem;
+  color: @gray100;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.harja-tabs-linkki:focus-visible {
+  outline: 2px solid @blue-default;
+  outline-offset: 2px;
+}
+
+.harja-tabs-valittu .harja-tabs-linkki {
+  color: @blue-darker;
+  border-bottom: 2px solid @blue-default;
+}
+
+.harja-tabs-sisalto {
+  padding-top: 1rem;
+}
+
+.harja-navbar {
+  background: @white-default;
+  border-bottom: 1px solid @gray220;
+}
+
+.harja-navbar-runko,
+.harja-navbar-otsake,
+.harja-navbar-sisalto,
+.harja-navbar-lista {
+  display: flex;
+  align-items: center;
+}
+
+.harja-navbar-runko {
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.harja-navbar-otsake,
+.harja-navbar-sisalto,
+.harja-navbar-lista {
+  gap: 0.75rem;
+}
+
+.harja-navbar-brandi {
+  display: inline-flex;
+  align-items: center;
+  color: inherit;
+  text-decoration: none;
+}
+
+.harja-navbar-vaihtaja {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.25rem;
+  border: 1px solid @gray220;
+  border-radius: 0.25rem;
+  padding: 0.5rem;
+  background: transparent;
+}
+
+.harja-navbar-vaihtaja-viiva {
+  display: block;
+  inline-size: 1.25rem;
+  block-size: 0.125rem;
+  border-radius: 999px;
+  background: @gray100;
+}
+
+.harja-navbar-sisalto {
+  flex: 1 1 auto;
+  justify-content: space-between;
+}
+
+.harja-navbar-lista {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.harja-navbar-lista-oikea {
+  margin-left: auto;
+}
+
+.harja-navbar-item {
+  display: flex;
+  align-items: center;
+}
+
+.harja-navbar-vaihtaja {
+  display: none;
+}
+
+@media (max-width: 62rem) {
+  .harja-navbar-runko,
+  .harja-navbar-sisalto,
+  .harja-navbar-lista {
+    align-items: flex-start;
+  }
+
+  .harja-navbar-runko,
+  .harja-navbar-sisalto,
+  .harja-navbar-lista {
+    flex-direction: column;
+  }
+
+  .harja-navbar-sisalto,
+  .harja-navbar-lista {
+    align-items: stretch;
+  }
+
+  .harja-navbar-vaihtaja {
+    display: inline-flex;
+  }
+
+  .harja-navbar-item,
+  .harja-navbar-item > * {
+    inline-size: 100%;
+  }
+
+  .harja-navbar-sisalto:not(.harja-navbar-sisalto-avoin) {
+    display: none;
+  }
+}
