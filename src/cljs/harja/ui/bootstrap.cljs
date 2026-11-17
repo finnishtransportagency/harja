@@ -79,7 +79,7 @@ The following keys are supported in the configuration:
                 ^{:key (str (tabin-otsikko-teksti title) "-" keyword)}
                 [:li {:class (clj-str/join " " (remove nil? ["harja-tabs-valilehti"
                                                               (when (= keyword active-tab-keyword)
-                                                                "harja-tabs-valittu")]))}
+                                                                "active harja-tabs-valittu")]))}
                  [:a.harja-tabs-linkki.klikattava (merge
                                                    {:tabIndex "0"
                                                     :role "tab"
