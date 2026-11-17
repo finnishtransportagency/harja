@@ -2730,7 +2730,8 @@
             :laskutus_yli_laskutusrajan
             :laskutus_ilman_laskutuskelpoisuutta
             :pohjavesisuolan_ylitys
-            :talvisuolan_kokonaiskayton_ylitys]
+            :talvisuolan_kokonaiskayton_ylitys
+            :arvonvahennyssanktio]
            (mapv :laji (:lajit urakka-konteksti)))
       "MHU2026-lajien pitää ryhmitellä C-, vastuuhenkilö-, laskutus- ja suolalajit oikein")))
 
