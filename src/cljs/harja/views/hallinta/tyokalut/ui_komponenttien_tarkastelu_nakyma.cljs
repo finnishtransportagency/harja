@@ -50,5 +50,6 @@
        (if (= :simulaattori @valittu-nakyma)
          [kehys/sopimus {:api "Deklaratiivinen puu: komponentti + asetukset + lapset"
                          :bootstrap-tila :ei-riippuvuutta
-                         :id :simulaattori}]
+                         :id :simulaattori}
+                        [simulaattori/lahde]]
          [kehys/sopimus komponentti])])))

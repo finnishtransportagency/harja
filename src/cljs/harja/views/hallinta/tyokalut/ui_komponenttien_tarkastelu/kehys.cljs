@@ -72,17 +72,19 @@
    (into [:div.ui-tarkastelu-kortin-sisalto] lapset)])
 
 (defn sopimus
-  [{:keys [api] :as komponentti}]
-  [:aside.ui-tarkastelu-sopimus
-   {:data-cy "ui-komponenttien-tarkastelu-tiedot"}
-   [:h2.ui-tarkastelu-ylaotsikko "Komponentin sopimus"]
-   [:dl
-    [:dt "Public API"]
-    [:dd api]
-    [:dt "Bootstrap-tila"]
-    [:dd [bootstrap-tila-merkki komponentti]]
-    [:dt "DOM-ankkuri"]
-    [:dd [:code (str "data-cy=" (rekisteri/ankkuri komponentti))]]]])
+  [{:keys [api] :as komponentti} & lapset]
+  (into
+    [:aside.ui-tarkastelu-sopimus
+     {:data-cy "ui-komponenttien-tarkastelu-tiedot"}
+     [:h2.ui-tarkastelu-ylaotsikko "Komponentin sopimus"]
+     [:dl
+      [:dt "Public API"]
+      [:dd api]
+      [:dt "Bootstrap-tila"]
+      [:dd [bootstrap-tila-merkki komponentti]]
+      [:dt "DOM-ankkuri"]
+      [:dd [:code (str "data-cy=" (rekisteri/ankkuri komponentti))]]]]
+    lapset))
 
 (defn esikatselua-ei-ole [komponentti]
   [kortti komponentti

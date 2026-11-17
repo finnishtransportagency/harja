@@ -115,6 +115,132 @@
   padding: 1rem;
 }
 
+.ui-simulaattori-tyopoyta {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.ui-simulaattori-paneeli {
+  min-width: 0;
+  padding: 1.25rem;
+  background: @white-default;
+  border: 1px solid @gray220;
+  border-radius: 0.25rem;
+}
+
+.ui-simulaattori-lahde {
+  margin-top: 1.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid @gray220;
+}
+
+.ui-simulaattori-paneelin-otsake {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+
+  h3,
+  p {
+    margin: 0;
+  }
+}
+
+.ui-simulaattori-merkki {
+  flex: 0 0 auto;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  color: @blue-darker;
+  background: @blue-lighter;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.ui-simulaattori-merkki-tulos {
+  color: @green-darker;
+  background: @green-lighter;
+}
+
+.ui-simulaattori-kuvaus {
+  margin: 0 0 1rem;
+  color: @gray100;
+  font-size: 0.875rem;
+}
+
+.ui-simulaattori-koodi {
+  max-height: 13rem;
+  margin: 0;
+  padding: 0.875rem;
+  overflow: auto;
+  background: @gray245;
+  border: 1px solid @gray220;
+  border-radius: 0.25rem;
+  color: @gray100;
+  font-size: 0.8rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+
+.ui-simulaattori-puu {
+  margin-top: 1.25rem;
+
+  h4 {
+    margin: 0 0 0.5rem;
+    color: @gray100;
+    font-size: 0.75rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  ul {
+    margin: 0;
+    padding-left: 1.25rem;
+  }
+
+  li {
+    padding: 0.2rem 0;
+  }
+
+  code {
+    color: @blue-darker;
+  }
+}
+
+.ui-simulaattori-esikatselu {
+  grid-column: 1 / -1;
+  min-height: 38rem;
+
+  .ui-pino {
+    min-height: 30rem;
+    padding: 1rem;
+    background: @gray245;
+    border: 1px solid @gray220;
+    border-radius: 0.25rem;
+  }
+}
+
+.ui-simulaattori-validointi {
+  grid-column: 1 / -1;
+  padding: 0.75rem 1rem;
+  background: @green-lighter;
+  border-left: 0.25rem solid @green-default;
+
+  .ui-tilaviesti {
+    margin: 0;
+  }
+}
+
+.ui-simulaattori-tila {
+  margin: 0;
+  color: @gray100;
+  font-size: 0.875rem;
+}
+
 .ui-tarkastelu-sopimus {
   dl {
     margin: 1rem 0 0;
@@ -159,5 +285,14 @@
   .ui-tarkastelu-sisalto,
   .ui-tarkastelu-sopimus {
     margin-top: 1rem;
+  }
+
+  .ui-simulaattori-tyopoyta {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .ui-simulaattori-validointi {
+    width: auto;
   }
 }
