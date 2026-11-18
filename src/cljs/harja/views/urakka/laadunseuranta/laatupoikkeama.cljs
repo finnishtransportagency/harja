@@ -121,7 +121,7 @@
         [napit/yleinen-reunaton "Muokkaa" #(swap! sanktiot/valittu-sanktio update :lukutila? not)]])
      ;; Käytetään sanktio-lomaketta ilman laji-valintaa (sanktio/bonus/arvonvähennys).
      ;; Lomakkeella voi syöttää vain sanktion.
-     [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata? nil
+     [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom lukutila? oikeus-muokata?
       {:tallenna-fn tallenna-fn}]]))
 
 (defn laatupoikkeaman-sanktiot
@@ -160,8 +160,7 @@
                [napit/yleinen-toissijainen "Lisää uusi"
                 (fn []
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
-                   (let [mhu-25? (tila/mhu25-urakka? @nav/valittu-urakka)
-                         kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
+                   (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
                          uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))) {:suorasanktio false})
                                 (assoc :maarattypvm kasittelyaika)
                                 (assoc :perintapvm kasittelyaika)

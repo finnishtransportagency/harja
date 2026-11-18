@@ -194,11 +194,11 @@
                    nil nil]]
                  ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä bonusta on kirjattu
                  (if (:id @tiedot/valittu-sanktio)
-                   [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? app]
+                   [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? {:lukitustiedot (:lukitustiedot app)}]
                    [napit/peruuta "Sulje" #(reset! sivupaneeli-auki?-atom false)])]
 
                  ;; Jos sanktioita ei ole lukittu, niin näytetään sanktiolomake normaalisti
-                 [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? app])])])))))
+                 [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? {:lukitustiedot (:lukitustiedot app)}])])])))))
 
 ;; --- Sanktioiden listaus ---
 
