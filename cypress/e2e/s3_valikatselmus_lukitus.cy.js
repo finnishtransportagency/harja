@@ -247,6 +247,28 @@ function alustaKantaanTalvisuolat(urakkaNimi) {
     });
 }
 
+function lisaaPoytakirjanRaporttipaatos(urakkaNimi) {
+    cy.terminaaliKomento().then((terminaaliKomento) => {
+        const sql = `
+            INSERT INTO paatos_poytakirjan_raportti (urakkaid, hoitokauden_alkuvuosi, luoja)
+            VALUES ((SELECT id FROM urakka WHERE nimi = '${urakkaNimi}'), 2025,
+                    (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'));
+        `;
+        cy.exec(`${terminaaliKomento} psql -h localhost -U harja harja -c "${sql.replace(/\n/g, ' ')}"`);
+    });
+}
+
+function poistaPoytakirjanRaporttipaatos(urakkaNimi) {
+    cy.terminaaliKomento().then((terminaaliKomento) => {
+        const sql = `
+            DELETE FROM paatos_poytakirjan_raportti
+            WHERE urakkaid = (SELECT id FROM urakka WHERE nimi = '${urakkaNimi}')
+              AND hoitokauden_alkuvuosi = 2025;
+        `;
+        cy.exec(`${terminaaliKomento} psql -h localhost -U harja harja -c "${sql.replace(/\n/g, ' ')}"`);
+    });
+}
+
 describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => {
     before(function () {
         asetaInterceptit();
@@ -476,16 +498,36 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.contains("Arvonvähennyksiä ei voi kirjata 1. hoitovuodelle 2025-2026")
             .should("be.visible");
         cy.get(sivupaneeli).contains("button", "Tallenna").should("not.exist");
+    });
 
-        // Sanktiolomake estää lukitun hoitovuoden valinnan jo ennen palvelinkutsua.
+    it("Sanktiolomake estää lukitun hoitovuoden päivämäärän valinnan", () => {
+        asetaInterceptit();
+        cy.intercept("POST", "**/hae-urakan-sanktiot-ja-bonukset").as("hae-sanktiot");
+        poistaPoytakirjanRaporttipaatos(urakanNimi);
+        lisaaPoytakirjanRaporttipaatos(urakanNimi);
+        avaaKajaaninUrakka();
+        cy.get("[data-cy=tabs-taso1-Laadunseuranta]").click();
+        cy.get("[data-cy='tabs-taso2-Sanktiot ja bonukset']").click();
+        cy.wait("@hae-sanktiot", {timeout});
+
+        // Sanktiot lukitaan pöytäkirjan raporttipäätöksellä. Lomake avataan lukitsemattomalta
+        // hoitovuodelta, jolloin lukitus tulee vastaan vasta päivämäärän valinnassa.
+        valitseHoitovuosi(2);
+        cy.contains(".lisaa-nappi", "Lisää uusi").click();
+        cy.get(sivupaneeli, {timeout}).should("be.visible");
         cy.get(sivupaneeli).contains("label", "Sanktio").click();
-        cy.get(sivupaneeli).contains("label", "Määrätty")
-            .parents(".form-group").find("input").first()
-            .clear().type(lukitunHoitovuodenPvm).blur();
-        cy.get(sivupaneeli)
-            .contains("Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026")
-            .should("be.visible");
-        cy.get(sivupaneeli).contains("button", "Tallenna").should("be.disabled");
+        const maarattyPvm = () => cy.get("[data-cy=sanktion-maarattypvm] input").first();
+        const kuvauskentta = () => cy.get(sivupaneeli).contains("label", "Tapahtumapaikka/kuvaus");
+        const lukitusvirhe = "Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026";
+
+        maarattyPvm().clear().type(lukitunHoitovuodenPvm);
+        // Kenttä validoidaan, kun fokus siirtyy pois päivämäärävalitsimesta.
+        kuvauskentta().click();
+        cy.get(sivupaneeli).find("div.virhe span").contains(lukitusvirhe).should("be.visible");
+
+        maarattyPvm().clear().type(lukitsemattomanHoitovuodenPvm);
+        kuvauskentta().click();
+        cy.get(sivupaneeli).should("not.contain", lukitusvirhe);
     });
 
     it(palautustestinNimi, () => {
@@ -499,5 +541,9 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         valitseKustannussuunnitelmanHoitovuosi();
         peruutaVahvistusJosTarpeen();
         //palautaTestidata();
+    });
+
+    after(() => {
+        poistaPoytakirjanRaporttipaatos(urakanNimi);
     });
 });

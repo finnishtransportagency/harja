@@ -113,10 +113,32 @@
       (:lukutila? sanktio)
       lukutila-parametri)))
 
+(defn hoitovuosi-lukittu?
+  "Tosi, kun välikatselmuksen päätös on lukinnut päivämäärän hoitovuoden sanktiot.
+  Puuttuva päivämäärä tai puuttuvat lukitustiedot eivät lukitse."
+  [lukitustiedot paivamaara]
+  (boolean
+    (when paivamaara
+      (let [hoitovuosi (pvm-hoitokauden-alkuvuosi paivamaara)]
+        (some (fn [{:keys [vuosi sanktio-lukittu?]}]
+                (and sanktio-lukittu? (= vuosi hoitovuosi)))
+          lukitustiedot)))))
+
+(defn lukitusvirhe
+  "Palauttaa virheviestin, kun päivämäärä osuu välikatselmuksen päätöksellä lukittuun
+  hoitovuoteen. Muuten, myös urakan alkupäivän puuttuessa, palauttaa nil."
+  [urakan-alkupvm lukitustiedot paivamaara]
+  (when (and urakan-alkupvm (hoitovuosi-lukittu? lukitustiedot paivamaara))
+    (let [vuosi (pvm-hoitokauden-alkuvuosi paivamaara)]
+      (str "Päivämäärää ei voida asettaa "
+        (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+        ". hoitovuodelle " vuosi "-" (inc vuosi)
+        ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))
+
 (def nakymakontekstin-avaimet
   "Sanktiolomakkeen kenttäkuvausfunktioiden yhteinen konteksti. Arvo voi olla nil, avain ei saa puuttua."
   [:sanktio :lomake :aikakausi :summa :lukutila? :voi-muokata?
-   :sanktiolajit :tyyppi-valinnat :urakan-alkuvuosi :toimenpideinstanssit
+   :sanktiolajit :tyyppi-valinnat :urakan-alkuvuosi :urakan-alkupvm :lukitustiedot :toimenpideinstanssit
    :urakkatyyppi :kulun-kohdistukset :hoidonjohtopalkkio-tr :laskutuskuukaudet :laskutuskuukausi-id
    :indeksi-kaytossa? :urakan-indeksi])
 
@@ -364,11 +386,11 @@
   Syöte: sanktio, urakka (:alkupvm :loppupvm :tyyppi :indeksi), hoitokauden-alkuvuosi,
   yllapitourakka?, yllapitokohdeurakka?, vesivaylaurakka?, sanktiolajit, sanktiotyypit
   (valitun lajin tyypit), toimenpideinstanssit, kulun-kohdistukset, tehtavaryhmat,
-  laskutuskuukaudet, laskutuskuukausi-id, indeksi-kaytossa?, lukutila? ja voi-muokata?."
+  laskutuskuukaudet, laskutuskuukausi-id, lukitustiedot, indeksi-kaytossa?, lukutila? ja voi-muokata?."
   [{:keys [sanktio urakka hoitokauden-alkuvuosi yllapitourakka? yllapitokohdeurakka?
            vesivaylaurakka? sanktiolajit sanktiotyypit toimenpideinstanssit
            kulun-kohdistukset tehtavaryhmat laskutuskuukaudet laskutuskuukausi-id
-           indeksi-kaytossa? voi-muokata?]
+           indeksi-kaytossa? voi-muokata? lukitustiedot]
     lukutila-parametri :lukutila?}]
   (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm urakka))
         urakan-loppupvm (:loppupvm urakka)
@@ -399,6 +421,8 @@
        :sanktiolajit (sallitut-sanktiolajit aikakausi sanktiolajit)
        :tyyppi-valinnat sanktiotyypit
        :urakan-alkuvuosi urakan-alkuvuosi
+       :urakan-alkupvm (:alkupvm urakka)
+       :lukitustiedot lukitustiedot
        :toimenpideinstanssit toimenpideinstanssit
       :urakkatyyppi (:tyyppi urakka)
        :kulun-kohdistukset kulun-kohdistukset

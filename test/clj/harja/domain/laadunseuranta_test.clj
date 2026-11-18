@@ -1243,6 +1243,7 @@
                :tehtavaryhmat [{:tehtavaryhma_nimi "G - Hoidonjohtopalkkio" :tehtavaryhma 5}]
                :laskutuskuukaudet []
                :laskutuskuukausi-id "laskutuskuukausi-1"
+               :lukitustiedot [{:vuosi 2025 :sanktio-lukittu? true}]
                :indeksi-kaytossa? false
                :lukutila? true
                :voi-muokata? true}
@@ -1251,6 +1252,8 @@
       (is (every? #(contains? konteksti %) sanktion-lomake-domain/nakymakontekstin-avaimet)))
     (testing "urakan ja tyypin tiedot johdetaan syötteestä"
       (is (= 2025 (:urakan-alkuvuosi konteksti)))
+      (is (= (pvm/->pvm "1.10.2025") (:urakan-alkupvm konteksti)))
+      (is (= [{:vuosi 2025 :sanktio-lukittu? true}] (:lukitustiedot konteksti)))
       (is (= "MAKU 2015" (:urakan-indeksi konteksti)))
       (is (= [tyyppi {:id 8 :koodi 2}] (:tyyppi-valinnat konteksti)))
       (is (= 5 (:tehtavaryhma (:hoidonjohtopalkkio-tr konteksti)))))
@@ -1273,3 +1276,23 @@
       (is (nil? (get-in (sanktion-lomake-domain/kokoa-nakymakonteksti
                           (assoc-in syote [:sanktio :tyyppi :id] 99))
                   [:summa :kiintea-summamalli]))))))
+
+(deftest sanktion-paivamaaran-lukitusvirhe
+  (let [urakan-alkupvm (pvm/->pvm "1.10.2025")
+        lukitustiedot [{:vuosi 2025 :sanktio-lukittu? true}
+                       {:vuosi 2026 :sanktio-lukittu? false}]
+        virhe #(sanktion-lomake-domain/lukitusvirhe urakan-alkupvm lukitustiedot %)]
+    (testing "lukitun hoitovuoden päivämäärä antaa virheen, jossa on hoitovuoden numero ja vuodet"
+      (is (= (str "Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026, koska hoitovuoden "
+               "tiedot on lukittu välikatselmuksen päätöksen johdosta.")
+            (virhe (pvm/->pvm "15.11.2025")))))
+    (testing "hoitovuoden rajat: 1.10. ja 30.9. kuuluvat samaan hoitovuoteen"
+      (is (some? (virhe (pvm/->pvm "1.10.2025"))))
+      (is (some? (virhe (pvm/->pvm "30.9.2026"))))
+      (is (nil? (virhe (pvm/->pvm "1.10.2026")))))
+    (testing "lukitsematon hoitovuosi ja puuttuva päivämäärä eivät anna virhettä"
+      (is (nil? (virhe (pvm/->pvm "15.11.2026"))))
+      (is (nil? (virhe nil))))
+    (testing "puuttuvat lukitustiedot tai urakan alkupäivä eivät anna virhettä"
+      (is (nil? (sanktion-lomake-domain/lukitusvirhe urakan-alkupvm nil (pvm/->pvm "15.11.2025"))))
+      (is (nil? (sanktion-lomake-domain/lukitusvirhe nil lukitustiedot (pvm/->pvm "15.11.2025")))))))
