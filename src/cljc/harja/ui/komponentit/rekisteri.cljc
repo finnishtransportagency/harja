@@ -72,6 +72,17 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
     :api "harja.ui.komponentit/valintaryhma: {:otsikko :id :vaihtoehdot :arvo :vaihda-fn :tyhja-valinta :ohje :virhe :pakollinen? :disabled?}"}
+   {:id :tekstikentta
+    :nimi "Tekstikenttä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :slotit #{:arvo}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Yksirivinen tekstikenttä. Arvo ja muutoksen käsittely omistaa käyttöpaikka. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
+    :api "harja.ui.kentat/tee-kentta: {:tyyppi :string :placeholder :elementin-id :disabled? :lomake?} + atomi"}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet

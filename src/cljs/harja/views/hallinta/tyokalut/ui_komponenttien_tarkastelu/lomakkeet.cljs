@@ -124,8 +124,23 @@
       [:div {:data-cy (str ankkuri "-sarake-b")} "Sarake B"]
       [:div {:data-cy (str ankkuri "-sarake-c")} "Sarake C"]]]))
 
+(defn- tekstikentta [komponentti]
+  (r/with-let [arvo (r/atom "")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Arvo on käyttöpaikan omistama. Kenttä välittää muutokset atomiin."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :string
+          :elementin-id (str ankkuri "-input")
+          :placeholder "Kirjoita tekstiä..."}
+         arvo]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: \"" @arvo "\"")]])))
+
 (def esikatselut
   {:suodatin suodatin
    :valintaryhma valintaryhma
    :lomake lomake
-   :rivi rivi})
+   :rivi rivi
+   :tekstikentta tekstikentta})
