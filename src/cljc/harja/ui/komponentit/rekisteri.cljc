@@ -83,6 +83,17 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :api "harja.ui.komponentit: pino + kenttaryhma + valintaryhma + toimintoryhma + tilaviesti"}
+   {:id :rivi
+    :nimi "Rivi"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :slotit #{:sarake}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Asettelurivi, jossa sarakkeet jakavat tilan tasan koon mukaan. Sarakkeiden koon ja rivin luokan välittää käyttöpaikka."
+    :api "harja.ui.yleiset/rivi: {:koko :luokka} + sarakkeet. Koko on numero tai mäppi {:lg :md :xs}."}
    {:id :panel
     :nimi "Panel"
     :ryhma :portatut

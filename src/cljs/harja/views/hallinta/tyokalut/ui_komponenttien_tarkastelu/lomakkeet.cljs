@@ -3,6 +3,7 @@
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentit :as ui]
             [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]))
 
 (def ^:private urakkatyypit
@@ -114,7 +115,17 @@
                         @tallennettu? "Nimi tallennettu")
           :data-cy (str ankkuri "-tila")}]]])))
 
+(defn- rivi [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [yleiset/rivi {:koko {:lg 4 :md 6 :xs 12}
+                    :luokka "ui-komponenttien-tarkastelu-rivi-sarake"}
+      [:div {:data-cy (str ankkuri "-sarake-a")} "Sarake A"]
+      [:div {:data-cy (str ankkuri "-sarake-b")} "Sarake B"]
+      [:div {:data-cy (str ankkuri "-sarake-c")} "Sarake C"]]]))
+
 (def esikatselut
   {:suodatin suodatin
    :valintaryhma valintaryhma
-   :lomake lomake})
+   :lomake lomake
+   :rivi rivi})
