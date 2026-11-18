@@ -94,6 +94,39 @@
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Numerokenttä muotoilee arvon ja hyväksyy vain sallitut luvut. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
     :api "harja.ui.kentat/tee-kentta: {:tyyppi :numero :desimaalien-maara :kokonaisosan-maara :kokonaisluku? :vaadi-ei-negatiivinen? :elementin-id :lomake?} + atomi"}
+   {:id :sahkopostikentta
+    :nimi "Sähköpostikenttä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :slotit #{:arvo}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Sähköpostiosoitteen syöttökenttä selaimen omalla tyypillä. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
+    :api "harja.ui.kentat/tee-kentta: {:tyyppi :email :placeholder :on-focus :on-blur :disabled? :lomake?} + atomi"}
+   {:id :puhelinkentta
+    :nimi "Puhelinkenttä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :slotit #{:arvo}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Puhelinnumeron syöttökenttä. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan, ellei vayla-tyyli? ole päällä."
+    :api "harja.ui.kentat/tee-kentta: {:tyyppi :puhelin :placeholder :pituus :vayla-tyyli? :disabled? :lomake?} + atomi"}
+   {:id :valintaruutu
+    :nimi "Valintaruutu"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :slotit #{:arvo}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Yksittäinen valintaruutu, jonka tila on boolean-atomi tai atomi, jonka arvo on true, false tai ::indeterminate."
+    :api "harja.ui.kentat/tee-kentta: {:tyyppi :checkbox :teksti :disabled? :iso-clickalue? :valitse!} + atomi"}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet

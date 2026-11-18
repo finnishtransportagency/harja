@@ -154,10 +154,54 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: " (pr-str @arvo))]])))
 
+(defn- sahkopostikentta [komponentti]
+  (r/with-let [arvo (r/atom "")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Kenttä käyttää selaimen sähköpostin validointia. Arvo on käyttöpaikan omistama."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :email
+          :elementin-id (str ankkuri "-input")
+          :placeholder "nimi@esimerkki.fi"}
+         arvo]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: \"" @arvo "\"")]])))
+
+(defn- puhelinkentta [komponentti]
+  (r/with-let [arvo (r/atom "")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Puhelinnumeron kenttä. Arvo on käyttöpaikan omistama."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :puhelin
+          :elementin-id (str ankkuri "-input")
+          :placeholder "040 1234567"}
+         arvo]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: \"" @arvo "\"")]])))
+
+(defn- valintaruutu [komponentti]
+  (r/with-let [valittu? (r/atom false)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :checkbox
+          :teksti "Hyväksy ehdot"
+          :input-id (str ankkuri "-input")}
+         valittu?]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Valittu: " (if @valittu? "kyllä" "ei"))]])))
+
 (def esikatselut
   {:suodatin suodatin
    :valintaryhma valintaryhma
    :lomake lomake
    :rivi rivi
    :tekstikentta tekstikentta
-   :numerokentta numerokentta})
+   :numerokentta numerokentta
+   :sahkopostikentta sahkopostikentta
+   :puhelinkentta puhelinkentta
+   :valintaruutu valintaruutu})
