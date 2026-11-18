@@ -138,9 +138,26 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: \"" @arvo "\"")]])))
 
+(defn- numerokentta [komponentti]
+  (r/with-let [arvo (r/atom nil)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Kenttä hyväksyy vain numeroita. Arvo on käyttöpaikan omistama."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :numero
+          :elementin-id (str ankkuri "-input")
+          :desimaalien-maara 2
+          :kokonaisosan-maara 6
+          :vaadi-ei-negatiivinen? true}
+         arvo]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: " (pr-str @arvo))]])))
+
 (def esikatselut
   {:suodatin suodatin
    :valintaryhma valintaryhma
    :lomake lomake
    :rivi rivi
-   :tekstikentta tekstikentta})
+   :tekstikentta tekstikentta
+   :numerokentta numerokentta})
