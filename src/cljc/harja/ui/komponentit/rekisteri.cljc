@@ -14,6 +14,7 @@
   [{:id :alasvedot :nimi "Alasvedot"}
    {:id :toiminnot :nimi "Toiminnot"}
    {:id :lomakkeet :nimi "Lomakkeet"}
+   {:id :gridit :nimi "Gridit"}
    {:id :portatut :nimi "Portatut Bootstrap-komponentit"}])
 
 (def luonteet
@@ -160,6 +161,17 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Yhteensopiva panel-wrapper ilman Bootstrapin panel-markupia."
     :api "harja.ui.bootstrap/panel: [options content] tai [options title content]"}
+   {:id :perusgrid
+    :nimi "Perusgrid"
+    :ryhma :gridit
+    :luonne :shared-komponentti
+    :rooli :taulukko
+    :slotit #{:sarakkeet :rivit}
+    :tilat #{:normaali :tyhja}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
+    :api "harja.ui.grid/grid: {:otsikko :tyhja :tunniste} + sarakkeet + rivit"}
    {:id :tabs
     :nimi "Tabs"
     :ryhma :portatut

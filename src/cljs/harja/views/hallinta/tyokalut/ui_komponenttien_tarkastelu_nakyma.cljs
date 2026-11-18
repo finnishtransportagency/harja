@@ -7,6 +7,7 @@
   (:require [reagent.core :as r]
             [harja.ui.komponentit.rekisteri :as rekisteri]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot :as alasvedot]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.gridit :as gridit]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.lomakkeet :as lomakkeet]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.portatut :as portatut]
@@ -16,6 +17,7 @@
 (def ^:private esikatselut
   (merge alasvedot/esikatselut
          toiminnot/esikatselut
+         gridit/esikatselut
          lomakkeet/esikatselut
          portatut/esikatselut))
 
