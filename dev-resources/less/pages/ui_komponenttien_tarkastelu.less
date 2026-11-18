@@ -101,10 +101,20 @@
   border: 1px solid @gray220;
   border-radius: 0.25rem;
 
-  h3 {
+  > h3 {
     margin: 0;
     padding: 1rem;
     border-bottom: 1px solid @gray220;
+  }
+
+  .panel-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    .pull-right {
+      float: none;
+    }
   }
 }
 
