@@ -281,14 +281,28 @@
         lukutilan-kulun-kohdistus))))
 
 (defn- laskutuskuukausi-muokkauskuvaus
-  [{:keys [laskutuskuukausi-id laskutuskuukaudet lomake]}]
-  {:otsikko "Laskutuskuukausi"
+(defn- laskutuskuukausi-muokkauskuvaus
+  [{:keys [laskutuskuukausi-id laskutuskuukaudet lomake urakan-alkupvm lukitustiedot]}]
+  (let [hoitovuosi-lukittu? (fn [paivamaara]
+                              (some (fn [{:keys [vuosi sanktio-lukittu?]}]
+                                      (and (= vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi))
+                                           sanktio-lukittu?))
+                                lukitustiedot))
+        lukitus-validointi-fn (fn [paivamaara _rivi _taulukko]
+                                (when (and urakan-alkupvm paivamaara (hoitovuosi-lukittu? paivamaara))
+                                  (let [vuosi (pvm/hoitokauden-alkuvuosi paivamaara)]
+                                    (str "Päivämäärää ei voida asettaa "
+                                         (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                         ". hoitovuodelle " vuosi "-" (inc vuosi)
+                                         ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]
+    {:otsikko "Laskutuskuukausi"
    :label-for-id laskutuskuukausi-id
    :nimi :perintapvm
    :pakollinen? true
    :tyyppi :komponentti
    ::lomake/col-luokka "col-xs-6"
    :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+   :validoi [lukitus-validointi-fn]
    :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                   (let [perintapvm (get-in data [:perintapvm])]
                     [:<>
@@ -316,11 +330,17 @@
                                         :laskutuskuukausi-komp-tiedot %
                                         ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
                                         :perintapvm (:pvm %)))
-                       :format-fn :teksti}
+                       :format-fn (fn [{:keys [teksti pvm]}]
+                                    [:span {:style {:display "inline-flex"
+                                                    :align-items "center"
+                                                    :gap "0.5rem"}}
+                                     teksti
+                                     (when (hoitovuosi-lukittu? pvm)
+                                       [ikonit/locked-svg 14])])}
                       laskutuskuukaudet]
                      ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                      (when (:nayta-laskutuskuukausi-teksti? lomake)
-                       [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))})
+                       [:div.small-caption.padding-vertical-4 "Näkyy laskutusyhteenvedolla"])]))}))
 
 (defn- laskutuskuukausi-lukutilakuvaus
   [muokkauskuvaus laskutuskuukaudet]
@@ -335,8 +355,20 @@
                       laskutuskuukaudet))))))
 
 (defn- paivamaarat-ja-perinta-kentat
-  [{:keys [lomake aikakausi voi-muokata? lukutila? laskutuskuukaudet urakan-alkuvuosi] :as konteksti}]
+  [{:keys [lomake aikakausi voi-muokata? lukutila? laskutuskuukaudet urakan-alkuvuosi urakan-alkupvm lukitustiedot] :as konteksti}]
   (let [hoitovuodet (:hoitovuodet aikakausi)
+        hoitovuosi-lukittu? (fn [paivamaara]
+                              (some (fn [{:keys [vuosi sanktio-lukittu?]}]
+                                      (and (= vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi))
+                                           sanktio-lukittu?))
+                                lukitustiedot))
+        lukitus-validointi-fn (fn [paivamaara _rivi _taulukko]
+                                (when (and urakan-alkupvm paivamaara (hoitovuosi-lukittu? paivamaara))
+                                  (let [vuosi (pvm/hoitokauden-alkuvuosi paivamaara)]
+                                    (str "Päivämäärää ei voida asettaa "
+                                         (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                                         ". hoitovuodelle " vuosi "-" (inc vuosi)
+                                         ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.")))))
         talvisuolan-validointi-fn (fn [arvo _sanktio]
                                     ((:talvisuolan-validointi lomake) arvo))]
     (lomake/ryhma {:rivi? true}
@@ -361,7 +393,8 @@
                     rivi arvo :kasittelyaika))
          :fmt pvm/pvm-opt :tyyppi :pvm
          :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                   talvisuolan-validointi-fn]}
+                   talvisuolan-validointi-fn
+                   lukitus-validointi-fn]}
 
         {:otsikko "Määrätty" :nimi :maarattypvm
          :pakollinen? true
@@ -371,7 +404,8 @@
                     rivi arvo :maarattypvm))
          :fmt pvm/pvm-opt :tyyppi :pvm
          :validoi [[:ei-tyhja "Valitse päivämäärä"]
-                   talvisuolan-validointi-fn]})
+                   talvisuolan-validointi-fn
+                   lukitus-validointi-fn]})
 
     ;; MHU25 urakoille ei näytetä laskutuskuukautta
       (if (= :laskutuskuukausi (:perinta-tapa aikakausi))
@@ -497,7 +531,7 @@
 (defn- lue-nakymakonteksti
   "Lukee lomakkeen tarvitsemat atomit ja kokoaa niistä kenttäkuvausten yhteisen kontekstin.
   Atomien luku tehdään vain täällä; päätöslogiikka on domainin `kokoa-nakymakonteksti`ssa."
-  [muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?]
+  [muokattu laskutuskuukausi-id lukutila-parametri voi-muokata? lukitustiedot]
   (let [urakka @nav/valittu-urakka]
     (sanktion-lomake-domain/kokoa-nakymakonteksti
       {:sanktio @muokattu
@@ -516,6 +550,7 @@
        :tehtavaryhmat @tiedot/valitun-urakan-tehtavaryhmat
        :laskutuskuukaudet (tiedot/pyorayta-laskutuskuukausi-valinnat)
        :laskutuskuukausi-id laskutuskuukausi-id
+       :lukitustiedot lukitustiedot
        :indeksi-kaytossa? (tiedot-urakka/indeksi-kaytossa-sakoissa?)
        :lukutila? lukutila-parametri
        :voi-muokata? voi-muokata?})))
@@ -549,7 +584,8 @@
       (let [muokattu tiedot/valittu-sanktio
             urakka-id (:id @nav/valittu-urakka)
             suorasanktio? (:suorasanktio @muokattu)
-            konteksti (lue-nakymakonteksti muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?)
+            konteksti (lue-nakymakonteksti muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?
+                                             (:lukitustiedot _asetukset))
             {:keys [lukutila? sanktiolajit]} konteksti
             ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
             ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.

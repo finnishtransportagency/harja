@@ -476,6 +476,16 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.contains("Arvonvähennyksiä ei voi kirjata 1. hoitovuodelle 2025-2026")
             .should("be.visible");
         cy.get(sivupaneeli).contains("button", "Tallenna").should("not.exist");
+
+        // Sanktiolomake estää lukitun hoitovuoden valinnan jo ennen palvelinkutsua.
+        cy.get(sivupaneeli).contains("label", "Sanktio").click();
+        cy.get(sivupaneeli).contains("label", "Määrätty")
+            .parents(".form-group").find("input").first()
+            .clear().type(lukitunHoitovuodenPvm).blur();
+        cy.get(sivupaneeli)
+            .contains("Päivämäärää ei voida asettaa 1. hoitovuodelle 2025-2026")
+            .should("be.visible");
+        cy.get(sivupaneeli).contains("button", "Tallenna").should("be.disabled");
     });
 
     it(palautustestinNimi, () => {
