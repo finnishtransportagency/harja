@@ -182,6 +182,33 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: \"" @arvo "\"")]])))
 
+(defn- radiokentta [komponentti]
+  (r/with-let [valittu (r/atom "Keski")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Vaihtoehdoista valitaan yksi. Arvo on käyttöpaikan omistama."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :radio
+          :valinnat ["Matala" "Keski" "Korkea"]}
+         valittu]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: " (pr-str @valittu))]])))
+
+(defn- checkbox-ryhma [komponentti]
+  (r/with-let [valitut (r/atom #{"Foo" "Baz"})]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Monta vaihtoehtoa voi olla valittuna. Arvo on joukko."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :checkbox-group
+          :vaihtoehdot ["Foo" "Bar" "Baz" "Quux"]
+          :vaihtoehto-nayta str}
+         valitut]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: " (pr-str (sort @valitut)))]])))
+
 (defn- valintaruutu [komponentti]
   (r/with-let [valittu? (r/atom false)]
     (let [ankkuri (kehys/ankkuri komponentti)]
@@ -204,4 +231,6 @@
    :numerokentta numerokentta
    :sahkopostikentta sahkopostikentta
    :puhelinkentta puhelinkentta
-   :valintaruutu valintaruutu})
+   :valintaruutu valintaruutu
+   :radiokentta radiokentta
+   :checkbox-ryhma checkbox-ryhma})

@@ -128,6 +128,28 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Yksittäinen valintaruutu, jonka tila on boolean-atomi tai atomi, jonka arvo on true, false tai ::indeterminate."
     :api "harja.ui.kentat/tee-kentta: {:tyyppi :checkbox :teksti :disabled? :iso-clickalue? :valitse!} + atomi"}
+   {:id :radiokentta
+    :nimi "Radiokenttä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :slotit #{:arvo :valinnat}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Vaihtoehdoista yksi valitaan radiopainikkeella. Arvo on atomi."
+    :api "harja.ui.kentat/tee-kentta: {:tyyppi :radio :valinnat :valinta-nayta :valinta-arvo :disabled?} + atomi"}
+   {:id :checkbox-ryhma
+    :nimi "Checkbox-ryhmä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Monivalinta, jossa arvo on joukko. Yksi palsta ei käytä Bootstrap-luokkia, useampi palsta käyttää col-sm-*-luokkia."
+    :api "harja.ui.kentat/tee-kentta: {:tyyppi :checkbox-group :vaihtoehdot :vaihtoehto-nayta :palstoja :disabloi} + atomi joukolla"}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet
