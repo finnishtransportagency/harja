@@ -247,14 +247,6 @@
     (when (= 1 (count koodit))
       (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit koodit}))))))
 
-(defn vaadi-sanktio-kuuluu-urakkaan
-  "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
-  [db urakka-id sanktio-id]
-  (when (id-olemassa? sanktio-id)
-    (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
-      (when-not (= sanktion-urakka urakka-id)
-        (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
-                                     urakka-id " vaan urakkaan " sanktion-urakka)))))))
 (defn vaadi-talvisuolan-ylitys-ehto
   "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
   sanktion laji on talvisuolan ylitys
@@ -351,6 +343,7 @@
                         (lajin-ainoa-sanktiotyyppi-id db laji (:alkupvm urakan-tiedot)))
         _ (when-not sanktiotyyppi
             (throw (IllegalArgumentException. "Sanktion tyyppi on pakollinen.")))
+        ;; Muut lajit validoidaan sanktio-konfiguraatioprofiilia vasten alla.
         _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
               db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
