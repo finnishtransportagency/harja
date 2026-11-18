@@ -23,6 +23,7 @@
             [harja.kyselyt.tieliikenneilmoitukset :as tieliikenneilmoitukset-q]
             [harja.palvelin.integraatiot.tloik.sahkoposti :as tloik-sahkoposti]
             [harja.palvelin.integraatiot.tloik.tekstiviesti :as tloik-tekstiviesti]
+            [harja.palvelin.integraatiot.tloik.kasittely.paivystajaviestit :as paivystajaviestit]
             [harja.palvelin.palvelut.tierekisteri-haku :as tierekisteri-haku]
             [taoensso.timbre :as log]
             [harja.palvelin.integraatiot.api.tyokalut.sijainnit :as sijainnit]
@@ -189,6 +190,25 @@
 
 ;; --- Päivystäjän ilmoituksen testaus -- Alkaa ---
 
+(defn validoi-paivystajan-ilmoituksen-tiedot [tiedot]
+  (let [{:keys [ilmoitus-id vastaanottajat]} tiedot]
+    (when-not (integer? ilmoitus-id)
+      (throw (ex-info "Ilmoitus-id:n pitää olla kokonaisluku" {:kentta :ilmoitus-id})))
+    (when-not (and (vector? vastaanottajat) (seq vastaanottajat))
+      (throw (ex-info "Vastaanottajia pitää olla vähintään yksi" {:kentta :vastaanottajat})))
+    (doseq [vastaanottaja vastaanottajat]
+      (when-not (map? vastaanottaja)
+        (throw (ex-info "Vastaanottajan pitää olla map" {:kentta :vastaanottajat})))
+      (doseq [kentta [:sahkoposti :puhelinnumero]]
+        (when (and (contains? vastaanottaja kentta)
+                   (some? (get vastaanottaja kentta))
+                   (not (string? (get vastaanottaja kentta))))
+          (throw (ex-info "Yhteystiedon pitää olla merkkijono" {:kentta kentta}))))
+      (when (and (string/blank? (:sahkoposti vastaanottaja))
+                 (string/blank? (:puhelinnumero vastaanottaja)))
+        (throw (ex-info "Vastaanottajalla pitää olla sähköposti tai puhelinnumero" {:kentta :vastaanottajat}))))
+    tiedot))
+
 (defn hae-ilmoitus [db ilmoitusid]
   (let [id (:id (first (tieliikenneilmoitukset-q/hae-id-ilmoitus-idlla db ilmoitusid)))
         _ (when-not id
@@ -231,41 +251,47 @@
       (throw (Exception. "Tekstiviestin lähetys epäonnistui")))))
 
 (defn- laheta-paivystajan-ilmoitus
-  ""
-  [db api-sahkoposti sms {:keys [ilmoitus-id sahkoposti puhelinnumero] :as ilmoitus-tiedot}]
+  "Lähettää päivystäjän ilmoituksen jokaiselle annetulle vastaanottajariville."
+  [db api-sahkoposti sms ilmoitus-tiedot]
   (try
-    (when (and (string/blank? sahkoposti) (string/blank? puhelinnumero))
-      (do
-        (log/error (format "[Testi] Päivystajan ilmoitusta %s ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa." ilmoitus-id))
-        (throw (Exception. "Päivystajan ilmoitusta ei voida lähettää ilman sähköpostiosoitetta tai puhelinnumeroa."))))
-
-    (let [email-sensuroitu (when (string? sahkoposti)
-                             (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
-          puh-sensuroitu (when (string? puhelinnumero)
-                           (str/replace puhelinnumero #"\d(?=\d{4})" "*"))
-          _ (log/info "[Testi] Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
-              " sähköposti: " email-sensuroitu
-              " puhelinnumero: " puh-sensuroitu)
-
-          ilmoitus (hae-ilmoitus db ilmoitus-id)]
-
-      (when-not (string/blank? sahkoposti)
-        (laheta-paivystaja-ilmoitus-sahkopostilla db api-sahkoposti sahkoposti ilmoitus))
-
-      (when-not (string/blank? puhelinnumero)
-        (laheta-paivystaja-ilmoitus-sms db sms ilmoitus puhelinnumero))
-
-      {:status 200
-       :body {:viesti "Päivystäjän ilmoitus lähetetty"
-              :ilmoitus-id ilmoitus-id}})
+    (validoi-paivystajan-ilmoituksen-tiedot ilmoitus-tiedot)
+    (let [{:keys [ilmoitus-id vastaanottajat]} ilmoitus-tiedot]
+      (let [ilmoitus (hae-ilmoitus db ilmoitus-id)]
+        (let [;; Testivastaanottajat ovat aina vastuuhenkilöitä, jotta SMS-päätös noudattaa tuotannon sääntöä
+              paivystajat (mapv (fn [{:keys [sahkoposti puhelinnumero]}]
+                                  {:sahkoposti sahkoposti
+                                   :matkapuhelin puhelinnumero
+                                   :vastuuhenkilo true})
+                                vastaanottajat)]
+          (doseq [{{:keys [sahkoposti matkapuhelin]} :paivystaja
+                   :keys [laheta-sahkoposti? laheta-sms? duplikaatti-sahkoposti?]}
+                  (paivystajaviestit/lahetyspaatokset ilmoitus paivystajat)]
+            (let [email-sensuroitu (when (string? sahkoposti)
+                                     (str/replace sahkoposti #"(?<=^.)[^@]*|(?<=@.).*(?=\.[^.]+$)" "***"))
+                  puh-sensuroitu (when (string? matkapuhelin)
+                                   (str/replace matkapuhelin #"\d(?=\d{4})" "*"))]
+              (log/info "[Testi] Lähetetään päivystajan ilmoitus, ilmoitus-id: " ilmoitus-id
+                        " sähköposti: " email-sensuroitu
+                        " puhelinnumero: " puh-sensuroitu
+                        " lähetä sähköposti: " laheta-sahkoposti?
+                        " lähetä sms: " laheta-sms?
+                        " duplikaatti: " duplikaatti-sahkoposti?)
+              (when (and laheta-sahkoposti? (not (string/blank? sahkoposti)))
+                (laheta-paivystaja-ilmoitus-sahkopostilla db api-sahkoposti sahkoposti ilmoitus))
+              (when (and laheta-sms? (not (string/blank? matkapuhelin)))
+                (laheta-paivystaja-ilmoitus-sms db sms ilmoitus matkapuhelin)))))
+        {:status 200
+         :body {:viesti "Päivystäjän ilmoitus lähetetty"
+                :ilmoitus-id ilmoitus-id}}))
 
     (catch Exception e
-      (log/error (format "[Testi] Päivystäjän ilmoituksen lähettämisessä tapahtui poikkeus: %s" e))
+      (log/error e "[Testi] Päivystäjän ilmoituksen lähettämisessä tapahtui poikkeus"
+                 " ilmoitus-id: " (:ilmoitus-id ilmoitus-tiedot))
       {:status 500
        :error "Virhe"
        :body {:virhe "Päivystäjän ilmoituksen lähettäminen epäonnistui"
               :viesti (.getMessage e)
-              :ilmoitus-id ilmoitus-id}})))
+              :ilmoitus-id (:ilmoitus-id ilmoitus-tiedot)}})))
 
 ;; --- Päivystäjän ilmoituksen testaus -- Päättyy ---
 

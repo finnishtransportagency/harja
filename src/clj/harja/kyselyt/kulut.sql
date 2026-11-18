@@ -78,6 +78,7 @@ WITH kohdistukset_ajalla AS (
         tr.jarjestys    AS "jarjestys",
         tr.nimi         AS "nimi"
     FROM tehtavaryhma tr
+        JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id AND tro.urakkatyyppi = 'teiden-hoito'
         LEFT JOIN kohdistukset_ajalla kohd ON tr.id = kohd.tehtavaryhma,
         urakka u
     -- Ei ole tarkoituksenmukaista listata tehtäväryhmiä, jotka on poistettu tai jotka eivät ole voimassa, jos niihin ei ole raportoitu kuluja

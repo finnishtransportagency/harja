@@ -12,11 +12,11 @@ inputs:
   password:
     description: ''
     required: true
-  # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä (esim. harjadb-latest)
+  # Katso saatavilla olevat harjadb servicet docker-compose.ci.yml:stä (esim. harjadb-latest)
   # Servicen asetukset on lukittu docker-compose konfiguraatioksi ja konfiguraatiossa viitataan aina tiettyyn imagen
   # versioon.
   service-name:
-    description: 'Testitietokannan compose servicen nimi. Saatavilla olevat servicet on määritelty docker-compose.yml:ään'
+    description: 'Testitietokannan compose servicen nimi. Saatavilla olevat servicet on määritelty docker-compose.ci.yml:ään'
     required: true
   skip-testdata:
     description: 'Ohita testidatan lisääminen testitietokantaan (nopeampi tietokannan alustus)'
@@ -27,7 +27,7 @@ runs:
   using: "composite"
   steps:
     - name: Log in to the Container registry
-      uses: docker/login-action@81c6f93d4bc991e510b342a00b419b3bb4efc5c6 # v4.7.0
+      uses: docker/login-action@8aa5831fb8d48d8f76594c7ddde61ae58019f550 # v4.8.0
       with:
         registry: ${{ inputs.registry }}
         username: ${{ inputs.username }}
@@ -37,14 +37,14 @@ runs:
       env:
         SERVICE_NAME: ${{ inputs.service-name }}
       run: |
-        cd .github/docker
+        cd tools/docker
         echo "Docker Compose version: $(docker compose version --short)"
         
         echo "Pulling harja test database docker image for service: ${SERVICE_NAME}"
-        docker compose pull "${SERVICE_NAME}"
+        docker compose -f docker-compose.ci.yml pull "${SERVICE_NAME}"
 
         echo "Starting test database service and waiting for it to start..."
-        docker compose up -d --wait --wait-timeout 60 "${SERVICE_NAME}"
+        docker compose -f docker-compose.ci.yml up -d --wait --wait-timeout 60 "${SERVICE_NAME}"
       shell: bash
 
     - name: Print DB version details

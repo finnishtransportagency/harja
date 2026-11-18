@@ -8,6 +8,7 @@
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.ui.komponentti :as komp]
+            [harja.ui.valinnat :as valinnat]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.toteumat :as toteumat]
@@ -230,16 +231,19 @@
   (let [{:keys [alkupvm loppupvm]} (-> @tila/tila :yleiset :urakka) ;; Ota urakan alkamis päivä
         vuosi (pvm/vuosi alkupvm)
         urakan-kesto (- (count (pvm/vuodet-valissa alkupvm loppupvm)) 1)
-        hoitokaudet (into [] (range vuosi (+ vuosi urakan-kesto)))
+        hoitokaudet-vuosina (into [] (range vuosi (+ vuosi urakan-kesto)))
+        hoitokaudet (mapv pvm/vuodesta-hoitokausi hoitokaudet-vuosina)
         ryhmitellyt-maarat (get-in app [:toteutuneet-maarat-grouped])
         toteumat (get-in app [:haetut-toteumat])
         toimenpiteet (get-in app [:toimenpiteet])
         valittu-toimenpide (if (nil? (:valittu-toimenpide app))
                              {:otsikko "Kaikki" :id 0}
                              (:valittu-toimenpide app))
-        valittu-hoitokausi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
+        valittu-hoitovuosi (if (nil? (get-in app [:hoitokauden-alkuvuosi]))
                              vuosi
                              (get-in app [:hoitokauden-alkuvuosi]))
+        valittu-hoitokausi (some #(when (= valittu-hoitovuosi (pvm/vuosi (first %))) %)
+                             hoitokaudet)
         syottomoodi (get-in app [:syottomoodi])
         filtterit (:hakufiltteri app)]
     [:div.maarien-toteumat
@@ -261,14 +265,13 @@
                                      :valitse-fn #(e! (maarien-toteumat/->ValitseToimenpide (:id @nav/valittu-urakka) %))
                                      :format-fn #(:otsikko %)}
         (merge toimenpiteet {:otsikko "Kaikki" :id 0})]]
-      [:div.col-xs-6.col-md-3
-       [:label.alasvedon-otsikko {:for "hoitokausi-valikko"} "Hoitokausi"]
-       [yleiset/livi-pudotusvalikko {:elementin-id "hoitokausi-valikko"
-                                     :valinta valittu-hoitokausi
-                                     :vayla-tyyli? true
-                                     :valitse-fn #(e! (maarien-toteumat/->ValitseHoitokausi (:id @nav/valittu-urakka) %))
-                                     :format-fn #(str "1.10." % "-30.9." (inc %))}
-        hoitokaudet]]
+      [valinnat/urakan-hoitokausi-tuck
+       valittu-hoitokausi
+       hoitokaudet
+       #(e! (maarien-toteumat/->ValitseHoitokausi
+              (:id @nav/valittu-urakka)
+              (pvm/vuosi (first %))))
+       {:wrapper-luokka "col-xs-6 col-md-3"}]
       [:div.col-xs-6.col-md-3 {:style {:padding-top "21px"}}
        [napit/uusi
         "Lisää toteuma"
@@ -298,6 +301,7 @@
     (komp/sisaan-ulos
       #(do
          (kartta-tasot/taso-paalle! :maarien-toteumat)
+         (e! (maarien-toteumat/->HaeMaarienToteumienLukitukset))
          (e! (maarien-toteumat/->HaeKaikkiTehtavat))
          (e! (maarien-toteumat/->HaeToimenpiteet))
          ;; Haetaan kaikki, joten ei määritellä tehtäväryhmää

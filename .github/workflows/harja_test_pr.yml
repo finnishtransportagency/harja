@@ -32,7 +32,7 @@ jobs:
 
     with:
 
-      # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+      # Katso saatavilla olevat harjadb servicet tools/docker/docker-compose.ci.yml:stä
       test-db-service: harjadb-latest
       e2e-browsers: "['chrome']"
       # PR-testeissä ajetaan vain kevyt build ja testauksen kannalta epärelevantit osat on jätetty pois.

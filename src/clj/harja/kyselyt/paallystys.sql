@@ -1173,7 +1173,7 @@ SELECT k.id,
 FROM kulu k
          LEFT JOIN kulu_kohdistus kk ON k.id = kk.kulu
          LEFT JOIN tehtavaryhma tr ON kk.tehtavaryhma = tr.id
-         LEFT JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id
+         LEFT JOIN tehtavaryhmaotsikko tro ON tr.tehtavaryhmaotsikko_id = tro.id AND tro.urakkatyyppi = 'teiden-hoito'
 WHERE tro.otsikko = '4 PÄÄLLYSTEIDEN PAIKKAUS'
   AND (k.luotu BETWEEN :alku AND :loppu OR
        k.muokattu BETWEEN :alku AND :loppu);
