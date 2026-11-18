@@ -22,5 +22,23 @@
      sarakkeet
      rivit]]])
 
+(defn- muokkausgrid [komponentti]
+  (r/with-let [rivit (r/atom {1 {:id 1 :nimi "Murske" :maara 10 :yksikko "tn"}
+                              2 {:id 2 :nimi "Sora" :maara 5 :yksikko "tn"}})]
+    [kehys/kortti komponentti
+     [:p "Muokkausgrid käsittelee rivit atomissa. Muutokset kulkevat käyttöpaikan muutos-callbackille."]
+     [:div {:data-cy (kehys/ankkuri komponentti "-grid")}
+      [grid/muokkaus-grid {:otsikko "Muokkausgrid"
+                           :tyhja "Ei muokattavia rivejä."
+                           :voi-muokata? true
+                           :voi-lisata? false
+                           :voi-kumota? false
+                           :muutos (fn [_] nil)}
+       [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys 2}
+        {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys 1}
+        {:otsikko "Yks." :nimi :yksikko :muokattava? (constantly false) :leveys 0.5}]
+       rivit]]]))
+
 (def esikatselut
-  {:perusgrid perusgrid})
+  {:perusgrid perusgrid
+   :muokkausgrid muokkausgrid})

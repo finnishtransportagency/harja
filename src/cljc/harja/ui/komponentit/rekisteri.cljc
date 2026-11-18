@@ -172,6 +172,17 @@
     :bootstrap-tila :riippuvainen
     :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
     :api "harja.ui.grid/grid: {:otsikko :tyhja :tunniste} + sarakkeet + rivit"}
+   {:id :muokkausgrid
+    :nimi "Muokkausgrid"
+    :ryhma :gridit
+    :luonne :shared-komponentti
+    :rooli :taulukko
+    :slotit #{:sarakkeet :rivit}
+    :tilat #{:normaali :tyhja :muokkaus}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Muokattava taulukko. Rivien muutokset kulkevat käyttöpaikan muutos-callbackin kautta. Paneelin rakenne on vielä Bootstrapin panel-luokkia."
+    :api "harja.ui.grid/muokkaus-grid: {:otsikko :tyhja :voi-muokata? :voi-lisata? :voi-kumota? :muutos} + sarakkeet + rivit-atomi"}
    {:id :tabs
     :nimi "Tabs"
     :ryhma :portatut
