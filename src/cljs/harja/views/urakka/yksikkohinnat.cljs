@@ -89,7 +89,7 @@
         ryhmat))))
 
 (defn tehtava-taulukko
-  [e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat]
+  [e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
   (let [grid-rivit (filter (fn [rivi]
                             (or (nil? (:tehtava rivi))
                               (contains? avatut-tehtavaryhmat
@@ -98,6 +98,8 @@
         solun-luokka-fn (fn [_ rivi]
                           (when (:valiotsikko rivi)
                             "valiotsikko-tausta korkea"))
+        indeksivaihtoehdot [{:arvo true  :nimi "Kyllä"}
+                            {:arvo false :nimi "Ei"}]
         sarakkeet [{:otsikko ""
                     :leveys "2%"
                     :tyyppi :komponentti
@@ -124,13 +126,29 @@
                     :muokattava? (constantly false)}
                    {:otsikko "Indeksi"
                     :leveys "18%"
-                    :fmt #(fmt/desimaaliluku-opt-ilman-nollia %)
-                    :nimi :indeksi
-                    :tyyppi :string
-                    :tasaa :oikea
+                    :nimi :indeksi_kaytossa
+                    :tyyppi :valinta
+                    :valinnat indeksivaihtoehdot
+                    :valinta-arvo :arvo
+                    :valinta-nayta (fn [valinta]
+                                     (if valinta
+                                       (:nimi valinta)
+                                       [:span
+                                        {:title "Valinta puuttuu"}
+                                        (ikonit/livicon-warning-sign)
+                                        " Valitse"]))
+                    :fmt (fn [indeksi-kaytossa?]
+                           (cond
+                             (true? indeksi-kaytossa?) urakan-indeksi
+                             (false? indeksi-kaytossa?) "-"
+                             :else         ""))
+                    :tasaa :vasen
                     :solun-luokka solun-luokka-fn
-                    :muokattava? (constantly false)}
-                   {:otsikko "Hinta ilman indeksikorjausta\u2028€ / yksikkö" :leveys "15%"
+                    :muokattava? (fn [rivi]
+                                   (and tallennustila?
+                                     (:tehtava rivi)))}
+                   {:otsikko "Hinta ilman indeksikorjausta\u2028€ / yksikkö"
+                    :leveys "15%"
                     :nimi :yksikkohinta
                     :tasaa :oikea
                     :tyyppi :numero
@@ -139,7 +157,9 @@
                     :muokattava? (fn [rivi]
                                    (and tallennustila?
                                      (:tehtava rivi)))}
-                   {:otsikko "Indeksikorjattu hinta\u2028€ / yksikkö" :leveys "15%" :nimi :indeksikorjattu-yksikkohinta
+                   {:otsikko "Indeksikorjattu hinta\u2028€ / yksikkö"
+                    :leveys "15%"
+                    :nimi :indeksikorjattu_yksikkohinta
                     :tyyppi :numero
                     :desimaalien-maara 2
                     :solun-luokka solun-luokka-fn
@@ -179,7 +199,8 @@
         valitun-hoitokauden-alkuvuosi (some-> valittu-hoitokausi first pvm/vuosi)
         onko-viimeinen-vuosi? (and valitun-hoitokauden-alkuvuosi
                                 (= valitun-hoitokauden-alkuvuosi
-                                  urakan-loppuvuoden-alkuvuosi))]
+                                  urakan-loppuvuoden-alkuvuosi))
+        urakan-indeksi (:indeksi urakka)]
     [:div.yksikkohinnat
      [:div.row
       [:h1 "Yksikköhinnat"]]
@@ -215,7 +236,7 @@
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? yksikkohintaiset-tyot
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
 
-     [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat]
+     [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
      [debug/debug app]]))
 
 (defn- yksikkohinnat*

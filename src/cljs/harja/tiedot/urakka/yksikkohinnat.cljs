@@ -31,6 +31,8 @@
 (defrecord TallennaYksikkohinnatEpaonnistui [vastaus])
 (defrecord AsetaKaikkiIndeksille [yksikkohintaiset-tyot])
 (defrecord HoitokausiVaihdettu [hoitokausi])
+(defrecord HaeUrakanIndeksikertoimetOnnistui [vastaus])
+(defrecord HaeUrakanIndeksikertoimetEpaonnistui [vastaus])
 (defrecord ToggleTallennusTila [])
 (defrecord PeruutaTallennus [])
 (defrecord AvaaRivi [valiotsikko])
@@ -79,18 +81,43 @@
     []
     rivit))
 
+(defn- urakkavuosi-nro [urakka hoitokausi]
+  (let [urakan-aloitusvuosi (pvm/vuosi (:alkupvm urakka))
+        urakkavuoden-alkuvuosi (pvm/vuosi (first hoitokausi))]
+    (max 1
+      (- (inc urakkavuoden-alkuvuosi)
+        urakan-aloitusvuosi))))
+
+(defn- indeksikorjattu-hinta [rivi indeksikerroin urakkavuosi-nro]
+  (let [hinta (:yksikkohinta rivi)]
+    (when (number? hinta)
+      (if (and (true? (:indeksi_kaytossa rivi))
+            (> urakkavuosi-nro 1)
+            (number? indeksikerroin))
+        (* hinta indeksikerroin)
+        hinta))))
+
 (extend-protocol tuck/Event
 
   Alusta
   (process-event [{urakka :urakka} app]
-    (assoc app
-      :urakka urakka
-      :urakan-hoitokaudet @urakka-tiedot/valitun-urakan-hoitokaudet
-      :valittu-hoitokausi @urakka-tiedot/valittu-hoitokausi
-      :yksikkohintaiset-tyot nil
-      :toimenpiteet-ja-tehtavat nil
-      :haku-kaynnissa? true
-      :virhe nil))
+    (do
+      (tuck-apurit/post!
+        app
+        :urakan-indeksikertoimet
+        (:id urakka)
+        {:onnistui ->HaeUrakanIndeksikertoimetOnnistui
+         :epaonnistui ->HaeUrakanIndeksikertoimetEpaonnistui})
+
+      (assoc app
+        :urakka urakka
+        :urakan-hoitokaudet @urakka-tiedot/valitun-urakan-hoitokaudet
+        :valittu-hoitokausi @urakka-tiedot/valittu-hoitokausi
+        :yksikkohintaiset-tyot nil
+        :toimenpiteet-ja-tehtavat nil
+        :urakan-indeksikertoimet []
+        :haku-kaynnissa? true
+        :virhe nil)))
 
   HaeYksikkohintaisetTyot
   (process-event [{parametrit :parametrit} app]
@@ -151,28 +178,39 @@
   (process-event [{:keys [tehtavat]} {:keys [urakka valittu-hoitokausi] :as app}]
     (let [[alkupvm loppupvm] valittu-hoitokausi
           sopimus (first @urakka-tiedot/valittu-sopimusnumero)
+          urakkavuosi-nro (urakkavuosi-nro urakka valittu-hoitokausi)
+          indeksikerroin (get-in app
+                           [:urakan-indeksikertoimet
+                            (dec urakkavuosi-nro)
+                            :indeksikerroin])
           nykyiset-rivit (vec (:yksikkohintaiset-tyot app))
           muokatut-rivit (->> tehtavat
                            (filter :tehtava)
-                           (map #(merge %
-                                   {:urakka (:id urakka)
-                                    :sopimus sopimus
-                                    :alkupvm (or (:alkupvm %) alkupvm)
-                                    :loppupvm (or (:loppupvm %) loppupvm)})))
-          paivitetyt-rivit
-          (reduce
-            (fn [rivit uusi-rivi]
-              (let [avain (yksikkohinnan-avain uusi-rivi)
-                    indeksi (some (fn [[i rivi]]
-                                    (when (= avain
-                                            (yksikkohinnan-avain rivi))
-                                      i))
-                              (map-indexed vector rivit))]
-                (if (some? indeksi)
-                  (assoc rivit indeksi uusi-rivi)
-                  (conj rivit uusi-rivi))))
-            nykyiset-rivit
-            muokatut-rivit)]
+                           (map (fn [rivi]
+                                  (let [rivi (merge rivi
+                                               {:urakka (:id urakka)
+                                                :sopimus sopimus
+                                                :alkupvm (or (:alkupvm rivi) alkupvm)
+                                                :loppupvm (or (:loppupvm rivi) loppupvm)})]
+                                    (assoc rivi
+                                      :indeksikorjattu_yksikkohinta
+                                      (indeksikorjattu-hinta
+                                        rivi
+                                        indeksikerroin
+                                        urakkavuosi-nro))))))
+          paivitetyt-rivit (reduce
+                              (fn [rivit uusi-rivi]
+                                (let [avain (yksikkohinnan-avain uusi-rivi)
+                                      indeksi (some (fn [[i rivi]]
+                                                      (when (= avain
+                                                              (yksikkohinnan-avain rivi))
+                                                        i))
+                                                (map-indexed vector rivit))]
+                                  (if (some? indeksi)
+                                    (assoc rivit indeksi uusi-rivi)
+                                    (conj rivit uusi-rivi))))
+                              nykyiset-rivit
+                              muokatut-rivit)]
       (-> app
         (assoc :yksikkohintaiset-tyot
           (poista-yksikkohintojen-duplikaatit paivitetyt-rivit)
@@ -218,6 +256,17 @@
       :valittu-hoitokausi hoitokausi
       :yksikkohintaiset-tyot nil
       :haku-kaynnissa? true))
+
+  HaeUrakanIndeksikertoimetOnnistui
+  (process-event [{:keys [vastaus]} app]
+    (assoc app :urakan-indeksikertoimet vastaus))
+
+  HaeUrakanIndeksikertoimetEpaonnistui
+  (process-event [{:keys [vastaus]} app]
+    (viesti/nayta-toast!
+      "Urakan indeksikertoimien haku epäonnistui."
+      :varoitus)
+    (assoc app :virhe vastaus))
 
   ToggleTallennusTila
   (process-event [_ app]

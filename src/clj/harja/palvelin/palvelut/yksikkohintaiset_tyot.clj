@@ -8,6 +8,7 @@
             [clj-time.core :as t]
             [clj-time.coerce :as c]
 
+            [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.yksikkohintaiset-tyot :as q]
             [harja.kyselyt.urakat :as u-q]
             [harja.domain.oikeudet :as oikeudet]))
@@ -24,6 +25,14 @@
                 :maara (if (:maara %) (double (:maara %)))
                 :yksikkohinta (if (:yksikkohinta %) (double (:yksikkohinta %)))))
         (q/listaa-urakan-yksikkohintaiset-tyot db {:urakka urakka-id})))
+
+(defn hae-urakan-indeksikertoimet
+  [db user urakka-id]
+  (oikeudet/vaadi-lukuoikeus
+    oikeudet/urakat-suunnittelu-yksikkohintaisettyot
+    user
+    urakka-id)
+  (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id))
 
 (defn tallenna-urakan-yksikkohintaiset-tyot
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot."
@@ -46,18 +55,20 @@
                                                   nykyiset-arvot)
                                   uniikit-tehtavat (into #{} (map #(:tehtava %) tyot))]
                               (doseq [tyo tyot]
-                                (let [sql {:maara              (:maara tyo)
-                                           :yksikko            (:yksikko tyo)
-                                           :yksikkohinta       (:yksikkohinta tyo)
-                                           :arvioitu_kustannus (:arvioitu_kustannus tyo)
-                                           :kayttaja           (:id user)
-                                           :urakka             urakka-id
-                                           :sopimus            sopimusnumero
-                                           :tehtava            (:tehtava tyo)
-                                           :alkupvm            (when-not (nil? (:alkupvm tyo)) (java.sql.Date. (.getTime (:alkupvm tyo))))
-                                           :loppupvm           (when-not (nil? (:loppupvm tyo)) (java.sql.Date. (.getTime (:loppupvm tyo))))
-                                           :kuukausi           (:kuukausi tyo)
-                                           :vuosi              (:vuosi tyo)}]
+                                (let [sql {:maara                         (:maara tyo)
+                                           :yksikko                       (:yksikko tyo)
+                                           :yksikkohinta                  (:yksikkohinta tyo)
+                                           :indeksi_kaytossa              (:indeksi_kaytossa tyo)
+                                           :indeksikorjattu_yksikkohinta  (:indeksikorjattu_yksikkohinta tyo)
+                                           :arvioitu_kustannus            (:arvioitu_kustannus tyo)
+                                           :kayttaja                      (:id user)
+                                           :urakka                        urakka-id
+                                           :sopimus                       sopimusnumero
+                                           :tehtava                       (:tehtava tyo)
+                                           :alkupvm                       (when-not (nil? (:alkupvm tyo)) (java.sql.Date. (.getTime (:alkupvm tyo))))
+                                           :loppupvm                      (when-not (nil? (:loppupvm tyo)) (java.sql.Date. (.getTime (:loppupvm tyo))))
+                                           :kuukausi                      (:kuukausi tyo)
+                                           :vuosi                         (:vuosi tyo)}]
                                   (if (not (tyot-kannassa (tyo-avain tyo)))
                                     ;; insert
                                     (q/lisaa-urakan-yksikkohintainen-tyo<! c sql)
@@ -78,7 +89,11 @@
                                  (hae-urakan-yksikkohintaiset-tyot (:db this) user urakka-id)))
       (julkaise-palvelu
         :tallenna-urakan-yksikkohintaiset-tyot (fn [user tiedot]
-                                                 (tallenna-urakan-yksikkohintaiset-tyot (:db this) user tiedot))))
+                                                 (tallenna-urakan-yksikkohintaiset-tyot (:db this) user tiedot)))
+      (julkaise-palvelu
+        :urakan-indeksikertoimet
+        (fn [user urakka-id]
+          (hae-urakan-indeksikertoimet (:db this) user urakka-id))))
     this)
 
   (stop [this]
