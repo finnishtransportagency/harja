@@ -63,8 +63,19 @@
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
       (str "Tila: " (name @tila))]]))
 
+(defn- dropdown-panel [komponentti]
+  (r/with-let [auki? (r/atom false)]
+    [kehys/kortti komponentti
+     [:p "Otsikko toimii vaihtajana. Sisältö näkyy vain auki ollessa."]
+     [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+      [bootstrap/dropdown-panel {:open auki? :style :primary}
+       "Lisäasetukset"
+       [:p {:data-cy (kehys/ankkuri komponentti "-sisalto")} "Dropdown-panelin sisältö."]]]
+     [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
+      (if @auki? "Tila: auki" "Tila: kiinni")]]))
+
 (def esikatselut
-  {:panel panel
+  {:dropdown-panel dropdown-panel
    :tabs tabs
    :navbar navbar
    :viesti viesti

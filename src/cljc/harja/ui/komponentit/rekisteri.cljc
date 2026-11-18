@@ -148,7 +148,18 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Modaali näytetään sivun päätason modal-kontissa. Avaamisen ehdot ja sulkemisen seuraukset omistaa näkymä."
-    :api "harja.ui.modal/nayta!: {:otsikko :sulje-fn :leveys} + sisältö. Sulkeminen kutsuu :sulje-fn-funktiota."}])
+    :api "harja.ui.modal/nayta!: {:otsikko :sulje-fn :leveys} + sisältö. Sulkeminen kutsuu :sulje-fn-funktiota."}
+   {:id :dropdown-panel
+    :nimi "Dropdown-panel"
+    :ryhma :portatut
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :slotit #{:otsikko :sisalto}
+    :tilat #{:auki :kiinni}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Otsikolla varustettu paneeli, jonka sisältö näkyy vain auki ollessa. Ei käytössä vielä missään näkymässä."
+    :api "harja.ui.bootstrap/dropdown-panel: {:open atom :style} otsikko sisältö"}])
 
 (defn ankkuri
   "Komponentin vakaa juuriankkuri (data-cy). Johdetaan id:stä, ei tallenneta erikseen."
