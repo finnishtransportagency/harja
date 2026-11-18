@@ -19,7 +19,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 | Komponenttirekisteri (data) ja eheystarkistus | `src/cljc/harja/ui/komponentit/rekisteri.cljc` |
 | Tarkastelusivun entry | `tyokalut/ui_komponenttien_tarkastelu_nakyma.cljs` |
 | Tarkastelurunko (navigaatio, kortti, sopimus, `ankkuri`) | `tyokalut/ui_komponenttien_tarkastelu/kehys.cljs` |
-| Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet}.cljs` |
+| Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit}.cljs` |
 | Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/komponentit_test.cljc`, `test/cljc/harja/ui/komponentit/rekisteri_test.cljc` |
 | Tyylit | `dev-resources/less/komponentit.less`, `dev-resources/less/pages/ui_komponenttien_tarkastelu.less` |
 
@@ -45,6 +45,10 @@ Uuden komponentin lisääminen:
 - Tarkastelusivun esikatselut (CLJS) validoidaan selaimessa. Rakennetestit kattavat vain cljc-puolen hiccup-rakenteen.
 - Tarjoushinnat-näkymän `urakka-haku-id` on edelleen render-aikainen `gensym`.
 - Livi-pudotusvalikko on rekisteröity, mutta sen sopimusta ei ole vielä määritelty uudelleen. Nappi on merkitty `:osittain-riippuvaiseksi`, koska Bootstrap-luokat tulevat käyttöpaikan `:luokka`-optiosta.
+- Kenttätyyppi `:valinta` renderöityy livi-pudotusvalikon kautta, joten sille ei ole omaa korttia. Sen Bootstrap-riippuvuus on sama kuin livi-pudotusvalikolla.
+- Gridit (`perusgrid`, `muokkausgrid`) ovat `:riippuvainen`, koska ne käyttävät `.panel`-, `.panel-default`- ja `btn-xs`-luokkia.
+- Checkbox-ryhmä on `:osittain-riippuvainen`: yksi palsta on puhdas, useampi palsta käyttää `col-sm-*`-luokkia.
+- Modal on `:riippuvainen`, koska `modal-container` käyttää yhä `.modal`-, `.modal-dialog`- ja `.modal-content`-luokkia.
 
 ## Rajauksen ulkopuolella
 
