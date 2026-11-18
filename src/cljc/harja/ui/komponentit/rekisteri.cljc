@@ -47,9 +47,9 @@
       :slotit #{:toiminto}
       :tilat #{:normaali :estetty :lataus}
       :sallitut-vanhemmat #{:lomake}
-    :bootstrap-tila :maarittelematta
-    :kuvaus "Yhteinen toimintopainike, jonka käyttöpaikka välittää tekstin ja toiminnon."
-    :api "harja.ui.napit/nappi: teksti + callback + optiot (:data-cy, :disabled, :luokka)"}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."
+    :api "harja.ui.napit/nappi: teksti + callback + optiot (:data-cy, :disabled, :luokka, :tallennus-kaynnissa?)"}
    {:id :suodatin
     :nimi "Suodatin"
     :ryhma :lomakkeet

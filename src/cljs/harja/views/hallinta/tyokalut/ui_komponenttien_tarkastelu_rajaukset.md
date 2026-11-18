@@ -44,7 +44,7 @@ Uuden komponentin lisääminen:
 - `kentat/tee-kentta` tukee vain `:elementin-id`:tä, ei `aria-describedby`- tai `aria-invalid`-attribuutteja. Kenttäryhmän ARIA-yhteys toimii natiiveille kentille (valintaryhmä), mutta `tee-kentta`-kentille se vaatii erillisen muutoksen `kentat.cljs`:ään.
 - Tarkastelusivun esikatselut (CLJS) validoidaan selaimessa. Rakennetestit kattavat vain cljc-puolen hiccup-rakenteen.
 - Tarjoushinnat-näkymän `urakka-haku-id` on edelleen render-aikainen `gensym`.
-- Livi-pudotusvalikko ja nappi on rekisteröity, mutta niiden sopimusta ei ole vielä määritelty uudelleen.
+- Livi-pudotusvalikko on rekisteröity, mutta sen sopimusta ei ole vielä määritelty uudelleen. Nappi on merkitty `:osittain-riippuvaiseksi`, koska Bootstrap-luokat tulevat käyttöpaikan `:luokka`-optiosta.
 
 ## Rajauksen ulkopuolella
 
