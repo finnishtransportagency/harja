@@ -190,7 +190,7 @@
 
 (defn hoidonjohtopalkkio-tehtavaryhma
   "MHU25+ sanktio kohdistuu tehtäväryhmään G - Hoidonjohtopalkkio.
-  Palauttaa tehtäväryhmän nimen perusteella tai nil. Nimihaku korvataan vakaalla tunnisteella tiketissä T09."
+  Palauttaa tehtäväryhmän nimen perusteella tai nil."
   [tehtavaryhmat]
   (some #(when (= "G - Hoidonjohtopalkkio" (:tehtavaryhma_nimi %)) %) tehtavaryhmat))
 
