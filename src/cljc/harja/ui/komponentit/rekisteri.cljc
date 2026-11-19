@@ -29,15 +29,19 @@
    :riippuvainen {:teksti "Bootstrap-riippuvainen"}
    :maarittelematta {:teksti "Bootstrap-tila määrittelemättä"}})
 
+(def roolit
+  "Komponentin rooli rakenteessa. Jokaisella komponentilla on täsmälleen yksi rooli."
+  #{:syote :toiminto :lomake :asettelu :taulukko :rakenne :navigaatio :palaute :overlay})
+
 (def komponentit
   [{:id :livi-pudotusvalikko
     :nimi "Livi-pudotusvalikko"
     :ryhma :alasvedot
     :luonne :shared-komponentti
-      :rooli :syote
-      :slotit #{:arvo :vaihtoehdot}
-      :tilat #{:normaali :tyhja :virhe :estetty}
-      :sallitut-vanhemmat #{:lomake}
+    :rooli :syote
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :virhe :estetty}
+    :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :riippuvainen
     :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus."
     :api "harja.ui.yleiset/pudotusvalikko: otsikko + asetuskartta + vaihtoehtovektori"}
@@ -45,10 +49,10 @@
     :nimi "Nappi"
     :ryhma :toiminnot
     :luonne :shared-komponentti
-      :rooli :toiminto
-      :slotit #{:toiminto}
-      :tilat #{:normaali :estetty :lataus}
-      :sallitut-vanhemmat #{:lomake}
+    :rooli :toiminto
+    :slotit #{:toiminto}
+    :tilat #{:normaali :estetty :lataus}
+    :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."
     :api "harja.ui.napit/nappi: teksti + callback + optiot (:data-cy, :disabled, :luokka, :tallennus-kaynnissa?)"}
@@ -56,10 +60,10 @@
     :nimi "Suodatin"
     :ryhma :lomakkeet
     :luonne :shared-komponentti
-      :rooli :syote
-      :slotit #{:kentta}
-      :tilat #{:normaali :tyhja :virhe}
-      :sallitut-vanhemmat #{:lomake}
+    :rooli :syote
+    :slotit #{:kentta}
+    :tilat #{:normaali :tyhja :virhe}
+    :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Suodattimen label ja kenttä. Käytössä tarjoushintojen näkymässä."
     :api "harja.ui.komponentit/suodatin, suodatinrivi: {:otsikko :id :data-cy} + kenttä (hiccup tai fn)"}
@@ -67,10 +71,10 @@
     :nimi "Valintaryhmä"
     :ryhma :lomakkeet
     :luonne :shared-komponentti
-      :rooli :syote
-      :slotit #{:arvo :vaihtoehdot}
-      :tilat #{:normaali :tyhja :virhe :estetty}
-      :sallitut-vanhemmat #{:lomake}
+    :rooli :syote
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :virhe :estetty}
+    :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
     :api "harja.ui.komponentit/valintaryhma: {:otsikko :id :vaihtoehdot :arvo :vaihda-fn :tyhja-valinta :ohje :virhe :pakollinen? :disabled?}"}
@@ -155,10 +159,10 @@
     :nimi "Lomake"
     :ryhma :lomakkeet
     :luonne :shared-rakenne
-      :rooli :lomake
-      :slotit #{:kentat :toiminnot :tila}
-      :tilat #{:normaali :lataus :virhe :onnistui}
-      :sallitut-vanhemmat #{:sivu}
+    :rooli :lomake
+    :slotit #{:kentat :toiminnot :tila}
+    :tilat #{:normaali :lataus :virhe :onnistui}
+    :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :api "harja.ui.komponentit: pino + kenttaryhma + valintaryhma + toimintoryhma + tilaviesti"}
@@ -234,7 +238,8 @@
     :luonne :shared-komponentti
     :rooli :palaute
     :slotit #{:sisalto}
-    :tilat #{:onnistuminen :info :varoitus :vaara}
+    :tilat #{:normaali}
+    :variantit #{:onnistuminen :info :varoitus :vaara}
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Flash-viesti ilman Bootstrapin modal- ja alert-luokkia. Variantit tulevat Harjan omista luokista."
@@ -289,7 +294,8 @@
     :luonne :shared-komponentti
     :rooli :palaute
     :slotit #{:ensisijainen :toissijainen}
-    :tilat #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
+    :tilat #{:normaali}
+    :variantit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
     :sallitut-vanhemmat #{:sivu :lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
@@ -321,17 +327,31 @@
   ([] (virheet ryhmat komponentit))
   ([ryhmat komponentit]
    (let [ryhma-idt (set (map :id ryhmat))
+         vanhempi-idt (into #{:sivu} (mapcat (juxt :id :rooli) komponentit))
          tuplat (fn [avain]
                   (->> komponentit (map avain) frequencies
-                    (keep (fn [[arvo maara]] (when (> maara 1) arvo)))))]
+                    (keep (fn [[arvo maara]] (when (> maara 1) arvo)))))
+         joukko? (fn [arvo] (and (set? arvo) (seq arvo)))]
      (vec
        (concat
          (for [arvo (tuplat :id)] (str "Tuplaid: " arvo))
-         (for [{:keys [id ryhma luonne bootstrap-tila nimi kuvaus api]} komponentit
+         (for [{:keys [id ryhma luonne bootstrap-tila nimi kuvaus api rooli slotit tilat
+                       sallitut-vanhemmat variantit] :as komponentti} komponentit
                virhe [(when-not (contains? ryhma-idt ryhma) (str id ": tuntematon ryhmä " ryhma))
                       (when-not (contains? luonteet luonne) (str id ": tuntematon luonne " luonne))
                       (when-not (contains? bootstrap-tilat bootstrap-tila)
                         (str id ": tuntematon bootstrap-tila " bootstrap-tila))
-                      (when-not (every? seq [nimi kuvaus api]) (str id ": nimi, kuvaus tai api puuttuu"))]
+                      (when-not (every? seq [nimi kuvaus api]) (str id ": nimi, kuvaus tai api puuttuu"))
+                      (when-not (contains? roolit rooli) (str id ": tuntematon tai puuttuva rooli " rooli))
+                      (when-not (joukko? slotit) (str id ": slotit puuttuvat tai ovat tyhjät"))
+                      (when-not (joukko? tilat) (str id ": tilat puuttuvat tai ovat tyhjät"))
+                      (when-not (joukko? sallitut-vanhemmat)
+                        (str id ": sallitut-vanhemmat puuttuvat tai ovat tyhjät"))
+                      (when-let [tuntemattomat (seq (remove vanhempi-idt sallitut-vanhemmat))]
+                        (str id ": tuntemattomat vanhemmat " (vec tuntemattomat)))
+                      (when (and (contains? komponentti :variantit) (not (joukko? variantit)))
+                        (str id ": variantit ovat tyhjät tai eivät ole joukko"))
+                      (when (and (joukko? variantit) (some #(contains? tilat %) variantit))
+                        (str id ": variantit ja tilat menevät päällekkäin"))]
                :when virhe]
            virhe))))))
