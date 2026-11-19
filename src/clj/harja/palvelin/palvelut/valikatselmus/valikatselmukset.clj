@@ -1336,7 +1336,9 @@
     mahdolliset-paatokset))
 
 (defn- hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen
+  "Palauttaa välikatselmukseen liittyvät mahdolliset ja kaikki tehdyt päätökset."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  ;; Välikatselmuksen päätösten hakeminen edellyttää urakkasidonnaista oikeutta.
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
@@ -1344,7 +1346,9 @@
      :tietokanta-paatokset tietokanta-paatokset}))
 
 (defn hae-kaikki-mahdolliset-ja-tehdyt-paatokset-urakkatilanteeseen
+  "Palauttaa urakkatilanteeseen liittyvät mahdolliset ja kaikki tehdyt päätökset."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  ;; Urakkatilanteen päätösten hakeminen edellyttää yleistä urakkatilanteen oikeutta.
   (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
   (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
