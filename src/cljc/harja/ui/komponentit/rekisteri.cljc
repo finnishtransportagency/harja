@@ -243,6 +243,7 @@
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :osittain-riippuvainen
+    :bootstrap-luokat ["col-sm-"]
     :kuvaus "Monivalinta, jossa arvo on joukko. Yksi palsta ei käytä Bootstrap-luokkia, useampi palsta käyttää col-sm-*-luokkia."
     :funktio "harja.ui.kentat/tee-kentta"
     :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :checkbox-group."}
@@ -276,6 +277,7 @@
     :tilat #{:normaali}
     :sallitut-vanhemmat #{:lomake :sivu}
     :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["row"]
     :kuvaus "Asettelurivi, jossa sarakkeet jakavat tilan tasan koon mukaan. Sarakkeiden koon ja rivin luokan välittää käyttöpaikka."
     :funktio "harja.ui.yleiset/rivi"
     :asetukset {:koko {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Numero tai mäppi {:lg :md :xs}."}
@@ -399,6 +401,7 @@
     :tilat #{:avoin :suljettu}
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["modal" "modal-dialog" "modal-content"]
     :kuvaus "Modaali näytetään sivun päätason modal-kontissa. Avaamisen ehdot ja sulkemisen seuraukset omistaa näkymä."
     :funktio "harja.ui.modal/nayta!"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Modaalin otsikko."}
@@ -554,7 +557,7 @@
      (vec
        (concat
          (for [arvo (tuplat :id)] (str "Tuplaid: " arvo))
-         (for [{:keys [id ryhma luonne bootstrap-tila nimi kuvaus funktio asetukset rooli slotit tilat
+         (for [{:keys [id ryhma luonne bootstrap-tila bootstrap-luokat nimi kuvaus funktio asetukset rooli slotit tilat
                        sallitut-vanhemmat variantit suositus korvaa] :as komponentti} komponentit
                virhe [(when-not (contains? suositukset suositus)
                         (str id ": tuntematon tai puuttuva suositus " suositus))
@@ -564,6 +567,10 @@
                       (when-not (contains? luonteet luonne) (str id ": tuntematon luonne " luonne))
                       (when-not (contains? bootstrap-tilat bootstrap-tila)
                         (str id ": tuntematon bootstrap-tila " bootstrap-tila))
+                      (when-not (or (nil? bootstrap-luokat) (and (vector? bootstrap-luokat) (every? string? bootstrap-luokat)))
+                        (str id ": bootstrap-luokat on oltava tekstivektori"))
+                      (when (and (= :ei-riippuvuutta bootstrap-tila) (seq bootstrap-luokat))
+                        (str id ": ei-riippuvuutta-komponentilla ei voi olla bootstrap-luokat"))
                       (when-not (every? seq [nimi kuvaus funktio]) (str id ": nimi, kuvaus tai funktio puuttuu"))
                       (when-not (and (map? asetukset) (seq asetukset)) (str id ": asetukset puuttuvat"))
                       (when-let [virheelliset (seq (remove (comp asetustyypit :tyyppi val) asetukset))]

@@ -103,7 +103,7 @@ The following keys are supported in the configuration:
                      :data-cy (when data-cy (str data-cy "-vaihtaja"))
                      :aria-expanded (str @valikko-avattu?)
                      :on-click toggle!}
-            [:span.sr-only "Vaihda navigaatio"]
+            [:span.harja-ruudunlukijalle "Vaihda navigaatio"]
             [:span.harja-navbar-vaihtaja-viiva]
             [:span.harja-navbar-vaihtaja-viiva]
             [:span.harja-navbar-vaihtaja-viiva]]
