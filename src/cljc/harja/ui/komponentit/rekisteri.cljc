@@ -15,6 +15,7 @@
    {:id :toiminnot :nimi "Toiminnot"}
    {:id :lomakkeet :nimi "Lomakkeet"}
    {:id :gridit :nimi "Gridit"}
+   {:id :palautteet :nimi "Palautteet"}
    {:id :portatut :nimi "Portatut Bootstrap-komponentit"}])
 
 (def luonteet
@@ -259,7 +260,40 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Otsikolla varustettu paneeli, jonka sisältö näkyy vain auki ollessa. Ei käytössä vielä missään näkymässä."
-    :api "harja.ui.bootstrap/dropdown-panel: {:open atom :style} otsikko sisältö"}])
+    :api "harja.ui.bootstrap/dropdown-panel: {:open atom :style} otsikko sisältö"}
+   {:id :ajax-loader
+    :nimi "Latausindikaattori"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :slotit #{:viesti}
+    :tilat #{:lataus}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Latauskuva ja optionaalinen viesti. Näkyy, kun sisältö on hakuvaiheessa."
+    :api "harja.ui.yleiset/ajax-loader: [viesti {:luokka :sama-rivi?}]"}
+   {:id :vihje
+    :nimi "Pikkuvihje"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :slotit #{:teksti}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Kevyt ohjeteksti kuvakkeella. Käytetään kenttien ja otsikoiden yhteydessä."
+    :api "harja.ui.yleiset/vihje: teksti [luokka] [ikonin-koko]"}
+   {:id :info-laatikko
+    :nimi "Info-laatikko"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :slotit #{:ensisijainen :toissijainen}
+    :tilat #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
+    :api "harja.ui.yleiset/info-laatikko: tyyppi ensisijainen-viesti [toissijainen-viesti leveys {:luokka :sulje-fn :sulje-nappi-id :reunan-voimakkuus}]"}])
 
 (defn ankkuri
   "Komponentin vakaa juuriankkuri (data-cy). Johdetaan id:stä, ei tallenneta erikseen."

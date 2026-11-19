@@ -10,6 +10,7 @@
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.gridit :as gridit]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.lomakkeet :as lomakkeet]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.palautteet :as palautteet]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.portatut :as portatut]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.toiminnot :as toiminnot]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.simulaattori :as simulaattori]))
@@ -19,6 +20,7 @@
          toiminnot/esikatselut
          gridit/esikatselut
          lomakkeet/esikatselut
+         palautteet/esikatselut
          portatut/esikatselut))
 
 (defn ui-komponenttien-tarkastelu []
