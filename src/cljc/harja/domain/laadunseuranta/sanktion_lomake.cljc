@@ -50,15 +50,25 @@
   Laskettavalla sanktiolla käyttäjän summa poistetaan ja tilalle asetetaan laskennan syöte;
   lopullisen määrän ratkaisee palvelu.
   `muokattu` on lomakkeen nykyinen sanktio, `summakonteksti` on `sanktion-summakonteksti`n tulos
-  ja `lomakkeen-tiedot` on sanktio ilman lomakkeen sisäisiä tilatietoja."
-  [muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot]
-  (cond-> lomakkeen-tiedot
-    kiintea-summamalli
-    (merge kiintea-summamalli)
-    laskettu-maaritys
-    (-> (dissoc :summa :normaalimaara :laskennan-syote)
-      (assoc :omailmoitettu false
-        :laskettava-syote (sanktion-laskenta/laskettava-syote muokattu)))))
+  ja `lomakkeen-tiedot` on sanktio ilman lomakkeen sisäisiä tilatietoja.
+  Kohdistusratkaisu normalisoidaan tallennettavaan riviin;
+  virheellinen ratkaisu keskeyttää tallennuksen."
+  ([muokattu summakonteksti lomakkeen-tiedot]
+   (sanktion-tallennusmuoto muokattu summakonteksti lomakkeen-tiedot nil))
+  ([muokattu {:keys [kiintea-summamalli laskettu-maaritys]} lomakkeen-tiedot
+    {:keys [kohdistus virhe] :as kohdistusratkaisu}]
+   (when virhe
+     (throw (ex-info virhe {:kohdistusratkaisu kohdistusratkaisu})))
+   (let [lomakkeen-tiedot (if (nil? kohdistusratkaisu)
+                            lomakkeen-tiedot
+                            (assoc lomakkeen-tiedot :toimenpideinstanssi kohdistus))]
+     (cond-> lomakkeen-tiedot
+       kiintea-summamalli
+       (merge kiintea-summamalli)
+       laskettu-maaritys
+       (-> (dissoc :summa :normaalimaara :laskennan-syote)
+         (assoc :omailmoitettu false
+           :laskettava-syote (sanktion-laskenta/laskettava-syote muokattu)))))))
 
 (defn sanktion-summakonteksti
   "Ratkaisee aktiivisen sanktiotyypin summamäärityksen: palauttaa avaimet
@@ -238,10 +248,28 @@
     (some #(when (= toimenpidekoodi (:id %)) (:tpi_id %))
       toimenpideinstanssit)))
 
+(defn kohdistusratkaisu
+  "Ratkaisee kanonisen sanktion kohdistuksen annetusta mahdollisten kohdistusten listasta.
+  Täsmälleen yksi kohdistus kelpaa; puuttuva tai epäselvä kohdistus palauttaa virhetekstin."
+  [kulun-kohdistukset]
+  (let [kohdistus (:tpi_id (first kulun-kohdistukset))]
+    (cond
+      (and (= 1 (count kulun-kohdistukset))
+        (some? kohdistus))
+      {:kohdistus kohdistus
+       :virhe nil}
+
+      (< (count kulun-kohdistukset) 2)
+      {:kohdistus nil
+       :virhe "Sanktiolle ei löytynyt toimenpidekohdistusta. Ota yhteys ylläpitoon."}
+
+      :else
+      {:kohdistus nil
+       :virhe "Sanktiolle löytyi useita toimenpidekohdistuksia. Kohdistusta ei voi ratkaista turvallisesti."})))
+
 (defn- ainoa-kulun-kohdistus
   [kulun-kohdistukset]
-  (when (= 1 (count kulun-kohdistukset))
-    (:tpi_id (first kulun-kohdistukset))))
+  (:kohdistus (kohdistusratkaisu kulun-kohdistukset)))
 
 (defn vaihda-sanktiolajia
   "Vaihtaa sanktion lajin ja ratkaisee tyypin ja toimenpideinstanssin uuden lajin tyypeistä.
@@ -262,10 +290,9 @@
          rivi (if tyyppi
                 (assoc rivi
                   :tyyppi tyyppi
-                  :toimenpideinstanssi (if (some? (:toimenpidekoodi tyyppi))
-                                         (tyypin-toimenpideinstanssi tyyppi toimenpideinstanssit)
-                                         (when (and urakan-alkuvuosi (> urakan-alkuvuosi 2024))
-                                           (ainoa-kulun-kohdistus kulun-kohdistukset))))
+                  :toimenpideinstanssi (if (and urakan-alkuvuosi (> urakan-alkuvuosi 2024))
+                                         (ainoa-kulun-kohdistus kulun-kohdistukset)
+                                         (tyypin-toimenpideinstanssi tyyppi toimenpideinstanssit)))
                 (dissoc rivi :laskettava-syote :laskennan-syote))]
      (if (and (not (sanktio-domain/muu-kuin-muistutus? rivi))
            (nil? (:tyyppi rivi)))
@@ -296,15 +323,12 @@
                    :tyyppi uusi-tyyppi
                    :toimenpideinstanssi toimenpideinstanssi
                    :tpi_id toimenpideinstanssi))
-               (let [toimenpidekoodi (:toimenpidekoodi uusi-tyyppi)
-                     kohdistus (ainoa-kulun-kohdistus kulun-kohdistukset)]
+               (let [kohdistus (ainoa-kulun-kohdistus kulun-kohdistukset)]
                  (cond-> (assoc rivi :tyyppi uusi-tyyppi)
                    (and (some? uusi-tyyppi)
-                     (or (some? toimenpidekoodi) (some? kohdistus)))
-                   (assoc :toimenpideinstanssi
-                     (if (some? toimenpidekoodi)
-                       (tyypin-toimenpideinstanssi uusi-tyyppi toimenpideinstanssit)
-                       kohdistus)))))
+                     (or (some? kohdistus)
+                       (contains? rivi :toimenpideinstanssi)))
+                   (assoc :toimenpideinstanssi kohdistus))))
         kiintea-summa (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa uusi-tyyppi)
         manuaalinen-c? (some? (summamaaritys/c-ryhman-manuaalinen-maaritys (:laji rivi) uusi-tyyppi))
         omailmoitettu (if kiintea-summa

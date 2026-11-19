@@ -248,7 +248,7 @@
 
 (defn- kulun-kohdistus-kentta
   [{:keys [sanktio aikakausi lukutila? kulun-kohdistukset
-           hoidonjohtopalkkio-tr toimenpideinstanssit]}]
+           hoidonjohtopalkkio-tr toimenpideinstanssit kohdistusratkaisu]}]
   ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
   (when (or
           (sanktio-domain/muu-kuin-muistutus? sanktio)
@@ -257,7 +257,8 @@
                          "Liikenneympäristön hoito"
                          "Sorateiden hoito ja ylläpito"
                          "Hallinnolliset laiminlyönnit"} (get-in sanktio [:tyyppi :nimi]))))
-    (let [kulun-kohdistus {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
+    (let [kohdistusvirhe (when (:maaraystapa? aikakausi) (:virhe kohdistusratkaisu))
+          kulun-kohdistus {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
                            :pakollinen? true
                            :disabled? (or (empty? toimenpideinstanssit)
                                         (and (:maaraystapa? aikakausi)
@@ -268,7 +269,10 @@
                            :valinta-arvo :tpi_id
                            :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                            :valinnat kulun-kohdistukset
-                           :validoi [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]]}
+                           :validoi (if (:maaraystapa? aikakausi)
+                                      [(fn [_arvo _rivi _taulukko] kohdistusvirhe)]
+                                      [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]])
+                           :virheteksti kohdistusvirhe}
           lukutilan-kulun-kohdistus (assoc (lukutilan-kenttakuvaus kulun-kohdistus)
                                       :hae (if (:maaraystapa? aikakausi)
                                              #(:tehtavaryhma_nimi hoidonjohtopalkkio-tr)
@@ -536,10 +540,11 @@
 
 (defn- tallennustoiminto
   "Palauttaa tallennusfunktion ja sitä vastaavan napin komponentin."
-  [{:keys [tallenna-fn muokattu summa urakka-id sivupaneeli-auki?-atom]}]
+  [{:keys [tallenna-fn muokattu summa urakka-id sivupaneeli-auki?-atom kohdistusratkaisu]}]
   (let [tallennettava-sanktio #(sanktion-lomake-domain/sanktion-tallennusmuoto
                                  @muokattu summa
-                                 (lomake/ilman-lomaketietoja @muokattu))]
+                                 (lomake/ilman-lomaketietoja @muokattu)
+                                 kohdistusratkaisu)]
     (if tallenna-fn
       ;; Laatupoikkeaman näkymässä sanktio tallennetaan paikallisesti atomiin, ei kantaan.
       {:tallenna! (fn []
@@ -563,8 +568,12 @@
       (let [muokattu tiedot/valittu-sanktio
             urakka-id (:id @nav/valittu-urakka)
             suorasanktio? (:suorasanktio @muokattu)
-            konteksti (lue-nakymakonteksti muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?
-                                             lukitustiedot)
+            peruskonteksti (lue-nakymakonteksti muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?
+                              lukitustiedot)
+            kohdistusratkaisu (when (:maaraystapa? (:aikakausi peruskonteksti))
+                                (sanktion-lomake-domain/kohdistusratkaisu
+                                  (:kulun-kohdistukset peruskonteksti)))
+            konteksti (assoc peruskonteksti :kohdistusratkaisu kohdistusratkaisu)
             {:keys [lukutila? sanktiolajit]} konteksti
             ;; Laatupoikkeaman kautta tehdyn (ei-suora)sanktion poisto vaatii erillisen "poisto"-oikeuden.
             ;; Suorasanktion poisto riittää kirjoitusoikeudella (voi-muokata?), joten sille tämä on aina tosi.
@@ -577,7 +586,8 @@
                                                           :muokattu muokattu
                                                           :summa (:summa konteksti)
                                                           :urakka-id urakka-id
-                                                          :sivupaneeli-auki?-atom sivupaneeli-auki?-atom})]
+                                                          :sivupaneeli-auki?-atom sivupaneeli-auki?-atom
+                                                          :kohdistusratkaisu kohdistusratkaisu})]
 
         ;; Vaadi tarvittavat tiedot ennen rendausta
         (if (seq sanktiolajit)

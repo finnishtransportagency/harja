@@ -337,7 +337,8 @@
     (doseq [vuosi [2025 2026]]
       (let [a-sanktio (sanktion-lomake-domain/vaihda-sanktiolajia
                         (assoc muistutus :toimenpideinstanssi nil)
-                        :A [toinen-tyyppi tyyppi] toimenpideinstanssit vuosi [])]
+                        :A [toinen-tyyppi tyyppi] toimenpideinstanssit vuosi
+                        [(first toimenpideinstanssit)])]
         (is (= tyyppi (:tyyppi a-sanktio)))
         (is (= 202 (:toimenpideinstanssi a-sanktio)))))))
 
@@ -352,11 +353,22 @@
 (deftest sanktiotyypin-vaihto-palauttaa-toimenpideinstanssin-uudemmissa-urakoissa
   (doseq [vuosi [2025 2026]]
     (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi 22}
+          kohdistus {:id 22 :tpi_id 202}
           tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
                   {:laji :A :tyyppi nil :toimenpideinstanssi nil}
-                  tyyppi vuosi [{:id 22 :tpi_id 202}] [])]
+                  tyyppi vuosi [kohdistus] [kohdistus])]
       (is (= tyyppi (:tyyppi tulos)))
       (is (= 202 (:toimenpideinstanssi tulos))))))
+
+(deftest mhu25-sanktiotyyppi-kayttaa-kanonista-kohdistusta-toimenpidekoodin-sijaan
+  (let [tyyppi {:id 2 :toimenpidekoodi 22}
+        tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                {:laji :A :tyyppi {:id 1} :toimenpideinstanssi 101}
+                tyyppi
+                2025
+                [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303 :t2_koodi "23150"}]
+                [{:id 33 :tpi_id 303 :t2_koodi "23150"}])]
+    (is (= 303 (:toimenpideinstanssi tulos)))))
 
 (deftest koodittoman-tyypin-vaihto-palauttaa-uudemman-urakan-kiintean-kohdistuksen
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
@@ -380,19 +392,33 @@
 
 (deftest koodittoman-tyypin-vaihto-ei-valitse-epa-selvaa-kohdistusta
   (let [tyyppi {:id 2 :toimenpidekoodi nil}
-        rivi {:laji :A :tyyppi nil :toimenpideinstanssi nil}
+        rivi {:laji :A :tyyppi nil :toimenpideinstanssi 101}
         kohdistukset [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303}]]
     (is (nil? (:toimenpideinstanssi
                (sanktion-lomake-domain/vaihda-sanktiotyyppia
                  rivi tyyppi 2026 kohdistukset kohdistukset))))))
 
-(deftest sanktiotyypin-vaihto-ei-keksi-puuttuvaa-kohdistusta
+(deftest sanktion-kohdistusratkaisu-paljastaa-puuttuvan-ja-epaselvan-kohdistuksen
+  (is (= {:kohdistus nil
+          :virhe "Sanktiolle ei löytynyt toimenpidekohdistusta. Ota yhteys ylläpitoon."}
+         (sanktion-lomake-domain/kohdistusratkaisu [])))
+  (is (= {:kohdistus 202
+          :virhe nil}
+         (sanktion-lomake-domain/kohdistusratkaisu [{:tpi_id 202}])))
+  (is (= {:kohdistus nil
+          :virhe "Sanktiolle ei löytynyt toimenpidekohdistusta. Ota yhteys ylläpitoon."}
+         (sanktion-lomake-domain/kohdistusratkaisu [{:tpi_id nil}])))
+  (is (= {:kohdistus nil
+          :virhe "Sanktiolle löytyi useita toimenpidekohdistuksia. Kohdistusta ei voi ratkaista turvallisesti."}
+         (sanktion-lomake-domain/kohdistusratkaisu [{:tpi_id 202} {:tpi_id 303}]))))
+
+(deftest mhu25-sanktiotyypin-vaihto-kayttaa-ainoan-kohdistuksen
   (let [rivi {:laji :A :tyyppi {:id 1} :toimenpideinstanssi 101}
         kohdistukset [{:id 33 :tpi_id 303}]
         tyyppi {:id 2 :toimenpidekoodi 22}]
-    (is (nil? (:toimenpideinstanssi
-               (sanktion-lomake-domain/vaihda-sanktiotyyppia
-                 rivi tyyppi 2026 kohdistukset kohdistukset))))
+    (is (= 303 (:toimenpideinstanssi
+                 (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                   rivi tyyppi 2026 kohdistukset kohdistukset))))
     (is (= 101 (:toimenpideinstanssi
                 (sanktion-lomake-domain/vaihda-sanktiotyyppia
                   rivi nil 2026 kohdistukset kohdistukset))))))
@@ -514,13 +540,13 @@
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
 
-(deftest sanktiotyypin-vaihto-sailyttaa-toimenpideinstanssin-uudemmassa-urakassa
+(deftest sanktiotyypin-vaihto-nollaa-vanhan-toimenpideinstanssin-uudemmassa-urakassa
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
         rivi {:laji :A
               :tyyppi {:id 1}
               :toimenpideinstanssi 101}
         toimenpideinstanssit [{:id 22 :tpi_id 202}]]
-    (is (= (assoc rivi :tyyppi tyyppi)
+    (is (= (assoc rivi :tyyppi tyyppi :toimenpideinstanssi nil)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
              rivi tyyppi 2025 toimenpideinstanssit [])))))
 
@@ -1118,6 +1144,26 @@
       (is (not (contains? tallennettu-laskettava :normaalimaara)))
       (is (not (contains? tallennettu-laskettava :laskennan-syote)))
       (is (= 42M (:laskettava-syote tallennettu-laskettava))))))
+
+(deftest sanktion-tallennusmuoto-varmistaa-kanonisen-kohdistuksen
+  (let [lomake {:laji :muistutus
+                :tyyppi {:id 1}
+                :toimenpideinstanssi nil}]
+    (is (= 202
+           (:toimenpideinstanssi
+             (sanktion-lomake-domain/sanktion-tallennusmuoto
+               lomake
+               {}
+               lomake
+               (sanktion-lomake-domain/kohdistusratkaisu [{:tpi_id 202}])))))
+    (is (thrown-with-msg?
+          clojure.lang.ExceptionInfo
+          #"Sanktiolle ei löytynyt toimenpidekohdistusta"
+          (sanktion-lomake-domain/sanktion-tallennusmuoto
+            (assoc lomake :toimenpideinstanssi 101)
+            {}
+            (assoc lomake :toimenpideinstanssi 101)
+            (sanktion-lomake-domain/kohdistusratkaisu []))))))
 
 (deftest c-ryhman-manuaalinen-maaritys-vaatii-c-lajin-ja-ohjetekstin
   (let [tyyppi {:summamaaritykset [{:maaritystapa :manuaalinen

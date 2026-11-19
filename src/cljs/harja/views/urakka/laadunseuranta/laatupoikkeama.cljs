@@ -28,6 +28,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.urakka :as u-domain]
@@ -245,14 +246,26 @@
         pakolliset-hoito-sakko
         pakolliset-hoito-muistutus))))
 
-(defn- tarkasta-sanktiorivi [sanktiorivi nakyma]
-  (let [sanktio-poistettu? (:poistettu sanktiorivi)
+(defn- tarkasta-sanktiorivi [sanktiorivi nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
+  (let [mhu25-kohdistus? (and (= :hoito nakyma)
+                          (= :teiden-hoito urakkatyyppi)
+                          (> urakan-alkuvuosi 2024))
+        kohdistusratkaisu (when mhu25-kohdistus?
+                            (-> (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
+                                  toimenpideinstanssit urakan-alkuvuosi urakkatyyppi
+                                  (get-in sanktiorivi [:tyyppi :nimi]))
+                              sanktion-lomake-domain/kohdistusratkaisu))
+        sanktio-poistettu? (:poistettu sanktiorivi)
         ;; Jos sanktio on poistettu, niin pakollisia kenttiä ei ole
         kentat (when-not sanktio-poistettu? (map #(get-in sanktiorivi %)
                                               (pakolliset-kentat nakyma (sanktio-domain/muu-kuin-muistutus? sanktiorivi))))]
-    (every? some? kentat)))
+    (and (every? some? kentat)
+      (or sanktio-poistettu?
+        (not mhu25-kohdistus?)
+        (and (nil? (:virhe kohdistusratkaisu))
+          (= (:kohdistus kohdistusratkaisu) (:toimenpideinstanssi sanktiorivi)))))))
 
-(defn- sanktiorivit-ok? [laatupoikkeama nakyma]
+(defn- sanktiorivit-ok? [laatupoikkeama nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
   (cond
     (and (not (sanktio-domain/paatos-on-sanktio? laatupoikkeama))
       (sanktiotaulukko-tyhja? laatupoikkeama))
@@ -265,7 +278,9 @@
     ;; muokkausgridiltä tulee [{id {rivi}} ..]
     ;; Tarkasta että jokaiselle riville muokkausgridissä on jokainen vaadittava arvo
     :default
-    (every? true? (map #(tarkasta-sanktiorivi % nakyma) (sanktiotaulukon-rivit laatupoikkeama)))))
+    (every? true? (map #(tarkasta-sanktiorivi %
+                          nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi)
+                    (sanktiotaulukon-rivit laatupoikkeama)))))
 
 (defn- tarkasta-sanktiotiedot [vertailu-fn laatupoikkeama]
   (vertailu-fn #(not (nil? %)) (map #(get-in laatupoikkeama %)
@@ -382,7 +397,10 @@
                                              (not (validoi-sanktiotiedot sisalto))
                                              (not (sanktiorivit-ok? sisalto (cond yllapito? :yllapito
                                                                               vesivayla? :vesivayla
-                                                                              :default :hoito)))
+                                                                              :default :hoito)
+                                               @urakka/urakan-toimenpideinstanssit
+                                               (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+                                               (:tyyppi @nav/valittu-urakka)))
                                              (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))}]))}
 
                [{:otsikko "Havaittu"
