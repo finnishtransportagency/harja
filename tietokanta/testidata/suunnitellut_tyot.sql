@@ -194,51 +194,14 @@ WHERE nimi = 'Urakan yhteiset kustannukset TP'
         'kauppamerenkulku'::vv_vaylatyyppi);
 
 -- Rentoselän TPI:t
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
+insert into toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
+values ((SELECT id
          FROM urakka
          WHERE nimi = 'Rentoselän urakka'),
-        'Kauppamerenkulun kustannukset TP',
-        (SELECT id
+         'Hoito, Vesiväylät',
+         (SELECT id
          FROM toimenpide
-         WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi
-WHERE   nimi = 'Kauppamerenkulun kustannukset TP'
-        AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')),
-        'kauppamerenkulku'::vv_vaylatyyppi);
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Rentoselän urakka'),
-        'Muun vesiliikenteen kustannukset TP',
-        (SELECT id
-         FROM toimenpide
-         WHERE nimi = 'Muun vesiliikenteen kustannukset'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi
-WHERE nimi = 'Muun vesiliikenteen kustannukset TP'
-      AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')),
-        'muu'::vv_vaylatyyppi);
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Rentoselän urakka'),
-        'Urakan yhteiset kustannukset TP',
-        (SELECT id
-         FROM toimenpide
-         WHERE nimi = 'Urakan yhteiset kustannukset'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi
-WHERE nimi = 'Urakan yhteiset kustannukset TP'
-      AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')),
-        'kauppamerenkulku'::vv_vaylatyyppi);
-
+         WHERE nimi = 'Hoito, Vesiväylät'), '2026-10-01', '2031-09-30');
 
 -- Vesiväylien suunnitellut työt
 
@@ -297,29 +260,6 @@ INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohint
 INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 2, null, (SELECT id
                                                                                                                                                                              FROM tehtava
                                                                                                                                                                              WHERE nimi = 'Henkilöstö: Sukeltaja, sis. merkinantajan ja sukellusvälineet'), (SELECT id FROM urakka WHERE nimi = 'Pyhäselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Pyhäselän pääsopimus'));
-
-
--- Rentoselän suunnitellut työt
--- Pyhäselän suunnitellut työt
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 8, 0.3, '2016-08-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 1, 1.8, '2017-01-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 10, 0.9, '2016-10-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 4, 2.7, '2017-04-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 2, 2.1, '2017-02-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 9, 0.6, '2016-09-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 6, 6, '2017-06-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 7, 1.5, '2017-07-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 12, 1.5, '2016-12-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2016, 11, 1.2, '2016-11-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 5, 9, '2017-05-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-INSERT INTO kokonaishintainen_tyo(vuosi, kuukausi, summa, maksupvm, toimenpideinstanssi, sopimus) VALUES (2017, 3, 2.4, '2017-03-01', (SELECT id FROM toimenpideinstanssi WHERE nimi = 'Kauppamerenkulun kustannukset TP' AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')), (SELECT id FROM sopimus where nimi = 'Rentoselän pääsopimus' AND paasopimus IS NULL));
-
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 1, null, (SELECT id
-                                                                                                                                                                             FROM tehtava
-                                                                                                                                                                             WHERE nimi = 'Henkilöstö: Ammattimies'), (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'));
-INSERT INTO yksikkohintainen_tyo (alkupvm, loppupvm, maara, yksikko, yksikkohinta, kohde, tehtava, urakka, sopimus) VALUES ('2017-08-01', '2018-07-31', null, 'h', 2, null, (SELECT id
-                                                                                                                                                                             FROM tehtava
-                                                                                                                                                                             WHERE nimi = 'Henkilöstö: Sukeltaja, sis. merkinantajan ja sukellusvälineet'), (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), (SELECT id FROM sopimus WHERE nimi = 'Rentoselän pääsopimus'));
 
 -- Kanavien toimenpideinstanssit
 INSERT INTO toimenpideinstanssi (urakka, toimenpide, nimi, alkupvm, loppupvm, tuotepolku, sampoid, talousosasto_id, talousosastopolku, luotu) VALUES ((SELECT id FROM urakka WHERE nimi='Saimaan kanava'), (SELECT id FROM toimenpide WHERE koodi='27105'), 'Saimaan kanava, sopimukseen kuuluvat työt, TP', (SELECT alkupvm FROM urakka WHERE nimi='Saimaan kanava'), (SELECT loppupvm FROM urakka WHERE nimi='Saimaan kanava'), 'tuotepolku', 'sampoid', 'talousosastoid', 'talousosastopolku', NOW());

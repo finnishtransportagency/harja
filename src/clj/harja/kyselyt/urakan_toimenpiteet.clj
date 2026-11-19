@@ -26,6 +26,7 @@
               :jarjestys (:t4_jarjestys rivi)
               :tehtavaryhma-id (:tehtavaryhma_id rivi)
               :tehtavaryhma-nimi (:tehtavaryhma_nimi rivi)
+              :tehtavaryhma-jarjestys (:tehtavaryhma_jarjestys rivi)
               :tehtavaryhmaotsikko-id (:tehtavaryhmaotsikko_id rivi)
               :tehtavaryhmaotsikko (:tehtavaryhmaotsikko rivi)}]))
      (case tyyppi

@@ -61,6 +61,7 @@
                              :toimenpide-nimi (:nimi toimenpide)
                              :tehtavaryhma-id (:tehtavaryhma-id tehtava)
                              :tehtavaryhma-nimi (:tehtavaryhma-nimi tehtava)
+                             :tehtavaryhma-jarjestys (:tehtavaryhma-jarjestys tehtava)
                              :tehtavaryhmaotsikko-id (:tehtavaryhmaotsikko-id tehtava)
                              :tehtavaryhmaotsikko (:tehtavaryhmaotsikko tehtava)}
                             (first
@@ -70,7 +71,8 @@
         ryhmat (group-by (juxt :tehtavaryhmaotsikko-id :tehtavaryhma-id) tehtavarivit)]
 
     (->> ryhmat
-      (sort-by (comp :tehtavaryhmaotsikko first val))
+      (sort-by (fn [[_ rivit]]
+                 (:tehtavaryhma-jarjestys (first rivit))))
       (mapcat
         (fn [[ryhma-id rivit]]
           (let [rivi (first rivit)
@@ -85,8 +87,7 @@
                :tehtavaryhmaotsikko-id (:tehtavaryhmaotsikko-id rivi)
                :tehtavan_nimi otsikko
                :jarjestys (:jarjestys rivi)}
-              (sort-by :jarjestys rivit))))
-        ryhmat))))
+              (sort-by :jarjestys rivit))))))))
 
 (defn tehtava-taulukko
   [e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
@@ -162,11 +163,21 @@
                     :leveys "15%"
                     :nimi :indeksikorjattu_yksikkohinta
                     :tyyppi :numero
-                    :fmt (partial fmt/euro-opt false)
-                    :desimaalien-maara 2
                     :solun-luokka solun-luokka-fn
                     :muokattava? (constantly false)
-                    :tasaa :oikea}]]
+                    :tasaa :oikea
+                    :hae (fn [rivi]
+                           (if (and (some? (:tehtava rivi))
+                                 tallennustila?
+                                 (nil? (:indeksi_kaytossa rivi))
+                                 (nil? (:yksikkohinta rivi)))
+                             "Ei saatavilla"
+                             (:indeksikorjattu_yksikkohinta rivi)))
+                    :fmt (fn [arvo]
+                           (cond
+                             (= arvo "Ei saatavilla") arvo
+                             (nil? arvo) ""
+                             :else (fmt/euro-opt false arvo)))}]]
     [grid/grid
      {:otsikko ""
       :tyhja "Ei tietoja."
@@ -183,7 +194,6 @@
       :tunniste (fn [rivi]
                   (or (:tehtava rivi)
                     (:nimi rivi)))
-      :jarjesta :jarjestys
       :nayta-toimintosarake? false
       :muutos #(e!
                  (tiedot/->PaivitaYksikkohinnatGrid
