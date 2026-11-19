@@ -20,6 +20,7 @@
             [harja.domain.kulut.kustannusten-seuranta :as kustannusten-seuranta]
 
             [harja.kyselyt.urakat :as q-urakat]
+            [harja.kyselyt.kulut :as kulut-kyselyt]
             [harja.kyselyt.konversio :as konversio]
             [harja.kyselyt.indeksit :as indeksi-kyselyt]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
@@ -30,7 +31,6 @@
 
             [harja.palvelin.palvelut.indeksit :as indeksipalvelu]
             [harja.palvelin.palvelut.toteumat :as toteumat-palvelu]
-            [harja.palvelin.palvelut.kulut.kulut :as kulut-palvelu]
             [harja.palvelin.palvelut.valikatselmus.apurit :as v-apurit]
             [harja.palvelin.palvelut.kulut.paatos-apurit :as paatos-apurit]
             [harja.palvelin.palvelut.muutos.muutos-palvelu :as muutos-palvelu]
@@ -123,6 +123,7 @@
                                        (reduce + 0 (keep :tavoitehinnan_muutos tehtava-ja-maaramuutokset))
                                        0)
         taman-vuoden-muutokset-summa (+ (or kirjallisesti-sovitut-muutokset 0) (or tehtava-ja-maaramuutos-summa 0) (or rahavarausmuutos-summa 0))
+        taman-vuoden-muutokset-summa (or taman-vuoden-muutokset-summa 0)
 
         ;; 2025 vuodesta eteenpäin on käytössä vuosittaiset muutoset/pysyvät muutokset
         muutosvaikutus (if (>= 2024 urakan-alkuvuosi) 0 taman-vuoden-muutokset-summa)
@@ -136,10 +137,10 @@
                                                                              :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
         arvonvahennykset-yht (apply + (map #(:maara %) tavoitehintaan-vaikuttavat-arvonvahennykset))
         hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta (+ (or hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta
-                                                               (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
-                                                               0)
-                                                            muutosvaikutus
-                                                            arvonvahennykset-yht)]
+                                                                   (:tavoitehinta-oikaistu budjettitavoite-vuodelle)
+                                                                   0)
+                                                                muutosvaikutus
+                                                                arvonvahennykset-yht)]
     ;; Joissakin tilanteissa saadaan kolme desimaalia, joka on euroissa hieman ongelmallista
     (bigdec (round2 2 hoitovuoden-lopun-tavoitehinta-ilman-indeksikorjausta))))
 
@@ -256,6 +257,7 @@
                                                                                               :loppupvm (second valittu-hoitokausi)
                                                                                               :hoitokauden-alkuvuosi valittu-hoitovuosi})
         thv-arvonvahennykset-yht (apply + (map #(:maara %) arvonvahennykset))
+        thv-arvonvahennykset-yht (or thv-arvonvahennykset-yht 0)
         ;; Edellisen hoitovuoden syyskuun pisteluku - eli elokuu
         alkuperainen-pisteluku (:arvo (indeksipalvelu/hae-urakan-kuukauden-indeksiarvo db urakkaid valittu-hoitovuosi 8))
         hoitokauden-indeksikuukaudet (hae-hoitovuoden-indeksiluvut db urakkaid valittu-hoitovuosi)
@@ -280,8 +282,8 @@
 
         ;; Valmistellaan päätökset ui:ta varten
         mahdolliset-paatokset (paatoskone/valmistele-lupauspaatokset db validoinnit-kaytossa? valittu-hoitovuosi urakkaid mahdolliset-paatokset toteutuneet-pisteet luvatut-pisteet tavoitehinta-indeksikorjattu tarjouksen-tavoitehinta indeksi tietokanta-paatokset urakan-alkuvuosi urakan-parametrit)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi)
-        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset oikaistu-tavoitehinta oikaistu-kattohinta muokkaa-kattohinta? valittu-hoitovuosi tavoitehinta-vahvistettu?)
+        mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-pysyva-muutospaatos validoinnit-kaytossa? mahdolliset-paatokset valittu-hoitovuosi kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht tavoitehinta-vahvistettu?)
         mahdolliset-paatokset (paatoskone/valmistele-hoitovuoden-lopun-indeksikorjauspaatos validoinnit-kaytossa? mahdolliset-paatokset hoitovuoden-lopun-indeksikorjaus-summa oikaistu-tavoitehinta tavoitehinnan-oikaisut taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitokauden-indeksikuukaudet alkuperainen-pisteluku valittu-hoitovuosi tietokanta-paatokset tavoitehinta-vahvistettu? urakan-alkuvuosi urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-hv-lopun-tavoite-ja-kattohinta validoinnit-kaytossa? urakan-alkuvuosi valittu-hoitovuosi mahdolliset-paatokset tavoitehinnan-oikaisut tavoitehinta-indeksikorjattu taman-vuoden-muutokset-summa thv-arvonvahennykset-yht hoitovuoden-lopun-kattohinta-ennen-indeksia-ja-muutoksia kattohintakerroin hoitovuoden-lopun-indeksikorjaus-summa lisaa-hoitokauden-lopun-indeksikorjaus tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
         mahdolliset-paatokset (paatoskone/valmistele-tavoitehinnan-alituspaatos validoinnit-kaytossa? mahdolliset-paatokset urakan-alkuvuosi urakan-loppuvuosi valittu-hoitovuosi hoitokauden-alun-tavoitehinta hoitovuoden-lopun-indeksikorjattu-tavoitehinta toteutuneet-kustannukset tietokanta-paatokset tavoitehinta-vahvistettu? urakan-parametrit)
@@ -577,8 +579,10 @@
                 {:id (:erilliskustannus_id paatos-tietokannasta) :urakka-id (:urakkaid paatos-tietokannasta)}))
           ;; Jos päätöksellä on sanktio, niin poista sanktio
           _ (when (:sanktio_id paatos-tietokannasta)
-              (laadunseuranta-palvelu/poista-sanktio db kayttaja {:id (:sanktio_id paatos-tietokannasta)
-                                                                  :urakka-id (:urakkaid paatos-tietokannasta)}))
+              (laadunseuranta-palvelu/poista-sanktio db kayttaja
+                {:id (:sanktio_id paatos-tietokannasta)
+                 :urakka-id (:urakkaid paatos-tietokannasta)}
+                true))
           _ (paatos-kyselyt/poista-lupauspaatos db (:urakkaid paatos-tietokannasta) (:id kayttaja) (:id paatos-tietokannasta))]
       ;; Palautetaan koko välikatselmus
       (hae-valikatselmuksen-tiedot-hoitovuodelle db kayttaja {:urakkaid (:urakkaid paatos) :hoitovuosi (:hoitokauden_alkuvuosi paatos)}))))
@@ -779,7 +783,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
 
           _ (paatos-kyselyt/poista-tavoitehinnan-alituspaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
@@ -844,7 +848,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
           _ (paatos-kyselyt/poista-tavoitehinnan-ylityspaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
       ;; Hae välikatselmuksen tiedot
@@ -972,7 +976,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
           _ (paatos-kyselyt/poista-kattohinnan-ylityspaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
 
@@ -1219,7 +1223,7 @@
   (jdbc/with-db-transaction [db db]
     (let [;; Jos päätöksellä on kulu, niin poisteatan se samalla
           _ (when (:kulu_id paatos)
-              (kulut-palvelu/poista-kulu-tietokannasta db kayttaja
+              (kulut-kyselyt/poista-kulu-tietokannasta db kayttaja
                 {:urakka-id (:urakkaid paatos) :id (:kulu_id paatos)}))
           _ (paatos-kyselyt/poista-hoidonjohtopalkkiomuutospaatos db (:urakkaid paatos) (:id kayttaja) (:id paatos))]
 
@@ -1331,18 +1335,15 @@
         mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset lopullinen-hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)]
     mahdolliset-paatokset))
 
-(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
-  "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
+(defn- hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen
+  "Palauttaa välikatselmukseen liittyvät mahdolliset ja kaikki tehdyt päätökset."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
-  ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
+  ;; Välikatselmuksen päätösten hakeminen edellyttää urakkasidonnaista oikeutta.
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
-        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
-        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
-        ;; Muodostetaan vastaus
-        vastaus {:mahdolliset-paatokset mahdolliset-paatokset
-                 :tietokanta-paatokset tietokanta-paatokset}]
-    vastaus))
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
+    {:mahdolliset-paatokset mahdolliset-paatokset
+     :tietokanta-paatokset tietokanta-paatokset}))
 
 (defn onko-paatoksia-tekematta
   "Päätellään onko jokin päätös vielä tekemättä, mikä voi vaikuttaa lukituksiin. 
@@ -1362,7 +1363,6 @@
         vastaus (not (or (= (count mahdolliset-paatokset) (count tietokanta-paatokset)) false))]
     vastaus))
 
-
 (defn hae-ketjutetusti-kumoutuvat-paatokset
   "Syötetään päätös, joka halutaan kumota.
   Palauttaa kaikki riippuvaiset päätökset, jotka kumoutuvat sen mukana."
@@ -1370,7 +1370,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
 
   (let [payload {:urakkaid urakkaid :kuluva-hoitovuosi hoitokauden_alkuvuosi}
-        kaikki-paatokset (palauta-kaikki-mahdolliset-ja-tehdyt-paatokset db kayttaja payload)
+        kaikki-paatokset (hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen db kayttaja payload)
         tehdyt-paatokset (:tietokanta-paatokset kaikki-paatokset)
 
         ;; Kaikki urakan mahdolliset kumoutuvat päätökset

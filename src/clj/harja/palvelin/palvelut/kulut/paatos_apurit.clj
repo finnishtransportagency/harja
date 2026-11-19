@@ -66,7 +66,7 @@
                    :indeksi indeksi}
 
           ;; Tallennus palauttaa sanktio-id:n
-          uusin-sanktio-id (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil])]
+          uusin-sanktio-id (laadunseuranta-palvelu/tallenna-suorasanktio db kayttaja sanktio laatupoikkeama urakka-id [nil nil true])]
       uusin-sanktio-id)))
 
 (defn tallenna-lupausbonus

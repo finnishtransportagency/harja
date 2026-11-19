@@ -30,7 +30,7 @@ FROM urakka u
         ON tm.toteuma = t.id
         AND tm.poistettu = FALSE,
     organisaatio o
-WHERE o.id = u.hallintayksikko
+WHERE o.id = u.elinvoimakeskus_id
     -- Suodatetaan pois päöllystystehtäviin työkoneelta kirjatut toteumat, koska niissä ei ole raportoitu tehtävän mukaista yksikköä (tonni) vaan matkaa.
     AND NOT (
         tp.koodi = '20107'

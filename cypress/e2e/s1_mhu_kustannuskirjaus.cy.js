@@ -8,6 +8,7 @@ let avaaKulujenKohdistus = (urakanNimi) => {
     hakupalkki.type(urakanNimi);
     hakupalkki.siblings().contains(urakanNimi).click();
     cy.get('[data-cy="tabs-taso1-Kulut"]').click();
+    cy.get('h1').contains('Yleiset tiedot').should('not.exist');
 }
 
 let avaaKulunKirjaus = () => {
@@ -38,6 +39,8 @@ let tallennaJaTarkistaKulu = (kuluTaiKulut) => {
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(0).click().wait(clicktimeout).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).click().wait(clicktimeout).type('{selectall}29.09.2021');
     cy.get('.pvm-kentta > .pvm-ikoni > input').eq(1).should('have.value', "29.09.2021").type('{enter}');
+
+    cy.wait(250);
 
     if (Array.isArray(kuluTaiKulut)) {
         cy.get('table.grid tr.klikattava').eq(0).click();
