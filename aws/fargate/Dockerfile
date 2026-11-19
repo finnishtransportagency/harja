@@ -20,21 +20,20 @@ RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 RUN mkdir -p /tmp && chmod 1777 /tmp
 VOLUME ["/tmp"]
 
-# Aseta aikavyöhyke
+# Asenna aikavyöhykedata ja apurit
 # Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
+RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
+    apt-get update && apt-get install -y \
+      tzdata \
+      bash \
+      curl \
+      jq \
+      nano \
+      unzip \
+      telnet \
     && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
-    && echo "Europe/Helsinki" > /etc/timezone
-
-# Asenna apurit
-RUN apt-get update && apt-get install -y \
-    bash \
-    curl \
-    jq \
-    nano \
-    unzip \
-    telnet \
+    && echo "Europe/Helsinki" > /etc/timezone \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 
