@@ -271,11 +271,38 @@
   [kulun-kohdistukset]
   (:kohdistus (kohdistusratkaisu kulun-kohdistukset)))
 
+(defn kulun-kohdistus-nakyvissa?
+  "Kertoo, näytetäänkö sanktiolomakkeella kulun kohdistuksen kenttä.
+  Muistutuksille kenttä näytetään vain tietyille tyypeille; talvihoitoon liittyviltä se piilotetaan."
+  [sanktio]
+  (boolean
+    (or (sanktio-domain/muu-kuin-muistutus? sanktio)
+      (and (sanktio-domain/muistutus? sanktio)
+        (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
+                     "Liikenneympäristön hoito"
+                     "Sorateiden hoito ja ylläpito"
+                     "Hallinnolliset laiminlyönnit"}
+          (get-in sanktio [:tyyppi :nimi]))))))
+
+(defn sanktiorivin-kohdistus-ok?
+  "Tosi, kun rivin toimenpideinstanssi vastaa MHU25+-urakan ainoaa kanonista kohdistusta.
+  Muissa urakoissa kohdistusta ei tarkasteta tässä."
+  [rivi toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
+  (if (:maaraystapa? (aikakausikonteksti urakan-alkuvuosi urakan-alkuvuosi urakkatyyppi))
+    (let [{:keys [kohdistus virhe]} (kohdistusratkaisu
+                                      (mahdolliset-kulun-kohdistukset
+                                        toimenpideinstanssit urakan-alkuvuosi urakkatyyppi
+                                        (get-in rivi [:tyyppi :nimi])))]
+      (and (nil? virhe)
+        (= kohdistus (:toimenpideinstanssi rivi))))
+    true))
+
 (defn vaihda-sanktiolajia
   "Vaihtaa sanktion lajin ja ratkaisee tyypin ja toimenpideinstanssin uuden lajin tyypeistä.
   Aiempi sallittu tyyppi säilytetään, muuten valitaan ainoa sallittu tyyppi.
-  Valitun tyypin toimenpideinstanssi ratkaistaan toimenpidekoodin perusteella tai koodittomalle
-  tyypille uudemman urakan ainoasta kulun kohdistuksesta.
+  Vuoden 2024 ja aiemmin alkaneissa urakoissa valitun tyypin toimenpideinstanssi ratkaistaan
+  toimenpidekoodin perusteella. Uudemmissa urakoissa se ratkaistaan aina ainoasta kulun kohdistuksesta,
+  jolloin toimenpidekoodia ei käytetä; epäselvä tai puuttuva kohdistus tyhjentää arvon.
   Jos tyyppiä ei voida valita, se tyhjenee ja laskennan syötteet poistetaan.
   Muistutusta lukuun ottamatta tyypittömän rivin summa, omailmoitus, toimenpideinstanssi ja indeksi nollataan."
   ([rivi uusi-laji sanktiotyypit toimenpideinstanssit]
@@ -307,8 +334,9 @@
   "Vaihtaa sanktion tyypin ja päivittää tyypistä riippuvat summatiedot.
   Kiinteällä automaattisella summalla asetetaan normaalimäärä ja omailmoituksen mukainen summa.
   C-ryhmän manuaalisella summalla ja muilla tyypeillä aiempi summa poistetaan tai nollataan.
-  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Toimenpideinstanssi päätellään tyypin
-  toimenpidekoodista tai koodittomalle tyypille ainoasta kulun kohdistuksesta."
+  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Toimenpideinstanssi päätellään vuoden 2024
+  ja aiemmin alkaneissa urakoissa tyypin toimenpidekoodista tai ainoasta kulun kohdistuksesta;
+  uudemmissa urakoissa vain ainoasta kulun kohdistuksesta."
   [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]
   (let [tyyppi-vaihtui? (not= (get-in rivi [:tyyppi :id]) (:id uusi-tyyppi))
         rivi (if (<= urakan-alkuvuosi 2024)

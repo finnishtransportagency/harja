@@ -247,23 +247,15 @@
         pakolliset-hoito-muistutus))))
 
 (defn- tarkasta-sanktiorivi [sanktiorivi nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
-  (let [mhu25-kohdistus? (and (= :hoito nakyma)
-                          (= :teiden-hoito urakkatyyppi)
-                          (> urakan-alkuvuosi 2024))
-        kohdistusratkaisu (when mhu25-kohdistus?
-                            (-> (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
-                                  toimenpideinstanssit urakan-alkuvuosi urakkatyyppi
-                                  (get-in sanktiorivi [:tyyppi :nimi]))
-                              sanktion-lomake-domain/kohdistusratkaisu))
-        sanktio-poistettu? (:poistettu sanktiorivi)
+  (let [sanktio-poistettu? (:poistettu sanktiorivi)
         ;; Jos sanktio on poistettu, niin pakollisia kenttiä ei ole
         kentat (when-not sanktio-poistettu? (map #(get-in sanktiorivi %)
                                               (pakolliset-kentat nakyma (sanktio-domain/muu-kuin-muistutus? sanktiorivi))))]
     (and (every? some? kentat)
       (or sanktio-poistettu?
-        (not mhu25-kohdistus?)
-        (and (nil? (:virhe kohdistusratkaisu))
-          (= (:kohdistus kohdistusratkaisu) (:toimenpideinstanssi sanktiorivi)))))))
+        (not= :hoito nakyma)
+        (sanktion-lomake-domain/sanktiorivin-kohdistus-ok?
+          sanktiorivi toimenpideinstanssit urakan-alkuvuosi urakkatyyppi)))))
 
 (defn- sanktiorivit-ok? [laatupoikkeama nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
   (cond

@@ -1165,6 +1165,25 @@
             (assoc lomake :toimenpideinstanssi 101)
             (sanktion-lomake-domain/kohdistusratkaisu []))))))
 
+(deftest sanktiorivin-kohdistus-ok-vertaa-rivia-kanoniseen-kohdistukseen
+  (let [g-tpi {:tpi_id 303 :tpi_nimi "Hoidon johto" :t2_koodi "23150"}
+        muu-tpi {:tpi_id 202 :tpi_nimi "Liikenneympäristön hoito" :t2_koodi "23116"}
+        tpit [g-tpi muu-tpi]
+        ok? #(sanktion-lomake-domain/sanktiorivin-kohdistus-ok? %1 %2 %3 :teiden-hoito)]
+    (is (true? (ok? {:toimenpideinstanssi 303} tpit 2025)))
+    (is (false? (ok? {:toimenpideinstanssi nil} tpit 2025)))
+    (is (false? (ok? {:toimenpideinstanssi 202} tpit 2026)))
+    (is (false? (ok? {:toimenpideinstanssi 303} [] 2025)))
+    (is (true? (ok? {:toimenpideinstanssi 202} tpit 2024)))))
+
+(deftest kulun-kohdistus-nakyvissa-piilottaa-talvihoidon-muistutuksen
+  (is (true? (sanktion-lomake-domain/kulun-kohdistus-nakyvissa?
+               {:laji :A :tyyppi {:nimi "Talvihoito, päätiet"}})))
+  (is (false? (sanktion-lomake-domain/kulun-kohdistus-nakyvissa?
+                {:laji :muistutus :tyyppi {:nimi "Talvihoito, päätiet"}})))
+  (is (true? (sanktion-lomake-domain/kulun-kohdistus-nakyvissa?
+               {:laji :muistutus :tyyppi {:nimi "Liikenneympäristön hoito"}}))))
+
 (deftest c-ryhman-manuaalinen-maaritys-vaatii-c-lajin-ja-ohjetekstin
   (let [tyyppi {:summamaaritykset [{:maaritystapa :manuaalinen
                                     :summa-euroina 1250M

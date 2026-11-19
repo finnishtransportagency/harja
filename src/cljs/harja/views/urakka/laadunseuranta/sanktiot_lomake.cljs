@@ -250,13 +250,7 @@
   [{:keys [sanktio aikakausi lukutila? kulun-kohdistukset
            hoidonjohtopalkkio-tr toimenpideinstanssit kohdistusratkaisu]}]
   ;; Kulunkohdistusvalikkoa ei näytetä muistutuksille, jos niiden tyyppinä on jotain Talvihoitoon liittyvää.
-  (when (or
-          (sanktio-domain/muu-kuin-muistutus? sanktio)
-          (and (sanktio-domain/muistutus? sanktio)
-            (contains? #{"Muut hoitourakan tehtäväkokonaisuudet"
-                         "Liikenneympäristön hoito"
-                         "Sorateiden hoito ja ylläpito"
-                         "Hallinnolliset laiminlyönnit"} (get-in sanktio [:tyyppi :nimi]))))
+  (when (sanktion-lomake-domain/kulun-kohdistus-nakyvissa? sanktio)
     (let [kohdistusvirhe (when (:maaraystapa? aikakausi) (:virhe kohdistusratkaisu))
           kulun-kohdistus {:otsikko (toimenpide-valikon-nimi (get-in sanktio [:tyyppi :nimi])) ; "Kulun kohdistus"
                            :pakollinen? true
@@ -269,8 +263,7 @@
                            :valinta-arvo :tpi_id
                            :valinta-nayta #(if % (:tpi_nimi %) " - valitse toimenpide -")
                            :valinnat kulun-kohdistukset
-                           :validoi (if (:maaraystapa? aikakausi)
-                                      [(fn [_arvo _rivi _taulukko] kohdistusvirhe)]
+                           :validoi (when-not (:maaraystapa? aikakausi)
                                       [[:ei-tyhja "Valitse toimenpide, johon sanktio liittyy"]])
                            :virheteksti kohdistusvirhe}
           lukutilan-kulun-kohdistus (assoc (lukutilan-kenttakuvaus kulun-kohdistus)
@@ -570,7 +563,8 @@
             suorasanktio? (:suorasanktio @muokattu)
             peruskonteksti (lue-nakymakonteksti muokattu laskutuskuukausi-id lukutila-parametri voi-muokata?
                               lukitustiedot)
-            kohdistusratkaisu (when (:maaraystapa? (:aikakausi peruskonteksti))
+            kohdistusratkaisu (when (and (:maaraystapa? (:aikakausi peruskonteksti))
+                                      (sanktion-lomake-domain/kulun-kohdistus-nakyvissa? @muokattu))
                                 (sanktion-lomake-domain/kohdistusratkaisu
                                   (:kulun-kohdistukset peruskonteksti)))
             konteksti (assoc peruskonteksti :kohdistusratkaisu kohdistusratkaisu)
@@ -611,6 +605,7 @@
                               tallenna!
                               (cond-> {:ikoni (ikonit/tallenna)
                                        :disabled (or (not voi-muokata?)
+                                                   (some? (:virhe kohdistusratkaisu))
                                                    (not (lomake/voi-tallentaa? sanktio)))}
                                 (not tallenna-fn)
                                 (assoc :luokka "nappi-ensisijainen"))])
