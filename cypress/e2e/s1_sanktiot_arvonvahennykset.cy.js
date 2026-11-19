@@ -43,7 +43,6 @@ let testiurakka2 = "Raahen MHU 2023-2028";              // mhu24 urakka
 let testiurakka3 = "Oulun MHU 2019-2024";              // mhu19 urakka
 let evk = "Pohjois-Suomi";
 let evk2 = "Pohjois-Suomi";
-let evkMhu26 = "Lappi";
 
 // Havaittu- ja Määrätty/Käsitelty-päivämäärät.
 // Sekä Kajaanin (käynnissä 2025-10-01–2030-09-30) että Raahen
