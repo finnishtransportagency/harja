@@ -17,23 +17,12 @@ export const testiurakkaMhu23 = "Raahen MHU 2023-2028";
 export const evkLappi = "Lappi";
 export const evkPohjoisSuomi = "Pohjois-Suomi";
 
-// Worktree-ajossa CYPRESS_tietokantaKontti osoittaa käytettävän tietokantakontin.
+// Siivoa testidatan sanktiot kannasta laatupoikkeaman kohteen tai perustelun perusteella
 export function siivoaSanktiotKannasta(kohde, perustelu = null) {
-    const tietokantaKontti = Cypress.env('tietokantaKontti');
-    if (!tietokantaKontti && new URL(Cypress.config('baseUrl')).port !== '3000') {
-        throw new Error('Aseta CYPRESS_tietokantaKontti kohdeinstanssin tietokantakontin nimeksi');
-    }
-    if (tietokantaKontti && !/^[a-zA-Z0-9][a-zA-Z0-9_.-]*$/.test(tietokantaKontti)) {
-        throw new Error('Tietokantakontin nimi on virheellinen');
-    }
-
     const ehto = kohde
         ? "lp.kohde = '" + kohde + "'"
         : "lp.perustelu = '" + perustelu + "'";
-    const komento = tietokantaKontti
-        ? cy.wrap(`/usr/local/bin/docker exec ${tietokantaKontti} `)
-        : cy.terminaaliKomento();
-    komento.then((terminaaliKomento) => {
+    cy.terminaaliKomento().then((terminaaliKomento) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE " + ehto + ");\"");
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
