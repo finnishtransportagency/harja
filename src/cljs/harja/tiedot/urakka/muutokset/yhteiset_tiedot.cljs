@@ -321,16 +321,6 @@
           :syy "Syy tehtävämäärämuutosten puuttumiselle on kirjaamatta.")))
     (sort-by :alkuvuosi tpi-vetolaatikoiden-virheet)))
 
-(defn- muotoile-virheen-avain
-  "Muotoilee avaimia nätimpään muotoon:
-  :voimassa_alkaen
-  -> Voimassa alkaen"
-  [avain]
-  (-> avain
-    name
-    (str/replace "_" " ")
-    str/capitalize))
-
 (defn koosta-lomakkeen-validaatio-virheet
   "Muodostaa lomakkeen virheet:
   <label>: <virhe>
@@ -340,7 +330,7 @@
     (fn [[avain virheet]]
       (str
         ;; Prefixinä kerrotaan käyttäjälle mistä kentästä virhe tuli
-        (muotoile-virheen-avain avain)
+        (fmt/avain-stringiksi avain)
         ": "
         ;; Ja tähän itse virhe. 
         ;; Nämä näytetään -> lomakkeen-footer

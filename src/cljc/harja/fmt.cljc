@@ -919,6 +919,16 @@
     str/lower-case
     (str/replace #"[\s]+" "-") keyword))
 
+(defn avain-stringiksi
+  "Muotoilee avaimia nätimpään muotoon:
+  :voimassa_alkaen
+  -> Voimassa alkaen"
+  [avain]
+  (-> avain
+    name
+    (str/replace "_" " ")
+    str/capitalize))
+
 (defn tieosoite-lyhyt-muoto [{:keys [tie alkuosa alkuetaisyys loppuosa loppuetaisyys]}]
   (str tie "/" alkuosa "/" alkuetaisyys "/" loppuosa "/" loppuetaisyys))
 
