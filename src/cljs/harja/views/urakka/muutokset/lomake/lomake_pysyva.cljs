@@ -398,12 +398,25 @@
                                    (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
                                    false)
         valittu-hk (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        hoitokaudet-map (when urakan-hoitokaudet
+                          (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet))
         hoitovuosi-str (when valittu-hk
                          (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
                            valittu-hk
-                           (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet)
+                           hoitokaudet-map
                            "hoitovuoden"
-                           false))]
+                           false))
+
+        paatos-virheviesti-otsikko (when (and
+                                           valittu-hk
+                                           hoitokaudet-map)
+                                     (str
+                                       "Muutoksia ei voi kirjata "
+                                       (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                                         valittu-hk
+                                         hoitokaudet-map
+                                         "hoitovuodelle"
+                                         false)))]
 
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
@@ -476,10 +489,13 @@
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_] [yleiset/info-laatikko :vahva-ilmoitus
-                                "Hoitovuoden tavoitehinnan muutokset on päätetty"
+                                paatos-virheviesti-otsikko
                                 [:<>
-                                 [:div hoitovuosi-str " osalta tavoitehinnan muutokset on jo päätetty." [:br]
-                                  "Jos haluat tehdä muutoksia, välikatselmuksen päätös on peruttava."]]
+                                 [:div
+                                  ;; Kääritty (str) koodin luettavuuden merkeissä
+                                  (str
+                                    "Muutoksia ei voi enää lisätä tai muokata, "
+                                    "koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu.")]]
                                 nil
                                 {:ikoni-fn #(ikonit/harja-icon-status-alert)}])}
 

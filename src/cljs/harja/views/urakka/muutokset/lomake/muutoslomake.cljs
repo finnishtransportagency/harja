@@ -62,22 +62,7 @@
    (when (and
            tallenna-painettu?
            (seq lomake-virheet))
-
-     (let [valittu-pvm-hoitovuosi (some-> (:hoitovuosi muutos) first (pvm/vuosi))
-           virheviesti (when (and
-                               urakan-hoitokaudet
-                               valittu-pvm-hoitovuosi)
-                         (str
-                           "Muutoksia ei voi kirjata "
-                           (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
-                             valittu-pvm-hoitovuosi
-                             (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet)
-                             "hoitovuodelle"
-                             false)))]
-
-       [yleiset/nayta-virheet :varoitus lomake-virheet (or
-                                                         virheviesti
-                                                         "Muutoksia ei voi kirjata valitulle hoitovuodelle")]))
+     [yleiset/nayta-virheet :varoitus lomake-virheet "Muutosta ei voi tallentaa, koska tiedoissa on virhe"])
 
    ;; Muutostyö lomakkeeseen design mukaan infolaatikko
    (when (= tyyppi "muutostyo")
