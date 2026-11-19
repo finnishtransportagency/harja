@@ -4,6 +4,7 @@
             [harja.loki :refer [log]]
             [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]
+            [harja.ui.primitiivit.tabs :as tabs]
             [clojure.string :as clj-str]))
 
 
@@ -16,17 +17,6 @@
   (if (map? title)
     (or (:sisalto title) (:teksti title))
     title))
-
-(defn- tabin-data-cy [title classes]
-  (or (when (map? title) (:data-cy title))
-      (let [tabs-taso (re-find #"tabs-taso\\d" (str classes))
-            cy-title (-> (tabin-otsikko-teksti title)
-                       str
-                       (clj-str/replace #"ä" "a")
-                       (clj-str/replace #"ö" "o"))]
-        (if tabs-taso
-          (str tabs-taso "-" cy-title)
-          cy-title))))
 
 (defn- tabs-tyyliluokka [style]
   (case (or style :tabs)
@@ -87,7 +77,7 @@ The following keys are supported in the configuration:
                                                     :on-click #(vaihda-aktiivinen-tabi keyword %)
                                                     :on-key-down #(when (dom/enter-nappain? %)
                                                                     (vaihda-aktiivinen-tabi keyword %))}
-                                                   {:data-cy (tabin-data-cy title classes)})
+                                                   {:data-cy (tabs/tabin-data-cy title classes)})
                   (tabin-otsikko-sisalto title)]])]
              [:div.valilehti.harja-tabs-sisalto {:role "tabpanel"}
               active-component]]))))))
