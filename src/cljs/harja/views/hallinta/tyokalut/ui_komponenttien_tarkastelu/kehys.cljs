@@ -71,15 +71,32 @@
    [:h3 "Esikatselu"]
    (into [:div.ui-tarkastelu-kortin-sisalto] lapset)])
 
+(defn asetukset-taulukko
+  [asetukset]
+  [:table {:data-cy "ui-komponenttien-tarkastelu-asetukset"}
+   [:thead
+    [:tr
+     [:th "Asetus"] [:th "Tyyppi"] [:th "Pakollinen"] [:th "Kuvaus"]]]
+   [:tbody
+    (for [[avain {:keys [tyyppi pakollinen? kuvaus]}] (sort-by key asetukset)]
+      ^{:key avain}
+      [:tr
+       [:td [:code (str avain)]]
+       [:td (str tyyppi)]
+       [:td (if pakollinen? "Kyllä" "Ei")]
+       [:td kuvaus]])]])
+
 (defn sopimus
-  [{:keys [api] :as komponentti} & lapset]
+  [{:keys [asetukset] :as komponentti} & lapset]
   (into
     [:aside.ui-tarkastelu-sopimus
      {:data-cy "ui-komponenttien-tarkastelu-tiedot"}
      [:h2.ui-tarkastelu-ylaotsikko "Komponentin sopimus"]
      [:dl
       [:dt "Public API"]
-      [:dd api]
+      [:dd [:code (rekisteri/api-teksti komponentti)]]
+      [:dt "Asetukset"]
+      [:dd [asetukset-taulukko asetukset]]
       [:dt "Bootstrap-tila"]
       [:dd [bootstrap-tila-merkki komponentti]]
       [:dt "DOM-ankkuri"]

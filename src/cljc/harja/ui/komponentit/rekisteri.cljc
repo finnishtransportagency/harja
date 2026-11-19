@@ -5,7 +5,8 @@
   komponentti lisätään tänne ensin, ja sen esikatselu liitetään samalla `:id`:llä
   tarkastelusivun esikatselut-kartassa.
 
-  Rekisterissä ei ole renderöintiä, jotta sen eheys voidaan testata JVM:llä.")
+  Rekisterissä ei ole renderöintiä, jotta sen eheys voidaan testata JVM:llä."
+  (:require [clojure.string :as str]))
 
 (def ankkuri-etuliite "ui-komponenttien-tarkastelu-")
 
@@ -33,6 +34,10 @@
   "Komponentin rooli rakenteessa. Jokaisella komponentilla on täsmälleen yksi rooli."
   #{:syote :toiminto :lomake :asettelu :taulukko :rakenne :navigaatio :palaute :overlay})
 
+(def asetustyypit
+  "Komponentin asetuksen tyyppi. Näytetään sopimusruudussa."
+  #{:merkkijono :numero :boolean :funktio :keyword :map :hiccup :vektori :atomi :muu})
+
 (def komponentit
   [{:id :livi-pudotusvalikko
     :nimi "Livi-pudotusvalikko"
@@ -44,7 +49,10 @@
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :riippuvainen
     :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus."
-    :api "harja.ui.yleiset/pudotusvalikko: otsikko + asetuskartta + vaihtoehtovektori"}
+    :funktio "harja.ui.yleiset/pudotusvalikko"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
+                :optiot {:tyyppi :map :pakollinen? true :oletus nil :kuvaus "Valikon asetukset, esim. :auki-fn!, :kiinni-fn!, :elementin-id, :wrap-luokka, :vayla-tyyli?."}
+                :valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Vaihtoehdot vektorina tai mappina."}}}
    {:id :nappi
     :nimi "Nappi"
     :ryhma :toiminnot
@@ -54,8 +62,15 @@
     :tilat #{:normaali :estetty :lataus}
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :osittain-riippuvainen
-    :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."
-    :api "harja.ui.napit/nappi: teksti + callback + optiot (:data-cy, :disabled, :luokka, :tallennus-kaynnissa?)"}
+    :funktio "harja.ui.napit/nappi"
+    :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Napin teksti."}
+                :toiminto {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Klikkauksen käsittelijä."}
+                :disabled {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, nappi on disabloitu."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Napin CSS-luokat, välilyönnillä erotettuna."}
+                :ikoni {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Nappiin piirrettävä ikonikomponentti."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :tallennus-kaynnissa? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, piirtää latausindikaattorin."}}
+    :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."}
    {:id :suodatin
     :nimi "Suodatin"
     :ryhma :lomakkeet
@@ -66,7 +81,11 @@
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Suodattimen label ja kenttä. Käytössä tarjoushintojen näkymässä."
-    :api "harja.ui.komponentit/suodatin, suodatinrivi: {:otsikko :id :data-cy} + kenttä (hiccup tai fn)"}
+    :funktio "harja.ui.komponentit/suodatin"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Suodattimen otsikko."}
+                :id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Suodattimen id."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :kentta {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Kenttä hiccupina tai funktiona."}}}
    {:id :valintaryhma
     :nimi "Valintaryhmä"
     :ryhma :lomakkeet
@@ -77,7 +96,16 @@
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
-    :api "harja.ui.komponentit/valintaryhma: {:otsikko :id :vaihtoehdot :arvo :vaihda-fn :tyhja-valinta :ohje :virhe :pakollinen? :disabled?}"}
+    :funktio "harja.ui.komponentit/valintaryhma"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Ryhmän otsikko."}
+                :vaihtoehdot {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valittavat vaihtoehdot."}
+                :arvo {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Valittu arvo."}
+                :vaihda-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan valinnan muuttuessa."}
+                :tyhja-valinta {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Tyhjän valinnan teksti."}
+                :ohje {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ohjeteksti."}
+                :virhe {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Virheteksti."}
+                :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Merkitsee ryhmän pakolliseksi."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}}}
    {:id :tekstikentta
     :nimi "Tekstikenttä"
     :ryhma :lomakkeet
@@ -88,7 +116,13 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Yksirivinen tekstikenttä. Arvo ja muutoksen käsittely omistaa käyttöpaikka. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :string :placeholder :elementin-id :disabled? :lomake?} + atomi"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :string."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon arvo tallennetaan."}
+                :placeholder {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Paikkamerkkiteksti."}
+                :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Input-elementin id."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on disabloitu."}
+                :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on lomakkeen osa."}}}
    {:id :numerokentta
     :nimi "Numerokenttä"
     :ryhma :lomakkeet
@@ -99,7 +133,15 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Numerokenttä muotoilee arvon ja hyväksyy vain sallitut luvut. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :numero :desimaalien-maara :kokonaisosan-maara :kokonaisluku? :vaadi-ei-negatiivinen? :elementin-id :lomake?} + atomi"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :numero."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon arvo tallennetaan."}
+                :desimaalien-maara {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Suurin sallittu desimaalien määrä."}
+                :kokonaisosan-maara {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Suurin sallittu kokonaisosan pituus."}
+                :kokonaisluku? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, sallitaan vain kokonaisluvut."}
+                :vaadi-ei-negatiivinen? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, negatiiviset arvot hylätään."}
+                :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Input-elementin id."}
+                :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on lomakkeen osa."}}}
    {:id :sahkopostikentta
     :nimi "Sähköpostikenttä"
     :ryhma :lomakkeet
@@ -110,7 +152,14 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Sähköpostiosoitteen syöttökenttä selaimen omalla tyypillä. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :email :placeholder :on-focus :on-blur :disabled? :lomake?} + atomi"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :email."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon arvo tallennetaan."}
+                :placeholder {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Paikkamerkkiteksti."}
+                :on-focus {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan kentän fokusoituessa."}
+                :on-blur {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan kentältä poistuttaessa."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on disabloitu."}
+                :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on lomakkeen osa."}}}
    {:id :puhelinkentta
     :nimi "Puhelinkenttä"
     :ryhma :lomakkeet
@@ -121,7 +170,14 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Puhelinnumeron syöttökenttä. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan, ellei vayla-tyyli? ole päällä."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :puhelin :placeholder :pituus :vayla-tyyli? :disabled? :lomake?} + atomi"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :puhelin."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon arvo tallennetaan."}
+                :placeholder {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Paikkamerkkiteksti."}
+                :pituus {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Kentän merkkipituus."}
+                :vayla-tyyli? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, käyttää Väylä-tyylin kenttää."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on disabloitu."}
+                :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on lomakkeen osa."}}}
    {:id :valintaruutu
     :nimi "Valintaruutu"
     :ryhma :lomakkeet
@@ -132,7 +188,13 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Yksittäinen valintaruutu, jonka tila on boolean-atomi tai atomi, jonka arvo on true, false tai ::indeterminate."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :checkbox :teksti :disabled? :iso-clickalue? :valitse!} + atomi"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :checkbox."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon valinta tallennetaan."}
+                :teksti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ruudun vieressä näkyvä teksti."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ruutu on disabloitu."}
+                :iso-clickalue? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, koko alue on klikattava."}
+                :valitse! {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan valinnan muuttuessa."}}}
    {:id :radiokentta
     :nimi "Radiokenttä"
     :ryhma :lomakkeet
@@ -143,7 +205,13 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Vaihtoehdoista yksi valitaan radiopainikkeella. Arvo on atomi."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :radio :valinnat :valinta-nayta :valinta-arvo :disabled?} + atomi"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :radio."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon valinta tallennetaan."}
+                :valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valittavat vaihtoehdot."}
+                :valinta-nayta {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon näytettävän tekstin."}
+                :valinta-arvo {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon arvon."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on disabloitu."}}}
    {:id :checkbox-ryhma
     :nimi "Checkbox-ryhmä"
     :ryhma :lomakkeet
@@ -154,7 +222,13 @@
     :sallitut-vanhemmat #{:lomake :suodatin}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Monivalinta, jossa arvo on joukko. Yksi palsta ei käytä Bootstrap-luokkia, useampi palsta käyttää col-sm-*-luokkia."
-    :api "harja.ui.kentat/tee-kentta: {:tyyppi :checkbox-group :vaihtoehdot :vaihtoehto-nayta :palstoja :disabloi} + atomi joukolla"}
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :checkbox-group."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon valitut arvot tallennetaan."}
+                :vaihtoehdot {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valittavat vaihtoehdot."}
+                :vaihtoehto-nayta {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon näytettävän tekstin."}
+                :palstoja {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Vaihtoehtojen palstamäärä."}
+                :disabloi {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}}}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet
@@ -165,7 +239,8 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
-    :api "harja.ui.komponentit: pino + kenttaryhma + valintaryhma + toimintoryhma + tilaviesti"}
+    :funktio "harja.ui.komponentit"
+    :asetukset {:lapset {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Lomakkeen sisältö: pino, kenttaryhma, valintaryhma, toimintoryhma tai tilaviesti."}}}
    {:id :rivi
     :nimi "Rivi"
     :ryhma :lomakkeet
@@ -176,7 +251,10 @@
     :sallitut-vanhemmat #{:lomake :sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Asettelurivi, jossa sarakkeet jakavat tilan tasan koon mukaan. Sarakkeiden koon ja rivin luokan välittää käyttöpaikka."
-    :api "harja.ui.yleiset/rivi: {:koko :luokka} + sarakkeet. Koko on numero tai mäppi {:lg :md :xs}."}
+    :funktio "harja.ui.yleiset/rivi"
+    :asetukset {:koko {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Numero tai mäppi {:lg :md :xs}."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Rivin CSS-luokka."}
+                :sarakkeet {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Rivin sarakkeet."}}}
    {:id :panel
     :nimi "Panel"
     :ryhma :portatut
@@ -187,7 +265,10 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Yhteensopiva panel-wrapper ilman Bootstrapin panel-markupia."
-    :api "harja.ui.bootstrap/panel: [options content] tai [options title content]"}
+    :funktio "harja.ui.bootstrap/panel"
+    :asetukset {:otsikko {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Paneelin otsikko. Jos annettu, sisältö on toinen argumentti."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Paneelin CSS-luokka."}
+                :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Paneelin sisältö."}}}
    {:id :perusgrid
     :nimi "Perusgrid"
     :ryhma :gridit
@@ -198,7 +279,12 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
-    :api "harja.ui.grid/grid: {:otsikko :tyhja :tunniste} + sarakkeet + rivit"}
+    :funktio "harja.ui.grid/grid"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Taulukon otsikko."}
+                :tyhja {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Teksti, joka näytetään kun rivejä ei ole."}
+                :tunniste {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Taulukon tunniste."}
+                :sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
+                :rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Rivit."}}}
    {:id :muokkausgrid
     :nimi "Muokkausgrid"
     :ryhma :gridit
@@ -209,7 +295,15 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Muokattava taulukko. Rivien muutokset kulkevat käyttöpaikan muutos-callbackin kautta. Paneelin rakenne on vielä Bootstrapin panel-luokkia."
-    :api "harja.ui.grid/muokkaus-grid: {:otsikko :tyhja :voi-muokata? :voi-lisata? :voi-kumota? :muutos} + sarakkeet + rivit-atomi"}
+    :funktio "harja.ui.grid/muokkaus-grid"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Taulukon otsikko."}
+                :tyhja {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Teksti, joka näytetään kun rivejä ei ole."}
+                :voi-muokata? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, rivejä voi muokata."}
+                :voi-lisata? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, rivejä voi lisätä."}
+                :voi-kumota? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, muutokset voi kumota."}
+                :muutos {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan muutosten yhteydessä."}
+                :sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
+                :rivit-atomi {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, jossa rivit ovat."}}}
    {:id :tabs
     :nimi "Tabs"
     :ryhma :portatut
@@ -220,7 +314,12 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Välilehtien public API säilyy, mutta rakenne ei enää nojaa Bootstrapin nav-luokkiin."
-    :api "harja.ui.bootstrap/tabs: {:active :style :classes :on-change} + otsikko/avain/sisältö"}
+    :funktio "harja.ui.bootstrap/tabs"
+    :asetukset {:active {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Aktiivisen välilehden avain."}
+                :style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Tyylit."}
+                :classes {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "CSS-luokat."}
+                :on-change {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan välilehden vaihtuessa."}
+                :valilehdet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Otsikot, avaimet ja sisällöt vuorotellen."}}}
    {:id :navbar
     :nimi "Navbar"
     :ryhma :portatut
@@ -231,7 +330,11 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Navigaation yhteensopiva navbar-wrapper Harjan omilla luokilla."
-    :api "harja.ui.bootstrap/navbar: options + header + itemit, :right erottaa oikean reunan"}
+    :funktio "harja.ui.bootstrap/navbar"
+    :asetukset {:options {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Navigaation asetukset."}
+                :header {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Navigaation otsikko."}
+                :itemit {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Navigaation kohdat."}
+                :right {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Kohdat, jotka erotetaan oikeaan reunaan."}}}
    {:id :viesti
     :nimi "Viesti"
     :ryhma :portatut
@@ -243,7 +346,10 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Flash-viesti ilman Bootstrapin modal- ja alert-luokkia. Variantit tulevat Harjan omista luokista."
-    :api "harja.ui.viesti/nayta!: viesti [luokka] [kesto], luokka :success, :info, :warning tai :danger"}
+    :funktio "harja.ui.viesti/nayta!"
+    :asetukset {:viesti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Näytettävä viesti."}
+                :luokka {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Viestin tyyppi: :success, :info, :warning tai :danger."}
+                :kesto {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Kuinka kauan viesti näytetään."}}}
    {:id :modal
     :nimi "Modal"
     :ryhma :portatut
@@ -254,7 +360,16 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Modaali näytetään sivun päätason modal-kontissa. Avaamisen ehdot ja sulkemisen seuraukset omistaa näkymä."
-    :api "harja.ui.modal/nayta!: {:otsikko :sulje-fn :leveys} + sisältö. Sulkeminen kutsuu :sulje-fn-funktiota."}
+    :funktio "harja.ui.modal/nayta!"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Modaalin otsikko."}
+                :sulje {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan modaalin sulkeutuessa."}
+                :sulje-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan sulkemispainikkeen tai sulkemisen yhteydessä."}
+                :sulje-ruksista-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan, kun modaali suljetaan ruksista."}
+                :modaalin-fokus-elementti {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Elementti, joka saa fokuksen modaalin avautuessa."}
+                :leveys {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Modaalin leveys."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Modaalin CSS-luokka."}
+                :footer {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Modaalin alaosa."}
+                :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Modaalin sisältö."}}}
    {:id :dropdown-panel
     :nimi "Dropdown-panel"
     :ryhma :portatut
@@ -265,7 +380,11 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :riippuvainen
     :kuvaus "Otsikolla varustettu paneeli, jonka sisältö näkyy vain auki ollessa. Ei käytössä vielä missään näkymässä."
-    :api "harja.ui.bootstrap/dropdown-panel: {:open atom :style} otsikko sisältö"}
+    :funktio "harja.ui.bootstrap/dropdown-panel"
+    :asetukset {:open {:tyyppi :atomi :pakollinen? false :oletus nil :kuvaus "Atomi, jossa avoin-tila on."}
+                :style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Tyylit."}
+                :otsikko {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Paneelin otsikko."}
+                :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Paneelin sisältö, näytetään kun paneeli on auki."}}}
    {:id :ajax-loader
     :nimi "Latausindikaattori"
     :ryhma :palautteet
@@ -276,7 +395,10 @@
     :sallitut-vanhemmat #{:sivu :lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Latauskuva ja optionaalinen viesti. Näkyy, kun sisältö on hakuvaiheessa."
-    :api "harja.ui.yleiset/ajax-loader: [viesti {:luokka :sama-rivi?}]"}
+    :funktio "harja.ui.yleiset/ajax-loader"
+    :asetukset {:viesti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Latausviesti."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "CSS-luokka."}
+                :sama-rivi? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, indikaattori on samalla rivillä."}}}
    {:id :vihje
     :nimi "Pikkuvihje"
     :ryhma :palautteet
@@ -287,7 +409,10 @@
     :sallitut-vanhemmat #{:sivu :lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Kevyt ohjeteksti kuvakkeella. Käytetään kenttien ja otsikoiden yhteydessä."
-    :api "harja.ui.yleiset/vihje: teksti [luokka] [ikonin-koko]"}
+    :funktio "harja.ui.yleiset/vihje"
+    :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vihjeen teksti."}
+                :luokka {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Vihjeen tyyppi."}
+                :ikonin-koko {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Ikonin koko."}}}
    {:id :info-laatikko
     :nimi "Info-laatikko"
     :ryhma :palautteet
@@ -299,12 +424,30 @@
     :sallitut-vanhemmat #{:sivu :lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
-    :api "harja.ui.yleiset/info-laatikko: tyyppi ensisijainen-viesti [toissijainen-viesti leveys {:luokka :sulje-fn :sulje-nappi-id :reunan-voimakkuus}]"}])
+    :funktio "harja.ui.yleiset/info-laatikko"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Laatikon tyyppi."}
+                :ensisijainen-viesti {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Pääviesti."}
+                :toissijainen-viesti {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Toissijainen viesti."}
+                :leveys {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Laatikon leveys."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "CSS-luokka."}
+                :sulje-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan laatikon sulkemisen yhteydessä."}
+                :sulje-nappi-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Sulkemisnapin id."}
+                :reunan-voimakkuus {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Reunan voimakkuus."}}}])
 
 (defn ankkuri
   "Komponentin vakaa juuriankkuri (data-cy). Johdetaan id:stä, ei tallenneta erikseen."
   [{:keys [id]}]
   (str ankkuri-etuliite (name id)))
+
+(defn api-teksti
+  "Muodostaa komponentin :asetukset-kartasta ihmisluettavan API-kuvauksen.
+  Pakolliset asetukset merkitään sulkeissa."
+  [{:keys [funktio asetukset]}]
+  (str funktio ": {"
+       (str/join ", "
+                 (for [[avain {:keys [tyyppi pakollinen?]}] (sort-by key asetukset)]
+                   (str avain " " tyyppi (when pakollinen? " (pakollinen)"))))
+       "}"))
 
 (defn hae
   "Komponentti id:llä tai nil."
@@ -335,13 +478,16 @@
      (vec
        (concat
          (for [arvo (tuplat :id)] (str "Tuplaid: " arvo))
-         (for [{:keys [id ryhma luonne bootstrap-tila nimi kuvaus api rooli slotit tilat
+         (for [{:keys [id ryhma luonne bootstrap-tila nimi kuvaus funktio asetukset rooli slotit tilat
                        sallitut-vanhemmat variantit] :as komponentti} komponentit
                virhe [(when-not (contains? ryhma-idt ryhma) (str id ": tuntematon ryhmä " ryhma))
                       (when-not (contains? luonteet luonne) (str id ": tuntematon luonne " luonne))
                       (when-not (contains? bootstrap-tilat bootstrap-tila)
                         (str id ": tuntematon bootstrap-tila " bootstrap-tila))
-                      (when-not (every? seq [nimi kuvaus api]) (str id ": nimi, kuvaus tai api puuttuu"))
+                      (when-not (every? seq [nimi kuvaus funktio]) (str id ": nimi, kuvaus tai funktio puuttuu"))
+                      (when-not (and (map? asetukset) (seq asetukset)) (str id ": asetukset puuttuvat"))
+                      (when-let [virheelliset (seq (remove (comp asetustyypit :tyyppi val) asetukset))]
+                        (str id ": tuntemattomat asetustyypit " (mapv (comp :tyyppi val) virheelliset)))
                       (when-not (contains? roolit rooli) (str id ": tuntematon tai puuttuva rooli " rooli))
                       (when-not (joukko? slotit) (str id ": slotit puuttuvat tai ovat tyhjät"))
                       (when-not (joukko? tilat) (str id ": tilat puuttuvat tai ovat tyhjät"))

@@ -1,5 +1,6 @@
 (ns harja.ui.komponentit.rekisteri-test
   (:require [clojure.set]
+            [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
             [harja.ui.komponentit.rekisteri :as rekisteri]))
 
@@ -49,3 +50,16 @@
 
 (deftest ankkuri-johdetaan-id-sta
   (is (= "ui-komponenttien-tarkastelu-nappi" (rekisteri/ankkuri {:id :nappi}))))
+
+(deftest api-teksti-generoituu-asetuksista
+  (let [komponentti {:funktio "harja.ui.esimerkki/komponentti"
+                     :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Teksti"}
+                                 :disabled {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Pois käytöstä"}}}]
+    (is (= "harja.ui.esimerkki/komponentti: {:disabled :boolean, :teksti :merkkijono (pakollinen)}"
+           (rekisteri/api-teksti komponentti)))))
+
+(deftest nappi-kuvaa-asetuksensa
+  (let [nappi (rekisteri/hae :nappi)]
+    (is (contains? (:asetukset nappi) :data-cy))
+    (is (= "harja.ui.napit/nappi" (:funktio nappi)))
+    (is (str/starts-with? (rekisteri/api-teksti nappi) "harja.ui.napit/nappi: "))))
