@@ -15,10 +15,30 @@ SELECT
   yt.arvioitu_kustannus,
   yt.kuukausi,
   yt.vuosi,
+  viimeisin.viimeisin_muokkaus,
+  viimeisin.viimeisin_muokkaaja,
   tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
   LEFT JOIN tehtava tk ON yt.tehtava = tk.id
+  LEFT JOIN LATERAL (
+    SELECT
+        GREATEST(COALESCE(yt2.muokattu, yt2.luotu), yt2.luotu)
+                AS viimeisin_muokkaus,
+        CASE
+            WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+            END AS viimeisin_muokkaaja
+    FROM yksikkohintainen_tyo yt2
+             LEFT JOIN kayttaja k
+                       ON COALESCE(
+                              NULLIF(TRIM(yt2.muokkaaja), ''),
+                              yt2.luoja::text
+                          ) = k.id::text
+    WHERE yt2.urakka = yt.urakka AND (yt2.muokattu IS NOT NULL OR yt2.luotu IS NOT NULL)
+    ORDER BY viimeisin_muokkaus DESC NULLS LAST, yt2.id DESC
+        LIMIT 1
+) viimeisin ON TRUE
 WHERE urakka = :urakka
 ORDER BY tk.nimi;
 

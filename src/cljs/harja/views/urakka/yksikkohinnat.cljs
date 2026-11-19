@@ -152,6 +152,7 @@
                     :nimi :yksikkohinta
                     :tasaa :oikea
                     :tyyppi :numero
+                    :fmt (partial fmt/euro-opt false)
                     :desimaalien-maara 2
                     :solun-luokka solun-luokka-fn
                     :muokattava? (fn [rivi]
@@ -161,6 +162,7 @@
                     :leveys "15%"
                     :nimi :indeksikorjattu_yksikkohinta
                     :tyyppi :numero
+                    :fmt (partial fmt/euro-opt false)
                     :desimaalien-maara 2
                     :solun-luokka solun-luokka-fn
                     :muokattava? (constantly false)
@@ -192,7 +194,7 @@
 (defn yksikkohinnat-nakyma
   [e! {:keys [urakka urakan-hoitokaudet valittu-hoitokausi yksikkohintaiset-tyot
               toimenpiteet-ja-tehtavat haku-kaynnissa? virhe
-              tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja onko-muutoksia?
+              tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
               avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
   (let [grid-rivit (tehtavat-grid-riveiksi toimenpiteet-ja-tehtavat yksikkohintaiset-tyot)
         urakan-loppuvuoden-alkuvuosi (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka)))
@@ -200,7 +202,22 @@
         onko-viimeinen-vuosi? (and valitun-hoitokauden-alkuvuosi
                                 (= valitun-hoitokauden-alkuvuosi
                                   urakan-loppuvuoden-alkuvuosi))
-        urakan-indeksi (:indeksi urakka)]
+        urakan-indeksi (str (:indeksi urakka)
+                         (when-let [perusluku (:indeksilaskennan_perusluku urakka)]
+                           (str ", Perusluku: " perusluku)))]
+    [:div.yksikkohinnat
+     (when virhe
+       [:div.virhe
+        [:h3 "Virhe"]
+        [:p virhe]])
+     (when haku-kaynnissa?
+       [:div.haku-kaynnissa
+        [:h3 "Haetaan tietoja..."]])
+     (when-not haku-kaynnissa?
+       [:<>
+        [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
+        [tallennus-painikkeet e! tallennus-kesken? tallennustila? yksikkohintaiset-tyot
+         (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]])]
     [:div.yksikkohinnat
      [:div.row
       [:h1 "Yksikköhinnat"]]
@@ -214,14 +231,14 @@
       [:div.painikkeet.text-right
        [:div.grid-status-viestit
         (cond
-          (and onko-muutoksia? viimeisin-muokkaus)
+          (and tallentamattomia-muutoksia? viimeisin-muokkaus)
           [:<>
            [:div.status-viesti.tallennettu
             (str "Viimeksi tallennettu: " (pvm/pvm-aika-klo viimeisin-muokkaus) " (" viimeisin-muokkaaja ")")]
            [:div.status-viesti.tallentamatta
             "Tallentamattomia muutoksia"]]
 
-          onko-muutoksia?
+          tallentamattomia-muutoksia?
           [:div.status-viesti.tallentamatta
            "Tallentamattomia muutoksia"]
 

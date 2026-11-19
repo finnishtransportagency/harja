@@ -126,7 +126,8 @@
 
   HaeYksikkohintaisetTyotOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [tyot (suunnittelu/prosessoi-tyorivit
+    (let [viimeisin-rivi (first vastaus)
+          tyot (suunnittelu/prosessoi-tyorivit
                  (:urakka app)
                  vastaus)
           [alkupvm loppupvm] (:valittu-hoitokausi app)]
@@ -138,8 +139,8 @@
           tyot)
         :haku-kaynnissa? false
         :haku (:haku app)
-        :viimeisin-muokkaus (:viimeisin-muokkaus vastaus)
-        :viimeisin-muokkaaja (:viimeisin-muokkaaja vastaus))))
+        :viimeisin-muokkaus (:viimeisin-muokkaus viimeisin-rivi)
+        :viimeisin-muokkaaja (:viimeisin-muokkaaja viimeisin-rivi))))
 
   HaeYksikkohintaisetTyotEpaonnistui
   (process-event [{vastaus :vastaus} app]
@@ -233,12 +234,16 @@
 
   TallennaYksikkohinnatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
-    (-> app
-      (assoc :tallennus-kaynnissa? false)
-      (assoc :tallennustila? false)
-      (assoc :tallentamattomia-muutoksia? false)
-      (assoc :viimeisin-muokkaus (:viimeisin-muokkaus vastaus))))
+    (let [viimeisin-rivi (first vastaus)]
+      (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
+      (-> app
+        (assoc :tallennus-kaynnissa? false)
+        (assoc :tallennustila? false)
+        (assoc :tallentamattomia-muutoksia? false)
+        (assoc :viimeisin-muokkaus
+          (:viimeisin_muokkaus viimeisin-rivi))
+        (assoc :viimeisin-muokkaaja
+          (:viimeisin_muokkaaja viimeisin-rivi)))))
 
   TallennaYksikkohinnatEpaonnistui
   (process-event [{vastaus :vastaus} app]
