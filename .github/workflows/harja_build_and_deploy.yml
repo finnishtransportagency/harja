@@ -287,6 +287,7 @@ jobs:
   scan-docker-image:
     name: "Scan Docker image (Trivy)"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build-and-cache-test-image
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token

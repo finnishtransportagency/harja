@@ -314,10 +314,12 @@ jobs:
     if: ${{ inputs.scan-docker-image == 'true' }}
     name: "Scan Docker image"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build-harja
     permissions:
       contents: read # Tarvitaan checkout actionissa
       packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
