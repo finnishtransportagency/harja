@@ -33,7 +33,7 @@ Uuden komponentin lisääminen:
 
 ## Rekisterin tulostus
 
-`lein komponenttirekisteri` tulostaa rekisterin EDN:nä stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Tuloksen avaimet: `:id`, `:ryhma`, `:rooli`, `:slotit`, `:tilat`, `:sallitut-vanhemmat`, `:asetukset`, `:bootstrap-tila`, `:ankkuri`. Funktioarvot jätetään pois. Tuntematon `:id` tulostaa virheen stderriin ja päättyy koodilla 1.
+`lein komponenttirekisteri` tulostaa rekisterin EDN:nä stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Tuloksen avaimet: `:id`, `:ryhma`, `:rooli`, `:suositus`, `:korvaa`, `:slotit`, `:tilat`, `:sallitut-vanhemmat`, `:asetukset`, `:bootstrap-tila`, `:ankkuri`. Funktioarvot jätetään pois. Tuntematon `:id` tulostaa virheen stderriin ja päättyy koodilla 1.
 
 ## Sopimus
 
@@ -43,6 +43,9 @@ Uuden komponentin lisääminen:
 - Valintaryhmän arvo voi olla mikä tahansa arvo (keyword, luku, merkkijono); komponentti vie arvon sellaisenaan `:vaihda-fn`:lle.
 - Komponentit eivät aseta ulkomarginaaleja. Välit kuuluvat käyttöpaikalle tai `pino`/`toimintoryhma`-rakenteelle.
 - Bootstrap-riippuvuus kirjataan rekisterissä `:bootstrap-tila`-arvolla (`:ei-riippuvuutta`, `:osittain-riippuvainen`, `:riippuvainen`, `:maarittelematta`).
+- Jokaisella rekisterimerkinnällä on `:suositus` (`:uuteen-ui`, `:vanha`, `:ei-suositusta`) ja `:korvaa`-lista (tekstit vanhoista vastineista, tyhjä vektori jos ei korvausta). Sopimusruutu näyttää molemmat.
+- Uudessa merkinnässä (`:suositus :uuteen-ui`) kielletyt asetusnimet ovat `:class`, `:classes`, `:disabled?`, `:disabloi`, `:valitse-fn` ja `:valinta-fn`. Käytä `:luokka`, `:disabled` ja `:vaihda-fn`. `-fn`-päätteisen asetuksen tyypin on oltava `:funktio` ja `?`-päätteisen `:boolean`. Vanhat merkinnät (`:vanha`, `:ei-suositusta`) saavat käyttää vanhoja nimiä, mutta tyyppisäännöt koskevat vain uusia merkintöjä.
+- Palautekomponentit ovat ryhmässä `:palautteet`. Yhteinen varianttisanasto on `palaute-variantit` (`:onnistui`, `:info`, `:varoitus`, `:virhe`). Komponenttien olemassa olevia variantteja ei ole vielä nimetty uudelleen.
 
 ## Tunnetut rajoitukset
 

@@ -4,7 +4,8 @@
 
   Ankkurit johdetaan rekisteristä (`rekisteri/ankkuri`), jotta kortin, navigaation ja
   sopimusruudun ankkurit eivät voi erota toisistaan."
-  (:require [harja.ui.komponentit.rekisteri :as rekisteri]))
+  (:require [clojure.string :as str]
+            [harja.ui.komponentit.rekisteri :as rekisteri]))
 
 (defn ankkuri
   "Komponentin ankkuri rekisteristä, valinnaisilla päätteillä sisäisiä elementtejä varten."
@@ -97,6 +98,12 @@
       [:dd [:code (rekisteri/api-teksti komponentti)]]
       [:dt "Asetukset"]
       [:dd [asetukset-taulukko asetukset]]
+      [:dt "Suositus"]
+      [:dd [:span {:data-cy "ui-komponenttien-tarkastelu-suositus"} (name (:suositus komponentti))]]
+      [:dt "Korvaa"]
+      [:dd (if (seq (:korvaa komponentti))
+             (str/join ", " (:korvaa komponentti))
+             "Ei korvaa mitään")]
       [:dt "Bootstrap-tila"]
       [:dd [bootstrap-tila-merkki komponentti]]
       [:dt "DOM-ankkuri"]

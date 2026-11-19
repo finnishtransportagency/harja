@@ -63,3 +63,34 @@
     (is (contains? (:asetukset nappi) :data-cy))
     (is (= "harja.ui.napit/nappi" (:funktio nappi)))
     (is (str/starts-with? (rekisteri/api-teksti nappi) "harja.ui.napit/nappi: "))))
+
+(deftest virheet-tunnistaa-suosituksen-puutteet
+  (let [ok (first rekisteri/komponentit)
+        virheet (fn [komponentti]
+                  (rekisteri/virheet rekisteri/ryhmat (cons komponentti (rest rekisteri/komponentit))))]
+    (testing "tuntematon suositus"
+      (is (seq (virheet (assoc ok :suositus :ei-ole)))))
+    (testing "puuttuva suositus"
+      (is (seq (virheet (dissoc ok :suositus)))))
+    (testing "korvaa on oltava vektori"
+      (is (seq (virheet (assoc ok :korvaa "yleiset/pudotusvalikko")))))))
+
+(deftest uuden-merkinnan-nimeamiskaytanto-tarkistetaan
+  (let [ok (first rekisteri/komponentit)
+        virheet (fn [komponentti]
+                  (rekisteri/virheet rekisteri/ryhmat (cons komponentti (rest rekisteri/komponentit))))
+        disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Pois käytöstä."}]
+    (testing "uudessa merkinnässä vanha nimi on virhe"
+      (is (seq (virheet (assoc-in ok [:asetukset :disabled?] disabled?)))))
+    (testing "vanhassa merkinnässä vanha nimi on sallittu"
+      (is (empty? (virheet (assoc-in (assoc ok :suositus :vanha) [:asetukset :disabled?] disabled?)))))
+    (testing "-fn-avaimen on oltava funktio"
+      (is (seq (virheet (assoc-in ok [:asetukset :vaihda-fn]
+                          {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Väärin."})))))
+    (testing "?-avaimen on oltava boolean"
+      (is (seq (virheet (assoc-in ok [:asetukset :tyhja?]
+                          {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Väärin."})))))))
+
+(deftest palautekomponentit-ovat-yhdessa-ryhmassa
+  (is (= #{:palautteet}
+         (set (map :ryhma (filter #(= :palaute (:rooli %)) rekisteri/komponentit))))))

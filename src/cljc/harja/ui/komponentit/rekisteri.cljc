@@ -44,6 +44,8 @@
     :ryhma :alasvedot
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :uuteen-ui
+    :korvaa ["yleiset/pudotusvalikko"]
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
     :sallitut-vanhemmat #{:lomake}
@@ -58,6 +60,8 @@
     :ryhma :toiminnot
     :luonne :shared-komponentti
     :rooli :toiminto
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:toiminto}
     :tilat #{:normaali :estetty :lataus}
     :sallitut-vanhemmat #{:lomake}
@@ -76,6 +80,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:kentta}
     :tilat #{:normaali :tyhja :virhe}
     :sallitut-vanhemmat #{:lomake}
@@ -91,6 +97,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
     :sallitut-vanhemmat #{:lomake}
@@ -111,6 +119,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -128,6 +138,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -147,6 +159,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -165,6 +179,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -183,6 +199,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -200,6 +218,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo :valinnat}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -217,6 +237,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :estetty}
     :sallitut-vanhemmat #{:lomake :suodatin}
@@ -234,6 +256,8 @@
     :ryhma :lomakkeet
     :luonne :shared-rakenne
     :rooli :lomake
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:kentat :toiminnot :tila}
     :tilat #{:normaali :lataus :virhe :onnistui}
     :sallitut-vanhemmat #{:sivu}
@@ -246,6 +270,8 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :asettelu
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:sarake}
     :tilat #{:normaali}
     :sallitut-vanhemmat #{:lomake :sivu}
@@ -260,6 +286,8 @@
     :ryhma :portatut
     :luonne :shared-komponentti
     :rooli :rakenne
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:otsikko :sisalto}
     :tilat #{:normaali :tyhja}
     :sallitut-vanhemmat #{:sivu}
@@ -274,6 +302,8 @@
     :ryhma :gridit
     :luonne :shared-komponentti
     :rooli :taulukko
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja}
     :sallitut-vanhemmat #{:sivu}
@@ -290,6 +320,8 @@
     :ryhma :gridit
     :luonne :shared-komponentti
     :rooli :taulukko
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja :muokkaus}
     :sallitut-vanhemmat #{:sivu}
@@ -309,6 +341,8 @@
     :ryhma :portatut
     :luonne :shared-komponentti
     :rooli :navigaatio
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:otsikot :sisallot}
     :tilat #{:normaali :ei-kayttooikeutta}
     :sallitut-vanhemmat #{:sivu}
@@ -325,6 +359,8 @@
     :ryhma :portatut
     :luonne :shared-komponentti
     :rooli :navigaatio
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:header :vasen :oikea}
     :tilat #{:normaali :suljettu :avoin}
     :sallitut-vanhemmat #{:sivu}
@@ -337,9 +373,11 @@
                 :right {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Kohdat, jotka erotetaan oikeaan reunaan."}}}
    {:id :viesti
     :nimi "Viesti"
-    :ryhma :portatut
+    :ryhma :palautteet
     :luonne :shared-komponentti
     :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:sisalto}
     :tilat #{:normaali}
     :variantit #{:onnistuminen :info :varoitus :vaara}
@@ -355,6 +393,8 @@
     :ryhma :portatut
     :luonne :shared-komponentti
     :rooli :overlay
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:otsikko :sisalto}
     :tilat #{:avoin :suljettu}
     :sallitut-vanhemmat #{:sivu}
@@ -375,6 +415,8 @@
     :ryhma :portatut
     :luonne :shared-komponentti
     :rooli :rakenne
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:otsikko :sisalto}
     :tilat #{:auki :kiinni}
     :sallitut-vanhemmat #{:sivu}
@@ -390,6 +432,8 @@
     :ryhma :palautteet
     :luonne :shared-komponentti
     :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:viesti}
     :tilat #{:lataus}
     :sallitut-vanhemmat #{:sivu :lomake}
@@ -404,6 +448,8 @@
     :ryhma :palautteet
     :luonne :shared-komponentti
     :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:teksti}
     :tilat #{:normaali}
     :sallitut-vanhemmat #{:sivu :lomake}
@@ -418,6 +464,8 @@
     :ryhma :palautteet
     :luonne :shared-komponentti
     :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:ensisijainen :toissijainen}
     :tilat #{:normaali}
     :variantit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
@@ -465,6 +513,34 @@
                (assoc ryhma :komponentit (vec ryhman-komponentit)))))
      ryhmat)))
 
+(def suositukset
+  "Mitä uudessa UI:ssa suositellaan: uuden komponentin käyttöä, vanhaa vastinetta tai ei suositusta."
+  #{:uuteen-ui :vanha :ei-suositusta})
+
+(def uusien-merkintojen-kielletyt-avaimet
+  "Vanhoja asetusavaimia, joita uusi merkintä ei käytä. Vanhat merkinnät saavat käyttää niitä."
+  #{:class :classes :disabled? :disabloi :valitse-fn :valinta-fn})
+
+(def palaute-variantit
+  "Palautekomponenttien yhteinen varianttisanasto."
+  #{:onnistui :info :varoitus :virhe})
+
+(defn- uusien-merkintojen-nimeamisvirheet
+  "Uudessa merkinnässä asetusnimien on noudatettava yhtenäistä nimeämistä."
+  [{:keys [id suositus asetukset]}]
+  (when (= :uuteen-ui suositus)
+    (concat
+      (for [avain (keys asetukset) :when (uusien-merkintojen-kielletyt-avaimet avain)]
+        (str id ": kielletty asetusnimi " avain))
+      (for [[avain {:keys [tyyppi]}] asetukset
+            :let [nimi (name avain)]
+            virhe [(when (and (str/ends-with? nimi "-fn") (not= :funktio tyyppi))
+                     (str id ": " avain " on -fn-asetus, tyypin pitää olla :funktio"))
+                   (when (and (str/ends-with? nimi "?") (not= :boolean tyyppi))
+                     (str id ": " avain " on ?-asetus, tyypin pitää olla :boolean"))]
+            :when virhe]
+        virhe))))
+
 (defn virheet
   "Palauttaa rekisterin eheysongelmat tekstinä. Tyhjä lista tarkoittaa, että rekisteri on kunnossa."
   ([] (virheet ryhmat komponentit))
@@ -479,8 +555,12 @@
        (concat
          (for [arvo (tuplat :id)] (str "Tuplaid: " arvo))
          (for [{:keys [id ryhma luonne bootstrap-tila nimi kuvaus funktio asetukset rooli slotit tilat
-                       sallitut-vanhemmat variantit] :as komponentti} komponentit
-               virhe [(when-not (contains? ryhma-idt ryhma) (str id ": tuntematon ryhmä " ryhma))
+                       sallitut-vanhemmat variantit suositus korvaa] :as komponentti} komponentit
+               virhe [(when-not (contains? suositukset suositus)
+                        (str id ": tuntematon tai puuttuva suositus " suositus))
+                      (when-not (and (vector? korvaa) (every? string? korvaa))
+                        (str id ": korvaa on oltava tekstivektori"))
+                      (when-not (contains? ryhma-idt ryhma) (str id ": tuntematon ryhmä " ryhma))
                       (when-not (contains? luonteet luonne) (str id ": tuntematon luonne " luonne))
                       (when-not (contains? bootstrap-tilat bootstrap-tila)
                         (str id ": tuntematon bootstrap-tila " bootstrap-tila))
@@ -500,4 +580,7 @@
                       (when (and (joukko? variantit) (some #(contains? tilat %) variantit))
                         (str id ": variantit ja tilat menevät päällekkäin"))]
                :when virhe]
+           virhe)
+         (for [komponentti komponentit
+               virhe (uusien-merkintojen-nimeamisvirheet komponentti)]
            virhe))))))

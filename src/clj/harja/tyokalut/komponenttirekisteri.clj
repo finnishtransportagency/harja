@@ -6,7 +6,7 @@
             [harja.ui.komponentit.rekisteri :as rekisteri]))
 
 (def ^:private tulostettavat-avaimet
-  [:id :ryhma :rooli :slotit :tilat :sallitut-vanhemmat :asetukset :bootstrap-tila :ankkuri])
+  [:id :ryhma :rooli :suositus :korvaa :slotit :tilat :sallitut-vanhemmat :asetukset :bootstrap-tila :ankkuri])
 
 (defn hae-kaikki []
   rekisteri/komponentit)
