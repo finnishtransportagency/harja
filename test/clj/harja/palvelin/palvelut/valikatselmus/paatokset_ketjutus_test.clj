@@ -82,7 +82,7 @@
         vastaus (with-redefs [valikatselmukset/hae-urakan-mahdolliset-paatokset
                               (fn [_db _kayttaja _payload]
                                 paatostyypit/paatostyypit)
-                              valikatselmukset/hae-kaikki-mahdolliset-ja-tehdyt-paatokset*
+                              valikatselmukset/hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen
                               (fn [_db _kayttaja _payload]
                                 {:tietokanta-paatokset tehdyt})]
                   (valikatselmukset/hae-ketjutetusti-kumoutuvat-paatokset

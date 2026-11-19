@@ -1335,19 +1335,21 @@
         mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset lopullinen-hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)]
     mahdolliset-paatokset))
 
-(defn- hae-kaikki-mahdolliset-ja-tehdyt-paatokset*
+(defn- hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
         tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
     {:mahdolliset-paatokset mahdolliset-paatokset
      :tietokanta-paatokset tietokanta-paatokset}))
 
-(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
-  "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
-  [db kayttaja tiedot]
-  ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
+(defn hae-kaikki-mahdolliset-ja-tehdyt-paatokset-urakkatilanteeseen
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
-  (hae-kaikki-mahdolliset-ja-tehdyt-paatokset* db kayttaja tiedot))
+  (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
+    {:mahdolliset-paatokset mahdolliset-paatokset
+     :tietokanta-paatokset tietokanta-paatokset}))
 
 (defn onko-paatoksia-tekematta
   "Päätellään onko jokin päätös vielä tekemättä, mikä voi vaikuttaa lukituksiin. 
@@ -1374,7 +1376,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
 
   (let [payload {:urakkaid urakkaid :kuluva-hoitovuosi hoitokauden_alkuvuosi}
-        kaikki-paatokset (hae-kaikki-mahdolliset-ja-tehdyt-paatokset* db kayttaja payload)
+        kaikki-paatokset (hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen db kayttaja payload)
         tehdyt-paatokset (:tietokanta-paatokset kaikki-paatokset)
 
         ;; Kaikki urakan mahdolliset kumoutuvat päätökset

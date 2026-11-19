@@ -63,7 +63,7 @@
                  (mapv
                    (fn [urakka]
                      (let [paatokset
-                           (v/palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
+                           (v/hae-kaikki-mahdolliset-ja-tehdyt-paatokset-urakkatilanteeseen
                              db kayttaja
                              {:urakkaid (:id urakka)
                               :kuluva-hoitovuosi hoitokauden-alkuvuosi})]
