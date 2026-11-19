@@ -18,7 +18,7 @@ export const evkLappi = "Lappi";
 export const evkPohjoisSuomi = "Pohjois-Suomi";
 
 // Worktree-ajossa CYPRESS_tietokantaKontti osoittaa käytettävän tietokantakontin.
-export function siivoaSanktiotKannasta(kohde) {
+export function siivoaSanktiotKannasta(kohde, perustelu = null) {
     const tietokantaKontti = Cypress.env('tietokantaKontti');
     if (!tietokantaKontti && new URL(Cypress.config('baseUrl')).port !== '3000') {
         throw new Error('Aseta CYPRESS_tietokantaKontti kohdeinstanssin tietokantakontin nimeksi');
@@ -27,14 +27,17 @@ export function siivoaSanktiotKannasta(kohde) {
         throw new Error('Tietokantakontin nimi on virheellinen');
     }
 
+    const ehto = kohde
+        ? "lp.kohde = '" + kohde + "'"
+        : "lp.perustelu = '" + perustelu + "'";
     const komento = tietokantaKontti
         ? cy.wrap(`/usr/local/bin/docker exec ${tietokantaKontti} `)
         : cy.terminaaliKomento();
     komento.then((terminaaliKomento) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE lp.kohde = '" + kohde + "');\"");
+            "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE " + ehto + ");\"");
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
-            "\"DELETE FROM laatupoikkeama WHERE kohde = '" + kohde + "';\"");
+            "\"DELETE FROM laatupoikkeama lp WHERE " + ehto + ";\"");
     });
 }
 
@@ -47,7 +50,7 @@ export function siivoaBonuksetKannasta(lisatieto) {
 }
 
 // Navigoi urakan Laadunseuranta > Sanktiot ja bonukset -näkymään
-export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
+export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk, urakkatyyppi = 'Hoito') {
     cy.intercept('POST', '_/hae-urakan-sanktiot-ja-bonukset').as('sanktiot')
     cy.intercept('POST', '_/hae-urakan-sanktio-konfiguraatio').as('sanktiokonfiguraatio')
 
@@ -61,7 +64,7 @@ export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
     cy.get('.valittu-hallintayksikko', {timeout: pageloadTimeout})
         .should('have.text', urakkaEvk + ' ')
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
-    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: 'Hoito'})
+    cy.get('[data-cy=murupolku-urakkatyyppi]').valinnatValitse({valinta: urakkatyyppi})
     cy.contains('label', 'Näytä päättyneet')
         .parent()
         .find('input[type="checkbox"]')
@@ -69,8 +72,10 @@ export function avaaSanktiotJaBonuksetNakyma(urakkaNimi, urakkaEvk) {
         .should('be.checked');
     cy.get('img[src="images/ajax-loader.gif"]', {timeout: pageloadTimeout}).should('not.exist')
     cy.contains('[data-cy=urakat-valitse-urakka] li', urakkaNimi, {timeout: pageloadTimeout}).click()
+    // Ylläpitourakoilla välilehden nimi on "Sakot ja bonukset"
+    const sanktiotTabNimi = urakkatyyppi === 'Päällystys' ? 'Sakot ja bonukset' : 'Sanktiot ja bonukset';
     cy.get('[data-cy=tabs-taso1-Laadunseuranta]').click()
-    cy.get('[data-cy="tabs-taso2-Sanktiot ja bonukset"]').click()
+    cy.get(`[data-cy="tabs-taso2-${sanktiotTabNimi}"]`).click()
     cy.wait('@sanktiot', {timeout: clickTimeout})
         .its('response.statusCode').should('be.within', 200, 299)
     cy.wait('@sanktiokonfiguraatio', {timeout: clickTimeout})
