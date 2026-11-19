@@ -6,7 +6,7 @@ import {
 import {SP, valitseSivupaneelissaEnsimmainenAlasvetoarvo} from '../support/apurit';
 
 const urakka = 'LOU tienpäällystysurakka ET1 2026,P';
-const evk = 'Varsinais-Suomi';
+const evk = 'Lounais-Suomi';
 const kuvaus = 'CY-yllapitourakka-20100-kohdistus';
 const perustelu = 'CY-yllapitourakka-20100-kohdistus-perustelu';
 const toimenpideinstanssi = 'LOU Päällyste T2 20100 TP';
