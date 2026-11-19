@@ -17,6 +17,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 | --- | --- |
 | Shared-komponentit (`pino`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `valintaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/komponentit.cljc` |
 | Komponenttirekisteri (data) ja eheystarkistus | `src/cljc/harja/ui/komponentit/rekisteri.cljc` |
+| Rekisterin EDN-tulostus komentoriviltä | `src/clj/harja/tyokalut/komponenttirekisteri.clj` (`lein komponenttirekisteri`) |
 | Tarkastelusivun entry | `tyokalut/ui_komponenttien_tarkastelu_nakyma.cljs` |
 | Tarkastelurunko (navigaatio, kortti, sopimus, `ankkuri`) | `tyokalut/ui_komponenttien_tarkastelu/kehys.cljs` |
 | Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit}.cljs` |
@@ -25,10 +26,14 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 
 Uuden komponentin lisääminen:
 
-1. Lisää rekisterimerkintä `rekisteri.cljc`:ään (`:id`, `:ryhma`, `:nimi`, `:kuvaus`, `:api`, `:bootstrap-tila`).
+1. Lisää rekisterimerkintä `rekisteri.cljc`:ään (`:id`, `:ryhma`, `:nimi`, `:kuvaus`, `:funktio`, `:asetukset`, `:bootstrap-tila`).
 2. Lisää esikatselu ryhmän tiedostoon ja exporttaa se `esikatselut`-kartassa rekisterin `:id`:llä.
 3. Lisää sopimustesti, jos komponentti on shared-komponentti.
 4. `rekisteri/virheet`-testi epäonnistuu, jos rekisterin tiedot ovat puutteelliset.
+
+## Rekisterin tulostus
+
+`lein komponenttirekisteri` tulostaa rekisterin EDN:nä stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Tuloksen avaimet: `:id`, `:ryhma`, `:rooli`, `:slotit`, `:tilat`, `:sallitut-vanhemmat`, `:asetukset`, `:bootstrap-tila`, `:ankkuri`. Funktioarvot jätetään pois. Tuntematon `:id` tulostaa virheen stderriin ja päättyy koodilla 1.
 
 ## Sopimus
 
