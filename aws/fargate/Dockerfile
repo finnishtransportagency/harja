@@ -52,7 +52,16 @@ RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
 
 
 # Asenna AWS CLI v2
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+# Curl-optiot: --fail epäonnistuu HTTP-virheissä, --retry/--retry-all-errors yrittää uudelleen ohimeneviä virheitä,
+# --connect-timeout katkaisee jumiin jääneen yhteyden ja --speed-limit/--speed-time katkaisee (ja retry yrittää uudelleen)
+# jos siirto on hitaampi kuin 1 KB/s 60 sekunnin ajan.
+RUN curl \
+    --fail --silent --show-error --location \
+    --retry 5 --retry-all-errors \
+    --connect-timeout 30 \
+    --speed-limit 1024 --speed-time 60 \
+    "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+    -o "awscliv2.zip" && \
  unzip awscliv2.zip && \
  ./aws/install && \
  rm -rf awscliv2.zip aws
@@ -62,7 +71,13 @@ ENV PROMETHEUS_JAR_VERSION=0.20.0
 # https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar.sha1
 ENV PROMETHEUS_JAR_SHA1="7b8a98e3482cee8889698ef391b85c47a3c4ce5b"
 ENV PROMETHEUS_MAVEN_REPO_URL_BASE="https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent"
-RUN curl "$PROMETHEUS_MAVEN_REPO_URL_BASE/${PROMETHEUS_JAR_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_JAR_VERSION}.jar" \
+# ks. curl-optiot AWS CLI:n asennuksen kommentissa
+RUN curl \
+    --fail --silent --show-error --location \
+    --retry 5 --retry-all-errors \
+    --connect-timeout 30 \
+    --speed-limit 1024 --speed-time 60 \
+    "$PROMETHEUS_MAVEN_REPO_URL_BASE/${PROMETHEUS_JAR_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_JAR_VERSION}.jar" \
     -o "jmx_prometheus_javaagent.jar"
 
 # Validoi latauksen checksum
