@@ -1,5 +1,6 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.lomakkeet
   (:require [reagent.core :as r]
+            [harja.ui.bootstrap :as bootstrap]
             [harja.ui.kentat :as kentat]
             [harja.ui.komponentit :as ui]
             [harja.ui.napit :as napit]
@@ -210,6 +211,42 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: " (pr-str (sort @valitut)))]])))
 
+(defn- radio-group-kentta [komponentti]
+  (r/with-let [valittu (r/atom "Keski")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Vaihtoehdoista valitaan yksi. Arvo on käyttöpaikan omistama."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :radio-group
+          :vaihtoehdot ["Matala" "Keski" "Korkea"]
+          :vaihtoehto-nayta str}
+         valittu]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: " (pr-str @valittu))]])))
+
+(defn- valinta-kentta [komponentti]
+  (r/with-let [valittu (r/atom "Keski")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Pudotusvalikko tee-kentän kautta. Arvo on käyttöpaikan omistama."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :valinta
+          :valinnat ["Matala" "Keski" "Korkea"]
+          :valinta-nayta str
+          :elementin-id (str ankkuri "-valinta")}
+         valittu]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: " (pr-str @valittu))]])))
+
+(defn- dropdown-valikko [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Otsikko ja vaihtoehtolista. Avautuminen ei kuulu komponenttiin, joten tässä näkyy vain otsikko."]
+     [:div {:data-cy (str ankkuri "-valikko")}
+      [bootstrap/dropdown "Valikko" [[:a {:href "#"} "Ensimmäinen"] [:a {:href "#"} "Toinen"]]]]]))
+
 (defn- valintaruutu [komponentti]
   (r/with-let [valittu? (r/atom false)]
     (let [ankkuri (kehys/ankkuri komponentti)]
@@ -338,6 +375,9 @@
 (register! :valintaruutu {:esikatselu valintaruutu})
 (register! :radiokentta {:esikatselu radiokentta})
 (register! :checkbox-ryhma {:esikatselu checkbox-ryhma})
+(register! :radio-group {:esikatselu radio-group-kentta})
+(register! :valinta {:esikatselu valinta-kentta})
+(register! :dropdown {:esikatselu dropdown-valikko})
 
 (defn- asettelu-simulaattorissa [asettelu-fn]
   (fn [solmu _tila lapsi-fn]

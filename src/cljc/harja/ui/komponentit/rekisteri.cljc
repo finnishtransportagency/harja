@@ -253,6 +253,65 @@
                 :vaihtoehto-nayta {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon näytettävän tekstin."}
                 :palstoja {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Vaihtoehtojen palstamäärä."}
                 :disabloi {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}}}
+   {:id :radio-group
+    :nimi "Radio-ryhmä (tee-kentta)"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :osittain-riippuvainen
+    :bootstrap-luokat ["radio"]
+    :kuvaus "Vaihtoehdoista yksi valitaan radiopainikkeella. Vayla-tyylissä käytetään omaa markupia, muuten Bootstrapin radio-luokkaa."
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :radio-group."}
+                :vaihtoehdot {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valittavat vaihtoehdot."}
+                :vaihtoehto-nayta {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon näytettävän tekstin."}
+                :vaihtoehto-arvo {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon arvon."}
+                :oletusarvo {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Valitaan, jos arvoa ei ole vielä asetettu."}
+                :nayta-rivina? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Näyttää vaihtoehdot vierekkäin."}
+                :vayla-tyyli? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Käyttää Väylän radio-markupia."}
+                :disabloitu? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}}}
+   {:id :valinta
+    :nimi "Valinta (tee-kentta)"
+    :ryhma :alasvedot
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :vanha
+    :korvaa []
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :virhe :estetty}
+    :sallitut-vanhemmat #{:lomake}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Pudotusvalikko tee-kentän kautta. Renderöi livi-pudotusvalikon, joka käyttää Bootstrapin dropdown-luokkaa. Uuteen UI:hin suositellaan valintaryhmää."
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :valinta."}
+                :valinnat {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Valittavat vaihtoehdot. Vaihtoehto tai valinnat-fn on pakollinen."}
+                :valinnat-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdot käyttöpaikan datasta."}
+                :valinta-nayta {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon näytettävän tekstin."}
+                :valinta-arvo {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon arvon."}
+                :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Kentän id."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on disabloitu."}}}
+   {:id :dropdown
+    :nimi "Dropdown-valikko"
+    :ryhma :toiminnot
+    :luonne :shared-komponentti
+    :rooli :navigaatio
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:otsikko :kohteet}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu}
+    :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["dropdown-toggle" "dropdown-menu"]
+    :kuvaus "Otsikko ja vaihtoehtolista. Ei lomakekenttä. Avautumisen tila ei kuulu komponenttiin, joten esikatselu näyttää vain otsikon."
+    :funktio "harja.ui.bootstrap/dropdown"
+    :asetukset {:title {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
+                :items {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valikon kohteet, jokainen kääritään li-elementtiin."}}}
    {:id :pino
     :nimi "Pino"
     :ryhma :lomakkeet
