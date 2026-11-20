@@ -1,6 +1,6 @@
 (ns harja.domain.laadunseuranta_test
   (:require [clojure.string :as str]
-            [clojure.test :refer [deftest testing is use-fixtures]]
+            [clojure.test :refer [deftest testing is are use-fixtures]]
             [harja.testi :refer :all]
             [slingshot.test]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
@@ -172,6 +172,40 @@
               :perintapvm nil}
              (sanktion-lomake-domain/aseta-kasittely-tai-maarattypvm
                perusrivi nil :maarattypvm))))))
+
+(deftest aikakausikonteksti-arvonvahennys-urakkamallin-ja-hoitovuoden-mukaan
+  (are [urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi sallittu?]
+       (= sallittu? (:salli-arvonvahennys?
+                      (sanktion-lomake-domain/aikakausikonteksti urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi)))
+    ;; MHU 2019–2024: sanktiolomakkeella hoitovuoteen 2025 asti
+    2019 2024 :teiden-hoito true
+    2023 2025 :teiden-hoito true
+    2023 2026 :teiden-hoito false
+    2024 2027 :teiden-hoito false
+    ;; MHU25+: aina omalla lomakkeella
+    2025 2025 :teiden-hoito false
+    2025 2026 :teiden-hoito false
+    2026 2026 :teiden-hoito false
+    ;; Alueurakka
+    2019 2025 :hoito true
+    2019 2026 :hoito false))
+
+(deftest arvonvahennyksen-lomakesaannot-ovat-toistensa-komplementit
+  ;; Sanktiolomake (aikakausikonteksti) ja arvonvähennyslomake (sanktio-domain) käyttävät samaa
+  ;; sääntöä kahtena kopiona; arvonvähennyksen pitää olla täsmälleen yhdellä lomakkeella.
+  (doseq [urakkatyyppi [:teiden-hoito :hoito]
+          urakan-alkuvuosi [2019 2021 2023 2024 2025 2026]
+          hoitokauden-alkuvuosi [2024 2025 2026 2027]
+          :when (>= hoitokauden-alkuvuosi urakan-alkuvuosi)]
+    (let [urakka {:tyyppi urakkatyyppi :alkupvm (pvm/hoitokauden-alkupvm urakan-alkuvuosi)}
+          sanktiolomakkeella? (:salli-arvonvahennys?
+                                (sanktion-lomake-domain/aikakausikonteksti
+                                  urakan-alkuvuosi hoitokauden-alkuvuosi urakkatyyppi))
+          omalla-lomakkeella? (sanktio-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
+                                urakka (pvm/vuodesta-hoitokausi hoitokauden-alkuvuosi))]
+      (is (not= sanktiolomakkeella? omalla-lomakkeella?)
+        (str urakkatyyppi " " urakan-alkuvuosi ", hoitovuosi " hoitokauden-alkuvuosi
+          ": arvonvähennys pitää olla täsmälleen yhdellä lomakkeella")))))
 
 (deftest urakan-mahdolliset-sanktiolajit
   (let [hoidon-lajit-ilman-arvonvahennysta [:muistutus :A :B :C :pohjavesisuolan_ylitys :talvisuolan_ylitys
