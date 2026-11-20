@@ -304,7 +304,7 @@
   toimenpidekoodin perusteella. Uudemmissa urakoissa se ratkaistaan aina ainoasta kulun kohdistuksesta,
   jolloin toimenpidekoodia ei käytetä; epäselvä tai puuttuva kohdistus tyhjentää arvon.
   Jos tyyppiä ei voida valita, se tyhjenee ja laskennan syötteet poistetaan.
-  Muistutusta lukuun ottamatta tyypittömän rivin summa, omailmoitus, toimenpideinstanssi ja indeksi nollataan."
+  Muistutuksen summa, omailmoitus, toimenpideinstanssi ja indeksi nollataan, jos tyyppiä ei voitu valita."
   ([rivi uusi-laji sanktiotyypit toimenpideinstanssit]
    (vaihda-sanktiolajia rivi uusi-laji sanktiotyypit toimenpideinstanssit nil nil))
   ([rivi uusi-laji sanktiotyypit toimenpideinstanssit urakan-alkuvuosi kulun-kohdistukset]
