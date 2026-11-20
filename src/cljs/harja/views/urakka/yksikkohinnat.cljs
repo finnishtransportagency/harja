@@ -5,9 +5,11 @@
             [harja.ui.grid :as grid]
             [harja.fmt :as fmt]
             [harja.pvm :as pvm]
+            [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.valinnat :as valinnat]
+            [harja.ui.yleiset :as yleiset]
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka.yksikkohinnat :as tiedot]))
 
@@ -90,7 +92,7 @@
               (sort-by :jarjestys rivit))))))))
 
 (defn tehtava-taulukko
-  [e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
+  [e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi urakan-perusluku]
   (let [grid-rivit (filter (fn [rivi]
                             (or (nil? (:tehtava rivi))
                               (contains? avatut-tehtavaryhmat
@@ -140,9 +142,11 @@
                                         " Valitse"]))
                     :fmt (fn [indeksi-kaytossa?]
                            (cond
-                             (true? indeksi-kaytossa?) urakan-indeksi
+                             (true? indeksi-kaytossa?) (str urakan-indeksi
+                                                         (when urakan-perusluku
+                                                           (str ", Perusluku: " urakan-perusluku)))
                              (false? indeksi-kaytossa?) "-"
-                             :else         ""))
+                             :else ""))
                     :tasaa :vasen
                     :solun-luokka solun-luokka-fn
                     :muokattava? (fn [rivi]
@@ -159,7 +163,28 @@
                     :muokattava? (fn [rivi]
                                    (and tallennustila?
                                      (:tehtava rivi)))}
-                   {:otsikko "Indeksikorjattu hinta\u2028€ / yksikkö"
+                   {:otsikko-komp
+                    (fn []
+                      [:div.indeksikorjattu-yksikkohinta
+                       [:span.indeksikorjattu-yksikkohinta-otsikko
+                        "Indeksikorjattu hinta\u2028€ / yksikkö"]
+                       [:button.indeksikorjattu-yksikkohinta-ikoni
+                        {:type "button"
+                         :title "Indeksikorjatun hinnan laskeminen"
+                         :aria-label "Indeksikorjatun hinnan laskeminen"
+                         :on-click
+                         (fn [_]
+                           (modal/nayta!
+                             {:otsikko "Indeksikorjatun hinnan laskeminen"
+                              :footer [napit/sulje #(modal/piilota!)]
+                              :modal-luokka "harja-modal-keskitetty-leveampi"
+                              :luokka "modal-dialog-keskitetty-leveampi"}
+                             [:div
+                              [:p "Ensimmäisenä urakkavuotena ei tehdä indeksikorjausta."]
+                              [:p "Indeksikorjaus tehdään aina 2. urakkavuodesta lähtien urakkavuoden ensimmäisenä päivänä 1.10. käyttäen seuraavaa laskukaavaa:"]
+                              [:p "Indeksikorjattuhinta = alkuperäinen hinta × (vertailukuukauden indeksiluku / perusluku)"]
+                              [:p "Tässä urakassa on käytössä " urakan-indeksi (when urakan-perusluku (str ", jonka perusluku on " urakan-perusluku)) "."]]))}
+                        (ikonit/nelio-info)]])
                     :leveys "15%"
                     :nimi :indeksikorjattu_yksikkohinta
                     :tyyppi :numero
@@ -180,7 +205,9 @@
                              :else (fmt/euro-opt false arvo)))}]]
     [grid/grid
      {:otsikko ""
-      :tyhja "Ei tietoja."
+      :tyhja (if haku-kaynnissa?
+               [yleiset/ajax-loader "Haku käynnissä..."]
+               "Tehtäviä ei löytynyt.")
       :luokat ["matala-panel"]
       :data-cy "tehtavat-ja-maarat-grid"
       :muokkaa-aina true
@@ -212,22 +239,8 @@
         onko-viimeinen-vuosi? (and valitun-hoitokauden-alkuvuosi
                                 (= valitun-hoitokauden-alkuvuosi
                                   urakan-loppuvuoden-alkuvuosi))
-        urakan-indeksi (str (:indeksi urakka)
-                         (when-let [perusluku (:indeksilaskennan_perusluku urakka)]
-                           (str ", Perusluku: " perusluku)))]
-    [:div.yksikkohinnat
-     (when virhe
-       [:div.virhe
-        [:h3 "Virhe"]
-        [:p virhe]])
-     (when haku-kaynnissa?
-       [:div.haku-kaynnissa
-        [:h3 "Haetaan tietoja..."]])
-     (when-not haku-kaynnissa?
-       [:<>
-        [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
-        [tallennus-painikkeet e! tallennus-kesken? tallennustila? yksikkohintaiset-tyot
-         (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]])]
+        urakan-indeksi (:indeksi urakka)
+        urakan-perusluku (:indeksilaskennan_perusluku urakka)]
     [:div.yksikkohinnat
      [:div.row
       [:h1 "Yksikköhinnat"]]
@@ -263,7 +276,7 @@
      [tallennus-painikkeet e! tallennus-kesken? tallennustila? yksikkohintaiset-tyot
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
 
-     [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi]
+     [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi urakan-perusluku]
      [debug/debug app]]))
 
 (defn- yksikkohinnat*
