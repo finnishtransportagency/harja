@@ -3,8 +3,8 @@
   (:require [cljs.reader :as reader]
             [clojure.string :as str]
             [reagent.core :as r]
-            [harja.ui.komponentit :as ui]
-            [harja.ui.komponentit.simulaattori :as sopimus]
+            [harja.ui.perus :as ui]
+            [harja.ui.perus.simulaattori :as sopimus]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :as rekisterointi]))
 
 (def ^:private esimerkkipuu

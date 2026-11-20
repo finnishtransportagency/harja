@@ -1,4 +1,4 @@
-(ns harja.ui.komponentit
+(ns harja.ui.perus
   "Harjan shared-komponentit, joita käyttöpaikat voivat käyttää ilman omaa Bootstrap-markupia.
 
   Komponentti omistaa DOM-rakenteen, id-yhteydet (label, ohje, virhe) ja saavutettavuusroolit.

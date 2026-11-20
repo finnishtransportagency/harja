@@ -1,9 +1,9 @@
-(ns harja.ui.komponentit.bootstrap-luokat-test
+(ns harja.ui.perus.bootstrap-luokat-test
   "Rekisterin `:bootstrap-tila` ja `:bootstrap-luokat` pitää vastata komponentin funktion lähdekoodia."
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
-            [harja.ui.komponentit.rekisteri :as rekisteri]))
+            [harja.ui.perus.rekisteri :as rekisteri]))
 
 (def ^:private bootstrap-luokat
   "Bootstrapin luokat, joita `:ei-riippuvuutta`-komponentin funktio ei saa käyttää. Loppuviiva = etuliite."

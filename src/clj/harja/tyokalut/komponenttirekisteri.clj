@@ -3,7 +3,7 @@
   Käyttö: lein komponenttirekisteri [:id nappi] [:ryhma lomakkeet]"
   (:require [clojure.string :as str]
             [clojure.walk :as walk]
-            [harja.ui.komponentit.rekisteri :as rekisteri]))
+            [harja.ui.perus.rekisteri :as rekisteri]))
 
 (def ^:private sallitut-suodattimet #{:id :ryhma})
 

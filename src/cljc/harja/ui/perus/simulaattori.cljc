@@ -1,9 +1,9 @@
-(ns harja.ui.komponentit.simulaattori
+(ns harja.ui.perus.simulaattori
   "Deklaratiivisen komponenttipuun pieni ja turvallinen validointikerros.
 
   Simulaattori hyväksyy vain rekisteröityjä komponentteja ja niiden dokumentoituja
   vanhempi-slot-suhteita. Se ei suorita agentin tuottamaa koodia."
-  (:require [harja.ui.komponentit.rekisteri :as rekisteri]))
+  (:require [harja.ui.perus.rekisteri :as rekisteri]))
 
 (def ^:private suojatut-asetukset
   "Renderer antaa nämä avaimet itse, joten syöte ei saa asettaa niitä."

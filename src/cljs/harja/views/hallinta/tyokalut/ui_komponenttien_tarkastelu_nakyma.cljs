@@ -1,10 +1,10 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-nakyma
   "UI-komponenttien tarkastelusivu.
 
-  Komponentit kuvataan rekisterissä (`harja.ui.komponentit.rekisteri`) ja niiden esikatselut
+  Komponentit kuvataan rekisterissä (`harja.ui.perus.rekisteri`) ja niiden esikatselut
   rekisteröidään ryhmäkohtaisissa tiedostoissa `register!`-kutsulla samalla `:id`:llä."
   (:require [reagent.core :as r]
-            [harja.ui.komponentit.rekisteri :as rekisteri]
+            [harja.ui.perus.rekisteri :as rekisteri]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.gridit]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]

@@ -1,4 +1,4 @@
-(ns harja.ui.komponentit.rekisteri
+(ns harja.ui.perus.rekisteri
   "Komponenttien tarkastelusivun rekisteri: komponenttien kuvaus datana.
 
   Rekisteri on tarkastelusivun kortin, navigaation ja sopimusruudun yhteinen lähde. Uusi
@@ -87,7 +87,7 @@
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Suodattimen label ja kenttä. Käytössä tarjoushintojen näkymässä."
-    :funktio "harja.ui.komponentit/suodatin"
+    :funktio "harja.ui.perus/suodatin"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Suodattimen otsikko."}
                 :id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Suodattimen id."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
@@ -105,7 +105,7 @@
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
-    :funktio "harja.ui.komponentit/valintaryhma"
+    :funktio "harja.ui.perus/valintaryhma"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Ryhmän otsikko."}
                 :vaihtoehdot {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valittavat vaihtoehdot."}
                 :arvo {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Valittu arvo."}
@@ -324,7 +324,7 @@
     :sallitut-vanhemmat #{:lomake :sivu :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
-    :funktio "harja.ui.komponentit/pino"
+    :funktio "harja.ui.perus/pino"
     :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :suodatinrivi
@@ -339,7 +339,7 @@
     :sallitut-vanhemmat #{:lomake :sivu :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Rivittyvä rivi suodattimille. Suodattimia ei ole vielä simulaattorissa."
-    :funktio "harja.ui.komponentit/suodatinrivi"
+    :funktio "harja.ui.perus/suodatinrivi"
     :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :toimintoryhma
@@ -354,7 +354,7 @@
     :sallitut-vanhemmat #{:lomake :sivu :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Ryhmittelee käyttöpaikan toimintopainikkeet. Painikkeet tulevat käyttöpaikalta."
-    :funktio "harja.ui.komponentit/toimintoryhma"
+    :funktio "harja.ui.perus/toimintoryhma"
     :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :tilaviesti
@@ -369,7 +369,7 @@
     :sallitut-vanhemmat #{:lomake :sivu :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Lataus-, onnistumis- tai virhetila käyttöpaikan antamalla viestillä. Säiliö näkyy aina, tyhjä viesti ei näy."
-    :funktio "harja.ui.komponentit/tilaviesti"
+    :funktio "harja.ui.perus/tilaviesti"
     :asetukset {:tila {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Tila: :lataus, :onnistui tai :virhe."}
                 :viesti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Näytettävä viesti."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
@@ -387,7 +387,7 @@
     :bootstrap-tila :ei-riippuvuutta
     :nimeamispoikkeukset #{:disabled?}
     :kuvaus "Label, kenttä sekä valinnainen ohje ja virhe. Natiivi kenttä saa ARIA-attribuutit. tee-kentta-kenttä ei vielä välitä niitä (rajoitus)."
-    :funktio "harja.ui.komponentit/kenttaryhma"
+    :funktio "harja.ui.perus/kenttaryhma"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Labelin teksti."}
                 :id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Kentän id, johon label ja ohje yhdistyvät."}
                 :ohje {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ohjeteksti kentän alla."}
@@ -408,7 +408,7 @@
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
-    :funktio "harja.ui.komponentit"
+    :funktio "harja.ui.perus"
     :asetukset {:lapset {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Lomakkeen sisältö: pino, kenttaryhma, valintaryhma, toimintoryhma tai tilaviesti."}}}
    {:id :rivi
     :nimi "Rivi"

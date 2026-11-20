@@ -1,10 +1,10 @@
-(ns harja.ui.komponentit.esikatselu-test
+(ns harja.ui.perus.esikatselu-test
   "Rekisterin jokaisella komponentilla on täsmälleen yksi esikatselun rekisteröinti.
   Rekisteröinti on cljs-puolella muodossa `(register! :id ...)`, joten se tarkistetaan lähdekoodista."
   (:require [clojure.java.io :as io]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
-            [harja.ui.komponentit.rekisteri :as rekisteri]))
+            [harja.ui.perus.rekisteri :as rekisteri]))
 
 (def ^:private cljs-lahdekoodit
   (->> (file-seq (io/file "src/cljs"))

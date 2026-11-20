@@ -1,8 +1,8 @@
-(ns harja.ui.komponentit.rekisteri-test
+(ns harja.ui.perus.rekisteri-test
   (:require [clojure.set]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
-            [harja.ui.komponentit.rekisteri :as rekisteri]))
+            [harja.ui.perus.rekisteri :as rekisteri]))
 
 (deftest rekisteri-on-ehja
   (is (empty? (rekisteri/virheet))))

@@ -1,6 +1,6 @@
-(ns harja.ui.komponentit.simulaattori-test
+(ns harja.ui.perus.simulaattori-test
   (:require [clojure.test :refer [deftest is testing]]
-            [harja.ui.komponentit.simulaattori :as simulaattori]))
+            [harja.ui.perus.simulaattori :as simulaattori]))
 
 (deftest kelvollinen-puu-hyvaksytaan
   (is (simulaattori/kelvollinen?

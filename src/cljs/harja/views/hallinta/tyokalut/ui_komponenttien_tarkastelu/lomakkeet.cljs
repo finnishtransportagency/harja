@@ -2,7 +2,7 @@
   (:require [reagent.core :as r]
             [harja.ui.bootstrap :as bootstrap]
             [harja.ui.kentat :as kentat]
-            [harja.ui.komponentit :as ui]
+            [harja.ui.perus :as ui]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]

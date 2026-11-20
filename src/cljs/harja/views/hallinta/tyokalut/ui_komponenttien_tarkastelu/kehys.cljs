@@ -5,7 +5,7 @@
   Ankkurit johdetaan rekisteristä (`rekisteri/ankkuri`), jotta kortin, navigaation ja
   sopimusruudun ankkurit eivät voi erota toisistaan."
   (:require [clojure.string :as str]
-            [harja.ui.komponentit.rekisteri :as rekisteri]))
+            [harja.ui.perus.rekisteri :as rekisteri]))
 
 (defn ankkuri
   "Komponentin ankkuri rekisteristä, valinnaisilla päätteillä sisäisiä elementtejä varten."

@@ -1,8 +1,8 @@
-(ns harja.ui.komponentit-test
+(ns harja.ui.perus-test
   "Shared-komponenttien sopimus hiccup-tasolla: id-yhteydet, roolit ja arvojen välitys."
   (:require [clojure.test :refer [deftest is testing]]
             [clojure.walk :as walk]
-            [harja.ui.komponentit :as ui]))
+            [harja.ui.perus :as ui]))
 
 (defn- loyda
   "Palauttaa ensimmäisen hiccup-elementin, jonka tagi on `tagi` ja joka täyttää `ehto`:n."

@@ -15,13 +15,13 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 
 | Osa | Sijainti |
 | --- | --- |
-| Shared-komponentit (`pino`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `valintaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/komponentit.cljc` |
-| Komponenttirekisteri (data) ja eheystarkistus | `src/cljc/harja/ui/komponentit/rekisteri.cljc` |
+| Shared-komponentit (`pino`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `valintaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/perus.cljc` |
+| Komponenttirekisteri (data) ja eheystarkistus | `src/cljc/harja/ui/perus/rekisteri.cljc` |
 | Rekisterin EDN-tulostus komentoriviltä | `src/clj/harja/tyokalut/komponenttirekisteri.clj` (`lein komponenttirekisteri`) |
 | Tarkastelusivun entry | `tyokalut/ui_komponenttien_tarkastelu_nakyma.cljs` |
 | Tarkastelurunko (navigaatio, kortti, sopimus, `ankkuri`) | `tyokalut/ui_komponenttien_tarkastelu/kehys.cljs` |
 | Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit}.cljs` |
-| Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/komponentit_test.cljc`, `test/cljc/harja/ui/komponentit/rekisteri_test.cljc` |
+| Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/perus_test.cljc`, `test/cljc/harja/ui/perus/rekisteri_test.cljc` |
 | Tyylit | `dev-resources/less/komponentit.less`, `dev-resources/less/pages/ui_komponenttien_tarkastelu.less` |
 
 Uuden komponentin lisääminen:
@@ -49,6 +49,12 @@ Uuden komponentin lisääminen:
 - `:nimeamispoikkeukset` (joukko asetusnimiä) sallii uudessa merkinnässä yksittäisen kielletyn asetusnimen, kun se on jo käytössä olevan API:n osa (esim. valintaryhmän `:disabled?`). Validointi hylkää poikkeuksen, jota merkintä ei tarvitse.
 - `:yhteiset-variantit` yhdistää yhteisen palautesanaston (`palaute-variantit`: `:onnistui`, `:info`, `:varoitus`, `:virhe`) komponentin omaan arvoon, esim. viestin `:luokka`-arvoon. Palautekomponentin pitää antaa kartta, ja avainten pitää kuulua yhteiseen sanastoon. Kartassa saa olla vain ne variantit, joille komponentilla on vastine (info-laatikolla ei ole virhevarianttia).
 - Palautekomponentit ovat ryhmässä `:palautteet`. Yhteinen varianttisanasto on `palaute-variantit` (`:onnistui`, `:info`, `:varoitus`, `:virhe`). Komponenttien olemassa olevia variantteja ei ole vielä nimetty uudelleen.
+
+## Nimiavaruudet
+
+- Shared-komponentit ovat `harja.ui.perus` (`src/cljc/harja/ui/perus.cljc`), rekisteri `harja.ui.perus.rekisteri` ja simulaattori `harja.ui.perus.simulaattori`. Nimi erottaa ne lifecycle-nimiavaruudesta `harja.ui.komponentti`, jota käyttää yli 160 tiedostoa.
+- `harja.ui.komponentti` (komponentin elinkaari, `komp/luo`) ei muutu tässä.
+- `primitiivit/viesti.cljc` (`harja.ui.primitiivit.viesti`) pysyy primitiivikerroksessa tabs-primitiivin rinnalla. Sen siirto ei ole tarpeen, koska sen käyttäjät ovat `harja.ui.viesti` ja tarkastelusivun portatut-esikatselut.
 
 ## Tunnetut rajoitukset
 
