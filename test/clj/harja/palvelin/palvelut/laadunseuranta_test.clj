@@ -161,6 +161,63 @@
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla "Testi")))
 
+(deftest tallenna-laatupoikkeama-hylkaa-usean-tyypin-sanktion-ilman-tyyppia
+  (let [perustelu "ABC laatupoikkeaman sanktion tyyppi puuttuu"
+        laatupoikkeama {:sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :urakka (hae-oulun-alueurakan-2014-2019-id)
+                        :tekija :tilaaja
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :puhelin
+                                 :kasittelyaika #inst "2016-09-15T09:00:01.000-00:00"
+                                 :perustelu perustelu}
+                        ;; Lajilla A on useita tyyppejä, joten tyyppiä ei voi päätellä
+                        :sanktiot [{:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
+                                    :laji :A
+                                    :summa 100
+                                    :indeksi "MAKU 2010"
+                                    :suorasanktio false
+                                    :toimenpideinstanssi 4}]}]
+    (try
+      (is (thrown-with-msg? IllegalArgumentException
+            #"Sanktion tyyppi on pakollinen"
+            (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)))
+      (is (zero? (ffirst (q "SELECT count(*) FROM sanktio s JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama
+                              WHERE lp.perustelu = '" perustelu "';")))
+        "Sanktiota ei tallenneta ilman tyyppiä")
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
+(deftest tallenna-laatupoikkeama-hylkaa-sanktion-ilman-lajia-ja-tyyppia
+  (let [perustelu "ABC laatupoikkeaman sanktiolta puuttuu laji ja tyyppi"
+        laatupoikkeama {:sijainti {:type :point
+                                   :coordinates [382554.0523636384 6675978.549765582]}
+                        :kuvaus "Kuvaus"
+                        :aika #inst "2016-09-15T09:00:01.000-00:00"
+                        :urakka (hae-oulun-alueurakan-2014-2019-id)
+                        :tekija :tilaaja
+                        :kohde "Kohde"
+                        :paatos {:paatos :sanktio
+                                 :kasittelytapa :puhelin
+                                 :kasittelyaika #inst "2016-09-15T09:00:01.000-00:00"
+                                 :perustelu perustelu}
+                        :sanktiot [{:perintapvm #inst "2016-09-15T09:00:01.000-00:00"
+                                    :summa 100
+                                    :suorasanktio false
+                                    :toimenpideinstanssi 4}]}]
+    (try
+      (is (thrown-with-msg? IllegalArgumentException
+            #"Sanktion tyyppi on pakollinen"
+            (kutsu-http-palvelua :tallenna-laatupoikkeama +kayttaja-jvh+ laatupoikkeama)))
+      (is (zero? (ffirst (q "SELECT count(*) FROM sanktio s JOIN laatupoikkeama lp ON lp.id = s.laatupoikkeama
+                              WHERE lp.perustelu = '" perustelu "';")))
+        "Sanktiota ei tallenneta ilman lajia ja tyyppiä")
+      (finally
+        (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))))
+
 (deftest laatupoikkeaman-selvityspyynnosta-lahtee-sms
   (let [laatupoikkeama {:sijainti {:type :point
                                    :coordinates [382554.0523636384 6675978.549765582]}
