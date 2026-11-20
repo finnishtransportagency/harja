@@ -315,6 +315,28 @@
                 :viesti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Näytettävä viesti."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :kenttaryhma
+    :nimi "Kenttäryhmä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :suositus :uuteen-ui
+    :korvaa []
+    :slotit #{:kentta}
+    :tilat #{:normaali :virhe}
+    :sallitut-vanhemmat #{:lomake :pino}
+    :bootstrap-tila :ei-riippuvuutta
+    :nimeamispoikkeukset #{:disabled?}
+    :kuvaus "Label, kenttä sekä valinnainen ohje ja virhe. Natiivi kenttä saa ARIA-attribuutit. tee-kentta-kenttä ei vielä välitä niitä (rajoitus)."
+    :funktio "harja.ui.komponentit/kenttaryhma"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Labelin teksti."}
+                :id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Kentän id, johon label ja ohje yhdistyvät."}
+                :ohje {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ohjeteksti kentän alla."}
+                :virhe {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Virheteksti. Näkyy, kun arvo on annettu."}
+                :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Merkitsee labelin pakolliseksi."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Estää kentän muokkaamisen."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet

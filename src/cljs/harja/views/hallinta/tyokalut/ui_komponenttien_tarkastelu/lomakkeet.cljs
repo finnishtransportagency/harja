@@ -277,6 +277,39 @@
                                  :virhe "Tallennus epäonnistui")
                        :data-cy (str ankkuri "-tila")}]])))
 
+(defn- kenttaryhma [komponentti]
+  (r/with-let [arvo (r/atom "")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Natiivi kenttä saa id:n ja ARIA-attribuutit, jolloin label, ohje ja virhe liittyvät siihen."]
+       [ui/kenttaryhma {:otsikko "Natiivi kenttä"
+                        :id (str ankkuri "-natiivi")
+                        :ohje "Anna vähintään yksi merkki."
+                        :virhe (when (empty? @arvo) "Arvo puuttuu")
+                        :pakollinen? true
+                        :data-cy (str ankkuri "-natiivi-ryhma")}
+        (fn [{:keys [id aria-describedby aria-invalid aria-required disabled?]}]
+          [:input {:id id
+                   :type "text"
+                   :value @arvo
+                   :on-change #(reset! arvo (.. % -target -value))
+                   :aria-describedby aria-describedby
+                   :aria-invalid aria-invalid
+                   :aria-required aria-required
+                   :disabled disabled?}])]
+       [:p "Rajoitus: tee-kentta ei vielä välitä ARIA-attribuutteja, joten yhteyttä label-kenttään ja virheeseen ei voi tarkistaa sen kohdalla."]
+       [ui/kenttaryhma {:otsikko "tee-kentta"
+                        :id (str ankkuri "-tee-kentta")
+                        :data-cy (str ankkuri "-tee-kentta-ryhma")}
+        (fn [{:keys [id]}]
+          [kentat/tee-kentta
+           {:tyyppi :string
+            :elementin-id id}
+           arvo])]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Arvo: \"" @arvo "\"")]])))
+
+(register! :kenttaryhma {:esikatselu kenttaryhma})
 (register! :suodatin {:esikatselu suodatin})
 (defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
   [ui/valintaryhma
