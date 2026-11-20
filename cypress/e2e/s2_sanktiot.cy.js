@@ -29,12 +29,20 @@ let testiurakkaMhu25 = "POP MHU Kajaani 2025-2030";
 let evkLappi = "Lappi";
 
 function valitseHoitovuosi(hoitovuosi) {
-    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).within(() => {
-        cy.get('button').click({force: true});
+    const hoitovuosiTeksti = `${hoitovuosi}. hoitovuosi`;
+    cy.get('div.label-ja-alasveto.hoitokausi div.dropdown').eq(0).then(($valikko) => {
+        // Jo valittua hoitovuotta valittaessa hakua ei käynnisty, joten sitä ei jäädä odottamaan
+        if ($valikko.find('button').text().includes(hoitovuosiTeksti)) {
+            return;
+        }
+        // Haku rajataan hoitokausivalikkoon, koska Lapin urakkalistassa on urakoita, joiden nimessä on "1. hoitovuosi"
+        cy.wrap($valikko).within(() => {
+            cy.get('button').click({force: true});
+            cy.contains('li', hoitovuosiTeksti).click();
+        });
+        cy.wait('@sanktiot', {timeout: clickTimeout});
+        cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
     });
-    cy.contains('li', `${hoitovuosi}. hoitovuosi`).click();
-    cy.wait('@sanktiot', {timeout: clickTimeout});
-    cy.get('.ajax-loader', {timeout: clickTimeout}).should('not.exist');
 }
 
 function avaaSanktiotJaBonuksetHoitovuodella(urakka, evk, hoitovuosi) {
