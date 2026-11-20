@@ -36,11 +36,16 @@
 
 (defn tallenna-urakan-yksikkohintaiset-tyot
   "Palvelu joka tallentaa urakan yksikkohintaiset tyot."
-  [db user {:keys [urakka-id sopimusnumero tyot]}]
+  [db user {:keys [urakka-id sopimusnumero tyot kopioi-tuleville-vuosille?]}]
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (assert (vector? tyot) "tyot tulee olla vektori")
   (jdbc/with-db-transaction [c db]
                             (let [urakkatyyppi (u-q/hae-urakan-tyyppi db {:urakka urakka-id})
+                                  urakka (first (u-q/hae-urakan-tiedot db urakka-id))
+                                  nykyinen-vuosi (when-let [ensimmainen-tyo (first tyot)]
+                                                   (if (= "teiden-hoito" urakkatyyppi)
+                                                     (:vuosi ensimmainen-tyo)
+                                                     (pvm/vuosi (:alkupvm ensimmainen-tyo))))
                                   nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)
                                   normalisoi-pvm (fn [pvm-arvo] (when pvm-arvo
                                                                     (java.sql.Date/valueOf (pvm/sql-aika->pvm-str pvm-arvo))))
@@ -49,6 +54,22 @@
                                               (fn [rivi] [(normalisoi-pvm (:alkupvm rivi))
                                                           (normalisoi-pvm (:loppupvm rivi))
                                                           (:tehtava rivi)]))
+                                  tallennettavat-vuodet (if (and kopioi-tuleville-vuosille? nykyinen-vuosi)
+                                                          (rest (range nykyinen-vuosi (pvm/vuosi (:loppupvm urakka))))
+                                                          [])
+                                  kopioitavat-tyot (mapcat
+                                                    (fn [vuosi]
+                                                      (map
+                                                        (fn [tyo]
+                                                          (if (= "teiden-hoito" urakkatyyppi)
+                                                            (assoc tyo :vuosi vuosi)
+                                                            (let [[alkupvm loppupvm] (pvm/vuodesta-hoitokausi vuosi)]
+                                                              (assoc tyo
+                                                                :alkupvm alkupvm
+                                                                :loppupvm loppupvm))))
+                                                        tyot))
+                                                    tallennettavat-vuodet)
+                                  tyot (into tyot kopioitavat-tyot)
                                   tyot-kannassa (into #{} (comp
                                                             (filter #(= (:sopimus %) sopimusnumero))
                                                             (map tyo-avain))

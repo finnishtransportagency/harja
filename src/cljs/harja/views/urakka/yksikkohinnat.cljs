@@ -10,7 +10,8 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
-            [harja.tiedot.urakka.urakka :as tila]
+            [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.ui.varmista-kayttajalta :as varmista]
             [harja.tiedot.urakka.yksikkohinnat :as tiedot]))
 
 (defn- piirra-valiotsikko-caret [e! valiotsikko avatut-tehtavaryhmat]
@@ -21,7 +22,33 @@
          :tabIndex "0"
          :on-click #(e! (tiedot/->AvaaRivi valiotsikko))}])
 
-(defn- tallennus-painikkeet [e! tallennus-kesken? tallennustila? yksikkohintaiset-tyot
+(defn- tulevilla-vuosilla-tietoja? [app]
+  (let [nykyinen-vuosi (some-> (:valittu-hoitokausi app) first pvm/vuosi)
+        sopimus (first @urakka-tiedot/valittu-sopimusnumero)]
+    (some
+      (fn [rivi]
+        (and
+          (= sopimus (:sopimus rivi))
+          (> (pvm/vuosi (:alkupvm rivi)) nykyinen-vuosi)
+          (or (:yksikkohinta rivi)
+            (:indeksi_kaytossa rivi)
+            (:indeksikorjattu_yksikkohinta rivi))))
+      (:kaikki-yksikkohintaiset-tyot app))))
+
+(defn- kopioi-tuleville-vuosille! [e! app yksikkohintaiset-tyot]
+  (let [tallenna! (fn []
+                    (e! (tiedot/->TallennaYksikkohinnat
+                          yksikkohintaiset-tyot
+                          true)))]
+    (if (tulevilla-vuosilla-tietoja? app)
+      (varmista/varmista-kayttajalta
+        {:otsikko "Tulevilla urakkavuosilla on jo tietoja"
+         :sisalto [:p "Tulevilla urakkavuosilla on jo tietoja. Ylikirjoitetaanko tiedot? Ylikirjoitetut tiedot menetetään pysyvästi"]
+         :hyvaksy "Ylikirjoita"
+         :toiminto-fn tallenna!})
+      (tallenna!))))
+
+(defn- tallennus-painikkeet [e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot
                              kopioi-tuleville-vuosille? tallentamattomia-muutoksia?]
   [:div.flex-row {:style {:justify-content "right"}}
    (if tallennustila?
@@ -31,11 +58,12 @@
         #(e! (tiedot/->AsetaKaikkiIndeksille yksikkohintaiset-tyot))
         {:ikoni (ikonit/list)
          :disabled (or tallennus-kesken? false)}]]
-      [:span {:style {:margin-left "1rem"}}
-       [napit/yleinen-toissijainen "Kopioi tuleville hoitovuosille"
-        #(e! (tiedot/->TallennaYksikkohinnat yksikkohintaiset-tyot true))
-        {:ikoni (ikonit/harja-icon-action-copy)
-         :disabled (or tallennus-kesken? false)}]]
+      (when kopioi-tuleville-vuosille?
+        [:span {:style {:margin-left "1rem"}}
+         [napit/yleinen-toissijainen "Kopioi tuleville urakkavuosille"
+          #(kopioi-tuleville-vuosille! e! app yksikkohintaiset-tyot)
+          {:ikoni (ikonit/harja-icon-action-copy)
+           :disabled (or tallennus-kesken? false)}]])
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
         #(e! (tiedot/->TallennaYksikkohinnat yksikkohintaiset-tyot false))
@@ -234,7 +262,7 @@
               tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
               avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
   (let [grid-rivit (tehtavat-grid-riveiksi toimenpiteet-ja-tehtavat yksikkohintaiset-tyot)
-        urakan-loppuvuoden-alkuvuosi (pvm/vuosi (:loppupvm (-> @tila/tila :yleiset :urakka)))
+        urakan-loppuvuoden-alkuvuosi (some-> urakan-hoitokaudet last first pvm/vuosi)
         valitun-hoitokauden-alkuvuosi (some-> valittu-hoitokausi first pvm/vuosi)
         onko-viimeinen-vuosi? (and valitun-hoitokauden-alkuvuosi
                                 (= valitun-hoitokauden-alkuvuosi
@@ -273,7 +301,7 @@
           [:div.status-viesti.ei-muutoksia
            "Ei tallennettuja muutoksia"])]]]
 
-     [tallennus-painikkeet e! tallennus-kesken? tallennustila? yksikkohintaiset-tyot
+     [tallennus-painikkeet e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
 
      [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi urakan-perusluku]

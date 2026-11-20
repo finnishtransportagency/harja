@@ -14,6 +14,7 @@
          :urakan-hoitokaudet []
          :valittu-hoitokausi nil
          :yksikkohintaiset-tyot nil
+         :kaikki-yksikkohintaiset-tyot nil
          :toimenpiteet-ja-tehtavat nil
          :haku-kaynnissa? false
          :virhe nil}))
@@ -114,6 +115,7 @@
         :urakan-hoitokaudet @urakka-tiedot/valitun-urakan-hoitokaudet
         :valittu-hoitokausi @urakka-tiedot/valittu-hoitokausi
         :yksikkohintaiset-tyot nil
+        :kaikki-yksikkohintaiset-tyot nil
         :toimenpiteet-ja-tehtavat nil
         :urakan-indeksikertoimet []
         :haku-kaynnissa? true
@@ -132,11 +134,11 @@
                  vastaus)
           [alkupvm loppupvm] (:valittu-hoitokausi app)]
       (assoc app
-        :yksikkohintaiset-tyot
-        (filterv #(and
-                    (pvm/sama-pvm? (:alkupvm %) alkupvm)
-                    (pvm/sama-pvm? (:loppupvm %) loppupvm))
-          tyot)
+        :kaikki-yksikkohintaiset-tyot tyot
+        :yksikkohintaiset-tyot (filterv
+                                 #(and (pvm/sama-pvm? (:alkupvm %) alkupvm)
+                                    (pvm/sama-pvm? (:loppupvm %) loppupvm))
+                                 tyot)
         :haku-kaynnissa? false
         :haku (:haku app)
         :viimeisin-muokkaus (:viimeisin-muokkaus viimeisin-rivi)
@@ -218,7 +220,8 @@
           :tallentamattomia-muutoksia? true))))
 
   TallennaYksikkohinnat
-  (process-event [{yksikkohintaiset-tyot :yksikkohintaiset-tyot} {:keys [urakka] :as app}]
+  (process-event [{yksikkohintaiset-tyot :yksikkohintaiset-tyot kopioi-tuleville-vuosille? :kopioi-tuleville-vuosille?}
+                  {:keys [urakka] :as app}]
     (if (:tallennus-kaynnissa? app)
       app
       (do
@@ -227,16 +230,21 @@
           :tallenna-urakan-yksikkohintaiset-tyot
           {:urakka-id (:id urakka)
            :sopimusnumero (first @urakka-tiedot/valittu-sopimusnumero)
-           :tyot (muodosta-tallennettavat-tyot urakka yksikkohintaiset-tyot)}
+           :tyot (muodosta-tallennettavat-tyot urakka yksikkohintaiset-tyot)
+           :kopioi-tuleville-vuosille? kopioi-tuleville-vuosille?}
           {:onnistui ->TallennaYksikkohinnatOnnistui
            :epaonnistui ->TallennaYksikkohinnatEpaonnistui})
         (assoc app :tallennus-kaynnissa? true))))
 
   TallennaYksikkohinnatOnnistui
   (process-event [{vastaus :vastaus} app]
-    (let [viimeisin-rivi (first vastaus)]
-      (viesti/nayta-toast! "Tiedot tallennettiin onnistuneesti.")
+    (let [viimeisin-rivi (first vastaus)
+          kaikki-tyot (suunnittelu/prosessoi-tyorivit
+                        (:urakka app)
+                        vastaus)]
+      (viesti/nayta-toast! "Yksikköhinnat tallennettiin onnistuneesti.")
       (-> app
+        (assoc :kaikki-yksikkohintaiset-tyot kaikki-tyot)
         (assoc :tallennus-kaynnissa? false)
         (assoc :tallennustila? false)
         (assoc :tallentamattomia-muutoksia? false)

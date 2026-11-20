@@ -172,8 +172,12 @@
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2021
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
         ;; Poista yhteenvetorivi ennen tallennusta
-        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        h-tietomalli (-> apurit/hankinnat-tietomalli
+                       apurit/poista-yhteenvetorivi-toimenpiteilta
+                       (urakkakohtaiset-toimenpideinstanssit-toimenpiteille toimenpiteet))
+
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge

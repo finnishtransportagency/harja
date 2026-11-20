@@ -57,7 +57,7 @@
                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                    :kustannuslaji "hankintakustannukset"
                                                                    :summa 1000
-                                                                   :toimenpideinstanssi 90
+                                                                   :toimenpideinstanssi 88
                                                                    :versio 1})
                                       :liitteet nil
                                       :luonnos false
@@ -99,7 +99,7 @@
                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                    :kustannuslaji "hankintakustannukset"
                                                                    :summa 1000
-                                                                   :toimenpideinstanssi 91
+                                                                   :toimenpideinstanssi 89
                                                                    :versio 1})
                                       :liitteet (list {:id 11
                                                        :muutos 3})
@@ -687,11 +687,11 @@
 
     (testing "Tallennus toimii ilman määrämuutoksia, syy on olemassa"
       (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2025
+                                        :toimenpideinstanssi 130, :hoitokauden_alkuvuosi 2025
                                         :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu koska ei nyt kirjattu"}
 
                                        {:summa 45000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 132, :hoitokauden_alkuvuosi 2026
+                                        :toimenpideinstanssi 130, :hoitokauden_alkuvuosi 2026
                                         :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu 26 vuodelle myöskään"}]
             odotettu-vastaus (list
                                {:hoitokauden_alkuvuosi 2025
@@ -699,7 +699,7 @@
                                 :summa 35000
                                 :syy "Ei kirjattu koska ei nyt kirjattu"
                                 :tehtavamaaramuutos-kirjattu? false
-                                :toimenpideinstanssi 132
+                                :toimenpideinstanssi 130
                                 :versio 2}
 
                                {:hoitokauden_alkuvuosi 2026
@@ -707,7 +707,7 @@
                                 :summa 45000
                                 :syy "Ei kirjattu 26 vuodelle myöskään"
                                 :tehtavamaaramuutos-kirjattu? false
-                                :toimenpideinstanssi 132
+                                :toimenpideinstanssi 130
                                 :versio 2}
 
                                ;; Olemassa olevia
@@ -716,14 +716,14 @@
                                 :summa 1000
                                 :syy nil
                                 :tehtavamaaramuutos-kirjattu? true
-                                :toimenpideinstanssi 132
+                                :toimenpideinstanssi 130
                                 :versio 1}
                                {:hoitokauden_alkuvuosi 2028
                                 :kustannuslaji "hankintakustannukset"
                                 :summa 1000
                                 :syy nil
                                 :tehtavamaaramuutos-kirjattu? true
-                                :toimenpideinstanssi 132
+                                :toimenpideinstanssi 130
                                 :versio 1})
 
             _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset
