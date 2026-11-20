@@ -383,8 +383,11 @@
 
 (defn lomake-pysyva
   "Pysyvän muutoksen lomakekomponentti"
-  [e! {:keys [urakan-hoitokaudet muokattava-muutos budjettitavoitteet
-              muokattavat-hoitokaudet muutoksen-tiedot-haku-kaynnissa? valittu-hoitokausi] :as app}]
+  [e! {:keys [urakan-hoitokaudet
+              muokattava-muutos
+              budjettitavoitteet
+              muokattavat-hoitokaudet
+              muutoksen-tiedot-haku-kaynnissa?] :as app}]
 
   (let [muokataan? (:id muokattava-muutos)
         voimassa-alkaen (:voimassa_alkaen muokattava-muutos)
@@ -395,11 +398,25 @@
                                    (muutos-domain/pysyva-muutos-voimassa-alkaen-lukittu? tavoitehinta-indeksikorjattu-per-hoitovuosi)
                                    false)
         valittu-hk (some-> (:hoitovuosi muokattava-muutos) (first) (pvm/vuosi))
+        hoitokaudet-map (when urakan-hoitokaudet
+                          (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet))
         hoitovuosi-str (when valittu-hk
                          (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
                            valittu-hk
-                           (map #(some-> % (first) (pvm/vuosi)) urakan-hoitokaudet) "hoitovuoden"
-                           false))]
+                           hoitokaudet-map
+                           "hoitovuoden"
+                           false))
+
+        paatos-virheviesti-otsikko (when (and
+                                           valittu-hk
+                                           hoitokaudet-map)
+                                     (str
+                                       "Muutoksia ei voi kirjata "
+                                       (fmt/hoitokauden-jarjestysluku-ja-alku-ja-loppupvm
+                                         valittu-hk
+                                         hoitokaudet-map
+                                         "hoitovuodelle"
+                                         false)))]
 
     [(lomake/ryhma {:otsikko "Perustiedot"}
        (yhteiset/+rivi-muutoksen-syy+)
@@ -415,9 +432,9 @@
                           nil
                           {:ikoni-fn #(ikonit/harja-icon-status-alert)}])})
 
-       (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi
+       (yhteiset/+rivi-muutos-voimassa+
+         app
          {:pakota-valittuun-hoitokauteen? false
-
           :voi-muokata? (not voimassa-alkaen-lukittu?)})
 
        ;; -- Info-laatikot --
@@ -472,10 +489,13 @@
          {:uusi-rivi? true
           :tyyppi :komponentti
           :komponentti (fn [_] [yleiset/info-laatikko :vahva-ilmoitus
-                                "Hoitovuoden tavoitehinnan muutokset on päätetty"
+                                paatos-virheviesti-otsikko
                                 [:<>
-                                 [:div hoitovuosi-str " osalta tavoitehinnan muutokset on jo päätetty." [:br]
-                                  "Jos haluat tehdä muutoksia, välikatselmuksen päätös on peruttava."]]
+                                 [:div
+                                  ;; Kääritty (str) koodin luettavuuden merkeissä
+                                  (str
+                                    "Muutoksia ei voi enää lisätä tai muokata, "
+                                    "koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista on jo vahvistettu.")]]
                                 nil
                                 {:ikoni-fn #(ikonit/harja-icon-status-alert)}])}
 
@@ -489,9 +509,18 @@
            {:uusi-rivi? true
             :tyyppi :komponentti
             :komponentti (fn [_]
-                           (let [;; Perumiselle pitää passata oikea hoitovuosi joka on vahvistettu
+                           (let [voimassa-alkaen-hoitokausi (some-> voimassa-alkaen (pvm/paivamaaran-hoitokausi))
+                                 voimassa-alkaen-hoitovuosi (some-> voimassa-alkaen-hoitokausi first (pvm/vuosi))
+
+                                 ;; Perumiselle pitää passata oikea hoitovuosi joka on vahvistettu
                                  ensimmainen-vahvistettu-vuosi (some (fn [[vuosi vahvistettu?]]
-                                                                       (when vahvistettu? vuosi))
+                                                                       (when (and
+                                                                               vahvistettu?
+                                                                               ;; Vahvistettu vuosi on vähintään voimassa alkaen vuodesta seuraava
+                                                                               ;; Tällöin pysyvä muutos vaikuttaa sen hoitokauden tavoitehintaan
+                                                                               (or
+                                                                                 (nil? voimassa-alkaen-hoitovuosi)
+                                                                                 (>= vuosi (inc voimassa-alkaen-hoitovuosi)))) vuosi))
                                                                  (sort-by key tavoitehinta-indeksikorjattu-per-hoitovuosi))]
 
                              [yleiset/info-laatikko :vahva-ilmoitus

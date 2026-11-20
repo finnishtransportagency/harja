@@ -321,8 +321,21 @@
           :syy "Syy tehtävämäärämuutosten puuttumiselle on kirjaamatta.")))
     (sort-by :alkuvuosi tpi-vetolaatikoiden-virheet)))
 
-(defn koosta-lomakkeen-validaatio-virheet [lomake]
-  (->> lomake ::lomake/virheet vals (map #(str/join " " (map str %)))))
+(defn koosta-lomakkeen-validaatio-virheet
+  "Muodostaa lomakkeen virheet:
+  <label>: <virhe>
+  Esim: Syy: Syötä muutoksen syy"
+  [lomake]
+  (mapv
+    (fn [[avain virheet]]
+      (str
+        ;; Prefixinä kerrotaan käyttäjälle mistä kentästä virhe tuli
+        (fmt/avain-stringiksi avain)
+        ": "
+        ;; Ja tähän itse virhe. 
+        ;; Nämä näytetään -> lomakkeen-footer
+        (str/join " " (map str virheet))))
+    (::lomake/virheet lomake)))
 
 (defn validoi-lomake [lomake]
   (let [pysyvan-muutoksen-virheet (if (= (:tyyppi lomake) "pysyva")

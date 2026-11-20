@@ -16,8 +16,10 @@
 
 (defn lomake-johto-ja-hallintokorvaus
   "johto-ja-hallintokorvaus muutoksen lomakekomponentti"
-  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet muokattava-muutos
-              haku-kaynnissa? muutoksen-tiedot-haku-kaynnissa?] :as app}]
+  [e! {:keys [valittu-hoitokausi
+              urakan-hoitokaudet
+              muokattava-muutos
+              muutoksen-tiedot-haku-kaynnissa?] :as app}]
   (let [muutostapa (muutos-domain/jjh-korvaus-muutos-vai-vahennys? (:alkupvm @nav/valittu-urakka))
         rivit (:johto-ja-hallintokorvaukset muokattava-muutos)
         summa (reduce + 0 (map :tavoitehinnan-muutos (vec (vals rivit))))
@@ -33,7 +35,7 @@
        (yhteiset/+rivi-muutoksen-syy+)
 
        (merge
-         (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
+         (yhteiset/+rivi-muutos-voimassa+ app)
          {:aseta (fn [rivi arvo]
                    (-> rivi
                      (assoc :voimassa_alkaen arvo)

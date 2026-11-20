@@ -6,24 +6,24 @@
 
 
 (defn lomake-muutostyo
-  [e! {:keys [valittu-hoitokausi urakan-hoitokaudet] :as app}]
+  [e! app]
 
   [(lomake/ryhma {:otsikko "Perustiedot"}
      ;; TODO: Muutostyön alityypin valinta on toistaiseksi poistettu käytöstä, koska vain 'erillisrahoitus' on sallittu vaihtoehto.
      ;;       Erillisrahoitus-alityyppi asetetaan oletuksena muutoslomake.cljs 'alusta-lomakkeen-pohjatiedot'-funktiossa.
      ;;       Kun alityypin valinta otetaan takaisin käyttöön, poista oletusarvon asetus pohjatietojen alustuksesta.
      #_(lomake/rivi
-       {:otsikko "Kyseessä on"
-        :nimi :alityyppi
-        :tyyppi :radio-group
-        :vayla-tyyli? true
-        :pakollinen? true
-        :validoi [#(when (nil? %) "Anna alityyppi")]
-        :vaihtoehto-nayta muutos-domain/+muutostyo-valinnat+
-        :vaihtoehdot (keys muutos-domain/+muutostyo-valinnat+)
-        :oletusarvo :erillisrahoitus ;; Toistaiseksi vain erillisrahoitus käytössä
-        :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; TODO - tarvitaan poikkeama
-        })
+         {:otsikko "Kyseessä on"
+          :nimi :alityyppi
+          :tyyppi :radio-group
+          :vayla-tyyli? true
+          :pakollinen? true
+          :validoi [#(when (nil? %) "Anna alityyppi")]
+          :vaihtoehto-nayta muutos-domain/+muutostyo-valinnat+
+          :vaihtoehdot (keys muutos-domain/+muutostyo-valinnat+)
+          :oletusarvo :erillisrahoitus ;; Toistaiseksi vain erillisrahoitus käytössä
+          :vaihtoehto-opts {:poikkeama {:disabloitu? true}} ;; TODO - lisätään poikkeama jos tulee tällainen tarve
+          })
 
      (lomake/rivi
        {:otsikko "Muutostyön nimi"
@@ -38,7 +38,6 @@
         ::lomake/col-luokka "perustiedot col-sm-6 aputeksti"})
 
      (yhteiset/+rivi-muutoksen-syy+)
-     (yhteiset/+rivi-muutos-voimassa+ urakan-hoitokaudet valittu-hoitokausi)
+     (yhteiset/+rivi-muutos-voimassa+ app)
      (yhteiset/+rivi-muutos-tavoitehinta+)
-
      (first (yhteiset/liite-kentta e! app)))])
