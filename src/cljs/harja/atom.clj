@@ -49,7 +49,8 @@
            arvo# (reagent.core/atom nil)
            parametrit-ch# (cljs.core.async/chan)
            paivita# (reagent.core/atom 0)
-           nil-kun-haku-kaynnissa?# ~(or (get asetukset :nil-kun-haku-kaynnissa?) false)]
+           nil-kun-haku-kaynnissa?# ~(or (get asetukset :nil-kun-haku-kaynnissa?) false)
+           edelliset# (reagent.core/atom ::ei-ajettu)]
        (cljs.core.async.macros/go
          (loop [haku-ch# nil ;; käynnissä olevan haun kanava
                 parametrit# (cljs.core.async/<! parametrit-ch#)]
@@ -88,13 +89,17 @@
                          (harja.loki/log "tuntematon kanava!!!")))]
                  (recur haku# parametrit#))))))
 
-
        (reagent.ratom/run!
-        (let [~@(interleave nimi-symbolit (map second bindings))]
-          @paivita#
-          (cljs.core.async.macros/go
-            (cljs.core.async/>! parametrit-ch#
-                                [~@nimi-symbolit]))))
+         (let [~@(interleave nimi-symbolit (map second bindings))
+               ;; Paivita-laskuri pitää olla mukana vertailussa, jotta paivita! ja paivita-periodisesti toimii edelleen
+               uudet# [~@nimi-symbolit @paivita#]]
+
+           ;; Vertaillaan muuttuivatko arvot oikeasti. Jos reaktio oli tahaton, niin parametrit-ch kanavaan ei pusketa
+           ;; turhaan samoja arvoja
+           (when (not= uudet# @edelliset#)
+             (reset! edelliset# uudet#)
+             (cljs.core.async.macros/go
+               (cljs.core.async/>! parametrit-ch# [~@nimi-symbolit])))))
 
        (swap! harja.atom/+reaktiot+ assoc arvo# {:paivita #(swap! paivita# inc)})
        arvo#)))
