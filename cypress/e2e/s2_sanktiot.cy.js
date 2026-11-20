@@ -180,7 +180,7 @@ describe('Sanktion summa näkyy tallennuksen jälkeen MHU26:ssa', function () {
 
     it('näyttää tallennetun summan sanktion tiedoissa', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu26, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu26, evkLappi, 1)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26')
 
@@ -220,7 +220,7 @@ describe('MHU26 laskettava sanktio', function () {
 
     it('laskee tiekilometreistä lukitun sanktion ja tallentaa sen', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu26, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu26, evkLappi, 1)
 
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26Laskettu')
 
@@ -272,7 +272,7 @@ describe('B-ryhmän omailmoitus puolittaa summan vain kerran MHU26:ssa', functio
 
     it('tallentaa ja muokkaa B-ryhmän omailmoitussanktion idempotentisti', function () {
         cy.viewport(1100, 1200)
-        avaaSanktiotJaBonuksetNakyma(testiurakkaMhu26, evkLappi)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu26, evkLappi, 1)
         cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaMhu26B1')
 
         cy.contains('Lisää uusi').click()
