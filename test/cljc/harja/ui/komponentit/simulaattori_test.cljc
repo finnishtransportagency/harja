@@ -55,3 +55,17 @@
   (is (simulaattori/kelvollinen?
         (valintaryhma-asetuksilla {:otsikko "Urakkatyyppi"
                                    :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}]}))))
+
+(deftest virheellinen-rakenne-antaa-virheen-eika-kaadu
+  (testing "asetukset ei ole map"
+    (doseq [asetukset ["x" [1 2] 5]]
+      (is (= [":lomake: asetukset ei ole map"]
+             (simulaattori/virheet [{:komponentti :lomake :asetukset asetukset}]))
+          (pr-str asetukset))))
+  (testing "lapset ei ole lista"
+    (is (= [":lomake: lapset ei ole lista"]
+           (simulaattori/virheet [{:komponentti :lomake :lapset "abc"}]))))
+  (testing "lapsi ei ole map"
+    (is (= ["Solmun pitää olla map: 1"]
+           (simulaattori/virheet [{:komponentti :lomake :lapset [1]}])))))
+

@@ -12,9 +12,6 @@
 (defn komponentin-kuvaus [id]
   (rekisteri/hae id))
 
-(defn- lapset [solmu]
-  (or (:lapset solmu) []))
-
 (defn- tagattu? [x]
   #?(:clj (instance? clojure.lang.TaggedLiteral x)
      :cljs false))
@@ -42,17 +39,26 @@
       virhe)))
 
 (defn- tarkista-solmu [solmu vanhempi]
-  (let [id (:komponentti solmu)
-        kuvaus (komponentin-kuvaus id)
-        sallitut (or (:sallitut-vanhemmat kuvaus) #{})]
-    (concat
-      (when-not kuvaus
-        [(str "Tuntematon komponentti: " id)])
-      (when (and kuvaus (not (contains? sallitut vanhempi)))
-        [(str id ": vanhempi=" (pr-str vanhempi) " ei ole sallittu")])
-      (when kuvaus
-        (asetusvirheet id kuvaus (:asetukset solmu)))
-      (mapcat #(tarkista-solmu % id) (lapset solmu)))))
+  (if-not (map? solmu)
+    [(str "Solmun pitää olla map: " (pr-str solmu))]
+    (let [{:keys [komponentti asetukset lapset]} solmu
+          kuvaus (komponentin-kuvaus komponentti)
+          sallitut (or (:sallitut-vanhemmat kuvaus) #{})
+          asetukset-kunnossa? (or (nil? asetukset) (map? asetukset))
+          lapset-kunnossa? (or (nil? lapset) (sequential? lapset))]
+      (concat
+        (when-not kuvaus
+          [(str "Tuntematon komponentti: " komponentti)])
+        (when (and kuvaus (not (contains? sallitut vanhempi)))
+          [(str komponentti ": vanhempi=" (pr-str vanhempi) " ei ole sallittu")])
+        (when-not asetukset-kunnossa?
+          [(str komponentti ": asetukset ei ole map")])
+        (when-not lapset-kunnossa?
+          [(str komponentti ": lapset ei ole lista")])
+        (when (and kuvaus asetukset-kunnossa?)
+          (asetusvirheet komponentti kuvaus asetukset))
+        (when lapset-kunnossa?
+          (mapcat #(tarkista-solmu % komponentti) lapset))))))
 
 (defn virheet
   "Palauttaa deklaratiivisen sivupuun virheet tekstinä."

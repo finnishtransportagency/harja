@@ -32,6 +32,10 @@
       (catch :default e
         {:virhe (str "EDN-lukuvirhe: " (.-message e))}))))
 
+(def ^:private luettu-syote
+  ;; Jaettu reaktio: syöte luetaan kerran, vaikka kolme paneelia käyttää tulosta.
+  (r/track #(lue-syote @syote)))
+
 (defn- puun-rakenne
   [solmut]
   [:ul
@@ -59,7 +63,7 @@
 
 (defn lahde
   []
-  (let [{:keys [puu virhe]} (lue-syote @syote)]
+  (let [{:keys [puu virhe]} @luettu-syote]
     [:section.ui-simulaattori-lahde {:data-cy "ui-simulaattori-lahde"}
      [:header.ui-simulaattori-paneelin-otsake
       [:div
@@ -81,7 +85,7 @@
     [:p {:role "alert"} (str "Komponenttia ei voi renderöidä: " (:komponentti solmu))]))
 
 (defn- validointi []
-  (let [{:keys [puu virhe]} (lue-syote @syote)
+  (let [{:keys [puu virhe]} @luettu-syote
         virheet (if virhe [virhe] (sopimus/virheet puu))]
     (if (seq virheet)
       [:section.ui-simulaattori-validointi {:data-cy "ui-simulaattori-validointi"}
@@ -95,7 +99,7 @@
                        :data-cy "ui-simulaattori-validointi-tila"}]])))
 
 (defn- puu [tila]
-  (let [{:keys [puu virhe]} (lue-syote @syote)]
+  (let [{:keys [puu virhe]} @luettu-syote]
     (if (and (nil? virhe) (sopimus/kelvollinen? puu))
       [:section.ui-simulaattori-paneeli.ui-simulaattori-esikatselu {:data-cy "ui-simulaattori-esikatselu"}
        [:header.ui-simulaattori-paneelin-otsake
