@@ -286,7 +286,7 @@
             hoitovuosi
             (or (= lukittava-ominaisuus :sanktio)
               (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
-                urakan-tiedot (pvm/vuodesta-hoitokausi hoitovuosi))))
+                (update urakan-tiedot :tyyppi keyword) (pvm/vuodesta-hoitokausi hoitovuosi))))
       (when-not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
                   db urakka-id hoitovuosi lukittava-ominaisuus)
         (throw+ {:type virheet/+viallinen-kutsu+

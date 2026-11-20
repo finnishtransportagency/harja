@@ -351,9 +351,8 @@
     (sanktio? rivi) :sanktiot))
 
 (defn arvonvahennykset-vaikuttaa-tavoitehintaan?
-  "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
+  "MHU25 urakoille tai kun kuluva hoitovuosi on 2026 tai myöhempi -> true. Urakan tyyppi on avainsana."
   [valittu-urakka kuluva-hoitokausi]
-  (let [mhu25? (and (or (= :teiden-hoito (:tyyppi valittu-urakka)) (= "teiden-hoito" (:tyyppi valittu-urakka)))
-                 (>= (pvm/vuosi (:alkupvm valittu-urakka)) 2025))
-        kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
-    (if (or mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) true false)))
+  (let [kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
+    (boolean (or (mhu25-urakka? valittu-urakka)
+               (>= kuluva-alkanut-hoitovuosi 2026)))))

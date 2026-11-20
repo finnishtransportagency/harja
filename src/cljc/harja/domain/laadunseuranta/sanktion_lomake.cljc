@@ -215,13 +215,20 @@
       [:laatupoikkeama :paatos :kasittelyaika]
       arvo)))
 
+(defn- mhu25-kohdistus?
+  "MHU25+ -urakoissa sanktion kohdistus ratkaistaan kulun kohdistuksesta; muissa urakkatyypeissä
+  käytetään toimenpideinstanssia."
+  [urakan-alkuvuosi urakkatyyppi]
+    (and (= :teiden-hoito urakkatyyppi)
+      (some? urakan-alkuvuosi)
+      (> urakan-alkuvuosi 2024)))
+
 (defn mahdolliset-kulun-kohdistukset
   "Palauttaa sanktiotyypille valittavat kohdistukset urakan alkuvuoden ja tyypin perusteella.
   MHU25-urakoissa kohdistus rajataan hoidon johtoon; muilla urakoilla vaihtoehdot
   suodatetaan sanktiotyypin nimen perusteella."
   [toimenpideinstanssit urakan-alkuvuosi urakkatyyppi sanktion-tyyppi]
-  (if (and (= :teiden-hoito urakkatyyppi)
-        (> urakan-alkuvuosi 2024))
+  (if (mhu25-kohdistus? urakan-alkuvuosi urakkatyyppi)
     (filter #(= "23150" (:t2_koodi %)) toimenpideinstanssit)
     (case sanktion-tyyppi
       "Muut hoitourakan tehtäväkokonaisuudet" (remove
@@ -300,14 +307,14 @@
 (defn vaihda-sanktiolajia
   "Vaihtaa sanktion lajin ja ratkaisee tyypin ja toimenpideinstanssin uuden lajin tyypeistä.
   Aiempi sallittu tyyppi säilytetään, muuten valitaan ainoa sallittu tyyppi.
-  Vuoden 2024 ja aiemmin alkaneissa urakoissa valitun tyypin toimenpideinstanssi ratkaistaan
-  toimenpidekoodin perusteella. Uudemmissa urakoissa se ratkaistaan aina ainoasta kulun kohdistuksesta,
-  jolloin toimenpidekoodia ei käytetä; epäselvä tai puuttuva kohdistus tyhjentää arvon.
+  MHU25+ -urakoissa (teiden hoito, alkuvuosi 2025 tai myöhemmin) valitun tyypin toimenpideinstanssi
+  ratkaistaan aina ainoasta kulun kohdistuksesta, jolloin toimenpidekoodia ei käytetä; epäselvä tai
+  puuttuva kohdistus tyhjentää arvon. Muissa urakoissa se ratkaistaan toimenpidekoodin perusteella.
   Jos tyyppiä ei voida valita, se tyhjenee ja laskennan syötteet poistetaan.
   Muistutuksen summa, omailmoitus, toimenpideinstanssi ja indeksi nollataan, jos tyyppiä ei voitu valita."
   ([rivi uusi-laji sanktiotyypit toimenpideinstanssit]
-   (vaihda-sanktiolajia rivi uusi-laji sanktiotyypit toimenpideinstanssit nil nil))
-  ([rivi uusi-laji sanktiotyypit toimenpideinstanssit urakan-alkuvuosi kulun-kohdistukset]
+   (vaihda-sanktiolajia rivi uusi-laji sanktiotyypit toimenpideinstanssit nil nil nil))
+  ([rivi uusi-laji sanktiotyypit toimenpideinstanssit urakan-alkuvuosi urakkatyyppi kulun-kohdistukset]
    (let [vanha-tyyppi-id (get-in rivi [:tyyppi :id])
          rivi (assoc rivi :laji uusi-laji :tyyppi nil)
          vanha-tyyppi (when (some? vanha-tyyppi-id)
@@ -317,7 +324,7 @@
          rivi (if tyyppi
                 (assoc rivi
                   :tyyppi tyyppi
-                  :toimenpideinstanssi (if (and urakan-alkuvuosi (> urakan-alkuvuosi 2024))
+                  :toimenpideinstanssi (if (mhu25-kohdistus? urakan-alkuvuosi urakkatyyppi)
                                          (ainoa-kulun-kohdistus kulun-kohdistukset)
                                          (tyypin-toimenpideinstanssi tyyppi toimenpideinstanssit)))
                 (dissoc rivi :laskettava-syote :laskennan-syote))]
@@ -334,12 +341,12 @@
   "Vaihtaa sanktion tyypin ja päivittää tyypistä riippuvat summatiedot.
   Kiinteällä automaattisella summalla asetetaan normaalimäärä ja omailmoituksen mukainen summa.
   C-ryhmän manuaalisella summalla ja muilla tyypeillä aiempi summa poistetaan tai nollataan.
-  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Toimenpideinstanssi päätellään vuoden 2024
-  ja aiemmin alkaneissa urakoissa tyypin toimenpidekoodista tai ainoasta kulun kohdistuksesta;
-  uudemmissa urakoissa vain ainoasta kulun kohdistuksesta."
-  [rivi uusi-tyyppi urakan-alkuvuosi toimenpideinstanssit kulun-kohdistukset]
+  Laskennan syötteet poistetaan, kun tyyppi vaihtuu. Toimenpideinstanssi päätellään muissa kuin
+  MHU25+ -urakoissa tyypin toimenpidekoodista tai ainoasta kulun kohdistuksesta; MHU25+ -urakoissa
+  vain ainoasta kulun kohdistuksesta."
+  [rivi uusi-tyyppi urakan-alkuvuosi urakkatyyppi toimenpideinstanssit kulun-kohdistukset]
   (let [tyyppi-vaihtui? (not= (get-in rivi [:tyyppi :id]) (:id uusi-tyyppi))
-        rivi (if (<= urakan-alkuvuosi 2024)
+        rivi (if (not (mhu25-kohdistus? urakan-alkuvuosi urakkatyyppi))
                (let [toimenpidekoodi (:toimenpidekoodi uusi-tyyppi)
                      toimenpideinstanssi (cond
                                            toimenpidekoodi

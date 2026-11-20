@@ -371,7 +371,7 @@
     (doseq [vuosi [2025 2026]]
       (let [a-sanktio (sanktion-lomake-domain/vaihda-sanktiolajia
                         (assoc muistutus :toimenpideinstanssi nil)
-                        :A [toinen-tyyppi tyyppi] toimenpideinstanssit vuosi
+                        :A [toinen-tyyppi tyyppi] toimenpideinstanssit vuosi :teiden-hoito
                         [(first toimenpideinstanssit)])]
         (is (= tyyppi (:tyyppi a-sanktio)))
         (is (= 202 (:toimenpideinstanssi a-sanktio)))))))
@@ -390,7 +390,7 @@
           kohdistus {:id 22 :tpi_id 202}
           tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
                   {:laji :A :tyyppi nil :toimenpideinstanssi nil}
-                  tyyppi vuosi [kohdistus] [kohdistus])]
+                  tyyppi vuosi :teiden-hoito [kohdistus] [kohdistus])]
       (is (= tyyppi (:tyyppi tulos)))
       (is (= 202 (:toimenpideinstanssi tulos))))))
 
@@ -400,6 +400,7 @@
                 {:laji :A :tyyppi {:id 1} :toimenpideinstanssi 101}
                 tyyppi
                 2025
+                :teiden-hoito
                 [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303 :t2_koodi "23150"}]
                 [{:id 33 :tpi_id 303 :t2_koodi "23150"}])]
     (is (= 303 (:toimenpideinstanssi tulos)))))
@@ -411,7 +412,7 @@
         toimenpideinstanssit (conj kulun-kohdistukset {:id 33 :tpi_id 303 :t2_koodi "23120"})]
     (is (= 202 (:toimenpideinstanssi
                 (sanktion-lomake-domain/vaihda-sanktiotyyppia
-                  rivi tyyppi 2026 toimenpideinstanssit kulun-kohdistukset))))))
+                  rivi tyyppi 2026 :teiden-hoito toimenpideinstanssit kulun-kohdistukset))))))
 
 (deftest koodittoman-tyypin-lajinvaihto-palauttaa-uudemman-urakan-kiintean-kohdistuksen
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
@@ -420,7 +421,7 @@
         kohdistukset [{:id 22 :tpi_id 202 :t2_koodi "23150"}]
         toimenpideinstanssit (conj kohdistukset {:id 33 :tpi_id 303 :t2_koodi "23120"})
         tulos (sanktion-lomake-domain/vaihda-sanktiolajia
-                rivi :A [toinen-tyyppi tyyppi] toimenpideinstanssit 2026 kohdistukset)]
+                rivi :A [toinen-tyyppi tyyppi] toimenpideinstanssit 2026 :teiden-hoito kohdistukset)]
     (is (= tyyppi (:tyyppi tulos)))
     (is (= 202 (:toimenpideinstanssi tulos)))))
 
@@ -430,7 +431,30 @@
         kohdistukset [{:id 22 :tpi_id 202} {:id 33 :tpi_id 303}]]
     (is (nil? (:toimenpideinstanssi
                (sanktion-lomake-domain/vaihda-sanktiotyyppia
-                 rivi tyyppi 2026 kohdistukset kohdistukset))))))
+                 rivi tyyppi 2026 :teiden-hoito kohdistukset kohdistukset))))))
+
+(deftest lajinvaihto-muussa-kuin-teiden-hoidon-urakassa-ei-kayta-mhu25-kohdistusta
+  (let [tpit [{:tpi_id 1 :id 10 :tpi_nimi "Päällystys"} {:tpi_id 2 :id 20 :tpi_nimi "Paikkaus"}]
+        tyyppi {:id 5 :nimi "Ylläpidon sakko" :toimenpidekoodi 10}]
+    (are [urakan-alkuvuosi urakkatyyppi]
+         (= 1 (:toimenpideinstanssi
+                (sanktion-lomake-domain/vaihda-sanktiolajia
+                  {} :yllapidon_sakko [tyyppi] tpit urakan-alkuvuosi urakkatyyppi tpit)))
+      2024 :paallystys
+      2026 :paallystys
+      2026 :hoito)))
+
+(deftest tyypinvaihto-muussa-kuin-teiden-hoidon-urakassa-ei-kayta-mhu25-kohdistusta
+  (let [tpit [{:tpi_id 1 :id 10 :tpi_nimi "Päällystys"} {:tpi_id 2 :id 20 :tpi_nimi "Paikkaus"}]
+        tyyppi {:id 5 :nimi "Ylläpidon sakko" :toimenpidekoodi 10}]
+    (are [urakan-alkuvuosi urakkatyyppi odotettu-tpi]
+         (= odotettu-tpi (:toimenpideinstanssi
+                           (sanktion-lomake-domain/vaihda-sanktiotyyppia
+                             {:laji :yllapidon_sakko} tyyppi urakan-alkuvuosi urakkatyyppi tpit tpit)))
+      2026 :paallystys 1
+      2026 :hoito 1
+      ;; MHU25+: kaksi kohdistusta on epäselvä, joten toimenpidekoodia ei käytetä
+      2026 :teiden-hoito nil)))
 
 (deftest sanktion-kohdistusratkaisu-paljastaa-puuttuvan-ja-epaselvan-kohdistuksen
   (is (= {:kohdistus nil
@@ -452,10 +476,10 @@
         tyyppi {:id 2 :toimenpidekoodi 22}]
     (is (= 303 (:toimenpideinstanssi
                  (sanktion-lomake-domain/vaihda-sanktiotyyppia
-                   rivi tyyppi 2026 kohdistukset kohdistukset))))
+                   rivi tyyppi 2026 :teiden-hoito kohdistukset kohdistukset))))
     (is (= 101 (:toimenpideinstanssi
                 (sanktion-lomake-domain/vaihda-sanktiotyyppia
-                  rivi nil 2026 kohdistukset kohdistukset))))))
+                  rivi nil 2026 :teiden-hoito kohdistukset kohdistukset))))))
 
 (deftest sanktion-kulun-kohdistukset-maaraytyvat-urakan-ja-tyypin-mukaan
   (let [talvi {:id 1 :tpi_id 101 :tpi_nimi "Talvihoito" :t2_koodi "23110"}
@@ -530,7 +554,7 @@
       (let [kohdistukset (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
                            toimenpideinstanssit vuosi :teiden-hoito (:nimi tyyppi))
             tulos (sanktion-lomake-domain/vaihda-sanktiotyyppia
-                    rivi tyyppi vuosi toimenpideinstanssit kohdistukset)]
+                    rivi tyyppi vuosi :teiden-hoito toimenpideinstanssit kohdistukset)]
         (is (= tyyppi (:tyyppi tulos)))
         (is (= odotettu (:toimenpideinstanssi tulos)))))))
 
@@ -546,7 +570,7 @@
              :toimenpideinstanssi 202
              :tpi_id 202)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
+             rivi tyyppi 2024 :teiden-hoito toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-esivalitsee-ainoan-kulun-kohdistuksen-ilman-toimenpidekoodia
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
@@ -561,7 +585,7 @@
              :toimenpideinstanssi 202
              :tpi_id 202)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2024 toimenpideinstanssit kulun-kohdistukset)))))
+             rivi tyyppi 2024 :teiden-hoito toimenpideinstanssit kulun-kohdistukset)))))
 
 (deftest sanktiotyypin-vaihto-sailyttaa-nykyisen-toimenpideinstanssin-kun-valintaa-ei-voi-johtaa
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
@@ -572,7 +596,7 @@
                               {:id 22 :tpi_id 202}]]
     (is (= (assoc rivi :tyyppi tyyppi :tpi_id 101)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2024 toimenpideinstanssit toimenpideinstanssit)))))
+             rivi tyyppi 2024 :teiden-hoito toimenpideinstanssit toimenpideinstanssit)))))
 
 (deftest sanktiotyypin-vaihto-nollaa-vanhan-toimenpideinstanssin-uudemmassa-urakassa
   (let [tyyppi {:id 2 :koodi 17 :toimenpidekoodi nil}
@@ -582,7 +606,7 @@
         toimenpideinstanssit [{:id 22 :tpi_id 202}]]
     (is (= (assoc rivi :tyyppi tyyppi :toimenpideinstanssi nil)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 toimenpideinstanssit [])))))
+             rivi tyyppi 2025 :teiden-hoito toimenpideinstanssit [])))))
 
 (deftest sanktiotyypin-vaihto-laskee-kiintean-profiilisumman-omailmoitus-tilassa
   (let [tyyppi {:id 2
@@ -603,7 +627,7 @@
                :omailmoitettu true)
              (dissoc :laskettava-syote :laskennan-syote))
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [] [])))))
+             rivi tyyppi 2025 :teiden-hoito [] [])))))
 
 (deftest sanktiotyypin-vaihto-ei-kirjoita-manuaalista-c-ryhman-summaa
   (let [tyyppi {:id 2
@@ -620,7 +644,7 @@
                :omailmoitettu false)
              (dissoc :normaalimaara :summa))
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [] [])))))
+             rivi tyyppi 2025 :teiden-hoito [] [])))))
 
 (deftest sanktiotyypin-vaihto-poistaa-vanhan-laskennan-ja-nollaa-ei-kiintean-summan
   (let [tyyppi {:id 2 :summamaaritykset []}
@@ -638,7 +662,7 @@
                :omailmoitettu false)
              (dissoc :laskettava-syote :laskennan-syote))
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [] [])))))
+             rivi tyyppi 2025 :teiden-hoito [] [])))))
 
 (deftest sanktiotyypin-uudelleenvalinta-sailyttaa-laskennan-syotteet
   (let [tyyppi {:id 2 :summamaaritykset []}
@@ -652,7 +676,7 @@
               :laskennan-syote laskennan-syote}]
     (is (= (assoc rivi :omailmoitettu false)
            (sanktion-lomake-domain/vaihda-sanktiotyyppia
-             rivi tyyppi 2025 [] [])))))
+             rivi tyyppi 2025 :teiden-hoito [] [])))))
 
       (deftest aikakausikonteksti-kokoaa-urakkakohtaiset-ehdot
         (let [yleinen {:nayta-indeksi? false
@@ -1100,7 +1124,7 @@
                                     :ohjeteksti nil}]}
         rivi (sanktion-lomake-domain/vaihda-sanktiotyyppia
                {:laji :A :tyyppi {:id 1} :omailmoitettu false}
-               tyyppi 2025 [] [])]
+               tyyppi 2025 :teiden-hoito [] [])]
     (is (= 6000M (:normaalimaara rivi)))
     (is (= 6000M (:summa rivi)))
     (is (false? (:omailmoitettu rivi)))))

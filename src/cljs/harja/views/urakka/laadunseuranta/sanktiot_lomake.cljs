@@ -55,6 +55,7 @@
                  (tiedot/valitun-urakan-sanktiotyypit arvo)
                  toimenpideinstanssit
                  urakan-alkuvuosi
+                 urakkatyyppi
                  kulun-kohdistukset))
       :valinnat (vec sanktiolajit)
       :valinta-nayta #(or (tiedot/valitun-urakan-sanktiolajin-nimi %) "- valitse laji -")
@@ -86,6 +87,7 @@
                                     sanktio
                                     tyyppi
                                     urakan-alkuvuosi
+                                    urakkatyyppi
                                     toimenpideinstanssit
                                     (sanktion-lomake-domain/mahdolliset-kulun-kohdistukset
                                       toimenpideinstanssit
