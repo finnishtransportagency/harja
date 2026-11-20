@@ -1,13 +1,25 @@
 -- name: listaa-indeksit
 -- Hakee kaikki indeksit
+WITH viimeisin AS (
+    SELECT DISTINCT ON (nimi)
+           nimi,
+           COALESCE(muokattu, luotu) AS viimeksi_muokattu,
+           COALESCE(muokkaaja, luoja) AS kayttaja_id
+      FROM indeksi
+     WHERE muokattu IS NOT NULL OR luotu IS NOT NULL
+     ORDER BY nimi, viimeksi_muokattu DESC, vuosi DESC, kuukausi DESC
+)
 SELECT i.nimi,
        i.vuosi,
        i.kuukausi,
        i.arvo,
-       (SELECT MAX(COALESCE(i2.muokattu, i2.luotu))
-          FROM indeksi i2
-         WHERE i2.nimi = i.nimi) AS viimeksi_muokattu
+       v.viimeksi_muokattu,
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
+            ELSE NULLIF(CONCAT_WS(' ', k.etunimi, k.sukunimi), '')
+       END AS viimeisin_muokkaaja
   FROM indeksi i
+  LEFT JOIN viimeisin v ON v.nimi = i.nimi
+  LEFT JOIN kayttaja k ON k.id = v.kayttaja_id
  ORDER BY i.nimi, i.vuosi, i.kuukausi;
 
 -- name: hae-indeksi

@@ -25,12 +25,13 @@
 
   (let [indeksit @i/indeksit
         viimeksi-muokattu (get indeksit [indeksinimi :viimeksi-muokattu])
+        viimeisin-muokkaaja (get indeksit [indeksinimi :viimeisin-muokkaaja])
         tallennus-kaynnissa? (contains? @i/indeksin-tallennus-kaynnissa indeksinimi)
         rivit (reverse (sort-by :vuosi
                          (map #(assoc (second %) :kannassa? true)
                            (filter (fn [[[nimi vuosi] _]]
                                      (and (= nimi indeksinimi)
-                                       (not= vuosi :viimeksi-muokattu)))
+                                       (number? vuosi)))
                              indeksit))))
         varatut-vuodet (into #{} (map :vuosi rivit))
         ;; Ylläpidossa käytettävien Platssin indeksien tarkkuus on 2 ja arvot ovat euroa per tonni
@@ -46,7 +47,9 @@
       [:div.grid-status-viestit.indeksi-grid-status
        (if viimeksi-muokattu
          [:div.status-viesti.tallennettu
-          (str "Viimeksi tallennettu: " (viimeksi-muokattu-teksti viimeksi-muokattu))]
+          (str "Viimeksi tallennettu: " (viimeksi-muokattu-teksti viimeksi-muokattu)
+               (when viimeisin-muokkaaja
+                 (str " (" viimeisin-muokkaaja ")")))]
          [:div.status-viesti.ei-muutoksia
           "Ei tallennettuja muutoksia"])]
       [grid/grid

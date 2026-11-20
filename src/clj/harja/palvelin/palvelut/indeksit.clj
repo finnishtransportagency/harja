@@ -32,9 +32,12 @@
                               indeksit-vuosittain))]
     (merge indeksit
            (into {}
-                 (for [[[nimi _] kuukaudet] indeksit-vuosittain]
-                   [[nimi :viimeksi-muokattu]
-                    (:viimeksi_muokattu (first kuukaudet))])))))
+                 (for [[[nimi _] kuukaudet]
+                       indeksit-vuosittain
+                       :let [rivi (first kuukaudet)]
+                       [avain arvo] [[:viimeksi-muokattu (:viimeksi_muokattu rivi)]
+                                     [:viimeisin-muokkaaja (:viimeisin_muokkaaja rivi)]]]
+                   [[nimi avain] arvo])))))
 
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
