@@ -3,7 +3,7 @@
 
   Rekisteri on tarkastelusivun kortin, navigaation ja sopimusruudun yhteinen lähde. Uusi
   komponentti lisätään tänne ensin, ja sen esikatselu liitetään samalla `:id`:llä
-  tarkastelusivun esikatselut-kartassa.
+  `register!`-kutsulla tarkastelusivun cljs-puolella.
 
   Rekisterissä ei ole renderöintiä, jotta sen eheys voidaan testata JVM:llä."
   (:require [clojure.string :as str]))

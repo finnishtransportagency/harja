@@ -6,10 +6,9 @@
 
 (defn register!
   "Rekisteröi komponentin renderöijät. Avaimet: `:esikatselu` (tarkastelusivu) ja
-  `:renderoi` (simulaattori, `(fn [solmu tila lapsi-fn])`). Saman id:n kaksi rekisteröintiä on virhe."
+  `:renderoi` (simulaattori, `(fn [solmu tila lapsi-fn])`). Uudelleenrekisteröinti korvaa edellisen,
+  jotta tiedoston hot reload ei kaadu. Tupla-rekisteröinti on JVM-testin vastuulla."
   [id {:keys [esikatselu renderoi] :as renderoijat-kartta}]
-  (when (contains? @renderoijat id)
-    (throw (js/Error. (str "Komponentti on jo rekisteröity: " id))))
   (when (and (nil? esikatselu) (nil? renderoi))
     (throw (js/Error. (str "Rekisteröinnissä ei ole renderöijää: " id))))
   (swap! renderoijat assoc id (select-keys renderoijat-kartta [:esikatselu :renderoi])))
