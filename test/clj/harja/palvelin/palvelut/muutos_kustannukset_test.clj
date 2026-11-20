@@ -481,6 +481,97 @@
           "Odotettu virhe heitetään, 
            erillisrahoitetun muutostyön budjetti ylittyy")))
 
+    (testing "hankintakulu-ei-kuluta-erillisrahoitetun-muutostyon-budjettia"
+      (let [muutostyo (tallenna-erillisrahoitettu-muutostyo
+                        "Erillisrahoitettu muutos"
+                        "Budjettitesti"
+                        1000M)
+            kulu {:kokonaissumma 10500M
+                   :erapaiva (pvm/->pvm "02.10.2025")
+                   :kohdistukset
+                   [{:rivi 0
+                     :summa 500M
+                     :tavoitehintainen :true
+                     :valittu-muutostyo muutostyo
+                     :lukittu? false
+                     :lisatyo? false
+                     :poistettu false
+                     :toimenpideinstanssi +tpi+
+                     :tyyppi :erillisrahoitettu-muutos}
+                    {:rivi 1
+                     :summa 10000M
+                     :tavoitehintainen :true
+                     :lukittu? false
+                     :lisatyo? false
+                     :poistettu false
+                     :toimenpideinstanssi +tpi+
+                     :tyyppi :hankintakulu}]
+                   :urakka +urakka+
+                   :liitteet []
+                   :tyyppi "laskutettava"
+                   :koontilaskun-kuukausi "lokakuu/5-hoitovuosi"}
+
+            vastaus (kutsu-palvelua
+                      (:http-palvelin jarjestelma)
+                      :tallenna-kulu
+                      +kayttaja-jvh+
+                      {:urakka-id +urakka+
+                       :kulu-kohdistuksineen kulu})
+
+            kohdistukset (:kohdistukset vastaus)
+            muutoskohdistus (some #(when (= "erillisrahoitettu-muutos" (:tyyppi %)) %) kohdistukset)
+            hankintakohdistus (some #(when (= "hankintakulu" (:tyyppi %)) %) kohdistukset)]
+
+        (is (= 10500M (:kokonaissumma vastaus)))
+        (is (= 500M (:summa muutoskohdistus)))
+        (is (= 10000M (:summa hankintakohdistus)))
+        (is (= 2 (count kohdistukset)))))
+
+    (testing "poistettu-muutostyokohdistus-ei-kuluta-budjettia"
+      (let [muutostyo (tallenna-erillisrahoitettu-muutostyo
+                        "Poistettavan kohdistuksen testi"
+                        "Poistettava kulu"
+                        1000M)
+            alkuperainen-kulu (tallenna-erillisrahoitetun-muutostyon-kulu
+                                muutostyo
+                                600M
+                                "02.10.2025")
+            alkuperainen-kohdistus (first (:kohdistukset alkuperainen-kulu))
+            paivitetty-kulu (kutsu-palvelua
+                              (:http-palvelin jarjestelma)
+                              :tallenna-kulu
+                              +kayttaja-jvh+
+                              {:urakka-id +urakka+
+                               :kulu-kohdistuksineen
+                               (assoc alkuperainen-kulu
+                                 :kokonaissumma 500M
+                                 :kohdistukset
+                                 [{:kohdistus-id (:kohdistus-id alkuperainen-kohdistus)
+                                   :rivi 0
+                                   :summa 600M
+                                   :tavoitehintainen :true
+                                   :valittu-muutostyo muutostyo
+                                   :lukittu? false
+                                   :lisatyo? false
+                                   :poistettu true
+                                   :toimenpideinstanssi +tpi+
+                                   :tyyppi :erillisrahoitettu-muutos}
+                                  {:rivi 1
+                                   :summa 500M
+                                   :tavoitehintainen :true
+                                   :valittu-muutostyo muutostyo
+                                   :lukittu? false
+                                   :lisatyo? false
+                                   :poistettu false
+                                   :toimenpideinstanssi +tpi+
+                                   :tyyppi :erillisrahoitettu-muutos}])})]
+
+        ;; Poistettu kohdistus ei palaudu aktiivisena.
+        (is (= 1 (count (:kohdistukset paivitetty-kulu))))
+        (is (= 500M
+              (:summa (first (:kohdistukset paivitetty-kulu)))))
+        (is (= 500M (:kokonaissumma paivitetty-kulu)))))
+
 
     (testing "Tallennus validointi toimii, kun kuluja on jo kirjattu (erillisrahoitus)"
       (let [virheellinen-voimassa-alkaen (pvm/->pvm "11.11.2025")
