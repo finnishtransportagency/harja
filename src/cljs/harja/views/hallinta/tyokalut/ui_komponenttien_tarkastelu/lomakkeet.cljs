@@ -223,6 +223,60 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Valittu: " (if @valittu? "kyllä" "ei"))]])))
 
+(defn- pino [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Pino asettaa lapset allekkain. Välit omistaa rakenne."]
+     [ui/pino {:data-cy (str ankkuri "-pino")}
+      [:div {:data-cy (str ankkuri "-lapsi-a")} "Ensimmäinen lapsi"]
+      [:div {:data-cy (str ankkuri "-lapsi-b")} "Toinen lapsi"]]]))
+
+(defn- suodatinrivi [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Rivi rivittää suodattimet. Suodattimen kentän sisällön antaa käyttöpaikka."]
+     [ui/suodatinrivi {:data-cy (str ankkuri "-rivi")}
+      [ui/suodatin {:otsikko "Alku" :id (str ankkuri "-alku")}
+       [:span "Alkukenttä"]]
+      [ui/suodatin {:otsikko "Loppu" :id (str ankkuri "-loppu")}
+       [:span "Loppukenttä"]]]]))
+
+(defn- toimintoryhma [komponentti]
+  (r/with-let [painettu (r/atom nil)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Ryhmä pitää toimintopainikkeet yhdessä. Painikkeiden toiminnan antaa käyttöpaikka."]
+       [ui/toimintoryhma {:data-cy (str ankkuri "-toiminnot")}
+        [napit/nappi "Tallenna" #(reset! painettu "Tallenna")
+         {:data-cy (str ankkuri "-tallenna")}]
+        [napit/nappi "Tyhjennä" #(reset! painettu "Tyhjennä")
+         {:data-cy (str ankkuri "-tyhjenna")
+          :luokka "nappi-toissijainen"}]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Viimeksi painettu: " (or @painettu "ei mitään"))]])))
+
+(defn- tilaviesti [komponentti]
+  (r/with-let [tila (r/atom :onnistui)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Tila ja viesti tulevat käyttöpaikalta. Viestisäiliö näkyy aina."]
+       [ui/toimintoryhma {:data-cy (str ankkuri "-tilat")}
+        [napit/nappi "Lataus" #(reset! tila :lataus)
+         {:data-cy (str ankkuri "-lataus")
+          :luokka "nappi-toissijainen"}]
+        [napit/nappi "Onnistui" #(reset! tila :onnistui)
+         {:data-cy (str ankkuri "-onnistui")
+          :luokka "nappi-toissijainen"}]
+        [napit/nappi "Virhe" #(reset! tila :virhe)
+         {:data-cy (str ankkuri "-virhe")
+          :luokka "nappi-toissijainen"}]]
+       [ui/tilaviesti {:tila @tila
+                       :viesti (case @tila
+                                 :lataus "Tallennetaan..."
+                                 :onnistui "Nimi tallennettu"
+                                 :virhe "Tallennus epäonnistui")
+                       :data-cy (str ankkuri "-tila")}]])))
+
 (register! :suodatin {:esikatselu suodatin})
 (defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
   [ui/valintaryhma
@@ -251,3 +305,23 @@
 (register! :valintaruutu {:esikatselu valintaruutu})
 (register! :radiokentta {:esikatselu radiokentta})
 (register! :checkbox-ryhma {:esikatselu checkbox-ryhma})
+
+(defn- asettelu-simulaattorissa [asettelu-fn]
+  (fn [solmu _tila lapsi-fn]
+    (apply asettelu-fn (:asetukset solmu)
+           (map-indexed (fn [indeksi lapsi]
+                          ^{:key indeksi}
+                          [lapsi-fn lapsi])
+                        (:lapset solmu)))))
+
+(defn- tilaviesti-simulaattorissa [solmu _tila _lapsi-fn]
+  [ui/tilaviesti (:asetukset solmu)])
+
+(register! :pino {:esikatselu pino
+                  :renderoi (asettelu-simulaattorissa ui/pino)})
+(register! :suodatinrivi {:esikatselu suodatinrivi
+                          :renderoi (asettelu-simulaattorissa ui/suodatinrivi)})
+(register! :toimintoryhma {:esikatselu toimintoryhma
+                           :renderoi (asettelu-simulaattorissa ui/toimintoryhma)})
+(register! :tilaviesti {:esikatselu tilaviesti
+                        :renderoi tilaviesti-simulaattorissa})

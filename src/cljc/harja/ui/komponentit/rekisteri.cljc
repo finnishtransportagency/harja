@@ -253,6 +253,68 @@
                 :vaihtoehto-nayta {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muodostaa vaihtoehdon näytettävän tekstin."}
                 :palstoja {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Vaihtoehtojen palstamäärä."}
                 :disabloi {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}}}
+   {:id :pino
+    :nimi "Pino"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:lapset}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
+    :funktio "harja.ui.komponentit/pino"
+    :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :suodatinrivi
+    :nimi "Suodatinrivi"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:suodattimet}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Rivittyvä rivi suodattimille. Suodattimia ei ole vielä simulaattorissa."
+    :funktio "harja.ui.komponentit/suodatinrivi"
+    :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :toimintoryhma
+    :nimi "Toimintoryhmä"
+    :ryhma :toiminnot
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:toiminnot}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Ryhmittelee käyttöpaikan toimintopainikkeet. Painikkeet tulevat käyttöpaikalta."
+    :funktio "harja.ui.komponentit/toimintoryhma"
+    :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :tilaviesti
+    :nimi "Tilaviesti"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:viesti}
+    :tilat #{:lataus :onnistui :virhe}
+    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Lataus-, onnistumis- tai virhetila käyttöpaikan antamalla viestillä. Säiliö näkyy aina, tyhjä viesti ei näy."
+    :funktio "harja.ui.komponentit/tilaviesti"
+    :asetukset {:tila {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Tila: :lataus, :onnistui tai :virhe."}
+                :viesti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Näytettävä viesti."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet
