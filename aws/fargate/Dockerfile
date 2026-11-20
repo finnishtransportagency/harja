@@ -22,6 +22,7 @@ VOLUME ["/tmp"]
 
 # Asenna aikavyöhykedata ja apurit
 # Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
+# Huom: Acquire::http::Timeout ei katkaise hidasta yhteyttä. Workflow:n `timeout-minutes` varmistaa, että build ei jää jumiin.
 RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
     apt-get  \
       -o Acquire::Retries=3 \
