@@ -23,14 +23,23 @@ VOLUME ["/tmp"]
 # Asenna aikavyöhykedata ja apurit
 # Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
 RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
-    apt-get update && apt-get install -y \
-      tzdata \
-      bash \
-      curl \
-      jq \
-      nano \
-      unzip \
-      telnet \
+    apt-get  \
+      -o Acquire::Retries=3 \
+      -o Acquire::http::Timeout=30 \
+      -o Acquire::https::Timeout=30 \
+      update \
+    && apt-get  \
+      -o Acquire::Retries=3 \
+      -o Acquire::http::Timeout=30 \
+      -o Acquire::https::Timeout=30 \
+      install -y \
+        tzdata \
+        bash \
+        curl \
+        jq \
+        nano \
+        unzip \
+        telnet \
     && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
     && echo "Europe/Helsinki" > /etc/timezone \
     && apt-get clean \
