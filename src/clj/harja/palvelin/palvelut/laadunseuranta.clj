@@ -372,8 +372,6 @@
                                        profiilin-summamaaritykset)
         automaattinen-summa-raakana (sanktion-summamaaritys/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
-        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
-                              (get-in profiilirivi [:profiilirivi :id]))
         tilannekuvan-maaritystapa (when sama-profiilirivi?
                                     (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
                                       ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
