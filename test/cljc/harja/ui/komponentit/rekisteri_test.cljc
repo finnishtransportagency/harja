@@ -76,7 +76,7 @@
       (is (seq (virheet (assoc ok :korvaa "yleiset/pudotusvalikko")))))))
 
 (deftest uuden-merkinnan-nimeamiskaytanto-tarkistetaan
-  (let [ok (first rekisteri/komponentit)
+  (let [ok (assoc (first rekisteri/komponentit) :suositus :uuteen-ui)
         virheet (fn [komponentti]
                   (rekisteri/virheet rekisteri/ryhmat (cons komponentti (rest rekisteri/komponentit))))
         disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Pois käytöstä."}]
@@ -94,3 +94,40 @@
 (deftest palautekomponentit-ovat-yhdessa-ryhmassa
   (is (= #{:palautteet}
          (set (map :ryhma (filter #(= :palaute (:rooli %)) rekisteri/komponentit))))))
+
+(deftest nimeamispoikkeus-sallii-vain-kielletyn-asetuksen
+  (let [valintaryhma (rekisteri/hae :valintaryhma)
+        virheet (fn [komponentti]
+                  (rekisteri/virheet rekisteri/ryhmat
+                    (map #(if (= (:id %) (:id komponentti)) komponentti %) rekisteri/komponentit)))]
+    (is (empty? (virheet valintaryhma)))
+    (testing "ilman poikkeusta uuden merkinnän :disabled? on virhe"
+      (is (seq (virheet (dissoc valintaryhma :nimeamispoikkeukset)))))
+    (testing "poikkeus asetukselle, jota ei ole, on virhe"
+      (is (seq (virheet (assoc valintaryhma :nimeamispoikkeukset #{:ei-ole})))))
+    (testing "poikkeus sallitulle asetusnimelle on virhe"
+      (is (seq (virheet (assoc valintaryhma :nimeamispoikkeukset #{:disabled? :otsikko})))))))
+
+(deftest palautekomponentin-variantit-vaativat-yhteiset-variantit
+  (let [viesti (rekisteri/hae :viesti)
+        virheet (fn [komponentti]
+                  (rekisteri/virheet rekisteri/ryhmat
+                    (map #(if (= (:id %) (:id komponentti)) komponentti %) rekisteri/komponentit)))]
+    (is (empty? (virheet viesti)))
+    (testing "puuttuva kartta"
+      (is (seq (virheet (dissoc viesti :yhteiset-variantit)))))
+    (testing "tuntematon yhteinen variantti"
+      (is (seq (virheet (assoc-in viesti [:yhteiset-variantit :ei-ole] :success)))))
+    (testing "kartan on oltava map"
+      (is (seq (virheet (assoc viesti :yhteiset-variantit [:info])))))))
+
+(deftest rinnakkaiset-rajapinnat-on-merkitty
+  (testing "uuteen UI:hin suositeltu valinta korvaa vanhat valinnat"
+    (is (= :uuteen-ui (:suositus (rekisteri/hae :valintaryhma))))
+    (is (seq (:korvaa (rekisteri/hae :valintaryhma)))))
+  (testing "komponentti ei korvaa itseään"
+    (doseq [{:keys [funktio korvaa]} rekisteri/komponentit
+            :let [lyhyt (str/replace funktio #"^harja\.ui\." "")
+                  lyhyt (str/replace lyhyt "." "/")]]
+      (is (not (some #{lyhyt} korvaa)) funktio))))
+

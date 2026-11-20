@@ -44,13 +44,13 @@
     :ryhma :alasvedot
     :luonne :shared-komponentti
     :rooli :syote
-    :suositus :uuteen-ui
-    :korvaa ["yleiset/pudotusvalikko"]
+    :suositus :ei-suositusta
+    :korvaa []
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :riippuvainen
-    :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus."
+    :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus. Uuteen UI:hin suositellaan valintaryhmää, ellei haku tai kombo-valinta ole tarpeen."
     :funktio "harja.ui.yleiset/pudotusvalikko"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
                 :optiot {:tyyppi :map :pakollinen? true :oletus nil :kuvaus "Valikon asetukset, esim. :auki-fn!, :kiinni-fn!, :elementin-id, :wrap-luokka, :vayla-tyyli?."}
@@ -97,8 +97,9 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :syote
-    :suositus :ei-suositusta
-    :korvaa []
+    :suositus :uuteen-ui
+    :korvaa ["yleiset/pudotusvalikko" "yleiset/livi-pudotusvalikko" "kentat/tee-kentta :valinta"]
+    :nimeamispoikkeukset #{:disabled?}
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
     :sallitut-vanhemmat #{:lomake}
@@ -271,7 +272,7 @@
     :ryhma :lomakkeet
     :luonne :shared-komponentti
     :rooli :asettelu
-    :suositus :ei-suositusta
+    :suositus :vanha
     :korvaa []
     :slotit #{:sarake}
     :tilat #{:normaali}
@@ -378,11 +379,12 @@
     :ryhma :palautteet
     :luonne :shared-komponentti
     :rooli :palaute
-    :suositus :ei-suositusta
-    :korvaa []
+    :suositus :uuteen-ui
+    :korvaa ["yleiset/toast-viesti" "viesti/nayta-toast!"]
     :slotit #{:sisalto}
     :tilat #{:normaali}
     :variantit #{:onnistuminen :info :varoitus :vaara}
+    :yhteiset-variantit {:onnistui :success :info :info :varoitus :warning :virhe :danger}
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Flash-viesti ilman Bootstrapin modal- ja alert-luokkia. Variantit tulevat Harjan omista luokista."
@@ -472,6 +474,7 @@
     :slotit #{:ensisijainen :toissijainen}
     :tilat #{:normaali}
     :variantit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
+    :yhteiset-variantit {:onnistui :onnistunut :info :neutraali :varoitus :varoitus}
     :sallitut-vanhemmat #{:sivu :lomake}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
@@ -525,15 +528,20 @@
   #{:class :classes :disabled? :disabloi :valitse-fn :valinta-fn})
 
 (def palaute-variantit
-  "Palautekomponenttien yhteinen varianttisanasto."
+  "Palautekomponenttien yhteinen varianttisanasto. Palautekomponentti, jolla on `:variantit`,
+  kertoo `:yhteiset-variantit`-kartassa, minkä oman arvonsa se käyttää kustakin yhteisestä variantista.
+  Kartta voi olla osittainen, kun komponentilla ei ole vastinetta kaikille variantille."
   #{:onnistui :info :varoitus :virhe})
 
 (defn- uusien-merkintojen-nimeamisvirheet
-  "Uudessa merkinnässä asetusnimien on noudatettava yhtenäistä nimeämistä."
-  [{:keys [id suositus asetukset]}]
+  "Uudessa merkinnässä asetusnimien on noudatettava yhtenäistä nimeämistä.
+  `:nimeamispoikkeukset` listaa jo käytössä olevat asetukset, joiden nimeä ei voi muuttaa."
+  [{:keys [id suositus asetukset nimeamispoikkeukset]}]
   (when (= :uuteen-ui suositus)
     (concat
-      (for [avain (keys asetukset) :when (uusien-merkintojen-kielletyt-avaimet avain)]
+      (for [avain (keys asetukset)
+            :when (and (uusien-merkintojen-kielletyt-avaimet avain)
+                       (not (contains? nimeamispoikkeukset avain)))]
         (str id ": kielletty asetusnimi " avain))
       (for [[avain {:keys [tyyppi]}] asetukset
             :let [nimi (name avain)]
@@ -544,12 +552,36 @@
             :when virhe]
         virhe))))
 
+(defn- nimeamispoikkeusten-virheet
+  "Poikkeus on sallittu vain asetukselle, joka on komponentilla ja jonka nimi on kielletty."
+  [{:keys [id asetukset nimeamispoikkeukset]}]
+  (when (some? nimeamispoikkeukset)
+    (if (set? nimeamispoikkeukset)
+      (for [avain nimeamispoikkeukset
+            :when (not (and (contains? asetukset avain)
+                            (uusien-merkintojen-kielletyt-avaimet avain)))]
+        (str id ": turha nimeämispoikkeus " avain))
+      [(str id ": nimeamispoikkeukset on oltava joukko")])))
+
+(defn- yhteisten-varianttien-virheet
+  "Palautekomponentin `:variantit` vaativat `:yhteiset-variantit`-kartan, jonka avaimet kuuluvat
+  yhteiseen sanastoon."
+  [{:keys [id rooli variantit yhteiset-variantit]}]
+  (let [vieraat (remove palaute-variantit (keys yhteiset-variantit))]
+    (concat
+      (when (and (= :palaute rooli) (seq variantit) (not (seq yhteiset-variantit)))
+        [(str id ": palautekomponentin variantit vaativat yhteiset-variantit-kartan")])
+      (when (and (some? yhteiset-variantit) (not (map? yhteiset-variantit)))
+        [(str id ": yhteiset-variantit on oltava kartta")])
+      (when (and (map? yhteiset-variantit) (seq vieraat))
+        [(str id ": tuntemattomat yhteiset variantit " (vec vieraat))]))))
+
 (defn virheet
   "Palauttaa rekisterin eheysongelmat tekstinä. Tyhjä lista tarkoittaa, että rekisteri on kunnossa."
   ([] (virheet ryhmat komponentit))
   ([ryhmat komponentit]
    (let [ryhma-idt (set (map :id ryhmat))
-         vanhempi-idt (into #{:sivu} (mapcat (juxt :id :rooli) komponentit))
+         vanhempi-idt (into #{:sivu} (map :id) komponentit)
          tuplat (fn [avain]
                   (->> komponentit (map avain) frequencies
                     (keep (fn [[arvo maara]] (when (> maara 1) arvo)))))
@@ -589,5 +621,7 @@
                :when virhe]
            virhe)
          (for [komponentti komponentit
-               virhe (uusien-merkintojen-nimeamisvirheet komponentti)]
+               virhe (concat (uusien-merkintojen-nimeamisvirheet komponentti)
+                             (nimeamispoikkeusten-virheet komponentti)
+                             (yhteisten-varianttien-virheet komponentti))]
            virhe))))))
