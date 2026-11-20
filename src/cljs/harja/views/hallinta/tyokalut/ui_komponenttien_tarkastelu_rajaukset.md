@@ -33,7 +33,7 @@ Uuden komponentin lisääminen:
 
 ## Rekisterin tulostus
 
-`lein komponenttirekisteri` tulostaa rekisterin EDN:nä stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Tuloksen avaimet: `:id`, `:ryhma`, `:rooli`, `:suositus`, `:korvaa`, `:slotit`, `:tilat`, `:sallitut-vanhemmat`, `:asetukset`, `:bootstrap-tila`, `:ankkuri`. Funktioarvot jätetään pois. Tuntematon `:id` tulostaa virheen stderriin ja päättyy koodilla 1.
+`lein komponenttirekisteri` tulostaa rekisterin EDN:nä stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Tulos sisältää rekisterimerkinnän kaikki avaimet (mm. `:funktio`, `:asetukset`, `:suositus`, `:korvaa`, `:variantit`, `:bootstrap-luokat`) ja lisäksi `:ankkuri`. Funktioarvot jätetään pois. Tuntematon suodatin, pariton argumenttimäärä sekä tuntematon `:id` tai `:ryhma` tulostavat virheen stderriin ja päättyvät koodilla 1.
 
 ## Sopimus
 

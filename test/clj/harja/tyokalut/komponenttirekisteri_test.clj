@@ -36,3 +36,27 @@
   (testing "Komentoriviargumentit muuttuvat suodattimiksi"
     (is (= {:id :nappi} (komponenttirekisteri/parsi-argumentit [":id" "nappi"])))
     (is (= {:ryhma :lomakkeet} (komponenttirekisteri/parsi-argumentit [":ryhma" "lomakkeet"])))))
+
+(deftest tulos-sisaltaa-komponentin-kutsuun-tarvittavat-tiedot
+  (let [{:keys [tulos]} (komponenttirekisteri/muotoile {:id :nappi})
+        nappi (first tulos)]
+    (is (= "harja.ui.napit/nappi" (:funktio nappi)))
+    (is (= "Nappi" (:nimi nappi)))
+    (is (string? (:kuvaus nappi)))))
+
+(deftest tulos-sisaltaa-variantit-ja-bootstrap-luokat
+  (is (seq (:variantit (first (:tulos (komponenttirekisteri/muotoile {:id :viesti}))))))
+  (is (seq (:bootstrap-luokat (first (:tulos (komponenttirekisteri/muotoile {:id :modal})))))))
+
+(deftest tuntematon-ryhma-antaa-virheen
+  (is (re-find #"ei-ole" (:virhe (komponenttirekisteri/muotoile {:ryhma :ei-ole})))))
+
+(deftest virheelliset-argumentit-tunnistetaan
+  (testing "tuntematon suodatin"
+    (is (re-find #":foo" (komponenttirekisteri/tarkista-argumentit [":foo" "bar"]))))
+  (testing "pariton argumenttimäärä"
+    (is (some? (komponenttirekisteri/tarkista-argumentit [":id"]))))
+  (testing "kelvolliset argumentit ja ei argumentteja"
+    (is (nil? (komponenttirekisteri/tarkista-argumentit [":id" "nappi"])))
+    (is (nil? (komponenttirekisteri/tarkista-argumentit [])))))
+
