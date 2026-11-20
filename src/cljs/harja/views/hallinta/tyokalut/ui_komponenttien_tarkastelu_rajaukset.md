@@ -27,7 +27,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 Uuden komponentin lisääminen:
 
 1. Lisää rekisterimerkintä `rekisteri.cljc`:ään (`:id`, `:ryhma`, `:nimi`, `:kuvaus`, `:funktio`, `:asetukset`, `:bootstrap-tila`).
-2. Lisää esikatselu ryhmän tiedostoon ja exporttaa se `esikatselut`-kartassa rekisterin `:id`:llä.
+2. Lisää esikatselu ryhmän tiedostoon `register!`-kutsulla (`rekisterointi.cljs`) rekisterin `:id`:llä. Kaksi rekisteröintiä samalla id:llä on virhe.
 3. Lisää sopimustesti, jos komponentti on shared-komponentti.
 4. `rekisteri/virheet`-testi epäonnistuu, jos rekisterin tiedot ovat puutteelliset.
 

@@ -4,7 +4,8 @@
             [harja.ui.komponentit :as ui]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]))
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
 (def ^:private urakkatyypit
   [{:arvo :hoito :nimi "Hoito"}
@@ -222,15 +223,31 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Valittu: " (if @valittu? "kyllä" "ei"))]])))
 
-(def esikatselut
-  {:suodatin suodatin
-   :valintaryhma valintaryhma
-   :lomake lomake
-   :rivi rivi
-   :tekstikentta tekstikentta
-   :numerokentta numerokentta
-   :sahkopostikentta sahkopostikentta
-   :puhelinkentta puhelinkentta
-   :valintaruutu valintaruutu
-   :radiokentta radiokentta
-   :checkbox-ryhma checkbox-ryhma})
+(register! :suodatin {:esikatselu suodatin})
+(defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
+  [ui/valintaryhma
+   (merge {:id "ui-simulaattori-urakkatyyppi"
+           :arvo @(:valinta tila)
+           :vaihda-fn (fn [arvo] (reset! (:valinta tila) arvo))
+           :ohje "Valinta tulee deklaratiivisen skenaarion vaihtoehdoista."}
+          (:asetukset solmu))])
+
+(defn- lomake-simulaattorissa [solmu _tila lapsi-fn]
+  [ui/pino {:data-cy "ui-simulaattori-lomake"}
+   (map-indexed (fn [indeksi lapsi]
+                  ^{:key indeksi}
+                  [lapsi-fn lapsi])
+                (:lapset solmu))])
+
+(register! :valintaryhma {:esikatselu valintaryhma
+                          :renderoi valintaryhma-simulaattorissa})
+(register! :lomake {:esikatselu lomake
+                    :renderoi lomake-simulaattorissa})
+(register! :rivi {:esikatselu rivi})
+(register! :tekstikentta {:esikatselu tekstikentta})
+(register! :numerokentta {:esikatselu numerokentta})
+(register! :sahkopostikentta {:esikatselu sahkopostikentta})
+(register! :puhelinkentta {:esikatselu puhelinkentta})
+(register! :valintaruutu {:esikatselu valintaruutu})
+(register! :radiokentta {:esikatselu radiokentta})
+(register! :checkbox-ryhma {:esikatselu checkbox-ryhma})

@@ -2,7 +2,8 @@
   (:require [reagent.core :as r]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]))
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
 (defn- livi-pudotusvalikko [komponentti]
   (r/with-let [valinta (r/atom "Urakat")]
@@ -21,5 +22,4 @@
       {:data-cy (kehys/ankkuri komponentti "-palauta")
        :luokka "nappi-toissijainen"}]]))
 
-(def esikatselut
-  {:livi-pudotusvalikko livi-pudotusvalikko})
+(register! :livi-pudotusvalikko {:esikatselu livi-pudotusvalikko})

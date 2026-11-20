@@ -4,7 +4,8 @@
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
             [harja.ui.primitiivit.viesti :as viesti-primitiivit]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]))
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
 (defn- panel [komponentti]
   [kehys/kortti komponentti
@@ -74,9 +75,9 @@
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
       (if @auki? "Tila: auki" "Tila: kiinni")]]))
 
-(def esikatselut
-  {:dropdown-panel dropdown-panel
-   :tabs tabs
-   :navbar navbar
-   :viesti viesti
-   :modal modaali})
+(register! :dropdown-panel {:esikatselu dropdown-panel})
+(register! :tabs {:esikatselu tabs})
+(register! :navbar {:esikatselu navbar})
+(register! :viesti {:esikatselu viesti})
+(register! :modal {:esikatselu modaali})
+(register! :panel {:esikatselu panel})

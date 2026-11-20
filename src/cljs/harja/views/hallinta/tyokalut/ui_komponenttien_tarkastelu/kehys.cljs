@@ -99,7 +99,7 @@
       [:dt "Asetukset"]
       [:dd [asetukset-taulukko asetukset]]
       [:dt "Suositus"]
-      [:dd [:span {:data-cy "ui-komponenttien-tarkastelu-suositus"} (name (:suositus komponentti))]]
+      [:dd [:span {:data-cy "ui-komponenttien-tarkastelu-suositus"} (some-> (:suositus komponentti) name)]]
       [:dt "Korvaa"]
       [:dd (if (seq (:korvaa komponentti))
              (str/join ", " (:korvaa komponentti))
@@ -109,7 +109,3 @@
       [:dt "DOM-ankkuri"]
       [:dd [:code (str "data-cy=" (rekisteri/ankkuri komponentti))]]]]
     lapset))
-
-(defn esikatselua-ei-ole [komponentti]
-  [kortti komponentti
-   [:p "Komponentti on rekisterissä, mutta sille ei ole esikatselua. Lisää esikatselu tämän id:n kohdalle."]])

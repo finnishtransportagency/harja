@@ -1,7 +1,8 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.gridit
   (:require [reagent.core :as r]
             [harja.ui.grid :as grid]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]))
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
 (def ^:private sarakkeet
   [{:otsikko "Nimi" :nimi :nimi :leveys 2}
@@ -39,6 +40,5 @@
         {:otsikko "Yks." :nimi :yksikko :muokattava? (constantly false) :leveys 0.5}]
        rivit]]]))
 
-(def esikatselut
-  {:perusgrid perusgrid
-   :muokkausgrid muokkausgrid})
+(register! :perusgrid {:esikatselu perusgrid})
+(register! :muokkausgrid {:esikatselu muokkausgrid})

@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.palautteet
   (:require [harja.ui.yleiset :as yleiset]
-            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]))
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
 (defn- ajax-loader [komponentti]
   [kehys/kortti komponentti
@@ -25,7 +26,6 @@
              :data-cy (kehys/ankkuri komponentti "-" (name tyyppi))}
        [yleiset/info-laatikko tyyppi (str "Esimerkkiviesti: " (name tyyppi))]])]])
 
-(def esikatselut
-  {:ajax-loader ajax-loader
-   :vihje vihje
-   :info-laatikko info-laatikko})
+(register! :ajax-loader {:esikatselu ajax-loader})
+(register! :vihje {:esikatselu vihje})
+(register! :info-laatikko {:esikatselu info-laatikko})

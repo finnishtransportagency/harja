@@ -2,8 +2,8 @@
   "Rekisteröidyistä shared-komponenteista rakennettu rajattu sivusimulaattori."
   (:require [reagent.core :as r]
             [harja.ui.komponentit :as ui]
-            [harja.ui.napit :as napit]
-            [harja.ui.komponentit.simulaattori :as sopimus]))
+            [harja.ui.komponentit.simulaattori :as sopimus]
+            [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :as rekisterointi]))
 
 (def ^:private esimerkkipuu
   [{:komponentti :lomake
@@ -40,28 +40,8 @@
     [puun-rakenne esimerkkipuu]]])
 
 (defn- solmun-sisalto [solmu tila]
-  (case (:komponentti solmu)
-    :lomake
-    [ui/pino {:data-cy "ui-simulaattori-lomake"}
-     (map-indexed (fn [indeksi lapsi]
-                    ^{:key indeksi}
-                    [solmun-sisalto lapsi tila])
-                  (:lapset solmu))]
-
-    :valintaryhma
-    [ui/valintaryhma
-     (merge {:id "ui-simulaattori-urakkatyyppi"
-             :arvo @(:valinta tila)
-             :vaihda-fn (fn [arvo] (reset! (:valinta tila) arvo))
-             :ohje "Valinta tulee deklaratiivisen skenaarion vaihtoehdoista."}
-            (:asetukset solmu))]
-
-    :nappi
-    [napit/nappi
-     (get-in solmu [:asetukset :teksti])
-     (fn [] (reset! (:tila tila) :onnistui))
-     {:data-cy "ui-simulaattori-tallenna"}]
-
+  (if-let [renderoi (rekisterointi/renderoi (:komponentti solmu))]
+    (renderoi solmu tila #(solmun-sisalto % tila))
     [:p {:role "alert"} (str "Komponenttia ei voi renderöidä: " (:komponentti solmu))]))
 
 (defn- validointi []
