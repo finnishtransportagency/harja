@@ -59,4 +59,3 @@
   (testing "kelvolliset argumentit ja ei argumentteja"
     (is (nil? (komponenttirekisteri/tarkista-argumentit [":id" "nappi"])))
     (is (nil? (komponenttirekisteri/tarkista-argumentit [])))))
-

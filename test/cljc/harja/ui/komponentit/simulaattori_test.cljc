@@ -68,4 +68,3 @@
   (testing "lapsi ei ole map"
     (is (= ["Solmun pitää olla map: 1"]
            (simulaattori/virheet [{:komponentti :lomake :lapset [1]}])))))
-

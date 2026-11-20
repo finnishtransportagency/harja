@@ -130,4 +130,3 @@
             :let [lyhyt (str/replace funktio #"^harja\.ui\." "")
                   lyhyt (str/replace lyhyt "." "/")]]
       (is (not (some #{lyhyt} korvaa)) funktio))))
-
