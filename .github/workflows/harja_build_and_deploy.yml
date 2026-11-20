@@ -202,6 +202,9 @@ jobs:
   build-and-cache-test-image:
     name: "Build and cache test Docker image"
     runs-on: ubuntu-latest
+    # Build-stepin timeout 10 min katkaisee jumiin jääneen apt-get:n.
+    # Tämä job-tason timeout kattaa myös tarballin uploadin.
+    timeout-minutes: 20
     needs: build-harja
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -232,8 +235,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Mitätöi build cachen itse asennetuille paketeille viikottain
+      - name: Laske cache-bust-week
+        id: cache-bust
+        run: echo "week=$(date +%G-%V)" >> "$GITHUB_OUTPUT"
+
       - name: Build and tag Harja app test image
         id: build-test-image
+        timeout-minutes: 10 # Katkaisee jumiin jääneen apt-get:n nopeasti
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -244,6 +253,8 @@ jobs:
           file: ${{ env.DOCKERFILE_PATH }}
           platforms: ${{ env.BUILD_PLATFORMS }}
           tags: harja_buildtest:${{ env.IMAGE_TAG }}
+          # Viikoittainen cache-bust pakottaa päivittämään apt-paketit ja AWS CLI:n (ks. Dockerfile).
+          build-args: CACHE_BUST_WEEK=${{ steps.cache-bust.outputs.week }}
           labels: |
             "commit=${{ github.sha }}"
             org.opencontainers.image.title=harja_buildtest

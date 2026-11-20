@@ -33,10 +33,15 @@ RUN printf '%s\n' \
       'APT::Update::Error-Mode "any";' \
       > /etc/apt/apt.conf.d/80-harja-network
 
+# CACHE_BUST_WEEK (ISO-viikko) pakottaa apt-paketit ja uusimman AWS CLI:n alempana päivittymään viikoittain,
+# koska ARG:n arvon muuttaminen mitätöi cachen tästä layeristä ja kaikista sitä seuraavista layereistä.
+# Tyhjä oletusarvo = ei viikoittaista päivitystä (esim. ECS-deploy buildaa ilman cachea).
+ARG CACHE_BUST_WEEK=""
+
 # Asenna aikavyöhykedata ja apurit
 # Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
-RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
-    apt-get update \
+RUN echo "Cache bust week: ${CACHE_BUST_WEEK}" \
+    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get update \
     && apt-get install -y --no-install-recommends \
         tzdata \
         bash \
