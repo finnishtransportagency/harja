@@ -15,3 +15,43 @@
   (testing "lomake ei voi sisältää nappia suoraan sivun juurena"
     (is (= [":nappi: vanhempi=:sivu ei ole sallittu"]
            (simulaattori/virheet [{:komponentti :nappi}])))))
+
+(defn- valintaryhma-asetuksilla [asetukset]
+  [{:komponentti :lomake
+    :lapset [{:komponentti :valintaryhma
+              :asetukset asetukset}]}])
+
+(deftest tuntematon-asetus-hylataan
+  (is (= ["valintaryhma: tuntematon asetus :ei-ole"]
+         (simulaattori/virheet (valintaryhma-asetuksilla {:ei-ole "x"})))))
+
+(deftest suojattu-asetus-hylataan
+  (testing "komponentin omistamia avaimia ei voi ylikirjoittaa"
+    (doseq [avain [:id :arvo :vaihda-fn]]
+      (is (= [(str "valintaryhma: suojattu asetus " avain " ei ole sallittu")]
+             (simulaattori/virheet (valintaryhma-asetuksilla {avain "x"})))
+          (str "avain " avain)))))
+
+(deftest funktio-hylataan-asetuksessa
+  (is (= ["valintaryhma: asetus :otsikko on funktio, ei sallittu"]
+         (simulaattori/virheet (valintaryhma-asetuksilla {:otsikko (fn [] "x")})))))
+
+(deftest symboli-hylataan-asetuksessa
+  (is (= ["valintaryhma: asetus :otsikko on symboli, ei sallittu"]
+         (simulaattori/virheet (valintaryhma-asetuksilla {:otsikko 'puhelin})))))
+
+(deftest funktio-hylataan-sisempaan-arvoon
+  (is (= ["valintaryhma: asetus :vaihtoehdot on funktio, ei sallittu"]
+         (simulaattori/virheet
+           (valintaryhma-asetuksilla {:vaihtoehdot [{:arvo :hoito :nimi (fn [] "x")}]})))))
+
+#?(:clj
+   (deftest tagattu-literaali-hylataan
+     (is (= ["valintaryhma: asetus :otsikko on tagattu literaali, ei sallittu"]
+            (simulaattori/virheet
+              (valintaryhma-asetuksilla {:otsikko (tagged-literal 'foo 1)}))))))
+
+(deftest kelvolliset-asetukset-hyvaksytaan
+  (is (simulaattori/kelvollinen?
+        (valintaryhma-asetuksilla {:otsikko "Urakkatyyppi"
+                                   :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}]}))))
