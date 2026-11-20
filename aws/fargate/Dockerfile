@@ -20,20 +20,24 @@ RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 RUN mkdir -p /tmp && chmod 1777 /tmp
 VOLUME ["/tmp"]
 
+# Apt-asetukset verkkovirheiden resilienssien kasvattamiseksi:
+# - Retries: Uudelleenyritykset kasvavalla viiveellä
+# - Timeout: Katkaisee jumiutuneen yhteyden
+#   Huom: Ei katkaise hidasta yhteyttä. Workflow:n `timeout-minutes` varmistaa, että build ei jää jumiin.
+# - Update::Error-Mode=any: apt-get update failaa, jos jonkin indeksin haku epäonnistuu.
+#   Oletuksena tulee vain varoitus, jolloin virhe näkyy vasta install-vaiheessa harhaanjohtavana.
+RUN printf '%s\n' \
+      'Acquire::Retries "5";' \
+      'Acquire::http::Timeout "30";' \
+      'Acquire::https::Timeout "30";' \
+      'APT::Update::Error-Mode "any";' \
+      > /etc/apt/apt.conf.d/80-harja-network
+
 # Asenna aikavyöhykedata ja apurit
 # Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
-# Huom: Acquire::http::Timeout ei katkaise hidasta yhteyttä. Workflow:n `timeout-minutes` varmistaa, että build ei jää jumiin.
 RUN DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
-    apt-get  \
-      -o Acquire::Retries=3 \
-      -o Acquire::http::Timeout=30 \
-      -o Acquire::https::Timeout=30 \
-      update \
-    && apt-get  \
-      -o Acquire::Retries=3 \
-      -o Acquire::http::Timeout=30 \
-      -o Acquire::https::Timeout=30 \
-      install -y \
+    apt-get update \
+    && apt-get install -y --no-install-recommends \
         tzdata \
         bash \
         curl \
