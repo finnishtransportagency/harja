@@ -171,8 +171,8 @@
                          ;;   Pakotetaan commons-codec korkeampaan versioon
                          [commons-codec "1.23.0"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.4"]
-                         [com.fasterxml.jackson.core/jackson-core "2.22.4"]
+                         [tools.jackson.core/jackson-core "3.3.0"]
+                         [com.fasterxml.jackson.core/jackson-core "2.23.0"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
                          [com.google.code.gson/gson "2.15.0"]]
 
