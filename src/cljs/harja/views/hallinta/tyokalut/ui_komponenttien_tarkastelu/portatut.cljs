@@ -27,10 +27,9 @@
 
 (defn- navbar [komponentti]
   [kehys/kortti komponentti
-   [:p "Header, vasen/oikea-itemit ja mobiilivaihtaja säilyvät."
-    ]
+   [:p "Header, vasen/oikea-itemit ja mobiilivaihtaja säilyvät."]
    [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
-    [bootstrap/navbar {}
+    [bootstrap/navbar {:data-cy (kehys/ankkuri komponentti "-navbar")}
      [:span "Harja"]
      [:a {:href "#"} "Vasen linkki"]
      :right
