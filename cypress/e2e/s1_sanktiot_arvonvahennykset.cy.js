@@ -326,6 +326,8 @@ describe('Arvonvähennykset - MHU24-urakka - ennen 2026 hoitovuotta', () => {
         // Sanktion laji
         cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä (tehtäväkohtainen sanktio)'});
 
+        // Manuaalinen summakenttä näytetään vasta, kun tyyppi on valittu.
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tyyppi');
 
         // Kun arvonvähennyslomakkeen MHU24-tarkistus on otettu pois käytöstä,
         // tavoitehinnan valinta näkyy myös MHU24-urakalla.
@@ -393,6 +395,3 @@ describe('Arvonvähennykset - MHU24-urakka - ennen 2026 hoitovuotta', () => {
         });
     });
 });
-
-
-
