@@ -7,16 +7,38 @@ SELECT
   yt.maara,
   yt.yksikko,
   yt.yksikkohinta,
+  yt.indeksi_kaytossa,
+  yt.indeksikorjattu_yksikkohinta,
   yt.tehtava,
   yt.urakka,
   yt.sopimus,
   yt.arvioitu_kustannus,
   yt.kuukausi,
   yt.vuosi,
+  viimeisin.viimeisin_muokkaus,
+  viimeisin.viimeisin_muokkaaja,
   tk.id   AS tehtavan_id,
   tk.nimi AS tehtavan_nimi
 FROM yksikkohintainen_tyo yt
   LEFT JOIN tehtava tk ON yt.tehtava = tk.id
+  LEFT JOIN LATERAL (
+    SELECT
+        GREATEST(COALESCE(yt2.muokattu, yt2.luotu), yt2.luotu)
+                AS viimeisin_muokkaus,
+        CASE
+            WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
+            ELSE CONCAT(k.etunimi, ' ', k.sukunimi)
+            END AS viimeisin_muokkaaja
+    FROM yksikkohintainen_tyo yt2
+             LEFT JOIN kayttaja k
+                       ON COALESCE(
+                              NULLIF(TRIM(yt2.muokkaaja), ''),
+                              yt2.luoja::text
+                          ) = k.id::text
+    WHERE yt2.urakka = yt.urakka AND (yt2.muokattu IS NOT NULL OR yt2.luotu IS NOT NULL)
+    ORDER BY viimeisin_muokkaus DESC NULLS LAST, yt2.id DESC
+        LIMIT 1
+) viimeisin ON TRUE
 WHERE urakka = :urakka
 ORDER BY tk.nimi;
 
@@ -39,12 +61,14 @@ ORDER BY tpk.nimi;
 -- name: paivita-urakan-yksikkohintainen-tyo!
 -- Päivittää urakan hoitokauden yksikkohintaiset tyot
 UPDATE yksikkohintainen_tyo
-SET maara              = :maara,
-    yksikko            = :yksikko,
-    yksikkohinta       = :yksikkohinta,
-    arvioitu_kustannus = :arvioitu_kustannus,
-    muokkaaja          = :kayttaja,
-    muokattu           = current_timestamp
+SET maara                           = :maara,
+    yksikko                         = :yksikko,
+    yksikkohinta                    = :yksikkohinta,
+    indeksi_kaytossa                = :indeksi_kaytossa,
+    indeksikorjattu_yksikkohinta    = :indeksikorjattu_yksikkohinta,
+    arvioitu_kustannus              = :arvioitu_kustannus,
+    muokkaaja                       = :kayttaja,
+    muokattu                        = current_timestamp
 WHERE urakka = :urakka
   AND sopimus = :sopimus
   AND tehtava = :tehtava
@@ -55,10 +79,12 @@ WHERE urakka = :urakka
 INSERT INTO yksikkohintainen_tyo
 (maara, yksikko, yksikkohinta,
  urakka, sopimus, tehtava,
- alkupvm, loppupvm, luoja, arvioitu_kustannus, luotu, kuukausi, vuosi)
+ alkupvm, loppupvm, luoja, arvioitu_kustannus, luotu, kuukausi, vuosi,
+ indeksi_kaytossa, indeksikorjattu_yksikkohinta)
 VALUES (:maara, :yksikko, :yksikkohinta,
         :urakka, :sopimus, :tehtava,
-        :alkupvm, :loppupvm, :kayttaja, :arvioitu_kustannus, current_timestamp, :kuukausi, :vuosi);
+        :alkupvm, :loppupvm, :kayttaja, :arvioitu_kustannus, current_timestamp,
+        :kuukausi, :vuosi, :indeksi_kaytossa, :indeksikorjattu_yksikkohinta);
 
 -- name: merkitse-kustannussuunnitelmat-likaisiksi!
 -- Merkitsee yksikköhintaisia töitä vastaavat kustannussuunnitelmat likaisiksi: lähtetetään seuraavassa päivittäisessä lähetyksessä

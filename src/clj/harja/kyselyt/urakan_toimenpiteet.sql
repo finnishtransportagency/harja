@@ -129,6 +129,11 @@ SELECT tpi.id                    AS tpi_id,
        t4.voimassaolo_alkuvuosi  AS t4_voimassaolo_alkuvuosi,
        t4.voimassaolo_loppuvuosi AS t4_voimassaolo_loppuvuosi,
        t4.jarjestys              AS t4_jarjestys,
+       tr.id                     AS tehtavaryhma_id,
+       tr.nimi                   AS tehtavaryhma_nimi,
+       tr.jarjestys              AS tehtavaryhma_jarjestys,
+       tro.id                    AS tehtavaryhmaotsikko_id,
+       tro.otsikko               AS tehtavaryhmaotsikko,
        t3.id                     AS t3_id,
        t3.koodi                  AS t3_koodi,
        t3.nimi                   AS t3_nimi,
@@ -139,6 +144,10 @@ SELECT tpi.id                    AS tpi_id,
        t1.koodi                  AS t1_koodi,
        t1.nimi                   AS t1_nimi
 FROM tehtava t4
+         LEFT JOIN tehtavaryhma tr
+              ON tr.id = t4.tehtavaryhma
+         LEFT JOIN tehtavaryhmaotsikko tro
+              ON tro.id = tr.tehtavaryhmaotsikko_id
          LEFT JOIN toimenpide t3 ON t3.id = t4.emo
          LEFT JOIN toimenpide t2 ON t2.id = t3.emo
          LEFT JOIN toimenpide t1 ON t1.id = t2.emo
@@ -152,7 +161,11 @@ WHERE t4.hinnoittelu @> ARRAY ['yksikkohintainen'::hinnoittelutyyppi]
                       AND poistettu IS FALSE)
   AND (t4.voimassaolo_alkuvuosi IS NULL OR t4.voimassaolo_alkuvuosi <= date_part('year', u.alkupvm)::INTEGER)
   AND (t4.voimassaolo_loppuvuosi IS NULL OR t4.voimassaolo_loppuvuosi >= date_part('year', u.alkupvm)::INTEGER)
-  AND (t4.poistettu IS NOT TRUE OR t4.id IN (SELECT DISTINCT tehtava FROM yksikkohintainen_tyo WHERE urakka = :urakka));
+  AND (t4.poistettu IS NOT TRUE OR t4.id IN (SELECT DISTINCT tehtava FROM yksikkohintainen_tyo WHERE urakka = :urakka))
+ORDER BY tro.id,
+         tr.id,
+         t4.jarjestys,
+         t4.nimi;
 
 -- name: hae-urakan-muutoshintaiset-toimenpiteet-ja-tehtavat
 -- Hakee kaikki urakan 3. ja 4. tason toimenpiteet jotka eivät ole kokonaishintaisia
