@@ -6,7 +6,6 @@
             [clojure.java.jdbc :as jdbc]
             [harja.kyselyt.indeksit :as q]
             [harja.kyselyt.budjettisuunnittelu :as budjettisuunnittelu-q]
-            [harja.pvm :as pvm]
             [harja.id :refer [id-olemassa?]]
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.konversio :as konv]
@@ -26,11 +25,19 @@
                  indeksit)))
 
 (defn- zippaa [indeksit-vuosittain]
-  (zipmap (map first indeksit-vuosittain)
-          (map (fn [[_ kuukaudet]]
-                 (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
-                        :vuosi (:vuosi (first kuukaudet))))
-               indeksit-vuosittain)))
+  (let [indeksit (zipmap (map first indeksit-vuosittain)
+                         (map (fn [[_ kuukaudet]]
+                                (assoc (zipmap (map :kuukausi kuukaudet) (map #(float (:arvo %)) kuukaudet))
+                                       :vuosi (:vuosi (first kuukaudet))))
+                              indeksit-vuosittain))]
+    (merge indeksit
+           (into {}
+                 (for [[[nimi _] kuukaudet]
+                       indeksit-vuosittain
+                       :let [rivi (first kuukaudet)]
+                       [avain arvo] [[:viimeksi-muokattu (:viimeksi_muokattu rivi)]
+                                     [:viimeisin-muokkaaja (:viimeisin_muokkaaja rivi)]]]
+                   [[nimi avain] arvo])))))
 
 (defn hae-indeksit
   "Palvelu, joka palauttaa indeksit."
@@ -105,12 +112,12 @@
           (doseq [kk paivitettavat-eri-sisalto]
             (log/debug "Päivitä indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/paivita-indeksi! c
-                                (get indeksivuosi kk) nimi vuosi kk)
+                                (get indeksivuosi kk) (:id user) nimi vuosi kk)
             (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk lisattavat]
             (log/debug "Luo indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})
             (q/luo-indeksi<! c
-                             nimi vuosi kk (get indeksivuosi kk))
+                             nimi vuosi kk (get indeksivuosi kk) (:id user))
             (indeksi-muuttunut c {:nimi nimi :vuosi vuosi :kuukausi kk}))
           (doseq [kk poistettavat]
             (log/debug "Poista indeksi" {:nimi nimi :vuosi vuosi :kuukausi kk :arvo (get indeksivuosi kk)})

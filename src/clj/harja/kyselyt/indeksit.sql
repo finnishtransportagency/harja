@@ -1,8 +1,26 @@
 -- name: listaa-indeksit
 -- Hakee kaikki indeksit
-SELECT nimi, vuosi, kuukausi, arvo
-  FROM indeksi
-  	ORDER BY nimi, vuosi, kuukausi;
+WITH viimeisin AS (
+    SELECT DISTINCT ON (nimi)
+           nimi,
+           COALESCE(muokattu, luotu) AS viimeksi_muokattu,
+           COALESCE(muokkaaja, luoja) AS kayttaja_id
+      FROM indeksi
+     WHERE muokattu IS NOT NULL OR luotu IS NOT NULL
+     ORDER BY nimi, viimeksi_muokattu DESC, vuosi DESC, kuukausi DESC
+)
+SELECT i.nimi,
+       i.vuosi,
+       i.kuukausi,
+       i.arvo,
+       v.viimeksi_muokattu,
+       CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'
+            ELSE NULLIF(CONCAT_WS(' ', k.etunimi, k.sukunimi), '')
+       END AS viimeisin_muokkaaja
+  FROM indeksi i
+  LEFT JOIN viimeisin v ON v.nimi = i.nimi
+  LEFT JOIN kayttaja k ON k.id = v.kayttaja_id
+ ORDER BY i.nimi, i.vuosi, i.kuukausi;
 
 -- name: hae-indeksi
 -- Hakee indeksin nimellä
@@ -19,13 +37,15 @@ SELECT arvo, nimi
 
 -- name: luo-indeksi<!
 -- Tekee uuden indeksin
-INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo)
-     VALUES (:nimi, :vuosi, :kuukausi, :arvo);
+INSERT INTO indeksi (nimi, vuosi, kuukausi, arvo, luoja, luotu)
+     VALUES (:nimi, :vuosi, :kuukausi, :arvo, :kayttaja, NOW());
 
 -- name: paivita-indeksi!
 -- Päivittää indeksin tiedot
 UPDATE indeksi
-   SET arvo=:arvo
+   SET arvo=:arvo,
+       muokkaaja=:kayttaja,
+       muokattu=NOW()
  WHERE nimi = :nimi AND vuosi = :vuosi AND kuukausi = :kuukausi
 
 -- name: poista-indeksi!

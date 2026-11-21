@@ -1,0 +1,5 @@
+ALTER TABLE indeksi
+    ADD COLUMN luoja INTEGER,
+    ADD COLUMN luotu TIMESTAMP,
+    ADD COLUMN muokkaaja INTEGER,
+    ADD COLUMN muokattu TIMESTAMP;
