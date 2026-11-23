@@ -652,8 +652,8 @@
     (log/debug "Ei oikeutta päivittää perustietoja.")))
 
 (defn- tallenna-pot-mukana-tulevat-aikataulutiedot
-  [db user {:keys [paallystyskohde-id perustiedot]} urakka-id]
-  (when-not (:valmispvm-kohde perustiedot)
+  [db user {:keys [paallystyskohde-id perustiedot]} urakka-id luonnos?]
+  (when (and (not luonnos?) (not (:valmispvm-kohde perustiedot)))
     (throw (IllegalArgumentException. (cheshire/encode {:perustiedot "Kohteen valmistumispvm on pakollinen tieto"}))))
   (yllapitokohteet-q/tallenna-paallystyskohteen-aloitus-ja-lopetus! db
                                                                     {:id paallystyskohde-id
@@ -783,7 +783,7 @@
     :else (paikkaus-domain/massamaara-ja-pinta-ala->massamenekki kokonaismassamaara pinta_ala)))
 
 (defn- tallenna-pot2-paallystekerros
-  [db paallystysilmoitus pot2-id paivitetyt-kohdeosat]
+  [db paallystysilmoitus pot2-id paivitetyt-kohdeosat luonnos?]
   (try
     (doseq [rivi (->> paallystysilmoitus
                      :paallystekerros
@@ -793,12 +793,18 @@
            kohdeosan-id (or (:kohdeosa-id rivi) (yllapitokohteet-domain/uuden-kohdeosan-id rivi paivitetyt-kohdeosat))
            params (merge rivi
                          {:kohdeosa_id kohdeosan-id
+                          ;; Luonnoksella nämä voivat puuttua riviltä kokonaan, mutta kyselyn parametrien täytyy olla mukana
+                          :leveys (:leveys rivi)
+                          :kokonaismassamaara (:kokonaismassamaara rivi)
                           :pinta_ala (:pinta_ala rivi)
                           :massamenekki (pot2-massamenekki rivi)
                           :piennar (boolean (:piennar rivi)) ;; Voi jäädä tulematta frontilta
                           :lisatieto (:lisatieto rivi)
                           :pot2_id pot2-id
-                          :materiaali (if (and (nil? (:materiaali rivi))
+                          ;; Luonnoksella materiaali saa puuttua, koska sarake on tietokannassa nullable.
+                          ;; Puute estetään vasta, kun ilmoitus lähetetään tarkistettavaksi.
+                          :materiaali (if (and (not luonnos?)
+                                               (nil? (:materiaali rivi))
                                                (not= pot2-domain/+kulutuskerros-toimenpide-karhinta+ (:toimenpide rivi)))
                                         (throw (IllegalArgumentException.
                                                  (str "Materiaali on valinnainen vain jos toimenpide on KAR, kohdeosa-id = "
@@ -811,7 +817,7 @@
       (throw (IllegalArgumentException. (cheshire/encode {:kulutuskerros (ex-message t)}))))))
 
 (defn- tallenna-pot2-alustarivit
-  [db paallystysilmoitus pot2-id]
+  [db paallystysilmoitus pot2-id luonnos?]
   (let [alustarivit (:alusta paallystysilmoitus)
         idt-ennen-tallennusta (into #{} (map :pot2a_id (q/hae-pot2-alustarivit-ilmoitukseen db {:pot2_id pot2-id})))
         hyotykuorman-idt (into #{} (map :pot2a_id alustarivit))
@@ -824,7 +830,11 @@
       (let [annetut-lisaparams (pot2-domain/alusta-kaikki-lisaparams rivi)
             toimenpide (:toimenpide rivi)
             [sallittut-avaimet pakolliset-avaimet] (pot2-domain/alusta-sallitut-ja-pakolliset-lisaavaimet rivi)
-            puuttuvat-pakolliset-avaimet (set/difference pakolliset-avaimet (-> annetut-lisaparams keys set))
+            ;; Pakollisten lisätietojen puute estetään vasta lähetettäessä tarkistettavaksi.
+            ;; Ylimääräiset lisätiedot hylätään aina, koska ne ovat virheellistä dataa.
+            puuttuvat-pakolliset-avaimet (if luonnos?
+                                           #{}
+                                           (set/difference pakolliset-avaimet (-> annetut-lisaparams keys set)))
             ylimaaraiset-avaimet (pot2-domain/alusta-ylimaaraiset-lisaparams-avaimet rivi)
             formatoi-avaimet (fn [avaimet]
                               (s/join ", " (map (fn [avain]
@@ -903,6 +913,7 @@
                             (pot-domain/paattele-ilmoituksen-tila
                               (get-in paallystysilmoitus [:perustiedot :valmis-kasiteltavaksi])
                               (= :hyvaksytty (get-in paallystysilmoitus [:perustiedot :tekninen-osa :paatos]))))
+            luonnos? (= :aloitettu seuraava-tila)
             tr-osoite (-> paallystysilmoitus :perustiedot :tr-osoite)
             ali-ja-muut-kohteet (remove :poistettu (if pot2?
                                                      (-> paallystysilmoitus :paallystekerros)
@@ -913,7 +924,7 @@
 
         ;; Validoidaan data ainoastaan silloin, kun päällystysilmoituksen seuraava tila on jotain muuta kuin "aloitettu".
         ;;  Eli, päällystysilmoitus on jo kerran tallennettu kantaan ja se olisi siirtymässä tilaan valmis tai lukittu.
-        (when (not= seuraava-tila :aloitettu)
+        (when-not luonnos?
           (let [virheviestit (yllapitokohteet-domain/validoi-kaikki-backilla
                                db paallystyskohde-id urakka-id vuosi tr-osoite ali-ja-muut-kohteet alustatoimet)]
             (when (seq virheviestit)
@@ -930,7 +941,7 @@
               _ (when-let [virhe (:validointivirheet paivitetyt-kohdeosat)]
                   (throw (IllegalArgumentException. (cheshire/encode virhe))))
               _ (when-not paikkauskohde?
-                  (tallenna-pot-mukana-tulevat-aikataulutiedot db user paallystysilmoitus urakka-id))
+                  (tallenna-pot-mukana-tulevat-aikataulutiedot db user paallystysilmoitus urakka-id (and pot2? luonnos?)))
               tallennettava-kohde (-> (:perustiedot paallystysilmoitus)
                                     (select-keys #{:tr-numero :tr-ajorata :tr-kaista :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys :kohdenumero :kohdenimi :tunnus})
                                     (clj-set/rename-keys {:kohdenimi :nimi}))
@@ -955,9 +966,10 @@
                    :muokkaaja (:id user)})
               pot2-paallystekerros (when pot2? (tallenna-pot2-paallystekerros db paallystysilmoitus
                                                  paallystysilmoitus-id
-                                                 paivitetyt-kohdeosat))
+                                                 paivitetyt-kohdeosat
+                                                 luonnos?))
               pot2-alustarivit (when pot2? (tallenna-pot2-alustarivit db paallystysilmoitus
-                                             paallystysilmoitus-id))
+                                             paallystysilmoitus-id luonnos?))
               tuore-paallystysilmoitus (hae-paallystysilmoitus paallystyskohde-id)]
 
 

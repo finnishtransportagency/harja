@@ -238,7 +238,9 @@
          (seq alustan-tekstit)
          (some? perustietojen-virheet))
       [yleiset/info-laatikko :varoitus
-        "Lomakkeessa on virheitä tai varoituksia. Luonnoksen voi tallentaa niistä huolimatta, kunhan tieosoite on täytetty. Virheet ja varoitukset tulee korjata ennen lähettämistä tarkistettavaksi. "
+        "Lomakkeessa on virheitä tai varoituksia. Luonnoksen voi tallentaa niistä huolimatta,
+         kunhan tieosoite sekä jokaisen rivin toimenpide ja tieosoite on täytetty.
+         Virheet ja varoitukset tulee korjata ennen lähettämistä tarkistettavaksi. "
         [:<>
          (when (some? perustietojen-virheet)
            [:span
@@ -318,11 +320,16 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj [] (-> perustiedot ::lomake/virheet))
               puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
-              ;; Luonnoksen saa tallentaa puutteista huolimatta, mutta tieosoite on pakollinen myös luonnoksessa
-              tieosoite-puuttuu? (some nil? (vals (select-keys perustiedot tr/paaluvali-avaimet)))
+              ;; Luonnoksen saa tallentaa puutteista huolimatta, mutta tieosoite sekä rivien
+              ;; tietokannan vaatimat pakolliset tiedot (esim. toimenpide) tarvitaan myös luonnoksessa
+              tieosoite-puuttuu? (pot2-domain/rivilta-puuttuu-luonnoksen-pakollisia? tr/paaluvali-avaimet perustiedot)
+              rivien-pakolliset-puuttuvat? (pot2-domain/luonnoksen-tallennus-estetty-riveilla?
+                                             (vals @pot2-tiedot/kohdeosat-atom)
+                                             (vals @pot2-tiedot/alustarivit-atom))
               voi-tallentaa? (and
                                (not= tila :lukittu)
-                               (not tieosoite-puuttuu?))
+                               (not tieosoite-puuttuu?)
+                               (not rivien-pakolliset-puuttuvat?))
               voi-lahettaa-tarkistettavaksi? (and
                                                voi-tallentaa?
                                                (empty? (flatten (keep vals virheet)))

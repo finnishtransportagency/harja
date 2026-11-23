@@ -21,6 +21,27 @@
 (def +massamenekin-maksimi+ 50)
 (def +tieosuushaun-rajoitus+ 200)
 
+;; Tietokannan NOT NULL -rajoitteet. Näiden puuttuessa riviä ei voi tallentaa edes luonnokseen.
+(def luonnoksen-paallystekerrosrivin-pakolliset-avaimet
+  #{:toimenpide :tr-numero :tr-alkuosa :tr-alkuetaisyys :tr-loppuosa :tr-loppuetaisyys})
+(def luonnoksen-alustarivin-pakolliset-avaimet
+  (conj luonnoksen-paallystekerrosrivin-pakolliset-avaimet :tr-ajorata :tr-kaista))
+
+(defn rivilta-puuttuu-luonnoksen-pakollisia?
+  "Palauttaa true, jos jokin annetuista pakollisista avaimista puuttuu riviltä tai on nil."
+  [pakolliset-avaimet rivi]
+  (boolean (some #(nil? (get rivi %)) pakolliset-avaimet)))
+
+(defn luonnoksen-tallennus-estetty-riveilla?
+  "Palauttaa true, jos jollakin poistamattomalla päällystekerros- tai alustarivillä puuttuu
+  tietokannan vaatima pakollinen tieto."
+  [paallystekerrosrivit alustarivit]
+  (boolean
+    (or (some #(rivilta-puuttuu-luonnoksen-pakollisia? luonnoksen-paallystekerrosrivin-pakolliset-avaimet %)
+          (remove :poistettu paallystekerrosrivit))
+      (some #(rivilta-puuttuu-luonnoksen-pakollisia? luonnoksen-alustarivin-pakolliset-avaimet %)
+        (remove :poistettu alustarivit)))))
+
 (s/def ::urakka-id pos-int?)
 (s/def ::paallystyskohde-id pos-int?)
 (s/def ::tr-numero nat-int?)
