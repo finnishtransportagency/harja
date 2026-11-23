@@ -384,11 +384,18 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
 
         // Suolatoteumat
 
-        cy.intercept("POST", "**/tallenna-suolatoteumat").as("tallenna-suolatoteuma");
+        const suolatoteumienGrid = '[data-cy="talvisuolatoteumat-grid"]';
+        cy.intercept("GET", "**/hae-suolamateriaalit").as("hae-suolamateriaalit");
+        cy.intercept("POST", "**/hae-toteumien-lukitukset").as("hae-suolatoteumien-lukitukset");
         cy.intercept("POST", "**/hae-suolatoteumat").as("hae-suolatoteumat");
         cy.get("[data-cy=tabs-taso2-Talvisuola]").click();
         cy.contains("Talvisuolan käyttö", {timeout}).should("be.visible");
         cy.contains("Hae suolatoteumia tieosoiteväliltä", {timeout}).should("be.visible");
+
+        // Oletusaikavälin haku käyttää samaa palvelua kuin Hae-painike.
+        odotaOnnistunutVastausPalvelimelta("@hae-suolatoteumat");
+        odotaOnnistunutVastausPalvelimelta("@hae-suolamateriaalit");
+        odotaOnnistunutVastausPalvelimelta("@hae-suolatoteumien-lukitukset");
 
         // Hae toteumat aikaväliltä
         cy.get("span.valinnat div.dropdown").eq(0).within(() => {
@@ -401,12 +408,14 @@ describe("Välikatselmuksen päätös lukitsee ensimmäisen hoitovuoden", () => 
         cy.get(".suolatoteumat div.aikavali-valinnat input").eq(1).clear();
         cy.get(".suolatoteumat div.aikavali-valinnat input").eq(1).type("01.11.2026");
         cy.get(".suolatoteumat button").contains("Hae").click();
-        cy.wait("@hae-suolatoteumat", {timeout});
+        odotaOnnistunutVastausPalvelimelta("@hae-suolatoteumat");
+        cy.get(suolatoteumienGrid).contains("tbody td", "Yhteenveto", {timeout}).should("be.visible");
 
-        cy.get(".suolatoteumat button").contains("Muokkaa").click();
-        cy.get(".suolatoteumat table.grid tbody").then(($tbody) => {
+        cy.get(suolatoteumienGrid).contains("button", "Muokkaa").click();
+        cy.get(`${suolatoteumienGrid} button.grid-lisaa`, {timeout}).should("be.visible");
+        cy.get(`${suolatoteumienGrid} table.grid tbody`).then(($tbody) => {
             const muokkausrivienMaara = $tbody.find("tr.muokataan").length;
-            cy.get(".suolatoteumat button.grid-lisaa", {timeout})
+            cy.get(`${suolatoteumienGrid} button.grid-lisaa`, {timeout})
                 .should("be.visible")
                 .and("be.enabled")
                 .click();
