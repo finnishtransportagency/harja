@@ -42,10 +42,10 @@
   (jdbc/with-db-transaction [c db]
                             (let [urakkatyyppi (u-q/hae-urakan-tyyppi db {:urakka urakka-id})
                                   urakka (first (u-q/hae-urakan-tiedot db urakka-id))
+                                  urakan-indeksikertoimet (indeksi-kyselyt/hae-urakan-indeksikertoimet db urakka-id)
                                   nykyinen-vuosi (when-let [ensimmainen-tyo (first tyot)]
-                                                   (if (= "teiden-hoito" urakkatyyppi)
-                                                     (:vuosi ensimmainen-tyo)
-                                                     (pvm/vuosi (:alkupvm ensimmainen-tyo))))
+                                                   (when-let [alkupvm (:alkupvm ensimmainen-tyo)]
+                                                     (pvm/vuosi alkupvm)))
                                   nykyiset-arvot (hae-urakan-yksikkohintaiset-tyot c user urakka-id)
                                   normalisoi-pvm (fn [pvm-arvo] (when pvm-arvo
                                                                     (java.sql.Date/valueOf (pvm/sql-aika->pvm-str pvm-arvo))))
@@ -63,10 +63,22 @@
                                                         (fn [tyo]
                                                           (if (= "teiden-hoito" urakkatyyppi)
                                                             (assoc tyo :vuosi vuosi)
-                                                            (let [[alkupvm loppupvm] (pvm/vuodesta-hoitokausi vuosi)]
+                                                            (let [[alkupvm loppupvm] (pvm/vuodesta-hoitokausi vuosi)
+                                                                  urakkavuosi-nro (max 1
+                                                                                    (- (inc vuosi)
+                                                                                      (pvm/vuosi (:alkupvm urakka))))
+                                                                  indeksikerroin (indeksi-kyselyt/indeksikerroin
+                                                                                   urakan-indeksikertoimet
+                                                                                   urakkavuosi-nro)
+                                                                  indeksikorjattu-yksikkohinta (if (and (true? (:indeksi_kaytossa tyo))
+                                                                                                    (> urakkavuosi-nro 1)
+                                                                                                    (number? indeksikerroin))
+                                                                                                (* (:yksikkohinta tyo) indeksikerroin)
+                                                                                                (:yksikkohinta tyo))]
                                                               (assoc tyo
                                                                 :alkupvm alkupvm
-                                                                :loppupvm loppupvm))))
+                                                                :loppupvm loppupvm
+                                                                :indeksikorjattu_yksikkohinta indeksikorjattu-yksikkohinta))))
                                                         tyot))
                                                     tallennettavat-vuodet)
                                   tyot (into tyot kopioitavat-tyot)

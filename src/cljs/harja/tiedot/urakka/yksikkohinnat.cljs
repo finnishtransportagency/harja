@@ -260,7 +260,22 @@
       (assoc :tallennus-kaynnissa? false)))
 
   AsetaKaikkiIndeksille
-  (process-event [{yksikkohintaiset-tyot :yksikkohintaiset-tyot} app])
+  (process-event [{:keys [yksikkohintaiset-tyot]}
+                  {:keys [valittu-hoitokausi] :as app}]
+    (let [[alkupvm loppupvm] valittu-hoitokausi
+          sopimus (first @urakka-tiedot/valittu-sopimusnumero)
+          paivitetyt-tyot
+          (mapv
+            (fn [rivi]
+              (-> rivi
+                (assoc :alkupvm (or (:alkupvm rivi) alkupvm)
+                  :loppupvm (or (:loppupvm rivi) loppupvm)
+                  :sopimus sopimus)
+                (assoc :indeksi_kaytossa true)))
+            yksikkohintaiset-tyot)]
+      (assoc app
+        :yksikkohintaiset-tyot paivitetyt-tyot
+        :tallentamattomia-muutoksia? true)))
 
   HoitokausiVaihdettu
   (process-event [{hoitokausi :hoitokausi} app]

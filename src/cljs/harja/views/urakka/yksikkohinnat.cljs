@@ -45,17 +45,50 @@
         {:otsikko "Tulevilla urakkavuosilla on jo tietoja"
          :sisalto [:p "Tulevilla urakkavuosilla on jo tietoja. Ylikirjoitetaanko tiedot? Ylikirjoitetut tiedot menetetään pysyvästi"]
          :hyvaksy "Ylikirjoita"
+         :modal-luokka "harja-modal-keskitetty"
+         :luokka "modal-dialog-keskitetty"
          :toiminto-fn tallenna!})
       (tallenna!))))
 
-(defn- tallennus-painikkeet [e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot
+(defn- nayta-tallennusvalinta! [e! app yksikkohintaiset-tyot]
+  (modal/nayta!
+    {:otsikko "Haluatko tallentaa tiedot vain yhdelle urakkavuodelle?"
+     :modal-luokka "harja-modal-keskitetty"
+     :luokka "modal-dialog-keskitetty-leveampi yksikkohinnat-tallennus-modal"
+     :footer
+     [:div.yksikkohinnat-tallennus-napit
+      [napit/yleinen-ensisijainen
+       "Kopioi ja tallenna tiedot myös tuleville urakkavuosille"
+       #(do
+          (modal/piilota!)
+          (kopioi-tuleville-vuosille! e! app yksikkohintaiset-tyot))]
+      [napit/yleinen-toissijainen
+       "Tallenna tiedot vain valitulle vuodelle"
+       #(do
+          (modal/piilota!)
+          (e! (tiedot/->TallennaYksikkohinnat
+                yksikkohintaiset-tyot
+                false)))]
+      [napit/peruuta
+       "Peruuta"
+       #(modal/piilota!)]]}
+    [:p
+     "Olet tallentamassa tietoja vain yhdelle vuodelle: "
+     [:strong
+      (fmt/hoitokauden-jarjestysluku-ja-vuodet
+        (:valittu-hoitokausi app)
+        (:urakan-hoitokaudet app)
+        "Urakkavuosi")]
+     "."]))
+
+(defn- tallennus-painikkeet [e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot grid-rivit
                              kopioi-tuleville-vuosille? tallentamattomia-muutoksia?]
   [:div.flex-row {:style {:justify-content "right"}}
    (if tallennustila?
      [:div.painikkeet.text-right.grid-status-viestit
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-toissijainen "Aseta kaikki tehtävät käyttämään oletusindeksiä"
-        #(e! (tiedot/->AsetaKaikkiIndeksille yksikkohintaiset-tyot))
+        #(e! (tiedot/->AsetaKaikkiIndeksille (filterv :tehtava grid-rivit)))
         {:ikoni (ikonit/list)
          :disabled (or tallennus-kesken? false)}]]
       (when kopioi-tuleville-vuosille?
@@ -66,7 +99,7 @@
            :disabled (or tallennus-kesken? false)}]])
       [:span {:style {:margin-left "1rem"}}
        [napit/yleinen-ensisijainen "Tallenna"
-        #(e! (tiedot/->TallennaYksikkohinnat yksikkohintaiset-tyot false))
+        #(nayta-tallennusvalinta! e! app yksikkohintaiset-tyot)
         {:disabled (or tallennus-kesken? false)}]]
       [:span
        [napit/yleinen-toissijainen "Peruuta"
@@ -84,11 +117,10 @@
   [toimenpiteet-ja-tehtavat yksikkohintaiset-tyot]
   (let [yksikkohinnat-tehtavittain (group-by :tehtava yksikkohintaiset-tyot)
         tehtavarivit (map
-                        (fn [[_ _ toimenpide tehtava]]
+                        (fn [[_ _ _ tehtava]]
                           (merge
                             {:tehtava (:id tehtava)
                              :tehtavan_nimi (:nimi tehtava)
-                             :toimenpide-nimi (:nimi toimenpide)
                              :tehtavaryhma-id (:tehtavaryhma-id tehtava)
                              :tehtavaryhma-nimi (:tehtavaryhma-nimi tehtava)
                              :tehtavaryhma-jarjestys (:tehtavaryhma-jarjestys tehtava)
@@ -96,7 +128,9 @@
                              :tehtavaryhmaotsikko (:tehtavaryhmaotsikko tehtava)}
                             (first
                               (get-in yksikkohinnat-tehtavittain
-                                [(:id tehtava)]))))
+                                [(:id tehtava)]))
+                            {:tehtavaryhma-avain [(:tehtavaryhmaotsikko-id tehtava)
+                                                  (:tehtavaryhma-id tehtava)]}))
                        toimenpiteet-ja-tehtavat)
         ryhmat (group-by (juxt :tehtavaryhmaotsikko-id :tehtavaryhma-id) tehtavarivit)]
 
@@ -115,6 +149,7 @@
                :tehtavaryhmaotsikko (:tehtavaryhmaotsikko rivi)
                :tehtavaryhma-id (:tehtavaryhma-id rivi)
                :tehtavaryhmaotsikko-id (:tehtavaryhmaotsikko-id rivi)
+               :tehtavaryhma-avain (:tehtavaryhma-avain rivi)
                :tehtavan_nimi otsikko
                :jarjestys (:jarjestys rivi)}
               (sort-by :jarjestys rivit))))))))
@@ -124,7 +159,7 @@
   (let [grid-rivit (filter (fn [rivi]
                             (or (nil? (:tehtava rivi))
                               (contains? avatut-tehtavaryhmat
-                                (:tehtavaryhmaotsikko-id rivi))))
+                                (:tehtavaryhma-avain rivi))))
                      grid-rivit)
         solun-luokka-fn (fn [_ rivi]
                           (when (:valiotsikko rivi)
@@ -138,7 +173,7 @@
                     (fn [rivi]
                       (if (:valiotsikko rivi)
                         (piirra-valiotsikko-caret e!
-                          (:tehtavaryhmaotsikko-id rivi)
+                          (:tehtavaryhma-avain rivi)
                           avatut-tehtavaryhmat)
                         [:span]))
                     :solun-luokka solun-luokka-fn}
@@ -301,7 +336,7 @@
           [:div.status-viesti.ei-muutoksia
            "Ei tallennettuja muutoksia"])]]]
 
-     [tallennus-painikkeet e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot
+     [tallennus-painikkeet e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot grid-rivit
       (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
 
      [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi urakan-perusluku]
