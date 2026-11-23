@@ -381,6 +381,17 @@
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
 (register! :taulukkotietonakyma {:esikatselu taulukkotietonakyma-esikatselu})
+
+(defn- kaksi-palstaa-otsikkoja-ja-arvoja [komponentti]
+  [kehys/kortti komponentti
+   [:p "Vanha grid-pohjainen otsikko-arvo-näkymä. Tyhjä arvo jätetään pois."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [yleiset/kaksi-palstaa-otsikkoja-ja-arvoja {}
+     "Nimi" "Esimerkki Oy"
+     "Tyhjä kenttä" nil
+     "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
+
+(register! :kaksi-palstaa-otsikkoja-ja-arvoja {:esikatselu kaksi-palstaa-otsikkoja-ja-arvoja})
 (register! :suodatin {:esikatselu suodatin})
 (defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
   [ui/valintaryhma

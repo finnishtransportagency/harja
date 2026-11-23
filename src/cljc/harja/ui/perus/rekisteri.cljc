@@ -739,6 +739,21 @@
                 :tyhja-rivi-otsikon-jalkeen {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, joiden jälkeen tulee tyhjä rivi."}
                 :piirra-viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää viivat otsikoiden ja arvojen alle."}
                 :tietorivi-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka jokaiselle tietoriville."}}}
+   {:id :kaksi-palstaa-otsikkoja-ja-arvoja
+    :nimi "Kaksipalstainen tietonäkymä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :suositus :vanha
+    :korvaa []
+    :slotit #{:otsikot-ja-arvot}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["container" "row" "col-md-4" "col-md-8"]
+    :kuvaus "Vanha kaksipalstainen otsikko-arvo-rivinäkymä Bootstrapin grid-luokilla. Käytössä vain käyttäjän tietojen näkymässä (haku). Uuteen käyttöön tulee :tietoja."
+    :funktio "harja.ui.yleiset/kaksi-palstaa-otsikkoja-ja-arvoja"
+    :asetukset {:class {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille (div.tietoja.container)."}}}
    {:id :taulukkotietonakyma
     :nimi "Taulukkotietonäkymä"
     :ryhma :lomakkeet
