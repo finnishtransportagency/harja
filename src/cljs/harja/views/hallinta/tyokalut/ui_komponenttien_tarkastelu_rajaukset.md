@@ -67,6 +67,18 @@ Uuden komponentin lisääminen:
 - Checkbox-ryhmä on `:osittain-riippuvainen`: yksi palsta on puhdas, useampi palsta käyttää `col-sm-*`-luokkia.
 - Modal on `:riippuvainen`, koska `modal-container` käyttää yhä `.modal`-, `.modal-dialog`- ja `.modal-content`-luokkia.
 
+## Lomakkeen apurit
+
+Lomake rakennetaan `:lomake`-komponentin kautta. Apurit ovat skeeman osia, eivät erillisiä komponentteja, joten niitä ei rekisteröidä omina merkintöinä:
+
+- `ryhma` ryhmittelee kentät otsikon alle.
+- `rivi` asettaa kentät vierekkäin samalle riville.
+- `lomake-spacer` lisää välin.
+- `::lomake/col-luokka` asetetaan yksittäiselle kentälle `:luokka`-arvolla. Oletusarvoja ei käytetä uudessa UI:ssa, koska ne ovat Bootstrap-gridiluokkia (`col-xs-12 col-sm-6 col-md-5 col-lg-4`).
+- `ilman-lomaketietoja` ja `voi-tallentaa?` ovat datan apureita, eivät UI-komponentteja.
+
+Yhtä kenttää varten `col-luokka` voi kuitenkin olla oma luokka, koska `kentta` käyttää skeeman arvoa ensin.
+
 ## Rajauksen ulkopuolella
 
 Älä laajenna tätä kokonaisuutta ilman erillistä päätöstä:
