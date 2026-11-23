@@ -421,7 +421,7 @@
     :slotit #{:kentat :toiminnot :tila}
     :tilat #{:normaali :lataus :virhe :onnistui}
     :sallitut-vanhemmat #{:sivu}
-    :bootstrap-tila :ei-riippuvuutta
+    :bootstrap-tila :riippuvainen
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :funktio "harja.ui.perus"
     :asetukset {:lapset {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Lomakkeen sisältö: pino, kenttaryhma, valintaryhma, toimintoryhma tai tilaviesti."}}}
