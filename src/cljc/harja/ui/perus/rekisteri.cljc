@@ -55,6 +55,23 @@
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
                 :optiot {:tyyppi :map :pakollinen? true :oletus nil :kuvaus "Valikon asetukset, esim. :auki-fn!, :kiinni-fn!, :elementin-id, :wrap-luokka, :vayla-tyyli?."}
                 :valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Vaihtoehdot vektorina tai mappina."}}}
+   {:id :checkbox-pudotusvalikko
+    :nimi "Checkbox-pudotusvalikko"
+    :ryhma :alasvedot
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Pudotusvalikko, jossa on monivalinta-checkboxit. Rakentuu livi-pudotusvalikon päälle, joten käyttää .dropdown- ja .dropdown-menu-rakennetta."
+    :funktio "harja.ui.valinnat/checkbox-pudotusvalikko"
+    :asetukset {:valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Vaihtoehdot, joissa on :nimi ja :valittu?."}
+                :valitse-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan valinnan ja valitun tilan kanssa: (fn [valinta valittu?])."}
+                :teksti {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Näytettävä teksti. Vektorina [yksikko monikko], jolloin valintojen määrä lisätään eteen."}
+                :asetukset {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Livi-pudotusvalikon asetukset, esim. :kaikki-valinta-fn, :fmt, :valintojen-maara."}}}
    {:id :ikoni-ja-teksti
     :nimi "Ikoni ja teksti"
     :ryhma :toiminnot
