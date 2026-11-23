@@ -1064,6 +1064,20 @@
 
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
+(deftest tallenna-pot2-paallystysilmoitus-luonnoksena-vaatii-tieosoitteen
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
+        puutteellinen-paallystysilmoitus (-> (pot2-testidata paallystyskohde-id)
+                                           (assoc :paallystyskohde-id paallystyskohde-id)
+                                           (assoc-in [:perustiedot :valmis-kasiteltavaksi] false)
+                                           (assoc-in [:perustiedot :tr-osoite] nil)
+                                           (assoc-in [:perustiedot :tr-numero] nil)
+                                           (assoc-in [:perustiedot :tr-alkuosa] nil)
+                                           (assoc-in [:perustiedot :tr-loppuosa] nil))]
+    (is (thrown-with-msg? Exception #"ei ole validi"
+                          (tallenna-testipaallystysilmoitus puutteellinen-paallystysilmoitus
+                                                            paallystysilmoitus-domain/pot2-vuodesta-eteenpain)))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")

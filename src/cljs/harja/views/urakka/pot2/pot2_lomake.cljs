@@ -238,7 +238,7 @@
          (seq alustan-tekstit)
          (some? perustietojen-virheet))
       [yleiset/info-laatikko :varoitus
-        "Lomakkeessa on virheitä tai varoituksia. Virheet estävät lomakkeen tallentamisen ja varoitukset tarkistettavaksi lähettämisen. "
+        "Lomakkeessa on virheitä tai varoituksia. Luonnoksen voi tallentaa niistä huolimatta, kunhan tieosoite on täytetty. Virheet ja varoitukset tulee korjata ennen lähettämistä tarkistettavaksi. "
         [:<>
          (when (some? perustietojen-virheet)
            [:span
@@ -318,14 +318,17 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj [] (-> perustiedot ::lomake/virheet))
               puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
+              ;; Luonnoksen saa tallentaa puutteista huolimatta, mutta tieosoite on pakollinen myös luonnoksessa
+              tieosoite-puuttuu? (some nil? (vals (select-keys perustiedot tr/paaluvali-avaimet)))
               voi-tallentaa? (and
                                (not= tila :lukittu)
-                               (empty? (flatten (keep vals virheet)))
-                               (empty? puuttuvat-pakolliset-kentat)
-                               (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
-                               (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
+                               (not tieosoite-puuttuu?))
               voi-lahettaa-tarkistettavaksi? (and
                                                voi-tallentaa?
+                                               (empty? (flatten (keep vals virheet)))
+                                               (empty? puuttuvat-pakolliset-kentat)
+                                               (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
+                                               (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom)))
                                                (empty? (keep identity (vals @pot2-tiedot/kohdeosat-varoitukset-atom)))
                                                (empty? (keep identity (vals @pot2-tiedot/alustarivit-varoitukset-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
