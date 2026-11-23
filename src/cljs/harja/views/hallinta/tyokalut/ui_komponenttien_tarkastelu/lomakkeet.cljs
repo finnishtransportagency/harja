@@ -370,6 +370,17 @@
 
 (register! :kenttaryhma {:esikatselu kenttaryhma})
 (register! :tietoja {:esikatselu tietoja})
+
+(defn- taulukkotietonakyma-esikatselu [komponentti]
+  [kehys/kortti komponentti
+   [:p "Sama otsikko-arvo-data taulukkona. Tyhjä arvo jätetään pois."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [yleiset/taulukkotietonakyma {}
+     "Nimi" "Esimerkki Oy"
+     "Tyhjä kenttä" nil
+     "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
+
+(register! :taulukkotietonakyma {:esikatselu taulukkotietonakyma-esikatselu})
 (register! :suodatin {:esikatselu suodatin})
 (defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
   [ui/valintaryhma

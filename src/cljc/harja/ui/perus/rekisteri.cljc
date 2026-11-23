@@ -718,6 +718,21 @@
                 :tyhja-rivi-otsikon-jalkeen {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, joiden jälkeen tulee tyhjä rivi."}
                 :piirra-viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää viivat otsikoiden ja arvojen alle."}
                 :tietorivi-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka jokaiselle tietoriville."}}}
+   {:id :taulukkotietonakyma
+    :nimi "Taulukkotietonäkymä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :taulukko
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:otsikot-ja-arvot}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Otsikko-arvo-rivit taulukkona. Rivit, joiden arvo on tyhjä, jätetään pois."
+    :funktio "harja.ui.yleiset/taulukkotietonakyma"
+    :asetukset {:style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Juurielementin tyylit (div.taulukko-tietonakyma)."}
+                :table-style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Taulukon tyylit (table)."}}}
    {:id :info-laatikko
     :nimi "Info-laatikko"
     :ryhma :palautteet
