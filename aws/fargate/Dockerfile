@@ -41,8 +41,9 @@ ARG CACHE_BUST_WEEK=""
 # Asenna aikavyöhykedata ja apurit
 # Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
 RUN echo "Cache bust week: ${CACHE_BUST_WEEK}" \
-    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get update \
-    && apt-get install -y --no-install-recommends \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
+       apt-get install -y --no-install-recommends \
         tzdata \
         bash \
         curl \
