@@ -359,7 +359,17 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: \"" @arvo "\"")]])))
 
+(defn- tietoja [komponentti]
+  [kehys/kortti komponentti
+   [:p "Otsikko-arvo-rivit. Tyhjä arvo jätetään pois."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [yleiset/tietoja {:class "body-text"}
+     "Nimi" "Esimerkki Oy"
+     "Tyhjä kenttä" nil
+     "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
+
 (register! :kenttaryhma {:esikatselu kenttaryhma})
+(register! :tietoja {:esikatselu tietoja})
 (register! :suodatin {:esikatselu suodatin})
 (defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
   [ui/valintaryhma

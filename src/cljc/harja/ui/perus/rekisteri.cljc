@@ -696,6 +696,29 @@
     :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vihjeen teksti."}
                 :luokka {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Vihjeen tyyppi."}
                 :ikonin-koko {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Ikonin koko."}}}
+   {:id :tietoja
+    :nimi "Tietonäkymä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:otsikot-ja-arvot}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["container" "row" "col-md-4" "col-md-8"]
+    :kuvaus "Geneerinen otsikko-arvo-rivinäkymä. Rivit, joiden arvo on tyhjä, jätetään pois."
+    :funktio "harja.ui.yleiset/tietoja"
+    :asetukset {:class {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka containerille."}
+                :tietokentan-leveys {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Tietokentän minimileveys, esim. \"150px\"."}
+                :kavenna? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jättää tyhjää tilaa tietorivien väliin."}
+                :jata-kaventamatta {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, joita ei kavenneta."}
+                :otsikot-omalla-rivilla? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Otsikot ovat blockeja omilla riveillään."}
+                :otsikot-samalla-rivilla {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, jotka ovat samalla rivillä."}
+                :tyhja-rivi-otsikon-jalkeen {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, joiden jälkeen tulee tyhjä rivi."}
+                :piirra-viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää viivat otsikoiden ja arvojen alle."}
+                :tietorivi-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka jokaiselle tietoriville."}}}
    {:id :info-laatikko
     :nimi "Info-laatikko"
     :ryhma :palautteet
