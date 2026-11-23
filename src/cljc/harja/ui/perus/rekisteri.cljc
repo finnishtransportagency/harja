@@ -492,7 +492,7 @@
     :slotit #{:otsikot :sisallot}
     :tilat #{:normaali :ei-kayttooikeutta}
     :sallitut-vanhemmat #{:sivu}
-    :bootstrap-tila :ei-riippuvuutta
+    :bootstrap-tila :riippuvainen
     :kuvaus "Välilehtien public API säilyy, mutta rakenne ei enää nojaa Bootstrapin nav-luokkiin."
     :funktio "harja.ui.bootstrap/tabs"
     :asetukset {:active {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Aktiivisen välilehden avain."}
