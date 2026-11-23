@@ -1,5 +1,6 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.toiminnot
   (:require [reagent.core :as r]
+            [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
@@ -22,3 +23,11 @@
 
 (register! :nappi {:esikatselu nappi
                    :renderoi nappi-simulaattorissa})
+
+(defn- ikoni-ja-teksti [komponentti]
+  [kehys/kortti komponentti
+   [:p "Ikoni ja teksti vierekkäin. Ikoni on ensimmäinen argumentti, teksti toinen."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [ikonit/ikoni-ja-teksti [ikonit/livicon-info-sign] "Esimerkkiteksti"]]])
+
+(register! :ikoni-ja-teksti {:esikatselu ikoni-ja-teksti})

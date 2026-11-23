@@ -55,6 +55,21 @@
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
                 :optiot {:tyyppi :map :pakollinen? true :oletus nil :kuvaus "Valikon asetukset, esim. :auki-fn!, :kiinni-fn!, :elementin-id, :wrap-luokka, :vayla-tyyli?."}
                 :valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Vaihtoehdot vektorina tai mappina."}}}
+   {:id :ikoni-ja-teksti
+    :nimi "Ikoni ja teksti"
+    :ryhma :toiminnot
+    :luonne :shared-komponentti
+    :rooli :sisalto
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:ikoni :teksti}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Ikoni ja teksti vierekkäin. Ikonin ja tekstin väli tulee Harjan omasta luokasta."
+    :funktio "harja.ui.ikonit/ikoni-ja-teksti"
+    :asetukset {:ikoni {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Ikonikomponentti."}
+                :teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Teksti ikonin oikealla puolella."}}}
    {:id :nappi
     :nimi "Nappi"
     :ryhma :toiminnot
