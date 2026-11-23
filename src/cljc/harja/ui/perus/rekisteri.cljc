@@ -738,6 +738,21 @@
                 :wrapper-luokka {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Lisäluokka tai luokkavektori wrapperille."}
                 :wrapperin-koko {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Wrapperin koko {:leveys :korkeus}, kun automaattinen mittaus ei onnistu."}
                 :tooltip-disabloitu? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, palautetaan vain komponentti ilman tooltipia."}}}
+   {:id :toast-viesti
+    :nimi "Toast-viesti"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:teksti}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Pieni inline-ilmoitus ikonilla. Luokka \"varoitus\" vaihtaa ikonin ja värin. Eroaa flash-viestistä (viesti), joka näytetään ruudun reunassa."
+    :funktio "harja.ui.yleiset/toast-viesti"
+    :asetukset {:teksti {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Viestin teksti merkkijonona tai hiccup-komponenttina."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "\"varoitus\" tai tyhjä (neutraali/onnistunut)."}}}
    {:id :leijuke
     :nimi "Leijuke"
     :ryhma :palautteet

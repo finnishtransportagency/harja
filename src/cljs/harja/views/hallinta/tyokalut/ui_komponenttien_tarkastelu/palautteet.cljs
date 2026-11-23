@@ -80,6 +80,15 @@
     [yleiset/tila-indikaattori "kesken" {:fmt-fn (constantly "Kesken")}]
     [yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Hylätty")}]]])
 
+(defn- toast-viesti [komponentti]
+  [kehys/kortti komponentti
+   [:p "Pieni inline-ilmoitus ikonilla. Luokka \"varoitus\" vaihtaa tyylin."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [yleiset/toast-viesti "Tallennus onnistui"]
+    [:div {:data-cy (kehys/ankkuri komponentti "-varoitus")}
+     [yleiset/toast-viesti "Tarkista tiedot" "varoitus"]]]])
+
 (register! :leijuke {:esikatselu leijuke})
+(register! :toast-viesti {:esikatselu toast-viesti})
 (register! :tila-indikaattori {:esikatselu tila-indikaattori})
 (register! :tooltip {:esikatselu tooltip})
