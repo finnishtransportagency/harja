@@ -1098,6 +1098,11 @@
     (is (thrown? Exception
                  (u (str "UPDATE paallystysilmoitus SET tila = 'valmis' WHERE paallystyskohde = " paallystyskohde-id)))
         "Tietokanta ei salli materiaalitonta riviä, kun ilmoitus ei ole luonnos")
+    (let [kohdeosa-id (:kohdeosa-id (first (filter #(= 12 (:toimenpide %)) (:paallystekerros paallystysilmoitus-kannassa))))]
+      (u (str "UPDATE yllapitokohdeosa SET poistettu = TRUE WHERE id = " kohdeosa-id))
+      (is (some? (u (str "UPDATE paallystysilmoitus SET tila = 'valmis' WHERE paallystyskohde = " paallystyskohde-id)))
+          "Poistetun kohdeosan materiaalitonta riviä ei huomioida")
+      (u (str "UPDATE yllapitokohdeosa SET poistettu = FALSE WHERE id = " kohdeosa-id)))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa

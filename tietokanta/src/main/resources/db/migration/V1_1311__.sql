@@ -19,6 +19,8 @@ BEGIN
     IF EXISTS(SELECT 1
                 FROM pot2_paallystekerros pk
                      JOIN paallystysilmoitus pio ON pio.id = pk.pot2_id
+                     -- Kohdeosan poisto vain merkitsee kohdeosan poistetuksi, joten sen päällystekerros jää kantaan
+                     JOIN yllapitokohdeosa ypko ON ypko.id = pk.kohdeosa_id AND ypko.poistettu IS NOT TRUE
                WHERE pk.pot2_id = ilmoitus_id
                  AND pk.materiaali IS NULL
                  AND pk.toimenpide <> 41
