@@ -644,6 +644,26 @@
                 :style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Tyylit."}
                 :otsikko {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Paneelin otsikko."}
                 :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Paneelin sisältö, näytetään kun paneeli on auki."}}}
+   {:id :varmista-kayttajalta
+    :nimi "Varmista käyttäjältä"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :overlay
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:otsikko :sisalto :napit}
+    :tilat #{:avoin :suljettu}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Modaali, jossa käyttäjältä varmistetaan toiminnon suoritus. Rakentuu modal-komponentin päälle. Toiminto ajetaan vain hyväksynnällä."
+    :funktio "harja.ui.varmista-kayttajalta/varmista-kayttajalta"
+    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Dialogin otsikko."}
+                :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Dialogin sisältö."}
+                :hyvaksy {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Hyväksyntäpainikkeen teksti tai elementti."}
+                :toiminto-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Toiminto, joka ajetaan käyttäjän hyväksyessä."}
+                :peruuta-txt {:tyyppi :merkkijono :pakollinen? false :oletus "Peruuta" :kuvaus "Peruuta-painikkeen teksti."}
+                :napit {:tyyppi :vektori :pakollinen? false :oletus [:hyvaksy :peruuta] :kuvaus "Footerin napit: :hyvaksy, :peruuta, :takaisin, :tallenna, :uusi tai :poista."}
+                :modal-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Modaalin CSS-luokka."}}}
    {:id :ajax-loader
     :nimi "Latausindikaattori"
     :ryhma :palautteet
