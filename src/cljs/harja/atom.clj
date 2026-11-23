@@ -50,7 +50,9 @@
            parametrit-ch# (cljs.core.async/chan)
            paivita# (reagent.core/atom 0)
            nil-kun-haku-kaynnissa?# ~(or (get asetukset :nil-kun-haku-kaynnissa?) false)
-           edelliset# (reagent.core/atom ::ei-ajettu)]
+           ;; Käytetään tavallista atomia, jotta se ei ole reaktion riippuvuus.
+           ;; Muutoin atomin reset! ajaa run!-reaktion uudelleen turhaan
+           edelliset# (atom ::ei-ajettu)]
        (cljs.core.async.macros/go
          (loop [haku-ch# nil ;; käynnissä olevan haun kanava
                 parametrit# (cljs.core.async/<! parametrit-ch#)]
