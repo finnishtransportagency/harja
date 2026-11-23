@@ -696,6 +696,27 @@
     :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vihjeen teksti."}
                 :luokka {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Vihjeen tyyppi."}
                 :ikonin-koko {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Ikonin koko."}}}
+   {:id :tooltip
+    :nimi "Tooltip"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :overlay
+    :suositus :uuteen-ui
+    :korvaa []
+    :slotit #{:komponentti :sisalto}
+    :tilat #{:normaali :tooltip-disabloitu}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["tooltip" "tooltip-inner" "tooltip-arrow"]
+    :kuvaus "Kietoo olemassa olevan komponentin ja näyttää sisällön hoverilla tai fokuksella. Eroaa vihjeestä, joka näkyy aina. Sijainti lasketaan komponentin mukaan, paitsi piilotetuissa elementeissä, joissa käytetään wrapperin-kokoa."
+    :funktio "harja.ui.yleiset/tooltip"
+    :asetukset {:komponentti {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Komponentti, jolle tooltip asetetaan."}
+                :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Tooltipin teksti tai hiccup-html."}
+                :suunta {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus ":vasen, :oikea, :ylos tai :alas."}
+                :leveys {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus ":levea tai :ohut."}
+                :wrapper-luokka {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Lisäluokka tai luokkavektori wrapperille."}
+                :wrapperin-koko {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Wrapperin koko {:leveys :korkeus}, kun automaattinen mittaus ei onnistu."}
+                :tooltip-disabloitu? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, palautetaan vain komponentti ilman tooltipia."}}}
    {:id :leijuke
     :nimi "Leijuke"
     :ryhma :palautteet

@@ -64,4 +64,13 @@
 (register! :vihje {:esikatselu vihje})
 (register! :info-laatikko {:esikatselu info-laatikko})
 (register! :varmista-kayttajalta {:esikatselu varmista-kayttajalta})
+(defn- tooltip [komponentti]
+  [kehys/kortti komponentti
+   [:p "Sisältö näkyy kohteen päällä hiiren viennillä tai fokuksella."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [yleiset/tooltip {:suunta :oikea}
+     [:span {:data-cy (kehys/ankkuri komponentti "-kohde")} "Vie hiiri tähän"]
+     "Tooltipin sisältö"]]])
+
 (register! :leijuke {:esikatselu leijuke})
+(register! :tooltip {:esikatselu tooltip})
