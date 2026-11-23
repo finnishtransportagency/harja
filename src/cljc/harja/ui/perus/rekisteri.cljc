@@ -696,6 +696,27 @@
     :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vihjeen teksti."}
                 :luokka {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Vihjeen tyyppi."}
                 :ikonin-koko {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Ikonin koko."}}}
+   {:id :leijuke
+    :nimi "Leijuke"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :overlay
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:otsikko :sisalto :toiminnot}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["pull-left" "pull-right"]
+    :kuvaus "Sisällön päälle absoluuttisesti sijoitettava paneeli. Avautuu ylös tai alas tilan mukaan. Sulkeutuu ruksilla tai ESC-näppäimellä. Toimintonapit ovat napit-komponentin nappeja. Vihjeleijukkeet rakentuvat tämän päälle, mutta niitä ei ole rekisteröity erikseen."
+    :funktio "harja.ui.leijuke/leijuke"
+    :asetukset {:sulje! {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan ruksin tai ESC-näppäimen painamisesta."}
+                :otsikko {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Leijukkeen otsikko (merkkijono tai hiccup)."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka leijukkeelle."}
+                :tallenna-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Näyttää Tallenna-napin."}
+                :peruuta-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Näyttää Peruuta-napin."}
+                :tyhjenna-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Näyttää Tyhjennä-napin."}
+                :sulje-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Näyttää Sulje-napin."}}}
    {:id :tietoja
     :nimi "Tietonäkymä"
     :ryhma :lomakkeet

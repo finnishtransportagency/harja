@@ -1,5 +1,6 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.palautteet
   (:require [reagent.core :as r]
+            [harja.ui.leijuke :as leijuke]
             [harja.ui.napit :as napit]
             [harja.ui.varmista-kayttajalta :as varmista]
             [harja.ui.yleiset :as yleiset]
@@ -44,7 +45,23 @@
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
       (str "Suoritettu: " @suoritettu)]]))
 
+(defn- leijuke [komponentti]
+  (r/with-let [auki? (r/atom false)]
+    [kehys/kortti komponentti
+     [:p "Sisällön päälle avautuva paneeli. Sulkeutuu ruksilla tai ESC-näppäimellä."]
+     [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+      [napit/nappi "Avaa leijuke" #(swap! auki? not)
+       {:data-cy (kehys/ankkuri komponentti "-avaa")
+        :luokka "nappi-toissijainen"}]
+      (when @auki?
+        [leijuke/leijuke {:otsikko "Leijukkeen otsikko"
+                          :sulje! #(reset! auki? false)
+                          :tallenna-fn #(reset! auki? false)
+                          :peruuta-fn #(reset! auki? false)}
+         [:p "Leijukkeen sisältö."]])]]))
+
 (register! :ajax-loader {:esikatselu ajax-loader})
 (register! :vihje {:esikatselu vihje})
 (register! :info-laatikko {:esikatselu info-laatikko})
 (register! :varmista-kayttajalta {:esikatselu varmista-kayttajalta})
+(register! :leijuke {:esikatselu leijuke})
