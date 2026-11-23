@@ -260,6 +260,19 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Valittu: " (if @valittu? "kyllä" "ei"))]])))
 
+(defn- raksiboksi [komponentti]
+  (r/with-let [valittu? (r/atom false)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Raksiboksi käärii valintaruudun teksti- ja infoalueeseen. Arvon ja muutoksen käsittelee käyttöpaikka."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/raksiboksi
+         {:teksti "Näytä vain aktiiviset"
+          :toiminto #(reset! valittu? %)}
+         valittu?]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Valittu: " (if @valittu? "kyllä" "ei"))]])))
+
 (defn- pino [komponentti]
   (let [ankkuri (kehys/ankkuri komponentti)]
     [kehys/kortti komponentti
@@ -373,6 +386,7 @@
 (register! :sahkopostikentta {:esikatselu sahkopostikentta})
 (register! :puhelinkentta {:esikatselu puhelinkentta})
 (register! :valintaruutu {:esikatselu valintaruutu})
+(register! :raksiboksi {:esikatselu raksiboksi})
 (register! :radiokentta {:esikatselu radiokentta})
 (register! :checkbox-ryhma {:esikatselu checkbox-ryhma})
 (register! :radio-group {:esikatselu radio-group-kentta})

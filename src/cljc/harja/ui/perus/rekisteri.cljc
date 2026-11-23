@@ -229,6 +229,26 @@
                 :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ruutu on disabloitu."}
                 :iso-clickalue? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, koko alue on klikattava."}
                 :valitse! {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan valinnan muuttuessa."}}}
+   {:id :raksiboksi
+    :nimi "Raksiboksi"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo :komponentti :info}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin :sivu}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Valintaruutu teksti- ja infoalueella. Käärii valintaruudun span.raksiboksi-elementtiin ja input-group-rakenteeseen, joten Bootstrap-luokat tulevat mukaan."
+    :funktio "harja.ui.kentat/raksiboksi"
+    :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ruudun vieressä näkyvä teksti."}
+                :toiminto {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan valinnan muuttuessa."}
+                :tiivis? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ruutu on tiiviimmässä muodossa."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ruutu on disabloitu."}
+                :komponentti {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Valinnaisesti ruudun viereen renderöitävä komponentti."}
+                :info-teksti {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Infoteksti, joka näytetään nayta-infoteksti?-asetuksen ollessa true."}
+                :nayta-infoteksti? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, info-teksti näytetään."}}}
    {:id :radiokentta
     :nimi "Radiokenttä"
     :ryhma :lomakkeet
