@@ -124,6 +124,27 @@
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :tallennus-kaynnissa? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, piirtää latausindikaattorin."}}
     :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."}
+   {:id :linkki
+    :nimi "Linkki"
+    :ryhma :toiminnot
+    :luonne :shared-komponentti
+    :rooli :toiminto
+    :suositus :uuteen-ui
+    :korvaa []
+    :slotit #{:teksti :toiminto}
+    :tilat #{:normaali :disabloitu}
+    :sallitut-vanhemmat #{:sivu :lomake :palautteet}
+    :bootstrap-tila :ei-riippuvuutta
+    :funktio "harja.ui.yleiset/linkki"
+    :kuvaus "Toimintolinkki, joka kutsuu käyttöpaikan funktiota. Disabloituna näkyy tekstinä ilman href-linkkiä."
+    :asetukset {:otsikko {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Linkin teksti tai sisältö."}
+                :toiminto {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan klikkauksella."}
+                :disabloitu? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, linkki ei ole klikattava."}
+                :style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Inline-tyylit."}
+                :ikoni {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Ikonikomponentti otsikon edessä."}
+                :stop-propagation {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, klikkaus ei kupli ylemmille elementeille."}
+                :block? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, linkki on display block."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Linkin CSS-luokka."}}}
    {:id :suodatin
     :nimi "Suodatin"
     :ryhma :lomakkeet

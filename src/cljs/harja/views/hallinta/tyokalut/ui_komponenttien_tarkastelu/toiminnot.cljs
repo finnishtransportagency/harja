@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [harja.ui.ikonit :as ikonit]
             [harja.ui.napit :as napit]
+            [harja.ui.yleiset :as yleiset]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
@@ -30,4 +31,16 @@
    [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
     [ikonit/ikoni-ja-teksti [ikonit/livicon-info-sign] "Esimerkkiteksti"]]])
 
+(defn- linkki [komponentti]
+  (r/with-let [klikkaukset (r/atom 0)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Klikattava teksti. Käyttöpaikka antaa toiminnon, disabloitu linkki ei ole klikattava."]
+       [:div {:data-cy (str ankkuri "-juuri")}
+        [yleiset/linkki "Klikkaa minua" #(swap! klikkaukset inc) {:luokka "linkki" :block? true}]
+        [yleiset/linkki "Disabloitu" #(swap! klikkaukset inc) {:disabloitu? true :block? true}]]
+       [:p {:data-cy (str ankkuri "-arvo")}
+        (str "Klikkauksia: " @klikkaukset)]])))
+
 (register! :ikoni-ja-teksti {:esikatselu ikoni-ja-teksti})
+(register! :linkki {:esikatselu linkki})
