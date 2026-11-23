@@ -72,6 +72,23 @@
                 :valitse-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan valinnan ja valitun tilan kanssa: (fn [valinta valittu?])."}
                 :teksti {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Näytettävä teksti. Vektorina [yksikko monikko], jolloin valintojen määrä lisätään eteen."}
                 :asetukset {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Livi-pudotusvalikon asetukset, esim. :kaikki-valinta-fn, :fmt, :valintojen-maara."}}}
+   {:id :hoitokausi
+    :nimi "Hoitokausi"
+    :ryhma :alasvedot
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo :vaihtoehdot}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Hoitokauden valinta pudotusvalikosta. Rakentuu livi-pudotusvalikon päälle. Ei lue urakkaa itse, vaan saa hoitokaudet parametrina. Urakkakohtainen otsikko ja tuck-variantti eivät ole tässä."
+    :funktio "harja.ui.valinnat/hoitokausi"
+    :asetukset {:hoitokaudet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Hoitokaudet muodossa [alkupvm loppupvm]."}
+                :valittu-hoitokausi-atom {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Valitun hoitokauden atomi. Käytetään, jos valitse-fn puuttuu."}
+                :valitse-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan valitulla hoitokaudella. Jos puuttuu, valinta menee atomiin."}
+                :asetukset {:tyyppi :map :pakollinen? false :oletus {} :kuvaus "Optiot: :disabled ja :disabloi-tulevat-hoitokaudet?."}}}
    {:id :ikoni-ja-teksti
     :nimi "Ikoni ja teksti"
     :ryhma :toiminnot

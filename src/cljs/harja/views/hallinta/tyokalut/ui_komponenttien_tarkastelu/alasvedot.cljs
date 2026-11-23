@@ -1,5 +1,7 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.alasvedot
   (:require [reagent.core :as r]
+            [harja.fmt :as fmt]
+            [harja.pvm :as pvm]
             [harja.ui.napit :as napit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
@@ -48,5 +50,23 @@
       {:data-cy (kehys/ankkuri komponentti "-palauta")
        :luokka "nappi-toissijainen"}]]))
 
+(def ^:private esikatselun-hoitokaudet
+  [[(pvm/hoitokauden-alkupvm 2024) (pvm/hoitokauden-loppupvm 2025)]
+   [(pvm/hoitokauden-alkupvm 2025) (pvm/hoitokauden-loppupvm 2026)]
+   [(pvm/hoitokauden-alkupvm 2026) (pvm/hoitokauden-loppupvm 2027)]])
+
+(defn- hoitokausi-esikatselu [komponentti]
+  (r/with-let [valittu (r/atom (second esikatselun-hoitokaudet))]
+    [kehys/kortti komponentti
+     [:p "Hoitokauden valinta välitetään valitse-fn-funktiolle. Komponentti ei lue urakkaa, vaan saa hoitokaudet parametrina."]
+     [:div {:data-cy (kehys/ankkuri komponentti "-valikko")}
+      [valinnat/hoitokausi {} esikatselun-hoitokaudet valittu #(reset! valittu %)]]
+     [:p {:data-cy (kehys/ankkuri komponentti "-arvo")}
+      (str "Valittu: " (when @valittu (fmt/pvm-vali-opt @valittu)))]
+     [napit/nappi "Palauta oletus" #(reset! valittu (second esikatselun-hoitokaudet))
+      {:data-cy (kehys/ankkuri komponentti "-palauta")
+       :luokka "nappi-toissijainen"}]]))
+
 (register! :livi-pudotusvalikko {:esikatselu livi-pudotusvalikko})
 (register! :checkbox-pudotusvalikko {:esikatselu checkbox-pudotusvalikko})
+(register! :hoitokausi {:esikatselu hoitokausi-esikatselu})
