@@ -706,11 +706,10 @@
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
     :sallitut-vanhemmat #{:sivu :lomake}
-    :bootstrap-tila :riippuvainen
-    :bootstrap-luokat ["container" "row" "col-md-4" "col-md-8"]
+    :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Geneerinen otsikko-arvo-rivinäkymä. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/tietoja"
-    :asetukset {:class {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka containerille."}
+    :asetukset {:class {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille (div.tietoja)."}
                 :tietokentan-leveys {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Tietokentän minimileveys, esim. \"150px\"."}
                 :kavenna? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jättää tyhjää tilaa tietorivien väliin."}
                 :jata-kaventamatta {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, joita ei kavenneta."}
