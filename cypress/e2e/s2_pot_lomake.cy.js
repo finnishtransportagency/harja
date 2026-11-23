@@ -354,3 +354,49 @@ describe("POT2", function() {
         cy.get('[data-cy=pot2-avaa-tieosuushaku]').should('be.visible');
     });
 })
+
+describe("POT2 tieosuushaku", function() {
+    const solu = (rivi, otsikko) => cy.get('[data-cy=pot2-kulutuskerros]').gridOtsikot().then(({grid, otsikot}) => {
+        return cy.wrap(grid.find('tbody tr').eq(rivi).find('td').eq(otsikot.get(otsikko)));
+    });
+
+    before(function () {
+        cy.POTTestienAlustus(
+            {
+                yllapitoluokka: null,
+                ajorata: null,
+                kaista: null,
+                vuosi: 2018,
+                kvl: null
+            },
+            {
+                ajorata: 1,
+                kaista: 11
+            })
+    })
+
+    it('Hae tieosuus -toiminnolla lisätty rivi validoidaan heti lisättäessä', function () {
+        const rivit = () => cy.get('[data-cy=pot2-kulutuskerros] tbody tr.muokataan');
+
+        cy.intercept('POST', '**/_/urakan-paallystysilmoitus-paallystyskohteella').as('avaa-ilmoitus');
+        cy.intercept('POST', '**/_/hae-tr-pituudet').as('hae-tr-pituudet');
+        cy.intercept('POST', '**/_/hae-tr-tiedot').as('hae-tr-tiedot');
+        cy.intercept('POST', '**/_/hae-urakan-massat-ja-murskeet').as('hae-massat-ja-murskeet');
+        avaaPaallystysIlmoitus(2021, 'Utajärven päällystysurakka', 'Tärkeä kohde mt20', 'Kesken', 'Muokkaa');
+        cy.wait(['@avaa-ilmoitus', '@hae-tr-pituudet', '@hae-tr-tiedot', '@hae-massat-ja-murskeet'], {timeout: ajaxLoaderTimeout});
+        cy.get('div.pot2-lomake .ajax-loader').should('not.exist');
+        rivit().its('length').then(alussa => {
+            cy.intercept('POST', '**/_/hae-pot2-tieosuudet').as('hae-pot2-tieosuudet');
+            // Nappi renderöidään uudelleen taustahakujen jälkeen, joten klikataan juuri haettua elementtiä suoraan
+            cy.get('[data-cy=pot2-avaa-tieosuushaku]').should('be.visible').then($nappi => $nappi[0].click());
+            cy.wait('@hae-pot2-tieosuudet');
+            cy.get('[data-cy=pot2-tieosuushaku-tulokset] tbody tr').first().find('input[type=checkbox]').check({force: true});
+            cy.get('[data-cy=pot2-lisaa-valitut-tieosuudet]').should('not.be.disabled').click();
+            cy.get('[data-cy=pot2-sulje-tieosuushaku]').click();
+
+            rivit().should('have.length', alussa + 1);
+            // Tieosuushaulla lisätyltä riviltä puuttuu toimenpide, jonka virheen pitää näkyä ilman rivin klikkausta
+            solu(alussa, 'Toimenpide').should('have.class', 'sisaltaa-virheen');
+        });
+    });
+})

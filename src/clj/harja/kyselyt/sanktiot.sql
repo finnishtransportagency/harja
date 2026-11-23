@@ -2,7 +2,7 @@
 -- Luo uuden sanktion annetulle laatupoikkeamalle
 INSERT
 INTO sanktio
-(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, maara,
+(perintapvm, maarattypvm, maaraystapa, kasittelytapa, sakkoryhma, tyyppi, toimenpideinstanssi, vakiofraasi, normaalimaara, omailmoitettu, maara, sanktio_profiili_rivi, maaritystapa, laskennan_syote,
  laskutusrajan_ylitys, indeksi, laatupoikkeama, suorasanktio, tehtavaryhma, tehtava, luoja, luotu)
 VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman_kasittelytapa,
         :ryhma :: sanktiolaji, :tyyppi,
@@ -16,7 +16,8 @@ VALUES (:perintapvm, :maarattypvm, :maaraystapa, :kasittelytapa::laatupoikkeaman
                       JOIN sanktiotyyppi s ON s.toimenpidekoodi = t.toimenpide
              WHERE s.id = :tyyppi
                AND t.urakka = :urakka)),
-        :vakiofraasi, :summa, :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
+        :vakiofraasi, :normaalimaara, :omailmoitettu, :summa, :sanktio_profiili_rivi, :maaritystapa, :laskennan_syote::JSONB,
+        :laskutusrajan-ylitys, :indeksi, :laatupoikkeama, :suorasanktio,
         :tehtavaryhma, :tehtava, :luoja, NOW());
 
 -- name: paivita-sanktio!
@@ -36,7 +37,12 @@ SET perintapvm           = :perintapvm,
          WHERE s.id = :tyyppi
            AND t.urakka = :urakka)),
     vakiofraasi          = :vakiofraasi,
+    normaalimaara       = :normaalimaara,
+    omailmoitettu       = :omailmoitettu,
     maara                = :summa,
+    sanktio_profiili_rivi = :sanktio_profiili_rivi,
+    maaritystapa         = :maaritystapa,
+    laskennan_syote      = :laskennan_syote::JSONB,
     laskutusrajan_ylitys = :laskutusrajan-ylitys,
     indeksi              = :indeksi,
     laatupoikkeama       = :laatupoikkeama,
@@ -65,6 +71,9 @@ SELECT s.id,
        lp.kuvaus                          AS laatupoikkeama_kuvaus,
        lp.perustelu                       AS laatupoikkeama_paatos_perustelu,
        s.maara                            AS summa,
+       s.normaalimaara,
+       s.omailmoitettu,
+       s.laskennan_syote                  AS "laskennan-syote",
        s.laskutusrajan_ylitys             AS "laskutusrajan-ylitys",
        s.sakkoryhma                       AS laji,
        s.toimenpideinstanssi,
@@ -83,6 +92,7 @@ WHERE laatupoikkeama = :laatupoikkeama
   AND s.poistettu IS NOT TRUE;
 
 -- name: hae-suorasanktion-tiedot
+-- row-fn: muunna-suorasanktion-tiedot
 -- Hae yksittäisen suora sanktion tiedot
 SELECT s.id,
        s.perintapvm,
@@ -90,6 +100,11 @@ SELECT s.id,
        s.maaraystapa,
        s.kasittelytapa,
        s.maara                AS summa,
+       s.normaalimaara,
+       s.omailmoitettu,
+       s.sanktio_profiili_rivi,
+       s.maaritystapa,
+       s.laskennan_syote      AS "laskennan-syote",
        s.laskutusrajan_ylitys AS "laskutusrajan-ylitys",
        s.sakkoryhma           AS laji,
        s.suorasanktio,
@@ -126,6 +141,9 @@ SELECT s.id,
        -- sanktion laatupoikkeamassa.
        lp.kasittelyaika                             AS kasittelyaika,
        s.maara                                      AS summa,
+       s.normaalimaara,
+       s.omailmoitettu,
+       s.laskennan_syote                            AS "laskennan-syote",
        s.laskutusrajan_ylitys                       AS "laskutusrajan-ylitys",
        s.sakkoryhma::text                           AS laji,
        s.indeksi,
@@ -244,7 +262,7 @@ SELECT ek.id,
        NULL                                                AS yllapitokohde_id,
        NULL                                                AS yllapitokohde_yhaid,
        NULL                                                AS laatupoikkeama_id,
-       u.id                                                AS urakka_id 
+       u.id                                                AS urakka_id
 FROM erilliskustannus ek
          JOIN urakka u ON ek.urakka = u.id
 WHERE ek.urakka = :urakka
@@ -337,6 +355,8 @@ SELECT s.id                   AS id,
        s.perintapvm,
        s.indeksi,
        s.maara,
+       s.normaalimaara,
+       s.omailmoitettu,
        s.laskutusrajan_ylitys AS "laskutusrajan-ylitys",
        s.kasittelytapa,
        s.laatupoikkeama       AS "laatupoikkeama-id",

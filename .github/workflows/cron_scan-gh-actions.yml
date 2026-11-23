@@ -33,7 +33,7 @@ jobs:
           persist-credentials: 'false'
 
       - name: Run zizmor scan on GitHub Actions workflows
-        uses: ./.github/actions/scan-actions-with-zizmor
+        uses: $/.github/actions/scan-actions-with-zizmor
         with:
           gh-token: ${{ secrets.GITHUB_TOKEN }}
           scan-targets: |

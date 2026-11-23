@@ -145,16 +145,6 @@
             :muokattava? (constantly false)
             :leveys 13}
 
-           {:otsikko "Muutoksen syy / lisätieto"
-            :nimi :syy
-            :tyyppi :text
-            :solun-luokka solun-luokka-fn
-            :muokattava? #(and
-                            (not haku-kaynnissa?)
-                            ;; Älä anna muokata väliotsikkoja 
-                            (nil? (:valiotsikko %)))
-            :leveys 25}
-
            {:otsikko "Suunniteltu määrä"
             :nimi :suunniteltu_maara
             :tyyppi :numero
@@ -203,9 +193,12 @@
             :nimi :tavoitehinnan_muutos
             :tyyppi :numero
             :fmt (fn [v r]
-                   (if (:valiotsikko r)
-                     v
-                     (fmt/euro-opt v)))
+                   (cond
+                     (:valiotsikko r) v
+                     ;; Käyttäjän mielestä on epäloogista, että tekemättömän tehtävän tavoitehintamuutoksena näytetään oletuksena nollaa. 
+                     ;; Tekemättömän tehtävän tavoitehintamuutos ei voi olla koskaan nolla euroa, vaan se on aina miinusta.
+                     (= v 0) "-"
+                     :else (fmt/euro-opt v)))
             :tasaa :oikea
             :solun-luokka solun-luokka-fn
             ;; Annetaanko kirjata tavoitehinta päätellään takapäässä
@@ -213,6 +206,16 @@
                             (not haku-kaynnissa?)
                             (true? (:anna-kirjata-tavoitehinta? %)))
             :leveys 22}
+
+           {:otsikko "Muutoksen syy / lisätieto"
+            :nimi :syy
+            :tyyppi :text
+            :solun-luokka solun-luokka-fn
+            :muokattava? #(and
+                            (not haku-kaynnissa?)
+                            ;; Älä anna muokata väliotsikkoja 
+                            (nil? (:valiotsikko %)))
+            :leveys 25}
 
            ;; Aseta yksikköhinta
            {:otsikko ""

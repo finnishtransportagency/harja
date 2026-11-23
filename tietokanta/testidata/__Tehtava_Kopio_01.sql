@@ -794,3 +794,17 @@ INSERT INTO public.tehtava (id, nimi, emo, luotu, muokattu, luoja, muokkaaja, po
 INSERT INTO public.tehtava (id, nimi, emo, luotu, muokattu, luoja, muokkaaja, poistettu, yksikko, jarjestys, hinnoittelu, api_seuranta, suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, "mhu-tehtava?", yksiloiva_tunniste, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id, materiaalikoodi_id, aluetieto, nopeusrajoitus, linkkitunniste, "maaramitattava?") VALUES (17336, 'Sorateiden pinnan hoito, hoitoluokka II', 608, '2025-11-20 11:20:38.713280 +00:00', null, null, null, false, 'tiekm', 1255, '{kokonaishintainen}', null, null, null, 17336, 358, true, null, 'tiekm', null, 2022, false, false, null, null, true, 108, null, false);
 INSERT INTO public.tehtava (id, nimi, emo, luotu, muokattu, luoja, muokkaaja, poistettu, yksikko, jarjestys, hinnoittelu, api_seuranta, suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, "mhu-tehtava?", yksiloiva_tunniste, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id, materiaalikoodi_id, aluetieto, nopeusrajoitus, linkkitunniste, "maaramitattava?") VALUES (17337, 'Sorateiden pinnan hoito, hoitoluokka III', 608, '2025-11-20 11:20:38.713280 +00:00', null, null, null, false, 'tiekm', 1260, '{kokonaishintainen}', null, null, null, 17337, 358, true, null, 'tiekm', 2019, 2022, false, false, null, null, true, 108, null, false);
 INSERT INTO public.tehtava (id, nimi, emo, luotu, muokattu, luoja, muokkaaja, poistettu, yksikko, jarjestys, hinnoittelu, api_seuranta, suoritettavatehtava, piilota, api_tunnus, tehtavaryhma, "mhu-tehtava?", yksiloiva_tunniste, suunnitteluyksikko, voimassaolo_alkuvuosi, voimassaolo_loppuvuosi, kasin_lisattava_maara, "raportoi-tehtava?", materiaaliluokka_id, materiaalikoodi_id, aluetieto, nopeusrajoitus, linkkitunniste, "maaramitattava?") VALUES (17338, 'Sorapintaisten kävely- ja pyöräilyväylienhoito', 608, '2025-11-20 11:20:38.713280 +00:00', null, null, null, false, 'tiekm', 1270, '{kokonaishintainen}', null, null, null, 17338, 358, true, null, 'tiekm', 2019, null, false, false, null, null, true, 108, null, false);
+
+-- Löytyy dokumentaatiosta: "Materiaaleina raportoitavat tehtävät"
+UPDATE tehtava
+   SET "materiaalina_raportoitava?" = TRUE
+ WHERE nimi IN (
+           'Liukkaudentorjunta suolaamalla (materiaali)',
+           'Kalium- tai natriumformiaatin käyttö liukkaudentorjuntaan (materiaali)',
+           'Liukkaudentorjunta hiekoituksella (materiaali)',
+           'Ennalta arvaamattomien kuljetusten avustaminen (materiaali)',
+           'Sorastus',
+           'Liikenteen varmistaminen kelirikkokohteessa (materiaali)',
+           'Reunantäyttö',
+           'Kesäsuola (CaCl2, materiaali)'
+);

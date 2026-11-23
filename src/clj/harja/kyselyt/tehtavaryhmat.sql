@@ -1,6 +1,7 @@
--- name: tehtavaryhmaotsikot
+-- name: hae-mhu-tehtavaryhmaotsikot
 SELECT tro.id, tro.otsikko
   FROM tehtavaryhmaotsikko tro
+ WHERE tro.urakkatyyppi = 'teiden-hoito'
  ORDER BY tro.otsikko ASC;
 
 -- name: hae-tehtavaryhma
@@ -20,8 +21,9 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
            t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto))) AS tehtavat
   FROM tehtavaryhmaotsikko tro
            JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id AND tr.id = :id
-           LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = TRUE
-  GROUP BY tro.id, tr.id, tro.otsikko;
+           LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND t."mhu-tehtava?" = TRUE
+ WHERE tro.urakkatyyppi = 'teiden-hoito'
+ GROUP BY tro.id, tr.id, tro.otsikko;
 
 -- name: hae-tehtava
 SELECT te.id
@@ -47,10 +49,36 @@ SELECT tro.id        AS tehtavaryhmaotsikko_id,
            t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto, t."maaramitattava?", ttp.nimi))) AS tehtavat
   FROM tehtavaryhmaotsikko tro
            JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id
-           LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND "mhu-tehtava?" = TRUE
+           LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND t."mhu-tehtava?" = TRUE
            LEFT JOIN toimenpide trtp ON tr.toimenpide_id = trtp.id -- Tehtäväryhmän toimenpide
            JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
+ WHERE tro.urakkatyyppi = 'teiden-hoito'
  GROUP BY tro.id, tr.id, tro.otsikko, trtp.nimi, tr.jarjestys
+ ORDER BY tro.otsikko ASC, tr.jarjestys ASC;
+
+-- name: hae-vhu-tehtavaryhmaotsikot-tehtavaryhmat-ja-tehtavat
+SELECT tro.id        AS tehtavaryhmaotsikko_id,
+       tro.otsikko,
+       tr.id         AS tehtavaryhma_id,
+       tr.nimi,
+       tr.voimassaolo_alkuvuosi,
+       tr.voimassaolo_loppuvuosi,
+       tr.jarjestys,
+       tr.nakyva,
+       tr.versio,
+       tr.yksiloiva_tunniste,
+       trtp.nimi AS toimenpide,
+       JSONB_AGG(ROW_TO_JSON(ROW (t.id, t.nimi, t.yksikko, t.jarjestys, t.api_seuranta, t.suoritettavatehtava,
+           t.piilota, t.api_tunnus, t."mhu-tehtava?", t.yksiloiva_tunniste,
+           t.voimassaolo_alkuvuosi, t.voimassaolo_loppuvuosi, t.kasin_lisattava_maara,
+           t."raportoi-tehtava?", t.materiaaliluokka_id, t.materiaalikoodi_id, t.aluetieto, t."maaramitattava?", ttp.nimi))) AS tehtavat
+FROM tehtavaryhmaotsikko tro
+         JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id
+         LEFT JOIN tehtava t ON t.tehtavaryhma = tr.id AND t."vhu-tehtava?" = TRUE
+         LEFT JOIN toimenpide trtp ON tr.toimenpide_id = trtp.id -- Tehtäväryhmän toimenpide
+         JOIN toimenpide ttp ON t.emo = ttp.id -- Tehtävän toimenpide (tehtäväryhmän ja siihen kuuluvien tehtävien toimenpiteen pitäisi olla sama)
+WHERE tro.urakkatyyppi = 'vesivayla-hoito'
+GROUP BY tro.id, tr.id, tro.otsikko, trtp.nimi, tr.jarjestys
 ORDER BY tro.otsikko ASC, tr.jarjestys ASC;
 
 -- name: paivita-tehtavaryhma!
@@ -66,7 +94,7 @@ UPDATE tehtava
  WHERE id = :id;
 
 -- name: tehtavat-tehtavaryhmaotsikoittain
--- Listaa kaikki tehtävät ja niille suunnitellut ja toteutuneet määrät tehtäväryhmäotsikon perusteella ryhmiteltynä.
+-- Listaa kaikki MHU tyyppiset tehtävät ja niille suunnitellut ja toteutuneet määrät tehtäväryhmäotsikon perusteella ryhmiteltynä.
 -- Äkillisille hoitotöille on ihan oma tehtäväryhmä ja tätä ei voida käyttää siihen
 SELECT tk.id                                     AS id,
        tk.nimi                                   AS tehtava,
@@ -79,7 +107,7 @@ SELECT tk.id                                     AS id,
                                             AND (tr_alataso.voimassaolo_loppuvuosi IS NULL OR tr_alataso.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
 
            JOIN tehtavaryhmaotsikko o ON tr_alataso.tehtavaryhmaotsikko_id = o.id
-                                         AND (:otsikko::TEXT IS NULL OR o.otsikko = :otsikko)
+                                         AND (:otsikko::TEXT IS NULL OR o.otsikko = :otsikko) AND o.urakkatyyppi = 'teiden-hoito'
  WHERE (tk.voimassaolo_alkuvuosi IS NULL OR tk.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
    AND (tk.voimassaolo_loppuvuosi IS NULL OR tk.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
    AND tk.poistettu IS NOT TRUE

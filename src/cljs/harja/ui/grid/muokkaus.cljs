@@ -123,15 +123,20 @@
         hiirella-fokusoitu? (atom false)
         hiiri? (atom false)
         ilmoitus-suljettu? (atom false)
+        ;; Ilmoitus näytetään vain näppäimistöfokuksella tai hoverilla. Hiirellä klikkaus
+        ;; antaa fokuksen, mutta se ei saa jättää ilmoitusta näkyviin hiiren poistuttua.
+        hiiri-painettu? (atom false)
         fokus-elementille #(do
                              (reset! fokus? true)
-                             (reset! nappaimisto-fokus? (not @hiirella-fokusoitu?))
-                             (reset! ilmoitus-suljettu? false))
+                             (when-not @hiiri-painettu?
+                               (reset! nappaimisto-fokus? (not @hiirella-fokusoitu?))
+                               (reset! ilmoitus-suljettu? false)))
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
                                       fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
                                                                     (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
                                   (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
-                                    (reset! fokus? false)))
+                                    (reset! fokus? false)
+                                    (reset! nappaimisto-fokus? false)))
         tayta-alas-key (str (gensym "tayta"))
         kentan-key (str (gensym "kentta"))
         seuranta-avain (keyword (str (gensym (str i nimi))))
@@ -226,8 +231,8 @@
                                    fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
                                                                  (.getAttribute uusi-fokusoitu-komponentti "data-komponentin-nimi"))]
                                (when-not (#{"tayta-alas-div" "tayta-alas-nappi"} fokusoidun-komponentin-nimi)
-                                 (let [fokus-solussa? (and uusi-fokusoitu-komponentti
-                                                        (.contains (.-currentTarget %) uusi-fokusoitu-komponentti))]
+                                 (let [fokus-solussa? (boolean (and uusi-fokusoitu-komponentti
+                                                                 (.contains (.-currentTarget %) uusi-fokusoitu-komponentti)))]
                                    (reset! fokus? fokus-solussa?)
                                    (when-not fokus-solussa?
                                      (reset! nappaimisto-fokus? false)
@@ -235,11 +240,14 @@
                    :on-mouse-down #(do
                                      (reset! hiirella-fokusoitu? true)
                                      (reset! nappaimisto-fokus? false)
+                                     (reset! hiiri-painettu? true)
                                      (reset! ilmoitus-suljettu? false))
+                   :on-mouse-up #(reset! hiiri-painettu? false)
                    :on-mouse-enter #(do
                                       (reset! hiiri? true)
                                       (reset! ilmoitus-suljettu? false))
-                   :on-mouse-leave #(reset! hiiri? false)
+                   :on-mouse-leave #(do (reset! hiiri? false)
+                                        (reset! hiiri-painettu? false))
                    :on-key-down #(cond
                                    (dom/esc-nappain? %)
                                    (reset! ilmoitus-suljettu? true)

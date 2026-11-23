@@ -59,13 +59,6 @@
            :leveys 15
            :muokattava? (constantly false)}
 
-          {:otsikko "Muutoksen syy"
-           :nimi :syy
-           :tyyppi :text
-           :pituus-max 1000
-           :koko [50 3]
-           :leveys 25}
-
           {:otsikko "Suunniteltu määrä"
            :nimi :summa-indeksikorjattu
            :tyyppi :numero
@@ -96,6 +89,14 @@
            :tasaa :oikea
            :leveys 10
            :muokattava? (constantly false)}
+
+          {:otsikko "Muutoksen syy"
+           :nimi :syy
+           :tyyppi :text
+           :pituus-max 1000
+           :koko [50 3]
+           :leveys 25}
+          
           ;; Tyhjä sarake, jotta "Tavoitehinnan muutos (€)" -sarake asettuun samaan kohtaan kuin muissa muutostauluissa
           ;; Muissa tauluissa tässä sarakkeessa on toimintopainikkeet, mutta tässä ei ole toimintoja
           {:otsikko ""

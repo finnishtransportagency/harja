@@ -136,10 +136,11 @@
         reitit (reduce
                  (fn [tulos nimi]
                    (let [;; Excelistä tuotavalla talvihoitoreitillä ei ole tunnistetta tai ulkoista id:tä, joten käytetään nimeä
-                         nimi (normalisoi-reitin-nimi nimi)
+                         normalisoitu-nimi (normalisoi-reitin-nimi nimi)
                          reitin-kalusto (some #(when (= (:nimi %) nimi) %) kalusto-rivit)
-                         talvihoitoreitti {:reittinimi nimi
-                                           :tunniste nimi
+
+                         talvihoitoreitti {:reittinimi normalisoitu-nimi
+                                           :tunniste normalisoitu-nimi
                                            :sijainnit (map #(dissoc % :nimi) (get-in reitti-rivit [nimi]))
                                            :kalustot {:tr_maara (konversio/konvertoi->int (:tr reitin-kalusto))
                                                       :ka_maara (konversio/konvertoi->int (:ka reitin-kalusto))

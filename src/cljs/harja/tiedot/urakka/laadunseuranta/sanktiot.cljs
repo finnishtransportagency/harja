@@ -110,6 +110,14 @@
   [laji]
   (domain-sanktio/sanktio-konfiguraation-sanktiotyypit @valitun-urakan-sanktio-konfiguraatio laji))
 
+(defn sanktiotyypin-automaattinen-summa
+  [sanktiotyyppi]
+  (domain-sanktio/sanktiotyypin-kiintea-automaattinen-summa sanktiotyyppi))
+
+(defn sanktiotyypilla-kiintea-automaattinen-summa?
+  [sanktiotyyppi]
+  (domain-sanktio/sanktiotyypilla-kiintea-automaattinen-summamaaritys? sanktiotyyppi))
+
 (def valitun-urakan-sanktiolajit
   "Valitulle urakalle mahdolliset sanktiolajit resolverin palauttamasta sanktio-konfiguraatiosta."
   (reaction
@@ -141,22 +149,22 @@
 
     (merge
       {:harja.ui.lomake/muokatut #{:kasittelyaika}
-            :suorasanktio true
-            :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
-            :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                                 (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                             :valikatselmus
-                             nil)
-            :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
-                               (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
-                           :tyomaakokous
-                           nil)
-            :perintapvm default-perintapvm
-            :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
-                                   (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
-            :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
-                             :paatos {:paatos "sanktio"
-                                      :kasittelyaika nyt}}}
+       :suorasanktio true
+       :laji (oletus-uuden-sanktion-laji urakkatyyppi @valitun-urakan-sanktiolajit)
+       :kasittelytapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                            (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                        :valikatselmus
+                        nil)
+       :maaraystapa (if (and (u-domain/mh-urakka? urakkatyyppi)
+                          (>= (pvm/vuosi (:alkupvm @nav/valittu-urakka)) 2025))
+                      :tyomaakokous
+                      nil)
+       :perintapvm default-perintapvm
+       :toimenpideinstanssi (when (= 1 (count @urakka/urakan-toimenpideinstanssit))
+                              (:tpi_id (first @urakka/urakan-toimenpideinstanssit)))
+       :laatupoikkeama {:tekijanimi @istunto/kayttajan-nimi
+                        :paatos {:paatos "sanktio"
+                                 :kasittelyaika nyt}}}
       (when mhu25? {:tehtavaryhma  hoidonjohtopalkkio-tr}))))
 
 (defn pyorayta-laskutuskuukausi-valinnat
@@ -354,13 +362,12 @@
                                  toimenpideinstanssit)
     toimenpideinstanssit))
 
-(defn mahdolliset-kulun-kohdistukset [suorasanktio? urakan-alkuvuosi sanktio-atom]
+(defn mahdolliset-kulun-kohdistukset [suorasanktio? sanktio-atom mhu25?]
   (cond
     ;; MHU25+: näytetään vain Hoidonjohtopalkkio sekä suorasanktiolle että laatupoikkeaman sanktiolle
-    (> urakan-alkuvuosi 2024)
+    (true? mhu25?)
     (filter #(= "23150" (:t2_koodi %)) @urakka/urakan-toimenpideinstanssit)
-
-    ;; MHU24 tai vanhempi: suodatetaan tyypin mukaan
+    ;; MHU24 tai vanhempi hoitourakka, kaikki muut urakkatyypit: suodatetaan sanktiotyypin mukaan
     :else
     (valittavat-kulun-kohdistukset @urakka/urakan-toimenpideinstanssit (get-in @sanktio-atom [:tyyppi :nimi]))))
 

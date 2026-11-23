@@ -19,6 +19,8 @@
   mielekästä näyttää käyttäjälle."
 
   (:require [com.stuartsierra.component :as component]
+            [cheshire.core :as cheshire]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [taoensso.timbre :as log]
             [clojure.java.jdbc :as jdbc]
 
@@ -44,10 +46,13 @@
             [harja.domain.urakka :as domain-urakka]
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
 
+            [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
             [harja.domain.oikeudet :as oikeudet]
-            [harja.id :refer [id-olemassa?]]))
+            [harja.id :refer [id-olemassa?]]
+            [slingshot.slingshot :refer [throw+]]))
 
 
 (defn hae-urakan-laatupoikkeamat [db user {:keys [listaus urakka-id alku loppu]}]
@@ -128,6 +133,11 @@
                     (sanktiot/hae-laatupoikkeaman-sanktiot db laatupoikkeama-id))
         :liitteet (into [] (laatupoikkeamat-q/hae-laatupoikkeaman-liitteet db laatupoikkeama-id))))))
 
+(defn- bonus-rivin-hoitovuosi
+  [urakan-alkupvm {:keys [kasittelyaika maarattypvm]}]
+  (when-let [paivamaara (or kasittelyaika maarattypvm)]
+    (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)))
+
 (defn hae-urakan-sanktiot-ja-bonukset
   "Hakee urakan sanktiot ja/tai bonukset perintäpvm:n ja urakka-id:n perusteella
   Oletusarvoisesti sekä sanktioden, että bonusten rivit molemmat haetaan ja palautetaan.
@@ -149,10 +159,34 @@
                                                             :alku (konv/sql-timestamp alku)
                                                             :loppu (konv/sql-timestamp loppu)})
                           []) ;;Hox! Sisältää myös ylläpidon bonukset, jotka ovat oikeasti sanktioita
+        urakan-tiedot (first (urakat/hae-urakka db {:id urakka-id}))
+        teiden-hoito? (= :teiden-hoito (keyword (:tyyppi urakan-tiedot)))
+        bonusten-lajien-nimet (when teiden-hoito?
+                                (->> urakan-bonukset
+                                  (remove #(= :yllapidon_bonus (:laji %)))
+                                  (keep (fn [bonus]
+                                          (let [hoitovuosi (bonus-rivin-hoitovuosi (:alkupvm urakan-tiedot) bonus)]
+                                            (when (and hoitovuosi (:toimenpideinstanssi bonus))
+                                              [(:toimenpideinstanssi bonus) hoitovuosi]))))
+                                  distinct
+                                  (map (fn [[toimenpideinstanssi-id hoitovuosi]]
+                                         [[toimenpideinstanssi-id hoitovuosi]
+                                          (bonus-konfiguraatio/hae-urakan-bonus-lajien-nimet
+                                            db {:urakka-id urakka-id
+                                                :hoitovuosi hoitovuosi
+                                                :toimenpideinstanssi-id toimenpideinstanssi-id})]))
+                                  (into {})))
         bonukset (into []
                    ;; Merkitse bonusrivit bonuksiksi, jotta ne erottaa helposti sanktioista.
-                   (map #(assoc % :bonus? true))
-                   urakan-bonukset)
+                   (map (fn [bonus]
+                          (let [hoitovuosi (bonus-rivin-hoitovuosi (:alkupvm urakan-tiedot) bonus)
+                                profiilin-nimi (get-in bonusten-lajien-nimet
+                                                [[(:toimenpideinstanssi bonus) hoitovuosi] (:laji bonus)])]
+                            (cond-> (assoc bonus :bonus? true)
+                              (and teiden-hoito? (not= :yllapidon_bonus (:laji bonus)))
+                              (assoc :laji-nimi (or (not-empty profiilin-nimi)
+                                                  "Bonuksen nimi puuttuu aktiivisesta bonusprofiilista")))))
+                   urakan-bonukset))
         ;; Koostetaan lopuksi sanktio ja bonukset yhteen vektoriin ja ajetaan alaviiva->rakenne muunnos kaikille riveille
         sanktiot-ja-bonukset (into []
                                (map konv/alaviiva->rakenne
@@ -203,15 +237,6 @@
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
                                    sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
-(defn vaadi-sanktio-kuuluu-urakkaan
-  "Tarkistaa, että sanktio kuuluu annettuun urakkaan"
-  [db urakka-id sanktio-id]
-  (when (id-olemassa? sanktio-id)
-    (let [sanktion-urakka (:urakka (first (sanktiot/hae-sanktion-urakka-id db {:sanktioid sanktio-id})))]
-      (when-not (= sanktion-urakka urakka-id)
-        (throw (SecurityException. (str "Sanktio " sanktio-id " ei kuulu valittuun urakkaan "
-                                     urakka-id " vaan urakkaan " sanktion-urakka)))))))
-
 (defn vaadi-talvisuolan-ylitys-ehto
   "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
   sanktion laji on talvisuolan ylitys
@@ -237,16 +262,62 @@
        :laji laji
        :sanktiotyyppi-id sanktiotyyppi-id})))
 
+(defn- tarkista-sanktion-lukitus
+  [db urakka-id urakan-tiedot sanktio paivamaara]
+  (let [laji (if (keyword? (:laji sanktio))
+               (:laji sanktio)
+               (some-> (:laji sanktio) keyword))
+        hoitovuosi (some-> paivamaara pvm/joda-timeksi pvm/hoitokauden-alkuvuosi)
+        lukittava-ominaisuus (when laji
+                               (if (= laji :arvonvahennyssanktio)
+                                 :arvonvahennys
+                                 :sanktio))]
+    (when (and lukittava-ominaisuus
+            hoitovuosi
+            (or (= lukittava-ominaisuus :sanktio)
+              (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
+                urakan-tiedot (pvm/vuodesta-hoitokausi hoitovuosi))))
+      (when-not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
+                  db urakka-id hoitovuosi lukittava-ominaisuus)
+        (throw+ {:type virheet/+viallinen-kutsu+
+                 :virheet [{:koodi virheet/+sisainen-kasittelyvirhe-koodi+
+                            :viesti "Välikatselmuksessa hoitovuodelle tehdyt päätökset estävät tallentamisen."}]})))))
+
+(defn- vaadi-manuaalinen-maara
+  [maara]
+  (when-not (number? maara)
+    (throw (IllegalArgumentException. "Manuaalisen sanktion määrän pitää olla numero.")))
+  (let [maara (-> (bigdec (str maara))
+                (.stripTrailingZeros))]
+    (when (or (neg? maara) (> (.scale maara) 2))
+      (throw (IllegalArgumentException.
+               "Manuaalisen sanktion määrän pitää olla vähintään 0 ja sisältää enintään kaksi desimaalia.")))
+    maara))
+
+(defn- absoluuttinen-maara
+  [maara]
+  (if (decimal? maara)
+    (.abs (bigdec maara))
+    (Math/abs maara)))
+
 (defn tallenna-laatupoikkeaman-sanktio
   [db user {:keys [id perintapvm maarattypvm maaraystapa laji tyyppi summa laskutusrajan-ylitys indeksi suorasanktio
-                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava] :as sanktio}
-   laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti]}]
+                   toimenpideinstanssi vakiofraasi kasittelytapa poistettu tehtavaryhma tehtava
+                   omailmoitettu laskettava-syote] :as sanktio}
+   laatupoikkeama-id urakka kasittelyaika {:keys [paivamaara soveltuvuuskonteksti ohita-lukitus?]}]
   (log/debug "TALLENNA sanktio: " sanktio ", urakka: " urakka ", tyyppi: " tyyppi ", laatupoikkeamaan " laatupoikkeama-id)
-  (when (id-olemassa? id) (vaadi-sanktio-kuuluu-urakkaan db urakka id))
+  (when (id-olemassa? id) (laatupoikkeamat-q/vaadi-sanktio-kuuluu-urakkaan db urakka id))
 
   (let [urakan-tiedot (first (urakat/hae-urakka db urakka))
+        olemassa-oleva-sanktio (when (id-olemassa? id)
+                                 (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
         _ (when (= :talvisuolan_ylitys laji) (vaadi-talvisuolan-ylitys-ehto urakan-tiedot kasittelyaika))
-        summa (if (decimal? summa)
+        vanha-sanktio (when (id-olemassa? id)
+                        (first (sanktiot/hae-suorasanktion-tiedot db {:id id})))
+        _ (when-not ohita-lukitus?
+            (tarkista-sanktion-lukitus
+              db urakka urakan-tiedot vanha-sanktio (or (:perintapvm vanha-sanktio) (:maarattypvm vanha-sanktio))))
+        pyynto-summa (if (decimal? summa)
                 (double summa) ;; Math/abs ei kestä BigDecimaalia, joten varmistetaan, ettei sitä käytetä
                 summa)
         ;; MHU-urakoissa joiden alkuvuosi 2021 tai myöhemmin, ei koskaan sidota indeksiin
@@ -261,16 +332,97 @@
                         (when laji
                           (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
         paivamaara (or paivamaara perintapvm)
+        _ (when-not ohita-lukitus?
+            (tarkista-sanktion-lukitus
+              db urakka urakan-tiedot sanktio paivamaara))
         _ (when (= :yllapidon_bonus laji)
             (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
-        _ (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
-            db
-            {:urakka-id urakka
-             :urakan-alkupvm (:alkupvm urakan-tiedot)
-             :paivamaara paivamaara
-             :soveltuvuuskonteksti soveltuvuuskonteksti
-             :laji laji
-             :sanktiotyyppi-id sanktiotyyppi})
+        profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
+                       db
+                       {:urakka-id urakka
+                        :urakan-alkupvm (:alkupvm urakan-tiedot)
+                        :paivamaara paivamaara
+                        :soveltuvuuskonteksti soveltuvuuskonteksti
+                        :laji laji
+                        :sanktiotyyppi-id sanktiotyyppi})
+        sama-profiilirivi? (= (:sanktio_profiili_rivi olemassa-oleva-sanktio)
+                              (get-in profiilirivi [:profiilirivi :id]))
+        profiilin-summamaaritykset (:profiilirivi profiilirivi)
+        laskettu-maaritys (sanktion-laskenta/laskettu-summamaaritys profiilin-summamaaritykset)
+        maaritystapa (if laskettu-maaritys
+                       :laskettu
+                       (some-> profiilin-summamaaritykset :summamaaritykset first :maaritystapa))
+        profiilin-manuaalinen-viitemaara
+        (when (= :manuaalinen maaritystapa)
+          (some (fn [{:keys [summa-euroina]}]
+                  (when (number? summa-euroina)
+                    summa-euroina))
+            (:summamaaritykset profiilin-summamaaritykset)))
+        kiintea-automaattinen-summa? (sanktiot-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+                                       profiilin-summamaaritykset)
+        automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
+                                      profiilin-summamaaritykset)
+        tilannekuvan-maaritystapa (when sama-profiilirivi?
+                                    (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
+                                      ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
+                                      (when-not (= :laskettu tallennettu) tallennettu)))
+        tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
+        manuaalinen-maara (when (= :manuaalinen maaritystapa)
+                            (if (= :C laji)
+                              (vaadi-manuaalinen-maara summa)
+                              pyynto-summa))
+        omailmoitettu (if (nil? omailmoitettu) false omailmoitettu)
+        _ (when-not (boolean? omailmoitettu)
+            (throw (IllegalArgumentException.
+                     "Omailmoitusvalinnan pitää olla totuusarvo.")))
+        _ (when (and laskettu-maaritys omailmoitettu)
+            (throw (IllegalArgumentException.
+                     "Omailmoituspuolitus ei ole sallittu lasketulle sanktiolle.")))
+        _ (when (and omailmoitettu
+                  (not (:voi-puolittaa-omailmoituksella (:profiilirivi profiilirivi))))
+            (throw (IllegalArgumentException.
+                     "Omailmoituspuolitus ei ole sallittu sanktion profiilirivillä.")))
+        ;; Palvelin laskee summan itse; pyynnön summa, normaalimäärä ja laskennan syöte ohitetaan.
+        ;; Muuttumattomalla raakasyötteellä vanha tapahtuma säilyttää tallennetun snapshotin ja määrät,
+        ;; jos aktiivisen profiilin parametrit vastaavat snapshotia. Aktiivisen profiilin parametrimismatch
+        ;; aiheuttaa uudelleenlaskennan. Snapshotin laskentatavan, version ja syöteavaimen pitää myös vastata
+        ;; nykyistä määritystä, jottei toisen lajin laskenta säily.
+        vanha-laskenta (when (and laskettu-maaritys
+                               (= "laskettu" (:maaritystapa olemassa-oleva-sanktio))
+                               (sanktion-laskenta/snapshot-vastaa-maaritysta?
+                                 (:laskennan-syote olemassa-oleva-sanktio) laskettu-maaritys)
+                               (sanktion-laskenta/syote-vastaa-snapshotia?
+                                 (:laskennan-syote olemassa-oleva-sanktio) laskettava-syote)
+                               (number? (:normaalimaara olemassa-oleva-sanktio))
+                               (number? (:summa olemassa-oleva-sanktio)))
+                         {:summa (:normaalimaara olemassa-oleva-sanktio)
+                          :laskennan-syote (:laskennan-syote olemassa-oleva-sanktio)})
+        laskenta (when laskettu-maaritys
+                   (or vanha-laskenta
+                     (sanktion-laskenta/laske-sanktion-summa laskettu-maaritys laskettava-syote)))
+        normaalimaara (if laskenta
+                        (:summa laskenta)
+                        (if (and tilannekuvan-automaattinen-maara?
+                              (number? (:normaalimaara olemassa-oleva-sanktio))
+                              (pos? (:normaalimaara olemassa-oleva-sanktio))
+                              (Double/isFinite (double (:normaalimaara olemassa-oleva-sanktio))))
+                          (:normaalimaara olemassa-oleva-sanktio)
+                          (if (= :manuaalinen maaritystapa)
+                            (or profiilin-manuaalinen-viitemaara manuaalinen-maara)
+                            (if kiintea-automaattinen-summa?
+                              (if (and (number? automaattinen-summa-raakana)
+                                    (pos? automaattinen-summa-raakana)
+                                    (Double/isFinite (double automaattinen-summa-raakana)))
+                                (double automaattinen-summa-raakana)
+                                (throw (IllegalArgumentException.
+                                         (str "Sanktiolajin " (name laji)
+                                           " profiilin automaattinen summamääritys puuttuu tai on epäkelpo."))))
+                              pyynto-summa))))
+        summa (cond
+                (= :manuaalinen maaritystapa) manuaalinen-maara
+                vanha-laskenta (:summa olemassa-oleva-sanktio)
+                omailmoitettu (/ normaalimaara 2)
+                :else normaalimaara)
         params {;; Perintäpäivä voi olla null. UI:lla voi tapahtua niin, että jos sanktio on muokattu ensin tyhjälle perintäpäivälle ja sitten poistettu
                 ;; Tätä ei kokonaan voi ui:lta estää. Joten tehdään perintäpäivän tallennuksesta ui:n kestävä, poistetuille sanktioille
                 :perintapvm (if
@@ -287,10 +439,15 @@
                 :tpi_id toimenpideinstanssi
                 :urakka urakka
                 ;; bonukselle miinus etumerkiksi, muistutuksen summa on kuitenkin nil
+                :normaalimaara normaalimaara
+                :omailmoitettu omailmoitettu
+                :sanktio_profiili_rivi (get-in profiilirivi [:profiilirivi :id])
+                :maaritystapa (some-> (if laskenta :laskettu (or tilannekuvan-maaritystapa maaritystapa)) name)
+                :laskennan_syote (some-> laskenta :laskennan-syote cheshire/generate-string)
                 :summa (when summa
                          (if (= :yllapidon_bonus laji)
-                           (- (Math/abs summa))
-                           (Math/abs summa)))
+                           (- (absoluuttinen-maara summa))
+                           (absoluuttinen-maara summa)))
                 :laskutusrajan-ylitys laskutusrajan-ylitys
                 :indeksi indeksi
                 :laatupoikkeama laatupoikkeama-id
@@ -444,19 +601,24 @@
   [db user tiedot]
   (bonus-konfiguraatio/hae-bonus-profiilin-detalji-admin db user tiedot))
 
-(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm]]
+(defn tallenna-suorasanktio [db user sanktio laatupoikkeama urakka [hk-alkupvm hk-loppupvm ohita-lukitus?]]
   (log/debug "Tallenna suorasanktio " (:id sanktio) " laatupoikkeamaan " (:id laatupoikkeama) ", urakassa " urakka)
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka (:yllapitokohde laatupoikkeama)))
-  (let [olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
+  (let [laatupoikkeama (if (and (= 22 (get-in sanktio [:tyyppi :koodi]))
+                               (contains? #{:sanktio "sanktio"} (get-in laatupoikkeama [:paatos :paatos]))
+                               (nil? (get-in laatupoikkeama [:paatos :perustelu])))
+                        (assoc-in laatupoikkeama [:paatos :perustelu] "Laskettava sanktio")
+                        laatupoikkeama)
+        olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))
         laatupoikkeaman-sanktion-muokkaus? (boolean (and olemassa-oleva-sanktio
-                                                       (not (:suorasanktio olemassa-oleva-sanktio))))]
+                                                      (not (:suorasanktio olemassa-oleva-sanktio))))]
     (when laatupoikkeaman-sanktion-muokkaus?
       ;; Varmistetaan että muokattava sanktio kuuluu annettuun urakkaan. Varsinainen muokkausoikeus
       ;; tulee kirjoitusoikeudesta (W), joka on jo vaadittu ylhäällä.
-      (vaadi-sanktio-kuuluu-urakkaan db urakka (:id sanktio)))
+      (laatupoikkeamat-q/vaadi-sanktio-kuuluu-urakkaan db urakka (:id sanktio)))
     (jdbc/with-db-transaction [c db]
       ;; poistetaan laatupoikkeama vain jos kyseessä on suorasanktio,
       ;; koska laatupoikkeamalla voi olla 0...n sanktiota
@@ -464,9 +626,9 @@
             sanktio (varmista-sanktion-tiedot laatupoikkeama sanktio)
         ;; Vanhoilla urakoilla käsittelytapa valitaan sanktiolomakkeella.
         ;; Päätöksen tallennus käyttää laatupoikkeaman päätöstä, joten pidä arvot samoina.
-        laatupoikkeama (if (:kasittelytapa sanktio)
-                 (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
-                 laatupoikkeama)
+            laatupoikkeama (if (:kasittelytapa sanktio)
+                             (assoc-in laatupoikkeama [:paatos :kasittelytapa] (:kasittelytapa sanktio))
+                             laatupoikkeama)
             ;; Laatupoikkeaman kautta tehtyä sanktiota muokattaessa säilytetään laatupoikkeaman ne
             ;; kentät, joita sanktiolomake ei näytä eikä käsittele oikein (tekijä, selvityspyyntö sekä
             ;; poikkeamaraportti-lippu). Näin muokkaus ei tyhjennä niitä. Suorasanktioille ja uusille
@@ -486,65 +648,53 @@
             {:keys [kasittelyaika paatos perustelu kasittelytapa muukasittelytapa]} (:paatos laatupoikkeama)
             _ (laatupoikkeamat-q/kirjaa-laatupoikkeaman-paatos! c
                 (konv/sql-timestamp kasittelyaika)
-              (if (keyword? paatos) (name paatos) paatos) perustelu
-              (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
+                (if (keyword? paatos) (name paatos) paatos) perustelu
+                (if (keyword? kasittelytapa) (name kasittelytapa) kasittelytapa) muukasittelytapa
                 (:id user)
                 id)
             sanktio-id (tallenna-laatupoikkeaman-sanktio
                          c user sanktio id urakka kasittelyaika
                          {:paivamaara hk-alkupvm
-                          :soveltuvuuskonteksti :urakka})
+                          :soveltuvuuskonteksti :urakka
+                          :ohita-lukitus? ohita-lukitus?})
             _ (tallenna-laatupoikkeaman-liitteet c laatupoikkeama id)]
         sanktio-id))))
-
-(defn poista-laatupoikkeaman-sanktio
-  "Poistaa laatupoikkeaman kautta määrätyn (ei-suora)sanktion. Palauttaa sanktion ID:n.
-
-  Toisin kuin suorasanktion poistossa, laatupoikkeamaa EI poisteta, koska laatupoikkeamalla voi
-  olla omaa arvoa ja se voi sisältää useita sanktioita. Sanktion poiston jälkeen laatupoikkeaman
-  päätös perutaan (käsittelytiedot ja päätös nollataan). Tämä poistaa laatupoikkeaman lukituksen ja
-  mahdollistaa laatupoikkeaman muokkauksen (vrt. HARJA-1954). Päätös perutaan silloinkin, kun
-  laatupoikkeamalle jää muita aktiivisia sanktioita — päätös tulee tällöin antaa uudelleen."
-  [db user {sanktio-id :id urakka-id :urakka-id} sanktio]
-  (oikeudet/vaadi-oikeus "poisto" oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
-  (vaadi-sanktio-kuuluu-urakkaan db urakka-id sanktio-id)
-  (jdbc/with-db-transaction [c db]
-    (sanktiot/poista-sanktio! c {:id sanktio-id
-                                 :muokkaaja (:id user)})
-    ;; Perutaan laatupoikkeaman päätös, jotta lukitus poistuu ja laatupoikkeamaa voi taas muokata.
-    ;; Laatupoikkeamalle mahdollisesti jäävät muut aktiiviset sanktiot säilyvät ennallaan, ja päätös
-    ;; annetaan niille uudelleen laatupoikkeaman muokkauksen yhteydessä.
-    (when-let [laatupoikkeama-id (:laatupoikkeama_id sanktio)]
-      (laatupoikkeamat-q/peru-laatupoikkeaman-paatos! c {:id laatupoikkeama-id
-                                                         :muokkaaja (:id user)}))
-    (sanktiot/merkitse-maksuera-likaiseksi! c sanktio-id)
-    sanktio-id))
 
 (defn poista-sanktio
   "Merkitsee suorasanktion ja siihen liittyvän laatupoikkeaman poistetuksi. Palauttaa sanktion ID:n.
 
   Laatupoikkeaman kautta määrätty (ei-suora)sanktio poistetaan poista-laatupoikkeaman-sanktio
-  -funktiolla, jolloin laatupoikkeamaa ei poisteta vaan sen päätös perutaan."
-  [db user {sanktio-id :id urakka-id :urakka-id :as tiedot}]
-  (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
-  (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
-  (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
+  -funktiolla, jolloin laatupoikkeamaa ei poisteta vaan sen päätös perutaan.
+  Valinnaisella ohitusparametrilla voidaan ohittaa hoitovuoden lukitus esimerkiksi lupauspäätöstä peruttaessa."
+  ([db user tiedot]
+   (poista-sanktio db user tiedot false))
+  ([db user {sanktio-id :id urakka-id :urakka-id} ohita-lukitus?]
+   (assert (integer? sanktio-id) "Parametria 'sanktio-id' ei ole määritelty")
+   (assert (integer? urakka-id) "Parametria 'urakka-id' ei ole määritelty")
+   (log/debug "Merkitse suorasanktio " sanktio-id " ja siihen liittyvä laatupoikkeama poistetuksi urakassa " urakka-id)
 
-  (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
+   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka-id)
 
-  (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))]
-    (if-not (:suorasanktio sanktio)
-      ;; Laatupoikkeaman kautta määrätty sanktio: laatupoikkeamaa ei poisteta.
-      (poista-laatupoikkeaman-sanktio db user tiedot sanktio)
-      ;; Suorasanktio: poistetaan sekä sanktio että siihen liittyvä laatupoikkeama.
-      (jdbc/with-db-transaction [c db]
-        (when-let [laatupoikkeama-id (:laatupoikkeama_id sanktio)]
-          (laatupoikkeamat-q/poista-laatupoikkeama c user {:id laatupoikkeama-id
-                                                           :urakka-id urakka-id}))
-        (sanktiot/poista-sanktio! c {:id sanktio-id
-                                     :muokkaaja (:id user)})
-        (sanktiot/merkitse-maksuera-likaiseksi! c sanktio-id)
-        sanktio-id))))
+   (let [sanktio (first (sanktiot/hae-suorasanktion-tiedot db {:id sanktio-id}))]
+     (when-not ohita-lukitus?
+       (tarkista-sanktion-lukitus
+         db urakka-id (first (urakat/hae-urakka db urakka-id)) sanktio
+         (or (:perintapvm sanktio) (:maarattypvm sanktio))))
+     (laatupoikkeamat-q/poista-sanktio-tietokannasta db user urakka-id sanktio))))
+
+(defn hae-lukitustiedot [db user tiedot]
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-laadunseuranta-sanktiot user (:urakka-id tiedot))
+  (let [urakan-tiedot (first (urakat/hae-urakka db {:id (:urakka-id tiedot)}))
+        urakan-alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        urakan-loppuvuosi (-> urakan-tiedot :loppupvm pvm/vuosi)
+        viimeinen-hoitovuosi (if (>= (pvm/kuukausi (:loppupvm urakan-tiedot)) 10)
+                               urakan-loppuvuosi
+                               (dec urakan-loppuvuosi))]
+    (mapv (fn [vuosi]
+            {:vuosi vuosi
+             :arvonvahennys-lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db (:urakka-id tiedot) vuosi :arvonvahennys))
+             :sanktio-lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db (:urakka-id tiedot) vuosi :sanktio))})
+      (range urakan-alkuvuosi (inc viimeinen-hoitovuosi)))))
 
 (defrecord Laadunseuranta []
   component/Lifecycle
@@ -620,7 +770,12 @@
 
       :hae-bonuksen-liitteet
       (fn [user {:keys [urakka-id bonus-id]}]
-        (hae-bonuksen-liitteet db user urakka-id bonus-id)))
+        (hae-bonuksen-liitteet db user urakka-id bonus-id))
+
+      :hae-sanktioiden-lukitustiedot
+      (fn [user tiedot]
+        (hae-lukitustiedot db user tiedot)))
+
     (when pdf-vienti
       (pdf-vienti/rekisteroi-pdf-kasittelija! pdf-vienti :bonukset-ja-sanktiot (partial #'bonukset-ja-sanktiot-pdf db)))
     (when excel-vienti
@@ -644,5 +799,6 @@
       :poista-sanktio
       :hae-urakan-laatupoikkeama-liitteet
       :hae-sanktion-liitteet
-      :hae-bonuksen-liitteet)
+      :hae-bonuksen-liitteet
+      :hae-sanktioiden-lukitustiedot)
     this))

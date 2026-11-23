@@ -361,7 +361,7 @@ SELECT
         WHEN (u.tyyppi IN ('hoito'::urakkatyyppi, 'teiden-hoito'::urakkatyyppi) AND au.alue IS NOT NULL)
             THEN -- Luodaan yhtenäinen polygon alueurakan alueelle (multipolygonissa voi olla reikiä)
             ST_SimplifyPreserveTopology(hoidon_alueurakan_geometria(u.urakkanro), 50)
-        END                                     AS alueurakan_alue,
+    END                                         AS alueurakan_alue,
     up.laskutusraja_kaytossa                    AS laskutusraja_kaytossa,
     up.muutosten_hallinta                       AS muutostenhallinta_kaytossa,
     up.hoitovuoden_alun_tavoitehinta_kaytossa   AS hoitovuoden_alun_tavoitehinta_kaytossa

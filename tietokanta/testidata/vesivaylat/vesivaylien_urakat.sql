@@ -85,7 +85,7 @@ INSERT INTO urakka (nimi, indeksi, alkupvm, loppupvm, hallintayksikko, urakoitsi
 VALUES
   ('Rentoselän urakka',
     'MAKU 2010 Maarakennuskustannukset, kokonaisindeksi',
-    '2023-01-01', '2028-12-31',
+    '2023-10-01', '2028-09-30',
     (SELECT id FROM organisaatio WHERE nimi = 'Sisävesiväylät'),
     (SELECT id FROM organisaatio WHERE nimi = 'Pohjanmeren venepojat'),
     (SELECT id FROM hanke WHERE nimi = 'Rentoselän syvennyshanke'),
@@ -106,12 +106,12 @@ VALUES ((SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), TRUE, TRUE, 0
 -- Lisätään vanhalle vesiväyläurakalle toimenkuvia vesiväyläurakoiden uusien toimintojen kehittämistä varten
 insert into johto_ja_hallintokorvaus_toimenkuva (toimenkuva, "urakka-id", urakkakohtainen_nimi)
 VALUES
-    ('sopimusvastaava (ennen urakka-ajan alkua)', 60, 'Sopimusvastaava (ennen urakka-ajan alkua)'),
-    ('sopimusvastaava', 60, 'Sopimusvastaava'),
-    ('vastuunalainen työnjohtaja (ennen urakka-ajan alkua)', 60, 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'),
-    ('vastuunalainen työnjohtaja', 60, 'Vastuunalainen työnjohtaja'),
-    ('2. työnjohtaja', 60, '2. Työnjohtaja'),
-    ('työnjohtoharjoittelija', 60, 'Työnjohtoharjoittelija');
+    ('sopimusvastaava (ennen urakka-ajan alkua)', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Sopimusvastaava (ennen urakka-ajan alkua)'),
+    ('sopimusvastaava', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Sopimusvastaava'),
+    ('vastuunalainen työnjohtaja (ennen urakka-ajan alkua)', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Vastuunalainen työnjohtaja (ennen urakka-ajan alkua)'),
+    ('vastuunalainen työnjohtaja', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Vastuunalainen työnjohtaja'),
+    ('2. työnjohtaja', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), '2. Työnjohtaja'),
+    ('työnjohtoharjoittelija', (SELECT id FROM urakka WHERE nimi = 'Rentoselän urakka'), 'Työnjohtoharjoittelija');
 
 -- SOPIMUS
 INSERT INTO sopimus (nimi, paasopimus, alkupvm, loppupvm, harjassa_luotu, luotu)

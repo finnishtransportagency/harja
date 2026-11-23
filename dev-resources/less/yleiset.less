@@ -448,9 +448,52 @@ button > .ajax-loader {
   }
 }
 
+.lomake-vihje {
+  max-width: 100%;
+  overflow-wrap: break-word;
+
+  .vihjeen-sisalto {
+    padding: 0;
+  }
+}
+
+.lomake-vihje-rivittamaton {
+  white-space: nowrap;
+
+  .vihjeen-sisalto {
+    flex-wrap: nowrap;
+
+    > span {
+      white-space: nowrap;
+    }
+  }
+}
+
 .checkboxin-vihje {
   margin-top: 4px;
   margin-left: 35px; // Tulee checkboxin leveydestä (23px) + marginista (12px)
+}
+
+.vayla-checkbox + label.lomake-checkbox-pieni {
+  display: flex;
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+  align-items: flex-start;
+  max-width: 100%;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  font-size: 0.75rem;
+  line-height: 1.25rem;
+
+  &:before {
+    flex: 0 0 auto;
+  }
+
+  .lomake-checkbox-teksti {
+    min-width: 0;
+    overflow-wrap: anywhere;
+  }
 }
 
 .vastuuhenkilo {

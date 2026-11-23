@@ -15,7 +15,7 @@
                  [org.clojure/core.async "1.7.701"]
                  ;; Transit tietomuoto asiakkaan ja palvelimen väliseen kommunikointiin
                  [com.cognitect/transit-cljs "0.8.280"]
-                 [com.cognitect/transit-clj "1.1.363"]
+                 [com.cognitect/transit-clj "1.2.372"]
                  ;; Pätevä yksinkertainen työkalu esimerkiksi config-tiedostojen mergeämiseen
                  [meta-merge "1.0.0"]
 
@@ -46,7 +46,7 @@
                  [org.clojure/java.jmx "1.1.1"]
 
                  ;; -- JSON encode/decode
-                 [cheshire "6.2.0"]
+                 [cheshire "6.2.1"]
 
                  ;; -- HTTP palvelin, reititys ja kyselyiden cahetus
                  [cljs-http "0.1.49"]
@@ -81,10 +81,10 @@
                  [io.github.tatut/specql "20240920" :exclusions [org.clojure/java.jdbc]]
 
                  ;; -- GeoTools kirjastot geospatiaalisten tietojen käsittelyyn
-                 [org.geotools/gt-shapefile "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
-                 [org.geotools/gt-process-raster "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
-                 [org.geotools/gt-epsg-wkt "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
-                 [org.geotools/gt-swing "35.1" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
+                 [org.geotools/gt-shapefile "35.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]]
+                 [org.geotools/gt-process-raster "35.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]]
+                 [org.geotools/gt-epsg-wkt "35.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore]] ;; EPSG koordinaatistot
+                 [org.geotools/gt-swing "35.2" :exclusions [org.eclipse.emf/org.eclipse.emf.common org.eclipse.emf/org.eclipse.emf.ecore com.google.guava/guava]] ;; just for experimentation, remove when no longer needed
 
                  ;; -- XML zipper XML-tietorakenteiden käsittelyyn
                  [org.clojure/data.zip "0.1.1"] ;; Jos päivittää uusimpaan, aiheuttaa parsintaongelmia https://dev.clojure.org/jira/browse/DZIP-6
@@ -98,7 +98,7 @@
                  [com.draines/postal "2.0.5"]
 
                  ;; -- JMS-jonot (esim. tieliikenneilmoitukset)
-                 [org.apache.activemq/activemq-client "5.19.11" :exclusions [org.slf4j/slf4j-api]]
+                 [org.apache.activemq/activemq-client "5.19.12" :exclusions [org.slf4j/slf4j-api]]
 
 
                  ;; Ajax-kirjasto frontille
@@ -140,7 +140,7 @@
                  [slingshot "0.12.2"]
 
                  ;; PDF:n generointi
-                 [org.apache.xmlgraphics/fop "2.11"]
+                 [org.apache.xmlgraphics/fop "2.12"]
 
                  ;; Kevyt Java 11 java.net.http wrapper WebSocket-testaukseen
                  [java-http-clj "0.4.3"]
@@ -169,12 +169,12 @@
                          [org.apache.poi/poi-ooxml "5.5.1"]
                          ;; Ratkaise: https://security.snyk.io/vuln/SNYK-JAVA-COMMONSCODEC-561518
                          ;;   Pakotetaan commons-codec korkeampaan versioon
-                         [commons-codec "1.22.1"]
+                         [commons-codec "1.23.0"]
                          ;; jackson-core tulee gt-shapefilen mukana (versio 3.1.2, jossa haavoittuvuus) uudempaa ei ole tarjolla. Joten niin pakotetaan se uudempi mukaan.
-                         [tools.jackson.core/jackson-core "3.2.4"]
-                         [com.fasterxml.jackson.core/jackson-core "2.22.4"]
+                         [tools.jackson.core/jackson-core "3.3.0"]
+                         [com.fasterxml.jackson.core/jackson-core "2.23.0"]
                          ;; uudemmassa org.clojure/clojurescript voisi saada myös tähän päivityksen - Eli tarkista tämä kun clojurescript päivitetään
-                         [com.google.code.gson/gson "2.14.0"]]
+                         [com.google.code.gson/gson "2.15.0"]]
 
   :profiles {:uberjar {:aot :all}
              :dev {:test2junit-run-ant true}}

@@ -71,7 +71,7 @@ jobs:
           role-skip-session-tagging: true
 
       - name: Start Harja Fargate tasks
-        uses: ./.github/actions/start-fargate-tasks
+        uses: $/.github/actions/start-fargate-tasks
         timeout-minutes: 10
         # Pakota uudelleenkäynnistyminen
         if: always()

@@ -20,7 +20,7 @@ permissions: {}
 
 jobs:
   tests:
-    uses: ./.github/workflows/reusable_run_app_tests.yml
+    uses: $/.github/workflows/reusable_run_app_tests.yml
     # Permissions
     # https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     # https://docs.github.com/en/actions/using-workflows/reusing-workflows#access-and-permissions
@@ -32,7 +32,7 @@ jobs:
 
     with:
 
-      # Katso saatavilla olevat harjadb servicet docker-compose.yml:stä
+      # Katso saatavilla olevat harjadb servicet tools/docker/docker-compose.ci.yml:stä
       test-db-service: harjadb-latest
       e2e-browsers: "['chrome']"
       # PR-testeissä ajetaan vain kevyt build ja testauksen kannalta epärelevantit osat on jätetty pois.
