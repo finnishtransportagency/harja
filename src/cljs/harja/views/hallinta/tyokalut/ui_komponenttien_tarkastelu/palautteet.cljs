@@ -72,5 +72,14 @@
      [:span {:data-cy (kehys/ankkuri komponentti "-kohde")} "Vie hiiri tähän"]
      "Tooltipin sisältö"]]])
 
+(defn- tila-indikaattori [komponentti]
+  [kehys/kortti komponentti
+   [:p "Pallo ja teksti tilan näyttämiseen. Tekstin muotoilun antaa käyttöpaikka."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [yleiset/tila-indikaattori "valmis" {:fmt-fn (constantly "Valmis")}]
+    [yleiset/tila-indikaattori "kesken" {:fmt-fn (constantly "Kesken")}]
+    [yleiset/tila-indikaattori "hylatty" {:fmt-fn (constantly "Hylätty")}]]])
+
 (register! :leijuke {:esikatselu leijuke})
+(register! :tila-indikaattori {:esikatselu tila-indikaattori})
 (register! :tooltip {:esikatselu tooltip})

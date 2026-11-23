@@ -811,6 +811,25 @@
     :funktio "harja.ui.yleiset/taulukkotietonakyma"
     :asetukset {:style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Juurielementin tyylit (div.taulukko-tietonakyma)."}
                 :table-style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Taulukon tyylit (table)."}}}
+   {:id :tila-indikaattori
+    :nimi "Tila-indikaattori"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :palaute
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:teksti}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu :lomake :taulukko}
+    :bootstrap-tila :osittain-riippuvainen
+    :bootstrap-luokat ["caption"]
+    :funktio "harja.ui.yleiset/tila-indikaattori"
+    :kuvaus "Pallo ja teksti tilan näyttämiseen. Tila on käyttöpaikan antama merkkijono. Ilman class-skeemaa tunnistetaan tilat tilattu, ehdotettu, valmis, ei-tehda, hylatty ja kesken. Muut tilat saavat tyylin tila-ehdotettu."
+    :asetukset {:tila {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Näytettävä tila merkkijonona."}
+                :fmt-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Muotoilee tilan tekstiksi. Oletuksena tila sellaisenaan."}
+                :class-skeema {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Tilan ja CSS-luokan vastaavuudet."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Tekstiosan CSS-luokka."}
+                :wrapper-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ulkoisen div-elementin CSS-luokka."}}}
    {:id :info-laatikko
     :nimi "Info-laatikko"
     :ryhma :palautteet
