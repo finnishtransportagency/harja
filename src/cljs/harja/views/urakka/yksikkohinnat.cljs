@@ -10,6 +10,7 @@
             [harja.ui.ikonit :as ikonit]
             [harja.ui.valinnat :as valinnat]
             [harja.ui.yleiset :as yleiset]
+            [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.ui.varmista-kayttajalta :as varmista]
             [harja.tiedot.urakka.yksikkohinnat :as tiedot]))
@@ -82,7 +83,7 @@
      "."]))
 
 (defn- tallennus-painikkeet [e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot grid-rivit
-                             kopioi-tuleville-vuosille? tallentamattomia-muutoksia?]
+                             kopioi-tuleville-vuosille?]
   [:div.flex-row {:style {:justify-content "right"}}
    (if tallennustila?
      [:div.painikkeet.text-right.grid-status-viestit
@@ -112,6 +113,34 @@
         "Muokkaa oletushintoja"
         #(e! (tiedot/->ToggleTallennusTila))
         {:data-cy "btn-muokkaa-oletushintoja"}]]])])
+
+(defn- vaihda-hoitokautta! [e! app uusi-hoitokausi]
+  (let [vaihda! #(e! (tiedot/->HoitokausiVaihdettu uusi-hoitokausi))
+        nykyinen-vuosi
+        (fmt/hoitokauden-jarjestysluku-ja-vuodet
+          (:valittu-hoitokausi app)
+          (:urakan-hoitokaudet app)
+          "Urakkavuosi")]
+    (if (:tallentamattomia-muutoksia? app)
+      (varmista/varmista-kayttajalta
+        {:otsikko "Yrität siirtyä toiseen näkymään, ilman tietojen tallentamista"
+         :sisalto
+         [:p
+          "Olet tehnyt muutoksia näkymään "
+          [:strong nykyinen-vuosi]
+          ". Muutoksia ei ole vielä tallennettu."]
+         :hyvaksy "Tallenna muutokset"
+         :peruuta-txt "Peruuta"
+         :napit [:tallenna :peruuta]
+         :modal-luokka "harja-modal-keskitetty"
+         :luokka "modal-dialog-keskitetty-leveampi"
+         :toiminto-fn
+         #(do
+            (e! (tiedot/->TallennaYksikkohinnat
+                  (:yksikkohintaiset-tyot app)
+                  false))
+            (vaihda!))})
+      (vaihda!))))
 
 (defn tehtavat-grid-riveiksi
   [toimenpiteet-ja-tehtavat yksikkohintaiset-tyot]
@@ -194,6 +223,7 @@
                     :leveys "18%"
                     :nimi :indeksi_kaytossa
                     :tyyppi :valinta
+                    :pakollinen? tallennustila?
                     :valinnat indeksivaihtoehdot
                     :valinta-arvo :arvo
                     :valinta-nayta (fn [valinta]
@@ -211,10 +241,16 @@
                              (false? indeksi-kaytossa?) "-"
                              :else ""))
                     :tasaa :vasen
-                    :solun-luokka solun-luokka-fn
+                    :solun-luokka (fn [arvo rivi]
+                                      (cond-> (solun-luokka-fn arvo rivi)
+                                        (and tallennustila?
+                                          (:tehtava rivi)
+                                          (nil? (:indeksi_kaytossa rivi)))
+                                        (str "valinta-puuttuu")))
                     :muokattava? (fn [rivi]
                                    (and tallennustila?
-                                     (:tehtava rivi)))}
+                                     (:tehtava rivi)))
+                    :varoita [[:ei-tyhja "Anna arvo"]]}
                    {:otsikko "Hinta ilman indeksikorjausta\u2028€ / yksikkö"
                     :leveys "15%"
                     :nimi :yksikkohinta
@@ -293,9 +329,9 @@
 
 (defn yksikkohinnat-nakyma
   [e! {:keys [urakka urakan-hoitokaudet valittu-hoitokausi yksikkohintaiset-tyot
-              toimenpiteet-ja-tehtavat haku-kaynnissa? virhe
+              toimenpiteet-ja-tehtavat haku-kaynnissa?
               tallennus-kesken? tallennustila? viimeisin-muokkaus viimeisin-muokkaaja
-              avatut-tehtavaryhmat tallentamattomia-muutoksia? haku] :as app}]
+              avatut-tehtavaryhmat tallentamattomia-muutoksia?] :as app}]
   (let [grid-rivit (tehtavat-grid-riveiksi toimenpiteet-ja-tehtavat yksikkohintaiset-tyot)
         urakan-loppuvuoden-alkuvuosi (some-> urakan-hoitokaudet last first pvm/vuosi)
         valitun-hoitokauden-alkuvuosi (some-> valittu-hoitokausi first pvm/vuosi)
@@ -313,7 +349,7 @@
         [valinnat/urakan-hoitokausi-tuck
          valittu-hoitokausi
          urakan-hoitokaudet
-         #(e! (tiedot/->HoitokausiVaihdettu %))]]]
+         #(vaihda-hoitokautta! e! app %)]]]
       [:div.painikkeet.text-right
        [:div.grid-status-viestit
         (cond
@@ -337,24 +373,32 @@
            "Ei tallennettuja muutoksia"])]]]
 
      [tallennus-painikkeet e! app tallennus-kesken? tallennustila? yksikkohintaiset-tyot grid-rivit
-      (not onko-viimeinen-vuosi?) tallentamattomia-muutoksia?]
+      (not onko-viimeinen-vuosi?)]
 
      [tehtava-taulukko e! haku-kaynnissa? tallennustila? grid-rivit avatut-tehtavaryhmat urakan-indeksi urakan-perusluku]
      [debug/debug app]]))
 
 (defn- yksikkohinnat*
   [e! app urakka]
-  (komp/luo
-    (komp/sisaan
-      #(do
-         (e! (tiedot/->Alusta urakka))
-         (e! (tiedot/->HaeYksikkohintaisetTyot (:id urakka)))
-         (e! (tiedot/->HaeToimenpiteetJaTehtavat (:id urakka)))))
-
-    (fn [e! app]
-      [yksikkohinnat-nakyma
-       e!
-       (assoc app :urakka urakka)])))
+  (let [{:keys [sisaan ulos]}
+        (nav/luo-muutosten-hallinta
+          :yksikkohinnat/muutokset
+          #(get @tiedot/yksikkohinnat-app-tila
+             :tallentamattomia-muutoksia?)
+          :beforeunload-viesti
+          "Yksikköhinnoissa on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+    (komp/luo
+      (komp/sisaan
+        #(do
+           (sisaan)
+           (e! (tiedot/->Alusta urakka))
+           (e! (tiedot/->HaeYksikkohintaisetTyot (:id urakka)))
+           (e! (tiedot/->HaeToimenpiteetJaTehtavat (:id urakka)))))
+      (komp/ulos ulos)
+      (fn [e! app]
+        [yksikkohinnat-nakyma
+         e!
+         (assoc app :urakka urakka)]))))
 
 (defn yksikkohinnat
   [urakka]

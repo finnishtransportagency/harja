@@ -396,3 +396,31 @@
     }
   }
 }
+
+td.indeksi-rivi .alasveto-gridin-kentta {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+
+  &::before {
+    content: "Indeksi";
+    align-self: flex-start;
+    font-weight: bold;
+    margin-bottom: 0.25rem;
+  }
+}
+
+.yksikkohinnat {
+  .livi-grid td.valinta-puuttuu {
+    border-bottom: none !important;
+
+    .alasveto-gridin-kentta
+    button.nappi-alasveto {
+      border: 1.5px solid @vaara !important;
+
+      .livicon-exclamation-triangle {
+        color: @vaara !important;
+      }
+    }
+  }
+}

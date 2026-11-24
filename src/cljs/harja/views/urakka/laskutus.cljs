@@ -28,8 +28,10 @@
                                      (:tyyppi @nav/valittu-urakka))
             valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
         [:span.laskutus
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
-                   :active (nav/valittu-valilehti-atom :laskutus)}
+         [bs/tabs {:style :tabs
+                   :classes "tabs-taso2"
+                   :active (nav/valittu-valilehti-atom :laskutus)
+                   :on-change #(nav/aseta-valittu-valilehti! :laskutus %)}
           "Kulujen kohdistus"
           :kohdistetut-kulut
           (when (or mhu-urakka? (and vesivayla-hoito-urakka (k/kehitysymparistossa?)))
