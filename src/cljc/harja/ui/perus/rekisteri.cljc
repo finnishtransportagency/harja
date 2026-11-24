@@ -124,6 +124,21 @@
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :tallennus-kaynnissa? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, piirtää latausindikaattorin."}}
     :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."}
+   {:id :murupolku
+    :nimi "Murupolku"
+    :ryhma :toiminnot
+    :luonne :shared-komponentti
+    :rooli :navigaatio
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{}
+    :tilat #{:normaali :piilotettu}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :riippuvainen
+    :bootstrap-luokat ["col-sm-7" "col-sm-5" "dropdown" "dropdown-menu" "dropdown-toggle" "open" "hide"]
+    :funktio "harja.views.murupolku/murupolku"
+    :kuvaus "Sovelluksenlaajuinen navigaatio: hallintayksikön, urakan, urakoitsijan ja urakkatyypin valinta. Renderöidään kerran sivun yläosaan, ja se lukee navigaation tiloja itse. Kiinteät id:t (esim. alasveto-urakka) estävät toisen instanssin renderöinnin samalle sivulle."
+    :asetukset {}}
    {:id :linkki
     :nimi "Linkki"
     :ryhma :toiminnot

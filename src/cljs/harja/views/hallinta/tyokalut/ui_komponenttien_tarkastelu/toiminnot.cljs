@@ -42,5 +42,12 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Klikkauksia: " @klikkaukset)]])))
 
+(defn- murupolku [komponentti]
+  [kehys/kortti komponentti
+   [:p "Sovelluksen yläosan navigaatio. Se renderöidään kerran harja.views.main-näkymässä, joten esikatselu ei renderöi toista instanssia."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [:p "Katso murupolku sivun yläreunasta."]]])
+
 (register! :ikoni-ja-teksti {:esikatselu ikoni-ja-teksti})
+(register! :murupolku {:esikatselu murupolku})
 (register! :linkki {:esikatselu linkki})
