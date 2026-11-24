@@ -15,6 +15,9 @@ jobs:
   build-and-scan:
     name: "Build and scan Fargate image"
     runs-on: ubuntu-latest
+    # Normaalisti kesto alle 5 min. Build-stepin timeout 10 min katkaisee jumiin jääneen apt-get:n nopeasti.
+    # Tähän job-tason timeouttiin on lisätty vähän pelivaraa.
+    timeout-minutes: 15
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
     permissions:
       contents: read # Tarvitaan checkout actionissa
@@ -55,6 +58,7 @@ jobs:
           build-laadunseuranta: 'false'
 
       - name: Docker build
+        timeout-minutes: 10 # Katkaisee jumiin jääneen apt-get:n nopeasti
         env:
           COMMIT_SHA: ${{ github.sha }}
         run: docker build -t harja-app:${COMMIT_SHA} --file aws/fargate/Dockerfile .

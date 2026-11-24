@@ -82,7 +82,7 @@
         vastaus (with-redefs [valikatselmukset/hae-urakan-mahdolliset-paatokset
                               (fn [_db _kayttaja _payload]
                                 paatostyypit/paatostyypit)
-                              valikatselmukset/palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
+                              valikatselmukset/hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen
                               (fn [_db _kayttaja _payload]
                                 {:tietokanta-paatokset tehdyt})]
                   (valikatselmukset/hae-ketjutetusti-kumoutuvat-paatokset
@@ -97,6 +97,15 @@
              :tavoitehinnan-ylitys}
           (paatosavaimet vastaus)))))
 
+
+(deftest hae-ketjutetusti-kumoutuvat-paatokset-toimii-rakennuttajakonsultille
+  (let [vastaus (valikatselmukset/hae-ketjutetusti-kumoutuvat-paatokset
+                  (:db jarjestelma)
+                  +tilaaja-konsultti+
+                  {:urakkaid 33
+                   :hoitokauden_alkuvuosi 2024
+                   :avain :tavoitehinnan-muutokset})]
+    (is (vector? vastaus))))
 
 (deftest poista-paatokset-ketjutetusti-funktiohierarkia-toimii
   (let [urakkaid (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
