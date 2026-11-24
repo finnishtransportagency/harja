@@ -1,23 +1,24 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.simulaattori
   "Rekisteröidyistä shared-komponenteista rakennettu rajattu sivusimulaattori."
-  (:require [cljs.reader :as reader]
+  (:require [cljs.pprint :as pprint]
+            [cljs.reader :as reader]
             [clojure.string :as str]
             [reagent.core :as r]
             [harja.ui.perus :as ui]
+            [harja.ui.perus.esimerkkisivut :as esimerkkisivut]
             [harja.ui.perus.simulaattori :as sopimus]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :as rekisterointi]))
 
-(def ^:private esimerkkipuu
-  [{:komponentti :lomake
-    :lapset [{:komponentti :valintaryhma
-              :asetukset {:otsikko "Urakkatyyppi"
-                          :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}
-                                        {:arvo :paallyste :nimi "Päällyste"}
-                                        {:arvo :vesivayla :nimi "Vesiväylä"}]}}
-             {:komponentti :nappi
-              :asetukset {:teksti "Tallenna"}}]}])
+(def ^:private oletusesimerkki :lomake-perus)
 
-(defonce ^:private syote (r/atom (pr-str esimerkkipuu)))
+(defn- puu-tekstina [puu]
+  (str/trim (with-out-str (pprint/pprint puu))))
+
+(defn- esimerkin-teksti [id]
+  (puu-tekstina (:puu (esimerkkisivut/hae id))))
+
+(defonce ^:private valittu-esimerkki (r/atom oletusesimerkki))
+(defonce ^:private syote (r/atom (esimerkin-teksti oletusesimerkki)))
 
 (defn- lue-syote
   "Lukee syötteen datana. Palauttaa {:puu ...} tai {:virhe teksti}."
@@ -46,8 +47,28 @@
       (when (seq (:lapset solmu))
         [puun-rakenne (:lapset solmu)])])])
 
+(defn- valitse-esimerkki! [id]
+  (reset! valittu-esimerkki id)
+  (when id
+    (reset! syote (esimerkin-teksti id))))
+
+(defn- esimerkkivalinta []
+  (let [valittu (esimerkkisivut/hae @valittu-esimerkki)]
+    [:div.ui-simulaattori-esimerkit
+     [ui/valintaryhma
+      {:otsikko "Esimerkkisivu"
+       :id "ui-simulaattori-esimerkki"
+       :data-cy "ui-simulaattori-esimerkki"
+       :arvo @valittu-esimerkki
+       :vaihda-fn valitse-esimerkki!
+       :vaihtoehdot (mapv (fn [{:keys [id nimi]}] {:arvo id :nimi nimi})
+                      esimerkkisivut/esimerkkisivut)
+       :tyhja-valinta "Oma syöte"
+       :ohje (some-> valittu :kuvaus)}]]))
+
 (defn- syotekentta []
   [:div.ui-simulaattori-syotteet
+   [esimerkkivalinta]
    [:label {:for "ui-simulaattori-syote"} "EDN-lähde"]
    [:textarea.ui-simulaattori-syote
     {:id "ui-simulaattori-syote"
@@ -58,7 +79,7 @@
      :on-change #(reset! syote (.. % -target -value))}]
    [:button {:type "button"
              :data-cy "ui-simulaattori-palauta"
-             :on-click #(reset! syote (pr-str esimerkkipuu))}
+             :on-click #(valitse-esimerkki! (or @valittu-esimerkki oletusesimerkki))}
     "Palauta esimerkki"]])
 
 (defn lahde

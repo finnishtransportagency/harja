@@ -1,0 +1,13 @@
+{:id :tilaviestit-ja-toiminnot
+ :nimi "Tilaviestit ja toiminnot"
+ :kuvaus "Pino, jossa lataus-, onnistumis- ja virhetila sekä toimintoryhmä."
+ :puu [{:komponentti :pino
+        :lapset [{:komponentti :tilaviesti
+                  :asetukset {:tila :lataus :viesti "Tallennetaan..."}}
+                 {:komponentti :tilaviesti
+                  :asetukset {:tila :onnistui :viesti "Tiedot tallennettu."}}
+                 {:komponentti :tilaviesti
+                  :asetukset {:tila :virhe :viesti "Tallennus epäonnistui."}}
+                 {:komponentti :toimintoryhma
+                  :lapset [{:komponentti :nappi
+                            :asetukset {:teksti "Yritä uudelleen"}}]}]}]}

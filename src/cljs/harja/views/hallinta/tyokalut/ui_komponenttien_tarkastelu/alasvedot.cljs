@@ -71,7 +71,7 @@
   (if (keyword? vaihtoehto) (name vaihtoehto) (str vaihtoehto)))
 
 (defn- livi-pudotusvalikko-simulaattorissa-sisalto [solmu]
-  (r/with-let [valinta (r/atom nil)]
+  (r/with-let [valinta (r/atom (first (get-in solmu [:asetukset :valinnat])))]
     (let [{:keys [otsikko valinnat]} (:asetukset solmu)]
       [:div {:data-cy "ui-simulaattori-livi-pudotusvalikko"}
        [yleiset/pudotusvalikko

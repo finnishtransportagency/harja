@@ -1,0 +1,20 @@
+{:id :listaussivu
+ :nimi "Listaussivu: suodattimet ja taulukko"
+ :kuvaus "Tyypillinen listausnäkymä: suodatinrivi (hoitokausi, valikko, hakunappi) ja paneelissa taulukko."
+ :puu [{:komponentti :pino
+        :lapset [{:komponentti :suodatinrivi
+                  :lapset [{:komponentti :hoitokausi}
+                           {:komponentti :livi-pudotusvalikko
+                            :asetukset {:otsikko "Näkymä"
+                                        :valinnat ["Urakat" "Raportit" "Hallinta"]}}
+                           {:komponentti :nappi
+                            :asetukset {:teksti "Hae"}}]}
+                 {:komponentti :panel
+                  :asetukset {:otsikko "Toteumat"}
+                  :lapset [{:komponentti :perusgrid
+                            :asetukset {:tunniste :id
+                                        :tyhja "Ei toteumia."
+                                        :sarakkeet [{:otsikko "Nimi" :nimi :nimi :leveys 2}
+                                                    {:otsikko "Määrä" :nimi :maara :leveys 1}]
+                                        :rivit [{:id 1 :nimi "Sorastus" :maara 12}
+                                                {:id 2 :nimi "Paikkaus" :maara 4}]}}]}]}]}

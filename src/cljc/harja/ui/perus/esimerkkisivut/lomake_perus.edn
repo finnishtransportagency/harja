@@ -1,0 +1,11 @@
+{:id :lomake-perus
+ :nimi "Lomake: valinta ja tallennus"
+ :kuvaus "Pienin lomake: yksi valintaryhmä ja toimintopainike lomakkeen sisällä."
+ :puu [{:komponentti :lomake
+        :lapset [{:komponentti :valintaryhma
+                  :asetukset {:otsikko "Urakkatyyppi"
+                              :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}
+                                            {:arvo :paallyste :nimi "Päällyste"}
+                                            {:arvo :vesivayla :nimi "Vesiväylä"}]}}
+                 {:komponentti :nappi
+                  :asetukset {:teksti "Tallenna"}}]}]}

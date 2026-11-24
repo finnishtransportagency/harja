@@ -22,6 +22,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 | Tarkastelurunko (navigaatio, kortti, sopimus, `ankkuri`) | `tyokalut/ui_komponenttien_tarkastelu/kehys.cljs` |
 | Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit,palautteet,portatut,simulaattori}.cljs` |
 | Esikatselujen rekisteröinti | `tyokalut/ui_komponenttien_tarkastelu/rekisterointi.cljs` |
+| Esimerkkisivut (EDN, simulaattorin valinta, ks. alla) | `src/cljc/harja/ui/perus/esimerkkisivut/*.edn`, lataus `src/cljc/harja/ui/perus/esimerkkisivut.cljc` |
 | Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/perus_test.cljc`, `test/cljc/harja/ui/perus/rekisteri_test.cljc`, `test/clj/harja/ui/perus/esikatselu_test.clj`, `test/clj/harja/ui/perus/bootstrap_luokat_test.clj` |
 | Tyylit | `dev-resources/less/komponentit.less`, `dev-resources/less/pages/ui_komponenttien_tarkastelu.less` |
 
@@ -58,6 +59,16 @@ Uuden komponentin lisääminen:
 - Shared-komponentit ovat `harja.ui.perus` (`src/cljc/harja/ui/perus.cljc`), rekisteri `harja.ui.perus.rekisteri` ja simulaattori `harja.ui.perus.simulaattori`. Nimi erottaa ne lifecycle-nimiavaruudesta `harja.ui.komponentti`, jota käyttää yli 160 tiedostoa.
 - `harja.ui.komponentti` (komponentin elinkaari, `komp/luo`) ei muutu tässä.
 - `primitiivit/viesti.cljc` (`harja.ui.primitiivit.viesti`) pysyy primitiivikerroksessa tabs-primitiivin rinnalla. Sen siirto ei ole tarpeen, koska sen käyttäjät ovat `harja.ui.viesti` ja tarkastelusivun portatut-esikatselut.
+
+## Esimerkkisivut
+
+Esimerkkisivut ovat valmiita, kelvollisia simulaattoripuita sekä käyttäjille (valinta simulaattorin "Esimerkkisivu"-kentästä) että agenteille (luettava ja kopioitava toteutusmalli). Käytä niitä lähtökohtana, kun rakennat uutta sivua tai tarkistat, mitä komponenttiyhdistelmiä simulaattori tukee.
+
+- Yksi tiedosto per esimerkki hakemistossa `src/cljc/harja/ui/perus/esimerkkisivut/`. Tiedostonimi on snake_case (`listaussivu.edn`), esimerkit näytetään tiedostonimen mukaisessa järjestyksessä.
+- Tiedoston muoto: `{:id :listaussivu :nimi "Näytettävä nimi" :kuvaus "Mitä esimerkki näyttää" :puu [{:komponentti ...}]}`. `:puu` on sama deklaratiivinen rakenne kuin simulaattorin EDN-lähde.
+- Tiedostot luetaan käännösaikaan makrolla (`harja.ui.perus.esimerkkisivut/lataa-esimerkkisivut`). Tiedoston muokkaus ei laukaise Figwheelin uudelleenlatausta: kosketa `esimerkkisivut.cljc`-tiedostoa tai käännä uudelleen.
+- `lein test :only harja.ui.perus.esimerkkisivut-test` validoi jokaisen esimerkin simulaattorin säännöillä sekä tarkistaa yksilölliset id:t, nimen ja kuvauksen. Uusi esimerkki saa käyttää vain komponentteja, joilla on simulaattorin `:renderoi`. Muuten esikatselu näyttää virheen, joten tarkista uusi esimerkki selaimessa.
+- Uusi esimerkki lisätään tiedostona, ei koodina. Esimerkki ei saa sisältää funktioita, symboleja tai hiccup-markupia.
 
 ## Tunnetut rajoitukset
 
