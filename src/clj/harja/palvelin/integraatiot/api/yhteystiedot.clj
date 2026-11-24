@@ -39,14 +39,17 @@
                                      (assoc % :varahenkilo true))
                                   (yhteyshenkilot/hae-urakan-vastuuhenkilot db urakka-id))
 
-        fim-yhteyshenkilot (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
-        fim-yhteyshenkilot (map
-                             (fn [fy]
-                               (let [hy (first (filter (fn [hy] (= (upper-case (:kayttajatunnus hy)) (upper-case(:kayttajatunnus fy))))
-                                                       harja-vastuuhenkilot))]
-                                 (assoc fy :vastuuhenkilo (:vastuuhenkilo hy)
-                                           :varahenkilo (:varahenkilo hy))))
-                             fim-yhteyshenkilot)]
+        fim-yhteyshenkilot (try
+                             (fim/hae-urakan-kayttajat fim (:sampoid urakan-tiedot))
+                             (catch Exception e
+                               nil))
+        fim-yhteyshenkilot (when fim-yhteyshenkilot (map
+                                                      (fn [fy]
+                                                        (let [hy (first (filter (fn [hy] (= (upper-case (:kayttajatunnus hy)) (upper-case (:kayttajatunnus fy))))
+                                                                          harja-vastuuhenkilot))]
+                                                          (assoc fy :vastuuhenkilo (:vastuuhenkilo hy)
+                                                            :varahenkilo (:varahenkilo hy))))
+                                                      fim-yhteyshenkilot))]
     (yhteyshenkilot-vastaus/urakan-yhteystiedot urakan-tiedot fim-yhteyshenkilot harja-yhteyshenkilot)))
 
 (defrecord Yhteystiedot []

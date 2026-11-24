@@ -1335,18 +1335,15 @@
         mahdolliset-paatokset (paatoskone/filtteroi-mahdolliset-paatokset mahdolliset-paatokset toteutuneet-kustannukset lopullinen-hoitovuoden-lopun-kattohinta hoitovuoden-lopun-tavoitehinta)]
     mahdolliset-paatokset))
 
-(defn palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
-  "Palauttaa urakalle mahdolliset, sekä kaikki tehdyt päätökset. Ei poissulje mitään."
+(defn- hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen
+  "Palauttaa välikatselmukseen liittyvät mahdolliset ja kaikki tehdyt päätökset."
   [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
-  ;; Huomaa, että tämä on oikeutettu urakkatilanne näkymään
-  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
+  ;; Välikatselmuksen päätösten hakeminen edellyttää urakkasidonnaista oikeutta.
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
   (let [mahdolliset-paatokset (hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
-        ;; Haetaan tietokantaan mahdollisesti tallennetut päätökset
-        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)
-        ;; Muodostetaan vastaus
-        vastaus {:mahdolliset-paatokset mahdolliset-paatokset
-                 :tietokanta-paatokset tietokanta-paatokset}]
-    vastaus))
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
+    {:mahdolliset-paatokset mahdolliset-paatokset
+     :tietokanta-paatokset tietokanta-paatokset}))
 
 (defn onko-paatoksia-tekematta
   "Päätellään onko jokin päätös vielä tekemättä, mikä voi vaikuttaa lukituksiin. 
@@ -1373,7 +1370,7 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-lupaukset kayttaja urakkaid)
 
   (let [payload {:urakkaid urakkaid :kuluva-hoitovuosi hoitokauden_alkuvuosi}
-        kaikki-paatokset (palauta-kaikki-mahdolliset-ja-tehdyt-paatokset db kayttaja payload)
+        kaikki-paatokset (hae-kaikki-mahdolliset-ja-tehdyt-paatokset-valikatselmukseen db kayttaja payload)
         tehdyt-paatokset (:tietokanta-paatokset kaikki-paatokset)
 
         ;; Kaikki urakan mahdolliset kumoutuvat päätökset
