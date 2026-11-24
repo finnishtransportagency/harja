@@ -238,7 +238,9 @@
          (seq alustan-tekstit)
          (some? perustietojen-virheet))
       [yleiset/info-laatikko :varoitus
-        "Lomakkeessa on virheitä. Lomaketta ei voi lähettää tarkistettavaksi ennen virheiden korjausta. "
+        "Lomakkeessa on virheitä tai varoituksia. Luonnoksen voi tallentaa niistä huolimatta,
+         kunhan tieosoite sekä jokaisen rivin toimenpide ja tieosoite on täytetty.
+         Virheet ja varoitukset tulee korjata ennen lähettämistä tarkistettavaksi. "
         [:<>
          (when (some? perustietojen-virheet)
            [:span
@@ -318,16 +320,24 @@
               huomautukset (paallystys/perustietojen-huomautukset (:tekninen-osa perustiedot) (:valmispvm-kohde perustiedot))
               virheet (conj [] (-> perustiedot ::lomake/virheet))
               puuttuvat-pakolliset-kentat (-> perustiedot ::lomake/puuttuvat-pakolliset-kentat)
-              valmis-luonnokseksi? (and
-                                         (not= tila :lukittu)
-                                         (empty? (flatten (keep vals virheet)))
-                                         (empty? puuttuvat-pakolliset-kentat)
-                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
-                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom))))
-              valmis-tarkistettavaksi? (and
-                                         valmis-luonnokseksi?
-                                         (empty? (keep identity (vals @pot2-tiedot/kohdeosat-varoitukset-atom)))
-                                         (empty? (keep identity (vals @pot2-tiedot/alustarivit-varoitukset-atom))))
+              ;; Luonnoksen saa tallentaa puutteista huolimatta, mutta tieosoite sekä rivien
+              ;; tietokannan vaatimat pakolliset tiedot (esim. toimenpide) tarvitaan myös luonnoksessa
+              tieosoite-puuttuu? (pot2-domain/rivilta-puuttuu-luonnoksen-pakollisia? tr/paaluvali-avaimet perustiedot)
+              rivien-pakolliset-puuttuvat? (pot2-domain/luonnoksen-tallennus-estetty-riveilla?
+                                             (vals @pot2-tiedot/kohdeosat-atom)
+                                             (vals @pot2-tiedot/alustarivit-atom))
+              voi-tallentaa? (and
+                               (not= tila :lukittu)
+                               (not tieosoite-puuttuu?)
+                               (not rivien-pakolliset-puuttuvat?))
+              voi-lahettaa-tarkistettavaksi? (and
+                                               voi-tallentaa?
+                                               (empty? (flatten (keep vals virheet)))
+                                               (empty? puuttuvat-pakolliset-kentat)
+                                               (empty? (keep identity (vals @pot2-tiedot/kohdeosat-virheet-atom)))
+                                               (empty? (keep identity (vals @pot2-tiedot/alustarivit-virheet-atom)))
+                                               (empty? (keep identity (vals @pot2-tiedot/kohdeosat-varoitukset-atom)))
+                                               (empty? (keep identity (vals @pot2-tiedot/alustarivit-varoitukset-atom))))
               perustiedot-hash-rendatessa (hash (perustiedot-ilman-lomaketietoja (:perustiedot paallystysilmoitus-lomakedata)))
               tietoja-muokattu? (or
                                   (not= perustiedot-hash-avatessa perustiedot-hash-rendatessa)
@@ -388,7 +398,7 @@
 
            [pot-yhteinen/tallenna e! perustiedot-app tallenna-app {:kayttaja kayttaja
                                                                    :urakka-id (:id urakka)
-                                                                   :valmis-luonnokseksi? valmis-luonnokseksi?
-                                                                   :valmis-tarkistettavaksi? valmis-tarkistettavaksi?
+                                                                   :voi-tallentaa? voi-tallentaa?
+                                                                   :voi-lahettaa-tarkistettavaksi? voi-lahettaa-tarkistettavaksi?
                                                                    :tallennus-kaynnissa? tallennus-kaynnissa?}]
            [yleiset/valitys-vertical]])))))

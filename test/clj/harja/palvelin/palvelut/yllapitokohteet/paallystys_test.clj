@@ -1064,6 +1064,47 @@
 
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id))))
 
+(deftest tallenna-pot2-paallystysilmoitus-luonnoksena-vaatii-tieosoitteen
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
+        puutteellinen-paallystysilmoitus (-> (pot2-testidata paallystyskohde-id)
+                                           (assoc :paallystyskohde-id paallystyskohde-id)
+                                           (assoc-in [:perustiedot :valmis-kasiteltavaksi] false)
+                                           (assoc-in [:perustiedot :tr-osoite] nil)
+                                           (assoc-in [:perustiedot :tr-numero] nil)
+                                           (assoc-in [:perustiedot :tr-alkuosa] nil)
+                                           (assoc-in [:perustiedot :tr-loppuosa] nil))]
+    (is (thrown-with-msg? Exception #"ei ole validi"
+                          (tallenna-testipaallystysilmoitus puutteellinen-paallystysilmoitus
+                                                            paallystysilmoitus-domain/pot2-vuodesta-eteenpain)))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(deftest tallenna-pot2-paallystysilmoitus-luonnoksena-ilman-valmistumispvm-hintaa-ja-paallystekerroksen-tietoja
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        puutteellinen-paallystysilmoitus (-> (pot2-testidata paallystyskohde-id)
+                                           (assoc :paallystyskohde-id paallystyskohde-id)
+                                           (assoc-in [:perustiedot :valmis-kasiteltavaksi] false)
+                                           (assoc-in [:perustiedot :valmispvm-kohde] nil)
+                                           ;; Toimenpide 12 ei ole KAR, joten materiaali olisi pakollinen lähetettäessä
+                                           (update-in [:paallystekerros 0] dissoc :materiaali :leveys :kokonaismassamaara :pinta_ala :massamenekki))
+        [_ paallystysilmoitus-kannassa] (tallenna-pot2-testi-paallystysilmoitus
+                                          urakka-id sopimus-id paallystyskohde-id puutteellinen-paallystysilmoitus)
+        tallennettu-rivi (first (filter #(= 12 (:toimenpide %)) (:paallystekerros paallystysilmoitus-kannassa)))]
+    (is (= :aloitettu (:tila paallystysilmoitus-kannassa)) "Luonnos tallentuu puutteista huolimatta")
+    (is (nil? (:valmispvm-kohde paallystysilmoitus-kannassa)))
+    (is (some? tallennettu-rivi) "Päällystekerroksen rivi tallentui")
+    (is (every? nil? (map tallennettu-rivi [:materiaali :leveys :kokonaismassamaara])))
+    (is (thrown? Exception
+                 (u (str "UPDATE paallystysilmoitus SET tila = 'valmis' WHERE paallystyskohde = " paallystyskohde-id)))
+        "Tietokanta ei salli materiaalitonta riviä, kun ilmoitus ei ole luonnos")
+    (let [kohdeosa-id (:kohdeosa-id (first (filter #(= 12 (:toimenpide %)) (:paallystekerros paallystysilmoitus-kannassa))))]
+      (u (str "UPDATE yllapitokohdeosa SET poistettu = TRUE WHERE id = " kohdeosa-id))
+      (is (some? (u (str "UPDATE paallystysilmoitus SET tila = 'valmis' WHERE paallystyskohde = " paallystyskohde-id)))
+          "Poistetun kohdeosan materiaalitonta riviä ei huomioida")
+      (u (str "UPDATE yllapitokohdeosa SET poistettu = FALSE WHERE id = " kohdeosa-id)))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
 (deftest tallenna-pot2-paallystysilmoitus-ei-salli-null-materiaali-paallystyskerroksessa
   (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Aloittamaton kohde mt20")
         urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
@@ -1203,6 +1244,7 @@
         paallystysilmoitus (-> (pot2-testidata paallystyskohde-id)
                                (assoc :paallystyskohde-id paallystyskohde-id)
                                (assoc-in [:perustiedot :aloituspvm] #inst "2021-06-15T21:00:00.000-00:00")
+                               (assoc-in [:perustiedot :valmis-kasiteltavaksi] true)
                                (assoc-in [:perustiedot :valmispvm-kohde] nil))]
     (is (thrown? IllegalArgumentException
                  (kutsu-palvelua (:http-palvelin jarjestelma)
@@ -1364,6 +1406,22 @@
         alustarivi-19 (alustarivi-idlla alustarivit-jalkeen 19)]
     (is (= {:verkon-tyyppi 1 :verkon-tarkoitus nil :verkon-sijainti 3}
            (select-keys alustarivi-19 [:verkon-tyyppi :verkon-tarkoitus :verkon-sijainti])))
+    (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
+
+(deftest tallenna-pot2-paallystysilmoitus-luonnoksena-ilman-alustarivin-pakollisia-lisatietoja
+  (let [paallystyskohde-id (hae-yllapitokohteen-id-nimella "Tärkeä kohde mt20")
+        urakka-id (hae-urakan-id-nimella "Utajärven päällystysurakka")
+        sopimus-id (hae-utajarven-paallystysurakan-paasopimuksen-id)
+        puutteellinen-paallystysilmoitus (-> (pot2-alustatestien-ilmoitus paallystyskohde-id)
+                                           (assoc :alusta pot2-alusta-esimerkki)
+                                           (assoc-in [:perustiedot :valmis-kasiteltavaksi] false)
+                                           (update-in [:alusta 3] dissoc :verkon-sijainti))
+        [_ paallystysilmoitus-kannassa] (tallenna-pot2-testi-paallystysilmoitus
+                                          urakka-id sopimus-id paallystyskohde-id puutteellinen-paallystysilmoitus)
+        verkkorivi (first (filter #(= 3 (:toimenpide %)) (:alusta paallystysilmoitus-kannassa)))]
+    (is (= :aloitettu (:tila paallystysilmoitus-kannassa)) "Luonnos tallentuu puutteista huolimatta")
+    (is (some? verkkorivi) "Puutteellinen alustarivi tallentui")
+    (is (nil? (:verkon-sijainti verkkorivi)))
     (poista-paallystysilmoitus-paallystyskohtella paallystyskohde-id)))
 
 (deftest tallenna-pot2-lisaa-alustarivi-ja-vain-pakolliset-tas-tiedot

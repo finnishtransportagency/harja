@@ -260,12 +260,15 @@
         paallystysilmoitukset))))
 
 (defn virheviestit-komponentti [virheet]
-  (for [[virhe-otsikko virheviestit] virheet]
+  (for [[virhe-otsikko virheviestit] virheet
+        :let [otsikko (cond
+                        (keyword? virhe-otsikko) (name virhe-otsikko)
+                        (symbol? virhe-otsikko) (name virhe-otsikko)
+                        (string? virhe-otsikko) virhe-otsikko)]]
     ^{:key virhe-otsikko}
     [:div
-     [:p (str (when virhe-otsikko
-                (clj-str/capitalize (clj-str/replace (name virhe-otsikko)
-                                                     "-" " "))) ": ")]
+     [:p (when otsikko
+           (str (clj-str/capitalize (clj-str/replace otsikko "-" " ")) ": "))]
      (into [:ul] (map-indexed (fn [i virheviesti]
                                 ^{:key i}
                                 [:li (if (map? virheviesti)

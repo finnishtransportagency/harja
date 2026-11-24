@@ -119,16 +119,17 @@
                                    (@grid-tilan-muokkaus-fn uusi))))
         arvo-atom (atom ((or hae #(get % nimi)) rivi))
         fokus? (atom false)
+        nappaimisto-fokus? (atom false)
+        hiirella-fokusoitu? (atom false)
         hiiri? (atom false)
         ilmoitus-suljettu? (atom false)
         ;; Ilmoitus näytetään vain näppäimistöfokuksella tai hoverilla. Hiirellä klikkaus
         ;; antaa fokuksen, mutta se ei saa jättää ilmoitusta näkyviin hiiren poistuttua.
-        nappaimisto-fokus? (atom false)
         hiiri-painettu? (atom false)
         fokus-elementille #(do
                              (reset! fokus? true)
                              (when-not @hiiri-painettu?
-                               (reset! nappaimisto-fokus? true)
+                               (reset! nappaimisto-fokus? (not @hiirella-fokusoitu?))
                                (reset! ilmoitus-suljettu? false)))
         fokus-pois-elementilta #(let [uusi-fokusoitu-komponentti (.-relatedTarget %)
                                       fokusoidun-komponentin-nimi (when uusi-fokusoitu-komponentti
@@ -234,16 +235,26 @@
                                                                  (.contains (.-currentTarget %) uusi-fokusoitu-komponentti)))]
                                    (reset! fokus? fokus-solussa?)
                                    (when-not fokus-solussa?
-                                     (reset! nappaimisto-fokus? false)))))
-                   :on-mouse-down #(reset! hiiri-painettu? true)
+                                     (reset! nappaimisto-fokus? false)
+                                     (reset! hiirella-fokusoitu? false)))))
+                   :on-mouse-down #(do
+                                     (reset! hiirella-fokusoitu? true)
+                                     (reset! nappaimisto-fokus? false)
+                                     (reset! hiiri-painettu? true)
+                                     (reset! ilmoitus-suljettu? false))
                    :on-mouse-up #(reset! hiiri-painettu? false)
                    :on-mouse-enter #(do
                                       (reset! hiiri? true)
                                       (reset! ilmoitus-suljettu? false))
                    :on-mouse-leave #(do (reset! hiiri? false)
                                         (reset! hiiri-painettu? false))
-                   :on-key-down #(when (dom/esc-nappain? %)
-                                   (reset! ilmoitus-suljettu? true))}
+                   :on-key-down #(cond
+                                   (dom/esc-nappain? %)
+                                   (reset! ilmoitus-suljettu? true)
+
+                                   (or (dom/tab+shift-nappaimet? %)
+                                     (dom/tab-nappain-ilman-shiftia? %))
+                                   (reset! hiirella-fokusoitu? false))}
               (when (case nayta-virheet?
                       :fokus (or @nappaimisto-fokus? @hiiri?)
                       :aina true)
