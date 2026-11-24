@@ -434,6 +434,35 @@
     ;; Siivoa roskat
     (testidatan-kaytto/poista-sanktio-perustelulla perustelu)))
 
+(deftest tallenna-suorasanktio-liittaa-laatupoikkeamaan-liitteen
+  (let [urakka-id (hae-oulun-alueurakan-2014-2019-id)
+        perustelu "ABC suorasanktion liite linkitetään laatupoikkeamaan"
+        sanktiorunko {:suorasanktio true
+                      :toimenpideinstanssi (hae-oulun-alueurakan-talvihoito-tpi-id)
+                      :perintapvm (pvm/->pvm-aika "3.1.2017 22:00:00")
+                      :laji :A
+                      :summa 665.9
+                      :tyyppi {:id (ffirst (q "SELECT id FROM sanktiotyyppi where koodi = 13;"))}
+                      :indeksi "MAKU 2010"}
+        laatupoikkeama {:tekijanimi "Järjestelmä Vastaava"
+                        :paatos {:paatos "sanktio" :kasittelyaika (pvm/->pvm-aika "2.1.2017 22:00:00")
+                                 :kasittelytapa :kommentit :perustelu perustelu}
+                        :aika (pvm/->pvm-aika "1.1.2017 08:00:00") :urakka urakka-id}
+        hk-alkupvm (pvm/->pvm "1.1.2017")
+        hk-loppupvm (pvm/->pvm "31.12.2017")
+        _ (u "INSERT INTO liite (tyyppi, nimi, liite_oid, lahde) VALUES ('image/jpeg', 'sanktion-liite.jpg', '123', 'harja-ui')")
+        liite-id (ffirst (q "SELECT id FROM liite WHERE nimi = 'sanktion-liite.jpg';"))
+        liitteet-laatupoikkeamassa (fn [sanktio-id]
+                                     (ffirst (q (str "SELECT count(*) FROM laatupoikkeama_liite pl
+                                                        JOIN sanktio s ON s.laatupoikkeama = pl.laatupoikkeama
+                                                       WHERE s.id = " sanktio-id " AND pl.liite = " liite-id ";"))))]
+    (testing "Sanktiolomakkeen liite avaimella :uudet-liitteet linkitetään laatupoikkeamaan"
+      (let [sanktio-id (palvelukutsu-tallenna-suorasanktio
+                         +kayttaja-jvh+ sanktiorunko
+                         (assoc laatupoikkeama :uudet-liitteet [{:id liite-id}])
+                         hk-alkupvm hk-loppupvm)]
+        (is (= 1 (liitteet-laatupoikkeamassa sanktio-id)))))))
+
 (deftest poista-laatupoikkeaman-sanktio-peruu-paatoksen-eika-poista-laatupoikkeamaa
   ;; Laatupoikkeaman kautta määrätyn (ei-suora)sanktion poisto eroaa suorasanktion poistosta:
   ;; laatupoikkeamaa EI poisteta, vaan sen päätös perutaan (nollataan), jolloin laatupoikkeaman

@@ -454,15 +454,15 @@
      ::lomake/col-luokka "col-xs-12"
      :komponentti (fn [_]
                     [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
-                     {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
+                     {:uusi-liite-atom (r/wrap (first (get-in @tiedot/valittu-sanktio [:laatupoikkeama :uudet-liitteet]))
                                          #(swap! tiedot/valittu-sanktio
-                                            (fn [_] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
+                                            (fn [_] (assoc-in @muokattu [:laatupoikkeama :uudet-liitteet] [%]))))
                       :uusi-liite-teksti "Lisää liite"
                       :elementin-id liitteet-id
                       :nayta-koko? true
                       :salli-poistaa-lisatty-liite? true
                       :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
-                                                  (fn [_] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))
+                                                  (fn [_] (assoc-in @muokattu [:laatupoikkeama :uudet-liitteet] nil)))
                       :salli-poistaa-tallennettu-liite? true
                       :poista-tallennettu-liite-fn
                       (fn [liite-id]
