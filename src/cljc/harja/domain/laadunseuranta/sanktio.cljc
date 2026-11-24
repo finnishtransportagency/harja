@@ -190,25 +190,6 @@
   [sanktio-konfiguraatio laji]
   (vec (:sanktiotyypit (sanktio-konfiguraation-lajin-tiedot sanktio-konfiguraatio laji))))
 
-(defn- kiintea-automaattinen-summamaaritys?
-  [{:keys [maaritystapa ohjeteksti]}]
-  (and (= :automaattinen maaritystapa)
-    (str/blank? ohjeteksti)))
-
-(defn sanktiotyypilla-kiintea-automaattinen-summamaaritys?
-  [{:keys [summamaaritykset]}]
-  (boolean (some kiintea-automaattinen-summamaaritys? summamaaritykset)))
-
-(defn sanktiotyypin-kiintea-automaattinen-summa
-  [{:keys [summamaaritykset]}]
-  (some (fn [{:keys [maaritystapa summa-euroina] :as summamaaritys}]
-          (when (and (kiintea-automaattinen-summamaaritys? summamaaritys)
-                  (number? summa-euroina)
-                  (pos? summa-euroina)
-                  #?(:clj (Double/isFinite (double summa-euroina))
-                     :cljs (js/isFinite summa-euroina)))
-            summa-euroina))
-    summamaaritykset))
 
 
 
@@ -370,9 +351,8 @@
     (sanktio? rivi) :sanktiot))
 
 (defn arvonvahennykset-vaikuttaa-tavoitehintaan?
-  "MHU25 urakoille - tai jos Jos kuluva vuosi 2026 -> true"
+  "MHU25 urakoille tai kun kuluva hoitovuosi on 2026 tai myöhempi -> true. Urakan tyyppi on avainsana."
   [valittu-urakka kuluva-hoitokausi]
-  (let [mhu25? (and (or (= :teiden-hoito (:tyyppi valittu-urakka)) (= "teiden-hoito" (:tyyppi valittu-urakka)))
-                 (>= (pvm/vuosi (:alkupvm valittu-urakka)) 2025))
-        kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
-    (if (or mhu25? (>= kuluva-alkanut-hoitovuosi 2026)) true false)))
+  (let [kuluva-alkanut-hoitovuosi (pvm/vuosi (first kuluva-hoitokausi))]
+    (boolean (or (mhu25-urakka? valittu-urakka)
+               (>= kuluva-alkanut-hoitovuosi 2026)))))
