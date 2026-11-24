@@ -81,6 +81,13 @@
               (re-matches #"-?\d+(?:[.,]\d+)?" (str/trim arvo)))))
     arvo))
 
+(defn maara [arvo]
+  (when (and (js/isFinite (js/parseFloat arvo))
+          (or (number? arvo)
+            (and (string? arvo)
+              (re-matches #"-?\d+(?:[.,]\d+)?" (str/trim arvo)))))
+    arvo))
+
 (defn ei-negatiivinen-numero [arvo]
   (when (and (number? (js/parseFloat arvo))
           (not (neg? (js/parseFloat arvo))))
@@ -109,7 +116,7 @@
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/tehtava               [ei-nil ei-tyhja]
-                  :kulut/maara                 [ei-nil numero ei-negatiivinen-numero]
+                  :kulut/maara                 [ei-nil maara ei-negatiivinen-numero]
                   :kulut/rahavaraus            [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]

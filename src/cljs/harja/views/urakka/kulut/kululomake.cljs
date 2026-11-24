@@ -22,7 +22,6 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]))
 
-(def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
 (def liitteen-lisaysohje "Lisää toimenpiteen lisätiedot liitteenä")
 
 (defn- kulun-poistovarmistus-modaali
