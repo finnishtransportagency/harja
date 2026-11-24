@@ -6,6 +6,7 @@
             [harja.ui.protokollat :as protokollat]
             [harja.ui.yleiset :as yleiset]
             [reagent.core :refer [atom] :as reagent]
+            [harja.tiedot.navigaatio :as nav]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
@@ -173,14 +174,17 @@
 
   HaeUrakat
   (process-event [_ app]
-    (tuck-apurit/post! :hae-urakat-kojelautaan
-      {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
-       :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
-       :urakka-idt (into #{} (map :id (get-in app [:valinnat :urakat])))
-       :evk-idt (into #{} (map :id (get-in app [:valinnat :evkt])))}
-      {:onnistui ->HaeUrakatOnnistui
-       :epaonnistui ->HaeUrakatEpaonnistui})
-    (assoc app :haku-kaynnissa? true))
+    (let [valitut-evkt (get-in app [:valinnat :evkt])]
+      (tuck-apurit/post! :hae-urakat-kojelautaan
+        {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
+         :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
+         :urakka-idt (into #{} (map :id (get-in app [:valinnat :urakat])))
+         :evk-idt (if-let [evk-id @nav/valittu-hallintayksikko-id]
+                    #{evk-id}
+                    (into #{} (map :id valitut-evkt)))}
+        {:onnistui ->HaeUrakatOnnistui
+         :epaonnistui ->HaeUrakatEpaonnistui})
+      (assoc app :haku-kaynnissa? true)))
 
   HaeUrakatOnnistui
   (process-event [{:keys [vastaus]} app]

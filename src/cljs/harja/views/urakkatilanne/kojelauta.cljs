@@ -32,13 +32,16 @@
 
 
 (defn suodattimet [e! {:keys [valinnat urakkahaku haku-kaynnissa?]}]
-  (let [valitut-evkt (:evkt valinnat)
-        valittavat-evkt (into [{:id 0 :nimi "Kaikki" :evknumero 0 :valittu? (empty? valitut-evkt)}]
-                          (map (fn [evk]
-                                 (assoc evk
-                                   :nimi (hal/evknumero-ja-nimi evk)
-                                   :valittu? (some #(= (:id evk) (:id %)) valitut-evkt)))
-                            (sort-by :evknumero @hal/vaylamuodon-hallintayksikot)))]
+  (let [valittu-evk-id @nav/valittu-hallintayksikko-id
+        evkt (mapv (fn [evk]
+                     (assoc evk :nimi (hal/evknumero-ja-nimi evk)))
+               (sort-by :evknumero @hal/vaylamuodon-hallintayksikot))
+        valitut-evkt (if-let [url-evk (some #(when (= valittu-evk-id (:id %)) %) evkt)]
+                       [url-evk]
+                       (or (:evkt valinnat) []))
+        valittujen-evk-idt (into #{} (map :id valitut-evkt))
+        valittavat-evkt (into [{:id nil :nimi "Kaikki" :valittu? (empty? valitut-evkt)}]
+                          (map #(assoc % :valittu? (contains? valittujen-evk-idt (:id %))) evkt))]
     [:div
      [yleiset/pudotusvalikko
       "Urakkatyyppi"
@@ -51,21 +54,25 @@
       (filter (fn [ut]
                 (#{:hoito :paallystys} (:arvo ut)))
         nav/+urakkatyypit+)]
-     [:div
-      [:div.label-ja-alasveto
-       [:label.alasvedon-otsikko "Elinvoimakeskus"]
-       [valinnat/checkbox-pudotusvalikko
-        valittavat-evkt
-        (fn [evk valittu?]
-          (let [valitut-evkt-uudet (cond
-                                     (= 0 (:id evk)) []
-                                     valittu? (conj (filterv #(not= (:id evk) (:id %)) valitut-evkt)
-                                                    (select-keys evk [:id :nimi :evknumero]))
-                                     :else (filterv #(not= (:id evk) (:id %)) valitut-evkt))]
-            (e! (tiedot/->AsetaSuodatin :evkt valitut-evkt-uudet))))
-        [" Elinvoimakeskus valittu" " Elinvoimakeskusta valittu"]
-        {:vayla-tyyli? true :disabled haku-kaynnissa?}]]
-      [yleiset/pudotusvalikko
+     [:div.label-ja-alasveto
+      [:label.alasvedon-otsikko "Elinvoimakeskus"]
+      [valinnat/checkbox-pudotusvalikko
+       valittavat-evkt
+       (fn [evk valittu?]
+         (let [valitut-evkt-uudet (cond
+                                    (nil? (:id evk)) (if valittu? [] valitut-evkt)
+                                    valittu? (conj (filterv #(not= (:id evk) (:id %)) valitut-evkt)
+                                                   (select-keys evk [:id :nimi :evknumero]))
+                                    :else (filterv #(not= (:id evk) (:id %)) valitut-evkt))]
+           (when-not (= valitut-evkt valitut-evkt-uudet)
+             (e! (tiedot/->AsetaSuodatin :evkt valitut-evkt-uudet))
+             (reset! nav/valittu-hallintayksikko-id
+               (when (= 1 (count valitut-evkt-uudet))
+                 (:id (first valitut-evkt-uudet))))
+             (nav/paivita-url))))
+       [" Elinvoimakeskus valittu" " Elinvoimakeskusta valittu"]
+       {:vayla-tyyli? true :disabled haku-kaynnissa?}]]
+     [yleiset/pudotusvalikko
        (if (= :paallystys (get-in valinnat [:urakkatyyppi :arvo]))
          "Vuosi"
          "Hoitokauden alkuvuosi")
@@ -76,7 +83,7 @@
         :disabled haku-kaynnissa?}
        (mahdolliset-hoitokauden-alkuvuodet (pvm/nyt))]
 
-      [:div.label-ja-alasveto
+     [:div.label-ja-alasveto
        [:label.alasvedon-otsikko {:for "urakkahaku"} "Hae urakkaa"]
        [kentat/tee-kentta
         {:elementin-id "urakkahaku" :tyyppi :haku
@@ -92,8 +99,8 @@
                                 1 (:nimi (first %))
                                 (str (count %) " urakkaa valittu"))
          :disabled? haku-kaynnissa?}
-       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]]
-      [:div {:style {:margin-top "1rem"}}
+       (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]
+     [:div.kojelauta-haku
        [napit/yleinen-ensisijainen "Hae"
         #(e! (tiedot/->HaeUrakat))
         {:disabled haku-kaynnissa?}]]]))
