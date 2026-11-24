@@ -36,10 +36,13 @@
 
 (defn- tabs-simulaattorissa-sisalto [valilehdet]
   (r/with-let [aktiivinen (r/atom 0)]
-    [:div {:data-cy "ui-simulaattori-tabs"}
-     (apply bootstrap/tabs {:active aktiivinen
-                            :classes "ui-portatut-tabs"}
-            (valilehdet-simulaattorissa valilehdet))]))
+    (let [valilehti-argumentit (valilehdet-simulaattorissa valilehdet)]
+      [:div {:data-cy "ui-simulaattori-tabs"}
+       (if (seq valilehti-argumentit)
+         (into [bootstrap/tabs {:active aktiivinen
+                                :classes "ui-portatut-tabs"}]
+           valilehti-argumentit)
+         [:p "Ei välilehtiä."])])))
 
 (defn- tabs-simulaattorissa [solmu _tila _lapsi-fn]
   [tabs-simulaattorissa-sisalto (get-in solmu [:asetukset :valilehdet])])

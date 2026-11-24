@@ -11,7 +11,8 @@
   Tiedostot luetaan käännösaikaisella makrolla, joten ne päätyvät sekä JVM:ään (testit) että
   selaimeen (simulaattorin valinta). Tiedoston muutos ei laukaise Figwheelin uudelleenlatausta:
   kosketa tätä tiedostoa tai käynnistä build uudelleen. JVM-testi validoi jokaisen puun
-  simulaattorin säännöillä (`lein test :only harja.ui.perus.esimerkkisivut-test`)."
+  simulaattorin säännöillä ja varmistaa renderöijien esimerkkikattavuuden
+  (`lein test harja.ui.perus.esikatselu-test harja.ui.perus.esimerkkisivut-test`)."
   #?(:clj (:require [clojure.edn :as edn]
                     [clojure.java.io :as io]
                     [clojure.string :as str])

@@ -640,22 +640,26 @@
                      :renderoi (sisalto-renderoijana valinta-simulaattorissa-sisalto)})
 (register! :dropdown {:esikatselu dropdown-valikko})
 
-(defn- asettelu-simulaattorissa [asettelu-fn]
+(defn- asettelu-simulaattorissa [id asettelu-fn]
   (fn [solmu _tila lapsi-fn]
-    (apply asettelu-fn (:asetukset solmu)
-           (map-indexed (fn [indeksi lapsi]
-                          ^{:key indeksi}
-                          [lapsi-fn lapsi])
-                        (:lapset solmu)))))
+    (into [asettelu-fn
+           (merge {:data-cy (str "ui-simulaattori-" (name id))}
+             (:asetukset solmu))]
+      (map-indexed (fn [indeksi lapsi]
+                     ^{:key indeksi}
+                     [lapsi-fn lapsi])
+        (:lapset solmu)))))
 
 (defn- tilaviesti-simulaattorissa [solmu _tila _lapsi-fn]
-  [ui/tilaviesti (:asetukset solmu)])
+  [ui/tilaviesti
+   (merge {:data-cy "ui-simulaattori-tilaviesti"}
+     (:asetukset solmu))])
 
 (register! :pino {:esikatselu pino
-                  :renderoi (asettelu-simulaattorissa ui/pino)})
+                  :renderoi (asettelu-simulaattorissa :pino ui/pino)})
 (register! :suodatinrivi {:esikatselu suodatinrivi
-                          :renderoi (asettelu-simulaattorissa ui/suodatinrivi)})
+                          :renderoi (asettelu-simulaattorissa :suodatinrivi ui/suodatinrivi)})
 (register! :toimintoryhma {:esikatselu toimintoryhma
-                           :renderoi (asettelu-simulaattorissa ui/toimintoryhma)})
+                           :renderoi (asettelu-simulaattorissa :toimintoryhma ui/toimintoryhma)})
 (register! :tilaviesti {:esikatselu tilaviesti
                         :renderoi tilaviesti-simulaattorissa})

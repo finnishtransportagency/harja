@@ -1,0 +1,71 @@
+{:id :renderoijien-kattavuus
+ :nimi "Renderöijien kattavuus"
+ :kuvaus "Kaikki muut simulaattorin renderöijät: lomakekentät, tietonäkymät, palautteet, grid ja portatut rakenteet."
+ :puu [{:komponentti :lomake
+        :lapset [{:komponentti :kenttaryhma
+                  :asetukset {:otsikko "Nimi"
+                              :ohje "Kirjoita vähintään yksi merkki."
+                              :pakollinen? true}}
+                 {:komponentti :suodatin
+                  :asetukset {:otsikko "Haku"}}
+                 {:komponentti :numerokentta
+                  :asetukset {:desimaalien-maara 1
+                              :kokonaisosan-maara 4}}
+                 {:komponentti :sahkopostikentta
+                  :asetukset {:placeholder "nimi@esimerkki.fi"}}
+                 {:komponentti :puhelinkentta
+                  :asetukset {:placeholder "040 1234567"}}
+                 {:komponentti :raksiboksi
+                  :asetukset {:teksti "Näytä aktiiviset"}}
+                 {:komponentti :radiokentta
+                  :asetukset {:valinnat ["Matala" "Korkea"]}}
+                 {:komponentti :checkbox-ryhma
+                  :asetukset {:vaihtoehdot ["Talvihoito" "Paikkaus" "Jätehuolto"]
+                              :palstoja 2}}
+                 {:komponentti :radio-group
+                  :asetukset {:vaihtoehdot ["Urakka" "Raportti"]
+                              :nayta-rivina? true
+                              :vayla-tyyli? true}}
+                 {:komponentti :valinta
+                  :asetukset {:valinnat ["Ensimmäinen" "Toinen"]
+                              :data-cy "renderoijien-kattavuus-valinta"}}
+                 {:komponentti :checkbox-pudotusvalikko
+                  :asetukset {:valinnat [{:nimi "Urakka A" :valittu? true}
+                                         {:nimi "Urakka B" :valittu? false}]
+                              :teksti [" urakka" " urakkaa"]}}
+                 {:komponentti :ajax-loader
+                  :asetukset {:viesti "Haetaan tietoja"
+                              :sama-rivi? true}}
+                 {:komponentti :vihje
+                  :asetukset {:teksti "Valinta tallentuu automaattisesti."}}
+                 {:komponentti :tooltip
+                  :asetukset {:sisalto "Lisätietoa"
+                              :suunta :oikea}}
+                 {:komponentti :tila-indikaattori
+                  :asetukset {:tila "valmis"}}
+                 {:komponentti :tietoja
+                  :asetukset {:rivit [["Urakka" "Oulun alueurakka"]
+                                      ["Tila" "Hyväksytty"]]
+                              :kavenna? true}}
+                 {:komponentti :kaksi-palstaa-otsikkoja-ja-arvoja
+                  :asetukset {:rivit [["Käyttäjä" "Testi Käyttäjä"]
+                                      ["Rooli" "Järjestelmänvalvoja"]]}}
+                 {:komponentti :taulukkotietonakyma
+                  :asetukset {:rivit [["Nimi" "Simulaattori"]
+                                      ["Versio" "1"]]}}]}
+       {:komponentti :muokkausgrid
+        :asetukset {:otsikko "Muokattava taulukko"
+                    :tyhja "Ei rivejä."
+                    :voi-muokata? true
+                    :voi-lisata? false
+                    :sarakkeet [{:otsikko "Nimi" :nimi :nimi :tyyppi :string :leveys 2}
+                                {:otsikko "Määrä" :nimi :maara :tyyppi :numero :leveys 1}]
+                    :rivit [{:id 1 :nimi "Sorastus" :maara 12}
+                            {:id 2 :nimi "Paikkaus" :maara 4}]}}
+       {:komponentti :tabs
+        :asetukset {:valilehdet [{:otsikko "Perustiedot"
+                                  :teksti "Perustietojen sisältö"}
+                                 {:otsikko "Historia"
+                                  :teksti "Historian sisältö"}]}}
+       {:komponentti :dropdown-panel
+        :asetukset {:otsikko "Lisäasetukset"}}]}
