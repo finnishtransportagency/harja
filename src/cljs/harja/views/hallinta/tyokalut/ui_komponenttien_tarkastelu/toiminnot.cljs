@@ -16,14 +16,28 @@
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
       (if @suoritettu? "Toiminto suoritettu" "Toimintoa ei ole suoritettu")]]))
 
-(defn- nappi-simulaattorissa [solmu tila _lapsi-fn]
-  [napit/nappi
-   (get-in solmu [:asetukset :teksti])
-   (fn [] (reset! (:tila tila) :onnistui))
-   {:data-cy "ui-simulaattori-tallenna"}])
+(def ^:private nappi-variantit
+  {:ensisijainen "nappi-ensisijainen"
+   :toissijainen "nappi-toissijainen"
+   :reunaton "nappi-reunaton"
+   :myonteinen "nappi-myonteinen"
+   :kielteinen "nappi-kielteinen"
+   :varoitus "nappi-varoitus"})
 
-(register! :nappi {:esikatselu nappi
-                   :renderoi nappi-simulaattorissa})
+(defn- tekstiarvo
+  "Syötteen arvo vain, jos se on merkkijono. Muuten oletus, jotta syöte ei tuo markupia."
+  [arvo oletus]
+  (if (string? arvo) arvo oletus))
+
+(defn- nappi-simulaattorissa [solmu tila _lapsi-fn]
+  (let [{:keys [teksti variantti disabled tallennus-kaynnissa? data-cy]} (:asetukset solmu)]
+    [napit/nappi
+     (tekstiarvo teksti "")
+     (fn [] (reset! (:tila tila) :onnistui))
+     {:luokka (get nappi-variantit variantti (nappi-variantit :ensisijainen))
+      :disabled (true? disabled)
+      :tallennus-kaynnissa? (true? tallennus-kaynnissa?)
+      :data-cy (tekstiarvo data-cy "ui-simulaattori-nappi")}]))
 
 (defn- ikoni-ja-teksti [komponentti]
   [kehys/kortti komponentti
@@ -48,6 +62,26 @@
    [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
     [:p "Katso murupolku sivun yläreunasta."]]])
 
-(register! :ikoni-ja-teksti {:esikatselu ikoni-ja-teksti})
+(defn- ikoni-ja-teksti-simulaattorissa [solmu _tila _lapsi-fn]
+  [:div {:data-cy "ui-simulaattori-ikoni-ja-teksti"}
+   [ikonit/ikoni-ja-teksti [ikonit/livicon-info-sign]
+    (tekstiarvo (get-in solmu [:asetukset :teksti]) "")]])
+
+(defn- linkki-simulaattorissa-sisalto [otsikko disabloitu?]
+  (r/with-let [klikkaukset (r/atom 0)]
+    [:div {:data-cy "ui-simulaattori-linkki"}
+     [yleiset/linkki otsikko #(swap! klikkaukset inc) {:disabloitu? disabloitu?}]
+     [:p (str "Klikkauksia: " @klikkaukset)]]))
+
+(defn- linkki-simulaattorissa [solmu _tila _lapsi-fn]
+  (let [{:keys [otsikko disabloitu?]} (:asetukset solmu)]
+    [linkki-simulaattorissa-sisalto (tekstiarvo otsikko "") (true? disabloitu?)]))
+
+(register! :nappi {:esikatselu nappi
+                   :renderoi nappi-simulaattorissa})
+(register! :ikoni-ja-teksti {:esikatselu ikoni-ja-teksti
+                             :renderoi ikoni-ja-teksti-simulaattorissa})
+;; Globaali singleton (harja.views.main): ei renderöijää, ks. rajaukset.
 (register! :murupolku {:esikatselu murupolku})
-(register! :linkki {:esikatselu linkki})
+(register! :linkki {:esikatselu linkki
+                    :renderoi linkki-simulaattorissa})

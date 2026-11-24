@@ -8,6 +8,9 @@
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
+(defn- merkkijono [arvo]
+  (when (string? arvo) arvo))
+
 (defn- ajax-loader [komponentti]
   [kehys/kortti komponentti
    [:p "Latauskuva viestillä tai ilman. Sama-rivi? sijoittaa viestin kuvan viereen."]
@@ -16,11 +19,21 @@
     [:div {:data-cy (kehys/ankkuri komponentti "-sama-rivi")}
      [yleiset/ajax-loader "Haetaan tietoja" {:sama-rivi? true}]]]])
 
+;; Asetuksista välitetään vain :viesti ja :sama-rivi?. :luokka jätetään pois, koska se liitetään CSS-luokaksi.
+(defn- ajax-loader-simulaattorissa [solmu _tila _lapsi-fn]
+  (let [{:keys [viesti sama-rivi?]} (:asetukset solmu)]
+    [:div {:data-cy "ui-simulaattori-ajax-loader"}
+     [yleiset/ajax-loader (merkkijono viesti) {:sama-rivi? (true? sama-rivi?)}]]))
+
 (defn- vihje [komponentti]
   [kehys/kortti komponentti
    [:p "Kevyt ohjeteksti kuvakkeella."]
    [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
     [yleiset/vihje "Kentän arvo tallentuu automaattisesti."]]])
+
+(defn- vihje-simulaattorissa [solmu _tila _lapsi-fn]
+  [:div {:data-cy "ui-simulaattori-vihje"}
+   [yleiset/vihje (merkkijono (get-in solmu [:asetukset :teksti]))]])
 
 (defn- info-laatikko [komponentti]
   [kehys/kortti komponentti
@@ -30,6 +43,16 @@
       [:div {:key (name tyyppi)
              :data-cy (kehys/ankkuri komponentti "-" (name tyyppi))}
        [yleiset/info-laatikko tyyppi (str "Esimerkkiviesti: " (name tyyppi))]])]])
+
+(def ^:private simulaattorin-info-tyypit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto})
+
+(defn- info-laatikko-simulaattorissa [solmu _tila _lapsi-fn]
+  (let [{:keys [tyyppi ensisijainen-viesti toissijainen-viesti]} (:asetukset solmu)]
+    [:div {:data-cy "ui-simulaattori-info-laatikko"}
+     [yleiset/info-laatikko (get simulaattorin-info-tyypit tyyppi :neutraali)
+      (merkkijono ensisijainen-viesti)
+      (merkkijono toissijainen-viesti)
+      nil]]))
 
 (defn- varmista-kayttajalta [komponentti]
   (r/with-let [suoritettu (r/atom 0)]
@@ -61,9 +84,12 @@
                           :peruuta-fn #(reset! auki? false)}
          [:p "Leijukkeen sisältö."]])]]))
 
-(register! :ajax-loader {:esikatselu ajax-loader})
-(register! :vihje {:esikatselu vihje})
-(register! :info-laatikko {:esikatselu info-laatikko})
+(register! :ajax-loader {:esikatselu ajax-loader
+                         :renderoi ajax-loader-simulaattorissa})
+(register! :vihje {:esikatselu vihje
+                   :renderoi vihje-simulaattorissa})
+(register! :info-laatikko {:esikatselu info-laatikko
+                           :renderoi info-laatikko-simulaattorissa})
 (register! :varmista-kayttajalta {:esikatselu varmista-kayttajalta})
 (defn- tooltip [komponentti]
   [kehys/kortti komponentti
@@ -72,6 +98,19 @@
     [yleiset/tooltip {:suunta :oikea}
      [:span {:data-cy (kehys/ankkuri komponentti "-kohde")} "Vie hiiri tähän"]
      "Tooltipin sisältö"]]])
+
+(def ^:private simulaattorin-tooltip-suunnat #{:vasen :oikea :ylos :alas})
+
+(defn- tooltip-simulaattorissa [solmu _tila _lapsi-fn]
+  (let [{:keys [sisalto suunta]} (:asetukset solmu)]
+    [:div {:data-cy "ui-simulaattori-tooltip"}
+     [yleiset/tooltip {:suunta (get simulaattorin-tooltip-suunnat suunta :oikea)}
+      [:span {:data-cy "ui-simulaattori-tooltip-kohde"} "Vie hiiri tähän"]
+      (merkkijono sisalto)]]))
+
+(defn- tila-indikaattori-simulaattorissa [solmu _tila _lapsi-fn]
+  [:div {:data-cy "ui-simulaattori-tila-indikaattori"}
+   [yleiset/tila-indikaattori (merkkijono (get-in solmu [:asetukset :tila]))]])
 
 (defn- tila-indikaattori [komponentti]
   [kehys/kortti komponentti
@@ -108,5 +147,7 @@
 (register! :leijuke {:esikatselu leijuke})
 (register! :sivupalkki {:esikatselu sivupalkki-esikatselu})
 (register! :toast-viesti {:esikatselu toast-viesti})
-(register! :tila-indikaattori {:esikatselu tila-indikaattori})
-(register! :tooltip {:esikatselu tooltip})
+(register! :tila-indikaattori {:esikatselu tila-indikaattori
+                               :renderoi tila-indikaattori-simulaattorissa})
+(register! :tooltip {:esikatselu tooltip
+                     :renderoi tooltip-simulaattorissa})

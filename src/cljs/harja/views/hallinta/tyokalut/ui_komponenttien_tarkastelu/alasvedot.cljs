@@ -94,8 +94,30 @@
 (defn- hoitokausi-simulaattorissa [_solmu _tila _lapsi-fn]
   [hoitokausi-simulaattorissa-sisalto])
 
+(def ^:private checkbox-pudotusvalikon-oletusteksti [" valinta" " valintaa"])
+
+(defn- checkbox-pudotusvalikko-simulaattorissa-sisalto [solmu]
+  (r/with-let [valinnat (r/atom (mapv #(select-keys % [:nimi :valittu?])
+                                      (get-in solmu [:asetukset :valinnat])))]
+    (let [teksti (or (get-in solmu [:asetukset :teksti]) checkbox-pudotusvalikon-oletusteksti)]
+      [:div {:data-cy "ui-simulaattori-checkbox-pudotusvalikko"}
+       [valinnat/checkbox-pudotusvalikko
+        @valinnat
+        (fn [valinta valittu?]
+          (swap! valinnat (fn [vaihtoehdot]
+                            (mapv #(if (= (:nimi %) (:nimi valinta))
+                                     (assoc % :valittu? valittu?)
+                                     %)
+                                  vaihtoehdot))))
+        teksti
+        {}]])))
+
+(defn- checkbox-pudotusvalikko-simulaattorissa [solmu _tila _lapsi-fn]
+  [checkbox-pudotusvalikko-simulaattorissa-sisalto solmu])
+
 (register! :livi-pudotusvalikko {:esikatselu livi-pudotusvalikko
                                  :renderoi livi-pudotusvalikko-simulaattorissa})
-(register! :checkbox-pudotusvalikko {:esikatselu checkbox-pudotusvalikko})
+(register! :checkbox-pudotusvalikko {:esikatselu checkbox-pudotusvalikko
+                                     :renderoi checkbox-pudotusvalikko-simulaattorissa})
 (register! :hoitokausi {:esikatselu hoitokausi-esikatselu
                         :renderoi hoitokausi-simulaattorissa})

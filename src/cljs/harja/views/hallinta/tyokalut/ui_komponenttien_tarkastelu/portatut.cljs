@@ -26,6 +26,24 @@
        "Historia" :historia [:p "Historia"]]]
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")} (str "Valittu: " (name @aktiivinen))]]))
 
+;; Välilehden avaimena on sen järjestysnumero, jotta samannimiset otsikot eivät törmää.
+(defn- valilehdet-simulaattorissa [valilehdet]
+  (->> valilehdet
+       (filter #(and (string? (:otsikko %)) (string? (:teksti %))))
+       (mapcat (fn [indeksi {:keys [otsikko teksti]}]
+                 [otsikko indeksi [:p teksti]])
+               (range))))
+
+(defn- tabs-simulaattorissa-sisalto [valilehdet]
+  (r/with-let [aktiivinen (r/atom 0)]
+    [:div {:data-cy "ui-simulaattori-tabs"}
+     (apply bootstrap/tabs {:active aktiivinen
+                            :classes "ui-portatut-tabs"}
+            (valilehdet-simulaattorissa valilehdet))]))
+
+(defn- tabs-simulaattorissa [solmu _tila _lapsi-fn]
+  [tabs-simulaattorissa-sisalto (get-in solmu [:asetukset :valilehdet])])
+
 (defn- navbar [komponentti]
   [kehys/kortti komponentti
    [:p "Header, vasen/oikea-itemit ja mobiilivaihtaja säilyvät."]
@@ -75,6 +93,23 @@
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
       (if @auki? "Tila: auki" "Tila: kiinni")]]))
 
+(defn- dropdown-panel-simulaattorissa-sisalto [otsikko lapset lapsi-fn]
+  (r/with-let [auki? (r/atom false)]
+    [:div {:data-cy "ui-simulaattori-dropdown-panel"}
+     [bootstrap/dropdown-panel {:open auki?}
+      otsikko
+      [ui/pino {}
+       (map-indexed (fn [indeksi lapsi]
+                      ^{:key indeksi}
+                      [lapsi-fn lapsi])
+                    lapset)]]]))
+
+(defn- dropdown-panel-simulaattorissa [solmu _tila lapsi-fn]
+  (let [otsikko (get-in solmu [:asetukset :otsikko])]
+    [dropdown-panel-simulaattorissa-sisalto (when (string? otsikko) otsikko)
+     (:lapset solmu)
+     lapsi-fn]))
+
 ;; Simulaattorissa paneelin sisältö tulee :lapset-solmuista. :sisalto (hiccup) ja :luokka
 ;; jätetään huomiotta, jotta syöte ei tuo mielivaltaista markupia tai CSS-luokkia.
 (defn- panel-simulaattorissa [solmu _tila lapsi-fn]
@@ -87,8 +122,10 @@
                      [lapsi-fn lapsi])
                    (:lapset solmu))]]))
 
-(register! :dropdown-panel {:esikatselu dropdown-panel})
-(register! :tabs {:esikatselu tabs})
+(register! :dropdown-panel {:esikatselu dropdown-panel
+                            :renderoi dropdown-panel-simulaattorissa})
+(register! :tabs {:esikatselu tabs
+                  :renderoi tabs-simulaattorissa})
 (register! :navbar {:esikatselu navbar})
 (register! :viesti {:esikatselu viesti})
 (register! :modal {:esikatselu modaali})

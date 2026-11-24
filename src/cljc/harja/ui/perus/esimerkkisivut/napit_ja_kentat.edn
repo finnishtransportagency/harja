@@ -1,0 +1,24 @@
+{:id :napit-ja-kentat
+ :nimi "Napit ja kentät"
+ :kuvaus "Nappivariantit, linkit ja tavallisimmat syöttökentät yhdessä lomakkeessa."
+ :puu [{:komponentti :pino
+        :lapset [{:komponentti :toimintoryhma
+                  :lapset [{:komponentti :nappi :asetukset {:teksti "Ensisijainen" :variantti :ensisijainen :data-cy "nappi-ensisijainen"}}
+                           {:komponentti :nappi :asetukset {:teksti "Toissijainen" :variantti :toissijainen :data-cy "nappi-toissijainen"}}
+                           {:komponentti :nappi :asetukset {:teksti "Myönteinen" :variantti :myonteinen :data-cy "nappi-myonteinen"}}
+                           {:komponentti :nappi :asetukset {:teksti "Kielteinen" :variantti :kielteinen :data-cy "nappi-kielteinen"}}
+                           {:komponentti :nappi :asetukset {:teksti "Estetty" :variantti :ensisijainen :disabled true :data-cy "nappi-estetty"}}
+                           {:komponentti :linkki :asetukset {:otsikko "Linkki"}}
+                           {:komponentti :ikoni-ja-teksti :asetukset {:teksti "Ikoni ja teksti"}}]}
+                 {:komponentti :lomake
+                  :lapset [{:komponentti :tekstikentta :asetukset {:placeholder "Teksti"}}
+                           {:komponentti :valintaruutu :asetukset {:teksti "Valintaruutu"}}
+                           {:komponentti :valintaryhma
+                            :asetukset {:otsikko "Urakkatyyppi"
+                                        :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}
+                                                      {:arvo :paallyste :nimi "Päällyste"}]}}
+                           {:komponentti :valintaryhma
+                            :asetukset {:otsikko "Toinen valinta"
+                                        :vaihtoehdot [{:arvo :a :nimi "A"} {:arvo :b :nimi "B"}]}}]}
+                 {:komponentti :info-laatikko
+                  :asetukset {:tyyppi :neutraali :ensisijainen-viesti "Info" :toissijainen-viesti "Lisätietoa"}}]}]}

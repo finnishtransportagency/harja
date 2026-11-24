@@ -14,6 +14,36 @@
    {:arvo :paallyste :nimi "Päällyste"}
    {:arvo :vesivayla :nimi "Vesiväylä"}])
 
+;; Simulaattorin asetukset ovat EDN-dataa, joten arvo voi olla minkä tahansa tyyppinen.
+(defn- vektori [arvo]
+  (if (coll? arvo) (vec arvo) []))
+
+(defn- joukko [arvo]
+  (if (coll? arvo) (set arvo) #{}))
+
+(defn- numero-tai [arvo oletus]
+  (if (number? arvo) arvo oletus))
+
+(defn- positiivinen-numero [arvo]
+  (when (and (number? arvo) (pos? arvo)) arvo))
+
+;; Kentät kutsuvat valinta-nayta-funktiota myös toisella argumentilla, siksi muuttuva aritia.
+(defn- vaihtoehdon-teksti [vaihtoehto & _]
+  (if (keyword? vaihtoehto) (name vaihtoehto) (str vaihtoehto)))
+
+(defn- vaihtoehto-arvo [vaihtoehto]
+  (if (or (keyword? vaihtoehto) (string? vaihtoehto)) vaihtoehto (str vaihtoehto)))
+
+(defn- sisalto-renderoijana [sisalto]
+  (fn [solmu _tila _lapsi-fn]
+    [sisalto solmu]))
+
+(defn- rivit-argumentit
+  "Muuntaa `[otsikko arvo]`-parit yleiset-komponentin muotoon. Tyhjä arvo jää nil:ksi."
+  [rivit]
+  (mapcat (fn [[otsikko arvo]] [(str otsikko) (some-> arvo str)])
+    (filter sequential? (vektori rivit))))
+
 (defn- suodatin [komponentti]
   (r/with-let [haku (r/atom "")
                vain-puutteelliset? (r/atom false)]
@@ -369,7 +399,25 @@
      "Tyhjä kenttä" nil
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
-(register! :kenttaryhma {:esikatselu kenttaryhma})
+(defn- kenttaryhma-simulaattorissa-sisalto [solmu]
+  (r/with-let [tunniste (str (gensym "ui-simulaattori-kenttaryhma-"))
+               arvo (r/atom "")]
+    [ui/kenttaryhma
+     (merge {:data-cy "ui-simulaattori-kenttaryhma"}
+            (select-keys (:asetukset solmu) [:otsikko :ohje :virhe :pakollinen? :disabled? :data-cy])
+            {:id tunniste})
+     (fn [{:keys [id aria-describedby aria-invalid aria-required disabled?]}]
+       [:input {:id id
+                :type "text"
+                :value @arvo
+                :on-change #(reset! arvo (.. % -target -value))
+                :aria-describedby aria-describedby
+                :aria-invalid aria-invalid
+                :aria-required aria-required
+                :disabled disabled?}])]))
+
+(register! :kenttaryhma {:esikatselu kenttaryhma
+                         :renderoi (sisalto-renderoijana kenttaryhma-simulaattorissa-sisalto)})
 (defn- liitteet-esikatselu [komponentti]
   [kehys/kortti komponentti
    [:p "Pelkkä liitetiedosto ilman urakkaa. Lisäys ja lista vaativat urakka-id:n ja oikeudet, joten niitä ei esikatselussa renderöidä."]
@@ -377,7 +425,20 @@
     [liitteet/liitetiedosto {:id 1 :nimi "tarkastus.pdf" :tyyppi "application/pdf" :koko 12345
                              :virustarkastettu? true}]]])
 
-(register! :tietoja {:esikatselu tietoja})
+(defn- tietoja-simulaattorissa [solmu _tila _lapsi-fn]
+  (let [asetukset (:asetukset solmu)]
+    [:div {:data-cy "ui-simulaattori-tietoja"}
+     (apply yleiset/tietoja
+       {:kavenna? (:kavenna? asetukset)
+        :jata-kaventamatta (joukko (:jata-kaventamatta asetukset))
+        :otsikot-omalla-rivilla? (:otsikot-omalla-rivilla? asetukset)
+        :otsikot-samalla-rivilla (joukko (:otsikot-samalla-rivilla asetukset))
+        :tyhja-rivi-otsikon-jalkeen (joukko (:tyhja-rivi-otsikon-jalkeen asetukset))
+        :piirra-viivat? (get asetukset :piirra-viivat? true)}
+       (rivit-argumentit (:rivit asetukset)))]))
+
+(register! :tietoja {:esikatselu tietoja
+                     :renderoi tietoja-simulaattorissa})
 (register! :liitteet {:esikatselu liitteet-esikatselu})
 
 (defn- taulukkotietonakyma-esikatselu [komponentti]
@@ -389,7 +450,13 @@
      "Tyhjä kenttä" nil
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
-(register! :taulukkotietonakyma {:esikatselu taulukkotietonakyma-esikatselu})
+(defn- taulukkotietonakyma-simulaattorissa [solmu _tila _lapsi-fn]
+  [:div {:data-cy "ui-simulaattori-taulukkotietonakyma"}
+   (apply yleiset/taulukkotietonakyma {}
+     (rivit-argumentit (get-in solmu [:asetukset :rivit])))])
+
+(register! :taulukkotietonakyma {:esikatselu taulukkotietonakyma-esikatselu
+                                 :renderoi taulukkotietonakyma-simulaattorissa})
 
 (defn- kaksi-palstaa-otsikkoja-ja-arvoja [komponentti]
   [kehys/kortti komponentti
@@ -400,15 +467,40 @@
      "Tyhjä kenttä" nil
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
-(register! :kaksi-palstaa-otsikkoja-ja-arvoja {:esikatselu kaksi-palstaa-otsikkoja-ja-arvoja})
-(register! :suodatin {:esikatselu suodatin})
-(defn- valintaryhma-simulaattorissa [solmu tila _lapsi-fn]
-  [ui/valintaryhma
-   (merge {:id "ui-simulaattori-urakkatyyppi"
-           :arvo @(:valinta tila)
-           :vaihda-fn (fn [arvo] (reset! (:valinta tila) arvo))
-           :ohje "Valinta tulee deklaratiivisen skenaarion vaihtoehdoista."}
-          (:asetukset solmu))])
+(defn- kaksi-palstaa-simulaattorissa [solmu _tila _lapsi-fn]
+  [:div {:data-cy "ui-simulaattori-kaksi-palstaa-otsikkoja-ja-arvoja"}
+   (apply yleiset/kaksi-palstaa-otsikkoja-ja-arvoja {}
+     (rivit-argumentit (get-in solmu [:asetukset :rivit])))])
+
+(register! :kaksi-palstaa-otsikkoja-ja-arvoja {:esikatselu kaksi-palstaa-otsikkoja-ja-arvoja
+                                               :renderoi kaksi-palstaa-simulaattorissa})
+
+(defn- suodatin-simulaattorissa-sisalto [solmu]
+  (r/with-let [tunniste (str (gensym "ui-simulaattori-suodatin-"))
+               haku (r/atom "")]
+    [ui/suodatin
+     (merge {:data-cy "ui-simulaattori-suodatin"}
+            (select-keys (:asetukset solmu) [:otsikko :data-cy])
+            {:id tunniste})
+     (fn [{:keys [id]}]
+       [kentat/tee-kentta {:tyyppi :string :elementin-id id} haku])]))
+
+(register! :suodatin {:esikatselu suodatin
+                      :renderoi (sisalto-renderoijana suodatin-simulaattorissa-sisalto)})
+
+(defn- valintaryhma-simulaattorissa-sisalto [solmu]
+  ;; Id on instanssikohtainen, jotta label ja ohje eivät osu toiseen valintaryhmään samalla sivulla.
+  (r/with-let [tunniste (str (gensym "ui-simulaattori-valintaryhma-"))
+               valinta (r/atom nil)]
+    (let [asetukset (select-keys (:asetukset solmu)
+                      [:otsikko :vaihtoehdot :tyhja-valinta :ohje :virhe :pakollinen? :disabled? :data-cy])]
+      [ui/valintaryhma
+       (merge {:data-cy "ui-simulaattori-valintaryhma"}
+              asetukset
+              {:id tunniste
+               :vaihtoehdot (vektori (:vaihtoehdot asetukset))
+               :arvo @valinta
+               :vaihda-fn #(reset! valinta %)})])))
 
 (defn- lomake-simulaattorissa [solmu _tila lapsi-fn]
   [ui/pino {:data-cy "ui-simulaattori-lomake"}
@@ -418,20 +510,134 @@
                 (:lapset solmu))])
 
 (register! :valintaryhma {:esikatselu valintaryhma
-                          :renderoi valintaryhma-simulaattorissa})
+                          :renderoi (sisalto-renderoijana valintaryhma-simulaattorissa-sisalto)})
 (register! :lomake {:esikatselu lomake
                     :renderoi lomake-simulaattorissa})
 (register! :rivi {:esikatselu rivi})
-(register! :tekstikentta {:esikatselu tekstikentta})
-(register! :numerokentta {:esikatselu numerokentta})
-(register! :sahkopostikentta {:esikatselu sahkopostikentta})
-(register! :puhelinkentta {:esikatselu puhelinkentta})
-(register! :valintaruutu {:esikatselu valintaruutu})
-(register! :raksiboksi {:esikatselu raksiboksi})
-(register! :radiokentta {:esikatselu radiokentta})
-(register! :checkbox-ryhma {:esikatselu checkbox-ryhma})
-(register! :radio-group {:esikatselu radio-group-kentta})
-(register! :valinta {:esikatselu valinta-kentta})
+(defn- tekstikentta-simulaattorissa-sisalto [solmu]
+  (r/with-let [arvo (r/atom "")]
+    [:div {:data-cy "ui-simulaattori-tekstikentta"}
+     [kentat/tee-kentta
+      (merge {:tyyppi :string}
+             (select-keys (:asetukset solmu) [:placeholder :disabled?]))
+      arvo]]))
+
+(defn- numerokentta-simulaattorissa-sisalto [solmu]
+  (r/with-let [arvo (r/atom nil)]
+    (let [asetukset (:asetukset solmu)]
+      [:div {:data-cy "ui-simulaattori-numerokentta"}
+       [kentat/tee-kentta
+        {:tyyppi :numero
+         :desimaalien-maara (numero-tai (:desimaalien-maara asetukset) 2)
+         :kokonaisosan-maara (numero-tai (:kokonaisosan-maara asetukset) 6)
+         :kokonaisluku? (:kokonaisluku? asetukset)
+         :vaadi-ei-negatiivinen? (get asetukset :vaadi-ei-negatiivinen? true)}
+        arvo]])))
+
+(defn- sahkopostikentta-simulaattorissa-sisalto [solmu]
+  (r/with-let [arvo (r/atom "")]
+    [:div {:data-cy "ui-simulaattori-sahkopostikentta"}
+     [kentat/tee-kentta
+      (merge {:tyyppi :email}
+             (select-keys (:asetukset solmu) [:placeholder :disabled?]))
+      arvo]]))
+
+(defn- puhelinkentta-simulaattorissa-sisalto [solmu]
+  (r/with-let [arvo (r/atom "")]
+    [:div {:data-cy "ui-simulaattori-puhelinkentta"}
+     [kentat/tee-kentta
+      (merge {:tyyppi :puhelin}
+             (select-keys (:asetukset solmu) [:placeholder :pituus :vayla-tyyli? :disabled?]))
+      arvo]]))
+
+(defn- valintaruutu-simulaattorissa-sisalto [solmu]
+  (r/with-let [valittu? (r/atom false)
+               input-id (str (gensym "ui-simulaattori-valintaruutu-"))]
+    [:div {:data-cy "ui-simulaattori-valintaruutu"}
+     [kentat/tee-kentta
+      (merge {:tyyppi :checkbox
+              :input-id input-id}
+             (select-keys (:asetukset solmu) [:teksti :disabled? :iso-clickalue?]))
+      valittu?]]))
+
+(defn- raksiboksi-simulaattorissa-sisalto [solmu]
+  (r/with-let [valittu? (r/atom false)]
+    [:div {:data-cy "ui-simulaattori-raksiboksi"}
+     [kentat/raksiboksi
+      (merge (select-keys (:asetukset solmu) [:teksti :tiivis? :disabled?])
+             ;; Toiminto saa tapahtuman, ei uutta arvoa, joten arvo käännetään.
+             {:toiminto (fn [_tapahtuma] (swap! valittu? not))})
+      valittu?]]))
+
+(defn- radiokentta-simulaattorissa-sisalto [solmu]
+  (r/with-let [valittu (r/atom nil)]
+    (let [{:keys [valinnat disabled?]} (:asetukset solmu)]
+      [:div {:data-cy "ui-simulaattori-radiokentta"}
+       [kentat/tee-kentta
+        {:tyyppi :radio
+         :valinnat (vektori valinnat)
+         :valinta-nayta vaihtoehdon-teksti
+         :disabled? disabled?}
+        valittu]])))
+
+(defn- checkbox-ryhma-simulaattorissa-sisalto [solmu]
+  (r/with-let [valitut (r/atom #{})]
+    (let [{:keys [vaihtoehdot palstoja disabloi]} (:asetukset solmu)]
+      [:div {:data-cy "ui-simulaattori-checkbox-ryhma"}
+       [kentat/tee-kentta
+        {:tyyppi :checkbox-group
+         :vaihtoehdot (mapv vaihtoehto-arvo (vektori vaihtoehdot))
+         :vaihtoehto-nayta vaihtoehdon-teksti
+         :palstoja (positiivinen-numero palstoja)
+         ;; Komponentti kutsuu disabloi-funktiota jokaiselle vaihtoehdolle, siksi boolean muutetaan funktioksi.
+         :disabloi (when disabloi (constantly true))}
+        valitut]])))
+
+(defn- radio-group-simulaattorissa-sisalto [solmu]
+  (r/with-let [valittu (r/atom nil)]
+    (let [{:keys [vaihtoehdot oletusarvo nayta-rivina? vayla-tyyli? disabloitu?]} (:asetukset solmu)]
+      [:div {:data-cy "ui-simulaattori-radio-group"}
+       [kentat/tee-kentta
+        {:tyyppi :radio-group
+         :vaihtoehdot (vektori vaihtoehdot)
+         :vaihtoehto-nayta vaihtoehdon-teksti
+         :oletusarvo oletusarvo
+         :nayta-rivina? nayta-rivina?
+         :vayla-tyyli? vayla-tyyli?
+         :disabloitu? disabloitu?}
+        valittu]])))
+
+(defn- valinta-simulaattorissa-sisalto [solmu]
+  (r/with-let [valittu (r/atom nil)]
+    (let [{:keys [valinnat disabled? data-cy]} (:asetukset solmu)]
+      [kentat/tee-kentta
+       {:tyyppi :valinta
+        :valinnat (vektori valinnat)
+        :valinta-nayta vaihtoehdon-teksti
+        :disabled? disabled?
+        :data-cy (or data-cy "ui-simulaattori-valinta")}
+       valittu])))
+
+(register! :tekstikentta {:esikatselu tekstikentta
+                          :renderoi (sisalto-renderoijana tekstikentta-simulaattorissa-sisalto)})
+(register! :numerokentta {:esikatselu numerokentta
+                          :renderoi (sisalto-renderoijana numerokentta-simulaattorissa-sisalto)})
+(register! :sahkopostikentta {:esikatselu sahkopostikentta
+                              :renderoi (sisalto-renderoijana sahkopostikentta-simulaattorissa-sisalto)})
+(register! :puhelinkentta {:esikatselu puhelinkentta
+                           :renderoi (sisalto-renderoijana puhelinkentta-simulaattorissa-sisalto)})
+(register! :valintaruutu {:esikatselu valintaruutu
+                          :renderoi (sisalto-renderoijana valintaruutu-simulaattorissa-sisalto)})
+(register! :raksiboksi {:esikatselu raksiboksi
+                        :renderoi (sisalto-renderoijana raksiboksi-simulaattorissa-sisalto)})
+(register! :radiokentta {:esikatselu radiokentta
+                         :renderoi (sisalto-renderoijana radiokentta-simulaattorissa-sisalto)})
+(register! :checkbox-ryhma {:esikatselu checkbox-ryhma
+                            :renderoi (sisalto-renderoijana checkbox-ryhma-simulaattorissa-sisalto)})
+(register! :radio-group {:esikatselu radio-group-kentta
+                         :renderoi (sisalto-renderoijana radio-group-simulaattorissa-sisalto)})
+(register! :valinta {:esikatselu valinta-kentta
+                     :renderoi (sisalto-renderoijana valinta-simulaattorissa-sisalto)})
 (register! :dropdown {:esikatselu dropdown-valikko})
 
 (defn- asettelu-simulaattorissa [asettelu-fn]

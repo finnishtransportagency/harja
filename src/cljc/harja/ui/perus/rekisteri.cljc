@@ -122,6 +122,7 @@
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Napin CSS-luokat, välilyönnillä erotettuna."}
                 :ikoni {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Nappiin piirrettävä ikonikomponentti."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :variantti {:tyyppi :keyword :pakollinen? false :oletus :ensisijainen :kuvaus "Napin tyyli simulaattorissa: :ensisijainen, :toissijainen, :reunaton, :myonteinen, :kielteinen tai :varoitus. Renderöijä muuntaa arvon nappi-luokaksi."}
                 :tallennus-kaynnissa? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, piirtää latausindikaattorin."}}
     :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."}
    {:id :murupolku
@@ -199,7 +200,8 @@
                 :ohje {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ohjeteksti."}
                 :virhe {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Virheteksti."}
                 :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Merkitsee ryhmän pakolliseksi."}
-                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}}}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}}}
    {:id :tekstikentta
     :nimi "Tekstikenttä"
     :ryhma :lomakkeet
@@ -510,7 +512,7 @@
     :korvaa []
     :slotit #{:kentat :toiminnot :tila}
     :tilat #{:normaali :lataus :virhe :onnistui}
-    :sallitut-vanhemmat #{:sivu}
+    :sallitut-vanhemmat #{:sivu :pino :panel}
     :bootstrap-tila :riippuvainen
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :funktio "harja.ui.perus"
@@ -586,7 +588,8 @@
                 :voi-kumota? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, muutokset voi kumota."}
                 :muutos {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan muutosten yhteydessä."}
                 :sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
-                :rivit-atomi {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, jossa rivit ovat."}}}
+                :rivit-atomi {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, jossa rivit ovat."}
+                :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana (mappeja :id-avaimella). Vain simulaattorille: renderöijä luo itse atomin."}}}
    {:id :tabs
     :nimi "Tabs"
     :ryhma :portatut
@@ -850,7 +853,8 @@
                 :otsikot-samalla-rivilla {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, jotka ovat samalla rivillä."}
                 :tyhja-rivi-otsikon-jalkeen {:tyyppi :muu :pakollinen? false :oletus #{} :kuvaus "Otsikot, joiden jälkeen tulee tyhjä rivi."}
                 :piirra-viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää viivat otsikoiden ja arvojen alle."}
-                :tietorivi-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka jokaiselle tietoriville."}}}
+                :tietorivi-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka jokaiselle tietoriville."}
+                :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana: vektori [otsikko arvo] -pareja. Vain simulaattorille."}}}
    {:id :kaksi-palstaa-otsikkoja-ja-arvoja
     :nimi "Kaksipalstainen tietonäkymä"
     :ryhma :lomakkeet
@@ -865,7 +869,8 @@
     :bootstrap-luokat ["container" "row" "col-md-4" "col-md-8"]
     :kuvaus "Vanha kaksipalstainen otsikko-arvo-rivinäkymä Bootstrapin grid-luokilla. Käytössä vain käyttäjän tietojen näkymässä (haku). Uuteen käyttöön tulee :tietoja."
     :funktio "harja.ui.yleiset/kaksi-palstaa-otsikkoja-ja-arvoja"
-    :asetukset {:class {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille (div.tietoja.container)."}}}
+    :asetukset {:class {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille (div.tietoja.container)."}
+                :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana: vektori [otsikko arvo] -pareja. Vain simulaattorille."}}}
    {:id :taulukkotietonakyma
     :nimi "Taulukkotietonäkymä"
     :ryhma :lomakkeet
@@ -880,7 +885,8 @@
     :kuvaus "Otsikko-arvo-rivit taulukkona. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/taulukkotietonakyma"
     :asetukset {:style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Juurielementin tyylit (div.taulukko-tietonakyma)."}
-                :table-style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Taulukon tyylit (table)."}}}
+                :table-style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Taulukon tyylit (table)."}
+                :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana: vektori [otsikko arvo] -pareja. Vain simulaattorille."}}}
    {:id :tila-indikaattori
     :nimi "Tila-indikaattori"
     :ryhma :palautteet

@@ -50,6 +50,31 @@
       (mapv #(select-keys % [:otsikko :nimi :leveys :tyyppi]) sarakkeet)
       (vec rivit)]]))
 
+(def ^:private muokkausgridin-tyypit #{:string :numero})
+
+(defn- muokkausgridin-sarake [sarake]
+  (cond-> (select-keys sarake [:otsikko :nimi :leveys])
+    (muokkausgridin-tyypit (:tyyppi sarake)) (assoc :tyyppi (:tyyppi sarake))))
+
+(defn- muokkausgrid-simulaattorissa-sisalto [solmu]
+  (r/with-let [rivit (r/atom (into {} (map (juxt :id identity)) (get-in solmu [:asetukset :rivit])))]
+    (let [{:keys [otsikko tyhja voi-muokata? voi-lisata? sarakkeet]} (:asetukset solmu)]
+      [:div {:data-cy "ui-simulaattori-muokkausgrid"}
+       ;; nil ei ole muokkausgridissä sama kuin false, joten booleanit annetaan aina.
+       [grid/muokkaus-grid {:otsikko otsikko
+                            :tyhja (or tyhja "Ei muokattavia rivejä.")
+                            :voi-muokata? (boolean voi-muokata?)
+                            :voi-lisata? (boolean voi-lisata?)
+                            :voi-kumota? false
+                            :muutos (fn [_] nil)}
+        (mapv muokkausgridin-sarake sarakkeet)
+        rivit]])))
+
+(defn- muokkausgrid-simulaattorissa [solmu _tila _lapsi-fn]
+  [muokkausgrid-simulaattorissa-sisalto solmu])
+
 (register! :perusgrid {:esikatselu perusgrid
                        :renderoi perusgrid-simulaattorissa})
-(register! :muokkausgrid {:esikatselu muokkausgrid})
+(register! :muokkausgrid {:esikatselu muokkausgrid
+                          :renderoi muokkausgrid-simulaattorissa})
+
