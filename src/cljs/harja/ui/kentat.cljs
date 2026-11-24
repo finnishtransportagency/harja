@@ -242,7 +242,8 @@
 
 (defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe?
                                        aputeksti regex focus on-focus on-blur lomake?
-                                       toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
+                                       toiminta-f disabled? vihje elementin-id muokattu?
+                                       data-cy] :as kentta}
                                data]
 
   [:input {:class (cond-> nil
@@ -261,6 +262,7 @@
            :on-blur on-blur
            :value @data
            :id (or elementin-id nil)
+           :data-cy data-cy
            :max-length pituus-max}])
 
 (defmethod tee-kentta :linkki [opts data]
@@ -274,7 +276,7 @@
 ;; pituus-max oletusarvo on 256, koska se on toteuman lisätiedon tietokantasarakkeissa
 (defmethod tee-kentta :text [{:keys [placeholder nimi koko on-focus on-blur lomake?
                                      disabled? pituus-max pituus-rajoittamaton? toiminta-f aputeksti
-                                     elementin-id aria-label]} data]
+                                     elementin-id aria-label data-cy]} data]
   (let [[koko-sarakkeet koko-rivit] koko
         rivit (atom (if (= :auto koko-rivit)
                       1
@@ -319,7 +321,8 @@
                        :on-blur on-blur
                        :disabled disabled?
                        :id (or elementin-id nil)
-                       :cols (or koko-sarakkeet 80)
+                           :data-cy data-cy
+                           :cols (or koko-sarakkeet 80)
                        :rows @rivit
                        :class (cond-> nil
                                 lomake? (str "form-control ")
