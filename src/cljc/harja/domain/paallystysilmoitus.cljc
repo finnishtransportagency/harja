@@ -140,8 +140,7 @@
 
 (def +kaistat+
   "Kaistavalinnat"
-  [{:nimi "1" :koodi 1}
-   {:nimi "11" :koodi 11}
+  [{:nimi "11" :koodi 11}
    {:nimi "12" :koodi 12}
    {:nimi "13" :koodi 13}
    {:nimi "21" :koodi 21}
