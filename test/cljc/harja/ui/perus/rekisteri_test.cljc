@@ -26,10 +26,14 @@
       (is (seq (virheet (dissoc ok :rooli)))))
     (testing "tuntematon rooli"
       (is (seq (virheet (assoc ok :rooli :ei-ole)))))
-    (testing "puuttuvat ja tyhjät slotit, tilat ja sallitut vanhemmat"
-      (doseq [avain [:slotit :tilat :sallitut-vanhemmat]]
+    (testing "puuttuvat ja tyhjät tilat ja sallitut vanhemmat"
+      (doseq [avain [:tilat :sallitut-vanhemmat]]
         (is (seq (virheet (dissoc ok avain))) (str "puuttuva " avain))
         (is (seq (virheet (assoc ok avain #{}))) (str "tyhjä " avain))))
+    (testing "slotit ja asetukset saavat olla tyhjiä, mutta eivät puuttua"
+      (doseq [[avain tyhja] [[:slotit #{}] [:asetukset {}]]]
+        (is (seq (virheet (dissoc ok avain))) (str "puuttuva " avain))
+        (is (empty? (virheet (assoc ok avain tyhja))) (str "tyhjä " avain))))
     (testing "tuntematon vanhempi"
       (is (seq (virheet (assoc ok :sallitut-vanhemmat #{:ei-ole})))))
     (testing "variantit on erillinen avain eikä sekoitu tiloihin"

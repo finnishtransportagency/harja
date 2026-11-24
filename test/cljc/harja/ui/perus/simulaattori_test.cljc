@@ -68,3 +68,30 @@
   (testing "lapsi ei ole map"
     (is (= ["Solmun pitää olla map: 1"]
            (simulaattori/virheet [{:komponentti :lomake :lapset [1]}])))))
+
+(deftest layout-komponentit-hyvaksyvat-tyypilliset-lapsensa
+  (testing "listaussivu: suodattimet, taulukko ja toiminnot"
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :pino
+            :lapset [{:komponentti :suodatinrivi
+                      :lapset [{:komponentti :hoitokausi}
+                               {:komponentti :livi-pudotusvalikko}
+                               {:komponentti :checkbox-pudotusvalikko}
+                               {:komponentti :nappi}]}
+                     {:komponentti :perusgrid}
+                     {:komponentti :toimintoryhma
+                      :lapset [{:komponentti :nappi}
+                               {:komponentti :linkki}]}]}])))
+  (testing "panel sisältää tietoja ja muita pinoja"
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :pino
+            :lapset [{:komponentti :panel
+                      :lapset [{:komponentti :tietoja}
+                               {:komponentti :taulukkotietonakyma}
+                               {:komponentti :info-laatikko}]}]}])))
+  (testing "suodatin kuuluu suodatinriviin, ei suoraan sivulle"
+    (is (seq (simulaattori/virheet [{:komponentti :suodatin}])))
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :suodatinrivi
+            :lapset [{:komponentti :suodatin}
+                     {:komponentti :valintaryhma}]}]))))

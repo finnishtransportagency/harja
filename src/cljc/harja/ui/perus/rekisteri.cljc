@@ -32,7 +32,7 @@
 
 (def roolit
   "Komponentin rooli rakenteessa. Jokaisella komponentilla on täsmälleen yksi rooli."
-  #{:syote :toiminto :lomake :asettelu :taulukko :rakenne :navigaatio :palaute :overlay})
+  #{:syote :toiminto :lomake :asettelu :taulukko :rakenne :sisalto :navigaatio :palaute :overlay})
 
 (def asetustyypit
   "Komponentin asetuksen tyyppi. Näytetään sopimusruudussa."
@@ -48,7 +48,7 @@
     :korvaa []
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
-    :sallitut-vanhemmat #{:lomake}
+    :sallitut-vanhemmat #{:lomake :suodatinrivi}
     :bootstrap-tila :riippuvainen
     :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus. Uuteen UI:hin suositellaan valintaryhmää, ellei haku tai kombo-valinta ole tarpeen."
     :funktio "harja.ui.yleiset/pudotusvalikko"
@@ -64,7 +64,7 @@
     :korvaa []
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatin}
+    :sallitut-vanhemmat #{:lomake :suodatin :suodatinrivi}
     :bootstrap-tila :riippuvainen
     :kuvaus "Pudotusvalikko, jossa on monivalinta-checkboxit. Rakentuu livi-pudotusvalikon päälle, joten käyttää .dropdown- ja .dropdown-menu-rakennetta."
     :funktio "harja.ui.valinnat/checkbox-pudotusvalikko"
@@ -81,7 +81,7 @@
     :korvaa []
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatin}
+    :sallitut-vanhemmat #{:lomake :suodatin :suodatinrivi}
     :bootstrap-tila :riippuvainen
     :kuvaus "Hoitokauden valinta pudotusvalikosta. Rakentuu livi-pudotusvalikon päälle. Ei lue urakkaa itse, vaan saa hoitokaudet parametrina. Urakkakohtainen otsikko ja tuck-variantti eivät ole tässä."
     :funktio "harja.ui.valinnat/hoitokausi"
@@ -98,7 +98,7 @@
     :korvaa []
     :slotit #{:ikoni :teksti}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :toimintoryhma}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Ikoni ja teksti vierekkäin. Ikonin ja tekstin väli tulee Harjan omasta luokasta."
     :funktio "harja.ui.ikonit/ikoni-ja-teksti"
@@ -113,7 +113,7 @@
     :korvaa []
     :slotit #{:toiminto}
     :tilat #{:normaali :estetty :lataus}
-    :sallitut-vanhemmat #{:lomake}
+    :sallitut-vanhemmat #{:lomake :pino :suodatinrivi :toimintoryhma}
     :bootstrap-tila :osittain-riippuvainen
     :funktio "harja.ui.napit/nappi"
     :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Napin teksti."}
@@ -148,7 +148,7 @@
     :korvaa []
     :slotit #{:teksti :toiminto}
     :tilat #{:normaali :disabloitu}
-    :sallitut-vanhemmat #{:sivu :lomake :palautteet}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :toimintoryhma}
     :bootstrap-tila :ei-riippuvuutta
     :funktio "harja.ui.yleiset/linkki"
     :kuvaus "Toimintolinkki, joka kutsuu käyttöpaikan funktiota. Disabloituna näkyy tekstinä ilman href-linkkiä."
@@ -169,7 +169,7 @@
     :korvaa []
     :slotit #{:kentta}
     :tilat #{:normaali :tyhja :virhe}
-    :sallitut-vanhemmat #{:lomake}
+    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Suodattimen label ja kenttä. Käytössä tarjoushintojen näkymässä."
     :funktio "harja.ui.perus/suodatin"
@@ -187,7 +187,7 @@
     :nimeamispoikkeukset #{:disabled?}
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
-    :sallitut-vanhemmat #{:lomake}
+    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
     :funktio "harja.ui.perus/valintaryhma"
@@ -410,7 +410,7 @@
     :korvaa []
     :slotit #{:otsikko :kohteet}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :toimintoryhma}
     :bootstrap-tila :riippuvainen
     :bootstrap-luokat ["dropdown-toggle" "dropdown-menu"]
     :kuvaus "Otsikko ja vaihtoehtolista. Ei lomakekenttä. Avautumisen tila ei kuulu komponenttiin, joten esikatselu näyttää vain otsikon."
@@ -426,7 +426,7 @@
     :korvaa []
     :slotit #{:lapset}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
     :funktio "harja.ui.perus/pino"
@@ -541,7 +541,7 @@
     :korvaa []
     :slotit #{:otsikko :sisalto}
     :tilat #{:normaali :tyhja}
-    :sallitut-vanhemmat #{:sivu}
+    :sallitut-vanhemmat #{:sivu :pino}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Yhteensopiva panel-wrapper ilman Bootstrapin panel-markupia."
     :funktio "harja.ui.bootstrap/panel"
@@ -557,7 +557,7 @@
     :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja}
-    :sallitut-vanhemmat #{:sivu}
+    :sallitut-vanhemmat #{:sivu :pino :panel}
     :bootstrap-tila :riippuvainen
     :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
     :funktio "harja.ui.grid/grid"
@@ -575,7 +575,7 @@
     :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja :muokkaus}
-    :sallitut-vanhemmat #{:sivu}
+    :sallitut-vanhemmat #{:sivu :pino :panel}
     :bootstrap-tila :riippuvainen
     :kuvaus "Muokattava taulukko. Rivien muutokset kulkevat käyttöpaikan muutos-callbackin kautta. Paneelin rakenne on vielä Bootstrapin panel-luokkia."
     :funktio "harja.ui.grid/muokkaus-grid"
@@ -838,7 +838,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Geneerinen otsikko-arvo-rivinäkymä. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/tietoja"
@@ -860,7 +860,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
     :bootstrap-tila :riippuvainen
     :bootstrap-luokat ["container" "row" "col-md-4" "col-md-8"]
     :kuvaus "Vanha kaksipalstainen otsikko-arvo-rivinäkymä Bootstrapin grid-luokilla. Käytössä vain käyttäjän tietojen näkymässä (haku). Uuteen käyttöön tulee :tietoja."
@@ -875,7 +875,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Otsikko-arvo-rivit taulukkona. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/taulukkotietonakyma"
@@ -890,7 +890,7 @@
     :korvaa []
     :slotit #{:teksti}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :taulukko}
+    :sallitut-vanhemmat #{:sivu :lomake :perusgrid :muokkausgrid}
     :bootstrap-tila :osittain-riippuvainen
     :bootstrap-luokat ["caption"]
     :funktio "harja.ui.yleiset/tila-indikaattori"
@@ -911,7 +911,7 @@
     :tilat #{:normaali}
     :variantit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
     :yhteiset-variantit {:onnistui :onnistunut :info :neutraali :varoitus :varoitus}
-    :sallitut-vanhemmat #{:sivu :lomake}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
     :funktio "harja.ui.yleiset/info-laatikko"
@@ -1040,11 +1040,12 @@
                       (when (and (= :ei-riippuvuutta bootstrap-tila) (seq bootstrap-luokat))
                         (str id ": ei-riippuvuutta-komponentilla ei voi olla bootstrap-luokat"))
                       (when-not (every? seq [nimi kuvaus funktio]) (str id ": nimi, kuvaus tai funktio puuttuu"))
-                      (when-not (and (map? asetukset) (seq asetukset)) (str id ": asetukset puuttuvat"))
+                      ;; Komponentti ilman parametreja (esim. murupolku) kuvataan tyhjällä kartalla.
+                      (when-not (map? asetukset) (str id ": asetukset puuttuvat"))
                       (when-let [virheelliset (seq (remove (comp asetustyypit :tyyppi val) asetukset))]
                         (str id ": tuntemattomat asetustyypit " (mapv (comp :tyyppi val) virheelliset)))
                       (when-not (contains? roolit rooli) (str id ": tuntematon tai puuttuva rooli " rooli))
-                      (when-not (joukko? slotit) (str id ": slotit puuttuvat tai ovat tyhjät"))
+                      (when-not (set? slotit) (str id ": slotit puuttuvat"))
                       (when-not (joukko? tilat) (str id ": tilat puuttuvat tai ovat tyhjät"))
                       (when-not (joukko? sallitut-vanhemmat)
                         (str id ": sallitut-vanhemmat puuttuvat tai ovat tyhjät"))
