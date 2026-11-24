@@ -359,13 +359,18 @@
       (fn [kohdistukset]
         (when kohdistukset
           (mapv (fn [kohdistus]
-                  (-> kohdistus
-                    (update :tehtavaryhman-tehtavat
-                      (fn [tehtavat]
-                        (when tehtavat (mapv paivita-tehtava tehtavat))))
-                    (update :tehtava
-                      (fn [tehtava]
-                        (when tehtava (paivita-tehtava tehtava))))))
+                  (let [kohdistus (-> kohdistus
+                                    (update :tehtavaryhman-tehtavat
+                                      (fn [tehtavat]
+                                        (when tehtavat (mapv paivita-tehtava tehtavat))))
+                                    (update :tehtava
+                                      (fn [tehtava]
+                                        (when tehtava (paivita-tehtava tehtava)))))
+                        maara (:maara kohdistus)
+                        yksikkohinta (get-in kohdistus [:tehtava :yksikkohinta])]
+                    (if (and (number? maara) (number? yksikkohinta))
+                      (assoc kohdistus :summa (* maara yksikkohinta))
+                      kohdistus)))
             kohdistukset))))))
 
 (extend-protocol tuck/Event
@@ -826,7 +831,8 @@
     [{:keys [urakka tehtavaryhma nro]} app]
     (when (and tehtavaryhma (:id tehtavaryhma)) (tuck-apurit/post! :hae-tehtavaryhman-tehtavat-urakalle
                                                   {:urakka-id (:id urakka)
-                                                   :tehtavaryhma-id (:id tehtavaryhma)}
+                                                   :tehtavaryhma-id (:id tehtavaryhma)
+                                                   :valittu-hoitokausi @urakka-tila/valittu-hoitokausi}
                                                   {:onnistui ->HaeUrakanTehtavaryhmanTehtavatOnnistui
                                                    :onnistui-parametrit [{:nro nro}]
                                                    :epaonnistui ->KutsuEpaonnistui
@@ -839,18 +845,15 @@
 
   HaeUrakanTehtavaryhmanTehtavatOnnistui
   (process-event [{tulos :tulos {:keys [nro]} :parametrit} app]
-    (let
-      [lomake (:lomake app)
-       lomake (-> lomake
-                (with-meta (tila/kulun-validointi-meta lomake)))
-       app (-> app
-             (assoc :lomake lomake)
-             (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] tulos)
-             (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] false))]
-      (if (= 1 (count tulos))
-        ;; Aseta ainoa tehtävä valinnaksi
-        (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
-        app)))
+    (let [lomake (-> (:lomake app)
+                   (assoc-in [:kohdistukset nro :tehtavaryhman-tehtavat] tulos)
+                   (assoc-in [:kohdistukset nro :tehtava-haku-menossa] false))
+          ;; Aseta ainoa tehtävä valinnaksi
+          lomake (if (= 1 (count tulos))
+                   (assoc-in lomake [:kohdistukset nro :tehtava] (first tulos))
+                   lomake)
+          lomake (with-meta lomake (tila/kulun-validointi-meta lomake))]
+      (assoc app :lomake lomake)))
 
   GeneroiVhuYksikkohinnat
   (process-event [_ app]

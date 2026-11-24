@@ -22,6 +22,9 @@
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]))
 
+(def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
+(def liitteen-lisaysohje "Lisää toimenpiteen lisätiedot liitteenä")
+
 (defn- kulun-poistovarmistus-modaali
   [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]
   [:div#kulun-poisto-modaali
@@ -63,6 +66,12 @@
     [napit/poista "" #(e! (tiedot/->PoistaLiite liite-id))
      {:vayla-tyyli? true :teksti-nappi? false :luokka "napiton-nappi pelkka-ikoni"}]]])
 
+(defn- nayta-liitteen-lisaysohje? [lomake]
+  (let [{validoi-fn :validoi} (meta lomake)
+        validoitu-lomake (validoi-fn lomake)
+        validius (get (:validius (meta validoitu-lomake)) [:liitteet])]
+    (and validius (not (:validi? validius)))))
+
 (defn- liitteet [e! kulu-lukittu? lomake]
   (let [liitteet (:liitteet lomake)]
     [:div.palsta
@@ -71,7 +80,10 @@
       [:div.liiterivit
        (if-not (empty? liitteet)
          (into [:<>] (mapv (r/partial liitteen-naytto e!) liitteet))
-         [:div.liitelista "Ei liitteitä"])]
+         [:div.liitelista
+          (if (nayta-liitteen-lisaysohje? lomake)
+            [:span.punainen-teksti (str liitteen-lisaysohje ".")]
+            "Ei liitteitä")])]
       (when-not kulu-lukittu?
         [:div.liitenappi
          [liitteet/lisaa-liite
@@ -101,7 +113,6 @@
 (defn tehtavan-valinta [{:keys [valitse-fn disabled virhe? valinta format-fn tehtava-haku-menossa]} tehtavat]
   [:<>
    (when (or (seq tehtavat) valinta)
-      #_ {:style {:width "100%"}}
      [:div.label-ja-alasveto {:style {:width "100%"}}
       [:span.alasvedon-otsikko "Tehtävä*"]
       [yleiset/livi-pudotusvalikko
@@ -112,6 +123,7 @@
         :pakollinen? true
         :valitse-fn valitse-fn
         :disabled disabled
+        :muokattu? true
         :virhe? virhe?
         :vayla-tyyli? true}
        tehtavat]])
@@ -130,6 +142,7 @@
      :arvo-atom (r/wrap lisatieto-arvo
                   #(e! (tiedot/->KohdistuksenLisatieto % nro)))
      :kentta-params (cond-> {:tyyppi :string
+                             :data-cy (str "kulukohdistus-lisatieto-" nro)
                              :vayla-tyyli? true
                              :aputeksti "Kirjoita tähän halutessasi lisätietoa"
                              :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}
@@ -185,6 +198,45 @@
       [:div.col-xs-12.col-md-3
        [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro]]]]))
 
+(defn- vhu-maara-ja-hinnat [e! lomake maara tehtava nro data-cy]
+  (let [yksikkohinta (:yksikkohinta tehtava)
+        yhteensa (when (and (number? maara) (number? yksikkohinta))
+                   (* maara yksikkohinta))]
+    [:<>
+     (when (and tehtava (nil? yksikkohinta))
+       [:div.row
+        [:div.col-xs-12.col-md-12
+         [yleiset/info-laatikko :varoitus
+          "Tehtävän yksikköhintaa ei löydy"
+          "Tehtävään liittyvää yksikköhintaa ei löydy Harjasta. Tehtävien yksikköhinnat tulee määritellä Harjan osiossa \"Kulut > Yksikköhinnat\"."
+          nil]]])
+     [:div.row
+      [:div.col-xs-12.col-md-2
+       [kentat/tee-otsikollinen-kentta
+        {:otsikko "Määrä *"
+         :arvo-atom (r/wrap maara #(e! (tiedot/->KohdistuksenMaara % nro)))
+         :tyylit {:width "110px"}
+         :kentta-tyylit {:width "100%"}
+         :kentta-params {:tyyppi :numero
+                         :vaadi-ei-negatiivinen? true
+                         :yksikko (:yksikko tehtava)
+                         :vayla-tyyli? true
+                         :muokattu? true
+                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :maara)
+                         :data-cy data-cy}}]]
+      [:div.col-xs-12.col-md-2
+       [kentat/nayta-otsikollinen-kentta
+        {:otsikko "Yksikköhinta"
+         :kentta-params {:tyyppi (if (nil? yksikkohinta) :string :euro)}
+         :arvo-atom (kentat/vain-luku-atomina
+                      (if (nil? yksikkohinta) "Ei saatavilla" yksikkohinta))}]]
+      [:div.col-xs-12.col-md-2
+       [:div {:data-cy (str data-cy "-yhteensa")}
+        [kentat/nayta-otsikollinen-kentta
+         {:otsikko "Yhteensä"
+          :kentta-params {:tyyppi :euro}
+          :arvo-atom (kentat/vain-luku-atomina yhteensa)}]]]]]))
+
 (defn- vhu-hankintakulu-kohdistus [e! lomake kohdistus tehtavaryhmat nro]
   (let [;; VHU:n hankintakulunäkymän logiikka eriytetään MHU:sta myöhempiä muutoksia varten.
         kielletyt-tehtavaryhmat #{"rahavaraus" "vahinkojen" "äkilliset" "hoidonjohtopalkkio"
@@ -205,10 +257,7 @@
                     kohdistus)
         tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)
         tehtava (:tehtava kohdistus)
-        maara (:maara kohdistus)
-        yksikkohinta (:yksikkohinta tehtava)
-        yhteensa (when (and (number? maara) (number? yksikkohinta))
-                   (* maara yksikkohinta))]
+        maara (:maara kohdistus)]
     [:div
      [:div.row
       [:div.col-xs-12.col-md-6
@@ -238,44 +287,13 @@
      [:div.row
       [:div.col-xs-12.col-md-3
        [lisatieto e! (:lisatyon-lisatieto kohdistus) lomake nro true]]]
-     (when (and tehtava (nil? yksikkohinta))
-       [:div.row
-        [:div.col-xs-12.col-md-12
-         [yleiset/info-laatikko :varoitus
-          "Tehtävän yksikköhintaa ei löydy"
-          "Tehtävään liittyvää yksikköhintaa ei löydy Harjasta. Tehtävien yksikköhinnat tulee määritellä Harjan osiossa \"Kulut > Yksikköhinnat\"."
-          nil]]])
-     [:div.row
-      [:div.col-xs-12.col-md-2
-       [kentat/tee-otsikollinen-kentta
-        {:otsikko "Määrä *"
-         :arvo-atom (r/wrap maara #(e! (tiedot/->KohdistuksenMaara % nro)))
-         :tyylit {:width "110px"}
-         :kentta-tyylit {:width "100%"}
-         :kentta-params {:tyyppi :numero
-                         :vaadi-ei-negatiivinen? true
-                         :yksikko (:yksikko tehtava)
-                         :vayla-tyyli? true
-
-                         :muokattu? true
-                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :maara)
-                         :data-cy "vhu-hankintakulu-maara"}}]]
-      [:div.col-xs-12.col-md-2
-       [kentat/nayta-otsikollinen-kentta
-        {:otsikko "Yksikköhinta"
-         :kentta-params {:tyyppi (if (nil? yksikkohinta) :string :euro)}
-         :arvo-atom (kentat/vain-luku-atomina
-                      (if (nil? yksikkohinta) "Ei saatavilla" yksikkohinta))}]]
-      [:div.col-xs-12.col-md-2
-       [kentat/nayta-otsikollinen-kentta
-        {:otsikko "Yhteensä"
-         :kentta-params {:tyyppi :euro}
-         :arvo-atom (kentat/vain-luku-atomina yhteensa)}]]]]))
+     [vhu-maara-ja-hinnat e! lomake maara tehtava nro "vhu-hankintakulu-maara"]]))
 
 
 
-(defn- muukulu-kohdistus [e! lomake kohdistus tehtavaryhmat toimenpiteet nro]
-  (let [tavoitehinta (r/atom (:tavoitehintainen kohdistus))
+(defn- muukulu-kohdistus [e! lomake kohdistus tehtavaryhmat toimenpiteet nro urakan-tyyppi]
+  (let [vhu-urakka? (= :vesivayla-hoito urakan-tyyppi)
+        tavoitehinta (r/atom (:tavoitehintainen kohdistus))
         ;; Tietokannassa lisätietoja voi olla vain lisätöillä. Mutta uusimpien muutosten mukaan niitä voi olla myös muilla kuluilla.
         ;; Tässä vaiheessa ei ole vielä muokattu tietokantaa, joten nimeäminen on tässä vaiheessa vielä hieman sekava.
         lisatyon-lisatieto (:lisatyon-lisatieto kohdistus)
@@ -293,7 +311,9 @@
                             sisaltaako?))
                         tehtavaryhmat)
         tehtavat (:tehtavaryhman-tehtavat kohdistus)
-        tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)]
+        tehtava-haku-menossa (:tehtava-haku-menossa kohdistus)
+        tehtava (:tehtava kohdistus)
+        maara (:maara kohdistus)]
     [:div
      [:div.row
       [:div.col-xs-12.col-md-6
@@ -345,7 +365,7 @@
            toimenpiteet]]])
       [:div.col-xs-12.col-md-6 {:style {:max-width "350px"}}
        [kentat/tee-otsikollinen-kentta
-        {:otsikko "Lisätieto *"
+        {:otsikko (if vhu-urakka? "Lisätieto" "Lisätieto *")
          :vayla-tyyli? true
          :tyylit {:width "150px"}
          :otsikon-luokka ""
@@ -354,7 +374,10 @@
          :kentta-params {:tyyppi :string
                          :vayla-tyyli? true
                          :muokattu? true
-                         :virhe? (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto)}}]]]]))
+                         :virhe? (and (not vhu-urakka?)
+                                   (nayta-kohdistuksen-virhe? lomake nro :lisatyon-lisatieto))}}]]]
+     (when (and vhu-urakka? (= :true @tavoitehinta))
+       [vhu-maara-ja-hinnat e! lomake maara tehtava nro "vhu-muukulu-maara"])]))
 
 (defn- rahavaraus-kohdistus [e! lomake kohdistus rahavaraukset nro]
   (let [tehtavaryhmat (sort-by :jarjestys (get-in kohdistus [:rahavaraus :tehtavaryhmat]))]
@@ -537,7 +560,7 @@
      ;; Kululle valitaan tehtäväryhmä, rahavaraus tai tavoitehintaan kuuluminen sen perusteella, että minkä tyyppinen kohdistus on kyseessä
      ;; Kohdistustyypit on filtteröity aiemmin, niin tässä ei tarvitse tarkistaa
      (case kohdistustyyppi
-       :muukulu [muukulu-kohdistus e! lomake kohdistus tehtavaryhmat toimenpiteet nro]
+       :muukulu [muukulu-kohdistus e! lomake kohdistus tehtavaryhmat toimenpiteet nro urakan-tyyppi]
        :hankintakulu (if (= :vesivayla-hoito urakan-tyyppi)
                        [vhu-hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro]
                        [mhu-hankintakulu-kohdistus e! lomake kohdistus tehtavaryhmat nro])
@@ -555,14 +578,19 @@
                              "ei ole käsitelty kululomakkeella."))
          nil))
 
-     (when (or (= :teiden-hoito urakan-tyyppi)
-               (and (= :vesivayla-hoito urakan-tyyppi)
-                    (not= :hankintakulu kohdistustyyppi)))
+     (when-not (and (= :vesivayla-hoito urakan-tyyppi)
+                 (or (= :hankintakulu kohdistustyyppi)
+                   (and (= :muukulu kohdistustyyppi)
+                     (= :true (:tavoitehintainen kohdistus)))))
        [:div.row
         [:div.col-xs-12.col-md-2 {:style {:width "142px"}}
          [:div
           [kentat/tee-otsikollinen-kentta
-           {:otsikko "Määrä € *"
+           {:otsikko (if (and (= :vesivayla-hoito urakan-tyyppi)
+                           (= :muukulu kohdistustyyppi)
+                           (not= :true (:tavoitehintainen kohdistus)))
+                       "Hinta € *"
+                       "Määrä *")
             :otsikon-tag "span"
             :arvo-atom (r/wrap (:summa kohdistus) #(e! (tiedot/->KohdistuksenSumma % nro)))
             :kentta-params {:elementin-id (str "kohdistuksen-summa-" nro)
@@ -810,6 +838,7 @@
             "Generoi VHU-yksikköhinnat"
             #(e! (tiedot/->GeneroiVhuYksikkohinnat))
             {:vayla-tyyli? true
+             :data-cy "generoi-vhu-yksikkohinnat"
              :teksti-nappi? true
              :disabled (or haku-menossa tehtava-haku-menossa? vhu-yksikkohintojen-generointi-kaynnissa?)
              :style {:margin-left "1rem"}}]])
