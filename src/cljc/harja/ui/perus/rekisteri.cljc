@@ -640,6 +640,46 @@
     :asetukset {:viesti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Näytettävä viesti."}
                 :luokka {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Viestin tyyppi: :success, :info, :warning tai :danger."}
                 :kesto {:tyyppi :numero :pakollinen? false :oletus nil :kuvaus "Kuinka kauan viesti näytetään."}}}
+   {:id :sivupalkki
+    :nimi "Sivupalkki"
+    :ryhma :palautteet
+    :luonne :shared-komponentti
+    :rooli :overlay
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:sisalto}
+    :tilat #{:avoin :suljettu}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :ei-riippuvuutta
+    :funktio "harja.ui.sivupalkki/oikea"
+    :kuvaus "Oikealle avautuva sivupalkki sisällölle. Avaamisen ja sulkemisen päättää käyttöpaikka. Komponentti siirtää fokuksen sisältöön ja palauttaa sen avautumista edeltäneeseen elementtiin. Ulkoasu tulee luokasta overlay-oikealla."
+    :asetukset {:leveys {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Sivupalkin leveys, esim. \"600px\"."}
+                :jarjestys {:tyyppi :numero :pakollinen? true :oletus nil :kuvaus "1 on leveä normaali sivupalkki, 2 kapeampi päälle avattava."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Korvaa oletusluokan overlay-oikealla."}
+                :sulku-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan, kun taustaa klikataan. Taustan klikkaus sulkee sivupalkin vain, jos tämä on annettu."}
+                :sisalto {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Sivupalkin koko sisältö."}}}
+   {:id :liitteet
+    :nimi "Liitteet"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:liite}
+    :tilat #{:normaali :kuva :linkki}
+    :sallitut-vanhemmat #{:sivu :lomake}
+    :bootstrap-tila :osittain-riippuvainen
+    :funktio "harja.ui.liitteet/liitteet-ja-lisays"
+    :kuvaus "Tallennettujen liitteiden listaus ja uuden liitteen lisäys urakkaan. Oikeustarkistus tehdään komponentin sisällä. Kuvaliitteet avautuvat modal-ikkunassa, joten komponentti on osittain Bootstrap-riippuvainen. Pelkän liitetiedoston (liitetiedosto) näyttäminen ei vaadi urakka-id:tä."
+    :asetukset {:urakka-id {:tyyppi :numero :pakollinen? true :oletus nil :kuvaus "Urakka, johon liite lisätään."}
+                :tallennetut-liitteet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Kantaan tallennetut liitteet."}
+                :uusi-liite-teksti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäysnapin teksti."}
+                :uusi-liite-atom {:tyyppi :atomi :pakollinen? false :oletus nil :kuvaus "Atomi, johon uuden liitteen tiedot tallennetaan."}
+                :grid? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Optimoi näytön gridiin."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Disabloi lisäysnapin."}
+                :lisaa-usea-liite? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Sallii usean liitteen lisäämisen."}
+                :salli-poistaa-tallennettu-liite? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Sallii kantaan tallennetun liitteen linkityksen poiston."}
+                :poista-tallennettu-liite-fn {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan, kun tallennettu liite vahvistetaan poistettavaksi."}}}
    {:id :modal
     :nimi "Modal"
     :ryhma :portatut

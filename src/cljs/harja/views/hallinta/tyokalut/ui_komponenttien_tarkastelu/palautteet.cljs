@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [harja.ui.leijuke :as leijuke]
             [harja.ui.napit :as napit]
+            [harja.ui.sivupalkki :as sivupalkki]
             [harja.ui.varmista-kayttajalta :as varmista]
             [harja.ui.yleiset :as yleiset]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
@@ -88,7 +89,24 @@
     [:div {:data-cy (kehys/ankkuri komponentti "-varoitus")}
      [yleiset/toast-viesti "Tarkista tiedot" "varoitus"]]]])
 
+(defn- sivupalkki-esikatselu [komponentti]
+  (r/with-let [auki? (r/atom false)]
+    [kehys/kortti komponentti
+     [:p "Oikealle avautuva sivupalkki. Näkymä päättää avaamisen ja sulkemisen. Taustan klikkaus sulkee sen."]
+     [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+      [napit/nappi "Avaa sivupalkki" #(reset! auki? true)
+       {:data-cy (kehys/ankkuri komponentti "-avaa")
+        :luokka "nappi-toissijainen"}]]
+     (when @auki?
+       [sivupalkki/oikea {:leveys "600px" :jarjestys 1 :sulku-fn #(reset! auki? false)}
+        [:div {:data-cy (kehys/ankkuri komponentti "-sisalto")}
+         [:h3 "Sivupalkin sisältö"]
+         [napit/nappi "Sulje" #(reset! auki? false)
+          {:data-cy (kehys/ankkuri komponentti "-sulje")
+           :luokka "nappi-toissijainen"}]]])]))
+
 (register! :leijuke {:esikatselu leijuke})
+(register! :sivupalkki {:esikatselu sivupalkki-esikatselu})
 (register! :toast-viesti {:esikatselu toast-viesti})
 (register! :tila-indikaattori {:esikatselu tila-indikaattori})
 (register! :tooltip {:esikatselu tooltip})

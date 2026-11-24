@@ -2,6 +2,7 @@
   (:require [reagent.core :as r]
             [harja.ui.bootstrap :as bootstrap]
             [harja.ui.kentat :as kentat]
+            [harja.ui.liitteet :as liitteet]
             [harja.ui.perus :as ui]
             [harja.ui.napit :as napit]
             [harja.ui.yleiset :as yleiset]
@@ -369,7 +370,15 @@
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
 (register! :kenttaryhma {:esikatselu kenttaryhma})
+(defn- liitteet-esikatselu [komponentti]
+  [kehys/kortti komponentti
+   [:p "Pelkkä liitetiedosto ilman urakkaa. Lisäys ja lista vaativat urakka-id:n ja oikeudet, joten niitä ei esikatselussa renderöidä."]
+   [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
+    [liitteet/liitetiedosto {:id 1 :nimi "tarkastus.pdf" :tyyppi "application/pdf" :koko 12345
+                             :virustarkastettu? true}]]])
+
 (register! :tietoja {:esikatselu tietoja})
+(register! :liitteet {:esikatselu liitteet-esikatselu})
 
 (defn- taulukkotietonakyma-esikatselu [komponentti]
   [kehys/kortti komponentti
