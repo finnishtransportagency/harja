@@ -67,6 +67,35 @@
       {:data-cy (kehys/ankkuri komponentti "-palauta")
        :luokka "nappi-toissijainen"}]]))
 
-(register! :livi-pudotusvalikko {:esikatselu livi-pudotusvalikko})
+(defn- simulaattorin-vaihtoehto-teksti [vaihtoehto]
+  (if (keyword? vaihtoehto) (name vaihtoehto) (str vaihtoehto)))
+
+(defn- livi-pudotusvalikko-simulaattorissa-sisalto [solmu]
+  (r/with-let [valinta (r/atom nil)]
+    (let [{:keys [otsikko valinnat]} (:asetukset solmu)]
+      [:div {:data-cy "ui-simulaattori-livi-pudotusvalikko"}
+       [yleiset/pudotusvalikko
+        (or otsikko "Valinta")
+        {:valinta @valinta
+         :valitse-fn #(reset! valinta %)
+         :format-fn simulaattorin-vaihtoehto-teksti}
+        (vec valinnat)]])))
+
+;; Simulaattorin data ei saa sisältää funktioita tai atomeja, joten renderöijä antaa nämä itse
+;; ja välittää asetuksista vain datana annettavat arvot (:otsikko, :valinnat).
+(defn- livi-pudotusvalikko-simulaattorissa [solmu _tila _lapsi-fn]
+  [livi-pudotusvalikko-simulaattorissa-sisalto solmu])
+
+(defn- hoitokausi-simulaattorissa-sisalto []
+  (r/with-let [valittu (r/atom (second esikatselun-hoitokaudet))]
+    [:div {:data-cy "ui-simulaattori-hoitokausi"}
+     [valinnat/hoitokausi {} esikatselun-hoitokaudet valittu #(reset! valittu %)]]))
+
+(defn- hoitokausi-simulaattorissa [_solmu _tila _lapsi-fn]
+  [hoitokausi-simulaattorissa-sisalto])
+
+(register! :livi-pudotusvalikko {:esikatselu livi-pudotusvalikko
+                                 :renderoi livi-pudotusvalikko-simulaattorissa})
 (register! :checkbox-pudotusvalikko {:esikatselu checkbox-pudotusvalikko})
-(register! :hoitokausi {:esikatselu hoitokausi-esikatselu})
+(register! :hoitokausi {:esikatselu hoitokausi-esikatselu
+                        :renderoi hoitokausi-simulaattorissa})

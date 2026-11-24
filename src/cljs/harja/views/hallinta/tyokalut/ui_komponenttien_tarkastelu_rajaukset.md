@@ -61,6 +61,8 @@ Uuden komponentin lisääminen:
 
 ## Tunnetut rajoitukset
 
+- Simulaattorin renderöijät (`:renderoi`) on vain komponenteille `lomake`, `valintaryhma`, `nappi`, `pino`, `suodatinrivi`, `toimintoryhma`, `tilaviesti`, `livi-pudotusvalikko`, `hoitokausi`, `perusgrid` ja `panel`. Renderöijä välittää asetuksista vain datana annettavat, dokumentoidut arvot: `panel` ignoroi `:sisalto`- ja `:luokka`-asetuksen (sisältö tulee `:lapset`-solmuista), `perusgrid` välittää sarakkeista vain `:otsikko`, `:nimi`, `:leveys` ja `:tyyppi`. `livi-pudotusvalikko` ja `hoitokausi` pitävät valinnan omassa tilassaan.
+- Simulaattorin `nappi`-renderöijä käyttää kiinteää `data-cy`-arvoa (`ui-simulaattori-tallenna`) ja `valintaryhma` jakaa yhden valinta-atomin, joten useampi nappi tai valintaryhmä samalla sivulla ei ole vielä erotettavissa.
 - `kentat/tee-kentta` tukee vain `:elementin-id`:tä, ei `aria-describedby`- tai `aria-invalid`-attribuutteja. Kenttäryhmän ARIA-yhteys toimii natiiveille kentille (valintaryhmä), mutta `tee-kentta`-kentille se vaatii erillisen muutoksen `kentat.cljs`:ään.
 - Tarkastelusivun esikatselut (CLJS) validoidaan selaimessa. Rakennetestit kattavat vain cljc-puolen hiccup-rakenteen.
 - Tarjoushinnat-näkymän `urakka-haku-id` on edelleen render-aikainen `gensym`.

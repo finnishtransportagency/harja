@@ -40,5 +40,16 @@
         {:otsikko "Yks." :nimi :yksikko :muokattava? (constantly false) :leveys 0.5}]
        rivit]]]))
 
-(register! :perusgrid {:esikatselu perusgrid})
+(defn- perusgrid-simulaattorissa [solmu _tila _lapsi-fn]
+  (let [{:keys [otsikko tyhja tunniste sarakkeet rivit]} (:asetukset solmu)]
+    [:div {:data-cy "ui-simulaattori-perusgrid"}
+     [grid/grid {:otsikko otsikko
+                 :tyhja (or tyhja "Ei rivejä.")
+                 :tunniste (or tunniste :id)}
+      ;; Sarakkeista välitetään vain datana kuvattavat avaimet.
+      (mapv #(select-keys % [:otsikko :nimi :leveys :tyyppi]) sarakkeet)
+      (vec rivit)]]))
+
+(register! :perusgrid {:esikatselu perusgrid
+                       :renderoi perusgrid-simulaattorissa})
 (register! :muokkausgrid {:esikatselu muokkausgrid})

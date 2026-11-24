@@ -3,6 +3,7 @@
             [harja.ui.bootstrap :as bootstrap]
             [harja.ui.modal :as modal]
             [harja.ui.napit :as napit]
+            [harja.ui.perus :as ui]
             [harja.ui.primitiivit.viesti :as viesti-primitiivit]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
@@ -74,9 +75,22 @@
      [:p {:data-cy (kehys/ankkuri komponentti "-tila")}
       (if @auki? "Tila: auki" "Tila: kiinni")]]))
 
+;; Simulaattorissa paneelin sisältö tulee :lapset-solmuista. :sisalto (hiccup) ja :luokka
+;; jätetään huomiotta, jotta syöte ei tuo mielivaltaista markupia tai CSS-luokkia.
+(defn- panel-simulaattorissa [solmu _tila lapsi-fn]
+  (let [otsikko (get-in solmu [:asetukset :otsikko])]
+    [bootstrap/panel {:data-cy "ui-simulaattori-panel"}
+     (when (string? otsikko) otsikko)
+     [ui/pino {}
+      (map-indexed (fn [indeksi lapsi]
+                     ^{:key indeksi}
+                     [lapsi-fn lapsi])
+                   (:lapset solmu))]]))
+
 (register! :dropdown-panel {:esikatselu dropdown-panel})
 (register! :tabs {:esikatselu tabs})
 (register! :navbar {:esikatselu navbar})
 (register! :viesti {:esikatselu viesti})
 (register! :modal {:esikatselu modaali})
-(register! :panel {:esikatselu panel})
+(register! :panel {:esikatselu panel
+                   :renderoi panel-simulaattorissa})
