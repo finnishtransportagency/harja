@@ -12,7 +12,9 @@
   selaimeen (simulaattorin valinta). Tiedoston muutos ei laukaise Figwheelin uudelleenlatausta:
   kosketa tätä tiedostoa tai käynnistä build uudelleen. JVM-testi validoi jokaisen puun
   simulaattorin säännöillä ja varmistaa renderöijien esimerkkikattavuuden
-  (`lein test harja.ui.perus.esikatselu-test harja.ui.perus.esimerkkisivut-test`)."
+  (`lein test harja.ui.perus.esikatselu-test harja.ui.perus.esimerkkisivut-test`).
+
+  `asettelut.edn` näyttää `sailio`-, `osio`-, `vaaka`- ja `ruudukko`-komponenttien yhteiskäytön."
   #?(:clj (:require [clojure.edn :as edn]
                     [clojure.java.io :as io]
                     [clojure.string :as str])

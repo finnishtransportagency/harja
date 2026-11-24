@@ -89,6 +89,19 @@
                       :lapset [{:komponentti :tietoja}
                                {:komponentti :taulukkotietonakyma}
                                {:komponentti :info-laatikko}]}]}])))
+  (testing "säiliö, osio, ruudukko ja vaaka yhdistyvät pinoon, tilaviesteihin ja nappeihin"
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :sailio
+            :lapset [{:komponentti :osio
+                      :lapset [{:komponentti :pino
+                               :lapset [{:komponentti :tietoja}]}
+                              {:komponentti :ruudukko
+                               :lapset [{:komponentti :pino
+                                         :lapset [{:komponentti :nappi}]}
+                                        {:komponentti :vaaka
+                                         :lapset [{:komponentti :nappi}
+                                                  {:komponentti :linkki}]}
+                                        {:komponentti :tilaviesti}]}]}]}])))
   (testing "suodatin kuuluu suodatinriviin, ei suoraan sivulle"
     (is (seq (simulaattori/virheet [{:komponentti :suodatin}])))
     (is (simulaattori/kelvollinen?

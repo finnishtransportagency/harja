@@ -98,7 +98,7 @@
     :korvaa []
     :slotit #{:ikoni :teksti}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :toimintoryhma}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :toimintoryhma :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Ikoni ja teksti vierekkäin. Ikonin ja tekstin väli tulee Harjan omasta luokasta."
     :funktio "harja.ui.ikonit/ikoni-ja-teksti"
@@ -113,7 +113,7 @@
     :korvaa []
     :slotit #{:toiminto}
     :tilat #{:normaali :estetty :lataus}
-    :sallitut-vanhemmat #{:lomake :pino :suodatinrivi :toimintoryhma}
+    :sallitut-vanhemmat #{:lomake :pino :suodatinrivi :toimintoryhma :vaaka :osio :ruudukko}
     :bootstrap-tila :osittain-riippuvainen
     :funktio "harja.ui.napit/nappi"
     :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Napin teksti."}
@@ -149,7 +149,7 @@
     :korvaa []
     :slotit #{:teksti :toiminto}
     :tilat #{:normaali :disabloitu}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :toimintoryhma}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :toimintoryhma :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :funktio "harja.ui.yleiset/linkki"
     :kuvaus "Toimintolinkki, joka kutsuu käyttöpaikan funktiota. Disabloituna näkyy tekstinä ilman href-linkkiä."
@@ -170,7 +170,7 @@
     :korvaa []
     :slotit #{:kentta}
     :tilat #{:normaali :tyhja :virhe}
-    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino}
+    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Suodattimen label ja kenttä. Käytössä tarjoushintojen näkymässä."
     :funktio "harja.ui.perus/suodatin"
@@ -188,7 +188,7 @@
     :nimeamispoikkeukset #{:disabled?}
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino}
+    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
     :funktio "harja.ui.perus/valintaryhma"
@@ -428,11 +428,83 @@
     :korvaa []
     :slotit #{:lapset}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino :panel}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :osio :ruudukko :panel :sailio}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
     :funktio "harja.ui.perus/pino"
     :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :vaaka
+    :nimi "Vaaka"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :suositus :uuteen-ui
+    :korvaa ["Rajauston sisäinen flex-rivi"]
+    :slotit #{:lapset}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :toimintoryhma :suodatinrivi :sailio :osio :ruudukko}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Vaakasuuntainen flex-asettelu, joka omistaa lasten välit, rivityksen ja tasaukset."
+    :funktio "harja.ui.perus/vaaka"
+    :asetukset {:vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
+                :rivita? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Rivittää lapset seuraavalle riville tilan loppuessa."}
+                :tasaus {:tyyppi :keyword :pakollinen? false :oletus :alku :kuvaus "Päätasaus: :alku, :keskelle, :loppu tai :valiin."}
+                :ristitasaus {:tyyppi :keyword :pakollinen? false :oletus :keskelle :kuvaus "Ristitasaus: :alku, :keskelle, :loppu tai :venyta."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :sailio
+    :nimi "Säiliö"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :suositus :uuteen-ui
+    :korvaa ["Sivukohtainen sisällön max-width- ja reunus-LESS"]
+    :slotit #{:lapset}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:sivu}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Rajoittaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla. Ei aseta ulkomarginaaleja."
+    :funktio "harja.ui.perus/sailio"
+    :asetukset {:leveys {:tyyppi :keyword :pakollinen? false :oletus :suuri :kuvaus "Sisällön enimmäisleveys: :pieni, :keski tai :suuri."}
+                :sisareuna {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Vaakasuuntainen sisäreuna: :pieni, :keski tai :suuri."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :osio
+    :nimi "Osio"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :suositus :uuteen-ui
+    :korvaa ["Sivukohtainen otsikollinen wrapper-rakenne"]
+    :slotit #{:lapset}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :sailio :osio :ruudukko}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Semanttinen, otsikollinen sisältöalue. Käyttöpaikan antama id yhdistää osion ja otsikon."
+    :funktio "harja.ui.perus/osio"
+    :asetukset {:id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa osion id ja saavutettavuusyhteyden perusta."}
+                :otsikko {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Osion otsikko."}
+                :otsikkotaso {:tyyppi :numero :pakollinen? false :oletus 2 :kuvaus "Otsikkoelementin taso 1–6."}
+                :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Otsikon ja sisällön väli: :pieni, :keski tai :suuri."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste, oletuksena id."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :ruudukko
+    :nimi "Ruudukko"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :asettelu
+    :suositus :uuteen-ui
+    :korvaa ["Sivukohtainen CSS-grid ja Bootstrapin row/col-*"]
+    :slotit #{:lapset}
+    :tilat #{:normaali}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :sailio :osio}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Rajattu 1–4-palstainen grid, joka käyttää yhtä palstaa kapealla näytöllä."
+    :funktio "harja.ui.perus/ruudukko"
+    :asetukset {:palstoja {:tyyppi :numero :pakollinen? false :oletus 2 :kuvaus "Palstojen määrä 1–4."}
+                :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :suodatinrivi
     :nimi "Suodatinrivi"
@@ -443,7 +515,7 @@
     :korvaa []
     :slotit #{:suodattimet}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Rivittyvä rivi suodattimille. Suodattimia ei ole vielä simulaattorissa."
     :funktio "harja.ui.perus/suodatinrivi"
@@ -458,7 +530,7 @@
     :korvaa []
     :slotit #{:toiminnot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Ryhmittelee käyttöpaikan toimintopainikkeet. Painikkeet tulevat käyttöpaikalta."
     :funktio "harja.ui.perus/toimintoryhma"
@@ -473,7 +545,7 @@
     :korvaa []
     :slotit #{:viesti}
     :tilat #{:lataus :onnistui :virhe}
-    :sallitut-vanhemmat #{:lomake :sivu :pino}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Lataus-, onnistumis- tai virhetila käyttöpaikan antamalla viestillä. Säiliö näkyy aina, tyhjä viesti ei näy."
     :funktio "harja.ui.perus/tilaviesti"
@@ -490,7 +562,7 @@
     :korvaa []
     :slotit #{:kentta}
     :tilat #{:normaali :virhe}
-    :sallitut-vanhemmat #{:lomake :pino}
+    :sallitut-vanhemmat #{:lomake :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :nimeamispoikkeukset #{:disabled?}
     :kuvaus "Label, kenttä sekä valinnainen ohje ja virhe. Natiivi kenttä saa ARIA-attribuutit. tee-kentta-kenttä ei vielä välitä niitä (rajoitus)."
@@ -512,7 +584,7 @@
     :korvaa []
     :slotit #{:kentat :toiminnot :tila}
     :tilat #{:normaali :lataus :virhe :onnistui}
-    :sallitut-vanhemmat #{:sivu :pino :panel}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :riippuvainen
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :funktio "harja.ui.perus"
@@ -543,7 +615,7 @@
     :korvaa []
     :slotit #{:otsikko :sisalto}
     :tilat #{:normaali :tyhja}
-    :sallitut-vanhemmat #{:sivu :pino}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Yhteensopiva panel-wrapper ilman Bootstrapin panel-markupia."
     :funktio "harja.ui.bootstrap/panel"
@@ -559,7 +631,7 @@
     :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja}
-    :sallitut-vanhemmat #{:sivu :pino :panel}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :riippuvainen
     :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
     :funktio "harja.ui.grid/grid"
@@ -577,7 +649,7 @@
     :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja :muokkaus}
-    :sallitut-vanhemmat #{:sivu :pino :panel}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :riippuvainen
     :kuvaus "Muokattava taulukko. Rivien muutokset kulkevat käyttöpaikan muutos-callbackin kautta. Paneelin rakenne on vielä Bootstrapin panel-luokkia."
     :funktio "harja.ui.grid/muokkaus-grid"
@@ -841,7 +913,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Geneerinen otsikko-arvo-rivinäkymä. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/tietoja"
@@ -880,7 +952,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Otsikko-arvo-rivit taulukkona. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/taulukkotietonakyma"
@@ -917,7 +989,7 @@
     :tilat #{:normaali}
     :variantit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
     :yhteiset-variantit {:onnistui :onnistunut :info :neutraali :varoitus :varoitus}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
     :funktio "harja.ui.yleiset/info-laatikko"

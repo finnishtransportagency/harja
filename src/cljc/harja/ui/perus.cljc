@@ -60,6 +60,72 @@
                :data-cy data-cy}]
     lapset))
 
+(def ^:private layout-valit #{:pieni :keski :suuri})
+(def ^:private vaaka-tasaukset #{:alku :keskelle :loppu :valiin})
+(def ^:private vaaka-ristitasaukset #{:alku :keskelle :loppu :venyta})
+
+(defn vaaka
+  "Vaakasuuntainen asettelu, joka omistaa lasten välit, rivityksen ja tasaukset.
+
+  Väli on nimetty tokeni `:pieni`, `:keski` tai `:suuri`."
+  [{:keys [data-cy luokka vali rivita? tasaus ristitasaus]
+    :or {vali :keski rivita? false tasaus :alku ristitasaus :keskelle}} & lapset]
+  {:pre [(layout-valit vali)
+         (boolean? rivita?)
+         (vaaka-tasaukset tasaus)
+         (vaaka-ristitasaukset ristitasaus)]}
+  (into [:div {:class (luokat "ui-vaaka"
+                         (str "ui-vaaka-vali-" (name vali))
+                         (when rivita? "ui-vaaka-rivita")
+                         (str "ui-vaaka-tasaus-" (name tasaus))
+                         (str "ui-vaaka-ristitasaus-" (name ristitasaus))
+                         luokka)
+               :data-cy data-cy}]
+    lapset))
+
+(defn sailio
+  "Rajaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla."
+  [{:keys [data-cy luokka leveys sisareuna]
+    :or {leveys :suuri sisareuna :keski}} & sisalto]
+  {:pre [(layout-valit leveys)
+         (layout-valit sisareuna)]}
+  (into [:div {:class (luokat "ui-sailio"
+                         (str "ui-sailio-leveys-" (name leveys))
+                         (str "ui-sailio-sisareuna-" (name sisareuna))
+                         luokka)
+               :data-cy data-cy}]
+    sisalto))
+
+(defn osio
+  "Otsikollinen, semanttinen sisältöalue. Käyttöpaikka antaa vakaan id:n."
+  [{:keys [id otsikko otsikkotaso vali data-cy luokka]
+    :or {otsikkotaso 2 vali :keski}} & sisalto]
+  {:pre [(and (string? id) (not (str/blank? id)))
+         (some? otsikko)
+         (and (integer? otsikkotaso) (<= 1 otsikkotaso 6))
+         (layout-valit vali)]}
+  (let [otsikko-id (str id "-otsikko")
+        otsikkotagi (keyword (str "h" otsikkotaso))]
+    [:section {:id id
+               :class (luokat "ui-osio" (str "ui-osio-vali-" (name vali)) luokka)
+               :aria-labelledby otsikko-id
+               :data-cy (or data-cy id)}
+     [otsikkotagi {:id otsikko-id :class "ui-osio-otsikko"} otsikko]
+     (into [:div {:class "ui-osio-sisalto"}] sisalto)]))
+
+(defn ruudukko
+  "Responsiivinen 1–4-palstainen grid, joka pienenee yhdelle palstalle kapealla näytöllä."
+  [{:keys [data-cy luokka palstoja vali]
+    :or {palstoja 2 vali :keski}} & lapset]
+  {:pre [(and (integer? palstoja) (<= 1 palstoja 4))
+         (layout-valit vali)]}
+  (into [:div {:class (luokat "ui-ruudukko"
+                         (str "ui-ruudukko-palstoja-" palstoja)
+                         (str "ui-ruudukko-vali-" (name vali))
+                         luokka)
+               :data-cy data-cy}]
+    lapset))
+
 (defn suodatinrivi
   "Rivittyvä rivi suodattimille."
   [{:keys [data-cy luokka]} & suodattimet]

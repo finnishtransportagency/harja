@@ -1,17 +1,168 @@
 // Harjan shared-komponentit (harja.ui.perus).
 // Komponentit omistavat vain sisäiset välinsä. Ulkoreunat kuuluvat vanhemmalle (.ui-pino).
 
+@ui-vali-pieni: @valistys-8;
+@ui-vali-keski: @valistys-16;
+@ui-vali-suuri: @valistys-24;
+@ui-leveys-pieni: @valistys-128 * 4;
+@ui-leveys-keski: @valistys-128 * 6;
+@ui-leveys-suuri: @valistys-128 * 10;
+
 .ui-pino {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: @ui-vali-keski;
+}
+
+.ui-vaaka {
+  display: flex;
+}
+
+.ui-vaaka-vali-pieni {
+  gap: @ui-vali-pieni;
+}
+
+.ui-vaaka-vali-keski {
+  gap: @ui-vali-keski;
+}
+
+.ui-vaaka-vali-suuri {
+  gap: @ui-vali-suuri;
+}
+
+.ui-vaaka-rivita {
+  flex-wrap: wrap;
+}
+
+.ui-vaaka-tasaus-alku {
+  justify-content: flex-start;
+}
+
+.ui-vaaka-tasaus-keskelle {
+  justify-content: center;
+}
+
+.ui-vaaka-tasaus-loppu {
+  justify-content: flex-end;
+}
+
+.ui-vaaka-tasaus-valiin {
+  justify-content: space-between;
+}
+
+.ui-vaaka-ristitasaus-alku {
+  align-items: flex-start;
+}
+
+.ui-vaaka-ristitasaus-keskelle {
+  align-items: center;
+}
+
+.ui-vaaka-ristitasaus-loppu {
+  align-items: flex-end;
+}
+
+.ui-vaaka-ristitasaus-venyta {
+  align-items: stretch;
+}
+
+.ui-sailio {
+  box-sizing: border-box;
+  width: 100%;
+}
+
+.ui-sailio-leveys-pieni {
+  max-width: @ui-leveys-pieni;
+}
+
+.ui-sailio-leveys-keski {
+  max-width: @ui-leveys-keski;
+}
+
+.ui-sailio-leveys-suuri {
+  max-width: @ui-leveys-suuri;
+}
+
+.ui-sailio-sisareuna-pieni {
+  padding-inline: @ui-vali-pieni;
+}
+
+.ui-sailio-sisareuna-keski {
+  padding-inline: @ui-vali-keski;
+}
+
+.ui-sailio-sisareuna-suuri {
+  padding-inline: @ui-vali-suuri;
+}
+
+.ui-osio {
+  display: flex;
+  flex-direction: column;
+}
+
+.ui-osio-vali-pieni {
+  gap: @ui-vali-pieni;
+}
+
+.ui-osio-vali-keski {
+  gap: @ui-vali-keski;
+}
+
+.ui-osio-vali-suuri {
+  gap: @ui-vali-suuri;
+}
+
+.ui-osio-otsikko {
+  margin: 0;
+}
+
+.ui-ruudukko {
+  display: grid;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.ui-ruudukko-palstoja-1 {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.ui-ruudukko-palstoja-2 {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.ui-ruudukko-palstoja-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.ui-ruudukko-palstoja-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.ui-ruudukko-vali-pieni {
+  gap: @ui-vali-pieni;
+}
+
+.ui-ruudukko-vali-keski {
+  gap: @ui-vali-keski;
+}
+
+.ui-ruudukko-vali-suuri {
+  gap: @ui-vali-suuri;
+}
+
+@media (max-width: 48rem) {
+  .ui-ruudukko {
+    grid-template-columns: minmax(0, 1fr);
+  }
 }
 
 .ui-suodatinrivi {
   display: flex;
   flex-wrap: wrap;
   align-items: flex-end;
-  gap: 1rem;
+  gap: @ui-vali-keski;
 }
 
 .ui-suodatin,
@@ -57,7 +208,7 @@
 .ui-toimintoryhma {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.75rem;
+  gap: @valistys-12;
 }
 
 .ui-tilaviesti {
@@ -86,6 +237,11 @@
 .harja-panel-otsake {
   padding: 0.1875rem 0.9375rem;
   background: @white-default;
+}
+
+.harja-panel-otsikko {
+  margin: 0;
+  color: @black-default;
 }
 
 .harja-panel-runko {

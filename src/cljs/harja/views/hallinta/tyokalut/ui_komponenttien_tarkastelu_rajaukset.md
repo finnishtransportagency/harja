@@ -15,7 +15,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 
 | Osa | Sijainti |
 | --- | --- |
-| Shared-komponentit (`pino`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `valintaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/perus.cljc` |
+| Shared-komponentit (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `valintaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/perus.cljc` |
 | Komponenttirekisteri (data) ja eheystarkistus | `src/cljc/harja/ui/perus/rekisteri.cljc` |
 | Rekisterin EDN-tulostus komentoriviltä | `src/clj/harja/tyokalut/komponenttirekisteri.clj` (`lein komponenttirekisteri`) |
 | Tarkastelusivun entry | `tyokalut/ui_komponenttien_tarkastelu_nakyma.cljs` |
@@ -44,6 +44,8 @@ Uuden komponentin lisääminen:
 - `:data-cy` on oletuksena `:id`. `:luokka` viedään juurielementille.
 - Valintaryhmän arvo voi olla mikä tahansa arvo (keyword, luku, merkkijono); komponentti vie arvon sellaisenaan `:vaihda-fn`:lle.
 - Komponentit eivät aseta ulkomarginaaleja. Välit kuuluvat käyttöpaikalle tai `pino`/`toimintoryhma`-rakenteelle.
+- Layout-komponentit käyttävät nimettyjä Väylä-tokeneita (`:pieni`, `:keski`, `:suuri`) eivätkä vapaata CSS:ää. `vaaka` on vaakasuuntainen `flex`, `sailio` rajaa sivusisällön leveyden ja sisäreunan, `ruudukko` on responsiivinen 1–4-palstainen CSS-grid ja `osio` on semanttinen otsikollinen alue.
+- `sailio` vastaa yleisen UI-frameworkin `Container`ia. Nimeä `sivu` ei käytetä, koska `:sivu` on simulaattorin komponenttipuun tekninen juurivanhempi.
 - Bootstrap-riippuvuus kirjataan rekisterissä `:bootstrap-tila`-arvolla (`:ei-riippuvuutta`, `:osittain-riippuvainen`, `:riippuvainen`, `:maarittelematta`).
 - Jokaisella rekisterimerkinnällä on `:suositus` (`:uuteen-ui`, `:vanha`, `:ei-suositusta`) ja `:korvaa`-lista (tekstit vanhoista vastineista, tyhjä vektori jos ei korvausta). Sopimusruutu näyttää molemmat.
 - Uudessa merkinnässä (`:suositus :uuteen-ui`) kielletyt asetusnimet ovat `:class`, `:classes`, `:disabled?`, `:disabloi`, `:valitse-fn` ja `:valinta-fn`. Käytä `:luokka`, `:disabled` ja `:vaihda-fn`. `-fn`-päätteisen asetuksen tyypin on oltava `:funktio` ja `?`-päätteisen `:boolean`. Vanhat merkinnät (`:vanha`, `:ei-suositusta`) saavat käyttää vanhoja nimiä, mutta tyyppisäännöt koskevat vain uusia merkintöjä.
@@ -72,7 +74,7 @@ Esimerkkisivut ovat valmiita, kelvollisia simulaattoripuita sekä käyttäjille 
 
 ## Tunnetut rajoitukset
 
-- Simulaattorin renderöijä (`:renderoi`) on tehty rekisterin komponenteista näille: asettelut (`pino`, `suodatinrivi`, `toimintoryhma`, `lomake`, `panel`), `nappi`, `linkki`, `ikoni-ja-teksti`, `tilaviesti`, kentät (`tekstikentta`, `numerokentta`, `sahkopostikentta`, `puhelinkentta`, `valintaruutu`, `raksiboksi`, `radiokentta`, `checkbox-ryhma`, `radio-group`, `valinta`, `valintaryhma`, `kenttaryhma`, `suodatin`), alasvedot (`livi-pudotusvalikko`, `checkbox-pudotusvalikko`, `hoitokausi`), gridit (`perusgrid`, `muokkausgrid`), sisältö (`tietoja`, `taulukkotietonakyma`, `kaksi-palstaa-otsikkoja-ja-arvoja`) ja palautteet (`ajax-loader`, `vihje`, `info-laatikko`, `tila-indikaattori`, `tooltip`, `tabs`, `dropdown-panel`).
+- Simulaattorin renderöijä (`:renderoi`) on tehty rekisterin komponenteista näille: asettelut (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `toimintoryhma`, `lomake`, `panel`), `nappi`, `linkki`, `ikoni-ja-teksti`, `tilaviesti`, kentät (`tekstikentta`, `numerokentta`, `sahkopostikentta`, `puhelinkentta`, `valintaruutu`, `raksiboksi`, `radiokentta`, `checkbox-ryhma`, `radio-group`, `valinta`, `valintaryhma`, `kenttaryhma`, `suodatin`), alasvedot (`livi-pudotusvalikko`, `checkbox-pudotusvalikko`, `hoitokausi`), gridit (`perusgrid`, `muokkausgrid`), sisältö (`tietoja`, `taulukkotietonakyma`, `kaksi-palstaa-otsikkoja-ja-arvoja`) ja palautteet (`ajax-loader`, `vihje`, `info-laatikko`, `tila-indikaattori`, `tooltip`, `tabs`, `dropdown-panel`).
 - Renderöijä välittää asetuksista vain dokumentoidut, datana annettavat arvot (whitelist). Vapaata `:luokka`-, `:class`-, `:style`- tai hiccup-asetusta ei välitetä, vaan tyylit tulevat renderöijän omasta sanastosta: `nappi` käyttää `:variantti`-asetusta (`:ensisijainen`, `:toissijainen`, `:reunaton`, `:myonteinen`, `:kielteinen`, `:varoitus`), `panel` ottaa sisällön `:lapset`-solmuista. Funktiot, atomit ja ikonit eivät voi tulla syötteestä, joten renderöijä antaa ne itse. Taulukko- ja otsikko-arvo-komponentit saavat datan `:rivit`-asetuksella.
 - Jokaisella instanssilla on oma tila (`r/with-let`) ja `data-cy` joko asetuksesta tai oletuksena `ui-simulaattori-<komponentti>`. Alkuarvoa ei voi antaa `:arvo`-asetuksella (suojattu).
 - Ilman simulaattorin renderöijää ovat tarkoituksella: `murupolku`, `navbar`, `viesti`, `modal`, `sivupalkki`, `toast-viesti`, `leijuke`, `varmista-kayttajalta` (globaali tila tai overlay), `liitteet` (backend-kutsut), `dropdown` (avaustila puuttuu) ja `rivi` (vanha Bootstrap-rakenne).

@@ -312,6 +312,67 @@
       [:div {:data-cy (str ankkuri "-lapsi-a")} "Ensimmäinen lapsi"]
       [:div {:data-cy (str ankkuri "-lapsi-b")} "Toinen lapsi"]]]))
 
+(defn- vaaka [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Vaaka asettaa lapset vierekkäin ja omistaa välit, tasaukset sekä rivityksen."]
+     [ui/pino {:data-cy (str ankkuri "-esimerkit")}
+      [ui/vaaka {:data-cy (str ankkuri "-normaali")
+                 :vali :pieni
+                 :ristitasaus :keskelle}
+       [napit/nappi "Ensimmäinen" (constantly nil)]
+       [napit/nappi "Toinen" (constantly nil)
+        {:luokka "nappi-toissijainen"}]]
+      [ui/vaaka {:data-cy (str ankkuri "-rivitetty")
+                 :vali :suuri
+                 :rivita? true
+                 :tasaus :valiin
+                 :ristitasaus :loppu}
+       [:span "Pitkä, rivittyvä sisältö vasemmalla"]
+       [:span "Toinen sisältö oikealla"]]
+      [ui/vaaka {:data-cy (str ankkuri "-tyhja")}]]]))
+
+(defn- sailio [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Säiliö rajaa sisällön leveyden ja sivun vaakasuuntaiset sisäreunat ilman ulkomarginaaleja."]
+     [ui/sailio {:data-cy (str ankkuri "-sailio")
+                 :leveys :keski
+                 :sisareuna :pieni}
+      [ui/pino {:data-cy (str ankkuri "-sisalto")}
+       [:span "Säiliön sisältö käyttää nimettyjä leveys- ja sisäreunatokeneita."]
+       [:span "Käyttöpaikka omistaa ulkopuolisen sijoittelun."]]]
+     [ui/sailio {:data-cy (str ankkuri "-tyhja")
+                 :leveys :pieni
+                 :sisareuna :pieni}]]))
+
+(defn- osio [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Osio yhdistää otsikon ja sisältöalueen saavutettavasti käyttöpaikan antamalla id:llä."]
+     [ui/osio {:id (str ankkuri "-osio")
+               :otsikko "Urakan yhteenveto"
+               :otsikkotaso 3
+               :vali :pieni}
+      [:p "Osio ei rakenna korttipintaa tai aseta ulkomarginaaleja."]
+      [:p "Osion sisältö kuuluu käyttöpaikalle."]]
+     [ui/osio {:id (str ankkuri "-tyhja")
+               :otsikko "Tyhjä osio"
+               :otsikkotaso 3}]]))
+
+(defn- ruudukko [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Ruudukko tukee 1–4 palstaa. Alle 48 rem:n levyinen näkymä käyttää aina yhtä palstaa."]
+     [ui/ruudukko {:data-cy (str ankkuri "-ruudukko")
+                   :palstoja 3
+                   :vali :keski}
+      [:div {:data-cy (str ankkuri "-solu-a")} "Ensimmäinen yhteenveto"]
+      [:div {:data-cy (str ankkuri "-solu-b")} "Toinen yhteenveto"]
+      [:div {:data-cy (str ankkuri "-solu-c")} "Pitkä teksti ei laajenna palstan ulkopuolelle"]]
+     [ui/ruudukko {:data-cy (str ankkuri "-tyhja")
+                   :palstoja 2}]]))
+
 (defn- suodatinrivi [komponentti]
   (let [ankkuri (kehys/ankkuri komponentti)]
     [kehys/kortti komponentti
@@ -655,8 +716,26 @@
    (merge {:data-cy "ui-simulaattori-tilaviesti"}
      (:asetukset solmu))])
 
+(defn- osio-simulaattorissa [solmu _tila lapsi-fn]
+  (into [ui/osio
+         (merge {:id "ui-simulaattori-osio"
+                 :data-cy "ui-simulaattori-osio"}
+           (:asetukset solmu))]
+    (map-indexed (fn [indeksi lapsi]
+                   ^{:key indeksi}
+                   [lapsi-fn lapsi])
+      (:lapset solmu))))
+
 (register! :pino {:esikatselu pino
                   :renderoi (asettelu-simulaattorissa :pino ui/pino)})
+(register! :vaaka {:esikatselu vaaka
+                   :renderoi (asettelu-simulaattorissa :vaaka ui/vaaka)})
+(register! :sailio {:esikatselu sailio
+                    :renderoi (asettelu-simulaattorissa :sailio ui/sailio)})
+(register! :osio {:esikatselu osio
+                  :renderoi osio-simulaattorissa})
+(register! :ruudukko {:esikatselu ruudukko
+                      :renderoi (asettelu-simulaattorissa :ruudukko ui/ruudukko)})
 (register! :suodatinrivi {:esikatselu suodatinrivi
                           :renderoi (asettelu-simulaattorissa :suodatinrivi ui/suodatinrivi)})
 (register! :toimintoryhma {:esikatselu toimintoryhma

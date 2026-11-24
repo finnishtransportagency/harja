@@ -170,6 +170,6 @@ Opts can have the following keys:
                       :data-cy (:data-cy options)}
     (when title
       [:div.harja-panel-otsake
-       [:h1.musta title]])
+       [:h3.harja-panel-otsikko title]])
     [:div.harja-panel-runko
      content]]))

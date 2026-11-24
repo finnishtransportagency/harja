@@ -1,0 +1,30 @@
+{:id :asettelut
+ :nimi "Asettelut: säiliö, osio, vaaka ja ruudukko"
+ :kuvaus "Näyttää layout-komponentit yhdessä: rajattu sivusäiliö, otsikollinen osio, rivitys ja responsiivinen ruudukko."
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :keski :sisareuna :pieni}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Layout-komponentit"
+                              :otsikkotaso 3
+                              :vali :keski}
+                  :lapset [{:komponentti :vaaka
+                            :asetukset {:vali :pieni
+                                        :rivita? true
+                                        :tasaus :valiin
+                                        :ristitasaus :keskelle}
+                            :lapset [{:komponentti :nappi
+                                      :asetukset {:teksti "Tallenna"
+                                                  :variantti :ensisijainen}}
+                                     {:komponentti :linkki
+                                      :asetukset {:otsikko "Lisätiedot"}}]}
+                           {:komponentti :ruudukko
+                            :asetukset {:palstoja 3 :vali :keski}
+                            :lapset [{:komponentti :tilaviesti
+                                      :asetukset {:tila :onnistui
+                                                  :viesti "Ensimmäinen tila"}}
+                                     {:komponentti :tilaviesti
+                                      :asetukset {:tila :lataus
+                                                  :viesti "Toinen tila"}}
+                                     {:komponentti :tilaviesti
+                                      :asetukset {:tila :virhe
+                                                  :viesti "Kolmas tila"}}]}]}]}]}
