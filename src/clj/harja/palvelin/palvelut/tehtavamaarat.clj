@@ -5,6 +5,8 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.konversio :as konversio]
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
@@ -76,20 +78,24 @@
     tehtavaryhmat-ja-toimenpiteet))
 
 (defn hae-tehtavaryhman-tehtavat-urakalle
-  [db user {:keys [urakka-id tehtavaryhma-id]}]
+  [db user {:keys [urakka-id tehtavaryhma-id valittu-hoitokausi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
   (let [;; Hae urakan tiedot
         urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
         alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        [alkupvm loppupvm] (map konversio/sql-date valittu-hoitokausi)
         tehtavat (into []
                    (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
-                     ;; VHU tehtäväryhmät
+                     (let [sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))]
                      (tehtavamaarat-kyselyt/hae-vhu-tehtavaryhman-tehtavat-urakalle db
                        {:urakka-id urakka-id
                         :tehtavaryhma-id tehtavaryhma-id
-                        :urakan-alkuvuosi alkuvuosi})
+                        :urakan-alkuvuosi alkuvuosi
+                        :sopimus-id sopimus-id
+                        :alkupvm alkupvm
+                        :loppupvm loppupvm}))
                      ;; else mhu
                      (tehtavamaarat-kyselyt/hae-mhu-tehtavaryhman-tehtavat-urakalle db
                        {:urakka-id urakka-id

@@ -128,19 +128,30 @@ FROM tehtavaryhma tr
  order by tr.jarjestys;
 
 -- name: hae-vhu-tehtavaryhmat-ja-toimenpiteet-urakalle
-SELECT tp.id        as "toimenpide-id",
-       tp.nimi      as "toimenpide",
-       tr.nimi      as "tehtavaryhma-nimi",
-       tr.id        as "tehtavaryhma-id",
-       tr.jarjestys as "jarjestys",
-       tpi.id       as "toimenpideinstanssi"
-FROM tehtavaryhmaotsikko tro
-         JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id AND tro.urakkatyyppi = 'vesivayla-hoito'
-         JOIN tehtava t ON tr.id = t.tehtavaryhma AND t."vhu-tehtava?" is true AND
-                           t.poistettu is not true AND t.piilota is not true
-         JOIN toimenpide tp ON t.emo = tp.id
-         JOIN toimenpideinstanssi tpi on tpi.toimenpide = tp.id and tpi.urakka = :urakkaid
-order by tro.otsikko, tr.jarjestys;
+WITH tehtavaryhmat AS (
+  SELECT DISTINCT
+         tp.id        as "toimenpide-id",
+         tp.nimi      as "toimenpide",
+         tr.nimi      as "tehtavaryhma-nimi",
+         tr.id        as "tehtavaryhma-id",
+         tr.jarjestys as "jarjestys",
+         tpi.id       as "toimenpideinstanssi",
+         tro.otsikko  as "otsikko"
+  FROM tehtavaryhmaotsikko tro
+           JOIN tehtavaryhma tr ON tro.id = tr.tehtavaryhmaotsikko_id AND tro.urakkatyyppi = 'vesivayla-hoito'
+           JOIN tehtava t ON tr.id = t.tehtavaryhma AND t."vhu-tehtava?" IS TRUE
+                          AND t.poistettu IS NOT TRUE AND t.piilota IS NOT TRUE
+           JOIN toimenpide tp ON t.emo = tp.id
+           JOIN toimenpideinstanssi tpi ON tpi.toimenpide = tp.id AND tpi.urakka = :urakkaid
+)
+SELECT "toimenpide-id",
+       "toimenpide",
+       "tehtavaryhma-nimi",
+       "tehtavaryhma-id",
+       "jarjestys",
+       "toimenpideinstanssi"
+FROM tehtavaryhmat
+ORDER BY "otsikko", "jarjestys";
 
 -- name: hae-mhu-tehtavaryhman-tehtavat-urakalle
 WITH maaramitattavat_tehtavat AS (
@@ -205,15 +216,26 @@ ORDER BY jarjestys, nimi;
 
 -- name: hae-vhu-tehtavaryhman-tehtavat-urakalle
 -- Haetaan vhu tehtäväryhmän tehtävät
-SELECT t.id, t.nimi, t.jarjestys, t.yksikko, tpi.id as toimenpideinstanssi, yth.yksikkohinta
+SELECT t.id,
+       t.nimi,
+       t.jarjestys,
+       t.yksikko,
+       tpi.id         as toimenpideinstanssi,
+       yth.yksikkohinta
   FROM tehtava t
        JOIN toimenpideinstanssi tpi on tpi.toimenpide = t.emo and tpi.urakka = :urakka-id
-       LEFT JOIN yksikkohintainen_tyo yth ON t.id = yth.tehtava AND yth.urakka = :urakka-id
-WHERE t.tehtavaryhma = :tehtavaryhma-id
-       -- Tehtävän täytyy olla voimassa urakan alkuvuonna -- Mutta lokaalisti tämä ei voi vielä toimia, joten jätetaan se nyt vielä pois
-  -- AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
-  -- AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
-ORDER BY t.jarjestys;
+       LEFT JOIN yksikkohintainen_tyo yth ON yth.tehtava = t.id
+                                          AND yth.urakka = :urakka-id
+                                          AND yth.sopimus = :sopimus-id
+                                          AND yth.alkupvm = :alkupvm::DATE
+                                          AND yth.loppupvm = :loppupvm::DATE
+ WHERE t.tehtavaryhma = :tehtavaryhma-id
+   AND t."vhu-tehtava?" IS TRUE
+   AND t.poistettu IS NOT TRUE
+   AND t.piilota IS NOT TRUE
+   AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= :urakan-alkuvuosi::INTEGER)
+   AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= :urakan-alkuvuosi::INTEGER)
+ ORDER BY t.jarjestys;
 
 
 -- name: hae-sopimuksen-tehtavamaarat-urakalle
