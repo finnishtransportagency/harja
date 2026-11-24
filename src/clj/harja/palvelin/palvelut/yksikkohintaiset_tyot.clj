@@ -51,7 +51,7 @@
               (vector? valittu-hoitokausi)
               (= 2 (count valittu-hoitokausi))
               (every? some? valittu-hoitokausi))
-    (throw (ex-info "Urakka, sopimus ja hoitokausi ovat pakollisia." {})))
+    (throw (ex-info "Urakka ja hoitokausi ovat pakollisia." {})))
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-suunnittelu-yksikkohintaisettyot user urakka-id)
   (when-not (= "vesivayla-hoito" (:tyyppi (first (u-q/hae-urakan-tyyppi db {:urakka urakka-id}))))
     (throw (ex-info "Yksikköhintoja voi generoida vain VHU-urakalle." {})))
@@ -59,7 +59,10 @@
         alkupvm-sql (konversio/sql-date alkupvm)
         loppupvm-sql (konversio/sql-date loppupvm)
         sopimusnumero (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))]
-    (let [tehtavat (q/hae-vhu-urakan-hinnoittelemattomat-tehtavat db {:urakkaid urakka-id :alkupvm alkupvm-sql :loppupvm loppupvm-sql})
+    (let [tehtavat (q/hae-vhu-urakan-hinnoittelemattomat-tehtavat db {:urakkaid urakka-id
+                                                                       :sopimusid sopimusnumero
+                                                                       :alkupvm alkupvm-sql
+                                                                       :loppupvm loppupvm-sql})
           generoitu (mapv (fn [{:keys [tehtava tehtavan-yksikko
                                        yksikkohintaisen-tyon-yksikko
                                        maara arvioitu_kustannus]}]

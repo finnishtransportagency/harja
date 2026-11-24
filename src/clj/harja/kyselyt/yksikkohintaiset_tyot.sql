@@ -332,6 +332,7 @@ FROM tehtavaryhmaotsikko tro
     AND tpi.urakka = :urakkaid
          LEFT JOIN yksikkohintainen_tyo yth ON yth.urakka = :urakkaid
     AND yth.tehtava = t.id
+    AND yth.sopimus = :sopimusid
     AND yth.alkupvm = :alkupvm::DATE
     AND yth.loppupvm = :loppupvm::DATE
 WHERE tro.urakkatyyppi = 'vesivayla-hoito'
