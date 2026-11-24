@@ -20,14 +20,15 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 | Rekisterin EDN-tulostus komentoriviltä | `src/clj/harja/tyokalut/komponenttirekisteri.clj` (`lein komponenttirekisteri`) |
 | Tarkastelusivun entry | `tyokalut/ui_komponenttien_tarkastelu_nakyma.cljs` |
 | Tarkastelurunko (navigaatio, kortti, sopimus, `ankkuri`) | `tyokalut/ui_komponenttien_tarkastelu/kehys.cljs` |
-| Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit}.cljs` |
-| Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/perus_test.cljc`, `test/cljc/harja/ui/perus/rekisteri_test.cljc` |
+| Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit,palautteet,portatut,simulaattori}.cljs` |
+| Esikatselujen rekisteröinti | `tyokalut/ui_komponenttien_tarkastelu/rekisterointi.cljs` |
+| Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/perus_test.cljc`, `test/cljc/harja/ui/perus/rekisteri_test.cljc`, `test/clj/harja/ui/perus/esikatselu_test.clj`, `test/clj/harja/ui/perus/bootstrap_luokat_test.clj` |
 | Tyylit | `dev-resources/less/komponentit.less`, `dev-resources/less/pages/ui_komponenttien_tarkastelu.less` |
 
 Uuden komponentin lisääminen:
 
 1. Lisää rekisterimerkintä `rekisteri.cljc`:ään (`:id`, `:ryhma`, `:nimi`, `:kuvaus`, `:funktio`, `:asetukset`, `:bootstrap-tila`).
-2. Lisää esikatselu ryhmän tiedostoon `register!`-kutsulla (`rekisterointi.cljs`) rekisterin `:id`:llä. Kaksi rekisteröintiä samalla id:llä on virhe.
+2. Lisää esikatselu ryhmän tiedostoon `register!`-kutsulla rekisterin `:id`:llä. Jokainen id esiintyy `(register! :id `-muodossa täsmälleen kerran `src/cljs`-hakemistossa. Kaksi rekisteröintiä samalla id:llä on virhe.
 3. Lisää sopimustesti, jos komponentti on shared-komponentti.
 4. `rekisteri/virheet`-testi epäonnistuu, jos rekisterin tiedot ovat puutteelliset.
 
@@ -76,6 +77,12 @@ Kartta ei ole rekisterissä käytettävänä komponenttina. Syyt:
 - Globaali kartta renderöidään kerran `harja.views.main`-näkymässä. Näkymät eivät renderöi karttaa itse.
 
 Näkymät ohjaavat karttaa `harja.tiedot.navigaatio`-funktioilla: `vaihda-kartan-koko!` kokoilla `:S`, `:M`, `:L` tai `:hidden`, `kartan-edellinen-koko` palauttamiseen ja `kartta-nakyvissa?` näkyvyyden lukemiseen. Tasot hallitaan `kartta-tasot/taso-paalle!` ja `taso-pois!` -funktioilla.
+
+## Overlay ja domain-kytkeytyvät komponentit
+
+- `:sivupalkki` (`harja.ui.sivupalkki/oikea`) on kiinteä overlay (`overlay-oikealla`: `position: fixed; right: 0; height: 100%`), ei normaalin virtauksen laatikko. Avaamisen ja sulkemisen päättää käyttöpaikka. Komponentti siirtää fokuksen sisältöön ja palauttaa sen. Esikatselu avaa paneelin vain napista, jotta fokus ei siirry sivun latautuessa.
+- `:liitteet` (`harja.ui.liitteet`) on domain-kytkeytyvä: lisäys ja lista tekevät backend-kutsuja ja oikeustarkistuksen urakka-id:llä. Esikatselu renderöi vain `liitetiedosto`-kortin ilman backendiä. Kuvaliitteet avautuvat `modal`-komponentissa, joten se on `:osittain-riippuvainen`.
+- `:murupolku` renderöidään globaalisti `harja.views.main`-näkymässä. Esikatselu on staattinen kortti, koska toinen instanssi duplikoisi globaalit `alasveto-*`-id:t ja näppäimistökäsittelijät.
 
 ## Lomakkeen apurit
 
