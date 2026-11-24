@@ -823,6 +823,10 @@
     (is (= 4000M (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa kiintea)))
     (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? kaava)))
     (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa kaava)))
+    (doseq [summa [0M -1M]]
+      (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa
+                  {:summamaaritykset [{:maaritystapa :automaattinen
+                                       :summa-euroina summa}]}))))
     (is (false? (summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys? manuaalinen)))
     (is (nil? (summamaaritys/sanktiotyypin-kiintea-automaattinen-summa manuaalinen)))
     (is (nil? (sanktion-laskenta/laskettu-summamaaritys manuaalinen)))

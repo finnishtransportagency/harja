@@ -1670,6 +1670,8 @@
                       {:profiilirivi {:summamaaritykset [{:maaritystapa :automaattinen
                                                           :summa-euroina nil}
                                                          {:maaritystapa :automaattinen
+                                                          :summa-euroina 0M}
+                                                         {:maaritystapa :automaattinen
                                                           :summa-euroina -1M}]}})]
         (is (thrown-with-msg?
               IllegalArgumentException
