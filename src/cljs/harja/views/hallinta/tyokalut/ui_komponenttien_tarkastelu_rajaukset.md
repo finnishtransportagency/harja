@@ -67,6 +67,16 @@ Uuden komponentin lisääminen:
 - Checkbox-ryhmä on `:osittain-riippuvainen`: yksi palsta on puhdas, useampi palsta käyttää `col-sm-*`-luokkia.
 - Modal on `:riippuvainen`, koska `modal-container` käyttää yhä `.modal`-, `.modal-dialog`- ja `.modal-content`-luokkia.
 
+## Kartta
+
+Kartta ei ole rekisterissä käytettävänä komponenttina. Syyt:
+
+- `harja.ui.openlayers/openlayers` vaatii `mapspec`-argumentin, jonka kutsuja muodostaa.
+- Komponentti käyttää jaettua tilaa (`the-kartta`, `komento-ch`, klik- ja hover-käsittelijät), joten vain yksi instanssi on kerrallaan.
+- Globaali kartta renderöidään kerran `harja.views.main`-näkymässä. Näkymät eivät renderöi karttaa itse.
+
+Näkymät ohjaavat karttaa `harja.tiedot.navigaatio`-funktioilla: `vaihda-kartan-koko!` kokoilla `:S`, `:M`, `:L` tai `:hidden`, `kartan-edellinen-koko` palauttamiseen ja `kartta-nakyvissa?` näkyvyyden lukemiseen. Tasot hallitaan `kartta-tasot/taso-paalle!` ja `taso-pois!` -funktioilla.
+
 ## Lomakkeen apurit
 
 Lomake rakennetaan `:lomake`-komponentin kautta. Apurit ovat skeeman osia, eivät erillisiä komponentteja, joten niitä ei rekisteröidä omina merkintöinä:
