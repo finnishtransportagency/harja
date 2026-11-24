@@ -117,11 +117,12 @@ SELECT ut.id,
        COALESCE(ko."uusi-kattohinta", -- Oikaistu kattohinta
                 (ut.kattohinta_indeksikorjattu + -- Indeksikorjattu kattohinta
                  (COALESCE(t.summa,0) -- Mahdolliset oikaisut
-                     * up.hoitokauden_lopun_kattohinta_kerroin))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
+                     * COALESCE(up.hoitokauden_lopun_kattohinta_kerroin, 1.1)))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista.
                                                                                               AS "kattohinta-oikaistu",
        COALESCE(ko."uusi-kattohinta",
                 (ut.kattohinta_indeksikorjattu + (COALESCE(t.summa, 0) * up.hoitokauden_lopun_kattohinta_kerroin)
-                    + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) * up.hoitokauden_lopun_kattohinta_kerroin))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
+                    + (COALESCE(hli.hoitokauden_lopun_indeksikorjaus, 0) *
+                       COALESCE(up.hoitokauden_lopun_kattohinta_kerroin, 1.1)))) -- Katottihinta kasvaa 10% myös tavoitehinnan oikaisuista ja hoitovuoden lopun indeksikorjauksista.
                                                                                               AS "hoitovuoden-lopun-kattohinta",
        x.hk_alkuvuosi                                                                         AS "hoitokauden-alkuvuosi",
        ut.tarjous_tavoitehinta                                                                AS "tarjous-tavoitehinta",

@@ -1,5 +1,6 @@
 (ns harja.views.urakka.kulut.kululomake
-  (:require [reagent.core :as r]
+  (:require [harja.tiedot.navigaatio :as nav]
+            [reagent.core :as r]
             [goog.string.format]
             [goog.string :as gstring]
             [clojure.string :as str]
@@ -20,8 +21,6 @@
             [harja.ui.kentat :as kentat]
             [harja.pvm :as pvm]
             [harja.asiakas.kommunikaatio :as k]))
-
-(def kulu-lukittu-teksti "Hoitokauden välikatselmuksen tavoitehintaan liittyvät päätökset on tehty, joten kuluja ei voi enää lisätä tai muokata.")
 
 (defn- kulun-poistovarmistus-modaali
   [{:keys [varmistus-fn koontilaskun-kuukausi laskun-pvm kohdistukset tehtavaryhmat]}]
@@ -607,6 +606,10 @@
         ;; Jos kulun eräpäivä osuu vuodelle, josta on välikatselmus pidetty, kulu lukitaan
         erapaivan-hoitovuosi (when erapaiva
                                (pvm/vuosi (first (pvm/paivamaaran-hoitokausi erapaiva))))
+        urakan-alkupvm (:alkupvm @nav/valittu-urakka)
+        erapaivan-hoitovuosinro (when erapaivan-hoitovuosi
+                                   (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm erapaiva))
+        lukitusotsikko (str "Kuluja ei voi kirjata " erapaivan-hoitovuosinro ". hoitovuodelle " erapaivan-hoitovuosi "-" (inc erapaivan-hoitovuosi))
         haku-menossa (boolean (get-in app [:parametrit :haku-menossa]))
         tehtava-haku-menossa? (boolean (boolean (some :tehtava-haku-menossa kohdistukset)))
         vhu-yksikkohintojen-generointi-kaynnissa? (boolean (get-in app [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?]))
@@ -675,9 +678,6 @@
          "100%"
          {:luokka "ala-margin-16 max-width-full max-width-full"}])]
 
-     ;; Onko kulu lukittu
-     (when (and kulu-lukittu? (not haku-menossa)) [:div.palstat [:div.palsta.punainen-teksti kulu-lukittu-teksti]])
-
      #_[debug/debug lomake]
      (map-indexed
        (fn [index kohdistus]
@@ -721,11 +721,11 @@
            koontilaskun-kuukaudet)]
 
         (when (and kulu-lukittu? paatos-tehty?)
-          [:div.vihje-paatoksia-tehty
-           [yleiset/keltainen-vihjelaatikko
-            [:div
-             [:strong "Urakalle on tehty päätöksiä välikatselmuksessa ko. hoitovuodelle. "]
-             "Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja ko. hoitovuodelle."] :info]])]]
+          [yleiset/info-laatikko :varoitus lukitusotsikko
+           "Kuluja ei voi enää lisätä tai muokata, koska hoitovuoden välikatselmuksen päätös tavoitehinnan muutoksista
+           on jo vahvistettu. Ota yhteyttä urakanvalvojaan, jos haluat kirjata kuluja tälle hoitovuodelle."
+           nil
+           {:ikoni-fn #(ikonit/harja-icon-status-alert)}])]]
       [:div.col-xs-12.col-md-6.lisatiedot
        [kentat/tee-otsikollinen-kentta
         {:otsikko "Lisätieto"

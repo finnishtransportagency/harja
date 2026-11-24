@@ -10,6 +10,7 @@
             [harja.palvelin.palvelut.kulut.kulu-apurit :as kuluapurit]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.valikatselmus.paatos-apurit :as paatos-apurit]
+            [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.erilliskustannus-kyselyt :as erilliskustannus-kyselyt]
             [harja.kyselyt.sanktiot :as sanktio-kyselyt]
@@ -458,7 +459,9 @@
                                       tallennettu-paatos)
         ;; Poistetaan päätös
         poisto-vastaus (with-redefs [;; Validointi on kinkkistä, joten otetaan osa validoinneista pois käytöstä
-                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])]
+                                     jarjestelma-kyselyt/hae-jarjestelman-asetukset (fn [db] [{:valikatselmus_validoinnit_kaytossa false}])
+                                     ;; Päätöksen peruuttamisen pitää poistaa sanktio myös lukitusta hoitovuodesta.
+                                     valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? (fn [& _] false)]
                          (kutsu-palvelua (:http-palvelin jarjestelma) :poista-paatokset-ketjutetusti +kayttaja-jvh+
                            {:urakka-id urakkaid
                             :paatos (assoc tallennettu-paatos :luoja kayttajaid)

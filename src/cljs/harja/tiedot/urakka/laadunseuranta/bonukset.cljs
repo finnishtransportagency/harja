@@ -29,6 +29,10 @@
   (some->> (bonus-konfiguraation-lajit bonus-konfiguraatio)
     (some #(when (= laji (:laji %)) (:nimi %)))))
 
+(defn bonus-konfiguraation-laji
+  [bonus-konfiguraatio laji]
+  (some #(when (= laji (:laji %)) %) (bonus-konfiguraation-lajit bonus-konfiguraatio)))
+
 (defn uusi-bonus []
   (let [nyt (pvm/nyt)
         urakan-alkuvuosi (-> nav/valittu-urakka deref :alkupvm pvm/vuosi)
