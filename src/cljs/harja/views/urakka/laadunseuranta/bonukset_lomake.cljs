@@ -119,6 +119,10 @@
                                          hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
                                      (when (some #{hoitovuosi} hoitovuodet)
                                        hoitovuosi))))
+        bonuslaji (tiedot/bonus-konfiguraation-laji bonus-konfiguraatio (:laji lomakkeen-tiedot))
+        summamaaritys (:summamaaritys bonuslaji)
+        automaattinen-summa? (and (= "automaattinen" (:maaritystapa summamaaritys))
+                              (some? (:summa-euroina summamaaritys)))
         hoitovuosi-lukittu? (fn [bonuksen-hoitovuosi]
                               (some (fn [{:keys [vuosi sanktio-lukittu?]}]
                                       (and (= vuosi bonuksen-hoitovuosi)
@@ -178,7 +182,9 @@
                                          (first @tiedot-urakka/urakan-toimenpideinstanssit))]
                     (-> rivi
                       (assoc :toimenpideinstanssi (:tpi_id asetettava-tpi))
-                      (assoc :laji arvo))))
+                      (assoc :laji arvo)
+                      (cond-> (not= (:laji rivi) arvo)
+                        (assoc :summa nil)))))
          :valinnat (bonus-lajivalinnat bonus-konfiguraatio (:tyyppi @nav/valittu-urakka) (:id @istunto/kayttaja) tpi)
          :valinta-nayta #(bonus-lajin-nimi bonus-konfiguraatio %)
          ::lomake/col-luokka "col-xs-12"
@@ -249,6 +255,11 @@
         {:otsikko "Summa"
          :nimi :summa
          :tyyppi :euro
+         :muokattava? (constantly (not automaattinen-summa?))
+         :hae (fn [rivi]
+                (if automaattinen-summa?
+                  (:summa-euroina summamaaritys)
+                  (:summa rivi)))
          :vaadi-positiivinen-numero? true
          :pakollinen? true
          ::lomake/col-luokka "col-xs-4"

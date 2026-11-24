@@ -217,6 +217,11 @@ jobs:
       - name: '[Test-envs] Setup Docker Buildx'
         uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
 
+      # Mitätöi build cachen itse asennetuille paketeille viikottain
+      - name: '[Test-envs] Laske cache-bust-week'
+        id: cache-bust
+        run: echo "week=$(date +%G-%V)" >> "$GITHUB_OUTPUT"
+
       - name: '[Test-envs] Build and push Harja Docker image'
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         env:
@@ -230,6 +235,8 @@ jobs:
           push: true
           # Uusi ajoyritys saa oman uniikin tagin tunnisteeksi, eikä ECR-repoon myöskään näin jää tagittomia imageita
           tags: ${{ env.ECR_URI }}:${{ env.BUILD_TAG }}
+          # Viikoittainen cache-bust pakottaa päivittämään apt-paketit ja AWS CLI:n (ks. Dockerfile).
+          build-args: CACHE_BUST_WEEK=${{ steps.cache-bust.outputs.week }}
           # Yksi yhteinen cache kaikille ympäristöille. Ei ole erityistä tarvetta tehdä ympäristökohtaisia
           # cacheja, koska valtosa Dockerfilen sisällöstä pysyy muuttumattomana.
           # ECR Lifecycle-sääntö suojaa cache-manifestin (cache-tag), orvot manifestit siivotaan pois.

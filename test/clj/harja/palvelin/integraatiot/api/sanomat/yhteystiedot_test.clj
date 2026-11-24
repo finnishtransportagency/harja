@@ -92,3 +92,28 @@
     (is (= odotettu-data data) "Data on muodostettu odotetun mukaisesti")
     (json/validoi json-skeemat/+urakan-yhteystietojen-haku-vastaus+
                   (cheshire/encode (spec-apurit/poista-nil-avaimet data)))))
+
+
+(deftest tarkista-sanoman-muodostus-ilman-fim-kayttajia
+  (let [odotettu-data {:urakka {:alkupvm #inst "2014-09-30T21:00:00.000-00:00"
+                                :alueurakkanro "1238"
+                                :elynimi "Pohjois-Pohjanmaa"
+                                :elynro 12
+                                :loppupvm #inst "2019-09-29T21:00:00.000-00:00"
+                                :nimi "Oulun alueurakka 2014-2019"
+                                :sampoid "1242141-OULU2"
+                                :urakoitsija {:katuosoite "Panuntie 11 PL 36"
+                                              :nimi "YIT Rakennus Oy"
+                                              :postinumero "621  "
+                                              :ytunnus "1565583-5"}
+                                :yhteyshenkilot [{:yhteyshenkilo {:email nil
+                                                                  :nimi "Seija Sillanvalvoja"
+                                                                  :organisaatio "YIT Rakennus Oy"
+                                                                  :puhelinnumero nil
+                                                                  :rooli "Sillanvalvoja"
+                                                                  :varahenkilo false
+                                                                  :vastuuhenkilo false}}]}}
+        data (yhteystiedot/urakan-yhteystiedot testiurakan-tiedot nil testi-harja-kayttajat)]
+    (is (= odotettu-data data) "Data on muodostettu odotetun mukaisesti, vaikka FIM-käyttäjät puuttuvat.")
+    (json/validoi json-skeemat/+urakan-yhteystietojen-haku-vastaus+
+      (cheshire/encode (spec-apurit/poista-nil-avaimet data)))))

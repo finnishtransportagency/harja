@@ -4,6 +4,7 @@
 
             [harja.kyselyt.kojelauta :as q]
             [harja.kyselyt.konversio :as konv]
+            [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.domain.oikeudet :as oikeudet]
             [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as v]
             [harja.palvelin.palvelut.budjettisuunnittelu :as budjettisuunnittelu]
@@ -22,6 +23,16 @@
                                            urakan-indeksikertoimet)))]
     (assoc rivi :indeksikerroin urakan-vuoden-indeksikerroin)))
 
+
+(defn hae-kaikki-mahdolliset-ja-tehdyt-paatokset-urakkatilanteeseen
+  "Palauttaa urakkatilanteeseen liittyvät mahdolliset ja kaikki tehdyt päätökset."
+  [db kayttaja {:keys [urakkaid kuluva-hoitovuosi] :as tiedot}]
+  ;; Urakkatilanteen päätösten hakeminen edellyttää yleistä urakkatilanteen oikeutta.
+  (oikeudet/vaadi-lukuoikeus oikeudet/urakkatilanne kayttaja)
+  (let [mahdolliset-paatokset (v/hae-urakan-mahdolliset-paatokset db kayttaja tiedot)
+        tietokanta-paatokset (paatos-kyselyt/hae-paatokset db mahdolliset-paatokset urakkaid kuluva-hoitovuosi)]
+    {:mahdolliset-paatokset mahdolliset-paatokset
+     :tietokanta-paatokset tietokanta-paatokset}))
 
 (defn hae-urakat-kojelautaan
   [db kayttaja {:keys [urakkatyyppi hoitokauden-alkuvuosi urakka-idt evk-idt] :as hakuehdot}]
@@ -63,7 +74,7 @@
                  (mapv
                    (fn [urakka]
                      (let [paatokset
-                           (v/palauta-kaikki-mahdolliset-ja-tehdyt-paatokset
+                           (hae-kaikki-mahdolliset-ja-tehdyt-paatokset-urakkatilanteeseen
                              db kayttaja
                              {:urakkaid (:id urakka)
                               :kuluva-hoitovuosi hoitokauden-alkuvuosi})]
