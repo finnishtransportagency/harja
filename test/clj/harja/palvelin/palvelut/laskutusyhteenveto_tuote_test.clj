@@ -188,7 +188,7 @@
           styyppi-arvonvah-id (:id (first (q-map "SELECT id FROM sanktiotyyppi WHERE nimi = 'Ei tarvita sanktiotyyppiä'")))
           kaikki-tehtavaryhmat (kulut-q/hae-kaikkien-tehtavaryhmien-nimet (:db jarjestelma))
           talvisuola-b (first (filter #(= (:tehtavaryhma_nimi %) "B1 - Talvisuola") kaikki-tehtavaryhmat))
-          tehtavaryhman-tehtava (first (tehtavamaarat-kyselyt/tehtavaryhman-tehtavat-urakalle (:db jarjestelma)
+          tehtavaryhman-tehtava (first (tehtavamaarat-kyselyt/hae-mhu-tehtavaryhman-tehtavat-urakalle (:db jarjestelma)
                                    {:urakka-id urakka-id
                                     :tehtavaryhma-id (:tehtavaryhma talvisuola-b)
                                     :urakan-alkuvuosi urakan-alkuvuosi}))
@@ -239,5 +239,4 @@
 
           (u (format "DELETE FROM sanktio WHERE toimenpideinstanssi IN (%s, %s) AND perintapvm = '%s'::DATE"
                hallinnollinen-tpi-id tehtavaryhman-tpi testipvm)))))
-
 
