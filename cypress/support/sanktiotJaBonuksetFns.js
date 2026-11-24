@@ -25,6 +25,9 @@ export function siivoaSanktiotKannasta(kohde, perustelu = null) {
     cy.terminaaliKomento().then((terminaaliKomento) => {
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM sanktio WHERE suorasanktio = true AND id IN (SELECT s.id FROM sanktio s JOIN laatupoikkeama lp ON s.laatupoikkeama = lp.id WHERE " + ehto + ");\"");
+        // laatupoikkeama_liite viittaa laatupoikkeamaan ilman ON DELETE CASCADE -sääntöä, joten linkit poistetaan ensin
+        cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
+            "\"DELETE FROM laatupoikkeama_liite WHERE laatupoikkeama IN (SELECT lp.id FROM laatupoikkeama lp WHERE " + ehto + ");\"");
         cy.exec(terminaaliKomento + 'psql -h localhost -U harja harja -c ' +
             "\"DELETE FROM laatupoikkeama lp WHERE " + ehto + ";\"");
     });

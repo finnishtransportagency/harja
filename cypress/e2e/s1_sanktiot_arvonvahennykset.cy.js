@@ -13,7 +13,7 @@ import {
     valitseSivupaneelissaPvm,
     valitseSivupaneelissaRadio
 } from '../support/apurit';
-import {evkLappi, testiurakkaMhu26} from '../support/sanktiotJaBonuksetFns';
+import {evkLappi, siivoaSanktiotKannasta, testiurakkaMhu26} from '../support/sanktiotJaBonuksetFns';
 
 // Arvonvähennysten E2E-testit (Sanktiot ja bonukset -näkymä)
 //
@@ -100,6 +100,52 @@ describe('Arvonvähennykset - MHU26-urakka', () => {
         cy.get('.sanktiot').contains('td', testiArvonvahennysKuvausMhu26).should('be.visible');
         cy.get('.sanktiot').contains('tr', testiArvonvahennysKuvausMhu26)
             .should('contain', '-100');
+    });
+});
+
+describe('Arvonvähennyksen liite tallentuu - MHU26-urakka', () => {
+    const testiKuvausLiite = 'CY-mhu26-arvonvahennys-liite';
+    const testiTiedostonNimi = 'cy-mhu26-arvonvahennys-liite.txt';
+
+    before(() => {
+        siivoaSanktiotKannasta(testiKuvausLiite);
+    });
+
+    after(() => {
+        siivoaSanktiotKannasta(testiKuvausLiite);
+    });
+
+    it('liite näkyy arvonvähennyksen tiedoissa tallennuksen jälkeen', () => {
+        cy.viewport(1100, 1200);
+        avaaSanktiotJaBonukset(testiurakkaMhu26, evkLappi);
+        avaaUusiArvonvahennys();
+
+        cy.intercept('POST', '**/_/tallenna-liite').as('tallennaLiite');
+        kirjoitaSivupaneelissaTekstikenttaan('Tapahtumapaikka/kuvaus', testiKuvausLiite);
+        kirjoitaSivupaneelissaTekstikenttaan('Perustelu', 'CY-arvonvahennys-liite-perustelu');
+        kirjoitaSivupaneelissaInputkenttaan('Arvonvähennys', '100');
+
+        cy.intercept('POST', '_/hae-tehtavaryhman-tehtavat-urakalle').as('haeTehtavatMhu26Liite');
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtäväryhmä');
+        cy.wait('@haeTehtavatMhu26Liite', {timeout: clickTimeout});
+        valitseSivupaneelissaEnsimmainenAlasvetoarvo('Tehtävä');
+        valitseSivupaneelissaPvm('Havaittu', '02.10.2026');
+        valitseSivupaneelissaPvm('Määrätty', '02.10.2026');
+
+        // Liitteen lisäyksen input on piilotettu (display: none) ja sen käynnistää "Lisää liite" -painike
+        cy.get(SP).contains('label', 'Liitteet').closest('.form-group').find('input[type="file"]').selectFile({
+            contents: Cypress.Buffer.from('Cypress-testin arvonvähennyksen liite'),
+            fileName: testiTiedostonNimi,
+            mimeType: 'text/plain'
+        }, {force: true});
+        cy.wait('@tallennaLiite').its('response.statusCode').should('eq', 200);
+        cy.get(SP).contains(testiTiedostonNimi).should('be.visible');
+
+        tallennaArvonvahennyslomake();
+        cy.get('.sanktiot').contains('td', testiKuvausLiite).should('be.visible');
+
+        avaaSivupaneelissaTallennettu(testiKuvausLiite);
+        cy.get(SP).contains(testiTiedostonNimi).should('be.visible');
     });
 });
 

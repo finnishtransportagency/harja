@@ -659,6 +659,58 @@ describe('Talvisuolan ylitys toimii vain viimeisellä hoitovuodella', function (
     })
 })
 
+describe('Suorasanktion liite tallentuu', function () {
+    const testiSanktioKuvausLiite = "CY-sanktio-liite";
+    const testiTiedostonNimi = "cy-sanktio-liite.txt";
+
+    before(function () {
+        siivoaSanktiotKannasta(testiSanktioKuvausLiite);
+    });
+
+    after(function () {
+        siivoaSanktiotKannasta(testiSanktioKuvausLiite);
+    });
+
+    it('liite näkyy sanktion tiedoissa tallennuksen jälkeen', function () {
+        cy.viewport(1100, 1200)
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
+
+        cy.intercept('POST', '_/tallenna-suorasanktio').as('tallennaLiitteella')
+        cy.intercept('POST', '**/_/tallenna-liite').as('tallennaLiite')
+
+        cy.contains('Lisää uusi').click()
+        cy.contains('h2', 'Lisää uusi').should('be.visible')
+        cy.contains('label', 'Sanktio').click()
+        cy.get('label[for*=laji] + div').valinnatValitse({valinta: 'A-ryhmä (tehtäväkohtainen sanktio)'});
+        cy.get('label[for*=tyyppi] + div').valinnatValitse({valinta: 'Talvihoito, päätiet'});
+        cy.contains('label', 'Tapahtumapaikka/kuvaus').closest('.form-group').find('input').first().clear().type(testiSanktioKuvausLiite)
+        cy.contains('label', 'Perustelu').closest('.form-group').find('textarea').first().clear().type('CY-sanktio-liite-perustelu')
+        cy.contains('label', 'Havaittu').closest('.form-group').find('input').first().type('{selectall}15.02.2026')
+        cy.contains('label', 'Määrätty').closest('.form-group').find('input').first().type('{selectall}15.02.2026')
+        cy.contains('label', 'Perustelu').click()
+
+        // Liitteen lisäyksen input on piilotettu (display: none) ja sen käynnistää "Lisää liite" -painike
+        cy.contains('label', 'Liitteet').closest('.form-group').find('input[type="file"]').selectFile({
+            contents: Cypress.Buffer.from('Cypress-testin sanktioliite'),
+            fileName: testiTiedostonNimi,
+            mimeType: 'text/plain'
+        }, {force: true})
+        cy.wait('@tallennaLiite').its('response.statusCode').should('eq', 200)
+        cy.get(SP).contains(testiTiedostonNimi).should('be.visible')
+
+        cy.get('div.lomake-footer button').contains('Tallenna').click()
+        cy.wait('@tallennaLiitteella', {timeout: clickTimeout}).its('response.statusCode').should('be.within', 200, 299)
+        cy.get('.toast-viesti.onnistunut', {timeout: clickTimeout}).should('be.visible')
+            .and('contain.text', 'Sanktion tallennus onnistui')
+
+        // Avataan sanktio uudelleen, jotta näkymä ladataan palvelimelta
+        avaaSanktiotJaBonuksetHoitovuodella(testiurakkaMhu25, evkPohjoisSuomi, 1)
+        cy.contains('td', testiSanktioKuvausLiite, {timeout: clickTimeout}).click()
+        cy.get(SP, {timeout: clickTimeout}).should('be.visible')
+        cy.get(SP).contains(testiTiedostonNimi, {timeout: clickTimeout}).should('be.visible')
+    })
+})
+
 describe('Siivotaan sanktiot lopuksi', function () {
     before(function () {
         siivoaSanktiotKannasta(testiSanktioKuvaus);
