@@ -440,10 +440,11 @@
     :tilat #{:normaali}
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
-    :kuvaus "Rajoittaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla. Ei aseta ulkomarginaaleja."
+    :kuvaus "Rajoittaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla. Oletuksena ei aseta ulkomarginaaleja. Valinnainen keskitys vaakasuunnassa."
     :funktio "harja.ui.perus/sailio"
     :asetukset {:leveys {:tyyppi :keyword :pakollinen? false :oletus :suuri :kuvaus "Sisällön enimmäisleveys: :pieni, :keski tai :suuri."}
                 :sisareuna {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Vaakasuuntainen sisäreuna: :pieni, :keski tai :suuri."}
+                :keskita? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Keskittää säiliön vaakasuunnassa, kun sisältö on rajattua leveyttä kapeampi."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :osio
@@ -549,6 +550,7 @@
                 :virhe {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Virheteksti. Näkyy, kun arvo on annettu."}
                 :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Merkitsee labelin pakolliseksi."}
                 :disabled? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Estää kentän muokkaamisen."}
+                :kentan-tyyppi {:tyyppi :keyword :pakollinen? false :oletus :teksti :kuvaus "Simulaattorin kenttätyyppi: :teksti, :numero, :paivamaara tai :tekstialue."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :lomake

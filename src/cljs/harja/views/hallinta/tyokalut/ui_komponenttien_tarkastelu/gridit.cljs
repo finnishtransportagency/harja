@@ -1,6 +1,7 @@
 (ns harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.gridit
   (:require [reagent.core :as r]
             [harja.ui.grid :as grid]
+            [harja.ui.yleiset :as yleiset]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.kehys :as kehys]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
@@ -40,14 +41,26 @@
         {:otsikko "Yks." :nimi :yksikko :muokattava? (constantly false) :leveys 0.5}]
        rivit]]]))
 
+;; EDN ei voi sisältää funktioita, joten solutyypit rekisteröidään avaimilla.
+;; Tuntematon :solu-avain näyttää sarakkeen tekstinä.
+(def ^:private solutyypit
+  {:tila-indikaattori (fn [nimi]
+                        (fn [rivi _opts]
+                          [yleiset/tila-indikaattori (str (get rivi nimi))]))})
+
+(defn- simulaattorin-sarake [sarake]
+  (let [solu (get solutyypit (:solu sarake))]
+    (cond-> (select-keys sarake [:otsikko :nimi :leveys :tyyppi])
+      solu (assoc :tyyppi :komponentti
+                  :komponentti (solu (:nimi sarake))))))
+
 (defn- perusgrid-simulaattorissa [solmu _tila _lapsi-fn]
   (let [{:keys [otsikko tyhja tunniste sarakkeet rivit]} (:asetukset solmu)]
     [:div {:data-cy "ui-simulaattori-perusgrid"}
      [grid/grid {:otsikko otsikko
                  :tyhja (or tyhja "Ei rivejä.")
                  :tunniste (or tunniste :id)}
-      ;; Sarakkeista välitetään vain datana kuvattavat avaimet.
-      (mapv #(select-keys % [:otsikko :nimi :leveys :tyyppi]) sarakkeet)
+      (mapv simulaattorin-sarake sarakkeet)
       (vec rivit)]]))
 
 (def ^:private muokkausgridin-tyypit #{:string :numero})

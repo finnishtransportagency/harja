@@ -113,6 +113,12 @@
   (is (thrown? #?(:clj AssertionError :cljs js/Error)
         (ui/sailio {:sisareuna :ei-vapaata-css} [:main]))))
 
+(deftest sailio-keskittaa-vain-kun-keskita-on-tosi
+  (is (= "ui-sailio ui-sailio-leveys-suuri ui-sailio-sisareuna-keski ui-sailio-keskita"
+        (:class (attribuutit (ui/sailio {:keskita? true} [:main])))))
+  (is (thrown? #?(:clj AssertionError :cljs js/Error)
+        (ui/sailio {:keskita? :kylla} [:main]))))
+
 (deftest osio-yhdistaa-otsikon-ja-sisallon-saavutettavasti
   (let [hiccup (ui/osio {:id "urakkakatsaus"
                           :otsikko "Urakan yhteenveto"

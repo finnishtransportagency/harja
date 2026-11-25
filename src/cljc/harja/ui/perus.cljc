@@ -79,14 +79,18 @@
     lapset))
 
 (defn sailio
-  "Rajaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla."
-  [{:keys [data-cy luokka leveys sisareuna]
-    :or {leveys :suuri sisareuna :keski}} & sisalto]
+  "Rajaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla.
+
+  Kun `keskita?` on tosi, säiliö keskitetään vaakasuunnassa. Oletuksena se ei aseta marginaaleja."
+  [{:keys [data-cy luokka leveys sisareuna keskita?]
+    :or {leveys :suuri sisareuna :keski keskita? false}} & sisalto]
   {:pre [(layout-valit leveys)
-         (layout-valit sisareuna)]}
+         (layout-valit sisareuna)
+         (boolean? keskita?)]}
   (into [:div {:class (luokat "ui-sailio"
                          (str "ui-sailio-leveys-" (name leveys))
                          (str "ui-sailio-sisareuna-" (name sisareuna))
+                         (when keskita? "ui-sailio-keskita")
                          luokka)
                :data-cy data-cy}]
     sisalto))

@@ -200,6 +200,7 @@
        [:div {:data-cy (str ankkuri "-kentta")}
         [kentat/tee-kentta
          {:tyyppi :puhelin
+          :vayla-tyyli? true
           :elementin-id (str ankkuri "-input")
           :placeholder "040 1234567"}
          arvo]]
@@ -335,7 +336,11 @@
        [:span "Käyttöpaikka omistaa ulkopuolisen sijoittelun."]]]
      [ui/sailio {:data-cy (str ankkuri "-tyhja")
                  :leveys :pieni
-                 :sisareuna :pieni}]]))
+                 :sisareuna :pieni}]
+     [ui/sailio {:data-cy (str ankkuri "-keskitetty")
+                 :leveys :pieni
+                 :sisareuna :pieni
+                 :keskita? true}]]))
 
 (defn- osio [komponentti]
   (let [ankkuri (kehys/ankkuri komponentti)]
@@ -415,7 +420,7 @@
     (let [ankkuri (kehys/ankkuri komponentti)]
       [kehys/kortti komponentti
        [:p "Natiivi kenttä saa id:n ja ARIA-attribuutit, jolloin label, ohje ja virhe liittyvät siihen."]
-       [ui/kenttaryhma {:otsikko "Natiivi kenttä"
+       [ui/kenttaryhma {:otsikko "Natiivi kenttä (ei Harja-komponentti)"
                         :id (str ankkuri "-natiivi")
                         :ohje "Anna vähintään yksi merkki."
                         :virhe (when (empty? @arvo) "Arvo puuttuu")
@@ -451,31 +456,45 @@
      "Tyhjä kenttä" nil
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
+(def ^:private kenttaryhman-kenttatyypit
+  {:teksti {:tyyppi :string :alkuarvo ""}
+   :numero {:tyyppi :numero :alkuarvo nil}
+   :paivamaara {:tyyppi :pvm :alkuarvo nil}
+   :tekstialue {:tyyppi :text :alkuarvo ""}})
+
 (defn- kenttaryhma-simulaattorissa-sisalto [solmu]
-  (r/with-let [tunniste (str (gensym "ui-simulaattori-kenttaryhma-"))
-               arvo (r/atom "")]
-    [ui/kenttaryhma
-     (merge {:data-cy "ui-simulaattori-kenttaryhma"}
-            (select-keys (:asetukset solmu) [:otsikko :ohje :virhe :pakollinen? :disabled? :data-cy])
-            {:id tunniste})
-     (fn [{:keys [id aria-describedby aria-invalid aria-required disabled?]}]
-       [:input {:id id
-                :type "text"
-                :value @arvo
-                :on-change #(reset! arvo (.. % -target -value))
-                :aria-describedby aria-describedby
-                :aria-invalid aria-invalid
-                :aria-required aria-required
-                :disabled disabled?}])]))
+  (let [{:keys [tyyppi alkuarvo]} (get kenttaryhman-kenttatyypit
+                                    (get-in solmu [:asetukset :kentan-tyyppi] :teksti)
+                                    (:teksti kenttaryhman-kenttatyypit))]
+    (r/with-let [tunniste (str (gensym "ui-simulaattori-kenttaryhma-"))
+                 arvo (r/atom alkuarvo)]
+      [ui/kenttaryhma
+       (merge {:data-cy "ui-simulaattori-kenttaryhma"}
+              (select-keys (:asetukset solmu) [:otsikko :ohje :virhe :pakollinen? :disabled? :data-cy])
+              {:id tunniste})
+       (fn [{:keys [id disabled?]}]
+         [kentat/tee-kentta
+          {:tyyppi tyyppi
+           :elementin-id id
+           :vayla-tyyli? true
+           :disabled? disabled?}
+          arvo])])))
 
 (register! :kenttaryhma {:esikatselu kenttaryhma
                          :renderoi (sisalto-renderoijana kenttaryhma-simulaattorissa-sisalto)})
+
+(def ^:private staattinen-liitetiedosto
+  {:id 1 :nimi "tarkastus.pdf" :tyyppi "application/pdf" :koko 12345 :virustarkastettu? true})
+
 (defn- liitteet-esikatselu [komponentti]
   [kehys/kortti komponentti
    [:p "Pelkkä liitetiedosto ilman urakkaa. Lisäys ja lista vaativat urakka-id:n ja oikeudet, joten niitä ei esikatselussa renderöidä."]
    [:div {:data-cy (kehys/ankkuri komponentti "-juuri")}
-    [liitteet/liitetiedosto {:id 1 :nimi "tarkastus.pdf" :tyyppi "application/pdf" :koko 12345
-                             :virustarkastettu? true}]]])
+    [liitteet/liitetiedosto staattinen-liitetiedosto]]])
+
+(defn- liitteet-simulaattorissa [_solmu _tila _lapsi-fn]
+  [:div {:data-cy "ui-simulaattori-liitteet"}
+   [liitteet/liitetiedosto staattinen-liitetiedosto]])
 
 (defn- tietoja-simulaattorissa [solmu _tila _lapsi-fn]
   (let [asetukset (:asetukset solmu)]
@@ -491,7 +510,8 @@
 
 (register! :tietoja {:esikatselu tietoja
                      :renderoi tietoja-simulaattorissa})
-(register! :liitteet {:esikatselu liitteet-esikatselu})
+(register! :liitteet {:esikatselu liitteet-esikatselu
+                      :renderoi liitteet-simulaattorissa})
 
 (defn- taulukkotietonakyma-esikatselu [komponentti]
   [kehys/kortti komponentti
@@ -582,7 +602,7 @@
   (r/with-let [arvo (r/atom "")]
     [:div {:data-cy "ui-simulaattori-puhelinkentta"}
      [kentat/tee-kentta
-      (merge {:tyyppi :puhelin}
+      (merge {:tyyppi :puhelin :vayla-tyyli? true}
              (select-keys (:asetukset solmu) [:placeholder :pituus :vayla-tyyli? :disabled?]))
       arvo]]))
 

@@ -36,7 +36,7 @@
                                         :sarakkeet [{:otsikko "Urakka" :nimi :urakka :leveys 10}
                                                     {:otsikko "Hoitokausi" :nimi :hoitokausi :leveys 4}
                                                     {:otsikko "Tarjoushinta" :nimi :tarjoushinta :leveys 4}
-                                                    {:otsikko "Tila" :nimi :tila :leveys 5}]
+                                                    {:otsikko "Tila" :nimi :tila :leveys 5 :solu :tila-indikaattori}]
                                         :rivit [{:id 1
                                                  :urakka "Pohjois-Suomen hoito 2021–2026"
                                                  :hoitokausi "2024–2025"

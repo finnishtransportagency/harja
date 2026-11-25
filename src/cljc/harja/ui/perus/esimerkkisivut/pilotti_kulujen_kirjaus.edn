@@ -62,6 +62,7 @@
                                                           :asetukset {:otsikko "Laskun pvm*"
                                                                       :pakollinen? true
                                                                       :ohje "Anna päivämäärä muodossa pp.kk.vvvv."
+                                                                      :kentan-tyyppi :paivamaara
                                                                       :data-cy "pilotti-kulujen-kirjaus-paivamaara"}}
                                                          {:komponentti :kenttaryhma
                                                           :asetukset {:otsikko "Laskun numero*"
@@ -70,10 +71,9 @@
                                                          {:komponentti :kenttaryhma
                                                           :asetukset {:otsikko "Lisätieto"
                                                                       :data-cy "pilotti-kulujen-kirjaus-lisatieto"}}]}]}
-                                     {:komponentti :info-laatikko
-                                      :asetukset {:tyyppi :neutraali
-                                                  :ensisijainen-viesti "Liitteet"
-                                                  :toissijainen-viesti "Kululle ei ole lisätty liitteitä."}}
+                                     {:komponentti :liitteet
+                                      :asetukset {:urakka-id 1
+                                                  :tallennetut-liitteet []}}
                                      {:komponentti :toimintoryhma
                                       :asetukset {:data-cy "pilotti-kulujen-kirjaus-toiminnot"}
                                       :lapset [{:komponentti :nappi
