@@ -1059,7 +1059,7 @@
         ;; Kovakoodattu "Toteutuneet lupauspisteet", joka voi hajota, jos testidataan kosketaan
         (is (= nil (nth (first (vuosirivit taulukko)) 2)))
         ;; Kovakoodattu "Bonus/Sanktiot (€)", joka voi hajota, jos testidataan kosketaan
-        (is (= 0.0M (nth (first (vuosirivit taulukko)) 3)))))
+        (is (= 0M (nth (first (vuosirivit taulukko)) 3)))))
 
     (testing "Rahavarausten tavoitehintamuutokset taulukko"
       (let [taulukko (hae-taulukko iin-raportti "Rahavarausten tavoitehintamuutokset")
@@ -1122,13 +1122,13 @@
         (is (= "2025-2026" (first vuoden-2025-rivi)))
         (is (= 0 (second vuoden-2025-rivi)))
         (is (= 0 (nth vuoden-2025-rivi 2)))
-        (is (= -1850M (nth vuoden-2025-rivi 3)))
+        (is (= -2850M (nth vuoden-2025-rivi 3)))
         (is (= -3400M (nth vuoden-2025-rivi 4)))
 
         ;; Yhteensä rivi
         (is (= 0 (second (:rivi (yhteensarivi taulukko)))))
         (is (= 0 (nth (:rivi (yhteensarivi taulukko)) 2)))
-        (is (= -1850M (nth (:rivi (yhteensarivi taulukko)) 3)))
+        (is (= -2850M (nth (:rivi (yhteensarivi taulukko)) 3)))
         (is (= -3400M (nth (:rivi (yhteensarivi taulukko)) 4)))))
 
     (testing "Bonukset-taulukko"

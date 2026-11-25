@@ -34,7 +34,7 @@
                    :lisatyo 0.0M
                    :muu 11000.0M
                    :sakko -31526.66600M
-                   :tpi_id 4
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu Talvihoito TP 2014-2019")
                    :urakka_id 4
                    :yksikkohintainen 0.0M}
                   {:akillinen-hoitotyo 0.0M
@@ -44,7 +44,7 @@
                    :lisatyo 0.0M
                    :muu 0.0M
                    :sakko -2434.0M
-                   :tpi_id 5
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu Liikenneympäristön hoito TP 2014-2019")
                    :urakka_id 4
                    :yksikkohintainen 7882.50M}
                   {:akillinen-hoitotyo 0.0M
@@ -54,7 +54,7 @@
                    :lisatyo 0.0M
                    :muu 0.0M
                    :sakko -22860.0M
-                   :tpi_id 6
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu Sorateiden hoito TP 2014-2019")
                    :urakka_id 4
                    :yksikkohintainen 0.0M}]]
     (is (= odotettu (vec
@@ -66,35 +66,28 @@
 (deftest hae-urakan-maksueran-summat-mhu-urakalle
   (let [db (:db jarjestelma)
         urakka-id (hae-oulun-maanteiden-hoitourakan-2019-2024-id)
-        ;; 48	Oulu MHU Talvihoito TP
-        ;; 49	Oulu MHU Liikenneympäristön hoito TP
-        ;; 50	Oulu MHU Soratien hoito TP
-        ;; 51	Oulu MHU Hallinnolliset toimenpiteet TP
-        ;; 52	Oulu MHU Päällystepaikkaukset TP
-        ;; 53	Oulu MHU MHU Ylläpito TP
-        ;; 54	Oulu MHU MHU Korvausinvestointi TP
         ;; Nämä summat ikävä kyllä vaihtuu joka kerta, kun indeksit vaihtuu
         ;; Eli voit olettaa päivittäväsi näitä summia aina 1.10. joka vuosi
         odotettu [{:kokonaishintainen 4150.791430M
-                   :tpi_id 45
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU Talvihoito TP")
                    :urakka_id 35}
                   {:kokonaishintainen 6251.487630M
-                   :tpi_id 46
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU Liikenneympäristön hoito TP")
                    :urakka_id 35}
                   {:kokonaishintainen 8801.94M
-                   :tpi_id 47
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU Soratien hoito TP")
                    :urakka_id 35}
                   {:kokonaishintainen 5544.254000M
-                   :tpi_id 48
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU Hallinnolliset toimenpiteet TP")
                    :urakka_id 35}
                   {:kokonaishintainen 11001.94M
-                   :tpi_id 49
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU Päällystepaikkaukset TP")
                    :urakka_id 35}
                   {:kokonaishintainen 16401.94M
-                   :tpi_id 50
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU MHU Ylläpito TP")
                    :urakka_id 35}
                   {:kokonaishintainen 13201.94M
-                   :tpi_id 51
+                   :tpi_id (hae-toimenpideinstanssi-id-nimella "Oulu MHU MHU Korvausinvestointi TP")
                    :urakka_id 35}]
         vastaus (vec
                   (sort-by :tpi_id

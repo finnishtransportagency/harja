@@ -194,11 +194,11 @@
                    nil nil]]
                  ;; Näytetään disabloitu lomake, jotta käyttäjä näkee mitä bonusta on kirjattu
                  (if (:id @tiedot/valittu-sanktio)
-                   [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? app]
+                   [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? {:lukitustiedot (:lukitustiedot app)}]
                    [napit/peruuta "Sulje" #(reset! sivupaneeli-auki?-atom false)])]
 
                  ;; Jos sanktioita ei ole lukittu, niin näytetään sanktiolomake normaalisti
-                 [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? app])])])))))
+                 [sanktiot-lomake/sanktio-lomake sivupaneeli-auki?-atom (or lukutila? sanktiot-paatoksella-lukittu?) oikeus-muokata? {:lukitustiedot (:lukitustiedot app)}])])])))))
 
 ;; --- Sanktioiden listaus ---
 
@@ -216,9 +216,8 @@
      :arvo-atom tiedot/sanktio-bonus-suodattimet}]])
 
 (defn- suodattimet-ja-toiminnot [sivupaneeli-auki?-atom lajisuodattimet]
-  (let [mhu-25? (uu-tiedot/mhu25-urakka? @nav/valittu-urakka)
-        urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
-        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true tiedot/valittu-sanktio mhu-25?)
+  (let [urakan-alkuvuosi (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+        mahdolliset-kulun-kohdistukset (tiedot/mahdolliset-kulun-kohdistukset true urakan-alkuvuosi (:tyyppi @nav/valittu-urakka) tiedot/valittu-sanktio)
         tpi (when (= 1 (count mahdolliset-kulun-kohdistukset))
               (:tpi_id (first mahdolliset-kulun-kohdistukset)))]
     [:div.flex-row
