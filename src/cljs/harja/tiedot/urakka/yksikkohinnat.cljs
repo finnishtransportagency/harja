@@ -9,16 +9,6 @@
             [harja.tiedot.urakka.urakka :as tiedot]
             [harja.tiedot.urakka.suunnittelu :as suunnittelu]))
 
-(defonce yksikkohinnat-app-tila
-  (atom {:urakka nil
-         :urakan-hoitokaudet []
-         :valittu-hoitokausi nil
-         :yksikkohintaiset-tyot nil
-         :kaikki-yksikkohintaiset-tyot nil
-         :toimenpiteet-ja-tehtavat nil
-         :haku-kaynnissa? false
-         :virhe nil}))
-
 (defrecord Alusta [urakka])
 (defrecord HaeYksikkohintaisetTyot [urakka-id])
 (defrecord HaeYksikkohintaisetTyotOnnistui [vastaus])

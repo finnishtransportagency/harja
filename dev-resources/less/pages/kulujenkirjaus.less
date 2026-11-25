@@ -412,8 +412,6 @@ td.indeksi-rivi .alasveto-gridin-kentta {
 
 .yksikkohinnat {
   .livi-grid td.valinta-puuttuu {
-    border-bottom: none !important;
-
     .alasveto-gridin-kentta
     button.nappi-alasveto {
       border: 1.5px solid @vaara !important;
@@ -422,5 +420,20 @@ td.indeksi-rivi .alasveto-gridin-kentta {
         color: @vaara !important;
       }
     }
+  }
+  .livi-grid td.indeksi-valittu
+  .alasveto-gridin-kentta
+  button.nappi-alasveto {
+    border: 1.5px solid @black-lighter !important;
+  }
+  .livi-grid {
+    table:not(.pvm-valinta) {
+      thead th {
+        border-bottom: 0.1rem solid @gray210 !important;
+      }
+    }
+  }
+  .matala-panel {
+    margin-top: 0.5rem;
   }
 }

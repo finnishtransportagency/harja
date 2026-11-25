@@ -25,8 +25,7 @@
       (let [mhu-urakka? (= :teiden-hoito
                            (:tyyppi @nav/valittu-urakka))
             vesivayla-hoito-urakka (= :vesivayla-hoito
-                                     (:tyyppi @nav/valittu-urakka))
-            valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
+                                     (:tyyppi @nav/valittu-urakka))]
         [:span.laskutus
          [bs/tabs {:style :tabs
                    :classes "tabs-taso2"
@@ -42,7 +41,7 @@
           :yksikkohinnat
           (when (and vesivayla-hoito-urakka (k/kehitysymparistossa?))
             ^{:key "yksikkohinnat"}
-            [yksikkohinnat/yksikkohinnat ur valitun-hoitokauden-yks-hint-kustannukset])
+            [yksikkohinnat/yksikkohinnat])
 
           "Laskutusyhteenveto"
           :laskutusyhteenveto
