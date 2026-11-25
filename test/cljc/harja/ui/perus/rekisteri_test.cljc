@@ -100,17 +100,20 @@
          (set (map :ryhma (filter #(= :palaute (:rooli %)) rekisteri/komponentit))))))
 
 (deftest nimeamispoikkeus-sallii-vain-kielletyn-asetuksen
-  (let [valintaryhma (rekisteri/hae :valintaryhma)
+  (let [disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Pois käytöstä."}
+        livi (-> (rekisteri/hae :livi-pudotusvalikko)
+                 (assoc-in [:asetukset :disabled?] disabled?)
+                 (assoc :nimeamispoikkeukset #{:disabled?}))
         virheet (fn [komponentti]
                   (rekisteri/virheet rekisteri/ryhmat
                     (map #(if (= (:id %) (:id komponentti)) komponentti %) rekisteri/komponentit)))]
-    (is (empty? (virheet valintaryhma)))
+    (is (empty? (virheet livi)))
     (testing "ilman poikkeusta uuden merkinnän :disabled? on virhe"
-      (is (seq (virheet (dissoc valintaryhma :nimeamispoikkeukset)))))
+      (is (seq (virheet (dissoc livi :nimeamispoikkeukset)))))
     (testing "poikkeus asetukselle, jota ei ole, on virhe"
-      (is (seq (virheet (assoc valintaryhma :nimeamispoikkeukset #{:ei-ole})))))
+      (is (seq (virheet (assoc livi :nimeamispoikkeukset #{:ei-ole})))))
     (testing "poikkeus sallitulle asetusnimelle on virhe"
-      (is (seq (virheet (assoc valintaryhma :nimeamispoikkeukset #{:disabled? :otsikko})))))))
+      (is (seq (virheet (assoc livi :nimeamispoikkeukset #{:disabled? :otsikko})))))))
 
 (deftest palautekomponentin-variantit-vaativat-yhteiset-variantit
   (let [viesti (rekisteri/hae :viesti)
@@ -125,10 +128,12 @@
     (testing "kartan on oltava map"
       (is (seq (virheet (assoc viesti :yhteiset-variantit [:info])))))))
 
-(deftest rinnakkaiset-rajapinnat-on-merkitty
-  (testing "uuteen UI:hin suositeltu valinta korvaa vanhat valinnat"
-    (is (= :uuteen-ui (:suositus (rekisteri/hae :valintaryhma))))
-    (is (seq (:korvaa (rekisteri/hae :valintaryhma)))))
+(deftest pudotusvalikon-suositus-on-yksiselitteinen
+  (testing "livi on uuden UI:n ainoa suositeltu yksivalinta"
+    (is (= :uuteen-ui (:suositus (rekisteri/hae :livi-pudotusvalikko))))
+    (is (nil? (rekisteri/hae :valintaryhma)))
+    (is (= #{"perus/valintaryhma" "kentat/tee-kentta :valinta"}
+           (set (:korvaa (rekisteri/hae :livi-pudotusvalikko))))))
   (testing "komponentti ei korvaa itseään"
     (doseq [{:keys [funktio korvaa]} rekisteri/komponentit
             :let [lyhyt (str/replace funktio #"^harja\.ui\." "")

@@ -1,0 +1,86 @@
+{:id :pilotti-kulujen-kirjaus
+ :nimi "Pilotti: kulujen kirjaus"
+ :kuvaus "Tuotannon lomakenäkymän pilotti: kohdistus, laskun tiedot, liitetiedot ja tallennustoiminnot."
+ :pilottisivu {:tyyppi :lomake
+               :lahde "src/cljs/harja/views/urakka/kulut/kululomake.cljs"
+               :less "dev-resources/less/pages/kulujenkirjaus.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-kulujen-kirjaus-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Uusi kulu"
+                              :otsikkotaso 1
+                              :vali :keski
+                              :data-cy "pilotti-kulujen-kirjaus-otsikko"}
+                  :lapset [{:komponentti :lomake
+                            :lapset [{:komponentti :osio
+                                      :asetukset {:otsikko "Kohdistus 1"
+                                                  :otsikkotaso 2
+                                                  :vali :pieni
+                                                  :data-cy "pilotti-kulujen-kirjaus-kohdistus"}
+                                      :lapset [{:komponentti :ruudukko
+                                                :asetukset {:palstoja 3
+                                                            :vali :keski
+                                                            :data-cy "pilotti-kulujen-kirjaus-kohdistuskentat"}
+                                                :lapset [{:komponentti :livi-pudotusvalikko
+                                                          :asetukset {:otsikko "Kulun tyyppi*"
+                                                                      :valinnat [{:arvo :hankintakulu
+                                                                                  :nimi "Hankintakulu"}
+                                                                                 {:arvo :muu-kulu
+                                                                                  :nimi "Muu kulu"}]
+                                                                      :optiot {:data-cy "pilotti-kulujen-kirjaus-tyyppi"}}}
+                                                         {:komponentti :livi-pudotusvalikko
+                                                          :asetukset {:otsikko "Tehtäväryhmä*"
+                                                                      :valinnat [{:arvo :talvihoito
+                                                                                  :nimi "Talvihoito"}
+                                                                                 {:arvo :liikenneymparisto
+                                                                                  :nimi "Liikenneympäristön hoito"}]
+                                                                      :optiot {:data-cy "pilotti-kulujen-kirjaus-tehtavaryhma"}}}
+                                                         {:komponentti :kenttaryhma
+                                                          :asetukset {:otsikko "Summa*"
+                                                                      :pakollinen? true
+                                                                      :ohje "Anno summa euroina."
+                                                                      :data-cy "pilotti-kulujen-kirjaus-summa"}}]}]}
+                                     {:komponentti :osio
+                                      :asetukset {:otsikko "Laskun tiedot"
+                                                  :otsikkotaso 2
+                                                  :vali :pieni
+                                                  :data-cy "pilotti-kulujen-kirjaus-lasku"}
+                                      :lapset [{:komponentti :ruudukko
+                                                :asetukset {:palstoja 2
+                                                            :vali :keski
+                                                            :data-cy "pilotti-kulujen-kirjaus-laskukentat"}
+                                                :lapset [{:komponentti :livi-pudotusvalikko
+                                                          :asetukset {:otsikko "Koontilaskun kuukausi*"
+                                                                      :valinnat [{:arvo :lokakuu
+                                                                                  :nimi "Lokakuu 2024"}
+                                                                                 {:arvo :marraskuu
+                                                                                  :nimi "Marraskuu 2024"}]
+                                                                      :optiot {:data-cy "pilotti-kulujen-kirjaus-kuukausi"}}}
+                                                         {:komponentti :kenttaryhma
+                                                          :asetukset {:otsikko "Laskun pvm*"
+                                                                      :pakollinen? true
+                                                                      :ohje "Anna päivämäärä muodossa pp.kk.vvvv."
+                                                                      :data-cy "pilotti-kulujen-kirjaus-paivamaara"}}
+                                                         {:komponentti :kenttaryhma
+                                                          :asetukset {:otsikko "Laskun numero*"
+                                                                      :pakollinen? true
+                                                                      :data-cy "pilotti-kulujen-kirjaus-laskunumero"}}
+                                                         {:komponentti :kenttaryhma
+                                                          :asetukset {:otsikko "Lisätieto"
+                                                                      :data-cy "pilotti-kulujen-kirjaus-lisatieto"}}]}]}
+                                     {:komponentti :info-laatikko
+                                      :asetukset {:tyyppi :neutraali
+                                                  :ensisijainen-viesti "Liitteet"
+                                                  :toissijainen-viesti "Kululle ei ole lisätty liitteitä."}}
+                                     {:komponentti :toimintoryhma
+                                      :asetukset {:data-cy "pilotti-kulujen-kirjaus-toiminnot"}
+                                      :lapset [{:komponentti :nappi
+                                                :asetukset {:teksti "Peruuta"
+                                                            :variantti :toissijainen
+                                                            :data-cy "pilotti-kulujen-kirjaus-peruuta"}}
+                                               {:komponentti :nappi
+                                                :asetukset {:teksti "Tallenna kulu"
+                                                            :variantti :ensisijainen
+                                                            :data-cy "pilotti-kulujen-kirjaus-tallenna"}}]}]}]}]}]}

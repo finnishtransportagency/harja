@@ -10,9 +10,12 @@
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :refer [register!]]))
 
 (def ^:private urakkatyypit
-  [{:arvo :hoito :nimi "Hoito"}
-   {:arvo :paallyste :nimi "Päällyste"}
-   {:arvo :vesivayla :nimi "Vesiväylä"}])
+  [:hoito :paallyste :vesivayla])
+
+(def ^:private urakkatyypin-nimi
+  {:hoito "Hoito"
+   :paallyste "Päällyste"
+   :vesivayla "Vesiväylä"})
 
 ;; Simulaattorin asetukset ovat EDN-dataa, joten arvo voi olla minkä tahansa tyyppinen.
 (defn- vektori [arvo]
@@ -66,22 +69,6 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Haku: \"" @haku "\", vain puutteelliset: " @vain-puutteelliset?)]])))
 
-(defn- valintaryhma [komponentti]
-  (r/with-let [valinta (r/atom :hoito)]
-    (let [ankkuri (kehys/ankkuri komponentti)]
-      [kehys/kortti komponentti
-       [:p "Arvot ovat keywordeja: vaihda-fn saa valitun arvon sellaisenaan."]
-       [ui/valintaryhma
-        {:otsikko "Urakkatyyppi"
-         :id (str ankkuri "-urakkatyyppi")
-         :arvo @valinta
-         :vaihda-fn #(reset! valinta %)
-         :vaihtoehdot urakkatyypit
-         :tyhja-valinta "Valitse..."
-         :ohje "Valitse yksi vaihtoehto."}]
-       [:p {:data-cy (str ankkuri "-arvo")}
-        (str "Valittu: " (pr-str @valinta))]])))
-
 (defn- lomake [komponentti]
   (r/with-let [nimi (r/atom "")
                tyyppi (r/atom :hoito)
@@ -122,14 +109,18 @@
              :disabled? (or disabled? @lataus?)
              :placeholder "Esimerkiksi Harja"}
             nimi])]
-        [ui/valintaryhma
-         {:otsikko "Tyyppi"
-          :id (str ankkuri "-tyyppi")
-          :arvo @tyyppi
-          :vaihda-fn #(reset! tyyppi %)
-          :vaihtoehdot urakkatyypit
-          :ohje "Valitse lomakkeen käyttötarkoitus."
-          :disabled? @lataus?}]
+        [:div
+         [yleiset/pudotusvalikko
+          "Tyyppi"
+          {:data-cy (str ankkuri "-tyyppi")
+           :elementin-id (str ankkuri "-tyyppi")
+           :valinta @tyyppi
+           :valitse-fn #(reset! tyyppi %)
+           :format-fn urakkatyypin-nimi
+           :vayla-tyyli? true
+           :disabled @lataus?}
+          urakkatyypit]
+         [:p.ui-ohje "Valitse lomakkeen käyttötarkoitus."]]
         [ui/toimintoryhma {:data-cy (str ankkuri "-toiminnot")}
          [napit/nappi "Tallenna" tallenna!
           {:data-cy (str ankkuri "-tallenna")
@@ -549,20 +540,6 @@
 (register! :suodatin {:esikatselu suodatin
                       :renderoi (sisalto-renderoijana suodatin-simulaattorissa-sisalto)})
 
-(defn- valintaryhma-simulaattorissa-sisalto [solmu]
-  ;; Id on instanssikohtainen, jotta label ja ohje eivät osu toiseen valintaryhmään samalla sivulla.
-  (r/with-let [tunniste (str (gensym "ui-simulaattori-valintaryhma-"))
-               valinta (r/atom nil)]
-    (let [asetukset (select-keys (:asetukset solmu)
-                      [:otsikko :vaihtoehdot :tyhja-valinta :ohje :virhe :pakollinen? :disabled? :data-cy])]
-      [ui/valintaryhma
-       (merge {:data-cy "ui-simulaattori-valintaryhma"}
-              asetukset
-              {:id tunniste
-               :vaihtoehdot (vektori (:vaihtoehdot asetukset))
-               :arvo @valinta
-               :vaihda-fn #(reset! valinta %)})])))
-
 (defn- lomake-simulaattorissa [solmu _tila lapsi-fn]
   [ui/pino {:data-cy "ui-simulaattori-lomake"}
    (map-indexed (fn [indeksi lapsi]
@@ -570,8 +547,6 @@
                   [lapsi-fn lapsi])
                 (:lapset solmu))])
 
-(register! :valintaryhma {:esikatselu valintaryhma
-                          :renderoi (sisalto-renderoijana valintaryhma-simulaattorissa-sisalto)})
 (register! :lomake {:esikatselu lomake
                     :renderoi lomake-simulaattorissa})
 (register! :rivi {:esikatselu rivi})

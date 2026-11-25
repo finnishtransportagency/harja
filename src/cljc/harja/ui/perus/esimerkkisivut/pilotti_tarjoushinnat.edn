@@ -1,0 +1,49 @@
+{:id :pilotti-tarjoushinnat
+ :nimi "Pilotti: tarjoushinnat"
+ :kuvaus "Tuotannon listausnäkymän pilotti: urakkahaku, puutteellisuussuodatin ja tarjoushintojen taulukko."
+ :pilottisivu {:tyyppi :listaus
+               :lahde "src/cljs/harja/views/hallinta/tarjoushinnat.cljs"
+               :less "dev-resources/less/pages/tarjoushinnat.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-tarjoushinnat-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "MH-Urakoiden tarjoushinnat"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-tarjoushinnat-otsikko"}
+                  :lapset [{:komponentti :suodatinrivi
+                            :asetukset {:data-cy "pilotti-tarjoushinnat-suodattimet"}
+                            :lapset [{:komponentti :suodatin
+                                      :asetukset {:otsikko "Urakka"
+                                                  :data-cy "pilotti-tarjoushinnat-urakkahaku"}}
+                                     {:komponentti :livi-pudotusvalikko
+                                      :asetukset {:otsikko "Näytä"
+                                                  :valinnat [{:arvo :kaikki
+                                                              :nimi "Kaikki urakat"}
+                                                             {:arvo :puutteelliset
+                                                              :nimi "Vain puutteelliset"}]
+                                                  :optiot {:data-cy "pilotti-tarjoushinnat-puutteelliset"}}}
+                                     {:komponentti :nappi
+                                      :asetukset {:teksti "Hae"
+                                                  :variantti :ensisijainen
+                                                  :data-cy "pilotti-tarjoushinnat-haku"}}]}
+                           {:komponentti :perusgrid
+                            :asetukset {:otsikko "MH-urakoiden tarjoushinnat"
+                                        :tunniste :id
+                                        :tyhja "Ei tarjoushintoja."
+                                        :sarakkeet [{:otsikko "Urakka" :nimi :urakka :leveys 10}
+                                                    {:otsikko "Hoitokausi" :nimi :hoitokausi :leveys 4}
+                                                    {:otsikko "Tarjoushinta" :nimi :tarjoushinta :leveys 4}
+                                                    {:otsikko "Tila" :nimi :tila :leveys 5}]
+                                        :rivit [{:id 1
+                                                 :urakka "Pohjois-Suomen hoito 2021–2026"
+                                                 :hoitokausi "2024–2025"
+                                                 :tarjoushinta "3 450 000 €"
+                                                 :tila "Tarjoushinta puuttuu"}
+                                                {:id 2
+                                                 :urakka "Oulun seudun hoito 2022–2027"
+                                                 :hoitokausi "2024–2025"
+                                                 :tarjoushinta "2 980 000 €"
+                                                 :tila "Täytetty"}]}}]}]}]}

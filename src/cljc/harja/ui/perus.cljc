@@ -23,11 +23,6 @@
 (defn- luokat [& luokat]
   (str/join " " (remove str/blank? luokat)))
 
-(defn- tapahtuman-arvo [tapahtuma]
-  ;; Clj-haara mahdollistaa komponenttien hiccup-tason testit JVM:llä.
-  #?(:cljs (.. tapahtuma -target -value)
-     :clj (get-in tapahtuma [:target :value])))
-
 (defn- kentan-attribuutit
   "Attribuutit, jotka komponentti antaa kentälle: id ja kuvaus-/virhe-yhteydet."
   [{:keys [id ohje virhe pakollinen? disabled?]}]
@@ -159,43 +154,6 @@
      [:p.ui-ohje {:id (str id "-ohje")} ohje])
    (when virhe
      [:p.ui-virhe {:id (str id "-virhe") :role "alert"} virhe])])
-
-(defn valintaryhma
-  "Natiivi select-kenttä labelilla, ohjeella ja virheellä.
-
-  `:vaihtoehdot` on vektori `{:arvo ... :nimi ...}`. Arvo voi olla mikä tahansa arvo
-  (esim. keyword), ja `:vaihda-fn` saa valitun arvon sellaisenaan. `:tyhja-valinta` lisää
-  tyhjän vaihtoehdon, jonka valinta välittää `nil`:n."
-  [{:keys [otsikko id vaihtoehdot arvo vaihda-fn tyhja-valinta ohje virhe pakollinen?
-           disabled? data-cy luokka] :as asetukset}]
-  (let [arvot (into {}
-                (map-indexed (fn [indeksi {:keys [arvo]}] [(str indeksi) arvo]))
-                vaihtoehdot)
-        valittu (or (some (fn [[avain vaihtoehdon-arvo]]
-                            (when (= vaihtoehdon-arvo arvo) avain))
-                      arvot)
-                  "")
-        attribuutit (dissoc (kentan-attribuutit asetukset) :disabled?)]
-    [:div {:class (luokat "ui-valintaryhma" luokka)
-           :data-cy (or data-cy id)}
-     [:label {:for id} (otsikko-ja-pakollisuus otsikko pakollinen?)]
-     [:select
-      (cond-> (assoc attribuutit
-                :value valittu
-                :data-cy (str (or data-cy id) "-valinta")
-                :on-change #(vaihda-fn (get arvot (tapahtuman-arvo %))))
-        disabled? (assoc :disabled true))
-      (when tyhja-valinta
-        [:option {:value ""} tyhja-valinta])
-      (map-indexed
-        (fn [indeksi {:keys [nimi]}]
-          ^{:key indeksi}
-          [:option {:value (str indeksi)} nimi])
-        vaihtoehdot)]
-     (when ohje
-       [:p.ui-ohje {:id (str id "-ohje")} ohje])
-     (when virhe
-       [:p.ui-virhe {:id (str id "-virhe") :role "alert"} virhe])]))
 
 (defn toimintoryhma
   "Ryhmittelee käyttöpaikan toimintopainikkeet."

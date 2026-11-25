@@ -1,0 +1,59 @@
+{:id :pilotti-urakoiden-tilanne
+ :nimi "Pilotti: urakoiden tilanne"
+ :kuvaus "Tuotannon yhteenvetonäkymän pilotti: urakkasuodattimet ja urakoiden tilakooste taulukossa."
+ :pilottisivu {:tyyppi :yhteenveto
+               :lahde "src/cljs/harja/views/urakkatilanne/kojelauta.cljs"
+               :less "dev-resources/less/pages/kojelauta.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-urakoiden-tilanne-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Urakoiden tilanne"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-urakoiden-tilanne-otsikko"}
+                  :lapset [{:komponentti :suodatinrivi
+                            :asetukset {:data-cy "pilotti-urakoiden-tilanne-suodattimet"}
+                            :lapset [{:komponentti :livi-pudotusvalikko
+                                      :asetukset {:otsikko "Urakkatyyppi"
+                                                  :valinnat [{:arvo :hoito
+                                                              :nimi "Hoito"}
+                                                             {:arvo :paallystys
+                                                              :nimi "Päällystys"}]
+                                                  :optiot {:data-cy "pilotti-urakoiden-tilanne-urakkatyyppi"}}}
+                                     {:komponentti :livi-pudotusvalikko
+                                      :asetukset {:otsikko "Elinvoimakeskus"
+                                                  :valinnat [{:arvo :lappi
+                                                              :nimi "Lapin elinvoimakeskus"}
+                                                             {:arvo :pohjois-suomi
+                                                              :nimi "Pohjois-Suomen elinvoimakeskus"}]
+                                                  :optiot {:data-cy "pilotti-urakoiden-tilanne-elinvoimakeskus"}}}
+                                     {:komponentti :livi-pudotusvalikko
+                                      :asetukset {:otsikko "Hoitokauden alkuvuosi"
+                                                  :valinnat [{:arvo 2024 :nimi "2024"}
+                                                             {:arvo 2025 :nimi "2025"}]
+                                                  :optiot {:data-cy "pilotti-urakoiden-tilanne-alkuvuosi"}}}]}
+                           {:komponentti :perusgrid
+                            :asetukset {:tunniste :id
+                                        :tyhja "Ei urakoita valituilla suodattimilla."
+                                        :sarakkeet [{:otsikko "Urakka" :nimi :urakka :leveys 8}
+                                                    {:otsikko "Hoitovuosi" :nimi :hoitovuosi :leveys 5}
+                                                    {:otsikko "Kustannussuunnitelma" :nimi :kustannussuunnitelma :leveys 5}
+                                                    {:otsikko "Välikatselmus" :nimi :valikatselmus :leveys 4}
+                                                    {:otsikko "Lupaukset" :nimi :lupaukset :leveys 4}
+                                                    {:otsikko "Avoimet poikkeamat" :nimi :poikkeamat :leveys 4}]
+                                        :rivit [{:id 1
+                                                 :urakka "Rovaniemen MHU"
+                                                 :hoitovuosi "2024–2025"
+                                                 :kustannussuunnitelma "Valmis"
+                                                 :valikatselmus "Käsittelyssä"
+                                                 :lupaukset "72 / 80 pistettä"
+                                                 :poikkeamat "2 avointa"}
+                                                {:id 2
+                                                 :urakka "Oulun MHU"
+                                                 :hoitovuosi "2024–2025"
+                                                 :kustannussuunnitelma "Päivitettävä"
+                                                 :valikatselmus "Ei aloitettu"
+                                                 :lupaukset "61 / 80 pistettä"
+                                                 :poikkeamat "Ei poikkeamia"}]}}]}]}]}

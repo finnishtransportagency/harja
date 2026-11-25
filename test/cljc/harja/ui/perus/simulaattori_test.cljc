@@ -5,7 +5,7 @@
 (deftest kelvollinen-puu-hyvaksytaan
   (is (simulaattori/kelvollinen?
         [{:komponentti :lomake
-          :lapset [{:komponentti :valintaryhma}]}])))
+          :lapset [{:komponentti :livi-pudotusvalikko}]}])))
 
 (deftest tuntematon-komponentti-hylataan
   (is (= ["Tuntematon komponentti: :ei-ole"]
@@ -16,45 +16,50 @@
     (is (= [":nappi: vanhempi=:sivu ei ole sallittu"]
            (simulaattori/virheet [{:komponentti :nappi}])))))
 
-(defn- valintaryhma-asetuksilla [asetukset]
+(defn- livi-asetuksilla [asetukset]
   [{:komponentti :lomake
-    :lapset [{:komponentti :valintaryhma
+    :lapset [{:komponentti :livi-pudotusvalikko
               :asetukset asetukset}]}])
 
 (deftest tuntematon-asetus-hylataan
-  (is (= ["valintaryhma: tuntematon asetus :ei-ole"]
-         (simulaattori/virheet (valintaryhma-asetuksilla {:ei-ole "x"})))))
+  (is (= ["livi-pudotusvalikko: tuntematon asetus :ei-ole"]
+         (simulaattori/virheet (livi-asetuksilla {:ei-ole "x"})))))
 
 (deftest suojattu-asetus-hylataan
   (testing "komponentin omistamia avaimia ei voi ylikirjoittaa"
     (doseq [avain [:id :arvo :vaihda-fn]]
-      (is (= [(str "valintaryhma: suojattu asetus " avain " ei ole sallittu")]
-             (simulaattori/virheet (valintaryhma-asetuksilla {avain "x"})))
+      (is (= [(str "livi-pudotusvalikko: suojattu asetus " avain " ei ole sallittu")]
+             (simulaattori/virheet (livi-asetuksilla {avain "x"})))
           (str "avain " avain)))))
 
 (deftest funktio-hylataan-asetuksessa
-  (is (= ["valintaryhma: asetus :otsikko on funktio, ei sallittu"]
-         (simulaattori/virheet (valintaryhma-asetuksilla {:otsikko (fn [] "x")})))))
+  (is (= ["livi-pudotusvalikko: asetus :otsikko on funktio, ei sallittu"]
+         (simulaattori/virheet (livi-asetuksilla {:otsikko (fn [] "x")})))))
 
 (deftest symboli-hylataan-asetuksessa
-  (is (= ["valintaryhma: asetus :otsikko on symboli, ei sallittu"]
-         (simulaattori/virheet (valintaryhma-asetuksilla {:otsikko 'puhelin})))))
+  (is (= ["livi-pudotusvalikko: asetus :otsikko on symboli, ei sallittu"]
+         (simulaattori/virheet (livi-asetuksilla {:otsikko 'puhelin})))))
 
 (deftest funktio-hylataan-sisempaan-arvoon
-  (is (= ["valintaryhma: asetus :vaihtoehdot on funktio, ei sallittu"]
+  (is (= ["livi-pudotusvalikko: asetus :valinnat on funktio, ei sallittu"]
          (simulaattori/virheet
-           (valintaryhma-asetuksilla {:vaihtoehdot [{:arvo :hoito :nimi (fn [] "x")}]})))))
+           (livi-asetuksilla {:valinnat [{:arvo :hoito :nimi (fn [] "x")}]})))))
 
 #?(:clj
    (deftest tagattu-literaali-hylataan
-     (is (= ["valintaryhma: asetus :otsikko on tagattu literaali, ei sallittu"]
+     (is (= ["livi-pudotusvalikko: asetus :otsikko on tagattu literaali, ei sallittu"]
             (simulaattori/virheet
-              (valintaryhma-asetuksilla {:otsikko (tagged-literal 'foo 1)}))))))
+              (livi-asetuksilla {:otsikko (tagged-literal 'foo 1)}))))))
 
 (deftest kelvolliset-asetukset-hyvaksytaan
   (is (simulaattori/kelvollinen?
-        (valintaryhma-asetuksilla {:otsikko "Urakkatyyppi"
-                                   :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}]}))))
+        (livi-asetuksilla {:otsikko "Urakkatyyppi"
+                           :valinnat [{:arvo :hoito :nimi "Hoito"}]
+                           :optiot {:data-cy "urakkatyyppi"}}))))
+
+(deftest poistettu-valintaryhma-hylataan
+  (is (= ["Tuntematon komponentti: :valintaryhma"]
+         (simulaattori/virheet [{:komponentti :valintaryhma}]))))
 
 (deftest virheellinen-rakenne-antaa-virheen-eika-kaadu
   (testing "asetukset ei ole map"
@@ -107,4 +112,4 @@
     (is (simulaattori/kelvollinen?
           [{:komponentti :suodatinrivi
             :lapset [{:komponentti :suodatin}
-                     {:komponentti :valintaryhma}]}]))))
+                     {:komponentti :livi-pudotusvalikko}]}]))))

@@ -44,13 +44,13 @@
     :ryhma :alasvedot
     :luonne :shared-komponentti
     :rooli :syote
-    :suositus :ei-suositusta
-    :korvaa []
+    :suositus :uuteen-ui
+    :korvaa ["perus/valintaryhma" "kentat/tee-kentta :valinta"]
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatinrivi}
+    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :riippuvainen
-    :kuvaus "Nykyinen tuotannossa käytetty dropdown-sopimus. Uuteen UI:hin suositellaan valintaryhmää, ellei haku tai kombo-valinta ole tarpeen."
+    :kuvaus "Uuden UI:n suositeltu yksivalinta. Nykyinen toteutus on Bootstrap-riippuvainen; saavutettavuussopimus toteutetaan erillisessä porttausviipaleessa."
     :funktio "harja.ui.yleiset/pudotusvalikko"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
                 :optiot {:tyyppi :map :pakollinen? true :oletus nil :kuvaus "Valikon asetukset, esim. :auki-fn!, :kiinni-fn!, :elementin-id, :wrap-luokka, :vayla-tyyli?."}
@@ -178,30 +178,6 @@
                 :id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Suodattimen id."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :kentta {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Kenttä hiccupina tai funktiona."}}}
-   {:id :valintaryhma
-    :nimi "Valintaryhmä"
-    :ryhma :lomakkeet
-    :luonne :shared-komponentti
-    :rooli :syote
-    :suositus :uuteen-ui
-    :korvaa ["yleiset/pudotusvalikko" "yleiset/livi-pudotusvalikko" "kentat/tee-kentta :valinta"]
-    :nimeamispoikkeukset #{:disabled?}
-    :slotit #{:arvo :vaihtoehdot}
-    :tilat #{:normaali :tyhja :virhe :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino :vaaka :osio :ruudukko}
-    :bootstrap-tila :ei-riippuvuutta
-    :kuvaus "Saavutettava natiivin select-kentän ympärille rakennettu valintaryhmä."
-    :funktio "harja.ui.perus/valintaryhma"
-    :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Ryhmän otsikko."}
-                :vaihtoehdot {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Valittavat vaihtoehdot."}
-                :arvo {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Valittu arvo."}
-                :vaihda-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan valinnan muuttuessa."}
-                :tyhja-valinta {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Tyhjän valinnan teksti."}
-                :ohje {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ohjeteksti."}
-                :virhe {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Virheteksti."}
-                :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Merkitsee ryhmän pakolliseksi."}
-                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, ryhmä on disabloitu."}
-                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}}}
    {:id :tekstikentta
     :nimi "Tekstikenttä"
     :ryhma :lomakkeet
@@ -393,7 +369,7 @@
     :tilat #{:normaali :tyhja :virhe :estetty}
     :sallitut-vanhemmat #{:lomake}
     :bootstrap-tila :riippuvainen
-    :kuvaus "Pudotusvalikko tee-kentän kautta. Renderöi livi-pudotusvalikon, joka käyttää Bootstrapin dropdown-luokkaa. Uuteen UI:hin suositellaan valintaryhmää."
+    :kuvaus "Pudotusvalikko tee-kentän kautta. Renderöi livi-pudotusvalikon, joka käyttää Bootstrapin dropdown-luokkaa. Uuteen UI:hin suositellaan livi-pudotusvalikkoa."
     :funktio "harja.ui.kentat/tee-kentta"
     :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :valinta."}
                 :valinnat {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Valittavat vaihtoehdot. Vaihtoehto tai valinnat-fn on pakollinen."}
@@ -588,7 +564,7 @@
     :bootstrap-tila :riippuvainen
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :funktio "harja.ui.perus"
-    :asetukset {:lapset {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Lomakkeen sisältö: pino, kenttaryhma, valintaryhma, toimintoryhma tai tilaviesti."}}}
+    :asetukset {:lapset {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Lomakkeen sisältö: pino, kenttaryhma, livi-pudotusvalikko, toimintoryhma tai tilaviesti."}}}
    {:id :rivi
     :nimi "Rivi"
     :ryhma :lomakkeet

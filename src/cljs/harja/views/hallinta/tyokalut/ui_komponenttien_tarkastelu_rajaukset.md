@@ -15,7 +15,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 
 | Osa | Sijainti |
 | --- | --- |
-| Shared-komponentit (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `valintaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/perus.cljc` |
+| Shared-komponentit (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `suodatin`, `kenttaryhma`, `toimintoryhma`, `tilaviesti`) | `src/cljc/harja/ui/perus.cljc` |
 | Komponenttirekisteri (data) ja eheystarkistus | `src/cljc/harja/ui/perus/rekisteri.cljc` |
 | Rekisterin EDN-tulostus komentoriviltä | `src/clj/harja/tyokalut/komponenttirekisteri.clj` (`lein komponenttirekisteri`) |
 | Tarkastelusivun entry | `tyokalut/ui_komponenttien_tarkastelu_nakyma.cljs` |
@@ -42,19 +42,111 @@ Uuden komponentin lisääminen:
 - Käyttöpaikka antaa kentälle `:id`:n. Komponentti ei generoi id:tä renderöinnissä.
 - Komponentti johtaa `label for`, `<id>-ohje`, `<id>-virhe` sekä `aria-describedby`, `aria-invalid` ja `aria-required`.
 - `:data-cy` on oletuksena `:id`. `:luokka` viedään juurielementille.
-- Valintaryhmän arvo voi olla mikä tahansa arvo (keyword, luku, merkkijono); komponentti vie arvon sellaisenaan `:vaihda-fn`:lle.
+- Pudotusvalikon valinta välitetään `:valitse-fn`:lle täsmälleen samassa muodossa kuin vaihtoehto annettiin.
 - Komponentit eivät aseta ulkomarginaaleja. Välit kuuluvat käyttöpaikalle tai `pino`/`toimintoryhma`-rakenteelle.
 - Layout-komponentit käyttävät nimettyjä Väylä-tokeneita (`:pieni`, `:keski`, `:suuri`) eivätkä vapaata CSS:ää. `vaaka` on vaakasuuntainen `flex`, `sailio` rajaa sivusisällön leveyden ja sisäreunan, `ruudukko` on responsiivinen 1–4-palstainen CSS-grid ja `osio` on semanttinen otsikollinen alue.
 - `sailio` vastaa yleisen UI-frameworkin `Container`ia. Nimeä `sivu` ei käytetä, koska `:sivu` on simulaattorin komponenttipuun tekninen juurivanhempi.
 - Bootstrap-riippuvuus kirjataan rekisterissä `:bootstrap-tila`-arvolla (`:ei-riippuvuutta`, `:osittain-riippuvainen`, `:riippuvainen`, `:maarittelematta`).
 - Jokaisella rekisterimerkinnällä on `:suositus` (`:uuteen-ui`, `:vanha`, `:ei-suositusta`) ja `:korvaa`-lista (tekstit vanhoista vastineista, tyhjä vektori jos ei korvausta). Sopimusruutu näyttää molemmat.
 - Uudessa merkinnässä (`:suositus :uuteen-ui`) kielletyt asetusnimet ovat `:class`, `:classes`, `:disabled?`, `:disabloi`, `:valitse-fn` ja `:valinta-fn`. Käytä `:luokka`, `:disabled` ja `:vaihda-fn`. `-fn`-päätteisen asetuksen tyypin on oltava `:funktio` ja `?`-päätteisen `:boolean`. Vanhat merkinnät (`:vanha`, `:ei-suositusta`) saavat käyttää vanhoja nimiä, mutta tyyppisäännöt koskevat vain uusia merkintöjä.
-- `:suositus` kertoo, mitä uuteen UI:hin käytetään. `:uuteen-ui` on suositeltu komponentti, `:vanha` on olemassa oleva Bootstrap-riippuvainen rakenne (esim. `rivi`) ja `:ei-suositusta` on käytössä oleva komponentti, jolle ei ole vielä korvaajaa tai jonka korvaaja on toinen komponentti (esim. `livi-pudotusvalikko` → `valintaryhma`). Komponentti ei saa korvata itseään: `:korvaa` listaa vanhat vastineet, ei komponentin omaa funktiota.
+- `:suositus` kertoo, mitä uuteen UI:hin käytetään. `:uuteen-ui` on suositeltu komponentti, `:vanha` on olemassa oleva Bootstrap-riippuvainen rakenne (esim. `rivi`) ja `:ei-suositusta` on käytössä oleva komponentti, jolle ei ole vielä korvaajaa tai jonka korvaaja on toinen komponentti. Poistettu API voidaan säilyttää `:korvaa`-listassa migraatioiden lähdeviitteenä. Komponentti ei saa korvata itseään: `:korvaa` listaa vanhat vastineet, ei komponentin omaa funktiota.
 - `:sallitut-vanhemmat` listaa rekisterin komponentti-id:t (tai `:sivu`), joiden lapsena komponentti saa olla. Ryhmä-id tai rooli ei ole kelvollinen vanhempi. Simulaattori hylkää kaikki muut yhdistelmät, joten kun layout-komponentti (`pino`, `suodatinrivi`, `toimintoryhma`, `panel`) saa uuden tyypillisen lapsen, lisää layout-komponentin id lapsen vanhempiin.
 - `:slotit` ja `:asetukset` ovat pakollisia avaimia, mutta ne saavat olla tyhjiä, kun komponentilla ei ole sloteja tai parametreja (esim. `murupolku`). `:tilat` ja `:sallitut-vanhemmat` eivät saa olla tyhjiä.
-- `:nimeamispoikkeukset` (joukko asetusnimiä) sallii uudessa merkinnässä yksittäisen kielletyn asetusnimen, kun se on jo käytössä olevan API:n osa (esim. valintaryhmän `:disabled?`). Validointi hylkää poikkeuksen, jota merkintä ei tarvitse.
+- `:nimeamispoikkeukset` (joukko asetusnimiä) sallii uudessa merkinnässä yksittäisen kielletyn asetusnimen, kun se on jo käytössä olevan API:n osa. Validointi hylkää poikkeuksen, jota merkintä ei tarvitse.
 - `:yhteiset-variantit` yhdistää yhteisen palautesanaston (`palaute-variantit`: `:onnistui`, `:info`, `:varoitus`, `:virhe`) komponentin omaan arvoon, esim. viestin `:luokka`-arvoon. Palautekomponentin pitää antaa kartta, ja avainten pitää kuulua yhteiseen sanastoon. Kartassa saa olla vain ne variantit, joille komponentilla on vastine (info-laatikolla ei ole virhevarianttia).
 - Palautekomponentit ovat ryhmässä `:palautteet`. Yhteinen varianttisanasto on `palaute-variantit` (`:onnistui`, `:info`, `:varoitus`, `:virhe`). Komponenttien olemassa olevia variantteja ei ole vielä nimetty uudelleen.
+
+## Livi-pudotusvalikon sopimus
+
+### Suositus ja vastuut
+
+- `livi-pudotusvalikko` on uuden komponenttipohjaisen UI:n suositeltu
+  yksivalinta. Bootstrap-riippuvuus ei muuta suositusta, vaan on tekninen velka.
+- Rekisteri omistaa public API:n, suosituksen, `:korvaa`-suhteen ja
+  Bootstrap-tilan. Tässä tiedostossa ei toisteta rekisterin asetustaulukkoa.
+- Käyttöpaikka omistaa arvon, vaihtoehdot, domain-rajoitukset,
+  validoinnin, callbackit, näkyvät tekstit, disabloinnin ja tiedon siitä,
+  mikä vaihtoehto on valittu.
+- Komponentti omistaa labelin ja kentän yhteyden, popupin, fokuksen,
+  näppäimistövuorovaikutuksen, ARIA-suhteet, valitun tilaindikaation ja
+  vaihtoehtojen käytettävyysluokan.
+- Käyttöpaikka antaa vakaan `:elementin-id`:n uudessa UI:ssa. Komponentti
+  johtaa siitä triggerin, popupin ja labelin id-suhteet. Vapaa fallback ei ole
+  uudelle käyttöpaikalle hyväksytty sopimus.
+- Avoimen ja suljetun tilan callbackit (`:auki-fn!`, `:kiinni-fn!`) kuvaavat
+  tilansiirtymää. Ne eivät omista fokus- tai DOM-logiikkaa.
+
+### Käyttöluokat
+
+| Luokka | Sopimus |
+| --- | --- |
+| Yksinkertainen tekstivalinta | Livi käsittelee yhden tekstivalinnan. |
+| Ryhmitelty valinta | Livi ylläpitää ryhmäotsikot ja vaihtoehtojen järjestyksen. |
+| Disabloitu vaihtoehto | Käyttöpaikka ilmoittaa estyneet vaihtoehdot; livi ohittaa ne näppäimistöllä ja näppäinohjauksen testissä. |
+| Komponenttirivi | Käyttöpaikka antaa sallitun rivikomponentin; livi omistaa valinnan ja fokuksen. |
+| Checkbox-monivalinta | Ei kuulu yksivalintaan. Käytä `checkbox-pudotusvalikko`a omalla sopimuksellaan. |
+| Haku | Ei kuulu livin perussopimukseen. Haku tarvitsee erillisen public API:n ja testit. |
+| Action menu | Ei ole arvovalinta. Käytä erillistä toimintovalikkokomponenttia. |
+
+### Nykyinen toteutus
+
+Nykyinen toteutus ei vielä täytä tavoitesopimusta eikä tätä nykytilaa saa kuvata
+saavutettavuustavoitteen toteutuneena:
+
+- trigger on `button`, mutta näkyvä `label` ei ole yhdistetty sen `id`:hen;
+  vain valinnainen `aria-label` nimeää triggerin
+- triggerillä ei ole `aria-expanded`-, `aria-controls`- tai popup-ominaisuuksia
+- lista on `ul`, jonka kohteet ovat fokusoitavia `li`-elementtejä, mutta niillä ei
+  ole listbox-/option-rooleja eikä valitulle kohteelle ARIA-tilaa
+- Enter ja Space avaavat triggeriltä valikon ja siirtävät fokuksen valittuun tai
+  ensimmäiseen vaihtoehtoon
+- listassa nuolet liikuttavat fokusta, Enter valitsee ja Escape tai Tab sulkee
+  listan sekä palauttaa fokuksen triggeriin
+- triggerin Escape- ja Tab-käsittely sulkee valikon ilman yhtenäistä callback- tai
+  fokuspalautussopimusta
+- typeahead tarkastelee tällä hetkellä yhtä näppäimen merkkiä ja sulkee listan
+  osuman löytyessä
+- ulkopuolinen klikkaus sulkee valikon ja kutsuu `:kiinni-fn!`-callbackin
+
+### Tavoitetila
+
+Myöhempi toteutusviipale muuttaa DOM- ja vuorovaikutussopimuksen näin:
+
+- triggerin saavutettava nimi tulee näkyvästä labelista; valinnainen
+  `aria-label` saa vain täydentää nimeämistä perustellussa poikkeustapauksessa
+- trigger on select-only combobox: `role=combobox`, `aria-expanded`,
+  `aria-controls`, popup-suhde listboxiin ja vakaat trigger-, label- ja
+  popup-id:t
+- popup on `role=listbox`; vaihtoehto on `role=option` ja valittu vaihtoehto
+  käyttää `aria-selected=true`-tilaa
+- Enter ja Space avaa tai sulkee triggerin. Nuoli alas avaa listan ja siirtää
+  fokuksen valittuun vaihtoehtoon tai ensimmäiseen; nuoli ylös käyttää
+  valittua tai viimeistä vaihtoehtoa
+- listan nuolet ohittavat disabloidut vaihtoehdot, Enter valitsee ja Space
+  valitsee tai vaihtaa checkbox-rivin tilan siinä komponentissa, jossa
+  monivalinta on tuettu
+- Escape sulkee listan ja palauttaa fokuksen triggeriin. Tab sulkee listan
+  viivyttämättä normaalin tab-järjestyksen etenemistä
+- klikkauksella tai näppäimistöllä tehty valinta sulkee listan. Näppäimistövalinta
+  palauttaa fokuksen triggeriin
+- ulkopuolinen klikkaus sulkee listan eikä siirrä fokusta pois klikattavasta
+  kohteesta
+- typeaheadin tulee vähintään säilyttää nykyinen yhden merkin yhteensopivuus.
+  Useamman merkin ja hakujakson aikakatkaisun rajaus tehdään toteutusviipaleen
+  hyväksymiskriteereihin ennen koodimuutosta
+- `:auki-fn!` ja `:kiinni-fn!` kutsutaan täsmälleen yhdelle avaus- tai
+  sulkemistilansiirtymälle riippumatta siitä, millä syötteellä siirtymä tapahtui
+
+### Varmennus
+
+- Rekisteritesti lukitsee sen, että livi on `:uuteen-ui`, valintaryhmä ei ole
+  uusi UI -suositus ja livin `:korvaa`-suhde sisältää valintaryhmän.
+- Hiccup- tai rekisteritesti ei todista DOM-fokusta tai saavutettavuuskäytöstä.
+- Tavoitetilan Playwright-passi testaa triggerin, listan ja option tila- ja
+  ARIA-suhteet sekä avauksen, nuolinäppäimet, Enterin, Spacen, Tabin, Escapen,
+  typeaheadin, valinnan ja ulkopuolisen klikkauksen.
+- Yksikään tämän nykytilaa kuvaava puute ei ole peruste jättää pois myöhemmän
+  toteutusviipaleen acceptance criteria -kohdasta.
 
 ## Nimiavaruudet
 
@@ -74,14 +166,17 @@ Esimerkkisivut ovat valmiita, kelvollisia simulaattoripuita sekä käyttäjille 
 
 ## Tunnetut rajoitukset
 
-- Simulaattorin renderöijä (`:renderoi`) on tehty rekisterin komponenteista näille: asettelut (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `toimintoryhma`, `lomake`, `panel`), `nappi`, `linkki`, `ikoni-ja-teksti`, `tilaviesti`, kentät (`tekstikentta`, `numerokentta`, `sahkopostikentta`, `puhelinkentta`, `valintaruutu`, `raksiboksi`, `radiokentta`, `checkbox-ryhma`, `radio-group`, `valinta`, `valintaryhma`, `kenttaryhma`, `suodatin`), alasvedot (`livi-pudotusvalikko`, `checkbox-pudotusvalikko`, `hoitokausi`), gridit (`perusgrid`, `muokkausgrid`), sisältö (`tietoja`, `taulukkotietonakyma`, `kaksi-palstaa-otsikkoja-ja-arvoja`) ja palautteet (`ajax-loader`, `vihje`, `info-laatikko`, `tila-indikaattori`, `tooltip`, `tabs`, `dropdown-panel`).
+- Simulaattorin renderöijä (`:renderoi`) on tehty rekisterin komponenteista näille: asettelut (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `toimintoryhma`, `lomake`, `panel`), `nappi`, `linkki`, `ikoni-ja-teksti`, `tilaviesti`, kentät (`tekstikentta`, `numerokentta`, `sahkopostikentta`, `puhelinkentta`, `valintaruutu`, `raksiboksi`, `radiokentta`, `checkbox-ryhma`, `radio-group`, `valinta`, `kenttaryhma`, `suodatin`), alasvedot (`livi-pudotusvalikko`, `checkbox-pudotusvalikko`, `hoitokausi`), gridit (`perusgrid`, `muokkausgrid`), sisältö (`tietoja`, `taulukkotietonakyma`, `kaksi-palstaa-otsikkoja-ja-arvoja`) ja palautteet (`ajax-loader`, `vihje`, `info-laatikko`, `tila-indikaattori`, `tooltip`, `tabs`, `dropdown-panel`).
 - Renderöijä välittää asetuksista vain dokumentoidut, datana annettavat arvot (whitelist). Vapaata `:luokka`-, `:class`-, `:style`- tai hiccup-asetusta ei välitetä, vaan tyylit tulevat renderöijän omasta sanastosta: `nappi` käyttää `:variantti`-asetusta (`:ensisijainen`, `:toissijainen`, `:reunaton`, `:myonteinen`, `:kielteinen`, `:varoitus`), `panel` ottaa sisällön `:lapset`-solmuista. Funktiot, atomit ja ikonit eivät voi tulla syötteestä, joten renderöijä antaa ne itse. Taulukko- ja otsikko-arvo-komponentit saavat datan `:rivit`-asetuksella.
 - Jokaisella instanssilla on oma tila (`r/with-let`) ja `data-cy` joko asetuksesta tai oletuksena `ui-simulaattori-<komponentti>`. Alkuarvoa ei voi antaa `:arvo`-asetuksella (suojattu).
 - Ilman simulaattorin renderöijää ovat tarkoituksella: `murupolku`, `navbar`, `viesti`, `modal`, `sivupalkki`, `toast-viesti`, `leijuke`, `varmista-kayttajalta` (globaali tila tai overlay), `liitteet` (backend-kutsut), `dropdown` (avaustila puuttuu) ja `rivi` (vanha Bootstrap-rakenne).
-- `kentat/tee-kentta` tukee vain `:elementin-id`:tä, ei `aria-describedby`- tai `aria-invalid`-attribuutteja. Kenttäryhmän ARIA-yhteys toimii natiiveille kentille (valintaryhmä), mutta `tee-kentta`-kentille se vaatii erillisen muutoksen `kentat.cljs`:ään.
+- `kentat/tee-kentta` tukee vain `:elementin-id`:tä, ei `aria-describedby`- tai `aria-invalid`-attribuutteja. Kenttäryhmän ARIA-yhteys toimii suoraan annettuun natiivikenttään, mutta `tee-kentta`-kentille se vaatii erillisen muutoksen `kentat.cljs`:ään.
 - Tarkastelusivun esikatselut (CLJS) validoidaan selaimessa. Rakennetestit kattavat vain cljc-puolen hiccup-rakenteen.
 - Tarjoushinnat-näkymän `urakka-haku-id` on edelleen render-aikainen `gensym`.
-- Livi-pudotusvalikko on rekisteröity, mutta sen sopimusta ei ole vielä määritelty uudelleen. Nappi on merkitty `:osittain-riippuvaiseksi`, koska Bootstrap-luokat tulevat käyttöpaikan `:luokka`-optiosta.
+- Livi-pudotusvalikon nykytila ja tavoitetila on dokumentoitu yllä. Nykyinen
+  toteutus ei vielä toteuta kaikkia tavoitetilan ARIA- ja fokussuhteita. Nappi on
+  merkitty `:osittain-riippuvaiseksi`, koska Bootstrap-luokat tulevat
+  käyttöpaikan `:luokka`-optiosta.
 - Kenttätyyppi `:valinta` renderöityy livi-pudotusvalikon kautta, joten sille ei ole omaa korttia. Sen Bootstrap-riippuvuus on sama kuin livi-pudotusvalikolla.
 - Gridit (`perusgrid`, `muokkausgrid`) ovat `:riippuvainen`, koska ne käyttävät `.panel`-, `.panel-default`- ja `btn-xs`-luokkia.
 - Checkbox-ryhmä on `:osittain-riippuvainen`: yksi palsta on puhdas, useampi palsta käyttää `col-sm-*`-luokkia.

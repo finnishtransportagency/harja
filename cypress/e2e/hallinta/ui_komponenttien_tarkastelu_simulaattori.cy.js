@@ -1,7 +1,7 @@
 const verkkovirheet = [];
 
 function valitseEsimerkkisivu(nimi) {
-  cy.get('[data-cy=ui-simulaattori-esimerkki-valinta]').select(nimi);
+  painaJaTarkistaValinta('[data-cy=ui-simulaattori-esimerkki]', nimi, true);
   cy.get('[data-cy=ui-simulaattori-esikatselu]')
     .should('be.visible')
     .find('[role=alert]')
@@ -17,11 +17,19 @@ function tarkistaAnkkurit(ankkurit) {
   });
 }
 
-function painaJaTarkistaValinta(valinta, teksti) {
+function painaJaTarkistaValinta(valinta, teksti, vaylaTyyli = false) {
+  if (vaylaTyyli) {
+    cy.get(`${valinta}.select-default, ${valinta} .select-default`).should('be.visible');
+  }
   cy.get(valinta).within(() => {
     cy.get('button').click();
     cy.contains('a', teksti).click();
     cy.get('button').should('contain', teksti);
+    if (vaylaTyyli) {
+      cy.get('button').click();
+      cy.get('.listan-arvo-valittu').should('be.visible');
+      cy.get('button').click();
+    }
   });
 }
 
@@ -58,7 +66,7 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
     cy.get('[data-cy=ui-simulaattori-nappi]').click();
     cy.get('[data-cy=ui-simulaattori-tila]')
       .should('contain', 'Muutokset ovat päivittyneet esikatseluun');
-    painaJaTarkistaValinta('[data-cy=ui-simulaattori-livi-pudotusvalikko]', 'Raportit');
+    painaJaTarkistaValinta('[data-cy=ui-simulaattori-livi-pudotusvalikko]', 'Raportit', true);
     cy.get('[data-cy=ui-simulaattori-hoitokausi]').within(() => {
       cy.get('button').click();
       cy.get('li').first().click();
@@ -71,12 +79,10 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
     valitseEsimerkkisivu('Lomake: valinta ja tallennus');
     tarkistaAnkkurit([
       'ui-simulaattori-lomake',
-      'ui-simulaattori-valintaryhma',
+      'ui-simulaattori-lomake-tyyppi',
       'ui-simulaattori-nappi',
     ]);
-    cy.get('[data-cy=ui-simulaattori-valintaryhma]')
-      .find('select')
-      .select('Päällyste');
+    painaJaTarkistaValinta('[data-cy=ui-simulaattori-lomake-tyyppi]', 'Päällyste', true);
     cy.get('[data-cy=ui-simulaattori-nappi]').click();
 
     valitseEsimerkkisivu('Napit ja kentät');
@@ -89,7 +95,8 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
       'ui-simulaattori-lomake',
       'ui-simulaattori-tekstikentta',
       'ui-simulaattori-valintaruutu',
-      'ui-simulaattori-valintaryhma',
+      'ui-simulaattori-nappi-valinta-tyyppi',
+      'ui-simulaattori-nappi-valinta-toinen',
       'ui-simulaattori-info-laatikko',
     ]);
     cy.get('[data-cy=nappi-ensisijainen]').click();
@@ -97,10 +104,8 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
     cy.get('[data-cy=ui-simulaattori-linkki]').should('contain', 'Klikkauksia: 1');
     cy.get('[data-cy=ui-simulaattori-tekstikentta]').find('input').type('Testi');
     cy.get('[data-cy=ui-simulaattori-valintaruutu]').find('input').check();
-    cy.get('[data-cy=ui-simulaattori-valintaryhma]')
-      .first()
-      .find('select')
-      .select('Päällyste');
+    painaJaTarkistaValinta('[data-cy=ui-simulaattori-nappi-valinta-tyyppi]', 'Päällyste', true);
+    painaJaTarkistaValinta('[data-cy=ui-simulaattori-nappi-valinta-toinen]', 'B', true);
 
     valitseEsimerkkisivu('Renderöijien kattavuus');
     tarkistaAnkkurit([

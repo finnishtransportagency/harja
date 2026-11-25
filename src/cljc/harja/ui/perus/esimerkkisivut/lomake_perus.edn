@@ -1,11 +1,12 @@
 {:id :lomake-perus
  :nimi "Lomake: valinta ja tallennus"
- :kuvaus "Pienin lomake: yksi valintaryhmä ja toimintopainike lomakkeen sisällä."
+ :kuvaus "Pienin lomake: yksi pudotusvalikko ja toimintopainike lomakkeen sisällä."
  :puu [{:komponentti :lomake
-        :lapset [{:komponentti :valintaryhma
+        :lapset [{:komponentti :livi-pudotusvalikko
                   :asetukset {:otsikko "Urakkatyyppi"
-                              :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}
-                                            {:arvo :paallyste :nimi "Päällyste"}
-                                            {:arvo :vesivayla :nimi "Vesiväylä"}]}}
+                              :valinnat [{:arvo :hoito :nimi "Hoito"}
+                                         {:arvo :paallyste :nimi "Päällyste"}
+                                         {:arvo :vesivayla :nimi "Vesiväylä"}]
+                              :optiot {:data-cy "ui-simulaattori-lomake-tyyppi"}}}
                  {:komponentti :nappi
                   :asetukset {:teksti "Tallenna"}}]}]}

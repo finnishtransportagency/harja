@@ -13,12 +13,14 @@
                  {:komponentti :lomake
                   :lapset [{:komponentti :tekstikentta :asetukset {:placeholder "Teksti"}}
                            {:komponentti :valintaruutu :asetukset {:teksti "Valintaruutu"}}
-                           {:komponentti :valintaryhma
+                           {:komponentti :livi-pudotusvalikko
                             :asetukset {:otsikko "Urakkatyyppi"
-                                        :vaihtoehdot [{:arvo :hoito :nimi "Hoito"}
-                                                      {:arvo :paallyste :nimi "Päällyste"}]}}
-                           {:komponentti :valintaryhma
+                                        :valinnat [{:arvo :hoito :nimi "Hoito"}
+                                                   {:arvo :paallyste :nimi "Päällyste"}]
+                                        :optiot {:data-cy "ui-simulaattori-nappi-valinta-tyyppi"}}}
+                           {:komponentti :livi-pudotusvalikko
                             :asetukset {:otsikko "Toinen valinta"
-                                        :vaihtoehdot [{:arvo :a :nimi "A"} {:arvo :b :nimi "B"}]}}]}
+                                        :valinnat [{:arvo :a :nimi "A"} {:arvo :b :nimi "B"}]
+                                        :optiot {:data-cy "ui-simulaattori-nappi-valinta-toinen"}}}]}
                  {:komponentti :info-laatikko
                   :asetukset {:tyyppi :neutraali :ensisijainen-viesti "Info" :toissijainen-viesti "Lisätietoa"}}]}]}

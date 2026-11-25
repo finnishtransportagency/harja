@@ -15,9 +15,11 @@
      [yleiset/pudotusvalikko
       "Näkymä"
       {:data-cy (kehys/ankkuri komponentti "-valikko")
+       :elementin-id (kehys/ankkuri komponentti "-valikko")
        :valinta @valinta
        :valitse-fn #(reset! valinta %)
-       :format-fn str}
+       :format-fn str
+       :vayla-tyyli? true}
       ["Urakat" "Raportit" "Hallinta"]]
      [:p {:data-cy (kehys/ankkuri komponentti "-arvo")}
       (str "Valittu: " @valinta)]
@@ -68,21 +70,27 @@
        :luokka "nappi-toissijainen"}]]))
 
 (defn- simulaattorin-vaihtoehto-teksti [vaihtoehto]
-  (if (keyword? vaihtoehto) (name vaihtoehto) (str vaihtoehto)))
+  (cond
+    (map? vaihtoehto) (str (or (:nimi vaihtoehto) (:arvo vaihtoehto)))
+    (keyword? vaihtoehto) (name vaihtoehto)
+    :else (str vaihtoehto)))
 
 (defn- livi-pudotusvalikko-simulaattorissa-sisalto [solmu]
-  (r/with-let [valinta (r/atom (first (get-in solmu [:asetukset :valinnat])))]
-    (let [{:keys [otsikko valinnat]} (:asetukset solmu)]
-      [:div {:data-cy "ui-simulaattori-livi-pudotusvalikko"}
+  (r/with-let [valinta (r/atom nil)]
+    (let [{:keys [otsikko valinnat optiot]} (:asetukset solmu)
+          data-cy (or (:data-cy optiot) "ui-simulaattori-livi-pudotusvalikko")]
+      [:div {:data-cy data-cy}
        [yleiset/pudotusvalikko
         (or otsikko "Valinta")
         {:valinta @valinta
+         :elementin-id data-cy
          :valitse-fn #(reset! valinta %)
-         :format-fn simulaattorin-vaihtoehto-teksti}
+         :format-fn simulaattorin-vaihtoehto-teksti
+         :vayla-tyyli? true}
         (vec valinnat)]])))
 
 ;; Simulaattorin data ei saa sisältää funktioita tai atomeja, joten renderöijä antaa nämä itse
-;; ja välittää asetuksista vain datana annettavat arvot (:otsikko, :valinnat).
+;; ja välittää asetuksista vain otsikon, valinnat ja dokumentoidun data-cy-ankkurin.
 (defn- livi-pudotusvalikko-simulaattorissa [solmu _tila _lapsi-fn]
   [livi-pudotusvalikko-simulaattorissa-sisalto solmu])
 

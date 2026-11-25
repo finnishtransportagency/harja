@@ -7,6 +7,7 @@
             [harja.ui.perus :as ui]
             [harja.ui.perus.esimerkkisivut :as esimerkkisivut]
             [harja.ui.perus.simulaattori :as sopimus]
+            [harja.ui.yleiset :as yleiset]
             [harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu.rekisterointi :as rekisterointi]))
 
 (def ^:private oletusesimerkki :lomake-perus)
@@ -53,18 +54,22 @@
     (reset! syote (esimerkin-teksti id))))
 
 (defn- esimerkkivalinta []
-  (let [valittu (esimerkkisivut/hae @valittu-esimerkki)]
+  (let [valittu (esimerkkisivut/hae @valittu-esimerkki)
+        vaihtoehdot (into [nil] (map :id esimerkkisivut/esimerkkisivut))]
     [:div.ui-simulaattori-esimerkit
-     [ui/valintaryhma
-      {:otsikko "Esimerkkisivu"
-       :id "ui-simulaattori-esimerkki"
-       :data-cy "ui-simulaattori-esimerkki"
-       :arvo @valittu-esimerkki
-       :vaihda-fn valitse-esimerkki!
-       :vaihtoehdot (mapv (fn [{:keys [id nimi]}] {:arvo id :nimi nimi})
-                      esimerkkisivut/esimerkkisivut)
-       :tyhja-valinta "Oma syöte"
-       :ohje (some-> valittu :kuvaus)}]]))
+     [yleiset/pudotusvalikko
+      "Esimerkkisivu"
+      {:data-cy "ui-simulaattori-esimerkki"
+       :elementin-id "ui-simulaattori-esimerkki"
+       :valinta @valittu-esimerkki
+       :valitse-fn valitse-esimerkki!
+       :format-fn #(if %
+                     (:nimi (esimerkkisivut/hae %))
+                     "Oma syöte")
+       :vayla-tyyli? true}
+      vaihtoehdot]
+     (when-let [kuvaus (some-> valittu :kuvaus)]
+       [:p.ui-ohje kuvaus])]))
 
 (defn- syotekentta []
   [:div.ui-simulaattori-syotteet
