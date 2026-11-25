@@ -98,6 +98,59 @@
         :else
         nil))
 
+(def hoitokuukausi->jarjestysnumero
+  {10 1
+   11 2
+   12 3
+   1  4
+   2  5
+   3  6
+   4  7
+   5  8
+   6  9
+   7  10
+   8  11
+   9  12})
+
+(defn hoitokuukausi-ennen?
+  "Hoitovuosi alkaa elokuusta, joten esimerkiksi lokakuu on ennen tammikuuta:
+  ```
+  (hoitokuukausi-ennen? 10 1)
+  => true
+  ```"
+  [a b]
+  (< (hoitokuukausi->jarjestysnumero a) (hoitokuukausi->jarjestysnumero b)))
+
+(def kaikki-kuukaudet [10 11 12 1 2 3 4 5 6 7 8 9])
+
+(defn hoitokuukaudet [alkuvuosi]
+  (let [loppuvuosi (inc alkuvuosi)]
+    [{:vuosi alkuvuosi :kuukausi 10}
+     {:vuosi alkuvuosi :kuukausi 11}
+     {:vuosi alkuvuosi :kuukausi 12}
+     {:vuosi loppuvuosi :kuukausi 1}
+     {:vuosi loppuvuosi :kuukausi 2}
+     {:vuosi loppuvuosi :kuukausi 3}
+     {:vuosi loppuvuosi :kuukausi 4}
+     {:vuosi loppuvuosi :kuukausi 5}
+     {:vuosi loppuvuosi :kuukausi 6}
+     {:vuosi loppuvuosi :kuukausi 7}
+     {:vuosi loppuvuosi :kuukausi 8}
+     {:vuosi loppuvuosi :kuukausi 9}]))
+
+#_ (defn paatos-kk-joukko [paatos-kk]
+     (if (= 0 paatos-kk)
+       (set kaikki-kuukaudet)
+       #{paatos-kk}))
+
+(defn paatos-kk-joukko
+  "Päätös-kk on uudemmassa versiossa vectori, esim [0] tai [4,9] tai [12]. 0 = kaikki kuukaudet.
+  Aiemmin päätöskk on ollut yksittäinen numero."
+  [paatos-kk]
+  (if (= 0 (first paatos-kk))
+    (set kaikki-kuukaudet)
+    (set paatos-kk)))
+
 (defn monivalinta->toteuma [{:keys [vastaukset paatos-kk]}]
   (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk)))
 
@@ -166,59 +219,6 @@
 (defn liita-ennuste-tai-toteuma [lupaus]
   (-> lupaus
       (merge (lupaus->ennuste-tai-toteuma lupaus))))
-
-(def hoitokuukausi->jarjestysnumero
-  {10 1
-   11 2
-   12 3
-   1  4
-   2  5
-   3  6
-   4  7
-   5  8
-   6  9
-   7  10
-   8  11
-   9  12})
-
-(defn hoitokuukausi-ennen?
-  "Hoitovuosi alkaa elokuusta, joten esimerkiksi lokakuu on ennen tammikuuta:
-  ```
-  (hoitokuukausi-ennen? 10 1)
-  => true
-  ```"
-  [a b]
-  (< (hoitokuukausi->jarjestysnumero a) (hoitokuukausi->jarjestysnumero b)))
-
-(def kaikki-kuukaudet [10 11 12 1 2 3 4 5 6 7 8 9])
-
-(defn hoitokuukaudet [alkuvuosi]
-  (let [loppuvuosi (inc alkuvuosi)]
-    [{:vuosi alkuvuosi :kuukausi 10}
-     {:vuosi alkuvuosi :kuukausi 11}
-     {:vuosi alkuvuosi :kuukausi 12}
-     {:vuosi loppuvuosi :kuukausi 1}
-     {:vuosi loppuvuosi :kuukausi 2}
-     {:vuosi loppuvuosi :kuukausi 3}
-     {:vuosi loppuvuosi :kuukausi 4}
-     {:vuosi loppuvuosi :kuukausi 5}
-     {:vuosi loppuvuosi :kuukausi 6}
-     {:vuosi loppuvuosi :kuukausi 7}
-     {:vuosi loppuvuosi :kuukausi 8}
-     {:vuosi loppuvuosi :kuukausi 9}]))
-
-#_ (defn paatos-kk-joukko [paatos-kk]
-  (if (= 0 paatos-kk)
-    (set kaikki-kuukaudet)
-    #{paatos-kk}))
-
-(defn paatos-kk-joukko
-  "Päätös-kk on uudemmassa versiossa vectori, esim [0] tai [4,9] tai [12]. 0 = kaikki kuukaudet.
-  Aiemmin päätöskk on ollut yksittäinen numero."
-  [paatos-kk]
-  (if (= 0 (first paatos-kk))
-    (set kaikki-kuukaudet)
-    (set paatos-kk)))
 
 (defn hoitovuoden-kirjauskuukaudet [lupaus _hoitovuosi-nro hoitovuoden-erikoisarvot]
   (or (:kirjaus-kkt hoitovuoden-erikoisarvot)
