@@ -45,7 +45,7 @@
 (defn generoi-vhu-yksikkohinnat
   "Generoi yksikköhinnat VHU-urakan hinnoittelemattomille tehtäville kehitysympäristössä."
   [db user kehitysmoodi? {:keys [urakka-id valittu-hoitokausi]}]
-  (when-not kehitysmoodi?
+  #_ (when-not kehitysmoodi?
     (throw (ex-info "VHU-yksikköhintojen generointi on käytössä vain kehitysympäristössä." {})))
   (when-not (and (number? urakka-id)
               (vector? valittu-hoitokausi)
