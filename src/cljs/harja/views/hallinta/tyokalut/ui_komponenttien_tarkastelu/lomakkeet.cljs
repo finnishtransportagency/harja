@@ -609,7 +609,7 @@
 (defn- valintaruutu-simulaattorissa-sisalto [solmu]
   (r/with-let [valittu? (r/atom false)
                input-id (str (gensym "ui-simulaattori-valintaruutu-"))]
-    [:div {:data-cy "ui-simulaattori-valintaruutu"}
+    [:div {:data-cy (or (get-in solmu [:asetukset :data-cy]) "ui-simulaattori-valintaruutu")}
      [kentat/tee-kentta
       (merge {:tyyppi :checkbox
               :input-id input-id}
@@ -684,6 +684,8 @@
                            :renderoi (sisalto-renderoijana puhelinkentta-simulaattorissa-sisalto)})
 (register! :valintaruutu {:esikatselu valintaruutu
                           :renderoi (sisalto-renderoijana valintaruutu-simulaattorissa-sisalto)})
+(register! :checkbox {:esikatselu valintaruutu
+                      :renderoi (sisalto-renderoijana valintaruutu-simulaattorissa-sisalto)})
 (register! :raksiboksi {:esikatselu raksiboksi
                         :renderoi (sisalto-renderoijana raksiboksi-simulaattorissa-sisalto)})
 (register! :radiokentta {:esikatselu radiokentta

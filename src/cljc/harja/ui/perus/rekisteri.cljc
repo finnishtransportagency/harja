@@ -72,6 +72,23 @@
                 :valitse-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan valinnan ja valitun tilan kanssa: (fn [valinta valittu?])."}
                 :teksti {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Näytettävä teksti. Vektorina [yksikko monikko], jolloin valintojen määrä lisätään eteen."}
                 :asetukset {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Livi-pudotusvalikon asetukset, esim. :kaikki-valinta-fn, :fmt, :valintojen-maara."}}}
+   {:id :checkbox
+    :nimi "Checkbox"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo}
+    :tilat #{:normaali :estetty}
+    :sallitut-vanhemmat #{:lomake :suodatin :suodatinrivi}
+    :bootstrap-tila :riippuvainen
+    :kuvaus "Yksittäinen valintaruutu tekstillä, esim. suodattimen 'Näytä vain puutteelliset'. Käyttää kenttäkirjaston checkbox-tyyppiä."
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:teksti {:tyyppi :muu :pakollinen? true :oletus nil :kuvaus "Valintaruudun näytettävä teksti."}
+                :arvo {:tyyppi :boolean :pakollinen? true :oletus nil :kuvaus "Valintaruudun tila."}
+                :vaihda-fn {:tyyppi :funktio :pakollinen? true :oletus nil :kuvaus "Kutsutaan uudella arvolla (fn [valittu?])."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}}}
    {:id :hoitokausi
     :nimi "Hoitokausi"
     :ryhma :alasvedot
@@ -187,7 +204,7 @@
     :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatin}
+    :sallitut-vanhemmat #{:lomake :suodatin :suodatinrivi}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Yksirivinen tekstikenttä. Arvo ja muutoksen käsittely omistaa käyttöpaikka. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
     :funktio "harja.ui.kentat/tee-kentta"

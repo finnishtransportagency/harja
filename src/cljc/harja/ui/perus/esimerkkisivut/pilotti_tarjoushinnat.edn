@@ -18,17 +18,9 @@
                             :lapset [{:komponentti :suodatin
                                       :asetukset {:otsikko "Urakka"
                                                   :data-cy "pilotti-tarjoushinnat-urakkahaku"}}
-                                     {:komponentti :livi-pudotusvalikko
-                                      :asetukset {:otsikko "Näytä"
-                                                  :valinnat [{:arvo :kaikki
-                                                              :nimi "Kaikki urakat"}
-                                                             {:arvo :puutteelliset
-                                                              :nimi "Vain puutteelliset"}]
-                                                  :optiot {:data-cy "pilotti-tarjoushinnat-puutteelliset"}}}
-                                     {:komponentti :nappi
-                                      :asetukset {:teksti "Hae"
-                                                  :variantti :ensisijainen
-                                                  :data-cy "pilotti-tarjoushinnat-haku"}}]}
+                                     {:komponentti :checkbox
+                                      :asetukset {:teksti "Näytä vain puutteelliset"
+                                                  :data-cy "pilotti-tarjoushinnat-puutteelliset"}}]}
                            {:komponentti :perusgrid
                             :asetukset {:otsikko "MH-urakoiden tarjoushinnat"
                                         :tunniste :id

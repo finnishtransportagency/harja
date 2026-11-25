@@ -38,6 +38,20 @@
                     (str nimi ": asetus " avain " on " tyyppi ", ei sallittu")))]
       virhe)))
 
+(def ^:private solutyypit
+  "Perusgridin sarakkeen :solu-arvot, joita renderöijä osaa piirtää."
+  #{:tila-indikaattori})
+
+(defn- solutyyppivirheet [id asetukset]
+  (let [nimi (name id)]
+    (for [sarake (get asetukset :sarakkeet)
+          :when (map? sarake)
+          :let [solu (:solu sarake)]
+          :when (and (some? solu)
+                     (not (kielletty-tyyppi solu))
+                     (not (contains? solutyypit solu)))]
+      (str nimi ": tuntematon solutyyppi " (pr-str solu)))))
+
 (defn- tarkista-solmu [solmu vanhempi]
   (if-not (map? solmu)
     [(str "Solmun pitää olla map: " (pr-str solmu))]
@@ -57,6 +71,8 @@
           [(str komponentti ": lapset ei ole lista")])
         (when (and kuvaus asetukset-kunnossa?)
           (asetusvirheet komponentti kuvaus asetukset))
+        (when (and (= :perusgrid komponentti) (map? asetukset))
+          (solutyyppivirheet komponentti asetukset))
         (when lapset-kunnossa?
           (mapcat #(tarkista-solmu % komponentti) lapset))))))
 

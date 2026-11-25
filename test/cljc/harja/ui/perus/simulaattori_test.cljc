@@ -113,3 +113,60 @@
           [{:komponentti :suodatinrivi
             :lapset [{:komponentti :suodatin}
                      {:komponentti :livi-pudotusvalikko}]}]))))
+
+(deftest suodatinrivi-sallii-checkboxin-lapsena
+  (testing "checkbox-pudotusvalikko on sallittu suodatinrivin lapsena rekisterin mukaan"
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :lomake
+            :lapset [{:komponentti :suodatinrivi
+                      :lapset [{:komponentti :checkbox-pudotusvalikko}]}]}]))))
+
+(deftest suodatinrivi-sallii-yksittaisen-checkboxin-lapsena
+  (testing "plain checkbox on sallittu suodatinrivin lapsena"
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :suodatinrivi
+            :lapset [{:komponentti :checkbox}]}])))
+  (testing "plain checkbox hylätään osion alla"
+    (is (seq (simulaattori/virheet
+               [{:komponentti :osio
+                 :lapset [{:komponentti :checkbox}]}])))))
+
+(deftest liitteet-sallitaan-lomakkeen-lapsena-ja-hylataan-osion-alla
+  (is (simulaattori/kelvollinen?
+        [{:komponentti :lomake
+          :lapset [{:komponentti :liitteet}]}]))
+  (is (= [":liitteet: vanhempi=:osio ei ole sallittu"]
+         (simulaattori/virheet
+           [{:komponentti :lomake
+             :lapset [{:komponentti :osio
+                       :lapset [{:komponentti :liitteet}]}]}]))))
+
+(deftest sailio-sallitaan-vain-sivun-juuressa
+  (is (simulaattori/kelvollinen? [{:komponentti :sailio}]))
+  (is (= [":sailio: vanhempi=:lomake ei ole sallittu"]
+         (simulaattori/virheet
+           [{:komponentti :lomake
+             :lapset [{:komponentti :sailio}]}]))))
+
+(deftest suodatinrivi-sallii-tekstikentan-lapsena
+  (is (simulaattori/kelvollinen?
+        [{:komponentti :lomake
+          :lapset [{:komponentti :suodatinrivi
+                    :lapset [{:komponentti :tekstikentta}]}]}])))
+
+(defn- perusgrid-sarakkeella [sarake]
+  [{:komponentti :perusgrid
+    :asetukset {:sarakkeet [sarake] :rivit []}}])
+
+(deftest tuntematon-solutyyppi-hylataan
+  (is (= ["perusgrid: tuntematon solutyyppi :ei-ole"]
+         (simulaattori/virheet (perusgrid-sarakkeella {:nimi :tila :solu :ei-ole})))))
+
+(deftest tila-indikaattori-solutyyppi-sallitaan
+  (is (simulaattori/kelvollinen?
+        (perusgrid-sarakkeella {:nimi :tila :solu :tila-indikaattori}))))
+
+(deftest funktio-solutyyppina-hylataan-kerran
+  (is (= ["perusgrid: asetus :sarakkeet on funktio, ei sallittu"]
+         (simulaattori/virheet
+           (perusgrid-sarakkeella {:nimi :tila :solu (fn [] nil)})))))

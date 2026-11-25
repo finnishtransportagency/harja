@@ -1,11 +1,11 @@
 const verkkovirheet = [];
 
-function valitseEsimerkkisivu(nimi) {
+function valitseEsimerkkisivu(nimi, { sisaltaaVirheilmoituksen = false } = {}) {
   painaJaTarkistaValinta('[data-cy=ui-simulaattori-esimerkki]', nimi, true);
   cy.get('[data-cy=ui-simulaattori-esikatselu]')
     .should('be.visible')
     .find('[role=alert]')
-    .should('not.exist');
+    .should(sisaltaaVirheilmoituksen ? 'exist' : 'not.exist');
 }
 
 function tarkistaAnkkurit(ankkurit) {
@@ -161,7 +161,8 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
     cy.get('[data-cy=ui-simulaattori-tabs]').should('contain', 'Historian sisältö');
     cy.get('[data-cy=ui-simulaattori-dropdown-panel]').find('h3').click();
 
-    valitseEsimerkkisivu('Tilaviestit ja toiminnot');
+    // Esimerkki näyttää tarkoituksella virhetilaviestin
+    valitseEsimerkkisivu('Tilaviestit ja toiminnot', { sisaltaaVirheilmoituksen: true });
     tarkistaAnkkurit([
       'ui-simulaattori-pino',
       'ui-simulaattori-tilaviesti',
