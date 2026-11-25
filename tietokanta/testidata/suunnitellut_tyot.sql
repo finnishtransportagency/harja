@@ -212,23 +212,6 @@ WHERE u.nimi = 'Rentoselän urakka'
                   WHERE tpi.urakka = u.id
                     AND tpi.toimenpide = tp.id);
 
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
-         FROM urakka
-         WHERE nimi = 'Rentoselän urakka'),
-        'Kauppamerenkulun kustannukset TP',
-        (SELECT id
-         FROM toimenpide
-         WHERE nimi = 'Kauppamerenkulun kustannukset'), '2016-08-01', '2017-07-30');
-
-INSERT INTO toimenpideinstanssi_vesivaylat("toimenpideinstanssi-id", vaylatyyppi)
-VALUES ((SELECT id FROM toimenpideinstanssi
-WHERE   nimi = 'Kauppamerenkulun kustannukset TP'
-        AND urakka = (select id from urakka where nimi = 'Rentoselän urakka')),
-        'kauppamerenkulku'::vv_vaylatyyppi);
-
-INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
-VALUES ((SELECT id
 insert into toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
 values ((SELECT id
          FROM urakka
