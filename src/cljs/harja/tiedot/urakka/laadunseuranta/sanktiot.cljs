@@ -161,29 +161,8 @@
 
 (defn pyorayta-laskutuskuukausi-valinnat
   []
-  (let [{:keys [alkupvm loppupvm]} @nav/valittu-urakka
-        vuodet (range (pvm/vuosi alkupvm) (pvm/vuosi loppupvm))]
-    (into []
-      (sort-by (juxt :vuosi :kuukausi)
-        (mapcat (fn [vuosi]
-                  (let [kuukaudet (range 1 13)
-                        inc-jos-tarvii (fn [kuukausi vuosi]
-                                         (if (< kuukausi 10)
-                                           (inc vuosi)
-                                           vuosi))]
-                    (into [] (map
-                               (fn [kuukausi]
-                                 {:pvm (pvm/->pvm (str "15." kuukausi "." (inc-jos-tarvii kuukausi vuosi)))
-                                  :vuosi (inc-jos-tarvii kuukausi vuosi)
-                                  :kuukausi kuukausi
-                                  :teksti (str (pvm/kuukauden-nimi kuukausi true)
-                                            " " (inc-jos-tarvii kuukausi vuosi)
-                                            " (" (pvm/paivamaara->mhu-hoitovuosi-nro
-                                                   alkupvm
-                                                   (pvm/->pvm (str "15." kuukausi "." (inc-jos-tarvii kuukausi vuosi))))
-                                            ". hoitovuosi)")}))
-                      kuukaudet)))
-          vuodet)))))
+  (let [{:keys [tyyppi alkupvm loppupvm]} @nav/valittu-urakka]
+    (sanktion-lomake-domain/laskutuskuukausi-valinnat tyyppi alkupvm loppupvm)))
 
 (defonce valittu-sanktio (atom nil))
 

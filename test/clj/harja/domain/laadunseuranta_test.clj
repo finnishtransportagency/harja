@@ -17,6 +17,51 @@
     (is (not (sanktio-domain/muu-kuin-muistutus? {:laji :yllapidon_muistutus})))
     (is (not (sanktio-domain/muu-kuin-muistutus? {:laji :vesivayla_muistutus})))))
 
+(deftest laskutuskuukausi-valinnat-noudattaa-urakan-kuukausia-ja-hoitovuotta
+  (let [vuosi-kuukausi (juxt :vuosi :kuukausi)
+        valinnat (fn [urakkatyyppi alku loppu]
+                   (sanktion-lomake-domain/laskutuskuukausi-valinnat
+                     urakkatyyppi (pvm/->pvm alku) (pvm/->pvm loppu)))
+        hoitovuosi-nro (fn [kuukaudet vuosi kuukausi]
+                         (->> kuukaudet
+                              (some #(when (= [vuosi kuukausi] (vuosi-kuukausi %)) %))
+                              :teksti
+                              (re-find #"\((\d+)\. hoitovuosi\)")
+                              second))]
+    (testing "ylläpidon urakka sisältää kaikki kuukaudet alusta loppuun, myös saman vuoden"
+      (let [kuukaudet (valinnat :paallystys "1.1.2024" "31.12.2024")]
+        (is (= 12 (count kuukaudet)))
+        (is (= [2024 1] (vuosi-kuukausi (first kuukaudet))))
+        (is (= [2024 12] (vuosi-kuukausi (last kuukaudet))))))
+    (testing "ylläpidon hoitovuosi vaihtuu kalenterivuoden vaihteessa, ei 1.10."
+      (let [kuukaudet (valinnat :paallystys "1.1.2024" "31.12.2026")]
+        (is (= "1" (hoitovuosi-nro kuukaudet 2024 10)))
+        (is (= "2" (hoitovuosi-nro kuukaudet 2025 1)))
+        (is (= "2" (hoitovuosi-nro kuukaudet 2025 9)))
+        (is (= "3" (hoitovuosi-nro kuukaudet 2026 1)))))
+    (testing "MHU-urakan hoitovuosi vaihtuu 1.10."
+      (let [kuukaudet (valinnat :hoito "1.10.2024" "30.9.2026")]
+        (is (= "1" (hoitovuosi-nro kuukaudet 2025 9)))
+        (is (= "2" (hoitovuosi-nro kuukaudet 2025 10)))
+        (is (= "2" (hoitovuosi-nro kuukaudet 2026 1)))))
+    (testing "teiden hoidon urakan hoitovuosi vaihtuu 1.10."
+      (let [kuukaudet (valinnat :teiden-hoito "1.10.2024" "30.9.2026")]
+        (is (= "1" (hoitovuosi-nro kuukaudet 2025 9)))
+        (is (= "2" (hoitovuosi-nro kuukaudet 2025 10)))))
+    (testing "muun kuin hoidon tai ylläpidon urakan hoitovuosi vaihtuu kalenterivuoden vaihteessa"
+      (let [kuukaudet (valinnat :vesivayla-hoito "1.1.2024" "31.12.2025")]
+        (is (= "1" (hoitovuosi-nro kuukaudet 2024 12)))
+        (is (= "2" (hoitovuosi-nro kuukaudet 2025 1)))))
+    (testing "saman kuukauden sisällä valitaan täsmälleen yksi kuukausi"
+      (let [kuukaudet (valinnat :paallystys "15.3.2025" "20.3.2025")]
+        (is (= [[2025 3]] (map vuosi-kuukausi kuukaudet)))))
+    (testing "loppupäivä ennen alkupäivää ei anna valintoja"
+      (is (= [] (valinnat :paallystys "1.1.2025" "31.12.2024"))))
+    (testing "puuttuva alku- tai loppupäivä ei anna valintoja"
+      (is (= [] (sanktion-lomake-domain/laskutuskuukausi-valinnat :hoito nil (pvm/->pvm "30.9.2026"))))
+      (is (= [] (sanktion-lomake-domain/laskutuskuukausi-valinnat :hoito (pvm/->pvm "1.10.2024") nil)))
+      (is (= [] (sanktion-lomake-domain/laskutuskuukausi-valinnat :hoito nil nil))))))
+
 (deftest sanktion-lomakekonteksti-palauttaa-kenttasaannot
   (let [aikakausikonteksti (sanktion-lomake-domain/aikakausikonteksti 2025 2025 :teiden-hoito)
         perus {:sanktio {:laji :A :tyyppi {:id 1 :koodi 1}}

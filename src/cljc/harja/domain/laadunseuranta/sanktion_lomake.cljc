@@ -433,6 +433,33 @@
      :talvisuolan-validointi (fn [arvo]
                                (talvisuolan-validointi urakan-loppupvm arvo sanktio))}))
 
+(defn laskutuskuukausi-valinnat
+  "Palauttaa urakan kaikki kalenterikuukaudet, joiden välillä laskutuskuukausi voidaan valita.
+  Kuukaudet käydään läpi indeksinä, joten alku- ja loppupäivän kuukausi sisältyvät mukaan.
+  Hoitovuosinumero lasketaan MHU-kierrolla (1.10.–30.9.) hoito- ja teiden hoito -urakoille.
+  Muille urakkatyypeille hoitovuosi vaihtuu kalenterivuoden vaihteessa.
+  Jos alku- tai loppupäivä puuttuu, palautetaan tyhjä lista."
+  [urakkatyyppi alkupvm loppupvm]
+  (if-not (and alkupvm loppupvm)
+    []
+    (let [mhu? (contains? #{:teiden-hoito} urakkatyyppi)
+          hoitovuosi-nro (fn [pvm-15]
+                           (if mhu?
+                             (pvm/paivamaara->mhu-hoitovuosi-nro alkupvm pvm-15)
+                             (inc (- (pvm/vuosi pvm-15) (pvm/vuosi alkupvm)))))
+          ensimmainen-kk (+ (* 12 (pvm/vuosi alkupvm)) (dec (pvm/kuukausi alkupvm)))
+          viimeinen-kk (+ (* 12 (pvm/vuosi loppupvm)) (dec (pvm/kuukausi loppupvm)))]
+      (mapv (fn [kk-indeksi]
+              (let [vuosi (quot kk-indeksi 12)
+                    kuukausi (inc (rem kk-indeksi 12))
+                    pvm-15 (pvm/->pvm (str "15." kuukausi "." vuosi))]
+                {:pvm pvm-15
+                 :vuosi vuosi
+                 :kuukausi kuukausi
+                 :teksti (str (pvm/kuukauden-nimi kuukausi true) " " vuosi
+                              " (" (hoitovuosi-nro pvm-15) ". hoitovuosi)")}))
+            (range ensimmainen-kk (inc viimeinen-kk))))))
+
 (defn aktiivinen-sanktiotyyppi
   "Palauttaa sanktiotyyppien joukosta sen, jonka id on annettu, tai nil."
   [sanktiotyypit tyyppi-id]
