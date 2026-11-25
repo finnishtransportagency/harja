@@ -191,8 +191,8 @@
       (is (= (pvm/dateksi (second tulos)) #inst "2022-08-31T00:00:00.000-00:00")))))
 
 (deftest vesivaylaurakan-hoitokausi
-  (is (= (pvm/->pvm "1.8.2017") (pvm/vesivaylien-hoitokauden-alkupvm 2017)))
-  (is (= (pvm/->pvm "31.7.2018") (pvm/vesivaylien-hoitokauden-loppupvm 2018))))
+  (is (= (pvm/->pvm "1.10.2023") (pvm/vesivaylien-hoitokauden-alkupvm 2023)))
+  (is (= (pvm/->pvm "30.9.2024") (pvm/vesivaylien-hoitokauden-loppupvm 2024))))
 
 
 (deftest aikavalit-leikkaavat

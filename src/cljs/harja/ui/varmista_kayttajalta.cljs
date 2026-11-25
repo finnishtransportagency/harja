@@ -15,7 +15,7 @@
   :peruuta-txt = peruuta-painikkeen teksti
   :toiminto-fn = varsinainen toiminto, joka ajetaan käyttäjän hyväksyessä
   :napit = Vektori, joka määrittelee footeriin asetettavat napit. Vaihtoehtoja ovat :peruuta, :hyvaksy, :takaisin, :poista."
-  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka content-tyyli body-tyyli]}]
+  [{:keys [otsikko sisalto toiminto-fn hyvaksy peruuta-txt napit modal-luokka luokka content-tyyli body-tyyli]}]
   (let [napit (or napit [:hyvaksy :peruuta])]
     (modal/nayta! {:otsikko otsikko
                    :footer [:span
@@ -47,7 +47,8 @@
                                            {:luokka "pull-left"}]
                                     nil)
                                   {:key (str "varmistus-nappi-" tyyppi)})))]
-                   :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli}
+                   :modal-luokka modal-luokka :content-tyyli content-tyyli :body-tyyli body-tyyli
+                   :luokka luokka}
                   sisalto)))
 
 (def modal-muut-vastaanottajat

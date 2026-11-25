@@ -741,14 +741,14 @@
       (inc hk-alkuvuosi))))
 
 (defn vesivaylien-hoitokauden-alkupvm
-  "Vesiväylien hoitokauden alkupvm vuodelle: 1.8.vuosi"
+  "Vesiväylien hoitokauden alkupvm vuodelle: 1.10.vuosi"
   [vuosi]
-  (luo-pvm vuosi 7 1))
+  (luo-pvm vuosi 9 1))
 
 (defn vesivaylien-hoitokauden-loppupvm
-  "Vesiväylien hoitokauden loppupvm vuodelle: 31.7.vuosi"
+  "Vesiväylien hoitokauden loppupvm vuodelle: 30.9.vuosi"
   [vuosi]
-  (luo-pvm vuosi 6 31))
+  (luo-pvm vuosi 8 30))
 
 (defn- d [x]
   #?(:cljs x

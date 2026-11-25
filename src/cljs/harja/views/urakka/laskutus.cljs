@@ -9,8 +9,10 @@
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.views.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta]
             [harja.ui.komponentti :as komp]
+            [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.kulut.kulut :as kohdistetut-kulut]
+            [harja.views.urakka.yksikkohinnat :as yksikkohinnat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakka :as urakka-domain])
 
@@ -19,19 +21,28 @@
 
 (defn laskutus []
   (komp/luo
-    (fn []
+    (fn [ur]
       (let [mhu-urakka? (= :teiden-hoito
                            (:tyyppi @nav/valittu-urakka))
             vesivayla-hoito-urakka (= :vesivayla-hoito
-                                     (:tyyppi @nav/valittu-urakka))]
+                                     (:tyyppi @nav/valittu-urakka))
+            valitun-hoitokauden-yks-hint-kustannukset (s/valitun-hoitokauden-yks-hint-kustannukset ur)]
         [:span.laskutus
-         [bs/tabs {:style :tabs :classes "tabs-taso2"
-                   :active (nav/valittu-valilehti-atom :laskutus)}
+         [bs/tabs {:style :tabs
+                   :classes "tabs-taso2"
+                   :active (nav/valittu-valilehti-atom :laskutus)
+                   :on-change #(nav/aseta-valittu-valilehti! :laskutus %)}
           "Kulujen kohdistus"
           :kohdistetut-kulut
           (when (or mhu-urakka? (and vesivayla-hoito-urakka (k/kehitysymparistossa?)))
             ^{:keys "kohdistetut-kulut"}
             [kohdistetut-kulut/kohdistetut-kulut])
+
+          "Yksikköhinnat"
+          :yksikkohinnat
+          (when (and vesivayla-hoito-urakka (k/kehitysymparistossa?))
+            ^{:key "yksikkohinnat"}
+            [yksikkohinnat/yksikkohinnat ur valitun-hoitokauden-yks-hint-kustannukset])
 
           "Laskutusyhteenveto"
           :laskutusyhteenveto
