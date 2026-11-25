@@ -57,7 +57,7 @@
                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                    :kustannuslaji "hankintakustannukset"
                                                                    :summa 1000
-                                                                   :toimenpideinstanssi 88
+                                                                   :toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 Päällystepaikkaukset TP")
                                                                    :versio 1})
                                       :liitteet nil
                                       :luonnos false
@@ -99,7 +99,7 @@
                                       :kustannusvaikutukset (list {:hoitokauden_alkuvuosi 2025
                                                                    :kustannuslaji "hankintakustannukset"
                                                                    :summa 1000
-                                                                   :toimenpideinstanssi 89
+                                                                   :toimenpideinstanssi (hae-toimenpideinstanssi-id-nimella "Iin MHU 2021-2026 MHU Ylläpito TP")
                                                                    :versio 1})
                                       :liitteet (list {:id 11
                                                        :muutos 3})
@@ -680,6 +680,7 @@
 (deftest kustannusvaikutusten-tallennus-ilman-maaramuutosta
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Suomussalmi 2024-2029")
         toimenpideinstanssi-id (hae-toimenpideinstanssi-id-nimella "POP MHU Suomussalmi 2024-2029 Talvihoito TP")
+        paallystys-tpi-id (hae-toimenpideinstanssi-id-nimella "POP MHU Suomussalmi 2024-2029 Päällystepaikkaukset TP")
         muutos {:id (ffirst (q "SELECT MAX(id) FROM mhu_muutos WHERE urakka = " urakka-id " AND nimi = 'Päällysteen paikkausmuutos';"))
                 :versio 2
                 :tyyppi "pysyva"
@@ -687,11 +688,11 @@
 
     (testing "Tallennus toimii ilman määrämuutoksia, syy on olemassa"
       (let [kustannusvaikutus-payload [{:summa 35000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 130, :hoitokauden_alkuvuosi 2025
+                                        :toimenpideinstanssi paallystys-tpi-id, :hoitokauden_alkuvuosi 2025
                                         :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu koska ei nyt kirjattu"}
 
                                        {:summa 45000, :kustannuslaji "hankintakustannukset",
-                                        :toimenpideinstanssi 130, :hoitokauden_alkuvuosi 2026
+                                        :toimenpideinstanssi paallystys-tpi-id, :hoitokauden_alkuvuosi 2026
                                         :tehtavamaaramuutos-kirjattu? false :syy "Ei kirjattu 26 vuodelle myöskään"}]
             odotettu-vastaus (list
                                {:hoitokauden_alkuvuosi 2025
@@ -699,7 +700,7 @@
                                 :summa 35000
                                 :syy "Ei kirjattu koska ei nyt kirjattu"
                                 :tehtavamaaramuutos-kirjattu? false
-                                :toimenpideinstanssi 130
+                                :toimenpideinstanssi paallystys-tpi-id
                                 :versio 2}
 
                                {:hoitokauden_alkuvuosi 2026
@@ -707,7 +708,7 @@
                                 :summa 45000
                                 :syy "Ei kirjattu 26 vuodelle myöskään"
                                 :tehtavamaaramuutos-kirjattu? false
-                                :toimenpideinstanssi 130
+                                :toimenpideinstanssi paallystys-tpi-id
                                 :versio 2}
 
                                ;; Olemassa olevia
@@ -716,14 +717,14 @@
                                 :summa 1000
                                 :syy nil
                                 :tehtavamaaramuutos-kirjattu? true
-                                :toimenpideinstanssi 130
+                                :toimenpideinstanssi paallystys-tpi-id
                                 :versio 1}
                                {:hoitokauden_alkuvuosi 2028
                                 :kustannuslaji "hankintakustannukset"
                                 :summa 1000
                                 :syy nil
                                 :tehtavamaaramuutos-kirjattu? true
-                                :toimenpideinstanssi 130
+                                :toimenpideinstanssi paallystys-tpi-id
                                 :versio 1})
 
             _ (muutos-palvelu/tallenna-muutoksen-kustannusvaikutukset

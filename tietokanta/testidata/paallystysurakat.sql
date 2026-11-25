@@ -10,10 +10,11 @@ DO $$
         yllapitokohdeid1 INTEGER;
         yllapitokohdeid2 INTEGER;
         integraatiokayttajaid INTEGER;
+        paallysteT3Id INTEGER;
 
     BEGIN
-        alkuvuosi := (SELECT EXTRACT(YEAR FROM CURRENT_DATE));
-        loppuvuosi := alkuvuosi + 2;
+        alkuvuosi := 2026;
+        loppuvuosi := 2028;
 
     -- Lisää urakalle hanke
     INSERT INTO hanke (nimi, alkupvm, loppupvm, sampoid, harjassa_luotu) VALUES ('LOU Päällysteiden korjaus, H','2005-01-01', '2030-12-31','PR00014581',false);
@@ -41,6 +42,35 @@ DO $$
     tiemerkintaurakkaid := (SELECT id FROM urakka WHERE nimi = 'LOU tiemerkintöjen palvelusopimus 2023-, P');
     sopimusid := (SELECT id FROM sopimus where nimi = 'LOU Tienpaallystysurakka DHJ LOU ET1 2026, T');
     integraatiokayttajaid := (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio');
+
+                IF (SELECT COUNT(*)
+                        FROM toimenpide t3
+                        JOIN toimenpide t2 ON t2.id = t3.emo
+                        WHERE t3.taso = 3
+                            AND t3.koodi = '20101'
+                            AND t2.taso = 2
+                            AND t2.koodi = '20100') <> 1 THEN
+                        RAISE EXCEPTION 'Toimenpidekoodien 20101 ja 20100 lähde ei ole yksikäsitteinen';
+                END IF;
+
+                paallysteT3Id := (SELECT t3.id
+                FROM toimenpide t3
+                JOIN toimenpide t2 ON t2.id = t3.emo
+                WHERE t3.taso = 3
+                    AND t3.koodi = '20101'
+                    AND t2.taso = 2
+                    AND t2.koodi = '20100');
+
+                IF NOT EXISTS (
+                        SELECT 1
+                        FROM toimenpideinstanssi
+                        WHERE urakka = urakkaid
+                            AND nimi = 'LOU Päällyste T2 20100 TP') THEN
+                        INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm)
+                        VALUES (urakkaid, 'LOU Päällyste T2 20100 TP', paallysteT3Id,
+                                        (SELECT alkupvm FROM urakka WHERE id = urakkaid),
+                                        (SELECT loppupvm FROM urakka WHERE id = urakkaid));
+                END IF;
 
 
     -- Lisään yllapitokohde tauluun 10 ylläpitokohdetta
