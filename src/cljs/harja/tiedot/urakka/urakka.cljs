@@ -494,6 +494,15 @@
                                            :vetolaatikon-muokkaus false
                                            :uusi-toimenkuva-valittavana false})
 
+(def yksikkohinnat-default {:urakka nil
+                            :urakan-hoitokaudet []
+                            :valittu-hoitokausi nil
+                            :yksikkohintaiset-tyot nil
+                            :kaikki-yksikkohintaiset-tyot nil
+                            :toimenpiteet-ja-tehtavat nil
+                            :haku-kaynnissa? false
+                            :virhe nil})
+
 (defonce tila (atom {:yleiset {:urakka {}}
                      :hallinta-hairiot {}
                      :laatupoikkeamat laatupoikkeamat-default
@@ -514,7 +523,8 @@
                      :tiemerkinta-sanktiot-ja-bonukset {}
                      :tiemerkinta-uusien-paallysteiden-merkkinnat {}
                      :tarjous-kustannussuunnitelma tarjous-kustannussuunnitelma-default
-                     :sanktiot-ja-bonukset sanktiot-ja-bonukset-default}))
+                     :sanktiot-ja-bonukset sanktiot-ja-bonukset-default
+                     :yksikkohinnat yksikkohinnat-default}))
 
 (defonce hallinta-hairiot (cursor tila [:hallinta-hairiot]))
 
@@ -556,6 +566,7 @@
 (defonce tarjous-kustannussuunnitelma (cursor tila [:tarjous-kustannussuunnitelma]))
 
 (defonce suunnittelu-suolarajoitukset (cursor tila [:suunnittelu :suolarajoitukset]))
+(defonce yksikkohinnat (cursor tila [:yksikkohinnat]))
 
 ;; FIXME: Tästä pitäisi päästä eroon kokonaan. Tuckin, atomien ja watchereiden käyttö yhdessä aiheuttaa välillä hankalasti selviteltäviä
 ;;        tilan mutatointiin liittyviä bugeja esimerkiksi reagentin lifcycle metodeja käyttäessä.

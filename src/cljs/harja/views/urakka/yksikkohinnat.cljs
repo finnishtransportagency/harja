@@ -1,5 +1,5 @@
 (ns harja.views.urakka.yksikkohinnat
-  (:require [tuck.core :as tuck]
+  (:require [tuck.core :refer [tuck]]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
@@ -12,6 +12,7 @@
             [harja.ui.yleiset :as yleiset]
             [harja.tiedot.navigaatio :as nav]
             [harja.tiedot.urakka :as urakka-tiedot]
+            [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.ui.varmista-kayttajalta :as varmista]
             [harja.tiedot.urakka.yksikkohinnat :as tiedot]))
 
@@ -87,18 +88,18 @@
   [:div.flex-row {:style {:justify-content "right"}}
    (if tallennustila?
      [:div.painikkeet.text-right.grid-status-viestit
-      [:span {:style {:margin-left "1rem"}}
+      [:span
        [napit/yleinen-toissijainen "Aseta kaikki tehtävät käyttämään oletusindeksiä"
         #(e! (tiedot/->AsetaKaikkiIndeksille (filterv :tehtava grid-rivit)))
         {:ikoni (ikonit/list)
          :disabled (or tallennus-kesken? false)}]]
       (when kopioi-tuleville-vuosille?
-        [:span {:style {:margin-left "1rem"}}
+        [:span
          [napit/yleinen-toissijainen "Kopioi tuleville urakkavuosille"
           #(kopioi-tuleville-vuosille! e! app yksikkohintaiset-tyot)
           {:ikoni (ikonit/harja-icon-action-copy)
            :disabled (or tallennus-kesken? false)}]])
-      [:span {:style {:margin-left "1rem"}}
+      [:span
        [napit/yleinen-ensisijainen "Tallenna"
         #(nayta-tallennusvalinta! e! app yksikkohintaiset-tyot)
         {:disabled (or tallennus-kesken? false)}]]
@@ -108,7 +109,7 @@
         {:disabled (or tallennus-kesken? false)}]]]
 
      [:div.painikkeet.text-right.grid-status-viestit
-      [:span {:style {:margin-left "1rem"}}
+      [:span
        [napit/muokkaa
         "Muokkaa oletushintoja"
         #(e! (tiedot/->ToggleTallennusTila))
@@ -193,8 +194,8 @@
         solun-luokka-fn (fn [_ rivi]
                           (when (:valiotsikko rivi)
                             "valiotsikko-tausta korkea"))
-        indeksivaihtoehdot [{:arvo true  :nimi "Kyllä"}
-                            {:arvo false :nimi "Ei"}]
+        indeksivaihtoehdot [{:arvo true  :nimi urakan-indeksi}
+                            {:arvo false :nimi "Ei indeksikorjausta"}]
         sarakkeet [{:otsikko ""
                     :leveys "2%"
                     :tyyppi :komponentti
@@ -207,7 +208,7 @@
                         [:span]))
                     :solun-luokka solun-luokka-fn}
                    {:otsikko "Tehtävä"
-                    :leveys "50%"
+                    :leveys "63%"
                     :nimi :tehtavan_nimi
                     :tyyppi :komponentti
                     :solun-luokka solun-luokka-fn
@@ -220,9 +221,10 @@
                          (:tehtavan_nimi rivi)]))
                     :muokattava? (constantly false)}
                    {:otsikko "Indeksi"
-                    :leveys "18%"
+                    :leveys "15%"
                     :nimi :indeksi_kaytossa
                     :tyyppi :valinta
+                    :aria-label "Indeksikorjauksen valinta"
                     :pakollinen? tallennustila?
                     :valinnat indeksivaihtoehdot
                     :valinta-arvo :arvo
@@ -242,17 +244,22 @@
                              :else ""))
                     :tasaa :vasen
                     :solun-luokka (fn [arvo rivi]
-                                      (cond-> (solun-luokka-fn arvo rivi)
-                                        (and tallennustila?
-                                          (:tehtava rivi)
-                                          (nil? (:indeksi_kaytossa rivi)))
-                                        (str "valinta-puuttuu")))
+                                    (cond-> (or (solun-luokka-fn arvo rivi) "")
+                                      (and tallennustila?
+                                        (:tehtava rivi)
+                                        (some? (:indeksi_kaytossa rivi)))
+                                      (str " indeksi-valittu")
+
+                                      (and tallennustila?
+                                        (:tehtava rivi)
+                                        (nil? (:indeksi_kaytossa rivi)))
+                                      (str " valinta-puuttuu")))
                     :muokattava? (fn [rivi]
                                    (and tallennustila?
                                      (:tehtava rivi)))
                     :varoita [[:ei-tyhja "Anna arvo"]]}
                    {:otsikko "Hinta ilman indeksikorjausta\u2028€ / yksikkö"
-                    :leveys "15%"
+                    :leveys "10%"
                     :nimi :yksikkohinta
                     :tasaa :oikea
                     :tyyppi :numero
@@ -284,7 +291,7 @@
                               [:p "Indeksikorjattuhinta = alkuperäinen hinta × (vertailukuukauden indeksiluku / perusluku)"]
                               [:p "Tässä urakassa on käytössä " urakan-indeksi (when urakan-perusluku (str ", jonka perusluku on " urakan-perusluku)) "."]]))}
                         (ikonit/nelio-info)]])
-                    :leveys "15%"
+                    :leveys "10%"
                     :nimi :indeksikorjattu_yksikkohinta
                     :tyyppi :numero
                     :solun-luokka solun-luokka-fn
@@ -379,14 +386,15 @@
      [debug/debug app]]))
 
 (defn- yksikkohinnat*
-  [e! app urakka]
+  [e! app]
   (let [{:keys [sisaan ulos]}
         (nav/luo-muutosten-hallinta
           :yksikkohinnat/muutokset
-          #(get @tiedot/yksikkohinnat-app-tila
+          #(get @urakka-tila/yksikkohinnat
              :tallentamattomia-muutoksia?)
           :beforeunload-viesti
-          "Yksikköhinnoissa on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")]
+          "Yksikköhinnoissa on tallentamattomia muutoksia! Jos poistut, menetät tekemäsi muutokset.")
+        urakka (:urakka @urakka-tila/yleiset)]
     (komp/luo
       (komp/sisaan
         #(do
@@ -400,9 +408,5 @@
          e!
          (assoc app :urakka urakka)]))))
 
-(defn yksikkohinnat
-  [urakka]
-  [tuck/tuck
-   tiedot/yksikkohinnat-app-tila
-   (fn [e! app]
-     [yksikkohinnat* e! app urakka])])
+(defn yksikkohinnat []
+  [tuck urakka-tila/yksikkohinnat yksikkohinnat*])
