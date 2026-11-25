@@ -44,7 +44,7 @@ Uuden komponentin lisääminen:
 - `:data-cy` on oletuksena `:id`. `:luokka` viedään juurielementille.
 - Pudotusvalikon valinta välitetään `:valitse-fn`:lle täsmälleen samassa muodossa kuin vaihtoehto annettiin.
 - Komponentit eivät aseta ulkomarginaaleja. Välit kuuluvat käyttöpaikalle tai `pino`/`toimintoryhma`-rakenteelle.
-- Layout-komponentit käyttävät nimettyjä Väylä-tokeneita (`:pieni`, `:keski`, `:suuri`) eivätkä vapaata CSS:ää. `vaaka` on vaakasuuntainen `flex`, `sailio` rajaa sivusisällön leveyden ja sisäreunan, `ruudukko` on responsiivinen 1–4-palstainen CSS-grid ja `osio` on semanttinen otsikollinen alue.
+- Layout-komponentit käyttävät nimettyjä Väylä-tokeneita (`:pieni`, `:keski`, `:suuri`) eivätkä vapaata CSS:ää. `vaaka` on vaakasuuntainen `flex`, `sailio` rajaa sivusisällön leveyden ja sisäreunan (valinnaisesti `:keskita? true` keskittää sen vaakasuunnassa), `ruudukko` on responsiivinen 1–4-palstainen CSS-grid ja `osio` on semanttinen otsikollinen alue.
 - `sailio` vastaa yleisen UI-frameworkin `Container`ia. Nimeä `sivu` ei käytetä, koska `:sivu` on simulaattorin komponenttipuun tekninen juurivanhempi.
 - Bootstrap-riippuvuus kirjataan rekisterissä `:bootstrap-tila`-arvolla (`:ei-riippuvuutta`, `:osittain-riippuvainen`, `:riippuvainen`, `:maarittelematta`).
 - Jokaisella rekisterimerkinnällä on `:suositus` (`:uuteen-ui`, `:vanha`, `:ei-suositusta`) ja `:korvaa`-lista (tekstit vanhoista vastineista, tyhjä vektori jos ei korvausta). Sopimusruutu näyttää molemmat.
@@ -169,8 +169,10 @@ Esimerkkisivut ovat valmiita, kelvollisia simulaattoripuita sekä käyttäjille 
 - Simulaattorin renderöijä (`:renderoi`) on tehty rekisterin komponenteista näille: asettelut (`pino`, `vaaka`, `sailio`, `osio`, `ruudukko`, `suodatinrivi`, `toimintoryhma`, `lomake`, `panel`), `nappi`, `linkki`, `ikoni-ja-teksti`, `tilaviesti`, kentät (`tekstikentta`, `numerokentta`, `sahkopostikentta`, `puhelinkentta`, `valintaruutu`, `raksiboksi`, `radiokentta`, `checkbox-ryhma`, `radio-group`, `valinta`, `kenttaryhma`, `suodatin`), alasvedot (`livi-pudotusvalikko`, `checkbox-pudotusvalikko`, `hoitokausi`), gridit (`perusgrid`, `muokkausgrid`), sisältö (`tietoja`, `taulukkotietonakyma`, `kaksi-palstaa-otsikkoja-ja-arvoja`) ja palautteet (`ajax-loader`, `vihje`, `info-laatikko`, `tila-indikaattori`, `tooltip`, `tabs`, `dropdown-panel`).
 - Renderöijä välittää asetuksista vain dokumentoidut, datana annettavat arvot (whitelist). Vapaata `:luokka`-, `:class`-, `:style`- tai hiccup-asetusta ei välitetä, vaan tyylit tulevat renderöijän omasta sanastosta: `nappi` käyttää `:variantti`-asetusta (`:ensisijainen`, `:toissijainen`, `:reunaton`, `:myonteinen`, `:kielteinen`, `:varoitus`), `panel` ottaa sisällön `:lapset`-solmuista. Funktiot, atomit ja ikonit eivät voi tulla syötteestä, joten renderöijä antaa ne itse. Taulukko- ja otsikko-arvo-komponentit saavat datan `:rivit`-asetuksella.
 - Jokaisella instanssilla on oma tila (`r/with-let`) ja `data-cy` joko asetuksesta tai oletuksena `ui-simulaattori-<komponentti>`. Alkuarvoa ei voi antaa `:arvo`-asetuksella (suojattu).
-- Ilman simulaattorin renderöijää ovat tarkoituksella: `murupolku`, `navbar`, `viesti`, `modal`, `sivupalkki`, `toast-viesti`, `leijuke`, `varmista-kayttajalta` (globaali tila tai overlay), `liitteet` (backend-kutsut), `dropdown` (avaustila puuttuu) ja `rivi` (vanha Bootstrap-rakenne).
-- `kentat/tee-kentta` tukee vain `:elementin-id`:tä, ei `aria-describedby`- tai `aria-invalid`-attribuutteja. Kenttäryhmän ARIA-yhteys toimii suoraan annettuun natiivikenttään, mutta `tee-kentta`-kentille se vaatii erillisen muutoksen `kentat.cljs`:ään.
+- Ilman simulaattorin renderöijää ovat tarkoituksella: `murupolku`, `navbar`, `viesti`, `modal`, `sivupalkki`, `toast-viesti`, `leijuke`, `varmista-kayttajalta` (globaali tila tai overlay), `dropdown` (avaustila puuttuu) ja `rivi` (vanha Bootstrap-rakenne).
+- `liitteet` saa simulaattorissa staattisen `liitetiedosto`-kortin. Oikea `harja.ui.liitteet`-komponentti tekee backend-kutsuja, joten simulaattori ei renderöi sitä.
+- `kentat/tee-kentta` tukee vain `:elementin-id`:tä, ei `aria-describedby`- tai `aria-invalid`-attribuutteja. Simulaattorin kenttäryhmä renderöi kentän `tee-kentta`-komponentilla (`:teksti`, `:numero`, `:paivamaara`, `:tekstialue`), joten sen ARIA-yhteys ei toimi ennen erillistä muutosta `kentat.cljs`:ään. Natiivi ARIA-esimerkki on oma korttinsa (`Natiivi kenttä (ei Harja-komponentti)`). Haku `aria-describedby` src/cljs-puusta osoittaa, että attribuutti esiintyy vain simulaattorissa, joten esimerkki ei ole tuotantokäytössä. Haku ei kuitenkaan kata kaikkia raakoja `:input`-elementtejä.
+- `:vayla-tyyli?` ei vaikuta kenttätyyppeihin `:email` ja `:text` (`kentat.cljs`), joten niiden input ja textarea jäävät ilman Väylä-luokkia (`form-control` vain `lomake?`-tilassa). Tämä on tuotantokomponentin rajoitus, jonka korjaus vaatii luvan. Sähköpostin ja tekstialueen simulaattorikortit eivät siksi näytä Väylä-tyyliä.
 - Tarkastelusivun esikatselut (CLJS) validoidaan selaimessa. Rakennetestit kattavat vain cljc-puolen hiccup-rakenteen.
 - Tarjoushinnat-näkymän `urakka-haku-id` on edelleen render-aikainen `gensym`.
 - Livi-pudotusvalikon nykytila ja tavoitetila on dokumentoitu yllä. Nykyinen
@@ -232,6 +234,19 @@ Review hyväksyy uuden muutoksen vain, jos kaikki täyttyvät:
 - `lein compile-dev`, tarvittaessa `npm run build-css`, editoridiagnostiikka ja selainpassi ovat vihreät
 - uusi käyttöpaikka ei lisää suoraa Bootstrap-markupia
 - muutoksen laajuus on yksi komponenttisopimus tai yksi tuotantokäyttöpaikka
+
+## Tuotantokomponenttien korjaukset
+
+Tuotantokomponentteja (`src/cljs/harja/ui/`, `src/cljs/harja/views/`) ei muokata ennen kuin komponenttijärjestelmän ensimmäinen versio on yhdistetty `develop`-haaraan. Sen jälkeen jokainen korjaus on oma muutoksensa omalla validoinnilla. Alla olevat kohdat on tunnistettu, mutta niitä ei ole toteutettu.
+
+| Korjaus | Kohde | Riski | Vaadittu validointi | Tila |
+| --- | --- | --- | --- | --- |
+| Alasvedon 4 px:n marginaali suodatinrivillä. `.label-ja-alasveto` nostaa alasvedon muiden kenttien yläpuolelle, ja tarjoushinnat-pilotissa linjaus epäonnistuu. | `styles.less` (`.label-ja-alasveto`), `yleiset.cljs` (`pudotusvalikko`) | Globaali muutos koskee noin 20 tuotantotiedostoa. Sivukohtaiset ylikirjoitukset (`yllapito_kustannukset_tyylit.less`, `tarkastukset.less`, `kulujenkirjaus.less`) voivat muuttua. | Ennen–jälkeen-kuvat 4–5 sivulta, esimerkiksi kulujenkirjaus, valinnat, kojelauta ja kululomake. Tarjoushinnat 1920 px ja 800 px leveydellä. | Odottaa päätöstä. Rajattu korjaus `.ui-suodatinrivi .label-ja-alasveto { margin: 0 }` ei riko tuotantoa, koska `.ui-suodatinrivi` on vain uudessa järjestelmässä. |
+| Väylä-tyyli ei päde sähköposti- ja tekstikenttään. `:vayla-tyyli?` ei vaikuta tyyppeihin `:email` ja `:text`. | `kentat.cljs` | Tyyli muuttuu kaikissa näiden tyyppien tuotantokentissä. | Selainpassi sähköposti-, tekstikenttä- ja tekstialuekäyttöpaikoissa. Tyyppitesti, joka varmistaa, että jokainen kenttätyyppi saa Väylä-luokat. | Odottaa lupaa. |
+| `tee-kentta` ei tue `aria-describedby`- eikä `aria-invalid`-attribuutteja. | `kentat.cljs` (`tee-kentta`) | Muutos koskee kenttien virheilmoituksia, joten käyttäytyminen voi muuttua. | Selainpassi virhetilassa ja saavutettavuustarkistus. | Odottaa lupaa. |
+| Liitteiden sijainti kululomakkeessa. | Kululomakkeen näkymä | Layoutpäätös, ei tekninen riski. | Päätös ennen toteutusta. | Avoin. |
+
+Vielä selvittämättä: lomakekomponenttien (esimerkiksi alasveto ja nappi) keskittäminen samalla vaaka-layoutilla. Keskittämistä on testattu vain `sailio`-komponentilla (`:keskita?`).
 
 ## Seuraava sallittu askel
 
