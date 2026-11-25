@@ -510,10 +510,10 @@
   Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet
   Sanktiot lasketaan kaavalla:
   0,0033 x (lupauspistemäärä - toteumapistemäärä) x tavoitehinta
-  
+
   HUOM: Tämä funktio käyttää kiinteitä kertoimia ja on jätetty 2019/2020-urakoiden vanhan polun yhteensopivuuden vuoksi.
   Uusi yhteinen laskenta on funktiossa laske-lupauspaatos-bonus-tai-sanktio.
-  
+
   Palauttaa:
   - {:bonus <positiivinen>} kun bonus
   - {:sanktio <negatiivinen>} kun legacy-polku tarvitsee sanktion indeksikorjaukseen
@@ -531,20 +531,20 @@
 
 (defn laske-lupauspaatos-bonus-tai-sanktio
   "Yhteinen lupausbonus/sanktio-laskenta, joka käyttää välikatselmuksen logiikkaa.
-  
+
   Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet:
     bonus = (bonusprosentti / 100) × tavoitehinta × (toteutuneet - luvatut)
-  
+
   Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet:
     sanktio = (sanktioprosentti / 100) × tavoitehinta × (luvatut - toteutuneet)
-  
+
   Parametrit:
   - toteutuneet-pisteet: Toteutuneet lupauksen pisteet
   - luvatut-pisteet: Luvatut lupauksen pisteet
   - tavoitehinta: Urakan tavoitehinta (tarjouksen tavoitehinta)
   - sanktioprosentti: Sanktioprosentti urakan parametreista (esim. 0.33 tai 0.18)
   - bonusprosentti: Bonusprosentti urakan parametreista (esim. 0.13)
-  
+
   Palauttaa:
   - {:lupausbonus <positiivinen luku>} kun toteutuneet > luvatut
   - {:lupaussanktio <positiivinen luku>} kun toteutuneet < luvatut
@@ -562,11 +562,11 @@
         ;; Toteutuneet pisteet ylittää luvatut -> bonus
         (< erotus 0)
         {:lupausbonus (* (/ bonusprosentti 100) tavoitehinta (Math/abs ^long erotus))}
-        
+
         ;; Toteutuneet pisteet alittaa luvatut -> sanktio (positiivinen)
         (> erotus 0)
         {:lupaussanktio (* (/ sanktioprosentti 100) tavoitehinta erotus)}
-        
+
         ;; Pisteet täsmäävät
         :else
         {:tavoite-taytetty true}))))
@@ -578,7 +578,7 @@
 
 (defn kayttaja-saa-vastata?
   "Saako käyttäjä vastata annettuun kuukauteen.
-  
+
   Excel (roolit.xlsx) määrittää kaikki oikeudet - katso dokumentaatio excelistä tai oikeudet.cljc"
   [kayttaja lupaus-kuukausi lupaustyyppi urakka-id]
   (and (vastauskuukausi? lupaus-kuukausi)
@@ -594,17 +594,17 @@
                                    oikeudet/urakat-lupaukset
                                    urakka-id
                                    kayttaja)
-          
+
           ;; Muut lupaukset: Excel määrittää kuka saa tehdä päätöksiä (W,päätös)
           (oikeudet/on-muu-oikeus? "päätös"
                                    oikeudet/urakat-lupaukset
                                    urakka-id
                                    kayttaja))
-        
+
         ;; Kirjauskuukaudet: perustason kirjoitusoikeus riittää (Excel: W)
         (:kirjauskuukausi? lupaus-kuukausi)
         (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset urakka-id kayttaja)
-        
+
         ;; Ei kirjaus- eikä päättävä kuukausi
         :else false))))
 
@@ -642,12 +642,12 @@
 
 (defn paatos->bonus-tai-sanktio
   "Muuntaa tietokannasta haetun päätöksen API-muotoon.
-  
+
   Tietokanta sisältää:
   - :lupausbonus (positiivinen) ja :tyyppi 'bonus'
   - :lupaussanktio (positiivinen) ja :tyyppi 'sanktio'
   - :tyyppi 'taytetty' kun tavoite on täytetty
-  
+
   API-muoto:
   - {:bonus <positiivinen>}
   - {:sanktio <positiivinen>}
