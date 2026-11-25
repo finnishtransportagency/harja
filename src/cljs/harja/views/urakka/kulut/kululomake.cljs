@@ -831,7 +831,8 @@
           {:disabled haku-menossa}]]
 
         (when (and (= :vesivayla-hoito urakan-tyyppi)
-                (k/kehitysymparistossa?))
+                (or (k/kehitysymparistossa?)
+                  (k/ciymparistossa?)))
           [:span
            [napit/yleinen-toissijainen
             "Generoi VHU-yksikköhinnat"

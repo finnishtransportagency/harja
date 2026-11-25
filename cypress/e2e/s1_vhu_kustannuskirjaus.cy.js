@@ -68,8 +68,10 @@ function tallennaKulu(laskunNumero) {
 function generoiMahdollisestiPuuttuvatVhuYksikkohinnat() {
     cy.get('body').then(($body) => {
         const puuttuvaYksikkohintaNakyvissa = $body
-            .find('.info-laatikko .infolaatikon-teksti')
-            .filter(':visible')
+            .find('span.kentan-otsikko')
+            .filter((_, otsikko) => otsikko.textContent.trim() === 'Yksikköhinta')
+            .parent()
+            .find('.lukutila-arvo:visible')
             .text()
             .includes(yksikkohinnanPuuttumisviesti);
 
@@ -85,7 +87,12 @@ function generoiMahdollisestiPuuttuvatVhuYksikkohinnat() {
                 .its('response.statusCode')
                 .should('eq', 200);
 
-            cy.contains(yksikkohinnanPuuttumisviesti).should('not.exist');
+            cy.contains('span.kentan-otsikko', 'Yksikköhinta')
+                .parent()
+                .find('.lukutila-arvo')
+                .should(($yksikkohinta) => {
+                    expect($yksikkohinta.text()).not.to.include(yksikkohinnanPuuttumisviesti);
+                });
             cy.contains('button', 'Tallenna').should('be.enabled');
         }
     });
@@ -185,14 +192,12 @@ describe('Sisävesiväylän urakan kulujen kirjaus', function () {
 
         aloitaKulunKirjaus('E2E-VHU-MUU');
         valitseKulunPvm();
-        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         valitseKulunTyyppi('Muu kulu');
         cy.contains('label', 'Kuuluu tavoitehintaan').click();
         valitseTehtava();
+        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
 
-        cy.get('[data-cy="vhu-muukulu-maara"]')
-            .type('1')
-            .blur();
+        cy.get('[data-cy="vhu-muukulu-maara"]').type('1').blur();
         tarkistaYhteensa(1);
 
         tallennaKulu('E2E-VHU-MUU');
@@ -214,7 +219,6 @@ describe('Sisävesiväylän urakan kulujen kirjaus', function () {
     it('Lisää ei-tavoitehintaisen Muu kulun hinnalla', function () {
         aloitaKulunKirjaus('E2E-VHU-MUU-EI-TAVOITE');
         valitseKulunPvm();
-        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         valitseKulunTyyppi('Muu kulu');
         cy.contains('label', 'Ei kuulu tavoitehintaan').click();
         valitseEnsimmainenAlasvedosta('Toimenpide*');
@@ -228,7 +232,6 @@ describe('Sisävesiväylän urakan kulujen kirjaus', function () {
     it('Lisää Lisätyö -kulu', function () {
         aloitaKulunKirjaus('E2E-VHU-LISATYO');
         valitseKulunPvm();
-        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         valitseKulunTyyppi('Lisätyö');
         valitseEnsimmainenAlasvedosta('Toimenpide*');
         cy.contains('label', /^Lisätieto \*$/)
@@ -244,9 +247,9 @@ describe('Sisävesiväylän urakan kulujen kirjaus', function () {
 
     it('Hankintakulu - Tarkista liitteen pakollisuus', function () {
         aloitaKulunKirjaus('E2E-VHU-HANKINTA-EI-LIITETTA');
-        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         valitseKulunTyyppi('Hankintakulu (kiinteä tai määrämitattava)');
         valitseTehtava();
+        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         cy.get('[data-cy="vhu-hankintakulu-maara"]').type('1').blur();
 
         cy.contains('.punainen-teksti', 'Lisää toimenpiteen lisätiedot liitteenä.').should('be.visible');
@@ -255,10 +258,10 @@ describe('Sisävesiväylän urakan kulujen kirjaus', function () {
 
     it('Nollaa määrä ja yhteissumma tehtäväryhmää vaihdettaessa', function () {
         aloitaKulunKirjaus('E2E-VHU-NOLLAUS');
-        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         valitseKulunTyyppi('Muu kulu');
         cy.contains('label', 'Kuuluu tavoitehintaan').click();
         valitseTehtava();
+        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         cy.get('[data-cy="vhu-muukulu-maara"]')
             .type('1')
             .blur();
@@ -290,9 +293,9 @@ describe('Sisävesiväylän urakan kulujen kirjaus', function () {
     it('Lisää liitteellinen Hankintakulu', function () {
         aloitaKulunKirjaus('E2E-VHU-HANKINTA');
         valitseKulunPvm();
-        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
         valitseKulunTyyppi('Hankintakulu (kiinteä tai määrämitattava)');
         valitseTehtava();
+        generoiMahdollisestiPuuttuvatVhuYksikkohinnat();
 
         cy.get('[data-cy="vhu-hankintakulu-maara"]')
             .type('1')
