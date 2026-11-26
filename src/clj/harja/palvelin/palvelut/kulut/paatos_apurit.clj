@@ -149,6 +149,8 @@
                         :rivi 0
                         :kulu uusi-kulu-id
                         :summa (:kokonaissumma kulu)
+                        :maara nil
+                        :yksikkohinta nil
                         :toimenpideinstanssi toimenpideinstanssi-id
                         :tehtavaryhma (:id tehtavaryhma)
                         :tehtava-id nil

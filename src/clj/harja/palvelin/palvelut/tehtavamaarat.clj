@@ -5,6 +5,8 @@
             [taoensso.timbre :as log]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
             [harja.kyselyt.urakat :as urakat-q]
+            [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.konversio :as konversio]
             [harja.tyokalut.big :as big]
             [harja.domain.oikeudet :as oikeudet]
             [harja.pvm :as pvm]
@@ -56,35 +58,49 @@
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
-  (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+  (let [urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
         ;; Varmista, että urakka on olemassa
         _ (when (nil? urakan-tiedot)
             (throw (IllegalArgumentException. (format "Urakkaa %s ei ole olemassa." urakka-id))))
         alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
         tehtavaryhmat-ja-toimenpiteet (into []
-                                        (tehtavamaarat-kyselyt/tehtavaryhmat-ja-toimenpiteet-urakalle db
-                                          {:urakka urakka-id
-                                           ;; 25 urakoilta karsitaan jjh käsinkirjaukset pois,
-                                           ;; mikäli muutokset ovat käytössä 
-                                           :muutokset-kaytossa? (and
-                                                                  (>= alkuvuosi 2025)
-                                                                  (boolean muutokset-kaytossa?))
-                                           :urakka-voimassaolo-alkuvuosi alkuvuosi}))]
+                                        (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+                                          (tehtavamaarat-kyselyt/hae-vhu-tehtavaryhmat-ja-toimenpiteet-urakalle db {:urakkaid urakka-id})
+                                          ;; Muussa tapauksessa oletetaan, että kyseessä on mhu-urakka
+                                          (tehtavamaarat-kyselyt/hae-mhu-tehtavaryhmat-ja-toimenpiteet-urakalle db
+                                            {:urakka urakka-id
+                                             ;; 25 urakoilta karsitaan jjh käsinkirjaukset pois,
+                                             ;; mikäli muutokset ovat käytössä
+                                             :muutokset-kaytossa? (and
+                                                                    (>= alkuvuosi 2025)
+                                                                    (boolean muutokset-kaytossa?))
+                                             :urakka-voimassaolo-alkuvuosi alkuvuosi})))]
     tehtavaryhmat-ja-toimenpiteet))
 
 (defn hae-tehtavaryhman-tehtavat-urakalle
-  [db user {:keys [urakka-id tehtavaryhma-id]}]
+  [db user {:keys [urakka-id tehtavaryhma-id valittu-hoitokausi]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo user urakka-id)
   (when (not urakka-id)
     (throw (IllegalArgumentException. (str "Urakka-id puuttuu"))))
-  (let [;; Hae urakan alkuvuosi
-        urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
+  (let [;; Hae urakan tiedot
+        urakan-tiedot (first (urakat-q/hae-urakan-tiedot db {:id urakka-id}))
         alkuvuosi (-> urakan-tiedot :alkupvm pvm/vuosi)
+        [alkupvm loppupvm] (map konversio/sql-date valittu-hoitokausi)
         tehtavat (into []
-                   (tehtavamaarat-kyselyt/tehtavaryhman-tehtavat-urakalle db
-                     {:urakka-id urakka-id
-                      :tehtavaryhma-id tehtavaryhma-id
-                      :urakan-alkuvuosi alkuvuosi}))]
+                   (if (= "vesivayla-hoito" (:tyyppi urakan-tiedot))
+                     (let [sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))]
+                     (tehtavamaarat-kyselyt/hae-vhu-tehtavaryhman-tehtavat-urakalle db
+                       {:urakka-id urakka-id
+                        :tehtavaryhma-id tehtavaryhma-id
+                        :urakan-alkuvuosi alkuvuosi
+                        :sopimus-id sopimus-id
+                        :alkupvm alkupvm
+                        :loppupvm loppupvm}))
+                     ;; else mhu
+                     (tehtavamaarat-kyselyt/hae-mhu-tehtavaryhman-tehtavat-urakalle db
+                       {:urakka-id urakka-id
+                        :tehtavaryhma-id tehtavaryhma-id
+                        :urakan-alkuvuosi alkuvuosi})))]
     tehtavat))
 
 (defn- paivita-tarvittaessa [idt polku arvo]

@@ -315,3 +315,29 @@ WHERE tot.urakka = :urakka
       AND tot.tyyppi = 'yksikkohintainen'::toteumatyyppi AND tot.poistettu IS NOT TRUE
 GROUP BY pvm, t4.nimi, tpi.nimi, tehtava_id
 ORDER BY pvm ASC, t4.nimi;
+
+-- name: hae-vhu-urakan-hinnoittelemattomat-tehtavat
+-- Hakee urakan tehtävät, joilla ei vielä ole valitun sopimuksen yksikköhintaa hoitokaudella.
+-- Käytetään generoidessa lokaalisti yksikköhintoja testauksen nopeuttamiseksi.
+SELECT DISTINCT
+    t.id AS tehtava,
+    t.yksikko AS "tehtavan-yksikko",
+    yth.yksikko AS "yksikkohintaisen-tyon-yksikko",
+    yth.maara,
+    yth.arvioitu_kustannus
+FROM tehtavaryhmaotsikko tro
+         JOIN tehtavaryhma tr ON tr.tehtavaryhmaotsikko_id = tro.id
+         JOIN tehtava t ON t.tehtavaryhma = tr.id
+         JOIN toimenpideinstanssi tpi ON tpi.toimenpide = t.emo
+    AND tpi.urakka = :urakkaid
+         LEFT JOIN yksikkohintainen_tyo yth ON yth.urakka = :urakkaid
+    AND yth.tehtava = t.id
+    AND yth.sopimus = :sopimusid
+    AND yth.alkupvm = :alkupvm::DATE
+    AND yth.loppupvm = :loppupvm::DATE
+WHERE tro.urakkatyyppi = 'vesivayla-hoito'
+  AND t."vhu-tehtava?" IS TRUE
+  AND t.poistettu IS NOT TRUE
+  AND t.piilota IS NOT TRUE
+  AND yth.yksikkohinta IS NULL
+ORDER BY t.id;

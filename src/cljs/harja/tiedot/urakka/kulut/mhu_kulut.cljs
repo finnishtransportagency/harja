@@ -9,6 +9,7 @@
     [harja.asiakas.kommunikaatio :as k]
     [harja.tiedot.istunto :as istunto]
     [harja.tyokalut.tuck :as tuck-apurit]
+    [harja.tiedot.urakka :as urakka-tila]
     [harja.tiedot.urakka.urakka :as tila]
     [harja.tiedot.navigaatio :as navigaatio])
   (:require-macros [harja.tyokalut.tuck :refer [varmista-kasittelyjen-jarjestys]]))
@@ -25,6 +26,7 @@
 (defrecord ValitseTehtavaKohdistukselle [tehtava nro])
 (defrecord KohdistuksenLisatieto [lisatieto nro])
 (defrecord KohdistuksenSumma [summa nro])
+(defrecord KohdistuksenMaara [maara nro])
 (defrecord KoontilaskunKuukausi [arvo])
 (defrecord ValitseErapaiva [erapaiva])
 (defrecord KoontilaskunNumero [koontilaskunnumero])
@@ -62,6 +64,9 @@
 (defrecord HaeTehtavatKaikilleKohdistuksille [lomake])
 (defrecord HaeUrakanToimenpiteetJaTehtavaryhmat [urakka])
 (defrecord HaeUrakanTehtavaryhmanTehtavat [urakka tehtavaryhma nro])
+(defrecord GeneroiVhuYksikkohinnat [])
+(defrecord GeneroiVhuYksikkohinnatOnnistui [vastaus])
+(defrecord GeneroiVhuYksikkohinnatEpaonnistui [vastaus])
 (defrecord HaeUrakanKulut [hakuparametrit])
 (defrecord HaeUrakanToimenpiteet [hakuparametrit])
 (defrecord OnkoLaskunNumeroKaytossa [laskun-numero])
@@ -187,7 +192,15 @@
                                                 hoitovuoden-paatostyyppi (when tehtavaryhma
                                                                            (first (keep #(when (= (val %) (:tehtavaryhma tehtavaryhma))
                                                                                            (key %)) vuoden-paatoksen-tehtavaryhmien-nimet)))
-                                                kohdistustyyppi (keyword (:tyyppi kohdistus))]
+                                                kohdistustyyppi (keyword (:tyyppi kohdistus))
+                                                tehtava (if (and (nil? (:tehtava kohdistus))
+                                                              (:muu-tehtava-kaytossa kohdistus))
+                                                          muu-tehtava
+                                                          (:tehtava kohdistus))
+                                                tehtava (cond-> tehtava
+                                                          (and (map? tehtava)
+                                                            (some? (:yksikkohinta kohdistus)))
+                                                          (assoc :yksikkohinta (:yksikkohinta kohdistus)))]
                                             (-> kohdistus
                                               (assoc :lisatyo? (if (= "lisatyo" (:maksueratyyppi kohdistus)) true false))
                                               (assoc :tyyppi kohdistustyyppi)
@@ -195,10 +208,7 @@
                                               (assoc :tehtavaryhma tehtavaryhma)
                                               (assoc :valittu-muutostyo valittu-muutostyo)
                                               (assoc :hoitovuoden-paatostyyppi hoitovuoden-paatostyyppi)
-                                              (assoc :tehtava (if (and (nil? (:tehtava kohdistus))
-                                                                    (:muu-tehtava-kaytossa kohdistus))
-                                                                muu-tehtava
-                                                                (:tehtava kohdistus))))))
+                                              (assoc :tehtava tehtava))))
                                     kohdistukset))))
         kl (with-meta kl (tila/kulun-validointi-meta kl))]
     kl))
@@ -339,6 +349,30 @@
       {:tuck.effect/type :laukaise-event
        :event ->HaeUrakanHintapaatokset})))
 
+(defn- paivita-tehtavien-yksikkohinnat [app generoitu-tehtavat]
+  (let [yksikkohinnat (into {} (map (juxt :tehtava :yksikkohinta) generoitu-tehtavat))
+        paivita-tehtava (fn [tehtava]
+                          (if (contains? yksikkohinnat (:id tehtava))
+                            (assoc tehtava :yksikkohinta (get yksikkohinnat (:id tehtava)))
+                            tehtava))]
+    (update-in app [:lomake :kohdistukset]
+      (fn [kohdistukset]
+        (when kohdistukset
+          (mapv (fn [kohdistus]
+                  (let [kohdistus (-> kohdistus
+                                    (update :tehtavaryhman-tehtavat
+                                      (fn [tehtavat]
+                                        (when tehtavat (mapv paivita-tehtava tehtavat))))
+                                    (update :tehtava
+                                      (fn [tehtava]
+                                        (when tehtava (paivita-tehtava tehtava)))))
+                        maara (:maara kohdistus)
+                        yksikkohinta (get-in kohdistus [:tehtava :yksikkohinta])]
+                    (if (and (number? maara) (number? yksikkohinta))
+                      (assoc kohdistus :summa (* maara yksikkohinta))
+                      kohdistus)))
+            kohdistukset))))))
+
 (extend-protocol tuck/Event
 
   AsetaNykyhetki
@@ -402,13 +436,17 @@
   ValitseTehtavaryhmaKohdistukselle
   (process-event [{:keys [nro tehtavaryhma]} app]
     (let [urakka (-> @tila/yleiset :urakka)
+          vhu-urakka? (= :vesivayla-hoito (:tyyppi urakka))
           ;; Toimenpideinstanssi on saatavilla tehtäväryhmän tiedoista, joten asetetaan se samalla
           app (-> app
                 (assoc-in [:lomake :kohdistukset nro :toimenpideinstanssi] (:toimenpideinstanssi tehtavaryhma))
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhma] tehtavaryhma)
                 (assoc-in [:lomake :kohdistukset nro :tehtava] nil)
                 (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] nil)
-                (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true))]
+                (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] true))
+          app (cond-> app
+                vhu-urakka? (assoc-in [:lomake :kohdistukset nro :maara] nil)
+                vhu-urakka? (assoc-in [:lomake :kohdistukset nro :summa] nil))]
       ;; Haetaan tehtävät kun tehtäväryhmä valitaan
       (when (and tehtavaryhma (:id tehtavaryhma))
         ((tuck/current-send-function)
@@ -450,10 +488,14 @@
 
   ValitseTehtavaKohdistukselle
   (process-event [{tehtava :tehtava nro :nro} app]
-    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)]
-      (-> app
-        (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
-        (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))))
+    (let [muu-tehtava-kaytossa? (= (:id tehtava) -1)
+          vhu-urakka? (= :vesivayla-hoito (-> @tila/yleiset :urakka :tyyppi))
+          app (-> app
+                (assoc-in [:lomake :kohdistukset nro :muu-tehtava-kaytossa] muu-tehtava-kaytossa?)
+                (assoc-in [:lomake :kohdistukset nro :tehtava] tehtava))]
+      (cond-> app
+        vhu-urakka? (assoc-in [:lomake :kohdistukset nro :maara] nil)
+        vhu-urakka? (assoc-in [:lomake :kohdistukset nro :summa] nil))))
 
   KohdistuksenLisatieto
   (process-event [{lisatieto :lisatieto nro :nro} app]
@@ -462,6 +504,17 @@
   KohdistuksenSumma
   (process-event [{summa :summa nro :nro} app]
     (assoc-in app [:lomake :kohdistukset nro :summa] summa))
+
+  KohdistuksenMaara
+  (process-event [{maara :maara nro :nro} app]
+    (let [yksikkohinta (get-in app [:lomake :kohdistukset nro :tehtava :yksikkohinta])
+          maara (when-not (or (nil? maara) (and (string? maara) (str/blank? maara)))
+                  (parsi-summa maara))
+          summa (when (and (number? maara) (number? yksikkohinta))
+                  (* maara yksikkohinta))]
+      (-> app
+        (assoc-in [:lomake :kohdistukset nro :maara] maara)
+        (assoc-in [:lomake :kohdistukset nro :summa] summa))))
 
   KoontilaskunKuukausi
   (process-event [{arvo :arvo} app]
@@ -778,7 +831,8 @@
     [{:keys [urakka tehtavaryhma nro]} app]
     (when (and tehtavaryhma (:id tehtavaryhma)) (tuck-apurit/post! :hae-tehtavaryhman-tehtavat-urakalle
                                                   {:urakka-id (:id urakka)
-                                                   :tehtavaryhma-id (:id tehtavaryhma)}
+                                                   :tehtavaryhma-id (:id tehtavaryhma)
+                                                   :valittu-hoitokausi @urakka-tila/valittu-hoitokausi}
                                                   {:onnistui ->HaeUrakanTehtavaryhmanTehtavatOnnistui
                                                    :onnistui-parametrit [{:nro nro}]
                                                    :epaonnistui ->KutsuEpaonnistui
@@ -791,18 +845,42 @@
 
   HaeUrakanTehtavaryhmanTehtavatOnnistui
   (process-event [{tulos :tulos {:keys [nro]} :parametrit} app]
-    (let
-      [lomake (:lomake app)
-       lomake (-> lomake
-                (with-meta (tila/kulun-validointi-meta lomake)))
-       app (-> app
-             (assoc :lomake lomake)
-             (assoc-in [:lomake :kohdistukset nro :tehtavaryhman-tehtavat] tulos)
-             (assoc-in [:lomake :kohdistukset nro :tehtava-haku-menossa] false))]
-      (if (= 1 (count tulos))
-        ;; Aseta ainoa tehtävä valinnaksi
-        (assoc-in app [:lomake :kohdistukset nro :tehtava] (first tulos))
-        app)))
+    (let [lomake (-> (:lomake app)
+                   (assoc-in [:kohdistukset nro :tehtavaryhman-tehtavat] tulos)
+                   (assoc-in [:kohdistukset nro :tehtava-haku-menossa] false))
+          ;; Aseta ainoa tehtävä valinnaksi
+          lomake (if (= 1 (count tulos))
+                   (assoc-in lomake [:kohdistukset nro :tehtava] (first tulos))
+                   lomake)
+          lomake (with-meta lomake (tila/kulun-validointi-meta lomake))]
+      (assoc app :lomake lomake)))
+
+  GeneroiVhuYksikkohinnat
+  (process-event [_ app]
+    (let [urakka (:urakka @tila/yleiset)
+          valittu-hoitokausi @urakka-tila/valittu-hoitokausi]
+      (tuck-apurit/post! :generoi-vhu-yksikkohinnat
+        {:urakka-id (:id urakka)
+         :valittu-hoitokausi valittu-hoitokausi}
+        {:onnistui ->GeneroiVhuYksikkohinnatOnnistui
+         :epaonnistui ->GeneroiVhuYksikkohinnatEpaonnistui
+         :paasta-virhe-lapi? true})
+      (assoc-in app [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?] true)))
+
+  GeneroiVhuYksikkohinnatOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (let [tehtavat (:tehtavat vastaus)
+          app (-> app
+                (paivita-tehtavien-yksikkohinnat tehtavat)
+                (assoc-in [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?] false))]
+      (viesti/nayta-toast! (str "Yksikköhintoja generoitiin " (count tehtavat) " tehtävälle.") :onnistui)
+      app))
+
+  GeneroiVhuYksikkohinnatEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (js/console.error "VHU-yksikköhintojen generointi epäonnistui." (pr-str vastaus))
+    (viesti/nayta-toast! "VHU-yksikköhintojen generointi epäonnistui." :varoitus)
+    (assoc-in app [:parametrit :vhu-yksikkohintojen-generointi-kaynnissa?] false))
 
   HaeKaikkiTehtavaryhmat
   (process-event [{:keys [hakuparametrit]} app]
@@ -1003,7 +1081,7 @@
       (assoc :syottomoodi auki?))))
 
 (defn kasittele-tehtavaryhmat
-  "Lisättäessä tai muokatessa kuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita.
+  "Lisättäessä tai muokatessa kuluja tehtäväryhmä alasvetovalikosta poistetaan muutamia tehtäväryhmiä, joita ei enää saa valita. (Näin MH-urakoilla)
    Jos niitä on saatu kululle jotain muuta kautta, niin ne kuitenkin näytetään.
    Näitä on:
    Hoitovuoden päättäminen / Tavoitepalkkio, yksilöllinen tunniste: '55c920e7-5656-4bb0-8437-1999add714a3'

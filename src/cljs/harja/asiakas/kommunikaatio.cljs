@@ -75,6 +75,11 @@
   []
   (kehitysymparistossa-yhteiset? (.-host js/location)))
 
+(defn ciymparistossa?
+  "Tarkistaa ajetaanko sovellusta Cypress-testin sisällä."
+  []
+  (some? (.-Cypress js/window)))
+
 (defn kehitysymparistossa-localhost?
   "Tarkistaa ollaanko localhost-kehitysympäristössä"
   []

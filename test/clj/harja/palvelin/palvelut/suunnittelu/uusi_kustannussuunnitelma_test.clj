@@ -172,10 +172,10 @@
         urakka-id (hae-urakan-id-nimella "Iin MHU 2021-2026")
         sopimus-id (urakat-q/urakan-paasopimus-id db urakka-id)
         hoitovuoden-alkuvuosi 2021
-        ;; Poista yhteenvetorivi ennen tallennusta
-        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
         toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
-        h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
+        h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id apurit/hankinnat-tietomalli toimenpiteet)
+        ;; Poista yhteenvetorivi ennen tallennusta
+        h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta h-tietomalli)
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge
@@ -189,7 +189,6 @@
                     {:error (.getMessage e)}))
         toimenkuvat (get-in vastaus [:kustannussuunnitelma :kilpailutettavat-hankinnat :toimenpiteet])
         alkukausi-vastauksesta (bigdec (apply + (keep :alkukausi toimenkuvat)))
-
 
 
         ;; Vastauksesta saatiin kilpailutettavat hankinnat vuodelle 2021

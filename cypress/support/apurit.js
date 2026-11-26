@@ -27,6 +27,38 @@ export function avaaHarjaTimeoutilla() {
     cy.get('.ladataan-harjaa', {timeout: ladataanHarjaaTimeout}).should('not.exist')
 }
 
+export function valitseVesivaylaurakka(urakkaNimi) {
+    avaaHarjaTimeoutilla();
+
+    // Valitse urakkatyyppi
+    cy.get('[data-cy="murupolku-urakkatyyppi"]')
+        .find('button')
+        .click();
+    cy.get('[data-cy="murupolku-urakkatyyppi"]')
+        .contains('ul li a', 'Vesiväylät ja kanavat')
+        .should('be.visible')
+        .click({force: true});
+
+    // Valitse elinvoimakeskus
+    cy.get('#alasveto-hallintayksikko')
+        .find('button')
+        .click();
+    cy.get('#alasveto-hallintayksikko')
+        .contains('ul li a', 'Sisävesiväylät')
+        .should('be.visible')
+        .click({force: true});
+
+    cy.get('.ajax-loader', {timeout: 10000})
+        .should('not.exist');
+    cy.contains('Näytä päättyneet')
+        .click();
+    cy.contains(
+        '[data-cy=urakat-valitse-urakka] li',
+        urakkaNimi,
+        {timeout: 10000}
+    ).click();
+}
+
 export function muokkaaTarjousRiviaArvo(taulukonDataCy, rivinTunniste, sarakeIndex, uusiArvo) {
     cy.get(`[data-cy=${taulukonDataCy}]`)
         .should('be.visible')

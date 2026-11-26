@@ -234,6 +234,9 @@
         on-muu-tehtava? (= -1 tehtava-id)
         kulu_kohdistus {:id (:kohdistus-id kohdistus)
                         :summa (:summa kohdistus)
+                        :maara (:maara kohdistus)
+                        :yksikkohinta (or (get-in kohdistus [:tehtava :yksikkohinta])
+                                         (:yksikkohinta kohdistus))
                         :toimenpideinstanssi (:toimenpideinstanssi kohdistus)
                         :tehtavaryhma (:tehtavaryhma kohdistus)
                         ;; Jos kyseessä on "Muu tehtävä", tehtävä-id:tä ei tallenneta

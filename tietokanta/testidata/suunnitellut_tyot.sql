@@ -194,6 +194,24 @@ WHERE nimi = 'Urakan yhteiset kustannukset TP'
         'kauppamerenkulku'::vv_vaylatyyppi);
 
 -- Rentoselän TPI:t
+INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide, alkupvm, loppupvm, luoja, luotu)
+SELECT u.id,
+       'Hoito, Vesiväylät TP',
+       tp.id,
+       u.alkupvm,
+       u.loppupvm,
+       k.id,
+       CURRENT_TIMESTAMP
+FROM urakka u
+         JOIN toimenpide tp ON tp.koodi = 'VV1' AND tp.poistettu IS NOT TRUE
+         JOIN kayttaja k ON k.kayttajanimi = 'Integraatio'
+WHERE u.nimi = 'Rentoselän urakka'
+  AND u.tyyppi = 'vesivayla-hoito'
+  AND NOT EXISTS (SELECT 1
+                  FROM toimenpideinstanssi tpi
+                  WHERE tpi.urakka = u.id
+                    AND tpi.toimenpide = tp.id);
+
 INSERT INTO toimenpideinstanssi (urakka, nimi, toimenpide,  alkupvm, loppupvm)
 VALUES ((SELECT id
          FROM urakka

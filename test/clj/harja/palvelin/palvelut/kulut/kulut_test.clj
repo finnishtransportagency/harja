@@ -10,6 +10,10 @@
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]
             [harja.kyselyt.valikatselmus :as valikatselmus-kyselyt]
             [harja.kyselyt.urakat :as urakka-kyselyt]
+            [harja.kyselyt.sopimukset :as sopimukset-kyselyt]
+            [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-kyselyt]
+            [harja.kyselyt.konversio :as konversio]
+            [harja.palvelin.palvelut.tehtavamaarat :as tehtavamaarat-palvelu]
             [harja.pvm :as pvm]
             [harja.palvelin.ajastetut-tehtavat.kustannusarvioiden-toteumat :as kustannusarvioiden-toteumat]))
 
@@ -359,6 +363,86 @@
     (is (contains? tehtava :id) "Tehtavalla on ID.")
     (is (contains? tehtava :nimi) "Tehtavalla on nimi.")
     (is (contains? tehtava-map-muodossa :nimi) "Map muotoisena annetulla tehtavalla on nimi."))))
+
+(deftest tallenna-kulun-kohdistuksen-maara-ja-yksikkohinta
+  (with-redefs [pvm/nyt (constantly #inst "2024-12-16T00:00:00.000-00:00")]
+    (let [urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+          hoitokausi [(pvm/vesivaylien-hoitokauden-alkupvm 2024)
+                      (pvm/vesivaylien-hoitokauden-loppupvm 2025)]
+          vhu-tehtavaryhma (first (filter #(= "Kelluvien turvalaitteiden huoltotyöt ajomatkoineen" (:tehtavaryhma-nimi %))
+                                     (tehtavamaarat-palvelu/tehtavaryhmat-ja-toimenpiteet
+                                       (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})))
+          tehtava (first (filter #(= "Poijujen ja suurviittojen ankkuroinnin tarkastus" (:nimi %))
+                           (tehtavamaarat-palvelu/hae-tehtavaryhman-tehtavat-urakalle
+                             (:db jarjestelma) +kayttaja-jvh+
+                             {:urakka-id urakka-id
+                              :tehtavaryhma-id (:tehtavaryhma-id vhu-tehtavaryhma)
+                              :valittu-hoitokausi hoitokausi})))
+          tehtava-id (:id tehtava)
+          sopimus-id (:id (first (sopimukset-kyselyt/hae-urakan-paasopimus (:db jarjestelma) urakka-id)))
+          [alkupvm loppupvm] (map konversio/sql-date hoitokausi)
+          yksikkohinta 12.34M
+          maara 3M
+          paivitetty-maara 4M
+          paivitetty-yksikkohinta 4.3M
+          uusi-kulu (assoc uusi-kulu
+                      :urakka urakka-id
+                      :erapaiva #inst "2024-12-15T21:00:00.000-00:00"
+                      :kokonaissumma 999M
+                      :tyyppi "laskutettava"
+                      :viite "123456789"
+                      :koontilaskun-kuukausi "joulukuu/2-hoitovuosi")
+          _ (yksikkohintaiset-kyselyt/lisaa-urakan-yksikkohintainen-tyo<!
+              (:db jarjestelma)
+              {:maara maara
+               :yksikko "kpl"
+               :yksikkohinta yksikkohinta
+               :arvioitu_kustannus (* maara yksikkohinta)
+               :kayttaja (:id +kayttaja-jvh+)
+               :kuukausi nil
+               :vuosi nil
+               :urakka urakka-id
+               :sopimus sopimus-id
+               :tehtava tehtava-id
+               :alkupvm alkupvm
+               :loppupvm loppupvm})
+          kohdistus (-> (first (:kohdistukset uusi-kulu))
+                      (assoc :summa (* maara yksikkohinta)
+                        :maara maara
+                        :yksikkohinta yksikkohinta
+                        :tehtavaryhma (:tehtavaryhma-id vhu-tehtavaryhma)
+                        :toimenpideinstanssi (:toimenpideinstanssi vhu-tehtavaryhma)
+                        :tehtava {:id tehtava-id
+                                  :yksikkohinta yksikkohinta}))
+          paivitettava-kulu (assoc uusi-kulu
+                              :kokonaissumma (* paivitetty-maara yksikkohinta)
+                              :kohdistukset [kohdistus]
+                              :liitteet [])
+          tallennettu (kutsu-http-palvelua :tallenna-kulu
+                        +kayttaja-jvh+
+                        {:urakka-id urakka-id
+                         :kulu-kohdistuksineen paivitettava-kulu})
+          _ (println "(:kohdistukset tallennettu)" (pr-str (:kohdistukset tallennettu)))
+          tallennettu-kohdistus (first (:kohdistukset tallennettu))
+          paivitetty-kohdistus (-> tallennettu-kohdistus
+                                 (assoc :maara paivitetty-maara
+                                   :summa (* paivitetty-maara yksikkohinta)
+                                   :yksikkohinta paivitetty-yksikkohinta
+                                   :tehtava {:id tehtava-id
+                                             :yksikkohinta paivitetty-yksikkohinta}))
+          paivitetty (kutsu-http-palvelua :tallenna-kulu
+                       +kayttaja-jvh+
+                       {:urakka-id urakka-id
+                        :kulu-kohdistuksineen (-> tallennettu
+                                                (assoc :kokonaissumma (* paivitetty-maara yksikkohinta))
+                                                (assoc :kohdistukset [paivitetty-kohdistus]))})
+          paivitetty-kohdistus (first (:kohdistukset paivitetty))]
+      (is (= maara (:maara tallennettu-kohdistus)))
+      (is (= yksikkohinta (:yksikkohinta tallennettu-kohdistus)))
+      (is (= (* maara yksikkohinta) (:summa tallennettu-kohdistus)))
+      (is (= paivitetty-maara (:maara paivitetty-kohdistus)))
+      (is (= paivitetty-yksikkohinta (:yksikkohinta paivitetty-kohdistus)))
+      (is (= (* paivitetty-maara yksikkohinta) (:summa paivitetty-kohdistus))))))
 
 (defn- feilaa-tallenna-kulu-validointi [vaara-kulu odotettu-poikkeus]
   (try

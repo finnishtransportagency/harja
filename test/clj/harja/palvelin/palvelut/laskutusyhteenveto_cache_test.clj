@@ -23,7 +23,7 @@
             :db-replica tietokanta
             :http-palvelin (testi-http-palvelin)
             :yksikkohintaiset-tyot (component/using
-                                     (->Yksikkohintaiset-tyot)
+                                     (->Yksikkohintaiset-tyot false)
                                      [:http-palvelin :db])
             :toteumat (component/using
                         (toteumat/->Toteumat)

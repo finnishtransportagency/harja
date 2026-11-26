@@ -75,8 +75,22 @@
     arvo))
 
 (defn numero [arvo]
-  (when
-    (number? (-> arvo js/parseFloat))
+  (when (and (js/isFinite (js/parseFloat arvo))
+          (or (number? arvo)
+            (and (string? arvo)
+              (re-matches #"-?\d+(?:[.,]\d+)?" (str/trim arvo)))))
+    arvo))
+
+(defn maara [arvo]
+  (when (and (js/isFinite (js/parseFloat arvo))
+          (or (number? arvo)
+            (and (string? arvo)
+              (re-matches #"-?\d+(?:[.,]\d+)?" (str/trim arvo)))))
+    arvo))
+
+(defn ei-negatiivinen-numero [arvo]
+  (when (and (number? (js/parseFloat arvo))
+          (not (neg? (js/parseFloat arvo))))
     arvo))
 
 (defn negatiivinen-numero [arvo]
@@ -102,13 +116,15 @@
                   :kulut/laskun-numero         [(ei-pakollinen ei-tyhja) (ei-pakollinen ei-nil)]
                   :kulut/tehtavaryhma          [ei-nil ei-tyhja]
                   :kulut/tehtava               [ei-nil ei-tyhja]
+                  :kulut/maara                 [ei-nil maara ei-negatiivinen-numero]
                   :kulut/rahavaraus            [ei-nil ei-tyhja]
                   :kulut/erapaiva              [ei-nil ei-tyhja paivamaara]
                   :kulut/koontilaskun-kuukausi [ei-nil ei-tyhja]
                   :kulut/y-tunnus              [(ei-pakollinen y-tunnus)]
                   :kulut/lisatyon-lisatieto    [ei-nil ei-tyhja]
                   :kulut/toimenpideinstanssi   [ei-nil ei-tyhja]
-                  :kulut/toimenpide            [ei-nil ei-tyhja]})
+                  :kulut/toimenpide            [ei-nil ei-tyhja]
+                  :kulut/liitteet              [seq]})
 
 (defn validoi!
   [{:keys [validius validi?] :as lomake-meta} lomake]
@@ -282,29 +298,40 @@
    (kulun-validointi-meta kulu {}))
   ([{:keys [kohdistukset] :as _kulu} opts]
    (let [onko-tehtava-validointi-kaytossa? true
+         vhu-urakka? (= :vesivayla-hoito
+                       (or (:urakan-tyyppi opts)
+                         (:tyyppi @nav/valittu-urakka)))
          kohdistusvalidoinnit (mapcat (fn [i]
                                         (let [kohdistus (get kohdistukset i)
-                                              tehtavaryhman-tehtavat? (seq (:tehtavaryhman-tehtavat kohdistus))]
+                                              tehtavaryhman-tehtavat? (seq (:tehtavaryhman-tehtavat kohdistus))
+                                              tehtavaryhma-validointi [[:kohdistukset i :tehtavaryhma]
+                                                                       (:kulut/tehtavaryhma validoinnit)]
+                                              tehtava-validointi (when (and onko-tehtava-validointi-kaytossa?
+                                                                         tehtavaryhman-tehtavat?)
+                                                                   [[:kohdistukset i :tehtava]
+                                                                    (:kulut/tehtava validoinnit)])
+                                              maara-validointi (when vhu-urakka?
+                                                                 [[:kohdistukset i :maara]
+                                                                  (:kulut/maara validoinnit)])
+                                              lisatieto-validointi (when-not vhu-urakka?
+                                                                     [[:kohdistukset i :lisatyon-lisatieto]
+                                                                      (:kulut/lisatyon-lisatieto validoinnit)])]
                                           (cond
                                             (= :lisatyo (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
                                              [:kohdistukset i :toimenpideinstanssi] (:kulut/toimenpideinstanssi validoinnit)
-                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
-                                            
+                                             [:kohdistukset i :toimenpide] (:kulut/toimenpide validoinnit)]
+
                                             (= :erillisrahoitettu-muutos (:tyyppi kohdistus))
                                             [[:kohdistukset i :summa] (:kulut/summa validoinnit)
                                              [:kohdistukset i :valittu-muutostyo] (:kulut/valittu-muutostyo validoinnit)
-                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)]
+                                             [:kohdistukset i :toimenpide] (:kulut/toimenpide validoinnit)]
 
                                             ;; Hankintakululla on pakko olla tehtäväryhmä ja määritellyillä tehtäväryhmän tehtävillä tehtävä
                                             (= :hankintakulu (:tyyppi kohdistus))
-                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
-                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
-                                               [:kohdistukset i :tehtava])
-                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
-                                               (:kulut/tehtava validoinnit))]
+                                            (concat [[:kohdistukset i :summa] (:kulut/summa validoinnit)]
+                                              tehtavaryhma-validointi maara-validointi tehtava-validointi)
 
                                             ;; Rahavarauksella on pakko olla rahavaraus ja tehtäväryhmä
                                             (= :rahavaraus (:tyyppi kohdistus))
@@ -312,26 +339,27 @@
                                              [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
                                              [:kohdistukset i :rahavaraus] (:kulut/rahavaraus validoinnit)]
 
-                                            ;; Kun Muu kulu on tavoitehintainen tarkistetaan summa, lisätieto ja tehtäväryhmä ja määritellyillä tehtäväryhmän tehtävillä tehtävä
+                                            ;; Tavoitehintaisella Muu kululla tarkistetaan summa, tehtäväryhmä ja tehtävä;
+                                            ;; VHU:lla lisätiedon sijaan vaaditaan määrä.
                                             (and (= :muukulu (:tyyppi kohdistus)) (= :true (:tavoitehintainen kohdistus)))
-                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                                             [:kohdistukset i :tehtavaryhma] (:kulut/tehtavaryhma validoinnit)
-                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)
-                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
-                                               [:kohdistukset i :tehtava])
-                                             (when (and onko-tehtava-validointi-kaytossa? tehtavaryhman-tehtavat?)
-                                               (:kulut/tehtava validoinnit))]
+                                            (concat [[:kohdistukset i :summa] (:kulut/summa validoinnit)]
+                                              tehtavaryhma-validointi lisatieto-validointi maara-validointi
+                                              tehtava-validointi)
 
-                                            ;; Kun Muu kulu on ei-tavoitehintainen tarkistetaan summa, lisätieto ja toimenpideinstanssi
+                                            ;; Ei-tavoitehintaisella Muu kululla tarkistetaan summa ja toimenpide;
+                                            ;; lisätieto vaaditaan vain muilla kuin VHU-urakoilla.
                                             (and (= :muukulu (:tyyppi kohdistus)) (= :false (:tavoitehintainen kohdistus)))
-                                            [[:kohdistukset i :summa] (:kulut/summa validoinnit)
-                                             [:kohdistukset i :toimenpide] (:kulut/:toimenpide validoinnit)
-                                             [:kohdistukset i :lisatyon-lisatieto] (:kulut/lisatyon-lisatieto validoinnit)]
+                                            (concat [[:kohdistukset i :summa] (:kulut/summa validoinnit)
+                                                     [:kohdistukset i :toimenpide] (:kulut/toimenpide validoinnit)]
+                                              lisatieto-validointi)
                                             )))
                                 (range (count kohdistukset)))
+         liitevalidoinnit (when (and vhu-urakka?
+                                  (some #(= :hankintakulu (:tyyppi %)) kohdistukset))
+                            [[:liitteet] (:kulut/liitteet validoinnit)])
          #_ (js/console.log "kulun-validointi-meta :: kohdistusvalidoinnit: " (pr-str kohdistusvalidoinnit))]
 
-     (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit)))))
+     (apply luo-validius-tarkistukset (concat kulun-oletus-validoinnit kohdistusvalidoinnit liitevalidoinnit)))))
 
 
 (def kulut-kohdistus-default {:tehtavaryhma nil

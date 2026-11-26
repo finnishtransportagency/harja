@@ -81,6 +81,9 @@ describe('Testaa Kittilän MHU Kulujen kirjaus-näkymää', () => {
             cy.focused().blur({force: true})
         });
         cy.get('#kohdistuksen-summa-0').should('have.value', '999,00');
+        cy.get('[data-cy="kulukohdistus-lisatieto-0"]')
+            .type('MHU Cypress -lisätieto')
+            .should('have.value', 'MHU Cypress -lisätieto');
         tallennaJaTarkistaKulu('TALVIHOITO');
 
 

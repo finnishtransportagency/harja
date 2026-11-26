@@ -7,6 +7,9 @@
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat]
+            [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-kyselyt]
+            [harja.kyselyt.sopimukset :as sopimukset-kyselyt]
+            [harja.kyselyt.konversio :as konversio]
             [harja.domain.urakka :as urakka]
             [harja.domain.tehtavamaarat :as tm-domain]
             [harja.domain.toimenpidekoodi :as toimenpidekoodi]
@@ -508,3 +511,62 @@
               +kayttaja-jvh+
               {:urakka-id urakka-id})))
       "Palvelu palauttaa päätöksellä lukitun vuoden, mutta ei lukitse muita hoitovuosia")))
+
+(deftest vhu-tehtavaryhmat-eivat-toistu-ja-tehtavan-hinta-rajoittuu-sopimukseen-ja-hoitokauteen
+  (let [db (:db jarjestelma)
+        urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        hoitokausi [(pvm/vesivaylien-hoitokauden-alkupvm 2024)
+                    (pvm/vesivaylien-hoitokauden-loppupvm 2025)]
+        toinen-hoitokausi [(pvm/vesivaylien-hoitokauden-alkupvm 2023)
+                           (pvm/vesivaylien-hoitokauden-loppupvm 2024)]
+        sopimus-id (:id (first (sopimukset-kyselyt/hae-urakan-paasopimus db urakka-id)))
+        toinen-sopimus-id @oulun-alueurakan-2005-2010-paasopimuksen-id
+        tehtavaryhmat (tehtavaryhmat-ja-toimenpiteet db +kayttaja-jvh+ {:urakka-id urakka-id})
+        tehtavaryhma-id (:tehtavaryhma-id (first tehtavaryhmat))
+        tehtava (first (hae-tehtavaryhman-tehtavat-urakalle
+                         db +kayttaja-jvh+
+                         {:urakka-id urakka-id
+                          :tehtavaryhma-id tehtavaryhma-id
+                          :valittu-hoitokausi hoitokausi}))
+        alku (konversio/sql-date (first hoitokausi))
+        loppu (konversio/sql-date (second hoitokausi))
+        toinen-alku (konversio/sql-date (first toinen-hoitokausi))
+        toinen-loppu (konversio/sql-date (second toinen-hoitokausi))
+        hinta-parametrit {:maara 10M
+                          :yksikko "kpl"
+                          :arvioitu_kustannus 100M
+                          :kayttaja (:id +kayttaja-jvh+)
+                          :kuukausi nil
+                          :vuosi nil
+                          :urakka urakka-id
+                          :sopimus sopimus-id
+                          :tehtava (:id tehtava)}]
+    (yksikkohintaiset-kyselyt/lisaa-urakan-yksikkohintainen-tyo<!
+      db (assoc hinta-parametrit :yksikkohinta 12.3456M :alkupvm alku :loppupvm loppu))
+    (yksikkohintaiset-kyselyt/lisaa-urakan-yksikkohintainen-tyo<!
+      db (assoc hinta-parametrit :yksikkohinta 98.7654M :alkupvm toinen-alku :loppupvm toinen-loppu))
+    (yksikkohintaiset-kyselyt/lisaa-urakan-yksikkohintainen-tyo<!
+      db (assoc hinta-parametrit
+           :sopimus toinen-sopimus-id
+           :yksikkohinta 87.6543M
+           :alkupvm alku
+           :loppupvm loppu))
+    (let [ryhmat-uudelleen (tehtavaryhmat-ja-toimenpiteet db +kayttaja-jvh+ {:urakka-id urakka-id})
+          ryhma-idt (map :tehtavaryhma-id ryhmat-uudelleen)
+          tehtavat (hae-tehtavaryhman-tehtavat-urakalle
+                     db +kayttaja-jvh+
+                     {:urakka-id urakka-id
+                      :tehtavaryhma-id tehtavaryhma-id
+                      :valittu-hoitokausi hoitokausi})
+          valittu-tehtava (first (filter #(= (:id %) (:id tehtava)) tehtavat))]
+      (is (= (count ryhma-idt) (count (distinct ryhma-idt))) "VHU-tehtäväryhmä näkyy alasvedossa vain kerran")
+      (is (= 1 (count (filter #(= (:id %) (:id tehtava)) tehtavat))) "Tehtävä ei kahdennu eri hoitokausien hintariveistä")
+      (is (= 12.3456M (:yksikkohinta valittu-tehtava)) "Tehtävän hinta haetaan valitulta hoitokaudelta")
+      (is (every? (fn [rivi]
+                    (= 1 (ffirst (q (str "SELECT count(*) FROM tehtava "
+                                      "WHERE id = " (:id rivi)
+                                      " AND \"vhu-tehtava?\" IS TRUE "
+                                      "AND poistettu IS NOT TRUE "
+                                      "AND piilota IS NOT TRUE")))))
+            tehtavat)
+        "Vain aktiiviset VHU-tehtävät palautetaan"))))

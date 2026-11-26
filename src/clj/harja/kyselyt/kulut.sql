@@ -212,6 +212,8 @@ WHERE k.id = :id
 SELECT kk.id                                      AS "kohdistus-id",
        kk.rivi                                    AS "rivi",
        kk.summa                                   AS "summa",
+       kk.maara                                   AS "maara",
+       kk.yksikkohinta                            AS "yksikkohinta",
        kk.tehtavaryhma                            AS "tehtavaryhma",
        kk.toimenpideinstanssi                     AS "toimenpideinstanssi",
        kk.luotu                                   AS "luontiaika",
@@ -266,15 +268,19 @@ UPDATE
 
 -- name: luo-kulun-kohdistus<!
 INSERT
-INTO kulu_kohdistus (kulu, rivi, summa, toimenpideinstanssi, tehtavaryhma, maksueratyyppi, tyyppi, luotu, luoja,
+INTO kulu_kohdistus (kulu, rivi, summa, maara, yksikkohinta, toimenpideinstanssi, tehtavaryhma,
+                     maksueratyyppi, tyyppi, luotu, luoja,
                      lisatyon_lisatieto, rahavaraus_id, tavoitehintainen, tehtava, "muu-tehtava-kaytossa")
-VALUES (:kulu, :rivi, :summa, :toimenpideinstanssi, :tehtavaryhma, :maksueratyyppi ::MAKSUERATYYPPI,
-        :tyyppi::KOHDISTUSTYYPPI, current_timestamp, :kayttaja, :lisatyon-lisatieto,
-        :rahavarausid, :tavoitehintainen::BOOLEAN, :tehtava-id, :muu-tehtava-kaytossa);
+VALUES (:kulu, :rivi, :summa, :maara, :yksikkohinta, :toimenpideinstanssi, :tehtavaryhma,
+        :maksueratyyppi::MAKSUERATYYPPI, :tyyppi::KOHDISTUSTYYPPI, current_timestamp, :kayttaja,
+        :lisatyon-lisatieto, :rahavarausid, :tavoitehintainen::BOOLEAN, :tehtava-id,
+        :muu-tehtava-kaytossa);
 
 -- name: paivita-kulun-kohdistus<!
 UPDATE kulu_kohdistus
 SET summa = :summa,
+    maara = :maara,
+    yksikkohinta = :yksikkohinta,
     toimenpideinstanssi = :toimenpideinstanssi,
     tehtavaryhma = :tehtavaryhma,
     maksueratyyppi = :maksueratyyppi ::MAKSUERATYYPPI,

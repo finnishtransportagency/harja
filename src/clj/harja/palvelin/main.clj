@@ -397,7 +397,7 @@
                              (budjettisuunnittelu/->Budjettisuunnittelu)
                              [:http-palvelin :db])
       :yksikkohintaiset-tyot (component/using
-                               (yksikkohintaiset-tyot/->Yksikkohintaiset-tyot)
+                               (yksikkohintaiset-tyot/->Yksikkohintaiset-tyot (:kehitysmoodi asetukset))
                                [:http-palvelin :db])
       :kokonaishintaiset-tyot (component/using
                                 (kokonaishintaiset-tyot/->Kokonaishintaiset-tyot)

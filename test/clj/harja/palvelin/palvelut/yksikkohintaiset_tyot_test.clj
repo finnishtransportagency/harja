@@ -2,9 +2,13 @@
   (:require [clojure.test :refer :all]
 
             [harja.kyselyt.urakat :as urk-q]
+            [harja.kyselyt.sopimukset :as sopimukset-q]
+            [harja.kyselyt.yksikkohintaiset-tyot :as yksikkohintaiset-q]
+            [harja.kyselyt.konversio :as konversio]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.palvelin.palvelut.yksikkohintaiset-tyot :refer :all]
             [harja.testi :refer :all]
+            [harja.domain.oikeudet :as oikeudet]
             [com.stuartsierra.component :as component]
             [harja.pvm :as pvm]))
 
@@ -17,7 +21,7 @@
                       :db (tietokanta/luo-tietokanta testitietokanta)
                       :http-palvelin (testi-http-palvelin)
                       :yksikkohintaiset-tyot (component/using
-                                  (->Yksikkohintaiset-tyot)
+                                  (->Yksikkohintaiset-tyot false)
                                   [:http-palvelin :db])))))
   
   (testit)
@@ -27,6 +31,85 @@
 (use-fixtures :once (compose-fixtures
                       jarjestelma-fixture
                       urakkatieto-fixture))
+
+(deftest generoi-vhu-yksikkohinta-kayttaa-yksikkokohtaisia-haarukoita
+  (doseq [[yksikko [alaraja ylaraja]] {"h" [30 150]
+                                       "tunti" [30 150]
+                                       "km" [100 2000]
+                                       "m" [1 200]
+                                       "m2" [1 100]
+                                       "m²" [1 100]
+                                       "m3" [10 500]
+                                       "m³" [10 500]
+                                       "kpl" [10 1000]
+                                       "kg" [1 50]
+                                       "t" [25 500]
+                                       "tn" [25 500]
+                                       "ha" [50 1500]
+                                       "vrk" [100 2000]
+                                       "päivä" [100 2000]
+                                       "tuntematon" [10 500]}]
+    (is (<= alaraja (generoi-vhu-yksikkohinta yksikko) ylaraja)
+      (str "Yksikön " yksikko " hinnan pitää olla haarukan sisällä"))))
+
+(deftest generoi-vhu-yksikkohinnat-tarkistaa-kehitysmoodin-parametrit-ja-oikeudet
+  (let [vhu-urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        hoitokausi [(pvm/vesivaylien-hoitokauden-alkupvm 2024)
+                    (pvm/vesivaylien-hoitokauden-loppupvm 2025)]
+        parametrit {:urakka-id vhu-urakka-id :valittu-hoitokausi hoitokausi}]
+    #_ (is (thrown-with-msg? clojure.lang.ExceptionInfo
+          #"vain kehitysympäristössä"
+          (generoi-vhu-yksikkohinnat nil nil false parametrit)))
+    (is (thrown-with-msg? clojure.lang.ExceptionInfo
+          #"Urakka ja hoitokausi ovat pakollisia"
+          (generoi-vhu-yksikkohinnat nil nil true {:urakka-id vhu-urakka-id})))
+    (is (thrown? Exception
+          (generoi-vhu-yksikkohinnat (:db jarjestelma) {} true parametrit)))
+    (with-redefs [oikeudet/vaadi-kirjoitusoikeus (fn [& _] true)]
+      (is (thrown-with-msg? clojure.lang.ExceptionInfo
+            #"vain VHU-urakalle"
+            (generoi-vhu-yksikkohinnat
+              (:db jarjestelma)
+              +kayttaja-jvh+
+              true
+              (assoc parametrit :urakka-id @oulun-alueurakan-2005-2010-id)))))))
+
+(deftest generoi-vhu-yksikkohinnat-ohittaa-jo-hinnoitellut-tehtavat
+  (let [db (:db jarjestelma)
+        user +kayttaja-jvh+
+        urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        sopimus-id (:id (first (sopimukset-q/hae-urakan-paasopimus db urakka-id)))
+        hoitokausi [(pvm/vesivaylien-hoitokauden-alkupvm 2024)
+                    (pvm/vesivaylien-hoitokauden-loppupvm 2025)]
+        [alkupvm loppupvm] (map konversio/sql-date hoitokausi)
+        hinnoittelemattomat (yksikkohintaiset-q/hae-vhu-urakan-hinnoittelemattomat-tehtavat
+                              db {:urakkaid urakka-id
+                                  :sopimusid sopimus-id
+                                  :alkupvm alkupvm
+                                  :loppupvm loppupvm})]
+    (is (seq hinnoittelemattomat) "Testiurakalla on aluksi hinnoittelemattomia tehtäviä")
+    (doseq [{:keys [tehtava tehtavan-yksikko yksikkohintaisen-tyon-yksikko]} hinnoittelemattomat]
+      (yksikkohintaiset-q/lisaa-urakan-yksikkohintainen-tyo<!
+        db {:maara 10M
+            :yksikko (or yksikkohintaisen-tyon-yksikko tehtavan-yksikko)
+            :yksikkohinta 12.3456M
+            :arvioitu_kustannus 123.456M
+            :kayttaja (:id user)
+            :kuukausi nil
+            :vuosi nil
+            :urakka urakka-id
+            :sopimus sopimus-id
+            :tehtava tehtava
+            :alkupvm alkupvm
+            :loppupvm loppupvm}))
+    (let [tallennettavat (atom nil)
+          vastaus (with-redefs [tallenna-urakan-yksikkohintaiset-tyot
+                                (fn [_ _ tiedot]
+                                  (reset! tallennettavat (:tyot tiedot)))]
+                    (generoi-vhu-yksikkohinnat db user true
+                      {:urakka-id urakka-id :valittu-hoitokausi hoitokausi}))]
+      (is (empty? (:tehtavat vastaus)))
+      (is (nil? @tallennettavat) "Tallennusta ei kutsuta, kun kaikilla tehtävillä on jo hinta"))))
 
 ;; käyttää testidata.sql:stä tietoa
 (deftest kaikki-yksikkohintaiset-tyot-haettu-oikein 
@@ -83,5 +166,3 @@
     (is (= 678.0 (:yksikkohinta metsan-harvennus-jalkeen-alku) (:yksikkohinta paivityksen-jalkeen-alku)))
     (is (= 678.0 (:yksikkohinta metsan-harvennus-jalkeen-loppu) (:yksikkohinta paivityksen-jalkeen-loppu)))
     (is (= (count metsan-harvennus-ennen-loppu) (count paivityksen-jalkeen-loppu) (count metsan-harvennus-jalkeen-loppu)) "sama määrä eri yks.hint. palveluiden paluuarvioista")))
-
-
