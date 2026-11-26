@@ -158,13 +158,14 @@
 (defn monivalinta->toteuma [{:keys [vastaukset paatos-kk]}]
   "Toteuman keskiarvo lasketaan päätökseen vaikuttavien kuukausien perusteella, mutta vain jos kaikki kuukaudet on täytetty.
   Päätökseen vaikuttavat kuukaudet määritellään LUPAUS.paatos-kk-sarakkeessa. Jos kaikkia kuukausia ei ole päätetty, palautetaan nil."
-  (let [vastaus-kk (->> vastaukset
-                     (filter #(some? (:pisteet %)))
-                     (map :kuukausi)
-                     set)]
-    (if (= vastaus-kk (paatos-kk-joukko paatos-kk))
-      (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk))
-      nil)))
+  (when (and vastaukset paatos-kk)
+    (let [vastaus-kk (->> vastaukset
+                       (filter #(some? (:pisteet %)))
+                       (map :kuukausi)
+                       set)]
+      (if (set/subset? (paatos-kk-joukko paatos-kk) vastaus-kk)
+        (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk))
+        nil))))
 
 (defn kysely->toteuma [{:keys [vastaukset]}]
   (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
@@ -179,12 +180,16 @@
   (or (:pisteet (viimeisin-vastaus vastaukset))
       kyselypisteet))
 
-(defn monivalinta->ennuste [{:keys [vastaukset]}]
-  "Ennusteen keskiarvo lasketaan täytettyjen kuukausien perusteella."
-  (let [vastaus-kk (->> vastaukset
+(defn monivalinta->ennuste [{:keys [vastaukset paatos-kk]}]
+  "Ennusteen keskiarvo lasketaan täytettyjen kuukausien perusteella.
+   Keskiarvo lasketaan vain päättävien kuukausien perusteella."
+  (let [paatos-kk  (paatos-kk-joukko paatos-kk)
+        vastaus-kk (->> vastaukset
                      (filter #(some? (:pisteet %)))
-                     (map :kuukausi))]
-    (vastausten-keskiarvo vastaukset vastaus-kk)))
+                     (map :kuukausi)
+                     set)
+        ennuste-kk (set/intersection paatos-kk vastaus-kk)]
+    (vastausten-keskiarvo vastaukset ennuste-kk)))
 
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
