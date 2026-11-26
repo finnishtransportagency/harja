@@ -60,12 +60,28 @@
       solu (assoc :tyyppi :komponentti
                   :komponentti (solu (:nimi sarake))))))
 
+;; Vetolaatikon sisältö valitaan avaimella, koska EDN ei voi sisältää funktioita.
+(def ^:private vetolaatikot
+  {:rivin-tiedot (fn [rivi]
+                   [:dl.vetolaatikon-tiedot
+                    (for [[avain arvo] (dissoc rivi :id)]
+                      ^{:key (str avain)}
+                      [:div
+                       [:dt (name avain)]
+                       [:dd (str arvo)]])])})
+
+(defn- vetolaatikko-rivit [{:keys [vetolaatikko tunniste]} rivit]
+  (when-let [piirra (get vetolaatikot vetolaatikko)]
+    (into {} (map (fn [rivi] [((or tunniste :id) rivi) (piirra rivi)])) rivit)))
+
 (defn- perusgrid-simulaattorissa [solmu _tila _lapsi-fn]
-  (let [{:keys [otsikko tyhja tunniste sarakkeet rivit]} (:asetukset solmu)]
+  (let [{:keys [otsikko tyhja tunniste sarakkeet rivit] :as asetukset} (:asetukset solmu)]
     [:div {:data-cy "ui-simulaattori-perusgrid"}
-     [grid/grid {:otsikko otsikko
-                 :tyhja (or tyhja "Ei rivejä.")
-                 :tunniste (or tunniste :id)}
+     [grid/grid (cond-> {:otsikko otsikko
+                         :tyhja (or tyhja "Ei rivejä.")
+                         :tunniste (or tunniste :id)}
+                  (:vetolaatikko asetukset)
+                  (assoc :vetolaatikot (vetolaatikko-rivit asetukset rivit)))
       (mapv simulaattorin-sarake sarakkeet)
       (vec rivit)]]))
 

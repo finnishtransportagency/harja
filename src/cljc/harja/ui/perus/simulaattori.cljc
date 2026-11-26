@@ -52,6 +52,17 @@
                      (not (contains? solutyypit solu)))]
       (str nimi ": tuntematon solutyyppi " (pr-str solu)))))
 
+(def ^:private vetolaatikkotyypit
+  "Perusgridin :vetolaatikko-arvot, joita renderöijä osaa piirtää."
+  #{:rivin-tiedot})
+
+(defn- vetolaatikkovirheet [id asetukset]
+  (let [vetolaatikko (:vetolaatikko asetukset)]
+    (when (and (some? vetolaatikko)
+               (not (kielletty-tyyppi vetolaatikko))
+               (not (contains? vetolaatikkotyypit vetolaatikko)))
+      [(str (name id) ": tuntematon vetolaatikko " (pr-str vetolaatikko))])))
+
 (defn- tarkista-solmu [solmu vanhempi]
   (if-not (map? solmu)
     [(str "Solmun pitää olla map: " (pr-str solmu))]
@@ -72,7 +83,8 @@
         (when (and kuvaus asetukset-kunnossa?)
           (asetusvirheet komponentti kuvaus asetukset))
         (when (and (= :perusgrid komponentti) (map? asetukset))
-          (solutyyppivirheet komponentti asetukset))
+          (concat (solutyyppivirheet komponentti asetukset)
+                  (vetolaatikkovirheet komponentti asetukset)))
         (when lapset-kunnossa?
           (mapcat #(tarkista-solmu % komponentti) lapset))))))
 

@@ -170,6 +170,19 @@
   (is (empty? (simulaattori/virheet
                 (perusgrid-sarakkeella {:nimi :tila :solu :linkki})))))
 
+(deftest vetolaatikko-rivin-tiedot-sallitaan
+  (is (empty? (simulaattori/virheet
+                [{:komponentti :perusgrid
+                  :asetukset {:sarakkeet [{:nimi :tiedot :tyyppi :vetolaatikon-tila}]
+                              :vetolaatikko :rivin-tiedot
+                              :rivit []}}]))))
+
+(deftest tuntematon-vetolaatikko-hylataan
+  (is (= ["perusgrid: tuntematon vetolaatikko :ei-ole"]
+         (simulaattori/virheet
+           [{:komponentti :perusgrid
+             :asetukset {:sarakkeet [] :vetolaatikko :ei-ole :rivit []}}]))))
+
 (deftest funktio-solutyyppina-hylataan-kerran
   (is (= ["perusgrid: asetus :sarakkeet on funktio, ei sallittu"]
          (simulaattori/virheet

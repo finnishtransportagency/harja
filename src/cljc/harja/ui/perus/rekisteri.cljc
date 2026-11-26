@@ -633,6 +633,7 @@
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Taulukon otsikko."}
                 :tyhja {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Teksti, joka näytetään kun rivejä ei ole."}
                 :tunniste {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Taulukon tunniste."}
+                :vetolaatikko {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Rivin alle avattava sisältö rekisteriavaimella. Tuettu arvo: :rivin-tiedot. Vaatii :vetolaatikon-tila-sarakkeen."}
                 :sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
                 :rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Rivit."}}}
    {:id :muokkausgrid
