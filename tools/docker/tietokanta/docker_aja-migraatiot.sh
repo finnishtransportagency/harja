@@ -17,6 +17,9 @@ echo "Ajetaan kaikki migraatiot."
 
 ## -- Aja kaikki migraatiot uusiksi --
 
+# Kerrotaan mistä flyway haetaan niin ei tule turhia lookuppeja
+FLYWAY_PLUGIN="org.flywaydb:flyway-maven-plugin"
+
 ## Lataa flyway-plugin ja sen riippuvuudet ennen tietokannan muuttamista.
 ## Komentoa retrytetään, mikäli esimerkiksi flyway-pluginin lataus epäonnistuu verkkovirheen vuoksi.
 ##  -Dflyway.skip=true: Maven resolvoi pluginin, sen riippuvuudet ja projektin riippuvuudet,
@@ -26,7 +29,7 @@ echo "Ajetaan kaikki migraatiot."
 odotusajat=(5 15)
 for yritys in 1 2 3; do
   echo "Ladataan Flyway-plugin ja sen riippuvuudet (yritys $yritys/3)."
-  if mvn -B -U -Dflyway.skip=true flyway:info; then
+  if mvn -B -ntp -U -Dflyway.skip=true "${FLYWAY_PLUGIN}:info"; then
     break
   else
     virhekoodi=$?
@@ -46,12 +49,14 @@ psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP 
 psql -h localhost -p "${HARJA_TIETOKANTA_PORTTI:-5432}" -U harja harja -c "DROP DATABASE IF EXISTS harjatest;"
 
 ## Puhdista kanta
-mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
- flyway:clean
+## -ntp: Removes download spam
+## -B: Uses non-interactive batch mode
+mvn -B -ntp -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
+ "${FLYWAY_PLUGIN}:clean"
 
 ## Aja migraatiot alusta
-mvn -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
--Dflyway.baselineVersion="0" -Dflyway.baselineOnMigrate="true" -Dflyway.table="schema_version" \
- flyway:migrate
+mvn -B -ntp -Dharja.tietokanta.port="${HARJA_TIETOKANTA_PORTTI:-5432}" -Dharja.tietokanta.host="${HARJA_TIETOKANTA_HOST:-localhost}" \
+ -Dflyway.baselineVersion="0" -Dflyway.baselineOnMigrate="true" -Dflyway.table="schema_version" \
+ "${FLYWAY_PLUGIN}:migrate"
 
 echo "Migraatio ajettu."
