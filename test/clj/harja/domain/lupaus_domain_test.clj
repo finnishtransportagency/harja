@@ -553,31 +553,66 @@
   (testing "Laskee ja pyöristää monivalinta-lupauksen toteuman eli kuukausittaisten lupauspisteiden keskiarvon oikein. Pyöristys aina kokonaisluvuksi ja alas."
     (is (= 2 (lupaus-domain/monivalinta->toteuma
                {:paatos-kk [0] :vastaukset '({:paatos true :pisteet 0 :kuukausi 1} {:paatos true :pisteet 0 :kuukausi 2} {:paatos true :pisteet 0 :kuukausi 3} {:paatos true :pisteet 0 :kuukausi 4} {:paatos true :pisteet 2 :kuukausi 5} {:paatos true :pisteet 3 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
-      "1. Keskiarvo lasketaan oikein ja pyöristetään kokonaisluvuksi.")
+      "1. Toteuma. Keskiarvo lasketaan oikein ja pyöristetään kokonaisluvuksi.")
 
     (is (= 2 (lupaus-domain/monivalinta->toteuma
                {:paatos-kk [0] :vastaukset '({:paatos true :pisteet 0 :kuukausi 1} {:paatos true :pisteet 0 :kuukausi 2} {:paatos true :pisteet 0 :kuukausi 3} {:paatos true :pisteet 0 :kuukausi 4} {:paatos true :pisteet 4 :kuukausi 5} {:paatos true :pisteet 4 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
-      "2. Pyöristys alas tapahtuu myös silloin, kun perinteinen pyöristyssääntö vaatisi ylöspäin pyöristämistä.")
+      "2. Toteuma. Pyöristys alas tapahtuu myös silloin, kun perinteinen pyöristyssääntö vaatisi ylöspäin pyöristämistä.")
 
     (is (= 2 (lupaus-domain/monivalinta->toteuma
-               {:paatos-kk [0] :vastaukset '({:paatos true :pisteet nil :kuukausi 2} {:paatos true :pisteet nil :kuukausi 3} {:paatos true :pisteet nil :kuukausi 4} {:paatos true :pisteet 0 :kuukausi 5} {:paatos true :pisteet 0 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
-      "3. Kokonaan kirjaamatta jääneet ja puuttuvat kuukaudet käsitellään nollana.")
+               {:paatos-kk [0] :vastaukset '({:paatos true :pisteet 0 :kuukausi 1} {:paatos true :pisteet 0 :kuukausi 2} {:paatos true :pisteet 0 :kuukausi 3} {:paatos true :pisteet 0 :kuukausi 4} {:paatos true :pisteet 0 :kuukausi 5} {:paatos true :pisteet 0 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
+      "3. Toteuma. Nollapisteet huomoidaan keskiarvon laskennassa.")
 
-    (is (= 0 (lupaus-domain/monivalinta->toteuma
+    (is (= nil (lupaus-domain/monivalinta->toteuma
                {:paatos-kk [0] :vastaukset '()}))
-      "4. Kun mitään ei ole kirjattu, keskiarvo on nolla (lista tyhjä).")
+      "4. Toteuma. Kun mitään ei ole kirjattu, keskiarvoa ei lasketa (tyhjä lista), jotta ei kuvitella toteumaa valmiiksi.")
 
-    (is (= 0 (lupaus-domain/monivalinta->toteuma
+    (is (= nil (lupaus-domain/monivalinta->toteuma
                {:paatos-kk [0] :vastaukset nil}))
-      "5. Kun mitään ei ole kirjattu, keskiarvo on nolla (lista nil).")
+      "5. Toteuma. Kun mitään ei ole kirjattu, keskiarvoa ei lasketa (lista nil), jotta ei kuvitella toteumaa valmiiksi.")
 
-    (is (= 0 (lupaus-domain/monivalinta->toteuma
+    (is (= nil (lupaus-domain/monivalinta->toteuma
                nil))
-      "6. Kun mitään ei ole kirjattu, keskiarvo on nolla (vastaukset nil).")
+      "6. Toteuma. Kun mitään ei ole kirjattu, keskiarvoa ei lasketa (vastaukset nil), jotta ei kuvitella toteumaa valmiiksi.")
 
     (is (= 3 (lupaus-domain/monivalinta->toteuma
+               {:paatos-kk [1 2]  :vastaukset '({:paatos true :pisteet 2 :kuukausi 1} {:paatos true :pisteet 4 :kuukausi 2} {:paatos true :pisteet 10 :kuukausi 3} {:paatos true :pisteet 10 :kuukausi 4} {:paatos true :pisteet 10 :kuukausi 5} {:paatos true :pisteet 10 :kuukausi 6} {:paatos true :pisteet 10 :kuukausi 7} {:paatos true :pisteet 10 :kuukausi 8} {:paatos true :pisteet 10 :kuukausi 9} {:paatos true :pisteet 10 :kuukausi 10} {:paatos true :pisteet 10 :kuukausi 11} {:paatos true :pisteet 10 :kuukausi 12})} ))
+      "7. Toteuma. Päätöskuukausimääritys huomoidaan keskiarvoa laskettaessa.")))
+
+
+(deftest monivalinta->ennuste-test
+  (testing "Laskee ja pyöristää monivalinta-lupauksen toteuman eli kuukausittaisten lupauspisteiden keskiarvon oikein. Pyöristys aina kokonaisluvuksi ja alas."
+    (is (= 2 (lupaus-domain/monivalinta->ennuste
+               {:paatos-kk [0] :vastaukset '({:paatos true :pisteet 0 :kuukausi 1} {:paatos true :pisteet 0 :kuukausi 2} {:paatos true :pisteet 0 :kuukausi 3} {:paatos true :pisteet 0 :kuukausi 4} {:paatos true :pisteet 2 :kuukausi 5} {:paatos true :pisteet 3 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
+      "1. Ennuste. Keskiarvo lasketaan oikein ja pyöristetään kokonaisluvuksi.")
+
+    (is (= 2 (lupaus-domain/monivalinta->ennuste
+               {:paatos-kk [0] :vastaukset '({:paatos true :pisteet 0 :kuukausi 1} {:paatos true :pisteet 0 :kuukausi 2} {:paatos true :pisteet 0 :kuukausi 3} {:paatos true :pisteet 0 :kuukausi 4} {:paatos true :pisteet 4 :kuukausi 5} {:paatos true :pisteet 4 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
+      "2. Ennuste. Pyöristys alas tapahtuu myös silloin, kun perinteinen pyöristyssääntö vaatisi ylöspäin pyöristämistä.")
+
+    (is (= 2 (lupaus-domain/monivalinta->toteuma
+               {:paatos-kk [0] :vastaukset '({:paatos true :pisteet 0 :kuukausi 1} {:paatos true :pisteet 0 :kuukausi 2} {:paatos true :pisteet 0 :kuukausi 3} {:paatos true :pisteet 0 :kuukausi 4} {:paatos true :pisteet 0 :kuukausi 5} {:paatos true :pisteet 0 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
+      "3. Ennuste. Nollapisteet huomoidaan keskiarvon laskennassa.")
+
+    (is (= 3 (lupaus-domain/monivalinta->ennuste
+               {:paatos-kk [0] :vastaukset '({:paatos true :pisteet nil :kuukausi 2} {:paatos true :pisteet nil :kuukausi 3} {:paatos true :pisteet nil :kuukausi 4} {:paatos true :pisteet 0 :kuukausi 5} {:paatos true :pisteet 0 :kuukausi 6} {:paatos true :pisteet 4 :kuukausi 7} {:paatos true :pisteet 4 :kuukausi 8} {:paatos true :pisteet 4 :kuukausi 9} {:paatos true :pisteet 4 :kuukausi 10} {:paatos true :pisteet 4 :kuukausi 11} {:paatos true :pisteet 4 :kuukausi 12})}))
+      "4. Ennuste. Keskiarvo lasketaan kirjatuille kuukausille. Kokonaan kirjaamatta jääneitä kuukausia ei lasketa mukaan.")
+
+    (is (= 0 (lupaus-domain/monivalinta->ennuste
+                 {:paatos-kk [0] :vastaukset '()}))
+      "5. Ennuste. Kun mitään ei ole kirjattu, keskiarvo on nolla (tyhjä lista).")
+
+    (is (= 0 (lupaus-domain/monivalinta->ennuste
+               {:paatos-kk [0] :vastaukset nil}))
+      "6. Ennuste. Kun mitään ei ole kirjattu, keskiarvo on nolla (lista nil).")
+
+    (is (= 0 (lupaus-domain/monivalinta->ennuste
+               nil))
+      "7. Ennuste. Kun mitään ei ole kirjattu, keskiarvo on nolla (vastaukset nil).")
+
+    (is (= 3 (lupaus-domain/monivalinta->ennuste
                {:paatos-kk [1 2]  :vastaukset '({:paatos true :pisteet 2 :kuukausi 1} {:paatos true :pisteet 4 :kuukausi 2} {:paatos true :pisteet 10 :kuukausi 3})} ))
-      "7. Päätöskuukausien määrä huomoidaan keskiarvoa laskettaessa.")))
+      "8. Ennuste. Päätöskuukausien määrä huomoidaan keskiarvoa laskettaessa.")))
 
 
 (deftest kysely->toteuma-test
