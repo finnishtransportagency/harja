@@ -4,7 +4,32 @@
   Simulaattori hyväksyy vain rekisteröityjä komponentteja ja niiden dokumentoituja
   vanhempi-slot-suhteita. Se ei suorita agentin tuottamaa koodia."
   (:require [clojure.string :as str]
+            [harja.ui.perus :as ui]
             [harja.ui.perus.rekisteri :as rekisteri]))
+
+(def sivutilat
+  "Simulaattorin yhteiset sivutilat ja niiden esitys viestinä."
+  [{:id :normaali
+    :nimi "Normaali"}
+   {:id :lataus
+    :nimi "Lataus"
+    :tilaviesti {:tila :lataus :viesti "Ladataan sivua..."}
+    :rooli (get ui/tilaviestin-roolit :lataus)}
+   {:id :tyhja
+    :nimi "Tyhjä"
+    :tilaviesti {:tila :onnistui :viesti "Sivulla ei ole tuloksia."}
+    :rooli (get ui/tilaviestin-roolit :onnistui)}
+   {:id :virhe
+    :nimi "Virhe"
+    :tilaviesti {:tila :virhe :viesti "Sivun lataus epäonnistui."}
+    :rooli (get ui/tilaviestin-roolit :virhe)}
+   {:id :ei-oikeutta
+    :nimi "Ei oikeutta"
+    :tilaviesti {:tila :virhe :viesti "Ei käyttöoikeutta."}
+    :rooli (get ui/tilaviestin-roolit :virhe)}])
+
+(defn sivutila [id]
+  (some #(when (= id (:id %)) %) sivutilat))
 
 (def ^:private suojatut-asetukset
   "Renderer antaa nämä avaimet itse, joten syöte ei saa asettaa niitä."

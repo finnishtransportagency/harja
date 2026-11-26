@@ -1,5 +1,6 @@
 (ns harja.ui.perus.simulaattori-test
   (:require [clojure.test :refer [deftest is testing]]
+            [harja.ui.perus :as perus]
             [harja.ui.perus.simulaattori :as simulaattori]))
 
 (deftest kelvollinen-puu-hyvaksytaan
@@ -60,6 +61,21 @@
 (deftest poistettu-valintaryhma-hylataan
   (is (= ["Tuntematon komponentti: :valintaryhma"]
          (simulaattori/virheet [{:komponentti :valintaryhma}]))))
+
+(deftest sivutilasopimus-kattaa-pilotin-rajatilat
+  (is (= [:normaali :lataus :tyhja :virhe :ei-oikeutta]
+         (mapv :id simulaattori/sivutilat)))
+  (doseq [tila simulaattori/sivutilat]
+    (is (= tila (simulaattori/sivutila (:id tila)))
+        (str "tila " (:id tila) " löytyy sopimuksesta"))))
+
+(deftest sivutilan-esitys-kayttaa-tilaviestin-aria-sopimusta
+  (doseq [tila (remove (comp #{:normaali} :id) simulaattori/sivutilat)]
+    (let [{:keys [tilaviesti rooli]} tila]
+      (is (some? (:viesti tilaviesti))
+          (str (:id tila) " sisältää käyttäjälle näkyvän viestin"))
+      (is (= rooli (get perus/tilaviestin-roolit (:tila tilaviesti)))
+          (str (:id tila) " käyttää tilaviestin roolia")))))
 
 (deftest virheellinen-rakenne-antaa-virheen-eika-kaadu
   (testing "asetukset ei ole map"

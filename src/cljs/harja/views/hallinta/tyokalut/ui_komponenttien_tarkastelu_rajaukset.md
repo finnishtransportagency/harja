@@ -163,6 +163,7 @@ Esimerkkisivut ovat valmiita, kelvollisia simulaattoripuita sekä käyttäjille 
 - Tiedostot luetaan käännösaikaan makrolla (`harja.ui.perus.esimerkkisivut/lataa-esimerkkisivut`). Tiedoston muokkaus ei laukaise Figwheelin uudelleenlatausta: kosketa `esimerkkisivut.cljc`-tiedostoa tai käännä uudelleen.
 - `lein test :only harja.ui.perus.esimerkkisivut-test` validoi jokaisen esimerkin simulaattorin säännöillä sekä tarkistaa yksilölliset id:t, nimen ja kuvauksen. Uusi esimerkki saa käyttää vain komponentteja, joilla on simulaattorin `:renderoi`. Muuten esikatselu näyttää virheen, joten tarkista uusi esimerkki selaimessa.
 - Uusi esimerkki lisätään tiedostona, ei koodina. Esimerkki ei saa sisältää funktioita, symboleja tai hiccup-markupia.
+- Simulaattorin yhteiset sivutilat ovat `:normaali`, `:lataus`, `:tyhja`, `:virhe` ja `:ei-oikeutta`. Tilanvalinta ei muuta EDN-lähdettä: epänormaali tila korvaa vain renderöidyn esikatselun sisällön. Lähde, validointi ja tilavalitsin jäävät näkyviin. Lataus ja tyhjä käyttävät `status`-roolia, virhe ja ei-oikeutta `alert`-roolia.
 
 ## Tunnetut rajoitukset
 

@@ -124,6 +124,17 @@
                        :viesti "Lähde on kelvollinen ja voidaan renderöidä."
                        :data-cy "ui-simulaattori-validointi-tila"}]])))
 
+(defn- sivutilavalinta [sivutila]
+  [yleiset/pudotusvalikko
+   "Sivun tila"
+   {:data-cy "ui-simulaattori-sivutila"
+    :elementin-id "ui-simulaattori-sivutila"
+    :valinta @sivutila
+    :valitse-fn #(reset! sivutila %)
+    :format-fn #(-> % sopimus/sivutila :nimi)
+    :vayla-tyyli? true}
+   (mapv :id sopimus/sivutilat)])
+
 (defn- puu [tila]
   (let [{:keys [puu virhe]} @luettu-syote]
     (if (and (nil? virhe) (sopimus/kelvollinen? puu))
@@ -134,8 +145,13 @@
          [:h3 "Renderöity esikatselu"]]
         [:span.ui-simulaattori-merkki.ui-simulaattori-merkki-tulos "UI"]]
        [:p.ui-simulaattori-kuvaus "Tämä alue on rendererin tuottama käyttöliittymä."]
-       (for [[indeksi solmu] (map-indexed vector puu)]
-         ^{:key indeksi} [solmun-sisalto solmu tila])]
+       (let [{:keys [id tilaviesti]} (sopimus/sivutila @(:sivutila tila))]
+         (if tilaviesti
+           [ui/tilaviesti
+            (assoc tilaviesti
+              :data-cy (str "ui-simulaattori-sivutila-" (name id)))]
+           (for [[indeksi solmu] (map-indexed vector puu)]
+             ^{:key indeksi} [solmun-sisalto solmu tila])))]
       [:section.ui-simulaattori-paneeli.ui-simulaattori-esikatselu {:data-cy "ui-simulaattori-esikatselu"}
        [:header.ui-simulaattori-paneelin-otsake
         [:h3 "Renderöity esikatselu"]]
@@ -145,14 +161,16 @@
 
 (defn sivu []
   (r/with-let [valinta (r/atom :hoito)
-               tila (r/atom :normaali)]
-    (let [tila-atomi {:valinta valinta :tila tila}]
+               tila (r/atom :normaali)
+               sivutila (r/atom :normaali)]
+    (let [tila-atomi {:valinta valinta :tila tila :sivutila sivutila}]
       [:main {:data-cy "ui-komponenttien-sivusimulaattori"}
        [:header
         [:p "Deklaratiivinen näkymä"]
         [:h2 "Sivusimulaattori"]
         [:p "Näe yhdellä silmäyksellä, miten rekisteröity rakenne muuttuu käyttöliittymäksi."]]
        [ui/pino {:data-cy "ui-simulaattori"}
+        [sivutilavalinta sivutila]
         [:div.ui-simulaattori-tyopoyta {:data-cy "ui-simulaattori-tyopoyta"}
          [puu tila-atomi]
          [validointi]]
