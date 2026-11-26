@@ -42,7 +42,7 @@
         valittujen-evk-idt (into #{} (map :id valitut-evkt))
         valittavat-evkt (into [{:id nil :nimi "Kaikki" :valittu? (empty? valitut-evkt)}]
                           (map #(assoc % :valittu? (contains? valittujen-evk-idt (:id %))) evkt))]
-    [:div
+    [:div.kojelauta-suodattimet
      [yleiset/pudotusvalikko
       "Urakkatyyppi"
       {:valitse-fn #(do
@@ -100,7 +100,7 @@
                                 (str (count %) " urakkaa valittu"))
          :disabled? haku-kaynnissa?}
        (r/wrap (:urakat valinnat) #(e! (tiedot/->AsetaSuodatin :urakat %)))]]
-     [:div.kojelauta-haku
+     [:div.kojelauta-hae-nappi
        [napit/yleinen-ensisijainen "Hae"
         #(e! (tiedot/->HaeUrakat))
         {:disabled haku-kaynnissa?}]]]))
