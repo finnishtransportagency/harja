@@ -54,7 +54,8 @@
     :funktio "harja.ui.yleiset/pudotusvalikko"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Valikon otsikko."}
                 :optiot {:tyyppi :map :pakollinen? true :oletus nil :kuvaus "Valikon asetukset, esim. :auki-fn!, :kiinni-fn!, :elementin-id, :wrap-luokka, :vayla-tyyli?."}
-                :valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Vaihtoehdot vektorina tai mappina."}}}
+                :valinnat {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Vaihtoehdot vektorina tai mappina."}}
+    :simulaattori-asetukset {:optiot {:tyyppi :map :pakollinen? false :oletus {} :kuvaus "Simulaattorin dokumentoidut optiot; renderer luo tilan ja callbackit."}}}
    {:id :checkbox-pudotusvalikko
     :nimi "Checkbox-pudotusvalikko"
     :ryhma :alasvedot
@@ -606,7 +607,9 @@
                 :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Merkitsee labelin pakolliseksi."}
                 :disabled? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Estää lapsikentän muokkaamisen."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste. Simulaattori käyttää tätä vakiona elementti-id:nä."}
-                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}
+    :simulaattori-asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa elementti-id ja E2E-ankkuri simulaattorissa."}}
+    :simulaattori-slotit {:kentta {:min 1 :max 1}}}
    {:id :lomake
     :nimi "Lomake"
     :ryhma :lomakkeet
@@ -695,7 +698,9 @@
                 :muutos {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan muutosten yhteydessä."}
                 :sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
                 :rivit-atomi {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, jossa rivit ovat."}
-                :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana (mappeja :id-avaimella). Vain simulaattorille: renderöijä luo itse atomin."}}}
+                :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana (mappeja :id-avaimella). Vain simulaattorille: renderöijä luo itse atomin."}}
+    :simulaattori-asetukset {:sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
+                             :rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Rivit datana; simulaattori rakentaa atomin."}}}
    {:id :tabs
     :nimi "Tabs"
     :ryhma :portatut
@@ -713,7 +718,8 @@
                 :style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Tyylit."}
                 :classes {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "CSS-luokat."}
                 :on-change {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan välilehden vaihtuessa."}
-                :valilehdet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Otsikot, avaimet ja sisällöt vuorotellen."}}}
+                :valilehdet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Otsikot, avaimet ja sisällöt vuorotellen."}}
+    :simulaattori-asetukset {:valilehdet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Välilehdet datana: [{:otsikko ... :teksti ...}]."}}}
    {:id :navbar
     :nimi "Navbar"
     :ryhma :portatut
@@ -1057,6 +1063,21 @@
   ([komponentit id]
    (first (filter #(= id (:id %)) komponentit))))
 
+(defn sallitut-lapset
+  "Johdetaan kanonisesta :sallitut-vanhemmat -tiedosta käänteinen vanhempi -> lapset -näkymä."
+  ([] (sallitut-lapset komponentit))
+  ([komponentit]
+   (reduce (fn [tulos {:keys [id sallitut-vanhemmat]}]
+             (reduce #(update %1 %2 (fnil conj #{}) id) tulos sallitut-vanhemmat))
+           {}
+           komponentit)))
+
+(defn simulaattori-asetukset
+  "Simulaattorin sallimat asetukset. Simulaattorikohtainen muoto korvaa saman avaimen tuotantoasetuksen."
+  [{:keys [asetukset simulaattori-asetukset]}]
+  (merge (or asetukset {})
+         (or simulaattori-asetukset {})))
+
 (defn ryhmittele
   "Palauttaa vain ne ryhmät, joissa on komponentteja: [{:id :nimi :komponentit [...]}]."
   ([] (ryhmittele ryhmat komponentit))
@@ -1138,7 +1159,7 @@
        (concat
          (for [arvo (tuplat :id)] (str "Tuplaid: " arvo))
          (for [{:keys [id ryhma luonne bootstrap-tila bootstrap-luokat nimi kuvaus funktio asetukset rooli slotit tilat
-                       sallitut-vanhemmat variantit suositus korvaa] :as komponentti} komponentit
+                       sallitut-vanhemmat variantit suositus korvaa simulaattori-asetukset simulaattori-slotit] :as komponentti} komponentit
                virhe [(when-not (contains? suositukset suositus)
                         (str id ": tuntematon tai puuttuva suositus " suositus))
                       (when-not (and (vector? korvaa) (every? string? korvaa))
@@ -1156,6 +1177,14 @@
                       (when-not (map? asetukset) (str id ": asetukset puuttuvat"))
                       (when-let [virheelliset (seq (remove (comp asetustyypit :tyyppi val) asetukset))]
                         (str id ": tuntemattomat asetustyypit " (mapv (comp :tyyppi val) virheelliset)))
+                      (when (and (some? simulaattori-asetukset) (not (map? simulaattori-asetukset)))
+                        (str id ": simulaattori-asetukset on oltava kartta"))
+                      (when (and (map? simulaattori-asetukset)
+                                 (not (every? asetustyypit (map (comp :tyyppi val) simulaattori-asetukset))))
+                        (str id ": simulaattori-asetuksella on tuntematon tyyppi"))
+                      (when (and (some? simulaattori-slotit)
+                                 (not (every? slotit (keys simulaattori-slotit))))
+                        (str id ": tuntematon simulaattori-slotti " (vec (remove slotit (keys simulaattori-slotit)))))
                       (when-not (contains? roolit rooli) (str id ": tuntematon tai puuttuva rooli " rooli))
                       (when-not (set? slotit) (str id ": slotit puuttuvat"))
                       (when-not (joukko? tilat) (str id ": tilat puuttuvat tai ovat tyhjät"))

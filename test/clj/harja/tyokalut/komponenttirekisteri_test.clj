@@ -17,6 +17,12 @@
       (is (every? #(contains? % :asetukset) tulos))
       (is (not (funktio-loytyy? tulos))))))
 
+(deftest muotoile-sisaltaa-esimerkkisivut
+  (let [{:keys [esimerkit]} (komponenttirekisteri/muotoile {})]
+    (is (seq esimerkit))
+    (is (every? #(contains? % :puu) esimerkit))
+    (is (some #(= :pilotti-raportti (:id %)) esimerkit))))
+
 (deftest muotoile-suodattaa-id-ja-ryhma
   (testing "Id-suodatin palauttaa vain yhden komponentin"
     (let [{:keys [tulos]} (komponenttirekisteri/muotoile {:id :nappi})]

@@ -55,6 +55,12 @@
 (deftest ankkuri-johdetaan-id-sta
   (is (= "ui-komponenttien-tarkastelu-nappi" (rekisteri/ankkuri {:id :nappi}))))
 
+(deftest sallitut-lapset-johdetaan-sallitusta-vanhemmista
+  (doseq [{:keys [id sallitut-vanhemmat]} rekisteri/komponentit
+          vanhempi sallitut-vanhemmat]
+    (is (contains? (get (rekisteri/sallitut-lapset) vanhempi) id)
+        (str id " on " vanhempi "n lapsi molempiin suuntiin"))))
+
 (deftest api-teksti-generoituu-asetuksista
   (let [komponentti {:funktio "harja.ui.esimerkki/komponentti"
                      :asetukset {:teksti {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Teksti"}

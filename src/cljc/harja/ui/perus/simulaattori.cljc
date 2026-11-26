@@ -56,13 +56,38 @@
                     (contains? suojatut-asetukset avain)
                     [(str nimi ": suojattu asetus " avain " ei ole sallittu")]
 
-                    (not (contains? (:asetukset kuvaus) avain))
+                    (not (contains? (rekisteri/simulaattori-asetukset kuvaus) avain))
                     [(str nimi ": tuntematon asetus " avain)])
                   (for [osa (tree-seq coll? seq arvo)
                         :let [tyyppi (kielletty-tyyppi osa)]
                         :when tyyppi]
                     (str nimi ": asetus " avain " on " tyyppi ", ei sallittu")))]
       virhe)))
+
+(def ^:private simulaattorin-omistamat-asetustyypit
+  #{:funktio :atomi :hiccup})
+
+(defn- pakolliset-asetusvirheet [id kuvaus asetukset]
+  (when (and (map? asetukset)
+             (empty? (asetusvirheet id kuvaus asetukset)))
+    (for [[avain asetustieto] (rekisteri/simulaattori-asetukset kuvaus)
+          :when (:pakollinen? asetustieto)
+          :when (not (contains? suojatut-asetukset avain))
+          :when (not= :tyyppi avain)
+          :when (not (contains? simulaattorin-omistamat-asetustyypit (:tyyppi asetustieto)))
+          :when (not (contains? asetukset avain))]
+      (str (name id) ": pakollinen asetus " avain " puuttuu"))))
+
+(defn- slottivirheet [id kuvaus lapset]
+  (let [lapsimaara (count lapset)]
+    (for [[slotti {:keys [min max]}] (:simulaattori-slotit kuvaus)
+          :when (or (and (some? min) (< lapsimaara min))
+                    (and (some? max) (> lapsimaara max)))]
+      (if (and (= 1 min) (= 1 max))
+        (if (= slotti :kentta)
+          (str (name id) ": vaatii täsmälleen yhden kenttäkomponentin")
+          (str (name id) ": vaatii täsmälleen yhden " (name slotti) " komponentin"))
+        (str (name id) ": slotin " slotti " lapsimäärä " lapsimaara " on virheellinen")))))
 
 (def ^:private solutyypit
   "Perusgridin sarakkeen :solu-arvot, joita renderöijä osaa piirtää."
@@ -135,16 +160,15 @@
           [(str komponentti ": asetukset ei ole map")])
         (when-not lapset-kunnossa?
           [(str komponentti ": lapset ei ole lista")])
-        (when (and (= :kenttaryhma komponentti)
-                   lapset-kunnossa?
-                   (not= 1 (count lapset)))
-          ["kenttaryhma: vaatii täsmälleen yhden kenttäkomponentin"])
+        (when (and kuvaus lapset-kunnossa?)
+          (slottivirheet komponentti kuvaus lapset))
         (when (and (= :kenttaryhma komponentti)
                    asetukset-kunnossa?
                    (str/blank? (:data-cy asetukset)))
           ["kenttaryhma: simulaattorissa vaaditaan :data-cy elementti-id:n muodostamiseen"])
         (when (and kuvaus asetukset-kunnossa?)
-          (asetusvirheet komponentti kuvaus asetukset))
+          (concat (asetusvirheet komponentti kuvaus asetukset)
+                  (pakolliset-asetusvirheet komponentti kuvaus asetukset)))
         (when (and (= :perusgrid komponentti) (map? asetukset))
           (concat (solutyyppivirheet komponentti asetukset)
                   (vetolaatikkovirheet komponentti asetukset)

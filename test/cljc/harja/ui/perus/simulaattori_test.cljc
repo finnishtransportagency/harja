@@ -170,6 +170,12 @@
           :lapset [{:komponentti :suodatinrivi
                     :lapset [{:komponentti :tekstikentta}]}]}])))
 
+(deftest pakollinen-simulaattoriasetus-hylataan
+  (is (= ["perusgrid: pakollinen asetus :sarakkeet puuttuu"]
+         (simulaattori/virheet
+           [{:komponentti :perusgrid
+             :asetukset {:rivit []}}]))))
+
 (deftest kenttaryhma-sallii-yhden-rekisteroidyn-kenttakomponentin
   (doseq [kentta [:tekstikentta
                   :numerokentta
@@ -179,7 +185,8 @@
     (is (simulaattori/kelvollinen?
           [{:komponentti :lomake
             :lapset [{:komponentti :kenttaryhma
-                      :asetukset {:data-cy (str "kenttaryhma-" (name kentta))}
+                      :asetukset {:otsikko "Kenttä"
+                                  :data-cy (str "kenttaryhma-" (name kentta))}
                       :lapset [{:komponentti kentta}]}]}])
         (name kentta))))
 
@@ -190,7 +197,8 @@
            (simulaattori/virheet
              [{:komponentti :lomake
                :lapset [{:komponentti :kenttaryhma
-                         :asetukset {:data-cy "kenttaryhma-testi"}
+                         :asetukset {:otsikko "Kenttä"
+                                     :data-cy "kenttaryhma-testi"}
                          :lapset lapset}]}])))))
 
 (deftest kenttaryhma-vaatii-vakaan-data-cy-tunnisteen

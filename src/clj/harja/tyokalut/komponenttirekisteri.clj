@@ -1,14 +1,19 @@
 (ns harja.tyokalut.komponenttirekisteri
   "Tulostaa UI-komponenttirekisterin EDN:nä ilman appia, tietokantaa tai selainta.
+  Tulos sisältää komponentit ja esimerkkisivut.
   Käyttö: lein komponenttirekisteri [:id nappi] [:ryhma lomakkeet]"
   (:require [clojure.string :as str]
             [clojure.walk :as walk]
+            [harja.ui.perus.esimerkkisivut :as esimerkkisivut]
             [harja.ui.perus.rekisteri :as rekisteri]))
 
 (def ^:private sallitut-suodattimet #{:id :ryhma})
 
 (defn hae-kaikki []
   rekisteri/komponentit)
+
+(defn hae-esimerkit []
+  esimerkkisivut/esimerkkisivut)
 
 (defn parsi-argumentit
   "Muuntaa komentoriviargumentit [\":id\" \"nappi\" ...] suodattimiksi {:id :nappi ...}."
@@ -50,13 +55,15 @@
     (cond
       (and id (empty? komponentit)) {:virhe (str "Tuntematon komponentti id:llä " id)}
       (and ryhma (empty? komponentit)) {:virhe (str "Ryhmästä " ryhma " ei löytynyt komponentteja")}
-      :else {:tulos (mapv siisti komponentit)})))
+      :else {:tulos (mapv siisti komponentit)
+             :esimerkit (mapv poista-funktiot (hae-esimerkit))})))
 
 (defn -main [& argumentit]
-  (let [{:keys [tulos virhe]} (if-let [virhe (tarkista-argumentit argumentit)]
-                                {:virhe virhe}
-                                (muotoile (parsi-argumentit argumentit)))]
+  (let [{:keys [tulos esimerkit virhe]} (if-let [virhe (tarkista-argumentit argumentit)]
+                                         {:virhe virhe}
+                                         (muotoile (parsi-argumentit argumentit)))]
     (if virhe
       (do (binding [*out* *err*] (println virhe))
           (System/exit 1))
-      (println (pr-str tulos)))))
+      (println (pr-str {:komponentit tulos
+                        :esimerkit esimerkit})))))

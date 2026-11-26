@@ -35,7 +35,19 @@ Uuden komponentin lisääminen:
 
 ## Rekisterin tulostus
 
-`lein komponenttirekisteri` tulostaa rekisterin EDN:nä stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Tulos sisältää rekisterimerkinnän kaikki avaimet (mm. `:funktio`, `:asetukset`, `:suositus`, `:korvaa`, `:variantit`, `:bootstrap-luokat`) ja lisäksi `:ankkuri`. Funktioarvot jätetään pois. Tuntematon suodatin, pariton argumenttimäärä sekä tuntematon `:id` tai `:ryhma` tulostavat virheen stderriin ja päättyvät koodilla 1.
+`lein komponenttirekisteri` tulostaa EDN-kartan `{:komponentit [...] :esimerkit [...]}` stdoutiin ilman appia, tietokantaa tai selainta. Suodattimet annetaan avain-arvo-pareina: `lein komponenttirekisteri :id nappi` tai `lein komponenttirekisteri :ryhma lomakkeet`. Suodatin kohdistuu komponentteihin; `:esimerkit` sisältää koko katalogin. Komponentit sisältävät rekisterimerkinnän kaikki avaimet (mm. `:funktio`, `:asetukset`, `:simulaattori-asetukset`, `:suositus`, `:korvaa`, `:variantit`, `:bootstrap-luokat`) ja lisäksi `:ankkuri`. Funktioarvot jätetään pois. Tuntematon suodatin, pariton argumenttimäärä sekä tuntematon `:id` tai `:ryhma` tulostavat virheen stderriin ja päättyvät koodilla 1.
+
+## Agenttityönkulku
+
+1. Aja `lein komponenttirekisteri` ja lue komponentit sekä `:esimerkit`.
+2. Valitse lähteeksi lähin olemassa oleva esimerkkisivu ja säilytä sen `:data-cy`-ankkurien malli.
+3. Käytä rekisterissä `:sallitut-vanhemmat`-kaarta kanonisena lapsisopimuksena. Käänteinen `sallitut-lapset`-näkymä johdetaan siitä eikä sitä ylläpidetä erikseen.
+4. Kirjoita declaratiivinen EDN-puu. Älä lisää funktioita, atomeja, suoraa Bootstrap-markupia tai sivukohtaista CSS:ää.
+5. Kun komponentilla on `:simulaattori-asetukset`, käytä sitä EDN-muodossa. `:asetukset` kuvaa tuotanto-API:a.
+6. Aja `lein test :only harja.ui.perus.esimerkkisivut-test` ja tarvittaessa `lein test :only harja.ui.perus.simulaattori-test`.
+7. Tarkista uusi puu Sivusimulaattorissa normaali-, tyhjä-, lataus-, virhe- ja kapea tila käyttäen yhteistä sivuntilavalitsinta.
+
+Esimerkit ladataan käännösaikaisella makrolla, joten EDN-muutos ei laukaise automaattista reloadia. Poikkeus on perusteltu, koska esimerkkien on pysyttävä samana JVM-testidatana ja selainbundlessa. Kehityksessä aja Figwheel-build uudelleen tai kosketa `esimerkkisivut.cljc`-tiedostoa.
 
 ## Sopimus
 
@@ -51,6 +63,8 @@ Uuden komponentin lisääminen:
 - Uudessa merkinnässä (`:suositus :uuteen-ui`) kielletyt asetusnimet ovat `:class`, `:classes`, `:disabled?`, `:disabloi`, `:valitse-fn` ja `:valinta-fn`. Käytä `:luokka`, `:disabled` ja `:vaihda-fn`. `-fn`-päätteisen asetuksen tyypin on oltava `:funktio` ja `?`-päätteisen `:boolean`. Vanhat merkinnät (`:vanha`, `:ei-suositusta`) saavat käyttää vanhoja nimiä, mutta tyyppisäännöt koskevat vain uusia merkintöjä.
 - `:suositus` kertoo, mitä uuteen UI:hin käytetään. `:uuteen-ui` on suositeltu komponentti, `:vanha` on olemassa oleva Bootstrap-riippuvainen rakenne (esim. `rivi`) ja `:ei-suositusta` on käytössä oleva komponentti, jolle ei ole vielä korvaajaa tai jonka korvaaja on toinen komponentti. Poistettu API voidaan säilyttää `:korvaa`-listassa migraatioiden lähdeviitteenä. Komponentti ei saa korvata itseään: `:korvaa` listaa vanhat vastineet, ei komponentin omaa funktiota.
 - `:sallitut-vanhemmat` listaa rekisterin komponentti-id:t (tai `:sivu`), joiden lapsena komponentti saa olla. Ryhmä-id tai rooli ei ole kelvollinen vanhempi. Simulaattori hylkää kaikki muut yhdistelmät, joten kun layout-komponentti (`pino`, `suodatinrivi`, `toimintoryhma`, `panel`) saa uuden tyypillisen lapsen, lisää layout-komponentin id lapsen vanhempiin.
+- `:simulaattori-slotit` nimeää EDN-lapsipuulle pakolliset määrärajoitukset, esim. `:kentta {:min 1 :max 1}`. Slottiavaimen pitää kuulua komponentin `:slotit`-joukkoon.
+- `:simulaattori-asetukset` korvaa saman avaimen tuotantoasetuksen simulaattorin EDN-muodossa. Tämä on raja esimerkiksi `tabs :valilehdet`-datan ja `muokkausgrid :rivit`-vektorin käyttämiselle ilman tuotantoatomia.
 - `:slotit` ja `:asetukset` ovat pakollisia avaimia, mutta ne saavat olla tyhjiä, kun komponentilla ei ole sloteja tai parametreja (esim. `murupolku`). `:tilat` ja `:sallitut-vanhemmat` eivät saa olla tyhjiä.
 - `:nimeamispoikkeukset` (joukko asetusnimiä) sallii uudessa merkinnässä yksittäisen kielletyn asetusnimen, kun se on jo käytössä olevan API:n osa. Validointi hylkää poikkeuksen, jota merkintä ei tarvitse.
 - `:yhteiset-variantit` yhdistää yhteisen palautesanaston (`palaute-variantit`: `:onnistui`, `:info`, `:varoitus`, `:virhe`) komponentin omaan arvoon, esim. viestin `:luokka`-arvoon. Palautekomponentin pitää antaa kartta, ja avainten pitää kuulua yhteiseen sanastoon. Kartassa saa olla vain ne variantit, joille komponentilla on vastine (info-laatikolla ei ole virhevarianttia).
