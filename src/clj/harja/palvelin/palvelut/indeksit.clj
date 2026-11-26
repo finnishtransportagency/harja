@@ -74,6 +74,16 @@
     (log/debug
       "Urakan tavoite:"
       (budjettisuunnittelu-q/paivita-urakka-tavoite-indeksille! db indeksi)
+      "riviä päivitetty"))
+  ;; Vesiväyläurakan alkavan urakkavuoden yksikköhintaisten töiden indeksikorjatut hinnat päivitetään, kun elokuun indeksi on kirjattu.
+  ;; Indeksikorotuksia ei lasketa urakan ensimmäisenä vuonna, vaan vasta toisesta urakkavuodesta lähtien ja kaikilla vesiväyläurakoilla toinen
+  ;; urakkavuosi alkaa 1.10, niin siksi riittää elokuun tarkistus.
+  (when (= 8 kuukausi)
+    (log/debug
+      "Yksikköhintaiset työt:"
+      (budjettisuunnittelu-q/paivita-yksikkohintaiset-tyot-indeksille!
+        db
+        indeksi)
       "riviä päivitetty")))
 
 (defn tallenna-indeksi

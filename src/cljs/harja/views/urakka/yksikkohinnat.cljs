@@ -1,5 +1,6 @@
 (ns harja.views.urakka.yksikkohinnat
   (:require [tuck.core :refer [tuck]]
+            [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]
             [harja.ui.debug :as debug]
             [harja.ui.grid :as grid]
@@ -17,12 +18,19 @@
             [harja.tiedot.urakka.yksikkohinnat :as tiedot]))
 
 (defn- piirra-valiotsikko-caret [e! valiotsikko avatut-tehtavaryhmat]
-  [:img {:alt "Expander"
-         :src (if (contains? avatut-tehtavaryhmat valiotsikko)
-                "images/expander-down.svg"
-                "images/expander.svg")
-         :tabIndex "0"
-         :on-click #(e! (tiedot/->AvaaRivi valiotsikko))}])
+  (let [avaa! #(e! (tiedot/->AvaaRivi valiotsikko))]
+    [:img {:alt "Avaa tai sulje tehtävät"
+           :role "button"
+           :src (if (contains? avatut-tehtavaryhmat valiotsikko)
+                  "images/expander-down.svg"
+                  "images/expander.svg")
+           :tabIndex 0
+           :on-click avaa!
+           :on-key-down
+           (fn [event]
+             (when (dom/enter-nappain? event)
+               (.preventDefault event)
+               (avaa!)))}]))
 
 (defn- tulevilla-vuosilla-tietoja? [app]
   (let [nykyinen-vuosi (some-> (:valittu-hoitokausi app) first pvm/vuosi)

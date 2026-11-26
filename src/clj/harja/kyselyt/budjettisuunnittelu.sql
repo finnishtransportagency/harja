@@ -499,6 +499,37 @@ set tavoitehinta_indeksikorjattu           = muuttuneet.tavoitehinta_indeksikorj
     from muuttuneet
 where muuttuneet.id = urakka_tavoite.id;
 
+-- name: paivita-yksikkohintaiset-tyot-indeksille!
+WITH muuttuneet AS (
+    SELECT yt.id,
+           yt.indeksikorjattu_yksikkohinta AS vanha,
+           indeksikorjaa(
+               yt.yksikkohinta,
+               EXTRACT(YEAR FROM yt.alkupvm)::INTEGER,
+               10,
+               u.id
+           ) AS uusi
+    FROM yksikkohintainen_tyo yt
+             JOIN urakka u ON u.id = yt.urakka
+    WHERE u.indeksi = :nimi
+      AND yt.indeksi_kaytossa IS TRUE
+      AND :kuukausi = 8
+      AND yt.alkupvm >= make_date(:vuosi::INTEGER, 10, 1)
+      AND yt.alkupvm < make_date((:vuosi::INTEGER + 1), 10, 1)
+      AND yt.yksikkohinta IS NOT NULL
+)
+UPDATE yksikkohintainen_tyo yt
+SET indeksikorjattu_yksikkohinta = muuttuneet.uusi,
+    muokkaaja = (
+        SELECT id
+        FROM kayttaja
+        WHERE kayttajanimi = 'Integraatio'
+    ),
+    muokattu = CURRENT_TIMESTAMP
+    FROM muuttuneet
+WHERE yt.id = muuttuneet.id
+  AND muuttuneet.vanha IS DISTINCT FROM muuttuneet.uusi;
+
 -- name: hae-urakoiden-tarjoushinnat
 SELECT u.id                           AS urakka,
        u.nimi                         AS "urakka-nimi",
