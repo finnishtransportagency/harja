@@ -83,7 +83,7 @@
                 (map :pisteet)
                 (remove nil?)
                 (reduce +))
-        lkm (count vastaukset)]
+        lkm (count paatos-kk)]
     (if (and summa (> summa 0))
       (int (Math/floor (/ summa lkm)))
       0)))
@@ -154,7 +154,7 @@
 (defn monivalinta->toteuma [{:keys [vastaukset paatos-kk]}]
   (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk)))
 
-(defn kysely->toteuma [{:keys [vastaukset paatos-kk]}]
+(defn kysely->toteuma [{:keys [vastaukset]}]
   (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
     (:pisteet paatos)))
 
