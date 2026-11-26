@@ -74,18 +74,22 @@
                   [vuosi kuukausi]))
        last))
 
-(defn vastausten-keskiarvo [vastaukset paatos-kk]
+(defn vastausten-keskiarvo [vastaukset kuukaudet]
   "Funktio laskee lupauksen vaikuttavien kuukausien pisteiden keskiarvon ja pyöristää sen kokonaisluvuksi.
   Pyöristys tehdään aina alaspäin, koska toteutumattomasta lupauksesta ei saa saada pisteitä.
-  Jos pisteiden summa on nil, keskiarvo on nolla."
-  (let [summa (->> vastaukset
-                (filter #(some #{(:kuukausi %)} paatos-kk))
+  Jos pisteiden summa on nil, keskiarvo on nolla.
+
+  Jos vastauksia löytyy, mutta päätöskuukausien lukumäärä on nolla, tarkista tietokannasta LUPAUS.paatos-kk-kentästä
+  päättävien kuukausien määritys. 0 on ok arvo, koska se tarkoittaa kaikkia kuukausia. Tyhjästä seuraa, että päätöskuukausia ei ole."
+  (let [kk-lkm (count kuukaudet)
+        jakaja (if (> kk-lkm 0) kk-lkm 1)
+        summa (->> vastaukset
+                (filter #(some #{(:kuukausi %)} kuukaudet))
                 (map :pisteet)
                 (remove nil?)
-                (reduce +))
-        lkm (count paatos-kk)]
+                (reduce +))]
     (if (and summa (> summa 0))
-      (int (Math/floor (/ summa lkm)))
+      (int (Math/floor (/ summa jakaja)))
       0)))
 
 (defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
@@ -152,7 +156,15 @@
     (set paatos-kk)))
 
 (defn monivalinta->toteuma [{:keys [vastaukset paatos-kk]}]
-  (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk)))
+  "Toteuman keskiarvo lasketaan päätökseen vaikuttavien kuukausien perusteella, mutta vain jos kaikki kuukaudet on täytetty.
+  Päätökseen vaikuttavat kuukaudet määritellään LUPAUS.paatos-kk-sarakkeessa. Jos kaikkia kuukausia ei ole päätetty, palautetaan nil."
+  (let [vastaus-kk (->> vastaukset
+                     (filter #(some? (:pisteet %)))
+                     (map :kuukausi)
+                     set)]
+    (if (= vastaus-kk (paatos-kk-joukko paatos-kk))
+      (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk))
+      nil)))
 
 (defn kysely->toteuma [{:keys [vastaukset]}]
   (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
@@ -167,9 +179,12 @@
   (or (:pisteet (viimeisin-vastaus vastaukset))
       kyselypisteet))
 
-(defn monivalinta->ennuste [{:keys [vastaukset kyselypisteet]}]
-  (or (:pisteet (viimeisin-vastaus vastaukset))
-      kyselypisteet))
+(defn monivalinta->ennuste [{:keys [vastaukset]}]
+  "Ennusteen keskiarvo lasketaan täytettyjen kuukausien perusteella."
+  (let [vastaus-kk (->> vastaukset
+                     (filter #(some? (:pisteet %)))
+                     (map :kuukausi))]
+    (vastausten-keskiarvo vastaukset vastaus-kk)))
 
 (defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
   (case lupaustyyppi
