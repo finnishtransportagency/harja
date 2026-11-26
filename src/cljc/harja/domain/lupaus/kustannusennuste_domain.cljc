@@ -35,13 +35,12 @@
    - lopputilanne: Map joka sisältää :kustannusennuste_keskiarvo_pisteet kentän
    
    Palauttaa:
-   - Pyöristetyn keskiarvon tai nil jos lopputilannetta ei ole.
-     Keskiarvo pyöristetään aina alaspäin, koska toteutumattomasta lupauksesta ei voi saada pisteitä."
+   - Pyöristetyn keskiarvon tai nil jos lopputilannetta ei ole."
   [{:keys [lopputilanne]}]
   (when lopputilanne
     (when-let [keskiarvo (:kustannusennuste_keskiarvo_pisteet lopputilanne)]
-      #?(:clj (Math/floor (double keskiarvo))
-         :cljs (js/Math.floor keskiarvo)))))
+      #?(:clj (Math/round (double keskiarvo))
+         :cljs (js/Math.round keskiarvo)))))
 
 (defn validoi-kustannusennuste-syotteet
   "Validoi että kaikki syötteet ovat valideja laskentaa varten"
