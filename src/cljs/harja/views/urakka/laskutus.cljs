@@ -12,7 +12,7 @@
             [harja.tiedot.urakka.suunnittelu :as s]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.kulut.kulut :as kohdistetut-kulut]
-            [harja.views.urakka.yksikkohinnat :as yksikkohinnat]
+            [harja.views.vesivaylat.urakka.yksikkohinnat :as yksikkohinnat]
             [harja.domain.oikeudet :as oikeudet]
             [harja.domain.urakka :as urakka-domain])
 

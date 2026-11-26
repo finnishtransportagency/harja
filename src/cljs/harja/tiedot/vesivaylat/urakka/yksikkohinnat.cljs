@@ -1,7 +1,6 @@
-(ns harja.tiedot.urakka.yksikkohinnat
+(ns harja.tiedot.vesivaylat.urakka.yksikkohinnat
   "Yksikköhinnat-näkymän Tuck-tila ja tapahtumat."
-  (:require [reagent.core :refer [atom]]
-            [tuck.core :as tuck]
+  (:require [tuck.core :as tuck]
             [harja.pvm :as pvm]
             [harja.tyokalut.tuck :as tuck-apurit]
             [harja.ui.viesti :as viesti]

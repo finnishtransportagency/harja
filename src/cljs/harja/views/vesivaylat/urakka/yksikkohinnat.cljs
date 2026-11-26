@@ -1,4 +1,4 @@
-(ns harja.views.urakka.yksikkohinnat
+(ns harja.views.vesivaylat.urakka.yksikkohinnat
   (:require [tuck.core :refer [tuck]]
             [harja.ui.dom :as dom]
             [harja.ui.komponentti :as komp]
@@ -15,7 +15,7 @@
             [harja.tiedot.urakka :as urakka-tiedot]
             [harja.tiedot.urakka.urakka :as urakka-tila]
             [harja.ui.varmista-kayttajalta :as varmista]
-            [harja.tiedot.urakka.yksikkohinnat :as tiedot]))
+            [harja.tiedot.vesivaylat.urakka.yksikkohinnat :as tiedot]))
 
 (defn- piirra-valiotsikko-caret [e! valiotsikko avatut-tehtavaryhmat]
   (let [avaa! #(e! (tiedot/->AvaaRivi valiotsikko))]
