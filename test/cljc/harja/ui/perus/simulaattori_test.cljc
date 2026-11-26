@@ -166,6 +166,10 @@
   (is (simulaattori/kelvollinen?
         (perusgrid-sarakkeella {:nimi :tila :solu :tila-indikaattori}))))
 
+(deftest linkki-solutyyppi-sallitaan
+  (is (empty? (simulaattori/virheet
+                (perusgrid-sarakkeella {:nimi :tila :solu :linkki})))))
+
 (deftest funktio-solutyyppina-hylataan-kerran
   (is (= ["perusgrid: asetus :sarakkeet on funktio, ei sallittu"]
          (simulaattori/virheet

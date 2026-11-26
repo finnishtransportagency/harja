@@ -46,7 +46,13 @@
 (def ^:private solutyypit
   {:tila-indikaattori (fn [nimi]
                         (fn [rivi _opts]
-                          [yleiset/tila-indikaattori (str (get rivi nimi))]))})
+                          [yleiset/tila-indikaattori (str (get rivi nimi))]))
+   ;; Linkki ei navigoi simulaattorissa, joten klikkaus vain estetään.
+   :linkki (fn [nimi]
+             (fn [rivi _opts]
+               [:a {:href "#"
+                    :on-click (fn [e] (.preventDefault e))}
+                (str (get rivi nimi))]))})
 
 (defn- simulaattorin-sarake [sarake]
   (let [solu (get solutyypit (:solu sarake))]

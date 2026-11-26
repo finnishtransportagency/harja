@@ -37,23 +37,23 @@
                            {:komponentti :perusgrid
                             :asetukset {:tunniste :id
                                         :tyhja "Ei urakoita valituilla suodattimilla."
-                                        :sarakkeet [{:otsikko "Urakka" :nimi :urakka :leveys 8}
+                                        :sarakkeet [{:otsikko "Urakka" :nimi :urakka :leveys 8 :solu :linkki}
                                                     {:otsikko "Hoitovuosi" :nimi :hoitovuosi :leveys 5}
-                                                    {:otsikko "Kustannussuunnitelma" :nimi :kustannussuunnitelma :leveys 5}
+                                                    {:otsikko "Kustannussuunnitelma" :nimi :kustannussuunnitelma :leveys 5 :solu :tila-indikaattori}
                                                     {:otsikko "Välikatselmus" :nimi :valikatselmus :leveys 4}
                                                     {:otsikko "Lupaukset" :nimi :lupaukset :leveys 4}
                                                     {:otsikko "Avoimet poikkeamat" :nimi :poikkeamat :leveys 4}]
                                         :rivit [{:id 1
                                                  :urakka "Rovaniemen MHU"
                                                  :hoitovuosi "2024–2025"
-                                                 :kustannussuunnitelma "Valmis"
+                                                 :kustannussuunnitelma "valmis"
                                                  :valikatselmus "Käsittelyssä"
                                                  :lupaukset "72 / 80 pistettä"
                                                  :poikkeamat "2 avointa"}
                                                 {:id 2
                                                  :urakka "Oulun MHU"
                                                  :hoitovuosi "2024–2025"
-                                                 :kustannussuunnitelma "Päivitettävä"
+                                                 :kustannussuunnitelma "kesken"
                                                  :valikatselmus "Ei aloitettu"
                                                  :lupaukset "61 / 80 pistettä"
                                                  :poikkeamat "Ei poikkeamia"}]}}]}]}]}

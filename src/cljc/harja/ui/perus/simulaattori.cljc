@@ -40,7 +40,7 @@
 
 (def ^:private solutyypit
   "Perusgridin sarakkeen :solu-arvot, joita renderöijä osaa piirtää."
-  #{:tila-indikaattori})
+  #{:tila-indikaattori :linkki})
 
 (defn- solutyyppivirheet [id asetukset]
   (let [nimi (name id)]
