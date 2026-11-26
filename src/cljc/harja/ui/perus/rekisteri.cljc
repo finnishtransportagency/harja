@@ -48,7 +48,7 @@
     :korvaa ["perus/valintaryhma" "kentat/tee-kentta :valinta"]
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatinrivi :pino :vaaka :osio :ruudukko}
+    :sallitut-vanhemmat #{:lomake :kenttaryhma :suodatinrivi :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :riippuvainen
     :kuvaus "Uuden UI:n suositeltu yksivalinta. Nykyinen toteutus on Bootstrap-riippuvainen; saavutettavuussopimus toteutetaan erillisessä porttausviipaleessa."
     :funktio "harja.ui.yleiset/pudotusvalikko"
@@ -204,7 +204,7 @@
     :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatin :suodatinrivi}
+    :sallitut-vanhemmat #{:lomake :kenttaryhma :suodatin :suodatinrivi}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Yksirivinen tekstikenttä. Arvo ja muutoksen käsittely omistaa käyttöpaikka. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
     :funktio "harja.ui.kentat/tee-kentta"
@@ -223,7 +223,7 @@
     :korvaa []
     :slotit #{:arvo}
     :tilat #{:normaali :tyhja :estetty}
-    :sallitut-vanhemmat #{:lomake :suodatin}
+    :sallitut-vanhemmat #{:lomake :kenttaryhma :suodatin}
     :bootstrap-tila :osittain-riippuvainen
     :kuvaus "Numerokenttä muotoilee arvon ja hyväksyy vain sallitut luvut. Lomake-tilassa kenttä saa Bootstrapin form-control-luokan."
     :funktio "harja.ui.kentat/tee-kentta"
@@ -235,6 +235,44 @@
                 :vaadi-ei-negatiivinen? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, negatiiviset arvot hylätään."}
                 :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Input-elementin id."}
                 :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on lomakkeen osa."}}}
+   {:id :paivamakentta
+    :nimi "Päivämääräkenttä"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :kenttaryhma}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Päivämääräkenttä valintakalenterilla. Arvon ja validoinnin omistaa käyttöpaikka."
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :pvm."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon päivämäärä tallennetaan."}
+                :placeholder {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Paikkamerkkiteksti."}
+                :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Input-elementin id."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on disabloitu."}
+                :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, kenttä on lomakkeen osa."}}}
+   {:id :tekstialue
+    :nimi "Tekstialue"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :syote
+    :suositus :ei-suositusta
+    :korvaa []
+    :slotit #{:arvo}
+    :tilat #{:normaali :tyhja :estetty}
+    :sallitut-vanhemmat #{:lomake :kenttaryhma}
+    :bootstrap-tila :osittain-riippuvainen
+    :kuvaus "Monirivinen tekstikenttä. Arvo ja muutoksen käsittely omistaa käyttöpaikka."
+    :funktio "harja.ui.kentat/tee-kentta"
+    :asetukset {:tyyppi {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Kentän tyyppi, tässä :text."}
+                :arvo {:tyyppi :atomi :pakollinen? true :oletus nil :kuvaus "Atomi, johon teksti tallennetaan."}
+                :placeholder {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Paikkamerkkiteksti."}
+                :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Tekstialueen id."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, tekstialue on disabloitu."}
+                :lomake? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Jos true, tekstialue on lomakkeen osa."}}}
    {:id :sahkopostikentta
     :nimi "Sähköpostikenttä"
     :ryhma :lomakkeet
@@ -559,16 +597,15 @@
     :sallitut-vanhemmat #{:lomake :pino :vaaka :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :nimeamispoikkeukset #{:disabled?}
-    :kuvaus "Label, kenttä sekä valinnainen ohje ja virhe. Natiivi kenttä saa ARIA-attribuutit. tee-kentta-kenttä ei vielä välitä niitä (rajoitus)."
+    :kuvaus "Label, yksi rekisteröity lapsikenttä sekä valinnainen ohje ja virhe. Kenttäryhmä välittää callbackissa id:n, ARIA-yhteydet ja disabled-tilan. Kenttä omistaa arvon; wrapper ei validoi tai muuta sitä."
     :funktio "harja.ui.perus/kenttaryhma"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Labelin teksti."}
                 :id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Kentän id, johon label ja ohje yhdistyvät."}
                 :ohje {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Ohjeteksti kentän alla."}
                 :virhe {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Virheteksti. Näkyy, kun arvo on annettu."}
                 :pakollinen? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Merkitsee labelin pakolliseksi."}
-                :disabled? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Estää kentän muokkaamisen."}
-                :kentan-tyyppi {:tyyppi :keyword :pakollinen? false :oletus :teksti :kuvaus "Simulaattorin kenttätyyppi: :teksti, :numero, :paivamaara tai :tekstialue."}
-                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :disabled? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Estää lapsikentän muokkaamisen."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste. Simulaattori käyttää tätä vakiona elementti-id:nä."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :lomake
     :nimi "Lomake"
@@ -625,17 +662,18 @@
     :suositus :ei-suositusta
     :korvaa []
     :slotit #{:sarakkeet :rivit}
-    :tilat #{:normaali :tyhja}
+    :tilat #{:normaali :tyhja :vetolaatikko :ryhmaotsikko :sivutettu :yhteenveto}
     :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
     :bootstrap-tila :riippuvainen
-    :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
+    :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Simulaattori tukee rekisteröidyn vetolaatikon, ryhmäotsikon, sivutuksen ja valmiiksi lasketun yhteenvetorivin. Funktioita, vapaata Hiccupia tai yhteenvetolaskentaa ei hyväksytä EDN-sopimuksessa. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
     :funktio "harja.ui.grid/grid"
     :asetukset {:otsikko {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Taulukon otsikko."}
                 :tyhja {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Teksti, joka näytetään kun rivejä ei ole."}
                 :tunniste {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Taulukon tunniste."}
                 :vetolaatikko {:tyyppi :keyword :pakollinen? false :oletus nil :kuvaus "Rivin alle avattava sisältö rekisteriavaimella. Tuettu arvo: :rivin-tiedot. Vaatii :vetolaatikon-tila-sarakkeen."}
+                :sivuta {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Rivejä sivulla. Arvon pitää olla positiivinen kokonaisluku. Tuottaa ylä- ja tarvittaessa alareunan sivutuskontrollit."}
                 :sarakkeet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Sarakkeiden määrittelyt."}
-                :rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Rivit."}}}
+                :rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Datarivit sekä nimetyt erikoisrivit. Ryhmäotsikko annetaan muodossa {:rivityyppi :otsikko :teksti \"Otsikko\"}. Yhteenvetorivi on {:rivityyppi :yhteenveto ...} ja käyttää sarakkeiden nimiä. Tyhjä ja vetolaatikko ovat komponentin tuottamia vakiorivityyppejä."}}}
    {:id :muokkausgrid
     :nimi "Muokkausgrid"
     :ryhma :gridit

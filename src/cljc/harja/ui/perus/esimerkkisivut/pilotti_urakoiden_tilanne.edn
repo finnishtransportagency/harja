@@ -36,6 +36,7 @@
                                                   :optiot {:data-cy "pilotti-urakoiden-tilanne-alkuvuosi"}}}]}
                            {:komponentti :perusgrid
                             :asetukset {:tunniste :id
+                                        :sivuta 2
                                         :tyhja "Ei urakoita valituilla suodattimilla."
                                         :sarakkeet [{:otsikko "Urakka" :nimi :urakka :leveys 8 :solu :linkki}
                                                     {:otsikko "Hoitovuosi" :nimi :hoitovuosi :leveys 5}
@@ -56,4 +57,19 @@
                                                  :kustannussuunnitelma "kesken"
                                                  :valikatselmus "Ei aloitettu"
                                                  :lupaukset "61 / 80 pistettä"
-                                                 :poikkeamat "Ei poikkeamia"}]}}]}]}]}
+                                                 :poikkeamat "Ei poikkeamia"}
+                                                {:id 3
+                                                 :urakka "Kuopion MHU"
+                                                 :hoitovuosi "2024–2025"
+                                                 :kustannussuunnitelma "valmis"
+                                                 :valikatselmus "Käsittelyssä"
+                                                 :lupaukset "68 / 80 pistettä"
+                                                 :poikkeamat "1 avoin"}
+                                                {:id :yhteensa
+                                                 :rivityyppi :yhteenveto
+                                                 :urakka "Yhteensä"
+                                                 :hoitovuosi ""
+                                                 :kustannussuunnitelma ""
+                                                 :valikatselmus ""
+                                                 :lupaukset ""
+                                                 :poikkeamat "3 avointa"}]}}]}]}]}

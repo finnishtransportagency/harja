@@ -36,8 +36,10 @@
                                                  :hoitokausi "2024–2025"
                                                  :tarjoushinta "3 450 000 €"
                                                  :tila "Tarjoushinta puuttuu"}
+                                                {:rivityyppi :otsikko
+                                                 :teksti "Päättyneet urakat"}
                                                 {:id 2
-                                                 :urakka "Oulun seudun hoito 2022–2027"
-                                                 :hoitokausi "2024–2025"
+                                                 :urakka "Etelä-Savon hoito 2019–2024"
+                                                 :hoitokausi "2023–2024"
                                                  :tarjoushinta "2 980 000 €"
                                                  :tila "Täytetty"}]}}]}]}]}

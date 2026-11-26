@@ -3,7 +3,8 @@
 
   Simulaattori hyväksyy vain rekisteröityjä komponentteja ja niiden dokumentoituja
   vanhempi-slot-suhteita. Se ei suorita agentin tuottamaa koodia."
-  (:require [harja.ui.perus.rekisteri :as rekisteri]))
+  (:require [clojure.string :as str]
+            [harja.ui.perus.rekisteri :as rekisteri]))
 
 (def ^:private suojatut-asetukset
   "Renderer antaa nämä avaimet itse, joten syöte ei saa asettaa niitä."
@@ -63,6 +64,35 @@
                (not (contains? vetolaatikkotyypit vetolaatikko)))
       [(str (name id) ": tuntematon vetolaatikko " (pr-str vetolaatikko))])))
 
+(def ^:private rivityypit
+  "Perusgridin datarivien :rivityyppi-arvot, joita renderöijä osaa piirtää."
+  #{:otsikko :yhteenveto})
+
+(defn- rivityyppivirheet [id asetukset]
+  (let [nimi (name id)]
+    (mapcat (fn [rivi]
+              (when (map? rivi)
+                (let [rivityyppi (:rivityyppi rivi)]
+                  (cond
+                    (and (some? rivityyppi)
+                         (not (kielletty-tyyppi rivityyppi))
+                         (not (contains? rivityypit rivityyppi)))
+                    [(str nimi ": tuntematon rivityyppi " (pr-str rivityyppi))]
+
+                    (and (= :otsikko rivityyppi)
+                         (or (not (string? (:teksti rivi)))
+                             (str/blank? (:teksti rivi))))
+                    [(str nimi ": :otsikko-riviltä puuttuu :teksti")]))))
+            (get asetukset :rivit))))
+
+(defn- sivutusvirheet [id asetukset]
+  (let [sivuta (:sivuta asetukset)]
+    (when (and (some? sivuta)
+               (not (kielletty-tyyppi sivuta))
+               (or (not (integer? sivuta))
+                   (not (pos? sivuta))))
+      [(str (name id) ": :sivuta pitää olla positiivinen kokonaisluku")])))
+
 (defn- tarkista-solmu [solmu vanhempi]
   (if-not (map? solmu)
     [(str "Solmun pitää olla map: " (pr-str solmu))]
@@ -80,11 +110,21 @@
           [(str komponentti ": asetukset ei ole map")])
         (when-not lapset-kunnossa?
           [(str komponentti ": lapset ei ole lista")])
+        (when (and (= :kenttaryhma komponentti)
+                   lapset-kunnossa?
+                   (not= 1 (count lapset)))
+          ["kenttaryhma: vaatii täsmälleen yhden kenttäkomponentin"])
+        (when (and (= :kenttaryhma komponentti)
+                   asetukset-kunnossa?
+                   (str/blank? (:data-cy asetukset)))
+          ["kenttaryhma: simulaattorissa vaaditaan :data-cy elementti-id:n muodostamiseen"])
         (when (and kuvaus asetukset-kunnossa?)
           (asetusvirheet komponentti kuvaus asetukset))
         (when (and (= :perusgrid komponentti) (map? asetukset))
           (concat (solutyyppivirheet komponentti asetukset)
-                  (vetolaatikkovirheet komponentti asetukset)))
+                  (vetolaatikkovirheet komponentti asetukset)
+                  (rivityyppivirheet komponentti asetukset)
+                  (sivutusvirheet komponentti asetukset)))
         (when lapset-kunnossa?
           (mapcat #(tarkista-solmu % komponentti) lapset))))))
 

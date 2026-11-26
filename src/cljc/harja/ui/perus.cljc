@@ -148,7 +148,8 @@
 
   Kenttä on hiccup tai funktio, joka saa attribuutit `:id`, `:aria-describedby`, `:aria-invalid`,
   `:aria-required` ja `:disabled?`. Kentän pitää käyttää annettua id:tä, jotta label ja ohje
-  yhdistyvät siihen."
+  yhdistyvät siihen. Arvo ei kuulu callback-sopimukseen: kenttä käyttää käyttöpaikan omaa arvoa
+  tai callbackia."
   [{:keys [otsikko id ohje virhe pakollinen? data-cy luokka] :as asetukset} kentta]
   [:div {:class (luokat "ui-kenttaryhma" luokka)
          :data-cy (or data-cy id)}

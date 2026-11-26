@@ -154,6 +154,36 @@
           :lapset [{:komponentti :suodatinrivi
                     :lapset [{:komponentti :tekstikentta}]}]}])))
 
+(deftest kenttaryhma-sallii-yhden-rekisteroidyn-kenttakomponentin
+  (doseq [kentta [:tekstikentta
+                  :numerokentta
+                  :paivamakentta
+                  :livi-pudotusvalikko
+                  :tekstialue]]
+    (is (simulaattori/kelvollinen?
+          [{:komponentti :lomake
+            :lapset [{:komponentti :kenttaryhma
+                      :asetukset {:data-cy (str "kenttaryhma-" (name kentta))}
+                      :lapset [{:komponentti kentta}]}]}])
+        (name kentta))))
+
+(deftest kenttaryhma-vaatii-tasmalleen-yhden-kenttakomponentin
+  (doseq [lapset [[] [{:komponentti :tekstikentta}
+                     {:komponentti :numerokentta}]]]
+    (is (= ["kenttaryhma: vaatii täsmälleen yhden kenttäkomponentin"]
+           (simulaattori/virheet
+             [{:komponentti :lomake
+               :lapset [{:komponentti :kenttaryhma
+                         :asetukset {:data-cy "kenttaryhma-testi"}
+                         :lapset lapset}]}])))))
+
+(deftest kenttaryhma-vaatii-vakaan-data-cy-tunnisteen
+  (is (= ["kenttaryhma: simulaattorissa vaaditaan :data-cy elementti-id:n muodostamiseen"]
+         (simulaattori/virheet
+           [{:komponentti :lomake
+             :lapset [{:komponentti :kenttaryhma
+                       :lapset [{:komponentti :tekstikentta}]}]}]))))
+
 (defn- perusgrid-sarakkeella [sarake]
   [{:komponentti :perusgrid
     :asetukset {:sarakkeet [sarake] :rivit []}}])
@@ -182,6 +212,51 @@
          (simulaattori/virheet
            [{:komponentti :perusgrid
              :asetukset {:sarakkeet [] :vetolaatikko :ei-ole :rivit []}}]))))
+
+(deftest ryhmaotsikko-rivityyppi-sallitaan
+  (is (empty? (simulaattori/virheet
+                [{:komponentti :perusgrid
+                  :asetukset {:sarakkeet [{:nimi :nimi}]
+                              :rivit [{:rivityyppi :otsikko
+                                       :teksti "Päättyneet urakat"}
+                                      {:id 1 :nimi "Pohjois-Suomi"}]}}]))))
+
+(deftest ryhmaotsikko-vaatii-tekstin
+  (is (= ["perusgrid: :otsikko-riviltä puuttuu :teksti"]
+         (simulaattori/virheet
+           [{:komponentti :perusgrid
+             :asetukset {:sarakkeet [{:nimi :nimi}]
+                         :rivit [{:rivityyppi :otsikko}]}}]))))
+
+(deftest tuntematon-rivityyppi-hylataan
+  (is (= ["perusgrid: tuntematon rivityyppi :ei-ole"]
+         (simulaattori/virheet
+           [{:komponentti :perusgrid
+             :asetukset {:sarakkeet [{:nimi :nimi}]
+                         :rivit [{:id 1 :rivityyppi :ei-ole :nimi "Pohjois-Suomi"}]}}]))))
+
+(deftest yhteenvetorivi-sallitaan
+  (is (empty? (simulaattori/virheet
+                [{:komponentti :perusgrid
+                  :asetukset {:sarakkeet [{:nimi :nimi}]
+                              :rivit [{:id :yhteensa
+                                       :rivityyppi :yhteenveto
+                                       :nimi "Yhteensä"}]}}]))))
+
+(deftest sivutus-sallitaan-positiivisella-kokonaisluvulla
+  (is (empty? (simulaattori/virheet
+                [{:komponentti :perusgrid
+                  :asetukset {:sarakkeet [{:nimi :nimi}]
+                              :sivuta 2
+                              :rivit []}}]))))
+
+(deftest sivutus-hylataan-nollana
+  (is (= ["perusgrid: :sivuta pitää olla positiivinen kokonaisluku"]
+         (simulaattori/virheet
+           [{:komponentti :perusgrid
+             :asetukset {:sarakkeet [{:nimi :nimi}]
+                         :sivuta 0
+                         :rivit []}}]))))
 
 (deftest funktio-solutyyppina-hylataan-kerran
   (is (= ["perusgrid: asetus :sarakkeet on funktio, ei sallittu"]

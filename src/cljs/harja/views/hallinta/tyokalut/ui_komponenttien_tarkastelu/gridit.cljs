@@ -72,18 +72,29 @@
 
 (defn- vetolaatikko-rivit [{:keys [vetolaatikko tunniste]} rivit]
   (when-let [piirra (get vetolaatikot vetolaatikko)]
-    (into {} (map (fn [rivi] [((or tunniste :id) rivi) (piirra rivi)])) rivit)))
+    (into {} (map (fn [rivi] [((or tunniste :id) rivi) (piirra rivi)]))
+          (remove :rivityyppi rivit))))
+
+(defn- simulaattorin-rivi [rivi]
+  (case (:rivityyppi rivi)
+    :otsikko (grid/otsikko (:teksti rivi)
+                           {:id (:id rivi)})
+    :yhteenveto (-> rivi
+                    (dissoc :rivityyppi)
+                    (assoc :yhteenveto true))
+    rivi))
 
 (defn- perusgrid-simulaattorissa [solmu _tila _lapsi-fn]
-  (let [{:keys [otsikko tyhja tunniste sarakkeet rivit] :as asetukset} (:asetukset solmu)]
+  (let [{:keys [otsikko tyhja tunniste sivuta sarakkeet rivit] :as asetukset} (:asetukset solmu)]
     [:div {:data-cy "ui-simulaattori-perusgrid"}
      [grid/grid (cond-> {:otsikko otsikko
                          :tyhja (or tyhja "Ei rivejä.")
-                         :tunniste (or tunniste :id)}
+                         :tunniste (or tunniste :id)
+                         :sivuta sivuta}
                   (:vetolaatikko asetukset)
                   (assoc :vetolaatikot (vetolaatikko-rivit asetukset rivit)))
       (mapv simulaattorin-sarake sarakkeet)
-      (vec rivit)]]))
+      (mapv simulaattorin-rivi rivit)]]))
 
 (def ^:private muokkausgridin-tyypit #{:string :numero})
 

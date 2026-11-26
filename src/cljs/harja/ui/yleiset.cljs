@@ -404,7 +404,8 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
 
       (fn [{:keys [valinta format-fn valitse-fn class disabled disabled-vaihtoehdot itemit-komponentteja? naytettava-arvo
                    on-focus title li-luokka-fn ryhmittely nayta-ryhmat ryhman-otsikko data-cy vayla-tyyli? virhe?
-                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label elementin-id] :as asetukset} vaihtoehdot]
+                   pakollinen? tarkenne muokattu? pitka-teksti? aria-label aria-describedby aria-invalid
+                   aria-required elementin-id] :as asetukset} vaihtoehdot]
         (let [format-fn (r/partial (or format-fn str))
               valitse-fn (r/partial (or valitse-fn (constantly nil)))
               ryhmitellyt-itemit (when ryhmittely
@@ -447,6 +448,9 @@ joita kutsutaan kun niiden näppäimiä paineetaan."
              :disabled (if disabled "disabled" "")
              :title title
              :aria-label (when aria-label aria-label)
+             :aria-describedby aria-describedby
+             :aria-invalid aria-invalid
+             :aria-required aria-required
              :on-click (partial on-click-fn vaihtoehdot)
              :on-focus on-focus
              :on-key-down (partial on-key-down-fn

@@ -78,16 +78,29 @@
 (defn- livi-pudotusvalikko-simulaattorissa-sisalto [solmu]
   (r/with-let [valinta (r/atom nil)]
     (let [{:keys [otsikko valinnat optiot]} (:asetukset solmu)
-          data-cy (or (:data-cy optiot) "ui-simulaattori-livi-pudotusvalikko")]
+          kentta-attribuutit (:kentta-attribuutit solmu)
+          elementin-id (or (:id kentta-attribuutit)
+                           (:data-cy optiot)
+                           "ui-simulaattori-livi-pudotusvalikko")
+          data-cy (or (:data-cy optiot)
+                    elementin-id
+                    "ui-simulaattori-livi-pudotusvalikko")
+          alasveto-optiot (merge {:valinta @valinta
+                                  :elementin-id elementin-id
+                                  :valitse-fn #(reset! valinta %)
+                                  :format-fn simulaattorin-vaihtoehto-teksti
+                                  :vayla-tyyli? true}
+                            (select-keys kentta-attribuutit
+                              [:aria-describedby :aria-invalid :aria-required])
+                            (when (:disabled? kentta-attribuutit)
+                              {:disabled true}))]
       [:div {:data-cy data-cy}
-       [yleiset/pudotusvalikko
-        (or otsikko "Valinta")
-        {:valinta @valinta
-         :elementin-id data-cy
-         :valitse-fn #(reset! valinta %)
-         :format-fn simulaattorin-vaihtoehto-teksti
-         :vayla-tyyli? true}
-        (vec valinnat)]])))
+       (if kentta-attribuutit
+         [yleiset/livi-pudotusvalikko alasveto-optiot (vec valinnat)]
+         [yleiset/pudotusvalikko
+          (or otsikko "Valinta")
+          alasveto-optiot
+          (vec valinnat)])])))
 
 ;; Simulaattorin data ei saa sisältää funktioita tai atomeja, joten renderöijä antaa nämä itse
 ;; ja välittää asetuksista vain otsikon, valinnat ja dokumentoidun data-cy-ankkurin.

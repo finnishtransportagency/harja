@@ -248,7 +248,8 @@
                            :rivin-infolaatikko rivin-infolaatikko
                            :infolaatikon-tila-muuttui infolaatikon-tila-muuttui
                            :rivi rivi})]
-    [:tr {:class (str luokka
+    [:tr {:data-cy (when (:yhteenveto rivi) "perusgrid-rivi-yhteenveto")
+          :class (str luokka
                    (when piilota-border? " valiotsikko ")
                    (when (= id @valittu-rivi)
                      " rivi-valittu ")
@@ -678,7 +679,8 @@
     [:<>
      [:tr.otsikko
       (merge
-        {:class (when luokka luokka)}
+        {:data-cy "perusgrid-rivi-otsikko"
+         :class (when luokka luokka)}
        (when salli-valiotsikoiden-piilotus?
          {:class (str "gridin-collapsoitava-valiotsikko klikattava"
                    (when (not (empty? otsikkokomponentit)) " grid-otsikkokomponentti"))
@@ -721,7 +723,8 @@
         tulevat-rivit (fn [aloitus-idx]
                         (map #(get muokatut %) (drop (inc aloitus-idx) jarjestys)))]
     (if (empty? muokatut)
-      [:tr.tyhja [:td {:colSpan colspan} tyhja]]
+      [:tr.tyhja {:data-cy "perusgrid-rivi-tyhja"}
+       [:td {:colSpan colspan} tyhja]]
       (let [kaikki-virheet @virheet
             kaikki-varoitukset @varoitukset
             kaikki-huomautukset @huomautukset
@@ -779,7 +782,8 @@
                                      esta-tiivis-grid? piilota-border? avattavat-rivit]}]
   (let [rivit (take @renderoi-max-rivia tiedot)]
     (if (empty? rivit)
-      [:tr.tyhja [:td {:col-span colspan} tyhja]]
+      [:tr.tyhja {:data-cy "perusgrid-rivi-tyhja"}
+       [:td {:col-span colspan} tyhja]]
       (doall
         (let [rivit-jarjestetty (sort-by
                                   (fn [rivi] (if (:yhteenveto rivi) 1 0)) ; Yhteenveto-rivin tulee olla aina viimeisenä
@@ -843,7 +847,7 @@
   (let [sivuja (count (partition-all sivuta kaikki-tiedot))
         max-sivu-index (max 0 (dec sivuja))]
     (when (> sivuja 1)
-      [:nav.livi-grid-pagination
+      [:nav.livi-grid-pagination {:data-cy "perusgrid-sivutus"}
        [:ul.pagination.justify-content-end
         [:li.page-item (merge
                          (when (= aktiivinen-indeksi 0)

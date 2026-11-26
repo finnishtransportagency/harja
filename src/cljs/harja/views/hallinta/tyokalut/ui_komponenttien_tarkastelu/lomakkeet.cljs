@@ -178,6 +178,31 @@
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: " (pr-str @arvo))]])))
 
+(defn- paivamakentta [komponentti]
+  (r/with-let [arvo (r/atom nil)]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Päivämäärä ja validointi ovat käyttöpaikan vastuulla."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :pvm
+          :elementin-id (str ankkuri "-input")
+          :placeholder "pp.kk.vvvv"}
+         arvo]]])))
+
+(defn- tekstialue [komponentti]
+  (r/with-let [arvo (r/atom "")]
+    (let [ankkuri (kehys/ankkuri komponentti)]
+      [kehys/kortti komponentti
+       [:p "Monirivisen tekstin arvo ja merkkirajoitus ovat käyttöpaikan vastuulla."]
+       [:div {:data-cy (str ankkuri "-kentta")}
+        [kentat/tee-kentta
+         {:tyyppi :text
+          :elementin-id (str ankkuri "-input")
+          :koko [80 4]
+          :placeholder "Kirjoita lisätiedot..."}
+         arvo]]])))
+
 (defn- sahkopostikentta [komponentti]
   (r/with-let [arvo (r/atom "")]
     (let [ankkuri (kehys/ankkuri komponentti)]
@@ -435,14 +460,15 @@
                    :aria-invalid aria-invalid
                    :aria-required aria-required
                    :disabled disabled?}])]
-       [:p "Rajoitus: tee-kentta ei vielä välitä ARIA-attribuutteja, joten yhteyttä label-kenttään ja virheeseen ei voi tarkistaa sen kohdalla."]
+       [:p "Sama ARIA-sopimus välitetään myös Harjan tee-kentta-kentälle."]
        [ui/kenttaryhma {:otsikko "tee-kentta"
                         :id (str ankkuri "-tee-kentta")
                         :data-cy (str ankkuri "-tee-kentta-ryhma")}
-        (fn [{:keys [id]}]
+        (fn [{:keys [id] :as kentta-attribuutit}]
           [kentat/tee-kentta
-           {:tyyppi :string
-            :elementin-id id}
+           (merge {:tyyppi :string
+                   :elementin-id id}
+             (dissoc kentta-attribuutit :id))
            arvo])]
        [:p {:data-cy (str ankkuri "-arvo")}
         (str "Arvo: \"" @arvo "\"")]])))
@@ -456,32 +482,18 @@
      "Tyhjä kenttä" nil
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
-(def ^:private kenttaryhman-kenttatyypit
-  {:teksti {:tyyppi :string :alkuarvo ""}
-   :numero {:tyyppi :numero :alkuarvo nil}
-   :paivamaara {:tyyppi :pvm :alkuarvo nil}
-   :tekstialue {:tyyppi :text :alkuarvo ""}})
-
-(defn- kenttaryhma-simulaattorissa-sisalto [solmu]
-  (let [{:keys [tyyppi alkuarvo]} (get kenttaryhman-kenttatyypit
-                                    (get-in solmu [:asetukset :kentan-tyyppi] :teksti)
-                                    (:teksti kenttaryhman-kenttatyypit))]
-    (r/with-let [tunniste (str (gensym "ui-simulaattori-kenttaryhma-"))
-                 arvo (r/atom alkuarvo)]
-      [ui/kenttaryhma
-       (merge {:data-cy "ui-simulaattori-kenttaryhma"}
-              (select-keys (:asetukset solmu) [:otsikko :ohje :virhe :pakollinen? :disabled? :data-cy])
-              {:id tunniste})
-       (fn [{:keys [id disabled?]}]
-         [kentat/tee-kentta
-          {:tyyppi tyyppi
-           :elementin-id id
-           :vayla-tyyli? true
-           :disabled? disabled?}
-          arvo])])))
+(defn- kenttaryhma-simulaattorissa [solmu _tila lapsi-fn]
+  (let [{:keys [data-cy] :as asetukset} (:asetukset solmu)]
+    [ui/kenttaryhma
+     (merge {:data-cy "ui-simulaattori-kenttaryhma"
+             :id data-cy}
+       (select-keys asetukset [:otsikko :ohje :virhe :pakollinen? :disabled? :data-cy]))
+     (fn [kentta-attribuutit]
+       [lapsi-fn (assoc (first (:lapset solmu))
+                  :kentta-attribuutit kentta-attribuutit)])]))
 
 (register! :kenttaryhma {:esikatselu kenttaryhma
-                         :renderoi (sisalto-renderoijana kenttaryhma-simulaattorissa-sisalto)})
+                         :renderoi kenttaryhma-simulaattorissa})
 
 (def ^:private staattinen-liitetiedosto
   {:id 1 :nimi "tarkastus.pdf" :tyyppi "application/pdf" :koko 12345 :virustarkastettu? true})
@@ -574,8 +586,12 @@
   (r/with-let [arvo (r/atom "")]
     [:div {:data-cy "ui-simulaattori-tekstikentta"}
      [kentat/tee-kentta
-      (merge {:tyyppi :string}
-             (select-keys (:asetukset solmu) [:placeholder :disabled?]))
+      (merge {:tyyppi :string
+              :vayla-tyyli? true}
+        (select-keys (:asetukset solmu) [:placeholder :disabled?])
+        (:kentta-attribuutit solmu)
+        (when-let [id (get-in solmu [:kentta-attribuutit :id])]
+          {:elementin-id id}))
       arvo]]))
 
 (defn- numerokentta-simulaattorissa-sisalto [solmu]
@@ -583,12 +599,41 @@
     (let [asetukset (:asetukset solmu)]
       [:div {:data-cy "ui-simulaattori-numerokentta"}
        [kentat/tee-kentta
-        {:tyyppi :numero
-         :desimaalien-maara (numero-tai (:desimaalien-maara asetukset) 2)
-         :kokonaisosan-maara (numero-tai (:kokonaisosan-maara asetukset) 6)
-         :kokonaisluku? (:kokonaisluku? asetukset)
-         :vaadi-ei-negatiivinen? (get asetukset :vaadi-ei-negatiivinen? true)}
+        (merge {:tyyppi :numero
+                :vayla-tyyli? true
+                :desimaalien-maara (numero-tai (:desimaalien-maara asetukset) 2)
+                :kokonaisosan-maara (numero-tai (:kokonaisosan-maara asetukset) 6)
+                :kokonaisluku? (:kokonaisluku? asetukset)
+                :vaadi-ei-negatiivinen? (get asetukset :vaadi-ei-negatiivinen? true)}
+          (:kentta-attribuutit solmu)
+          (when-let [id (get-in solmu [:kentta-attribuutit :id])]
+            {:elementin-id id}))
         arvo]])))
+
+(defn- paivamakentta-simulaattorissa-sisalto [solmu]
+  (r/with-let [arvo (r/atom nil)]
+    [:div {:data-cy "ui-simulaattori-paivamakentta"}
+     [kentat/tee-kentta
+      (merge {:tyyppi :pvm
+              :vayla-tyyli? true}
+        (select-keys (:asetukset solmu) [:placeholder :disabled?])
+        (:kentta-attribuutit solmu)
+        (when-let [id (get-in solmu [:kentta-attribuutit :id])]
+          {:elementin-id id}))
+      arvo]]))
+
+(defn- tekstialue-simulaattorissa-sisalto [solmu]
+  (r/with-let [arvo (r/atom "")]
+    [:div {:data-cy "ui-simulaattori-tekstialue"}
+     [kentat/tee-kentta
+      (merge {:tyyppi :text
+              :vayla-tyyli? true
+              :koko [80 4]}
+        (select-keys (:asetukset solmu) [:placeholder :disabled?])
+        (:kentta-attribuutit solmu)
+        (when-let [id (get-in solmu [:kentta-attribuutit :id])]
+          {:elementin-id id}))
+      arvo]]))
 
 (defn- sahkopostikentta-simulaattorissa-sisalto [solmu]
   (r/with-let [arvo (r/atom "")]
@@ -678,6 +723,10 @@
                           :renderoi (sisalto-renderoijana tekstikentta-simulaattorissa-sisalto)})
 (register! :numerokentta {:esikatselu numerokentta
                           :renderoi (sisalto-renderoijana numerokentta-simulaattorissa-sisalto)})
+(register! :paivamakentta {:esikatselu paivamakentta
+                           :renderoi (sisalto-renderoijana paivamakentta-simulaattorissa-sisalto)})
+(register! :tekstialue {:esikatselu tekstialue
+                        :renderoi (sisalto-renderoijana tekstialue-simulaattorissa-sisalto)})
 (register! :sahkopostikentta {:esikatselu sahkopostikentta
                               :renderoi (sisalto-renderoijana sahkopostikentta-simulaattorissa-sisalto)})
 (register! :puhelinkentta {:esikatselu puhelinkentta

@@ -240,28 +240,33 @@
   (or placeholder
     (and placeholder-fn (placeholder-fn rivi))))
 
+(defn- aria-attribuutit [kentta]
+  (select-keys kentta [:aria-describedby :aria-invalid :aria-required]))
+
 (defmethod tee-kentta :string [{:keys [nimi pituus-max vayla-tyyli? pituus-min virhe?
                                        aputeksti regex focus on-focus on-blur lomake?
                                        toiminta-f  disabled? vihje elementin-id muokattu?] :as kentta}
                                data]
 
-  [:input {:class (cond-> nil
-                    (and lomake?
-                      (not vayla-tyyli?)) (str "form-control ")
-                    true (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
-                    disabled? (str "disabled"))
-           :placeholder (placeholder kentta data)
-           :on-change #(let [v (-> % .-target .-value)]
-                         (when (or (not regex) (re-matches regex v))
-                           (reset! data v)
-                           (when toiminta-f
-                             (toiminta-f v))))
-           :disabled disabled?
-           :on-focus on-focus
-           :on-blur on-blur
-           :value @data
-           :id (or elementin-id nil)
-           :max-length pituus-max}])
+  [:input (merge
+            {:class (cond-> nil
+                      (and lomake?
+                        (not vayla-tyyli?)) (str "form-control ")
+                      true (str "input-" (if (and muokattu? virhe?) "error-" "") "default komponentin-input ")
+                      disabled? (str "disabled"))
+             :placeholder (placeholder kentta data)
+             :on-change #(let [v (-> % .-target .-value)]
+                           (when (or (not regex) (re-matches regex v))
+                             (reset! data v)
+                             (when toiminta-f
+                               (toiminta-f v))))
+             :disabled disabled?
+             :on-focus on-focus
+             :on-blur on-blur
+             :value @data
+             :id (or elementin-id nil)
+             :max-length pituus-max}
+            (aria-attribuutit kentta))])
 
 (defmethod tee-kentta :linkki [opts data]
   [tee-kentta (assoc opts :tyyppi :string) data])
@@ -307,7 +312,7 @@
                (swap! rivit + (/ erotus 19)))))})
 
       (fn [{:keys [nimi koko on-focus on-blur lomake? disabled?
-                   aputeksti elementin-id aria-label]} data]
+                   aputeksti elementin-id aria-label] :as kentta} data]
         [:span.kentta-text
          [:textarea (merge
                       {:value @data
@@ -323,7 +328,8 @@
                                 disabled? (str "disabled"))
                        :placeholder placeholder}
                       (when aria-label
-                        {:aria-label aria-label}))]
+                        {:aria-label aria-label})
+                      (aria-attribuutit kentta))]
          (when aputeksti [:div.aputeksti aputeksti])
          ;; näytetään laskuri kun merkkejä on jäljellä alle 25%
          (when (> (/ (count @data) pituus-max) 0.75)
@@ -485,7 +491,8 @@
                                                     (reset! data numero)
                                                     (when toiminta-f (toiminta-f numero)))))))))}
                      (when data-cy {:data-cy data-cy})
-                     (when aria-label {:aria-label aria-label}))]
+                     (when aria-label {:aria-label aria-label})
+                     (aria-attribuutit kentta))]
            (when (and yksikko vayla-tyyli?)
              [:span.sisainen-label.black-lighter {:style
                                                   {:margin-left (* -1 (+ 25 (* (- (count yksikko) 2) 5)))
@@ -1176,7 +1183,7 @@
                             ""))))
        :reagent-render
        (fn [{:keys [on-focus on-blur placeholder rivi validointi on-datepicker-select
-                    kentan-tyylit virhe? muokattu? elementin-id elementin-nimi]} data]
+                    kentan-tyylit virhe? muokattu? disabled? elementin-id elementin-nimi] :as kentta} data]
          (let [nykyinen-pvm @data
                {vanha-data-arvo :data muokattu-tassa? :muokattu-tassa?} @vanha-data
                _ (when (and (not= nykyinen-pvm vanha-data-arvo)
@@ -1194,38 +1201,43 @@
                               elementin-id elementin-id
                               elementin-nimi elementin-nimi
                               :else (str (gensym "pvm-input")))
-               input-komponentti [:input {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
-                                                   (cond
-                                                     kentan-tyylit (apply str kentan-tyylit)
-                                                     vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default ")
-                                                     lomake? "form-control"))
-                                          :placeholder (or placeholder "pp.kk.vvvv")
-                                          :value nykyinen-teksti
-                                          :on-focus #(when on-focus (on-focus))
-                                          :on-change #(muuta! data (-> % .-target .-value))
-                                          ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
-                                          :on-key-down #(do
-                                                          (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
-                                                            (teksti-paivamaaraksi! validoi data nykyinen-teksti)
-                                                            (reset! auki false))
-                                                          (when (dom/enter-nappain? %)
-                                                            (teksti-paivamaaraksi! validoi data nykyinen-teksti)
-                                                            (reset! auki (not @auki))))
-                                          :on-blur #(let [arvo (.. % -target -value)
-                                                          pvm (pvm/->pvm arvo)]
-                                                      (when on-blur
-                                                        (on-blur %))
-                                                      (if (and pvm (not (validoi pvm)))
-                                                        (do (muuta-data! nil)
-                                                          (reset! teksti ""))
-                                                        (teksti-paivamaaraksi! validoi data arvo)))
-                                          :aria-label "päiväys"
-                                          :id elementin-id}]]
+               input-komponentti [:input (merge
+                                          {:class (yleiset/luokat (when-not (or kentan-tyylit vayla-tyyli?) "pvm")
+                                                    (cond
+                                                      kentan-tyylit (apply str kentan-tyylit)
+                                                      vayla-tyyli? (str "input-" (if (and muokattu? virhe?) "error-" "") "default ")
+                                                      lomake? "form-control"))
+                                           :placeholder (or placeholder "pp.kk.vvvv")
+                                           :value nykyinen-teksti
+                                           :disabled disabled?
+                                           :on-focus #(when on-focus (on-focus))
+                                           :on-change #(muuta! data (-> % .-target .-value))
+                                           ;; Suljetaan datepicker kun painetaan tab + shift tai esc. Enterillä datepickerin saa auki/kiinni.
+                                           :on-key-down #(do
+                                                           (when (or (dom/tab+shift-nappaimet? %) (dom/esc-nappain? %))
+                                                             (teksti-paivamaaraksi! validoi data nykyinen-teksti)
+                                                             (reset! auki false))
+                                                           (when (dom/enter-nappain? %)
+                                                             (teksti-paivamaaraksi! validoi data nykyinen-teksti)
+                                                             (reset! auki (not @auki))))
+                                           :on-blur #(let [arvo (.. % -target -value)
+                                                           pvm (pvm/->pvm arvo)]
+                                                       (when on-blur
+                                                         (on-blur %))
+                                                       (if (and pvm (not (validoi pvm)))
+                                                         (do (muuta-data! nil)
+                                                           (reset! teksti ""))
+                                                         (teksti-paivamaaraksi! validoi data arvo)))
+                                           :aria-label "päiväys"
+                                           :id elementin-id}
+                                          (aria-attribuutit kentta))]]
            (swap! vanha-data assoc :data nykyinen-pvm :muokattu-tassa? false)
            [:span.pvm-kentta
-            {:on-click #(do (.stopPropagation %)
-                          (.preventDefault %)
-                          (reset! auki true) nil)}
+            {:on-click #(when-not disabled?
+                         (.stopPropagation %)
+                         (.preventDefault %)
+                         (reset! auki true)
+                         nil)}
             [:div.pvm-ikoni input-komponentti
              [:span.ikoni-osio
               (ikonit/calendar)]]

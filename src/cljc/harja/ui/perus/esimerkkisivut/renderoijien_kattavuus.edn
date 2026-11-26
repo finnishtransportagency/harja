@@ -5,7 +5,9 @@
         :lapset [{:komponentti :kenttaryhma
                   :asetukset {:otsikko "Nimi"
                               :ohje "Kirjoita vähintään yksi merkki."
-                              :pakollinen? true}}
+                              :pakollinen? true
+                              :data-cy "renderoijien-kattavuus-nimi"}
+                  :lapset [{:komponentti :tekstikentta}]}
                  {:komponentti :suodatin
                   :asetukset {:otsikko "Haku"}}
                  {:komponentti :numerokentta
