@@ -1,0 +1,54 @@
+{:id :pilotti-ilmoitukset
+ :nimi "Pilotti: ilmoituksen tiedot"
+ :kuvaus "Leveä ilmoitustaulukko, pitkä seliteteksti sekä tieto-, kuittaus- ja kuvalinkkialueet."
+ :pilottisivu {:tyyppi :detail
+               :lahde "src/cljs/harja/views/ilmoitukset/ilmoituksen_tiedot.cljs"
+               :less "dev-resources/less/pages/ilmoitukset.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-ilmoitukset-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Ilmoitus 45218"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-ilmoitukset-otsikko"}
+                  :lapset [{:komponentti :info-laatikko
+                            :asetukset {:tyyppi :varoitus
+                                        :ensisijainen-viesti "Havaittu vaaratilanne"
+                                        :toissijainen-viesti "Este katkaisee ajoradan ja aiheuttaa liikennettä pysäyttävän tilanteen."}}
+                           {:komponentti :panel
+                            :asetukset {:otsikko "Ilmoituksen tiedot"}
+                            :lapset [{:komponentti :tietoja
+                                      :asetukset {:rivit [["Vastaanotettu" "26.11.2026 klo 08.14"]
+                                                          ["Tie" "VT 4, osuus 140, 320 m"]
+                                                          ["Kuvaus" "Kuormasta pudonnut romumetalli on hajaantunut molemmille ajosuunnille. Paikalle on ohjattu kaksi aura-autoa ja liikenteenohjaus. Ajouran avaaminen aloitettiin välittömästi, mutta kaapelivyöhyke vaatii vielä erillisen tarkastuksen."]
+                                                          ["Selitteet" "Este, liukkausvaara, liikennekatko"]
+                                                          ["Ilmoittaja" "Liikenteenohjaus"] ]}}]}
+                           {:komponentti :panel
+                            :asetukset {:otsikko "Käsittely ja kuittaukset"}
+                            :lapset [{:komponentti :perusgrid
+                                      :asetukset {:tunniste :id
+                                                  :tyhja "Ei kuittauksia."
+                                                  :sarakkeet [{:otsikko "Aika" :nimi :aika :leveys 3}
+                                                              {:otsikko "Käsittelijä" :nimi :kasittelija :leveys 4}
+                                                              {:otsikko "Toimenpide" :nimi :toimenpide :leveys 7}
+                                                              {:otsikko "Tila" :nimi :tila :leveys 3 :solu :tila-indikaattori}
+                                                              {:otsikko "Viesti" :nimi :viesti :leveys 8}]
+                                                  :rivit [{:id 1 :aika "08.16" :kasittelija "Päivystys" :toimenpide "Tehtävä vastaanotettu" :tila "valmis" :viesti "Työryhmä 4 lähetetty paikalle."}
+                                                          {:id 2 :aika "08.28" :kasittelija "Työnjohto" :toimenpide "Liikenneohjaus aloitettu" :tila "käsittelyssä" :viesti "Toinen kaista suljettu puhdistusalueelta."}
+                                                          {:id 3 :aika "08.42" :kasittelija "Valvoja" :toimenpide "Tilannepäivitys" :tila "valmis" :viesti "Puhdistus etenee, kaapelivyöhyke tarkastetaan ennen avausta."}]}}]}
+                           {:komponentti :panel
+                            :asetukset {:otsikko "Liitteet"}
+                            :lapset [{:komponentti :tietoja
+                                      :asetukset {:rivit [["Kuvat" "3 kuvaa: ylöspäin, alaspäin ja sulkualue"]
+                                                          ["Dokumentti" "Liikennejärjestelyluonnos 45218.pdf"]
+                                                          ["Sijainti" "Karttaliite ja tieosoite"]]}}]}
+                           {:komponentti :toimintoryhma
+                            :asetukset {:data-cy "pilotti-ilmoitukset-toiminnot"}
+                            :lapset [{:komponentti :nappi
+                                      :asetukset {:teksti "Lisää kuittaus"
+                                                  :variantti :toissijainen}}
+                                     {:komponentti :nappi
+                                      :asetukset {:teksti "Merkitse käsitellyksi"
+                                                  :variantti :ensisijainen}}]}]}]}]}

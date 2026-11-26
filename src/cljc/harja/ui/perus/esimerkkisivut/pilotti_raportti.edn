@@ -1,0 +1,68 @@
+{:id :pilotti-raportti
+ :nimi "Pilotti: raportit"
+ :kuvaus "Raporttiparametrit, lataus- ja tietoviestit sekä pitkä monikerroksinen taulukko yhteenvetorivillä."
+ :pilottisivu {:tyyppi :raportti
+               :lahde "src/cljs/harja/views/raportit.cljs"
+               :less "dev-resources/less/pages/raportit.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-raportti-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "MHU-urakan kuukausiraportti"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-raportti-otsikko"}
+                  :lapset [{:komponentti :lomake
+                            :lapset [{:komponentti :ruudukko
+                                      :asetukset {:palstoja 3
+                                                  :vali :pieni
+                                                  :data-cy "pilotti-raportti-parametrit"}
+                                      :lapset [{:komponentti :kenttaryhma
+                                                :asetukset {:otsikko "Hoitokausi"
+                                                            :data-cy "pilotti-raportti-hoitokausi"}
+                                                :lapset [{:komponentti :livi-pudotusvalikko
+                                                          :asetukset {:otsikko "Hoitokausi"
+                                                                      :valinnat ["2024–2025" "2025–2026"]
+                                                                      :optiot {}}}]}
+                                               {:komponentti :kenttaryhma
+                                                :asetukset {:otsikko "Urakkatyyppi"
+                                                            :data-cy "pilotti-raportti-urakkatyyppi"}
+                                                :lapset [{:komponentti :livi-pudotusvalikko
+                                                          :asetukset {:otsikko "Urakkatyyppi"
+                                                                      :valinnat ["Hoito" "Päällystys"]
+                                                                      :optiot {}}}]}
+                                               {:komponentti :kenttaryhma
+                                                :asetukset {:otsikko "Päättymispäivä"
+                                                            :data-cy "pilotti-raportti-paattymispvm"}
+                                                :lapset [{:komponentti :paivamakentta}]}]}
+                                     {:komponentti :toimintoryhma
+                                      :asetukset {:data-cy "pilotti-raportti-toiminnot"}
+                                      :lapset [{:komponentti :nappi
+                                                :asetukset {:teksti "Tyhjennä"
+                                                            :variantti :toissijainen}}
+                                               {:komponentti :nappi
+                                                :asetukset {:teksti "Muodosta raportti"
+                                                            :variantti :ensisijainen}}]}]}
+                           {:komponentti :info-laatikko
+                            :asetukset {:tyyppi :neutraali
+                                        :ensisijainen-viesti "Raportti sisältää 126 kustannusriviä."
+                                        :toissijainen-viesti "Luvut perustuvat simulaattorin kuvitteelliseen kuukausidataan."}}
+                           {:komponentti :panel
+                            :asetukset {:otsikko "Tavoite- ja toteumatiedot"}
+                            :lapset [{:komponentti :perusgrid
+                                      :asetukset {:tunniste :id
+                                                  :sivuta 5
+                                                  :tyhja "Raporttiin ei kuulu rivejä."
+                                                  :sarakkeet [{:otsikko "Toimenpide" :nimi :toimenpide :leveys 6}
+                                                              {:otsikko "Tehtävä" :nimi :tehtava :leveys 7}
+                                                              {:otsikko "Lokakuu" :nimi :lokakuu :leveys 3}
+                                                              {:otsikko "Marraskuu" :nimi :marraskuu :leveys 3}
+                                                              {:otsikko "Joulukuu" :nimi :joulukuu :leveys 3}
+                                                              {:otsikko "Yhteensä" :nimi :yhteensa :leveys 3}]
+                                                  :rivit [{:id 1 :toimenpide "Talvihoito" :tehtava "Auraus ja liukkauden torjunta" :lokakuu "125 400 €" :marraskuu "242 800 €" :joulukuu "318 500 €" :yhteensa "686 700 €"}
+                                                          {:id 2 :toimenpide "Talvihoito" :tehtava "Liukkaudentorjunnan materiaalit" :lokakuu "84 200 €" :marraskuu "156 900 €" :joulukuu "205 700 €" :yhteensa "446 800 €"}
+                                                          {:id 3 :toimenpide "Liikenneympäristö" :tehtava "Viestit ja opastukset" :lokakuu "18 200 €" :marraskuu "16 500 €" :joulukuu "14 900 €" :yhteensa "49 600 €"}
+                                                          {:id 4 :toimenpide "Liikenneympäristö" :tehtava "Nurmetus ja kasvillisuuden hoito" :lokakuu "32 000 €" :marraskuu "5 400 €" :joulukuu "0 €" :yhteensa "37 400 €"}
+                                                          {:id 5 :toimenpide "Päällysteet" :tehtava "Päällystyskohteiden korjausvelka" :lokakuu "68 000 €" :marraskuu "92 000 €" :joulukuu "16 000 €" :yhteensa "176 000 €"}
+                                                          {:id :yhteensa :rivityyppi :yhteenveto :toimenpide "Yhteensä" :tehtava "" :lokakuu "327 800 €" :marraskuu "513 600 €" :joulukuu "555 100 €" :yhteensa "1 396 500 €"}]}}]}]}]}]}

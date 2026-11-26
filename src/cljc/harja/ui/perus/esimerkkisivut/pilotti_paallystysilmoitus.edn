@@ -1,0 +1,65 @@
+{:id :pilotti-paallystysilmoitus
+ :nimi "Pilotti: päällystysilmoitus"
+ :kuvaus "Leveä päällystyslomake, kohde- ja kerrosrivit sekä rinnakkaiset tarkistus- ja hyväksymistiedot."
+ :pilottisivu {:tyyppi :laaja-lomake
+               :lahde "src/cljs/harja/views/urakka/pot2/pot2_lomake.cljs"
+               :less "dev-resources/less/pages/paallystys_ja_paikkaus.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-paallystysilmoitus-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Päällystysilmoitus 2026-018"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-paallystysilmoitus-otsikko"}
+                  :lapset [{:komponentti :info-laatikko
+                            :asetukset {:tyyppi :varoitus
+                                        :ensisijainen-viesti "Kaksi kohdetta odottaa hyväksyntää."
+                                        :toissijainen-viesti "Riveillä näkyy viimeisin tallennettu tieto; leveä taulukko vierittyy vain tarvittaessa."}}
+                           {:komponentti :ruudukko
+                            :asetukset {:palstoja 3
+                                        :vali :pieni
+                                        :data-cy "pilotti-paallystysilmoitus-perustiedot"}
+                            :lapset [{:komponentti :kenttaryhma
+                                      :asetukset {:otsikko "Urakka"
+                                                  :data-cy "pilotti-paallystysilmoitus-urakka"}
+                                      :lapset [{:komponentti :tekstikentta}]}
+                                     {:komponentti :kenttaryhma
+                                      :asetukset {:otsikko "Päällystysvuosi"
+                                                  :data-cy "pilotti-paallystysilmoitus-vuosi"}
+                                      :lapset [{:komponentti :numerokentta
+                                                :asetukset {:kokonaisluku? true}}]}
+                                     {:komponentti :kenttaryhma
+                                      :asetukset {:otsikko "Toimenpide"
+                                                  :data-cy "pilotti-paallystysilmoitus-toimenpide"}
+                                      :lapset [{:komponentti :livi-pudotusvalikko
+                                                :asetukset {:otsikko "Toimenpide"
+                                                            :valinnat ["Päällystys" "Tiemerkintä"]
+                                                            :optiot {}}}]}]}
+                           {:komponentti :panel
+                            :asetukset {:otsikko "Kohteet ja kerrokset"}
+                            :lapset [{:komponentti :perusgrid
+                                      :asetukset {:tunniste :id
+                                                  :tyhja "Ei kohteita."
+                                                  :sivuta 3
+                                                  :sarakkeet [{:otsikko "Tie" :nimi :tie :leveys 2}
+                                                              {:otsikko "Aosa" :nimi :aosa :leveys 1}
+                                                              {:otsikko "Aet" :nimi :aet :leveys 1}
+                                                              {:otsikko "Losa" :nimi :losa :leveys 1}
+                                                              {:otsikko "Let" :nimi :let-val :leveys 1}
+                                                              {:otsikko "Massatyyppi" :nimi :massa :leveys 4}
+                                                              {:otsikko "Määrä" :nimi :maara :leveys 2}
+                                                              {:otsikko "Tila" :nimi :tila :leveys 2 :solu :tila-indikaattori}]
+                                                  :rivit [{:id 1 :tie 4 :aosa 10 :aet 0 :losa 10 :let-val 850 :massa "AB 16/110" :maara "840 t" :tila "valmis"}
+                                                          {:id 2 :tie 4 :aosa 10 :aet 850 :losa 11 :let-val 250 :massa "SMA 11" :maara "410 t" :tila "kesken"}
+                                                          {:id 3 :tie 4 :aosa 11 :aet 250 :losa 12 :let-val 0 :massa "AB 11" :maara "760 t" :tila "valmis"}
+                                                          {:id 4 :tie 4 :aosa 12 :aet 0 :losa 12 :let-val 900 :massa "AB 16/110" :maara "920 t" :tila "kesken"}]}}]}
+                           {:komponentti :toimintoryhma
+                            :asetukset {:data-cy "pilotti-paallystysilmoitus-toiminnot"}
+                            :lapset [{:komponentti :nappi
+                                      :asetukset {:teksti "Tallenna luonnos"
+                                                  :variantti :toissijainen}}
+                                     {:komponentti :nappi
+                                      :asetukset {:teksti "Lähetä käsittelyyn"
+                                                  :variantti :ensisijainen}}]}]}]}]}

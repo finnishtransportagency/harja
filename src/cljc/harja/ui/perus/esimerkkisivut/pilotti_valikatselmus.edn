@@ -1,0 +1,51 @@
+{:id :pilotti-valikatselmus
+ :nimi "Pilotti: välikatselmus"
+ :kuvaus "Kaksi palstaa: pitkä päätös- ja tietosisältö sekä min-width-yhteenveto."
+ :pilottisivu {:tyyppi :yhteenveto
+               :lahde "src/cljs/harja/views/urakka/valikatselmus/valikatselmus_nakyma.cljs"
+               :less "dev-resources/less/pages/valikatselmus.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-valikatselmus-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Välikatselmus 2026"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-valikatselmus-otsikko"}
+                  :lapset [{:komponentti :ruudukko
+                            :asetukset {:palstoja 2
+                                        :vali :pieni
+                                        :data-cy "pilotti-valikatselmus-palstat"}
+                            :lapset [{:komponentti :panel
+                                      :asetukset {:otsikko "Päätökset ja perustelut"}
+                                      :lapset [{:komponentti :info-laatikko
+                                                :asetukset {:tyyppi :neutraali
+                                                            :ensisijainen-viesti "Käsittelyssä"
+                                                            :toissijainen-viesti "Päätökset voidaan lukita vasta, kun puuttuvat perustelut on täydennetty."}}
+                                               {:komponentti :perusgrid
+                                                :asetukset {:tunniste :id
+                                                            :tyhja "Ei päätöksiä."
+                                                            :sarakkeet [{:otsikko "Asia" :nimi :asia :leveys 6}
+                                                                        {:otsikko "Päätös" :nimi :paatos :leveys 3 :solu :tila-indikaattori}
+                                                                        {:otsikko "Perustelu" :nimi :perustelu :leveys 7}]
+                                                            :rivit [{:id 1 :asia "Tavoitehinnan muutos" :paatos "keskeneräinen" :perustelu "Q4-ennuste ja indeksikorjaus arvioidaan samassa päätöksessä."}
+                                                                    {:id 2 :asia "Lupausten toteutuminen" :paatos "valmis" :perustelu "72 pistettä 80:stä, perustelut toimitettu 18.11."}
+                                                                    {:id 3 :asia "Sanktioiden peruminen" :paatos "virhe" :perustelu "Kirjaus puuttuu määräpäivältä 15.11.2026."}]}}]}
+                                     {:komponentti :panel
+                                      :asetukset {:otsikko "Yhteenveto"}
+                                      :lapset [{:komponentti :tietoja
+                                                :asetukset {:rivit [["Hoitovuosi" "2026–2027"]
+                                                                    ["Tavoitehinta" "4 860 000 €"]
+                                                                    ["Toteutunut" "2 430 000 €"]
+                                                                    ["Ennuste" "4 946 500 €"]
+                                                                    ["Lupauspisteet" "72 / 80"]
+                                                                    ["Tila" "Käsittelyssä"]]}}]}]}
+                           {:komponentti :toimintoryhma
+                            :asetukset {:data-cy "pilotti-valikatselmus-toiminnot"}
+                            :lapset [{:komponentti :nappi
+                                      :asetukset {:teksti "Palauta"
+                                                  :variantti :toissijainen}}
+                                     {:komponentti :nappi
+                                      :asetukset {:teksti "Lukitse päätökset"
+                                                  :variantti :ensisijainen}}]}]}]}]}

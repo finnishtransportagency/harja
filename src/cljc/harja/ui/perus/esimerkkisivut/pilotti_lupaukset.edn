@@ -1,0 +1,53 @@
+{:id :pilotti-lupaukset
+ :nimi "Pilotti: lupaukset"
+ :kuvaus "Mittarit, toteuma- ja ennustepisteet sekä ryhmitellyt lupaus- ja tekstirivit."
+ :pilottisivu {:tyyppi :mittari
+               :lahde "src/cljs/harja/views/urakka/lupaus_nakyma.cljs"
+               :less "dev-resources/less/pages/lupaus_tyylit.less"}
+ :puu [{:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-lupaukset-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Lupaukset 2026–2027"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-lupaukset-otsikko"}
+                  :lapset [{:komponentti :ruudukko
+                            :asetukset {:palstoja 3
+                                        :vali :pieni
+                                        :data-cy "pilotti-lupaukset-mittarit"}
+                            :lapset [{:komponentti :panel
+                                      :asetukset {:otsikko "Toteuma"}
+                                      :lapset [{:komponentti :tietoja
+                                                :asetukset {:rivit [["Pisteet" "72"]
+                                                                    ["Tila" "TOTEUMA"]]}}]}
+                                     {:komponentti :panel
+                                      :asetukset {:otsikko "Ennuste"}
+                                      :lapset [{:komponentti :tietoja
+                                                :asetukset {:rivit [["Pisteet" "68"]
+                                                                    ["Tila" "ENNUSTE"]]}}]}
+                                     {:komponentti :panel
+                                      :asetukset {:otsikko "Maksimi"}
+                                      :lapset [{:komponentti :tietoja
+                                                :asetukset {:rivit [["Pisteet" "80"]
+                                                                    ["Puuttuu" "8"]]}}]}]}
+                           {:komponentti :panel
+                            :asetukset {:otsikko "Talvihoito"}
+                            :lapset [{:komponentti :perusgrid
+                                      :asetukset {:tunniste :id
+                                                  :tyhja "Ei lupauksia."
+                                                  :sarakkeet [{:otsikko "Lupaus" :nimi :lupaus :leveys 8}
+                                                              {:otsikko "Kuukausi" :nimi :kuukausi :leveys 3}
+                                                              {:otsikko "Toteuma" :nimi :toteuma :leveys 2 :solu :tila-indikaattori}
+                                                              {:otsikko "Ennuste" :nimi :ennuste :leveys 2}
+                                                              {:otsikko "Perustelu" :nimi :perustelu :leveys 6}]
+                                                  :rivit [{:rivityyppi :otsikko :teksti "Liukkaudentorjunta"}
+                                                          {:id 1 :lupaus "Auraus alkaa ennen talvikelien alkua" :kuukausi "Lokakuu" :toteuma "valmis" :ennuste "2 / 2" :perustelu "Konevalmius varmistettu kauden alussa."}
+                                                          {:id 2 :lupaus "Hionta käynnistyy tavoiteajassa" :kuukausi "Marraskuu" :toteuma "kesken" :ennuste "1 / 2" :perustelu "Yksi yövuoro jäi toteutumatta huollon vuoksi."}
+                                                          {:rivityyppi :otsikko :teksti "Talvisuunnitelma"}
+                                                          {:id 3 :lupaus "Riskikohteet käydään läpi viikoittain" :kuukausi "Joulukuu" :toteuma "valmis" :ennuste "3 / 3" :perustelu "Viikkokatselmus toteutui ajallaan."}]}}]}
+                           {:komponentti :info-laatikko
+                            :asetukset {:tyyppi :neutraali
+                                        :ensisijainen-viesti "Piste-ennuste perustuu kuluvan kuukauden toteumaan."
+                                        :toissijainen-viesti "Päivitetty 26.11.2026."}}]}]}]}

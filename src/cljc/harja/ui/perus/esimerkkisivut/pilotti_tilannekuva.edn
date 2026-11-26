@@ -1,0 +1,53 @@
+{:id :pilotti-tilannekuva
+ :nimi "Pilotti: tilannekuva"
+ :kuvaus "Karttanäkymä, välilehdet ja sivupaneeli. Testaa päällekkäisen paneelin, pitkän sisällön ja rajatun leveysmallin."
+ :pilottisivu {:tyyppi :kartta-paneeli
+               :lahde "src/cljs/harja/views/tilannekuva/tilannekuva.cljs"
+               :less "dev-resources/less/pages/tilannekuva.less"}
+ :puu [{:komponentti :tabs
+        :asetukset {:valilehdet [{:otsikko "Nykyhetki" :teksti "Ajantasaiset havainnot"}
+                                {:otsikko "Historia" :teksti "Menneet tapahtumat"}
+                                {:otsikko "Ennuste" :teksti "Tulevat tiedot"}]}}
+       {:komponentti :sailio
+        :asetukset {:leveys :suuri
+                    :sisareuna :pieni
+                    :data-cy "pilotti-tilannekuva-sailio"}
+        :lapset [{:komponentti :osio
+                  :asetukset {:otsikko "Tilannekuva"
+                              :otsikkotaso 1
+                              :vali :pieni
+                              :data-cy "pilotti-tilannekuva-otsikko"}
+                  :lapset [{:komponentti :ruudukko
+                            :asetukset {:palstoja 2
+                                        :vali :pieni
+                                        :data-cy "pilotti-tilannekuva-layout"}
+                            :lapset [{:komponentti :panel
+                                      :asetukset {:otsikko "Kartta-alue"}
+                                      :lapset [{:komponentti :tietoja
+                                                :asetukset {:piirra-viivat? false
+                                                            :rivit [["Karttataso" "Tapahtumat ja ilmoitukset"]
+                                                                    ["Alue" "Lapin elinvoimakeskus"]
+                                                                    ["Aikaväli" "24 h"]
+                                                                    ["Näkyvät kohteet" "18"]]}}]}
+                                     {:komponentti :panel
+                                      :asetukset {:otsikko "Tiedot ja suodattimet"}
+                                      :lapset [{:komponentti :pino
+                                                :lapset [{:komponentti :kenttaryhma
+                                                          :asetukset {:otsikko "Urakkatyyppi"
+                                                                      :data-cy "pilotti-tilannekuva-urakkatyyppi"}
+                                                          :lapset [{:komponentti :livi-pudotusvalikko
+                                                                    :asetukset {:otsikko "Urakkatyyppi"
+                                                                                :valinnat ["Hoito" "Päällystys" "Kanavat"]
+                                                                                :optiot {}}}]}
+                                                         {:komponentti :tietoja
+                                                          :asetukset {:rivit [["Auki olevat poikkeamat" "6"]
+                                                                              ["Viimeisin päivitys" "26.11.2026 klo 10.15"]
+                                                                              ["Kartan tila" "Paneeli auki"]]}}
+                                                         {:komponentti :toimintoryhma
+                                                          :asetukset {:data-cy "pilotti-tilannekuva-toiminnot"}
+                                                          :lapset [{:komponentti :nappi
+                                                                    :asetukset {:teksti "Sulje paneeli"
+                                                                                :variantti :toissijainen}}
+                                                                   {:komponentti :nappi
+                                                                    :asetukset {:teksti "Keskitä kartta"
+                                                                                :variantti :ensisijainen}}]}]}]}]}]}]}]}]}
