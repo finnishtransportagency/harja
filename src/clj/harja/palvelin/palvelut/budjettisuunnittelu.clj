@@ -267,49 +267,72 @@
                 :kuvaus muutoksen-syy
                 :luoja (:id user)}]))
 
+(defn- muodosta-urakan-indeksikertoimet
+  [alkupvm loppupvm tyyppi perusluku indeksi-rivit]
+  (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
+        urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+        urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
+        urakan-vuosien-maara (- urakan-loppuvuosi urakan-alkuvuosi)
+        indeksiluvut-urakan-aikana (when perusluku
+                                     (sequence
+                                       (comp (filter (fn [{:keys [kuukausi vuosi]}]
+                                                       (and (= (i-q/hae-vertailu-kk tyyppi urakan-alkuvuosi vuosi) kuukausi)
+                                                         (>= vuosi urakan-alkuvuosi))))
+                                         (remove (fn [{:keys [vuosi]}]
+                                                   (>= vuosi urakan-loppuvuosi)))
+                                         (map (fn [{:keys [arvo vuosi]}]
+                                                {:vuosi vuosi
+                                                 ;; Halutaan numero kolmen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
+                                                 ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
+                                                 ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
+                                                 ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
+                                                 :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)
+                                                 ;; Käyttöliittymässä halutaan näyttää indeksiluvut aina kolmella desimaalilla. Lukuina ei tule aina kolmea desimaalia. Luku voi olla vaikka 1.0
+                                                 ;; ja sitä ei voida tarkentaa lisäämällä siihen enemmän nollia. Niinpä tehdään erillinen tekstimuotoinen esitys.
+                                                 :indeksikerroin-str (format "%.3f" (pyorista (with-precision 4 (/ arvo perusluku)) 3))})))
+                                       indeksi-rivit))
+        urakan-indeksien-maara (count indeksiluvut-urakan-aikana)]
+    (if (= urakan-vuosien-maara urakan-indeksien-maara)
+      (vec indeksiluvut-urakan-aikana)
+      (mapv (fn [index]
+              (if (empty? indeksiluvut-urakan-aikana)
+                ;; Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
+                nil
+                ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
+                ;; Lopuille hoitovuosille nil.
+                (nth indeksiluvut-urakan-aikana index nil)))
+        (range 0 urakan-vuosien-maara)))))
+
 (defn hae-urakan-indeksikertoimet
   [db user {:keys [urakka-id]}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id)
   (jdbc/with-db-transaction [db db]
-                            (let [pyorista #(/ (Math/round (* %1 (Math/pow 10 %2))) (Math/pow 10 %2))
-                                  {::ur/keys [alkupvm loppupvm indeksi tyyppi]} (first (fetch db
-                                                                                       ::ur/urakka
-                                                                                       #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi ::ur/tyyppi}
-                                                                                       {::ur/id urakka-id}))
-                                  urakan-alkuvuosi (-> alkupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-                                  urakan-loppuvuosi (-> loppupvm pvm/joda-timeksi pvm/suomen-aikavyohykkeeseen pvm/vuosi)
-                                  urakan-vuosien-maara (- urakan-loppuvuosi urakan-alkuvuosi)
-                                  perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))
-                                  indeksiluvut-urakan-aikana (when perusluku
-                                                               (sequence
-                                                                 (comp (filter (fn [{:keys [kuukausi vuosi]}]
-                                                                                 (and (= (i-q/hae-vertailu-kk tyyppi urakan-alkuvuosi vuosi) kuukausi)
-                                                                                   (>= vuosi urakan-alkuvuosi))))
-                                                                   (remove (fn [{:keys [vuosi]}]
-                                                                             (>= vuosi urakan-loppuvuosi)))
-                                                                   (map (fn [{:keys [arvo vuosi]}]
-                                                                          {:vuosi vuosi
-                                                                           ;; Halutaan numero kolmen desimaalin tarkkuudella. Pelataan sen varaan, että indeksikerroin
-                                                                           ;; Ei nouse yli kymmenen, jolloin with-precision 4 riittää.
-                                                                           ;; Ratkaisu pyöristää indeksikerrointa. Tämä on sovittu käytäntö ELYissä ja perustuu myös siihen,
-                                                                           ;; että tilastokeskus ilmaisee indeksikertoimen kolmella desimaalilla (prosentin kymmenyksen tarkkuudella).
-                                                                           :indeksikerroin (pyorista (with-precision 4 (/ arvo perusluku)) 3)
-                                                                           ;; Käyttöliittymässä halutaan näyttää indeksiluvut aina kolmella desimaalilla. Lukuina ei tule aina kolmea desimaalia. Luku voi olla vaikka 1.0
-                                                                           ;; ja sitä ei voida tarkentaa lisäämällä siihen enemmän nollia. Niinpä tehdään erillinen tekstimuotoinen esitys.
-                                                                           :indeksikerroin-str (format "%.3f" (pyorista (with-precision 4 (/ arvo perusluku)) 3))})))
-                                                                 (i-q/hae-indeksi db {:nimi indeksi})))
-                                  urakan-indeksien-maara (count indeksiluvut-urakan-aikana)
-                                  indeksikertoimet (if (= urakan-vuosien-maara urakan-indeksien-maara)
-                                                     (vec indeksiluvut-urakan-aikana)
-                                                     (mapv (fn [index]
-                                                             (if (empty? indeksiluvut-urakan-aikana)
-                                                               ;;Palautetaan nil indeksikertoimeksi urakoille, jotka eivät ole vielä alkaneet.
-                                                               nil
-                                                               ;; Palautetaan indeksit vain hoitovuosille, joilla on indeksejä.
-                                                               ;; Lopuille hoitovuosille nil.
-                                                               (nth indeksiluvut-urakan-aikana index nil)))
-                                                       (range 0 urakan-vuosien-maara)))]
-                              indeksikertoimet)))
+    (let [{::ur/keys [alkupvm loppupvm indeksi tyyppi]} (first (fetch db
+                                                                  ::ur/urakka
+                                                                  #{::ur/alkupvm ::ur/loppupvm ::ur/indeksi ::ur/tyyppi}
+                                                                  {::ur/id urakka-id}))
+          perusluku (:perusluku (first (i-q/hae-urakan-indeksin-perusluku db {:urakka-id urakka-id})))]
+      (muodosta-urakan-indeksikertoimet
+        alkupvm loppupvm tyyppi perusluku (i-q/hae-indeksi db {:nimi indeksi})))))
+
+(defn hae-urakoiden-indeksikertoimet
+  [db user urakka-idt]
+  (let [urakka-idt (set urakka-idt)]
+    (doseq [urakka-id urakka-idt]
+      (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-kustannussuunnittelu user urakka-id))
+    (if (empty? urakka-idt)
+      {}
+      (jdbc/with-db-transaction [db db]
+        (let [urakat (i-q/hae-urakoiden-indeksitiedot db {:urakka-idt urakka-idt})
+              indeksien-nimet (set (keep :indeksi urakat))
+              indeksit-nimittain (if (seq indeksien-nimet)
+                                   (group-by :nimi (i-q/hae-indeksit-nimilla db {:nimet indeksien-nimet}))
+                                   {})]
+          (into {}
+            (map (fn [{:keys [urakka_id alkupvm loppupvm indeksi tyyppi perusluku]}]
+                   [urakka_id (muodosta-urakan-indeksikertoimet
+                                alkupvm loppupvm tyyppi perusluku (get indeksit-nimittain indeksi))]))
+            urakat))))))
 
 (defn tallenna-urakan-tavoite
   "Palvelu joka tallentaa urakan budjettiin liittyvät tavoitteet: tavoitehinta, kattohinta ja edelliseltä hoitovuodelta siirretty tavoitehinnan lisä/vähennys.

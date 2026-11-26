@@ -18,10 +18,11 @@
       (component/start
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
+          :db-replica (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :urakkatilanne (component/using
                            (kojelauta/->KojelautaHallinta)
-                           [:db :http-palvelin])))))
+                           [:http-palvelin :db-replica])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
@@ -492,5 +493,4 @@
     (is (= kohteen-odotettu-virhe
           ;; kohteen id voi muuttua kun testidata elää, dissocataan id sen vuoksi niin testi on robustimpi
           (dissoc (first (get-in vastaus-lahetys-epaonnistuu [:virheelliset_kohteet])) :id)) "Kohteen virhetiedot")))
-
 
