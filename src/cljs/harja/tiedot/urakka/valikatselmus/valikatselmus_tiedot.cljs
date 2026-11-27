@@ -92,6 +92,7 @@
 (defrecord HaeKumoutuvatOnnistui [vastaus])
 (defrecord SuljePaatosModal [])
 (defrecord PeruValikatselmusPaatos [paatos])
+(defrecord PeruValikatselmusPaatosOnnistui [vastaus])
 (defrecord PeruValikatselmusPaatosEpaonnistui [vastaus])
 
 
@@ -498,13 +499,18 @@
        :paatos (assoc paatos :luoja (:id @istunto/kayttaja))
        :tehdyt-kumoutuvat-paatokset (:tehdyt-kumoutuvat-paatokset app)}
       {:paasta-virhe-lapi? true
-       :onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :onnistui ->PeruValikatselmusPaatosOnnistui
        :epaonnistui ->PeruValikatselmusPaatosEpaonnistui})
     (assoc app
       :tallennus-kesken? true
       :nayta-kumoa-modal? false
       :tehdyt-kumoutuvat-paatokset nil
       :kumottava-paatos-nimi (:nimi paatos)))
+
+  PeruValikatselmusPaatosOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Peruutus onnistui")
+    (kasittele-valikatselmuksen-vastaus app vastaus))
 
   PeruValikatselmusPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
