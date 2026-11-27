@@ -425,7 +425,20 @@
                     :kulut       []
                     :syottomoodi false})
 
-(def laskutus-default {:kohdistetut-kulut kulut-default})
+(def toteutuneet-toimenpiteet-default
+  (let [nyt (pvm/nyt)
+        urakkavuosi (if (>= (pvm/kuukausi nyt) 8)
+                      (pvm/vuosi nyt)
+                      (dec (pvm/vuosi nyt)))]
+    {:rajauksen-tyyppi :urakkavuoden-mukaan
+     :urakkavuosi urakkavuosi
+     :kuukausi "Kaikki"
+     :aikavali (pvm/vuodesta-hoitokausi urakkavuosi)
+     :toimenpiteet nil
+     :haku-kaynnissa? false}))
+
+(def laskutus-default {:kohdistetut-kulut kulut-default
+                       :toteutuneet-toimenpiteet toteutuneet-toimenpiteet-default})
 (def lupaukset-default {})
 (def muutokset-default {:kirjatut-muutokset nil
                         :lasketut-muutokset nil
@@ -512,6 +525,7 @@
 (defonce toteuma-pohjavesialueiden-suola (cursor tila [:toteumat :pohjavesialueiden-suolatoteumat]))
 
 (defonce laskutus-kohdistetut-kulut (cursor tila [:laskutus :kohdistetut-kulut]))
+(defonce toteutuneet-toimenpiteet (cursor tila [:laskutus :toteutuneet-toimenpiteet]))
 
 (defonce lupaukset (cursor tila [:lupaukset]))
 (defonce muutokset (cursor tila [:muutokset]))
