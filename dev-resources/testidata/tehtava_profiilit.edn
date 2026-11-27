@@ -1,4 +1,5 @@
-{"Ise 1-ajorat." 9.9
+{:teiden-hoito
+ {"Ise 1-ajorat." 9.9
  "Ise ohituskaistat" 8.1
  "Is 1-ajorat." 45.6
  "Ise 2-ajorat." 45.6
@@ -81,3 +82,109 @@
  "Pysäkkikatoksen uusiminen" 2
  "Pysäkkikatoksen poistaminen" 3
  "Nopeusnäyttötaulun hankinta" 1}
+
+ :vesivayla-hoito
+ {"Poijujen sijainnin ja asennon tarkastukset ml. vedenpäällisen osan silmämääräinen tarkastaminen ja heijastinkalvojen tarkastus ja tarvittaessa uusiminen" 250
+  "Suurviittojen (ø > 225 mm) sijainnin ja asennon tarkastukset ml. vedenpäällisen osan silmämääräinen tarkastaminen ja heijastinkalvojen tarkastus ja tarvittaessa uusiminen" 40
+  "Viittojen (ø ≤ 225 mm) sijainnin ja asennon tarkastukset ml. vedenpäällisen osan silmämääräinen tarkastaminen ja heijastinkalvojen tarkastus ja tarvittaessa uusiminen" 300
+  "Poijun tai suurviitan siirto" 2
+  "Suurviitan siirto" 2
+  "Viitan siirto (tavoitehinta ehdollinen)" 8
+  "Viitan siirto" 12
+  "Viitan asennus- ja vaihtotyö" 15
+  "Kiinteiden valaistujen turvalaitteiden vuositarkastustyöt" 25
+  "Kiinteiden valaisemattomien turvalaitteiden vuositarkastustyöt" 50
+  "Poijujen ja suurviittojen ankkuroinnin tarkastus" 30
+  "Esijännitettyjen suurviittojen ankkuroinnin tarkastus" 6
+  "Poijujen ja suurviittojen vaihtotyöt" 8
+  "Suurviittojen vaihtotyöt" 3
+  "Poijujen kunnostaminen maalauksineen sis. kuljetuksen" 12
+  "Poijujen ja suurviittojen ankkuroinnin korjaus- ja vaihtotyöt sisältäen materiaalit ilman painoa" 4
+  "Suurviittojen ankkuroinnin korjaus- ja vaihtotyöt sisältäen materiaalit ilman painoa" 2
+  "Poijujen ja suurviittojen ankkuroinnin painon vaihtotyö" 5
+  "Suurviittojen ankkuroinnin painojen vaihtotyö" 2
+  "Poijujen (kesäpoiju) poisto talveksi ja asennus keväällä" 80
+  "Poijujen ja suurviittojen (kesäpoiju) poisto talveksi ja asennus keväällä" 25
+  "Rakenteiden tarkastus, huolto ja korjaus" 35
+  "Näkemäalueiden raivaukset, urakkavuodet 1.-2." 5000
+  "Näkemäalueiden raivaukset, urakkavuodet 3. - 5." 3000
+  "Kummeleiden maalaus (sis. Materiaalit)" 15
+  "Näkemäalueiden raivaukset" 8000
+  "Rikkoutuneiden, tuhoutuneiden ja kadonneiden poijujen/suurviittojen uusiminen jääpeitteisenä aikana: työ ja ankkurointitarvikkeet" 3
+  "Rikkoutuneiden, tuhoutuneiden ja kadonneiden poijujen/suurviittojen uusiminen avovesikaudella: työ ja ankkurointitarvikkeet ilman painoa" 5
+  "Rikkoutuneiden, tuhoutuneiden ja kadonneiden suurviittojen uusiminen avovesikaudella: työ ja ankkurointitarvikkeet" 2
+  "Rikkoutuneiden, tuhoutuneiden ja kadonneiden suurviittojen uusiminen avovesikaudella: työ ja ankkurointitarvikkeet ilman painoa" 2
+  "Siirtyneiden poijujen ja suurviittojen siirto jääpeitteisenä aikana: työ" 8
+  "Siirtyneiden poijujen ja suurviittojen siirto avovesikaudella: työ" 12
+  "Siirtyneiden suurviittojen siirto jääpeitteisenä aikana: työ" 3
+  "Siirtyneiden suurviittojen siirto avovesikaudella: työ" 5
+  "Vikailmoitukseen perustuva viankorjauskäynti kelluvalla turvalaitteella: valovika (tavoitehinta ehdollinen)" 2
+  "Vikailmoitukseen perustuva viankorjauskäynti kelluvalla turvalaitteella: valovika" 3
+  "Vikailmoitukseen perustuva viankorjauskäynti kelluvalla turvalaitteella: viitan (ø ≤ 225 mm) siirto/vaihto/asennus" 2
+  "Vikailmoitukseen perustuva viankorjauskäynti kelluvalla turvalaitteella: viitan (ø ≤ 225 mm) siirto/vaihto/asennus (tavoitehinta ehdollinen)" 1
+  "Vikailmoitukseen perustuva viankorjauskäynti kiinteällä turvalaitteella sisältäen tutkamajakoiden energialähteiden viat" 2
+  "Vikailmoitukseen perustuva viankorjauskäynti kiinteällä turvalaitteella sisältäen tutkamajakoiden energialähteiden viat (tavoitehinta ehdollinen)" 1
+  "Vikailmoitukseen perustuva viankorjauskäynti kiinteällä turvalaitteella" 4
+  "Jään alle ajautuneen kelluvan turvalaitteen ylösajo" 2
+  "Irronneiden viittojen noutaminen asiakasilmoitusten perusteella" 5
+  "Irronneiden viittojen noutaminen asiakasilmoitusten perusteella (tavoitehinta ehdollinen)" 2
+  "Avokanavien reunavalaistuksien tarkastus ja huolto" 20
+  "Vikailmoitukseen perustuva vikakäynti avokanavilla: valovika" 5
+  "Avokanavien luiskien vesakonraivaus" 12000
+  "Avokanavien reuna-alueiden käsiniitto" 4500
+  "Avokanavien reunateiden kunnossapito" 1500
+  "Muut avokanavien ympäristön hoitoon liittyvät tehtävät" 5
+  "Uuden poijun asennustyö avovesikaudella" 8
+  "Uuden viitan asennustyö avovesikaudella" 15
+  "Uuden suurviitan asennustyö avovesikaudella" 3
+  "Poijun poistotyö avovesikaudella" 5
+  "Viitan poistotyö avovesikaudella" 6
+  "Suurviitan poistotyö avovesikaudella" 2
+  "Uudet viitat mukaan lukien ankkurointitarvikkeet esim. kettingit, sakkelit ja painot" 50
+  "Jääpoiju, materiaali (PE)" 5
+  "Poijuviitta, materiaali (PE)" 12
+  "Jääpoiju, materiaali (PE), 5 v. paristomalli" 4
+  "Suurviitta (ø = 500 mm), materiaali" 2
+  "Suurviitta (ø = 400 mm), materiaali" 4
+  "6t paino" 3
+  "10t paino" 2
+  "20t lohkoankkuri" 4
+  "1200 kg paino" 5
+  "Aurinkopaneeli" 3
+  "NiCd-akku 50Ah" 5
+  "NiCd-akku 100Ah" 5
+  "NiCd-akku 150Ah" 3
+  "LED 155" 2
+  "LED 155 tai vastaava" 3
+  "LED 155, huolto/korjaus" 5
+  "LED 155 tai vastaava, huolto/korjaus" 5
+  "LED 160 tai vastaava" 2
+  "LED 160 tai vastaava, huolto/korjaus" 5
+  "LO 200 M" 2
+  "LO 200 M tai vastaava" 3
+  "LO 200 M, huolto/korjaus" 4
+  "LO 200 M tai vastaava, huolto/korjaus" 4
+  "MPV- led" 2
+  "MPV- led, huolto/korjaus" 4
+  "MPV 2- led tai vastaava" 2
+  "MPV 2- led tai vastaava, huolto/korjaus" 4
+  "MVP 2- led, huolto/korjaus" 4
+  "VP-led" 2
+  "VP- led, huolto/korjaus" 3
+  "VP 2- led tai vastaava" 2
+  "VP 2- led" 2
+  "VP 2- led tai vastaava, huolto/korjaus" 4
+  "ODSL 200" 2
+  "ODSL 200 tai vastaava" 2
+  "ODSL 200, huolto/korjaus" 3
+  "ODSL 200 tai vastaava, huolto/korjaus" 3
+  "UPS 12 verkkovirtamuuntaja" 2
+  "5 vuoden paristot" 6
+  "Isot pyöreät kelluviin turvalaitteisiin" 20
+  "Isot pyöreät paristot" 20
+  "Pienet pyöreät kelluviin turvalaitteisiin" 12
+  "Nelikulmainen poijuparisto" 10
+  "Nelikulmainen poijuparisto (tavoitehinta ehdollinen)" 2
+  "Isot pyöreät turvalaitteisiin" 10
+  "Pienet pyöreät turvalaitteisiin" 10
+  "Nelikulmainen poijuparisto turvalaitteisiin" 5}}

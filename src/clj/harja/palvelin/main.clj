@@ -122,6 +122,7 @@
     [harja.palvelin.palvelut.hairioilmoitukset :as hairioilmoitukset]
     [harja.palvelin.palvelut.jarjestelman-tila :as jarjestelman-tila]
     [harja.palvelin.palvelut.kulut.kustannusten-seuranta :as kustannusten-seuranta]
+    [harja.palvelin.palvelut.kulut.toteutuneet-toimenpiteet-palvelu :as toteutuneet-toimenpiteet]
     [harja.palvelin.palvelut.valikatselmus.valikatselmukset :as valikatselmukset]
     [harja.palvelin.palvelut.yllapitokohteet.reikapaikkaukset :as reikapaikkaukset]
     [harja.palvelin.palvelut.yllapitokohteet.kustannukset-palvelu :as kustannukset-palvelu]
@@ -417,6 +418,9 @@
       :kustannusten-seuranta (component/using
                                (kustannusten-seuranta/->KustannustenSeuranta)
                                [:http-palvelin :db :db-replica :excel-vienti])
+      :toteutuneet-toimenpiteet (component/using
+                                  (toteutuneet-toimenpiteet/->ToteutuneetToimenpiteet)
+                                  [:http-palvelin :db])
       :vv-toimenpiteet (component/using
                          (vv-toimenpiteet/->Toimenpiteet)
                          [:http-palvelin :db])

@@ -8,6 +8,7 @@
             [harja.loki :refer [log]]
             [harja.views.urakka.laskutusyhteenveto :as laskutusyhteenveto]
             [harja.views.urakka.kulut.mhu-kustannusten-seuranta :as kustannusten-seuranta]
+            [harja.views.urakka.kulut.toteutuneet-toimenpiteet-nakyma :as toteutuneet-toimenpiteet]
             [harja.ui.komponentti :as komp]
             [harja.views.urakka.maksuerat :as maksuerat]
             [harja.views.urakka.kulut.kulut :as kohdistetut-kulut]
@@ -50,4 +51,10 @@
           (when mhu-urakka?
             ^{:key "kustannusten-seuranta"}
             [kustannusten-seuranta/kustannusten-seuranta])
+
+          "Toteutuneet toimenpiteet"
+          :toteutuneet-toimenpiteet
+          (when (and vesivayla-hoito-urakka (k/kehitysymparistossa?))
+            ^{:key "toteutuneet-toimenpiteet"}
+            [toteutuneet-toimenpiteet/toteutuneet-toimenpiteet])
           ]]))))
