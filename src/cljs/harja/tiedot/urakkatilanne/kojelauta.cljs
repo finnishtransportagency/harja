@@ -6,24 +6,13 @@
             [harja.ui.protokollat :as protokollat]
             [harja.ui.yleiset :as yleiset]
             [reagent.core :refer [atom] :as reagent]
+            [harja.tiedot.navigaatio :as nav]
             [tuck.core :as tuck]
             [harja.tyokalut.tuck :as tuck-apurit])
   (:require-macros [cljs.core.async.macros :refer [go]]))
 
 ;; vuosi, jota ennen tavoite ja kattohinnan paatokset eivat olleet sidoksissa toisiinsa
 (def +kattohintapaatos-kynnysvuosi+ 2021)
-
-(defn tee-evkhaku [evkt]
-  (reify protokollat/Haku
-    (hae [_ teksti]
-      (go (let [itemit (if (< (count teksti) 1)
-                         evkt
-                         (filter #(and
-                                    (str (:evknumero %) " " (:nimi %))
-                                    (not= (.indexOf (.toLowerCase (str (:evknumero %) " " (:nimi %)))
-                                            (.toLowerCase teksti)) -1))
-                           evkt))]
-            (vec (sort-by :evknumero itemit)))))))
 
 (defn tee-urakkahaku [urakat]
   (reify protokollat/Haku
@@ -39,7 +28,7 @@
 
 (def tila (atom {:urakat []
                  :valinnat {:urakkatyyppi {:nimi "Hoito" :arvo :hoito}
-                            :evknumerot #{}
+                            :evkt []
                             :urakat #{}
                             :urakkavuosi (pvm/vuosi (first (pvm/paivamaaran-hoitokausi (pvm/nyt))))}}))
 
@@ -172,7 +161,6 @@
                                   "Valmiina:" (str urakat-joissa-ks-valmiina " (" (fmt/prosentti-opt (math/osuus-prosentteina urakat-joissa-ks-valmiina kaikkien-urakoiden-lkm) 0) ")")]])]
     ks-tilojen-yhteenveto))
 
-(defrecord AlustaHallintayksikkoHaku [evkt])
 (defrecord AsetaSuodatin [avain valinta])
 (defrecord HaeUrakat [])
 (defrecord HaeUrakatOnnistui [vastaus])
@@ -180,24 +168,23 @@
 
 (extend-protocol tuck/Event
 
-  AlustaHallintayksikkoHaku
-  (process-event [{:keys [evkt]} app]
-    (assoc app :evkhaku (tee-evkhaku evkt)))
-
   AsetaSuodatin
   (process-event [{:keys [avain valinta]} app]
     (assoc-in app [:valinnat avain] valinta))
 
   HaeUrakat
   (process-event [_ app]
-    (tuck-apurit/post! :hae-urakat-kojelautaan
-      {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
-       :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
-       :urakka-idt (into #{} (map :id (get-in app [:valinnat :urakat])))
-       :evk-idt (into #{} (map :id (get-in app [:valinnat :evkt])))}
-      {:onnistui ->HaeUrakatOnnistui
-       :epaonnistui ->HaeUrakatEpaonnistui})
-    (assoc app :haku-kaynnissa? true))
+    (let [valitut-evkt (get-in app [:valinnat :evkt])]
+      (tuck-apurit/post! :hae-urakat-kojelautaan
+        {:urakkatyyppi (or (get-in app [:valinnat :urakkatyyppi :arvo]) :hoito)
+         :hoitokauden-alkuvuosi (get-in app [:valinnat :urakkavuosi])
+         :urakka-idt (into #{} (map :id (get-in app [:valinnat :urakat])))
+         :evk-idt (if-let [evk-id @nav/valittu-hallintayksikko-id]
+                    #{evk-id}
+                    (into #{} (map :id valitut-evkt)))}
+        {:onnistui ->HaeUrakatOnnistui
+         :epaonnistui ->HaeUrakatEpaonnistui})
+      (assoc app :haku-kaynnissa? true)))
 
   HaeUrakatOnnistui
   (process-event [{:keys [vastaus]} app]
