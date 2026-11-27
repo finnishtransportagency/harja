@@ -1,4 +1,4 @@
-(ns harja.tiedot.vesivaylat.urakka.yksikkohinnat
+(ns harja.tiedot.urakka.kulut.yksikkohinnat
   "Yksikköhinnat-näkymän Tuck-tila ja tapahtumat."
   (:require [tuck.core :as tuck]
             [harja.pvm :as pvm]
