@@ -140,10 +140,7 @@
                  ;; Kun
                  (not arvonvah-vaikk-tavoitehintaan?) (conj ["Arvonvähennykset" (euro sanktio-arvonvahennykset)]))
      :hoidonjohtopalkkio [["Hoidonjohtopalkkion muutos"
-                           (euro (if (and (:id hoidonjohtopalkkion-paatos)
-                                       (neg? hoidonjohtopalkkion-muutos))
-                                   (* -1 hoidonjohtopalkkion-muutos)
-                                   0))]]}))
+                           (euro hoidonjohtopalkkion-muutos)]]}))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as _parametrit}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))
