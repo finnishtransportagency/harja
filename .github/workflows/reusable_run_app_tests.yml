@@ -314,10 +314,14 @@ jobs:
     if: ${{ inputs.scan-docker-image == 'true' }}
     name: "Scan Docker image"
     runs-on: ubuntu-latest
+    # Normaalisti kesto alle 5 min. Build-stepin timeout 10 min katkaisee jumiin jääneen apt-get:n nopeasti.
+    # Tähän job-tason timeouttiin on lisätty vähän pelivaraa.
+    timeout-minutes: 15
     needs: build-harja
     permissions:
       contents: read # Tarvitaan checkout actionissa
       packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
+
     steps:
       - name: Checkout code
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
@@ -349,8 +353,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Mitätöi build cachen itse asennetuille paketeille viikottain
+      - name: Laske cache-bust-week
+        id: cache-bust
+        run: echo "week=$(date +%G-%V)" >> "$GITHUB_OUTPUT"
+
       - name: Build and tag Harja app test image
         id: build-test-image
+        timeout-minutes: 10 # Katkaisee jumiin jääneen apt-get:n nopeasti
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -361,6 +371,10 @@ jobs:
           file: ${{ env.DOCKERFILE_PATH }}
           platforms: ${{ env.BUILD_PLATFORMS }}
           tags: harja_buildtest_pr:${{ env.IMAGE_TAG }}
+          # Cache vain luetaan tässä. Sitä ylläpitää harja_build_and_deploy-workflow.
+          # Viikoittainen cache-bust pakottaa päivittämään apt-paketit ja AWS CLI:n (ks. Dockerfile).
+          build-args: CACHE_BUST_WEEK=${{ steps.cache-bust.outputs.week }}
+          cache-from: type=registry,ref=${{ env.GH_DOCKER_REGISTRY }}/finnishtransportagency/harja_buildtest:buildcache
           # Disabloi provenance attestations: https://github.com/docker/build-push-action/issues/820
           provenance: false
           # Lataa buildattu image paikallisesti 'docker images':iin tämän jobin käyttöön

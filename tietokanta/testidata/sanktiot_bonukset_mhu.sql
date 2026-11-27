@@ -434,6 +434,24 @@ SELECT bpr.id,
          ON u.lyhyt_nimi = 'Nummi 26'
  WHERE bp.nimi = 'teiden-hoito-bonus-mhu2026';
 
+INSERT INTO bonus_profiili_rivi_urakka (bonus_profiili_rivi_id, urakka_id,
+                                        luoja, luotu, muokkaaja, muokattu)
+SELECT bpr.id,
+       u.id,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       CURRENT_TIMESTAMP,
+       (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio'),
+       CURRENT_TIMESTAMP
+  FROM bonus_profiili bp
+       JOIN bonus_laji bl
+         ON bl.koodi = 'liikennevahinkojen_aiheuttajien_selvitysbonus'
+       JOIN bonus_profiili_rivi bpr
+         ON bpr.bonus_profiili_id = bp.id
+        AND bpr.bonus_laji_id = bl.id
+       JOIN urakka u
+         ON u.lyhyt_nimi = 'Raasepori 26'
+ WHERE bp.nimi = 'teiden-hoito-bonus-mhu2026';
+
     WITH tiedot AS (
         SELECT u.id AS urakka,
          s.id AS sopimus,
@@ -458,6 +476,34 @@ SELECT bpr.id,
         1400,
         NULL,
         'Sanktioraportin Nummi 26 liikennevahinkobonuksen kohdistustesti',
+        CURRENT_TIMESTAMP,
+        kayttaja
+      FROM tiedot;
+
+    WITH tiedot AS (
+        SELECT u.id AS urakka,
+         s.id AS sopimus,
+         tpi.id AS toimenpideinstanssi,
+         (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
+       FROM urakka u
+         JOIN sopimus s ON s.urakka = u.id AND s.paasopimus IS NULL
+         JOIN toimenpideinstanssi tpi
+           ON tpi.urakka = u.id
+          AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+      WHERE u.nimi = 'Raasepori 26 - liikennevahinkobonuksen kohdistus'
+    )
+    INSERT INTO erilliskustannus (tyyppi, sopimus, urakka, toimenpideinstanssi,
+                pvm, laskutuskuukausi, rahasumma, indeksin_nimi,
+                lisatieto, luotu, luoja)
+    SELECT 'liikennevahinkojen_aiheuttajien_selvitysbonus'::erilliskustannustyyppi,
+        sopimus,
+        urakka,
+        toimenpideinstanssi,
+        DATE '2026-10-15',
+        DATE '2026-10-15',
+        1400,
+        NULL,
+        'Sanktioraportin Raasepori 26 liikennevahinkobonuksen kohdistustesti',
         CURRENT_TIMESTAMP,
         kayttaja
       FROM tiedot;
@@ -574,3 +620,53 @@ SELECT bpr.id,
             ('POP MHU Suomussalmi 2024-2029', DATE '2026-04-15', 450)
           ) AS manuaalinen(urakan_nimi, pvm, maara)
           ON manuaalinen.urakan_nimi = tiedot.urakan_nimi;
+
+-- Määräystapa-lukutilan ja -muokkauksen selainvarmennukseen (MHU25, näkyvä urakka)
+WITH tiedot AS (
+    SELECT tpi.id AS toimenpideinstanssi,
+           u.id AS urakka,
+           (SELECT id FROM kayttaja WHERE kayttajanimi = 'Integraatio') AS kayttaja
+      FROM urakka u
+           JOIN toimenpideinstanssi tpi
+             ON tpi.urakka = u.id
+            AND tpi.nimi = u.nimi || ' MHU ja HJU Hoidon johto'
+     WHERE u.nimi = 'POP MHU Kajaani 2025-2030'
+        ),
+        uusi_laatupoikkeama AS (
+            INSERT INTO laatupoikkeama (lahde, kohde, tekija, kasittelytapa, muu_kasittelytapa, paatos, perustelu,
+                      tarkastuspiste, luoja, luotu, aika, kasittelyaika, selvitys_pyydetty,
+                      selvitys_annettu, urakka, kuvaus)
+            SELECT 'harja-ui'::LAHDE,
+             'Sanktioraportin testikohde',
+             'tilaaja'::OSAPUOLI,
+             'puhelin'::LAATUPOIKKEAMAN_KASITTELYTAPA,
+             '',
+             'sanktio'::LAATUPOIKKEAMAN_PAATOSTYYPPI,
+             'Maaraystapa-testidata',
+             123,
+             kayttaja,
+             CURRENT_TIMESTAMP,
+             DATE '2026-02-15',
+             DATE '2026-02-15',
+             FALSE,
+             FALSE,
+             urakka,
+             'Kajaanin maaraystapa-testisanktio'
+           FROM tiedot
+            RETURNING id
+)
+        INSERT INTO sanktio (sakkoryhma, maara, perintapvm, maarattypvm, indeksi, laatupoikkeama,
+                     toimenpideinstanssi, tyyppi, suorasanktio, maaraystapa, luoja)
+SELECT 'A'::SANKTIOLAJI,
+       1000,
+       DATE '2026-02-15',
+       DATE '2026-02-15',
+       NULL,
+       uusi_laatupoikkeama.id,
+       toimenpideinstanssi,
+       (SELECT id FROM sanktiotyyppi WHERE koodi = 13),
+       FALSE,
+       'tyomaakokous',
+       kayttaja
+      FROM tiedot
+        CROSS JOIN uusi_laatupoikkeama;

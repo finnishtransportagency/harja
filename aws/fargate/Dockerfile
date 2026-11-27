@@ -2,7 +2,7 @@
 # Käytetään Eclipse Temurin 17 LTS (OpenJDK) imagea (https://endoflife.date/java)
 # Pohjalla Ubuntu Noble Numbat (Ubuntu 24.04 LTS)
 # Huom: Jos päivität major-version, muista päivittää myös .github/.java-version tiedosto
-FROM eclipse-temurin:17.0.21_9-jre-noble
+FROM eclipse-temurin:17.0.21.1_2-jre-noble
 
 # Lisää labeleita AWS ECR:ää varten
 LABEL description="Harja app"
@@ -20,26 +20,54 @@ RUN touch /var/mail/ubuntu && chown ubuntu /var/mail/ubuntu && userdel -r ubuntu
 RUN mkdir -p /tmp && chmod 1777 /tmp
 VOLUME ["/tmp"]
 
-# Aseta aikavyöhyke
-# Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
-RUN apt-get update \
-    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki apt-get -y install tzdata \
-    && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
-    && echo "Europe/Helsinki" > /etc/timezone
+# Apt-asetukset verkkovirheiden resilienssien kasvattamiseksi:
+# - Retries: Uudelleenyritykset kasvavalla viiveellä
+# - Timeout: Katkaisee jumiutuneen yhteyden
+#   Huom: Ei katkaise hidasta yhteyttä. Workflow:n `timeout-minutes` varmistaa, että build ei jää jumiin.
+# - Update::Error-Mode=any: apt-get update failaa, jos jonkin indeksin haku epäonnistuu.
+#   Oletuksena tulee vain varoitus, jolloin virhe näkyy vasta install-vaiheessa harhaanjohtavana.
+RUN printf '%s\n' \
+      'Acquire::Retries "5";' \
+      'Acquire::http::Timeout "30";' \
+      'Acquire::https::Timeout "30";' \
+      'APT::Update::Error-Mode "any";' \
+      > /etc/apt/apt.conf.d/80-harja-network
 
-# Asenna apurit
-RUN apt-get update && apt-get install -y \
-    bash \
-    curl \
-    jq \
-    nano \
-    unzip \
-    telnet \
+# CACHE_BUST_WEEK (ISO-viikko) pakottaa apt-paketit ja uusimman AWS CLI:n alempana päivittymään viikoittain,
+# koska ARG:n arvon muuttaminen mitätöi cachen tästä layeristä ja kaikista sitä seuraavista layereistä.
+# Tyhjä oletusarvo = ei viikoittaista päivitystä (esim. ECS-deploy buildaa ilman cachea).
+ARG CACHE_BUST_WEEK=""
+
+# Asenna aikavyöhykedata ja apurit
+# Huom: /etc/localtime on ensisijainen aikavyöhykelähde JRE 17.0.18_8+ versioissa
+RUN echo "Cache bust week: ${CACHE_BUST_WEEK}" \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive TZ=Europe/Helsinki \
+       apt-get install -y --no-install-recommends \
+        tzdata \
+        bash \
+        curl \
+        jq \
+        nano \
+        unzip \
+        telnet \
+    && ln -snf /usr/share/zoneinfo/Europe/Helsinki /etc/localtime \
+    && echo "Europe/Helsinki" > /etc/timezone \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 
 # Asenna AWS CLI v2
-RUN curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip" && \
+# Curl-optiot: --fail epäonnistuu HTTP-virheissä, --retry/--retry-all-errors yrittää uudelleen ohimeneviä virheitä,
+# --connect-timeout katkaisee jumiin jääneen yhteyden ja --speed-limit/--speed-time katkaisee (ja retry yrittää uudelleen)
+# jos siirto on hitaampi kuin 1 KB/s 60 sekunnin ajan.
+RUN curl \
+    --fail --silent --show-error --location \
+    --retry 5 --retry-all-errors \
+    --connect-timeout 30 \
+    --speed-limit 1024 --speed-time 60 \
+    "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" \
+    -o "awscliv2.zip" && \
  unzip awscliv2.zip && \
  ./aws/install && \
  rm -rf awscliv2.zip aws
@@ -49,7 +77,13 @@ ENV PROMETHEUS_JAR_VERSION=0.20.0
 # https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent/0.20.0/jmx_prometheus_javaagent-0.20.0.jar.sha1
 ENV PROMETHEUS_JAR_SHA1="7b8a98e3482cee8889698ef391b85c47a3c4ce5b"
 ENV PROMETHEUS_MAVEN_REPO_URL_BASE="https://repo.maven.apache.org/maven2/io/prometheus/jmx/jmx_prometheus_javaagent"
-RUN curl "$PROMETHEUS_MAVEN_REPO_URL_BASE/${PROMETHEUS_JAR_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_JAR_VERSION}.jar" \
+# ks. curl-optiot AWS CLI:n asennuksen kommentissa
+RUN curl \
+    --fail --silent --show-error --location \
+    --retry 5 --retry-all-errors \
+    --connect-timeout 30 \
+    --speed-limit 1024 --speed-time 60 \
+    "$PROMETHEUS_MAVEN_REPO_URL_BASE/${PROMETHEUS_JAR_VERSION}/jmx_prometheus_javaagent-${PROMETHEUS_JAR_VERSION}.jar" \
     -o "jmx_prometheus_javaagent.jar"
 
 # Validoi latauksen checksum

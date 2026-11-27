@@ -70,6 +70,7 @@
           kilpailutettavat-hankinnat (kutsu-palvelua (:http-palvelin jarjestelma) :hae-kustannussuunnitelman-tiedot +kayttaja-jvh+ tiedot)
           hankinnat (get-in kilpailutettavat-hankinnat [:kustannussuunnitelma :kilpailutettavat-hankinnat])]
 
+      (is (boolean? (:lukittu? kilpailutettavat-hankinnat)))
       (is (= (count (:toimenpiteet hankinnat)) 7))
       (is (true? (some #(str/includes? (str/lower-case (:nimi %)) "talvihoito") (:toimenpiteet hankinnat))))
       (is (= (:nimi (last (:toimenpiteet hankinnat))) "Yhteensä"))
@@ -173,6 +174,8 @@
         hoitovuoden-alkuvuosi 2021
         ;; Poista yhteenvetorivi ennen tallennusta
         h-tietomalli (apurit/poista-yhteenvetorivi-toimenpiteilta apurit/hankinnat-tietomalli)
+        toimenpiteet (uusi-kust-kyselyt/hae-urakan-toimenpiteet db {:urakkaid urakka-id})
+        h-tietomalli (apurit/paivita-hankintojen-toimenpideinstanssi-id h-tietomalli toimenpiteet)
         vastaus (try
                   (kutsu-palvelua (:http-palvelin jarjestelma) :tallenna-kilpailutettavat-hankinnat +kayttaja-jvh+
                     (merge

@@ -67,12 +67,17 @@
                                          kuukausi (pvm/kuukausi perintapvm)
                                          hoitovuosi (if (>= kuukausi 10) vuosi (dec vuosi))]
                                      (when (some #{hoitovuosi} hoitovuodet)
-                                       hoitovuosi))))]
+                                       hoitovuosi))))
+        hoitovuosi-lukittu? (fn [arvonvahennyksen-hoitovuosi]
+                              (some (fn [{:keys [vuosi arvonvahennys-lukittu?]}]
+                                      (and (= vuosi arvonvahennyksen-hoitovuosi)
+                                        arvonvahennys-lukittu?))
+                                (:lukitustiedot app)))]
 
 
 
     [:div
-     [debug/debug @muokattu]
+     #_ [debug/debug @muokattu]
      [lomake/lomake
       {:otsikko "ARVONVÄHENNYKSEN TIEDOT"
        :otsikko-elementti :h4
@@ -267,7 +272,13 @@
                      true
                      (assoc-in [:laatupoikkeama :paatos :kasittelyaika] arvo)))
           :fmt pvm/pvm-opt :tyyppi :pvm
-          :validoi [[:ei-tyhja "Valitse päivämäärä"]]}
+          :validoi [[:ei-tyhja "Valitse päivämäärä"]
+                    (fn [paivamaara _rivi _taulukko]
+                      (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                        (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                          (str "Päivämäärää ei voida asettaa "
+                            (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                            ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]}
 
          ;; Laskutuskuukausi - muokkausmoodi
          (cond
@@ -282,8 +293,24 @@
                      (assoc rivi :perintapvm
                        (when hoitovuosi
                          (pvm/hoitokauden-alkupvm hoitovuosi))))
-            :valinta-nayta #(or (hoitovuosi->teksti %) " - valitse hoitovuosi -")
-            ::lomake/col-luokka "col-xs-6"}
+            :valinta-nayta (fn [vuosi]
+                             (cond
+                               (and (hoitovuosi->teksti vuosi) (hoitovuosi-lukittu? vuosi))
+                                [:span {:style {:display "inline-flex"
+                                                :align-items "center"
+                                                :gap "0.5rem"}}
+                                  (hoitovuosi->teksti vuosi)
+                                  [ikonit/locked-svg 14]]
+                               (and (hoitovuosi->teksti vuosi) (not (hoitovuosi-lukittu? vuosi)))
+                               (hoitovuosi->teksti vuosi)
+
+                               :else " - valitse hoitovuosi -"))
+            ::lomake/col-luokka "col-xs-6"
+            :validoi [(fn [vuosi _rivi _taulukko]
+                        (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                          (str "Päivämäärää ei voida asettaa "
+                            (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm (pvm/->pvm (str "01.10." vuosi)))
+                            ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta.")))]}
            (and (not mhu25?) voi-muokata? (not lukutila?))
            {:otsikko "Laskutuskuukausi"
             :label-for-id laskutuskuukausi-id
@@ -292,6 +319,12 @@
             :tyyppi :komponentti
             ::lomake/col-luokka "col-xs-6"
             :huomauta [[:urakan-aikana-ja-hoitokaudella]]
+            :validoi [(fn [paivamaara _rivi _taulukko]
+                        (let [vuosi (some-> paivamaara pvm/hoitokauden-alkuvuosi)]
+                          (when (and urakan-alkupvm (hoitovuosi-lukittu? vuosi))
+                            (str "Päivämäärää ei voida asettaa "
+                              (pvm/paivamaara->mhu-hoitovuosi-nro urakan-alkupvm paivamaara)
+                              ". hoitovuodelle " vuosi "-" (inc vuosi) ", koska hoitovuoden tiedot on lukittu välikatselmuksen päätöksen johdosta."))))]
             :komponentti (fn [{:keys [muokkaa-lomaketta data]}]
                            (let [perintapvm (get-in data [:perintapvm])]
                              [:<>
@@ -319,7 +352,14 @@
                                                  :laskutuskuukausi-komp-tiedot %
                                                  ;; Varsinainen perintapvm poimitaan valitun laskutuskuukauden pvm-kentästä.
                                                  :perintapvm (:pvm %)))
-                                :format-fn :teksti}
+                                :format-fn (fn [{:keys [teksti pvm]}]
+                                             [:span {:style {:display "inline-flex"
+                                                             :align-items "center"
+                                                             :gap "0.5rem"}}
+                                              teksti
+                                              (when (hoitovuosi-lukittu?
+                                                      (some-> pvm pvm/hoitokauden-alkuvuosi))
+                                                [ikonit/locked-svg 14])])}
                                laskutuskuukaudet]
                               ;; Piilotetaan teksti ylläpitourakoilta, koska niillä ei ole laskutusyhteenvetoa
                               (when (not @tiedot-urakka/yllapitourakka?)
@@ -396,15 +436,15 @@
           ::lomake/col-luokka "col-xs-12"
           :komponentti (fn [_]
                          [liitteet/liitteet-ja-lisays urakka-id (get-in @muokattu [:laatupoikkeama :liitteet])
-                          {:uusi-liite-atom (r/wrap (:uusi-liite @tiedot/valittu-sanktio)
+                          {:uusi-liite-atom (r/wrap (first (get-in @tiedot/valittu-sanktio [:laatupoikkeama :uudet-liitteet]))
                                               #(swap! tiedot/valittu-sanktio
-                                                 (fn [_] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] %))))
+                                                 (fn [_] (assoc-in @muokattu [:laatupoikkeama :uudet-liitteet] [%]))))
                            :uusi-liite-teksti "Lisää liite"
                            :elementin-id liitteet-id
                            :nayta-koko? true
                            :salli-poistaa-lisatty-liite? true
                            :poista-lisatty-liite-fn #(swap! tiedot/valittu-sanktio
-                                                       (fn [_] (assoc-in @muokattu [:laatupoikkeama :uusi-liite] nil)))
+                                                       (fn [_] (assoc-in @muokattu [:laatupoikkeama :uudet-liitteet] nil)))
                            :salli-poistaa-tallennettu-liite? true
                            :poista-tallennettu-liite-fn
                            (fn [liite-id]
@@ -434,7 +474,6 @@
                                                            :nayta-koko? true}]))
                             "Ei liitettä")])})]
       @muokattu]]))
-
 
 
 

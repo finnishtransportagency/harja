@@ -16,6 +16,7 @@
             [harja.tiedot.urakka.urakka :as tila]
             [harja.tiedot.urakka :as tiedot-urakka]
             [harja.pvm :as pvm]
+            [harja.fmt :as fmt]
             [harja.tiedot.urakka.laadunseuranta.sanktiot :as sanktiot]
             [harja.ui.napit :as napit]
             [harja.asiakas.kommunikaatio :as k]
@@ -27,6 +28,7 @@
             [harja.tiedot.urakka :as urakka]
             [harja.domain.roolit :as roolit]
             [harja.domain.laadunseuranta.sanktio :as sanktio-domain]
+            [harja.domain.laadunseuranta.sanktion-lomake :as sanktion-lomake-domain]
             [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
             [harja.domain.yllapitokohde :as yllapitokohde-domain]
             [harja.domain.urakka :as u-domain]
@@ -159,8 +161,7 @@
                [napit/yleinen-toissijainen "Lisää uusi"
                 (fn []
                   ;; Alustetaan uusi sanktio laatupoikkeaman tiedoilla
-                   (let [mhu-25? (tila/mhu25-urakka? @nav/valittu-urakka)
-                         kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
+                   (let [kasittelyaika (get-in @laatupoikkeama [:paatos :kasittelyaika])
                          uusi (-> (merge (sanktiot/uusi-sanktio (:tyyppi @nav/valittu-urakka) (pvm/vuosi (first @tiedot-urakka/valittu-hoitokausi))) {:suorasanktio false})
                                 (assoc :maarattypvm kasittelyaika)
                                 (assoc :perintapvm kasittelyaika)
@@ -170,7 +171,7 @@
                                 (assoc-in [:laatupoikkeama :paatos :kasittelyaika] kasittelyaika))
                          siivottu-laatupoikkeama (lomake/ilman-lomaketietoja @laatupoikkeama)
                          uusi-sanktio-atom (atom uusi)
-                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false uusi-sanktio-atom mhu-25?)]
+                         mahdolliset-kulun-kohdistukset (sanktiot/mahdolliset-kulun-kohdistukset false (pvm/vuosi (:alkupvm @nav/valittu-urakka)) (:tyyppi @nav/valittu-urakka) uusi-sanktio-atom)]
                     (reset! sivupaneeli-auki? true)
                     (reset! sanktiot/valittu-sanktio
                       (-> (uuden-sanktion-rivi uusi (:tyyppi @nav/valittu-urakka) @sanktiot/valitun-urakan-sanktiolajit mahdolliset-kulun-kohdistukset)
@@ -209,7 +210,7 @@
                     (:tyyppi %))
             :leveys 2}
            {:otsikko "Tapah\u00ADtuma\u00ADpaik\u00ADka/kuvaus" :nimi :tapahtumapaikka :hae #(get-in % [:laatupoikkeama :kuvaus]) :leveys 3}
-           {:otsikko "Määrä (€)" :nimi :summa :hae #(when (:summa %) (str (:summa %))) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
+           {:otsikko "Määrä (€)" :nimi :summa :hae :summa :fmt #(fmt/euro-opt false %) :tyyppi :numero :tasaa :oikea :leveys 1.7}]
           (or sanktiot-lista [])]]
           (case sanktio-konfiguraation-tila
             :haku-kaynnissa [ajax-loader "Ladataan..."]
@@ -245,14 +246,18 @@
         pakolliset-hoito-sakko
         pakolliset-hoito-muistutus))))
 
-(defn- tarkasta-sanktiorivi [sanktiorivi nakyma]
+(defn- tarkasta-sanktiorivi [sanktiorivi nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
   (let [sanktio-poistettu? (:poistettu sanktiorivi)
         ;; Jos sanktio on poistettu, niin pakollisia kenttiä ei ole
         kentat (when-not sanktio-poistettu? (map #(get-in sanktiorivi %)
                                               (pakolliset-kentat nakyma (sanktio-domain/muu-kuin-muistutus? sanktiorivi))))]
-    (every? some? kentat)))
+    (and (every? some? kentat)
+      (or sanktio-poistettu?
+        (not= :hoito nakyma)
+        (sanktion-lomake-domain/sanktiorivin-kohdistus-ok?
+          sanktiorivi toimenpideinstanssit urakan-alkuvuosi urakkatyyppi)))))
 
-(defn- sanktiorivit-ok? [laatupoikkeama nakyma]
+(defn- sanktiorivit-ok? [laatupoikkeama nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi]
   (cond
     (and (not (sanktio-domain/paatos-on-sanktio? laatupoikkeama))
       (sanktiotaulukko-tyhja? laatupoikkeama))
@@ -265,7 +270,9 @@
     ;; muokkausgridiltä tulee [{id {rivi}} ..]
     ;; Tarkasta että jokaiselle riville muokkausgridissä on jokainen vaadittava arvo
     :default
-    (every? true? (map #(tarkasta-sanktiorivi % nakyma) (sanktiotaulukon-rivit laatupoikkeama)))))
+    (every? true? (map #(tarkasta-sanktiorivi %
+                          nakyma toimenpideinstanssit urakan-alkuvuosi urakkatyyppi)
+                    (sanktiotaulukon-rivit laatupoikkeama)))))
 
 (defn- tarkasta-sanktiotiedot [vertailu-fn laatupoikkeama]
   (vertailu-fn #(not (nil? %)) (map #(get-in laatupoikkeama %)
@@ -382,7 +389,10 @@
                                              (not (validoi-sanktiotiedot sisalto))
                                              (not (sanktiorivit-ok? sisalto (cond yllapito? :yllapito
                                                                               vesivayla? :vesivayla
-                                                                              :default :hoito)))
+                                                                              :default :hoito)
+                                               @urakka/urakan-toimenpideinstanssit
+                                               (pvm/vuosi (:alkupvm @nav/valittu-urakka))
+                                               (:tyyppi @nav/valittu-urakka)))
                                              (not (lomake/voi-tallentaa-ja-muokattu? sisalto)))}]))}
 
                [{:otsikko "Havaittu"

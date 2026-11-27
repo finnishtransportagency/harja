@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success ja sitä ei ole manuaalisesti canceloitu
         if: ${{ (job.status != 'success' || needs.tests.result != 'success') && needs.tests.result != 'cancelled' }}
         with:
@@ -99,7 +99,7 @@ jobs:
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Send cancel message to Slack
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         if: ${{ needs.tests.result == 'cancelled' }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -170,7 +170,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -202,6 +202,9 @@ jobs:
   build-and-cache-test-image:
     name: "Build and cache test Docker image"
     runs-on: ubuntu-latest
+    # Build-stepin timeout 10 min katkaisee jumiin jääneen apt-get:n.
+    # Tämä job-tason timeout kattaa myös tarballin uploadin.
+    timeout-minutes: 20
     needs: build-harja
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -232,8 +235,14 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # Mitätöi build cachen itse asennetuille paketeille viikottain
+      - name: Laske cache-bust-week
+        id: cache-bust
+        run: echo "week=$(date +%G-%V)" >> "$GITHUB_OUTPUT"
+
       - name: Build and tag Harja app test image
         id: build-test-image
+        timeout-minutes: 10 # Katkaisee jumiin jääneen apt-get:n nopeasti
         uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
         env:
           IMAGE_TAG: ${{ github.sha }}
@@ -244,6 +253,8 @@ jobs:
           file: ${{ env.DOCKERFILE_PATH }}
           platforms: ${{ env.BUILD_PLATFORMS }}
           tags: harja_buildtest:${{ env.IMAGE_TAG }}
+          # Viikoittainen cache-bust pakottaa päivittämään apt-paketit ja AWS CLI:n (ks. Dockerfile).
+          build-args: CACHE_BUST_WEEK=${{ steps.cache-bust.outputs.week }}
           labels: |
             "commit=${{ github.sha }}"
             org.opencontainers.image.title=harja_buildtest
@@ -287,6 +298,7 @@ jobs:
   scan-docker-image:
     name: "Scan Docker image (Trivy)"
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     needs: build-and-cache-test-image
 
     # README: https://docs.github.com/en/actions/security-guides/automatic-token-authentication#permissions-for-the-github_token
@@ -366,7 +378,7 @@ jobs:
           path: .
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # 4.39.3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # 4.39.4
         with:
           sarif_file: 'trivy-results.sarif'
 

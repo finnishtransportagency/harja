@@ -540,11 +540,13 @@
         thv-arvonvahennykset-yht -3400
         tavoitehinna-muutokset-yhteensa (+ kirjallisesti-sovitut-muutokset toteumiin-perustuvat-muutokset
                                           thv-arvonvahennykset-yht)
+        tavoitehinta-vahvistettu? true
         tavhin-pysyva-muutospaatos (first
                                      (filter #(= (:nimi %) "Tavoitehinnan pysyvät muutokset")
                                        (kone/valmistele-tavoitehinnan-pysyva-muutospaatos true mahdolliset-paatokset kuluva-hoitovuosi
                                          kirjallisesti-sovitut-muutokset pysyvat-muutokset muutostyo-muutokset
-                                         jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa thv-arvonvahennykset-yht)))
+                                         jjh-muutokset tehtava-ja-maaramuutos-summa rahavarausmuutos-summa
+                                         thv-arvonvahennykset-yht tavoitehinta-vahvistettu?)))
 
         _ (is (= (:kirjallisesti_sovitut_muutokset tavhin-pysyva-muutospaatos) kirjallisesti-sovitut-muutokset))
         _ (is (= (:pysyvat_muutokset tavhin-pysyva-muutospaatos) pysyvat-muutokset))

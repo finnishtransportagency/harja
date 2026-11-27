@@ -5,6 +5,17 @@
   }
 }
 .kojelauta-hallinta {
+  .kojelauta-suodattimet {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+
+    // Tasataan nappi kenttien alareunaan samalla marginaalilla kuin suodattimilla
+    .kojelauta-hae-nappi {
+      margin: @valistys-4;
+    }
+  }
+
   .tietoja {
     .tietorivi {
       display: flex;

@@ -1,5 +1,6 @@
 (ns harja.kyselyt.sanktio-konfiguraatio
   (:require [clojure.string :as str]
+            [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
             [harja.kyselyt.konversio :as konv]
             [jeesql.core :refer [defqueries]]))
 
@@ -44,12 +45,28 @@
       (str/replace "_" "-")
       keyword)))
 
+(defn- laskentatapa-avaimeksi
+  [arvo]
+  (when (string? arvo)
+    (normalisoi-maaritystapa arvo)))
+
 (defn- normalisoi-summamaaritys
-  [summamaaritys]
-  {:maaritystapa (normalisoi-maaritystapa (:maaritystapa summamaaritys))
-   :summa-euroina (normalisoi-euromaara (:summa_euroina summamaaritys))
-   :ohjeteksti (:ohjeteksti summamaaritys)
-   :jarjestys (:jarjestys summamaaritys)})
+  [{:keys [laskentaversio laskentaparametrit] :as summamaaritys}]
+  (let [maaritystapa (normalisoi-maaritystapa (:maaritystapa summamaaritys))
+        perusrivi {:maaritystapa maaritystapa
+                   :summa-euroina (normalisoi-euromaara (:summa_euroina summamaaritys))
+                   :ohjeteksti (:ohjeteksti summamaaritys)
+                   :jarjestys (:jarjestys summamaaritys)}]
+    (if (= :laskettu maaritystapa)
+      (let [laskentatapa (laskentatapa-avaimeksi (:laskentatapa summamaaritys))
+            laskettu {:laskentatapa laskentatapa
+                      :laskentaversio laskentaversio
+                      :laskentaparametrit laskentaparametrit}]
+        ;; Tietokannan virheellinen määritys on palvelimen tila, ei käyttäjän syöte.
+        (when-let [virhe (sanktion-laskenta/laskentamaarityksen-virhe laskettu (:laskentatapa summamaaritys))]
+          (throw (IllegalStateException. ^String virhe)))
+        (merge perusrivi laskettu))
+      perusrivi)))
 
 (defn- normalisoi-summamaaritykset
   [summamaaritykset]
