@@ -86,11 +86,13 @@
 (defrecord TallennaHoidonjohtopalkkionMuutospaatos [paatos])
 (defrecord TallennaHoitokaudenlopunHintapaatos [paatos])
 (defrecord TallennaHoitovuodenlopunIndeksikorjauspaatos [paatos])
+(defrecord TallennaValikatselmuksenPaatosOnnistui [vastaus viesti])
 
 (defrecord HaeKetjutetustiKumoutuvatPaatokset [paatos peru-fn])
 (defrecord HaeKumoutuvatOnnistui [vastaus])
 (defrecord SuljePaatosModal [])
 (defrecord PeruValikatselmusPaatos [paatos])
+(defrecord PeruValikatselmusPaatosOnnistui [vastaus])
 (defrecord PeruValikatselmusPaatosEpaonnistui [vastaus])
 
 
@@ -298,7 +300,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-lupauspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös lupauksista vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -361,7 +364,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-tavoitehinnan-muutospaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös tavoitehinnan muutoksista vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -370,7 +374,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-tavoitehinnan-pysyvamuutospaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös tavoitehinnan muutoksista vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -379,7 +384,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-tavoitehinnan-alituspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös tavoitehinnan alituksesta vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -388,7 +394,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-tavoitehinnan-ylityspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös tavoitehinnan ylityksestä vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -397,7 +404,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-kattohinnan-ylityspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös kattohinnan ylityksestä vahvistettiin"]
        :epaonnistui ->TallennaKattohinnanYlitysPaatosEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -421,7 +429,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-poytakirjan-raporttipaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös pöytäkirjan raporteista vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -430,7 +439,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-hoidonjohtopalkkion-muutospaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös hoidonjohtopalkkion muutoksista vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -439,7 +449,8 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-hv-lopun-tavoite-ja-kattohintapaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös hoitokauden lopun tavoite- ja kattohinnasta vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
@@ -448,10 +459,16 @@
   (process-event [{paatos :paatos} app]
     (tuck-apurit/post! :tee-indeksikorjauspaatos
       (assoc paatos :luoja (:id @istunto/kayttaja))
-      {:onnistui ->HaeValikatselmuksenTiedotOnnistui
+      {:onnistui ->TallennaValikatselmuksenPaatosOnnistui
+       :onnistui-parametrit ["Päätös hoitovuoden lopun indeksikorjauksesta vahvistettiin"]
        :epaonnistui ->HaeValikatselmuksenTiedotEpaonnistui
        :paasta-virhe-lapi? true})
     (assoc app :tallennus-kesken? true))
+
+  TallennaValikatselmuksenPaatosOnnistui
+  (process-event [{vastaus :vastaus onnistumisviesti :viesti} app]
+    (viesti/nayta-toast! onnistumisviesti)
+    (kasittele-valikatselmuksen-vastaus app vastaus))
 
   HaeKetjutetustiKumoutuvatPaatokset
   (process-event [{paatos :paatos peru-fn :peru-fn} app]
@@ -482,13 +499,18 @@
        :paatos (assoc paatos :luoja (:id @istunto/kayttaja))
        :tehdyt-kumoutuvat-paatokset (:tehdyt-kumoutuvat-paatokset app)}
       {:paasta-virhe-lapi? true
-       :onnistui ->HaeValikatselmuksenTiedotOnnistui
+       :onnistui ->PeruValikatselmusPaatosOnnistui
        :epaonnistui ->PeruValikatselmusPaatosEpaonnistui})
     (assoc app
       :tallennus-kesken? true
       :nayta-kumoa-modal? false
       :tehdyt-kumoutuvat-paatokset nil
       :kumottava-paatos-nimi (:nimi paatos)))
+
+  PeruValikatselmusPaatosOnnistui
+  (process-event [{vastaus :vastaus} app]
+    (viesti/nayta-toast! "Peruutus onnistui")
+    (kasittele-valikatselmuksen-vastaus app vastaus))
 
   PeruValikatselmusPaatosEpaonnistui
   (process-event [{vastaus :vastaus} app]
