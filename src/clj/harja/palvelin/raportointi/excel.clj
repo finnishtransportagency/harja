@@ -523,7 +523,9 @@
           otsikko-rivi (when-not piilota-otsikot?
                          (.createRow sheet nolla))
           luodut-tyylit (atom {})
-          luo-uusi-tyyli (fn [solun-tyyli formaatti-fn sarake-fmt]
+          ;; Solun lukitus kuuluu tyyliin, joten muokattavuus on osa välimuistin avainta.
+          ;; Muuten samanmuotoiset muokattavat ja lukitut sarakkeet jakaisivat saman tyylin.
+          luo-uusi-tyyli (fn [solun-tyyli formaatti-fn tyyliavain]
                            (let [taustavari (:background solun-tyyli)
                                  tekstivari (get-in solun-tyyli [:font :color])
                                  tyyli (cond-> solun-tyyli
@@ -538,7 +540,7 @@
                              (when (and (string? tekstivari)
                                      (instance? XSSFCellStyle uusi-tyyli))
                                (.setColor (.getFont uusi-tyyli) (XSSFColor. (java.awt.Color/decode tekstivari) nil)))
-                             (swap! luodut-tyylit assoc-in [solun-tyyli sarake-fmt] uusi-tyyli)
+                             (swap! luodut-tyylit assoc-in [solun-tyyli tyyliavain] uusi-tyyli)
                              uusi-tyyli))]
       ;; Luodaan mahdollinen rivi-ennen
       (when rivi-ennen
@@ -671,9 +673,10 @@
                                             ;; tuleva ASCII 8722 merkki normaaliksi 45 miinusmerkiksi. Jos löydät syyn oudolle merkille. Voit korjata.
                                             :else
                                             naytettava-arvo)
-                          tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli (or solu-fmt sarake-fmt)])]
+                          tyyliavain [(or solu-fmt sarake-fmt) (boolean (:voi-muokata? sarake))]
+                          tyyli (if-let [tyyli (get-in @luodut-tyylit [solun-tyyli tyyliavain])]
                                   tyyli
-                                  (luo-uusi-tyyli solun-tyyli formaatti-fn (or solu-fmt sarake-fmt)))]
+                                  (luo-uusi-tyyli solun-tyyli formaatti-fn tyyliavain))]
                       (if (raportti-domain/excel-kaava? arvo-datassa)
                         (aseta-kaava! arvo-datassa workbook cell)
                         (excel/set-cell! cell (ilman-soft-hyphenia naytettava-arvo)))

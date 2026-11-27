@@ -3,6 +3,8 @@
    [harja.tiedot.navigaatio :as nav]
    [harja.tiedot.urakka :as u]
    [harja.tyokalut.tuck :as tuck-apurit]
+   [harja.ui.modal :as modal]
+   [harja.ui.napit :as napit]
    [harja.ui.viesti :as viesti]
    [tuck.core :as tuck])
   (:require-macros [cljs.core.async.macros :refer [go]]
@@ -32,6 +34,21 @@
 (defrecord TallennaPaikkausKustannukset [tiedot])
 (defrecord TallennaPaikkausKustannuksetOnnistui [vastaus app])
 (defrecord TallennaPaikkausKustannuksetEpaonnistui [vastaus])
+
+(defrecord ExcelTuontiOnnistui [vastaus])
+(defrecord ExcelTuontiEpaonnistui [vastaus])
+
+(defn- excel-tuonnin-virheet-modal [virheet]
+  (modal/nayta!
+    {:otsikko "Kustannusten tuonti epäonnistui"
+     :otsikko-tyyli :virhe
+     :footer [napit/sulje #(modal/piilota!)]}
+    [:div
+     [:p "Tiedostosta ei tallennettu mitään. Korjaa seuraavat virheet ja tuo tiedosto uudelleen:"]
+     [:ul {:data-cy "tiemerkinta-excel-virheet"}
+      (for [[i virhe] (map-indexed vector virheet)]
+        ^{:key i}
+        [:li virhe])]]))
 
 
 (defn- hakeminen-epaonnistui-toast [_vastaus]
@@ -142,4 +159,17 @@
   (process-event [{vastaus :vastaus} app]
     (js/console.warn "TallennaPaikkausKustannuksetEpaonnistui" vastaus)
     (viesti/nayta-toast! "Kustannusten tallennuksessa tapahtui virhe" :varoitus)
+    app)
+
+  ExcelTuontiOnnistui
+  (process-event [_ app]
+    ((tuck/current-send-function) (->HaePaallystysKustannukset))
+    (viesti/nayta-toast! "Kustannukset päivitetty." :onnistui)
+    app)
+
+  ExcelTuontiEpaonnistui
+  (process-event [{vastaus :vastaus} app]
+    (if-let [virheet (seq (get-in vastaus [:response "virheet"]))]
+      (excel-tuonnin-virheet-modal virheet)
+      (viesti/nayta-toast! "Kustannusten tuonti epäonnistui." :varoitus))
     app))

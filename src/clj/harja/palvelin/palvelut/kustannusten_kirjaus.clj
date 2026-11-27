@@ -2,17 +2,22 @@
   "Palvelut kustannusten kirjauksille ja hauille"
   (:require
    [taoensso.timbre :as log]
+   [cheshire.core :as cheshire]
    [clojure.java.jdbc :as jdbc]
    [com.stuartsierra.component :as component]
+   [dk.ative.docjure.spreadsheet :as xls]
+   [ring.middleware.multipart-params :refer [wrap-multipart-params]]
 
    [harja.pvm :as pvm]
    [harja.domain.oikeudet :as oikeudet]
    [harja.kyselyt.konversio :as konv]
    [harja.kyselyt.kustannusten-kirjaus :as q]
+   [harja.palvelin.komponentit.excel-vienti :as excel-vienti]
    [harja.palvelin.komponentit.http-palvelin :refer [julkaise-palvelu poista-palvelut]]
    [harja.palvelin.palvelut.laadunseuranta :as laadunseuranta]
    [harja.palvelin.palvelut.yllapito-toteumat :as yllapito-toteumat]
-   [harja.palvelin.palvelut.yllapitokohteet.tiemerkinta-apurit :as apurit]))
+   [harja.palvelin.palvelut.yllapitokohteet.tiemerkinta-apurit :as apurit]
+   [harja.palvelin.palvelut.yllapitokohteet.tiemerkinta-kustannukset-excel :as tm-excel]))
 
 (defn hae-tiemerkinta-kustannuskirjaukset
   [db user urakka]
@@ -164,9 +169,43 @@
         yhteenveto (conj yhteenveto (apurit/laske-yhteensa yhteenveto))]
     yhteenveto))
 
+(defn- json-vastaus [status body]
+  {:status status
+   :headers {"Content-Type" "application/json; charset=UTF-8"}
+   :body (cheshire/encode body)})
+
+(defn tuo-tiemerkintakustannukset-excelista
+  "Ring-käsittelijä päällystyskohteiden tiemerkintäkustannusten Excel-tuonnille."
+  [db req]
+  (let [params (:params req)
+        urakka-id (Integer/parseInt (get params "urakka-id"))
+        vuosi (Integer/parseInt (get params "vuosi"))
+        kayttaja (:kayttaja req)
+        _ (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-tiemerkinta-kustannukset kayttaja urakka-id)
+        workbook (try
+                   (xls/load-workbook-from-file (:path (bean (get-in params ["file" :tempfile]))))
+                   (catch Exception e
+                     (log/warn e "Tiemerkintäkustannusten Excel-tiedoston lukeminen epäonnistui")
+                     nil))
+        {:keys [virheet tallennettu]} (if workbook
+                                        (tm-excel/tuo-tiemerkintakustannukset-excelista
+                                          db kayttaja workbook urakka-id vuosi)
+                                        {:virheet ["Tiedosto ei ole kelvollinen Excel-tiedosto (.xlsx)."]})]
+    (if (seq virheet)
+      (json-vastaus 400 {:virheet virheet})
+      (json-vastaus 200 {:tallennettu tallennettu}))))
+
 (defrecord TiemerkinnanKustannusKirjaukset []
   component/Lifecycle
   (start [this]
+    (julkaise-palvelu (:http-palvelin this) :tuo-tiemerkintakustannukset-excelista
+      (wrap-multipart-params (fn [req] (tuo-tiemerkintakustannukset-excelista (:db this) req)))
+      {:ring-kasittelija? true})
+
+    (when-let [excel (:excel-vienti this)]
+      (excel-vienti/rekisteroi-excel-kasittelija! excel :tiemerkinta-paallystyskustannukset-excel
+        (partial #'tm-excel/vie-tiemerkintakustannukset-exceliin (:db this))))
+
     (julkaise-palvelu (:http-palvelin this)
       :hae-tiemerkinta-kustannuskirjaus
       (fn [kayttaja urakka]
@@ -215,5 +254,8 @@
       :hae-tiemerkinta-paikkausten-kustannukset
       :tallenna-tiemerkinta-yllapitokohteiden-kustannukset
       :tallenna-tiemerkinta-paikkauskohteiden-kustannukset
-      :hae-tiemerkinta-yhteenveto)
+      :hae-tiemerkinta-yhteenveto
+      :tuo-tiemerkintakustannukset-excelista)
+    (when-let [excel (:excel-vienti this)]
+      (excel-vienti/poista-excel-kasittelija! excel :tiemerkinta-paallystyskustannukset-excel))
     this))

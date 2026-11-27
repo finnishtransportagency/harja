@@ -525,7 +525,7 @@
                            [:http-palvelin :db])
       :tiemerkinnan-kustannuskirjaukset (component/using
                                           (tiemerkinnan-kustannus-kirjaukset/->TiemerkinnanKustannusKirjaukset)
-                                          [:http-palvelin :db])
+                                          [:http-palvelin :db :excel-vienti])
       :lampotilat (component/using
                     (lampotilat/->Lampotilat
                       (:lampotilat-url (:ilmatieteenlaitos asetukset))
