@@ -162,8 +162,13 @@
         (ui/ruudukko {:vali :vapaa} [:article]))))
 
 (deftest luokka-lisataan-juurielementille
-  (is (= "ui-pino oma" (:class (attribuutit (ui/pino {:luokka "oma"})))))
+  (is (= "ui-pino ui-pino-vali-keski oma" (:class (attribuutit (ui/pino {:luokka "oma"})))))
   (is (= "ui-toimintoryhma" (:class (attribuutit (ui/toimintoryhma {}))))))
+
+(deftest pino-valitsee-valin-nimetyn-tokenin-mukaan
+  (is (= "ui-pino ui-pino-vali-pieni" (:class (attribuutit (ui/pino {:vali :pieni})))))
+  (is (thrown? #?(:clj AssertionError :cljs js/Error)
+        (ui/pino {:vali :vapaa}))))
 
 (deftest tietolista-renderoi-semanttiset-rivit-ja-sailyttaa-hiccup-arvon
   (let [hiccup (ui/tietolista {:data-cy "urakan-tiedot"

@@ -327,7 +327,11 @@
      [:p "Pino asettaa lapset allekkain. Välit omistaa rakenne."]
      [ui/pino {:data-cy (str ankkuri "-pino")}
       [:div {:data-cy (str ankkuri "-lapsi-a")} "Ensimmäinen lapsi"]
-      [:div {:data-cy (str ankkuri "-lapsi-b")} "Toinen lapsi"]]]))
+      [:div {:data-cy (str ankkuri "-lapsi-b")} "Toinen lapsi"]]
+     [ui/pino {:data-cy (str ankkuri "-pieni")
+               :vali :pieni}
+      [:div "Pieni väli"]
+      [:div "Pieni väli"]]]))
 
 (defn- vaaka [komponentti]
   (let [ankkuri (kehys/ankkuri komponentti)]
@@ -374,9 +378,9 @@
      [ui/osio {:id (str ankkuri "-osio")
                :otsikko "Urakan yhteenveto"
                :otsikkotaso 3
-               :vali :pieni}
-      [:p "Osio ei rakenna korttipintaa tai aseta ulkomarginaaleja."]
-      [:p "Osion sisältö kuuluu käyttöpaikalle."]]
+               :vali :suuri}
+      [:div {:data-cy (str ankkuri "-lapsi-a")} "Osio ei rakenna korttipintaa tai aseta ulkomarginaaleja."]
+      [:div {:data-cy (str ankkuri "-lapsi-b")} "Osion lasten väli noudattaa osion :vali-tokenia."]]
      [ui/osio {:id (str ankkuri "-tyhja")
                :otsikko "Tyhjä osio"
                :otsikkotaso 3}]]))

@@ -464,7 +464,8 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
     :funktio "harja.ui.perus/pino"
-    :asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+    :asetukset {:vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :vaaka
     :nimi "Vaaka"
@@ -519,7 +520,7 @@
     :asetukset {:id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa osion id ja saavutettavuusyhteyden perusta."}
                 :otsikko {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Osion otsikko."}
                 :otsikkotaso {:tyyppi :numero :pakollinen? false :oletus 2 :kuvaus "Otsikkoelementin taso 1–6."}
-                :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Otsikon ja sisällön väli: :pieni, :keski tai :suuri."}
+                :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Otsikon ja sisällön sekä sisällön lasten väli: :pieni, :keski tai :suuri."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste, oletuksena id."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :ruudukko

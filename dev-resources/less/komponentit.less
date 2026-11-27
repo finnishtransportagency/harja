@@ -1,5 +1,9 @@
 // Harjan shared-komponentit (harja.ui.perus).
-// Komponentit omistavat vain sisäiset välinsä. Ulkoreunat kuuluvat vanhemmalle (.ui-pino).
+//
+// VÄLISÄÄNTÖ: komponentin juurielementti ei aseta ulkomarginaalia (vaakakeskitys auto sallittu).
+// Lasten välin omistaa vanhempi `gap`illa ja tokenilla (@ui-vali-*). Säiliön sisältö-wrapper
+// (.ui-osio-sisalto, .ui-kortti-sisalto) on flex-column + gap. Älä korjaa kiinni olevia lapsia
+// marginaalilla vaan vanhemman gapilla. Valvonta: test/clj/harja/ui/perus/valit_test.clj.
 
 @ui-vali-pieni: @valistys-8;
 @ui-vali-keski: @valistys-16;
@@ -12,6 +16,18 @@
   display: flex;
   flex-direction: column;
   gap: @ui-vali-keski;
+}
+
+.ui-pino-vali-pieni {
+  gap: @ui-vali-pieni;
+}
+
+.ui-pino-vali-keski {
+  gap: @ui-vali-keski;
+}
+
+.ui-pino-vali-suuri {
+  gap: @ui-vali-suuri;
 }
 
 .ui-vaaka {
@@ -104,6 +120,13 @@
   flex-direction: column;
 }
 
+// Sisältö-wrapper omistaa lasten välin, joten sama token ohjaa otsikon ja sisällön lasten väliä.
+.ui-osio-sisalto {
+  display: flex;
+  flex-direction: column;
+  gap: @ui-vali-keski;
+}
+
 .ui-osio-vali-pieni {
   gap: @ui-vali-pieni;
 }
@@ -113,6 +136,18 @@
 }
 
 .ui-osio-vali-suuri {
+  gap: @ui-vali-suuri;
+}
+
+.ui-osio-vali-pieni > .ui-osio-sisalto {
+  gap: @ui-vali-pieni;
+}
+
+.ui-osio-vali-keski > .ui-osio-sisalto {
+  gap: @ui-vali-keski;
+}
+
+.ui-osio-vali-suuri > .ui-osio-sisalto {
   gap: @ui-vali-suuri;
 }
 
@@ -203,6 +238,12 @@
   padding: @ui-vali-keski;
 }
 
+.ui-kortti-sisalto {
+  display: flex;
+  flex-direction: column;
+  gap: @ui-vali-keski;
+}
+
 .ui-kortti-alatunniste {
   border-top: 1px solid @gray220;
 }
@@ -215,6 +256,10 @@
   .ui-kortti-sisalto,
   .ui-kortti-alatunniste {
     padding: @ui-vali-pieni;
+  }
+
+  .ui-kortti-sisalto {
+    gap: @ui-vali-pieni;
   }
 }
 

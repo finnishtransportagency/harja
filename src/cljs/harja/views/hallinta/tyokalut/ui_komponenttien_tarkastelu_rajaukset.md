@@ -23,7 +23,7 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 | Esikatselut ryhmittäin | `tyokalut/ui_komponenttien_tarkastelu/{alasvedot,toiminnot,lomakkeet,gridit,palautteet,portatut,simulaattori}.cljs` |
 | Esikatselujen rekisteröinti | `tyokalut/ui_komponenttien_tarkastelu/rekisterointi.cljs` |
 | Esimerkkisivut (EDN, simulaattorin valinta, ks. alla) | `src/cljc/harja/ui/perus/esimerkkisivut/*.edn`, lataus `src/cljc/harja/ui/perus/esimerkkisivut.cljc` |
-| Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/perus_test.cljc`, `test/cljc/harja/ui/perus/rekisteri_test.cljc`, `test/clj/harja/ui/perus/esikatselu_test.clj`, `test/clj/harja/ui/perus/bootstrap_luokat_test.clj` |
+| Sopimus- ja rekisteritestit (`lein test`) | `test/cljc/harja/ui/perus_test.cljc`, `test/cljc/harja/ui/perus/rekisteri_test.cljc`, `test/clj/harja/ui/perus/esikatselu_test.clj`, `test/clj/harja/ui/perus/bootstrap_luokat_test.clj`, `test/clj/harja/ui/perus/valit_test.clj` |
 | Tyylit | `dev-resources/less/komponentit.less`, `dev-resources/less/pages/ui_komponenttien_tarkastelu.less` |
 
 Uuden komponentin lisääminen:
@@ -55,7 +55,7 @@ Esimerkit ladataan käännösaikaisella makrolla, joten EDN-muutos ei laukaise a
 - Komponentti johtaa `label for`, `<id>-ohje`, `<id>-virhe` sekä `aria-describedby`, `aria-invalid` ja `aria-required`.
 - `:data-cy` on oletuksena `:id`. `:luokka` viedään juurielementille.
 - Pudotusvalikon valinta välitetään `:valitse-fn`:lle täsmälleen samassa muodossa kuin vaihtoehto annettiin.
-- Komponentit eivät aseta ulkomarginaaleja. Välit kuuluvat käyttöpaikalle tai `pino`/`toimintoryhma`-rakenteelle.
+- **Välisääntö:** komponentit eivät aseta ulkomarginaaleja. Lasten välin omistaa aina vanhempi `gap`-ominaisuudella ja nimetyllä tokenilla (`:pieni`, `:keski`, `:suuri`): `pino`, `vaaka`, `ruudukko`, `osio` ja `kortti` sekä niiden sisältö-wrapperit (`.ui-osio-sisalto`, `.ui-kortti-sisalto`). Jos lapset ovat kiinni toisissaan, korjaa vanhemman gap. Älä lisää lapselle marginaalia, spacer-CSS:ää, `* + *`-valitsinta tai `:margin`-asetusta API:in. Sivun ylä- ja alareunan tila on vanhemman paddingia. Valinnaisen sisällön ympärille ei tehdä tyhjää wrapperia. `harja.ui.perus.valit-test` valvoo sääntöä (juurielementeillä ei ulkomarginaalia, säiliöiden sisältö-wrapperit omistavat gapin). Legacy-komponenttien omia marginaaleja ei korjata ennen porttausvaihetta.
 - Layout-komponentit käyttävät nimettyjä Väylä-tokeneita (`:pieni`, `:keski`, `:suuri`) eivätkä vapaata CSS:ää. `vaaka` on vaakasuuntainen `flex`, `sailio` rajaa sivusisällön leveyden ja sisäreunan (valinnaisesti `:keskita? true` keskittää sen vaakasuunnassa), `ruudukko` on responsiivinen 1–4-palstainen CSS-grid ja `osio` on semanttinen otsikollinen alue.
 - `kortti` kokoaa otsakkeen, sisällön ja alatunnisteen ilman ulkomarginaalia. `tietolista` on sen semanttinen `<dl>`-pohjainen otsikko-arvo-sisältö; uuteen UI:hin käytetään niitä vanhojen `panel`- ja `tietoja`-komponenttien sijaan.
 - `sailio` vastaa yleisen UI-frameworkin `Container`ia. Nimeä `sivu` ei käytetä, koska `:sivu` on simulaattorin komponenttipuun tekninen juurivanhempi.

@@ -9,7 +9,9 @@
     ohjeen ja virheen id:t. Id:tä ei generoida renderöinnissä.
   - `:data-cy` on valinnainen. Oletuksena käytetään `:id`:tä.
   - `:luokka` lisää käyttöpaikan luokan juurielementille.
-  - Ulkoreunat (marginaalit) kuuluvat vanhemmalle, esim. `pino`-komponentille.
+  - Välisääntö: komponentti ei aseta ulkomarginaaleja. Lasten välin omistaa vanhempi `gap`illa ja
+    tokenilla (`:pieni`, `:keski`, `:suuri`), myös säiliön sisältö-wrapper (`osio`, `kortti`).
+    Kiinni olevat lapset korjataan vanhemman gapilla, ei marginaalilla.
 
   Komponenttien tarkastelusivu ja rekisteri: harja.views.hallinta.tyokalut.ui-komponenttien-tarkastelu-nakyma"
   (:require [clojure.string :as str]))
@@ -48,14 +50,18 @@
    (when pakollinen?
      [:span.ui-pakollinen {:aria-hidden true} " *"])])
 
+(def ^:private layout-valit #{:pieni :keski :suuri})
+
 (defn pino
-  "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
-  [{:keys [data-cy luokka]} & lapset]
-  (into [:div {:class (luokat "ui-pino" luokka)
+  "Pystysuuntainen asettelu, joka omistaa lasten väliset välit.
+
+  Väli on nimetty tokeni `:pieni`, `:keski` tai `:suuri`."
+  [{:keys [data-cy luokka vali]
+    :or {vali :keski}} & lapset]
+  {:pre [(layout-valit vali)]}
+  (into [:div {:class (luokat "ui-pino" (str "ui-pino-vali-" (name vali)) luokka)
                :data-cy data-cy}]
     lapset))
-
-(def ^:private layout-valit #{:pieni :keski :suuri})
 (def ^:private tietolista-otsikkoleveydet #{:pieni :keski :suuri})
 (def ^:private kortti-koot #{:oletus :pieni})
 (def ^:private vaaka-tasaukset #{:alku :keskelle :loppu :valiin})
