@@ -135,11 +135,13 @@
                                            (str/replace #"[\s\u00A0€]" "")
                                            (str/replace "," ".")))
                                  (catch NumberFormatException _ nil)))
-        ;; Pyöristetään ennen rajatarkistusta, jotta pyöristys ei voi ylittää sarakkeen kokoa.
+        ;; Negatiivisuus tarkistetaan alkuperäisestä arvosta, jotta esim. -0,001 ei pyöristy hyväksytyksi nollaksi.
+        negatiivinen? (some-> ^BigDecimal summa neg?)
+        ;; Pyöristetään ennen kokorajan tarkistusta, jotta pyöristys ei voi ylittää sarakkeen kokoa.
         summa (some-> ^BigDecimal summa (.setScale 2 java.math.RoundingMode/HALF_UP))]
     (cond
       (nil? summa) [nil "ei ole numero"]
-      (neg? summa) [nil "ei saa olla negatiivinen"]
+      negatiivinen? [nil "ei saa olla negatiivinen"]
       (>= summa suurin-sallittu-summa) [nil "on liian suuri"]
       :else [summa nil])))
 

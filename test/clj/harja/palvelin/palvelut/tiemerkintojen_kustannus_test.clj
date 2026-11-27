@@ -585,6 +585,10 @@
               (:virheet (tuo (tuonti-workbook [(tuontirivi kohde-id "99999999,995" 0.0 0.0 0.0)]))))
           "Raja tarkistetaan pyöristetystä arvosta"))
 
+      (testing "Pyöristyksessä nollaksi muuttuva negatiivinen summa hylätään"
+        (is (= ["Rivi 2: Linjamerkinnät (€) ei saa olla negatiivinen"]
+              (:virheet (tuo (tuonti-workbook [(tuontirivi kohde-id "-0,001" 0.0 0.0 0.0)]))))))
+
       (testing "Toisen vuoden kohde hylätään"
         (is (seq (:virheet (tm-excel/tuo-tiemerkintakustannukset-excelista db +kayttaja-jvh+
                              (tuonti-workbook [(tuontirivi kohde-id 1.0 1.0 1.0 1.0)])
