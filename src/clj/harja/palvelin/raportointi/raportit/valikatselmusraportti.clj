@@ -90,13 +90,7 @@
                                     (fmt/pyorista-desimaaliin hoitovuoden-lopun-tavoitehinta 2))
                                   (not= 0 tavoitehinnan-alitus)))
         hoidonjohtopalkkion-paatos (ota-paatos paatokset :hoidonjohtopalkkion-muutos)
-        hoidonjohtopalkkion-muutos (or (arvopaatoksesta hoidonjohtopalkkion-paatos :hoidonjohtopalkkio_muutos) 0)
-        hoidonjohtopalkkion-muutos (if
-                                     (and
-                                       (:id hoidonjohtopalkkion-paatos)
-                                       (neg? hoidonjohtopalkkion-muutos))
-                                     (* -1 hoidonjohtopalkkion-muutos)
-                                     hoidonjohtopalkkion-muutos)]
+        hoidonjohtopalkkion-muutos (or (arvopaatoksesta hoidonjohtopalkkion-paatos :hoidonjohtopalkkio_muutos) 0)]
 
     {:tavoitehinta (cond-> [["Hoitovuoden alun indeksikorjattu tavoitehinta" (euro hoitovuoden-alun-tavoitehinta)]]
                      ;; Vanhemilla urakoilla ei ole muutostenhallinta käytössä ja heille näytetään vähän erilaiset tiedot

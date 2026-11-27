@@ -107,17 +107,6 @@
      ;; Jos hoidonjohtopalkkio on positiivinen, niin se on urakoitsijan saatavia.
      ;; Jos hoitovuoden lopun tavoitehinta ilman indeksitarkastuksia on enemmmän kuin 5% suurempi kuin tarjouksen tavoitehinta
      ;; niin hoidonjohtopalkkiota muutetaan. Jos se ei ole muuttunut yli 5%, niin muutos on nolla ja silloin näytetään nollaa.
-     (if (:id hoidonjohtopalkkiopaatos)
-       (if (< hoidonjohtopalkkion-muutos 0)
-         [:div.flex-row.summa-rivi
-          [:span "Hoidonjohtopalkkion muutos"]
-          ;; Kaikki yhteenvedon luvut näytetään positiivisena
-          [:span (fmt/euro-opt false (* -1 hoidonjohtopalkkion-muutos))]]
-
-         [:div.flex-row.summa-rivi
-          [:span "Hoidonjohtopalkkion muutos"]
-          [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
-
-       [:div.flex-row.summa-rivi
-        [:span "Hoidonjohtopalkkion muutos"]
-        [:span (fmt/euro-opt false 0)]])]))
+     [:div.flex-row.summa-rivi
+      [:span "Hoidonjohtopalkkion muutos"]
+      [:span (fmt/euro-opt false (or hoidonjohtopalkkion-muutos 0))]]]))
