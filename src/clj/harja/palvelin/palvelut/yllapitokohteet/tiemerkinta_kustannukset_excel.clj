@@ -116,7 +116,12 @@
 (defn- lue-kohde-id [arvo]
   (cond
     (and (number? arvo) (== arvo (Math/floor (double arvo)))) (long arvo)
-    (and (string? arvo) (re-matches #"\d+" arvo)) (Long/parseLong arvo)
+    (and (string? arvo) (re-matches #"\d+" arvo))
+    (try
+      (Long/parseLong arvo)
+      (catch NumberFormatException _
+        ;; Liian suuri Long-arvoksi, tulkitaan virheelliseksi tunnisteeksi
+        nil))
     :else nil))
 
 (defn- lue-summa
