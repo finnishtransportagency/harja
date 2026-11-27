@@ -104,10 +104,14 @@
     (is (= 10 (:pisteet-max ryhma-2)) "ryhmä 2 maksimipisteet")
     (is (= 10 (:pisteet-ennuste ryhma-2)) "ryhmä 2 piste-ennuste")
 
+    ;; Ryhmä 3:n lupaus 5 (Kunnossapitoilmoitukset) ei lisää pisteitä ennusteeseen
+    ;; koska päättävän kuukauden (9) pisteitä ei ole annettu. Monivalinta-tyyppisessä
+    ;; lupauksessa pisteiden keskiarvo lasketaan tietokannassa määriteltyjen
+    ;; päättävien kuukausien perusteella, ei viimeisen kirjauksen perusteella kuten kyselyissä.
     (is (= 10 (:pisteet ryhma-3)) "ryhmä 3 pisteet")
     (is (= 10 (:kyselypisteet ryhma-3)) "ryhmä 3 kyselypisteet")
     (is (= 20 (:pisteet-max ryhma-3)) "ryhmä 3 maksimipisteet")
-    (is (= 20 (:pisteet-ennuste ryhma-3)) "ryhmä 3 piste-ennuste")
+    (is (= 10 (:pisteet-ennuste ryhma-3)) "ryhmä 3 piste-ennuste")
 
     (is (= 15 (:pisteet ryhma-4)) "ryhmä 4 pisteet")
     (is (= 0 (:kyselypisteet ryhma-4)) "ryhmä 4 kyselypisteet")
@@ -122,7 +126,7 @@
     (is (= 100 (->> ryhmat (map :pisteet-max) (reduce +))))
     (is (= 100 (get-in vastaus [:yhteenveto :pisteet :maksimi]))
       "koko hoitovuoden piste-maksimi")
-    (is (= 100 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
+    (is (= 90 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
       "koko hoitovuoden piste-ennuste")
 
     (is (= vastaus (hae-urakan-lupaustiedot
@@ -256,14 +260,18 @@
                                         #inst "2022-09-30T20:59:59.000-00:00"]})
         ryhmat (:lupausryhmat vastaus)
         ryhma-1 (etsi-ryhma ryhmat 1)
+        ryhma-3 (etsi-ryhma ryhmat 3)
         lupaus-2 (etsi-lupaus vastaus 2)
-        lupaus-3 (etsi-lupaus vastaus 3)]
+        lupaus-3 (etsi-lupaus vastaus 3)
+        lupaus-5 (etsi-lupaus vastaus 5)]
     (is paivitys-tulos)
     (is (= 30 (:pisteet-max ryhma-1)) "ryhmä 1 maksimipisteet")
     (is (= 0 (:pisteet-ennuste lupaus-2)) "lupauksen 2 piste-ennuste")
     (is (= 14 (:pisteet-ennuste lupaus-3)) "lupauksen 3 piste-ennuste")
+    (is (= 0 (:pisteet-ennuste lupaus-5)) "lupauksen 5 piste-ennuste (monivalinnan päättävää kuukautta ei ole kirjattu)")
     (is (= 22 (:pisteet-ennuste ryhma-1)) "ryhmä 1 piste-ennuste")
-    (is (= 92 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
+    (is (= 10 (:pisteet-ennuste ryhma-3)) "ryhmä 3 piste-ennuste")
+    (is (= 82 (get-in vastaus [:yhteenveto :pisteet :ennuste]))
       "koko hoitovuoden piste-ennuste")))
 
 (deftest piste-toteuma

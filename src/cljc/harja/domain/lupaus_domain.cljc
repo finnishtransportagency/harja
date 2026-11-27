@@ -74,84 +74,23 @@
                   [vuosi kuukausi]))
        last))
 
-(defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
-  (cond (paatos-hylatty? vastaukset joustovara-kkta)
-        0
+(defn vastausten-keskiarvo [vastaukset kuukaudet]
+  "Funktio laskee lupauksen vaikuttavien kuukausien pisteiden keskiarvon ja pyöristää sen kokonaisluvuksi.
+  Pyöristys tehdään aina alaspäin, koska toteutumattomasta lupauksesta ei saa saada pisteitä.
+  Jos pisteiden summa on nil, keskiarvo on nolla.
 
-        (paatos-hyvaksytty? vastaukset joustovara-kkta paatos-kk)
-        pisteet
-
-        :else
-        nil))
-
-(defn monivalinta->toteuma [{:keys [vastaukset]}]
-  (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
-    (:pisteet paatos)))
-
-(defn kysely->toteuma [lupaus]
-  (monivalinta->toteuma lupaus))
-
-(defn yksittainen->ennuste [{:keys [vastaukset joustovara-kkta pisteet]}]
-  (if (hylatty? vastaukset joustovara-kkta)
-    0
-    pisteet))
-
-(defn kysely->ennuste [{:keys [vastaukset kyselypisteet]}]
-  (or (:pisteet (viimeisin-vastaus vastaukset))
-      kyselypisteet))
-
-(defn monivalinta->ennuste [{:keys [vastaukset kyselypisteet]}]
-  (or (:pisteet (viimeisin-vastaus vastaukset))
-      kyselypisteet))
-
-(defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
-  (case lupaustyyppi
-    "yksittainen" (yksittainen->ennuste lupaus)
-    "kysely" (kysely->ennuste lupaus)
-    "monivalinta" (monivalinta->ennuste lupaus)
-    "kustannusennuste" (kustannusennuste-domain/kustannusennuste->ennuste lupaus)))
-
-(defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
-  (case lupaustyyppi
-    "yksittainen" (yksittainen->toteuma lupaus)
-    "kysely" (monivalinta->toteuma lupaus)
-    "monivalinta" (monivalinta->toteuma lupaus)
-    "kustannusennuste" (kustannusennuste-domain/kustannusennuste->toteuma lupaus)))
-
-(defn lupaus->maksimipisteet
-  "Palauttaa lupauksen maksimipisteet lupaustyypistä riippumatta.
-   Backend palauttaa :kyselypisteet arvoksi vähintään 0 jos muuta arvoa ei ole."
-  [{:keys [lupaustyyppi pisteet kyselypisteet]}]
-  (case lupaustyyppi
-    "yksittainen" pisteet
-    "kustannusennuste" pisteet
-    ; kysely ja monivalinta käyttävät kyselypisteitä, defaulttaa 0:aan
-    (or kyselypisteet 0)))
-
-(defn lupaus->pistenakyma
-  "Palauttaa lupauksen pistenäytön merkkijonona UI:ta varten.
-   Yksittäinen: näyttää vain pisteet
-   Kustannusennuste ja muut: näyttää 'Pisteet 0 - X'"
-  [{:keys [lupaustyyppi pisteet kyselypisteet] :as lupaus}]
-  (case lupaustyyppi
-    "yksittainen" (str pisteet)
-    "kustannusennuste" (str "Pisteet 0 - " pisteet)
-    ; kysely ja monivalinta
-    (str "Pisteet 0 - " (or kyselypisteet 0))))
-
-(defn lupaus->ennuste-tai-toteuma [lupaus]
-  (or (when-let [toteuma (lupaus->toteuma lupaus)]
-        {:pisteet-toteuma toteuma
-         ;; Jos päättävät kuukaudet on täytetty, niin ennuste == toteuma.
-         ;; Liitetään sama luku ennuste-avaimen alle, niin on helpompi laskea ryhmäkohtainen ennuste,
-         ;; jos ryhmässä on sekaisin ennustetta ja toteumaa.
-         :pisteet-ennuste toteuma})
-      (when-let [ennuste (lupaus->ennuste lupaus)]
-        {:pisteet-ennuste ennuste})))
-
-(defn liita-ennuste-tai-toteuma [lupaus]
-  (-> lupaus
-      (merge (lupaus->ennuste-tai-toteuma lupaus))))
+  Jos vastauksia löytyy, mutta päätöskuukausien lukumäärä on nolla, tarkista tietokannasta LUPAUS.paatos-kk-kentästä
+  päättävien kuukausien määritys. 0 on ok arvo, koska se tarkoittaa kaikkia kuukausia. Tyhjästä seuraa, että päätöskuukausia ei ole."
+  (let [kk-lkm (count kuukaudet)
+        jakaja (if (> kk-lkm 0) kk-lkm 1)
+        summa (->> vastaukset
+                (filter #(some #{(:kuukausi %)} kuukaudet))
+                (map :pisteet)
+                (remove nil?)
+                (reduce +))]
+    (if (and summa (> summa 0))
+      (int (Math/floor (/ summa jakaja)))
+      0)))
 
 (def hoitokuukausi->jarjestysnumero
   {10 1
@@ -194,9 +133,9 @@
      {:vuosi loppuvuosi :kuukausi 9}]))
 
 #_ (defn paatos-kk-joukko [paatos-kk]
-  (if (= 0 paatos-kk)
-    (set kaikki-kuukaudet)
-    #{paatos-kk}))
+     (if (= 0 paatos-kk)
+       (set kaikki-kuukaudet)
+       #{paatos-kk}))
 
 (defn paatos-kk-joukko
   "Päätös-kk on uudemmassa versiossa vectori, esim [0] tai [4,9] tai [12]. 0 = kaikki kuukaudet.
@@ -205,6 +144,101 @@
   (if (= 0 (first paatos-kk))
     (set kaikki-kuukaudet)
     (set paatos-kk)))
+
+(defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
+  (cond (paatos-hylatty? vastaukset joustovara-kkta)
+    0
+
+    (paatos-hyvaksytty? vastaukset joustovara-kkta paatos-kk)
+    pisteet
+
+    :else
+    nil))
+
+(defn monivalinta->toteuma [{:keys [vastaukset paatos-kk]}]
+  "Toteuman keskiarvo lasketaan päätökseen vaikuttavien kuukausien perusteella, mutta vain jos kaikki kuukaudet on täytetty.
+  Päätökseen vaikuttavat kuukaudet määritellään LUPAUS.paatos-kk-sarakkeessa. Jos kaikkia kuukausia ei ole päätetty, palautetaan nil."
+  (when (and vastaukset paatos-kk)
+    (let [vastaus-kk (->> vastaukset
+                       (filter #(some? (:pisteet %)))
+                       (map :kuukausi)
+                       set)]
+      (if (set/subset? (paatos-kk-joukko paatos-kk) vastaus-kk)
+        (vastausten-keskiarvo vastaukset (paatos-kk-joukko paatos-kk))
+        nil))))
+
+(defn kysely->toteuma [{:keys [vastaukset]}]
+  (when-let [paatos (viimeisin-vastaus (paatokset vastaukset))]
+    (:pisteet paatos)))
+
+(defn yksittainen->ennuste [{:keys [vastaukset joustovara-kkta pisteet]}]
+  (if (hylatty? vastaukset joustovara-kkta)
+    0
+    pisteet))
+
+(defn kysely->ennuste [{:keys [vastaukset kyselypisteet]}]
+  (or (:pisteet (viimeisin-vastaus vastaukset))
+      kyselypisteet))
+
+(defn monivalinta->ennuste [{:keys [vastaukset paatos-kk]}]
+  "Ennusteen keskiarvo lasketaan täytettyjen kuukausien perusteella.
+   Keskiarvo lasketaan vain päättävien kuukausien perusteella."
+  (let [paatos-kk  (paatos-kk-joukko paatos-kk)
+        vastaus-kk (->> vastaukset
+                     (filter #(some? (:pisteet %)))
+                     (map :kuukausi)
+                     set)
+        ennuste-kk (set/intersection paatos-kk vastaus-kk)]
+    (vastausten-keskiarvo vastaukset ennuste-kk)))
+
+(defn lupaus->ennuste [{:keys [lupaustyyppi] :as lupaus}]
+  (case lupaustyyppi
+    "yksittainen" (yksittainen->ennuste lupaus)
+    "kysely" (kysely->ennuste lupaus)
+    "monivalinta" (monivalinta->ennuste lupaus)
+    "kustannusennuste" (kustannusennuste-domain/kustannusennuste->ennuste lupaus)))
+
+(defn lupaus->toteuma [{:keys [lupaustyyppi] :as lupaus}]
+  (case lupaustyyppi
+    "yksittainen" (yksittainen->toteuma lupaus)
+    "kysely" (kysely->toteuma lupaus)
+    "monivalinta" (monivalinta->toteuma lupaus)
+    "kustannusennuste" (kustannusennuste-domain/kustannusennuste->toteuma lupaus)))
+
+(defn lupaus->maksimipisteet
+  "Palauttaa lupauksen maksimipisteet lupaustyypistä riippumatta.
+   Backend palauttaa :kyselypisteet arvoksi vähintään 0 jos muuta arvoa ei ole."
+  [{:keys [lupaustyyppi pisteet kyselypisteet]}]
+  (case lupaustyyppi
+    "yksittainen" pisteet
+    "kustannusennuste" pisteet
+    ; kysely ja monivalinta käyttävät kyselypisteitä, defaulttaa 0:aan
+    (or kyselypisteet 0)))
+
+(defn lupaus->pistenakyma
+  "Palauttaa lupauksen pistenäytön merkkijonona UI:ta varten.
+   Yksittäinen: näyttää vain pisteet
+   Kustannusennuste ja muut: näyttää 'Pisteet 0 - X'"
+  [{:keys [lupaustyyppi pisteet kyselypisteet] :as lupaus}]
+  (case lupaustyyppi
+    "yksittainen" (str pisteet)
+    "kustannusennuste" (str "Pisteet 0 - " pisteet)
+    ; kysely ja monivalinta
+    (str "Pisteet 0 - " (or kyselypisteet 0))))
+
+(defn lupaus->ennuste-tai-toteuma [lupaus]
+  (or (when-let [toteuma (lupaus->toteuma lupaus)]
+        {:pisteet-toteuma toteuma
+         ;; Jos päättävät kuukaudet on täytetty, niin ennuste == toteuma.
+         ;; Liitetään sama luku ennuste-avaimen alle, niin on helpompi laskea ryhmäkohtainen ennuste,
+         ;; jos ryhmässä on sekaisin ennustetta ja toteumaa.
+         :pisteet-ennuste toteuma})
+      (when-let [ennuste (lupaus->ennuste lupaus)]
+        {:pisteet-ennuste ennuste})))
+
+(defn liita-ennuste-tai-toteuma [lupaus]
+  (-> lupaus
+      (merge (lupaus->ennuste-tai-toteuma lupaus))))
 
 (defn hoitovuoden-kirjauskuukaudet [lupaus _hoitovuosi-nro hoitovuoden-erikoisarvot]
   (or (:kirjaus-kkt hoitovuoden-erikoisarvot)
@@ -265,8 +299,8 @@
   (puuttuvat-vastauskuukaudet-hoitovuodelle lupaus kuluva-kuukausi nil nil))
 
 (defn maarita-kuluva-kuukausi-hoitokaudelle
-  "Määrittää mikä kuluva-kuukausi parametri pitää antaa 
-   odottaa-kannanottoa-kkt-hoitovuodelle funktiolle hoitokauden 
+  "Määrittää mikä kuluva-kuukausi parametri pitää antaa
+   odottaa-kannanottoa-kkt-hoitovuodelle funktiolle hoitokauden
    aikatilan perusteella."
   [nykyhetki valittu-hoitokausi]
   (let [[hk-alkupvm hk-loppupvm] valittu-hoitokausi]
@@ -364,7 +398,7 @@
         kk->kustannusennuste (when kustannusennusteet
                                (into {}
                                      (map (fn [ke] [(pvm/kuukausi (:maarapaiva ke)) ke]))
-                                     kustannusennusteet)) 
+                                     kustannusennusteet))
         kaytettavat-kirjaus-kkt (set (hoitovuoden-kirjauskuukaudet lupaus hoitovuosi-nro hoitovuoden-erikoisarvot))
         kaytettava-paatos-kk (hoitovuoden-paatos-kk lupaus hoitovuosi-nro hoitovuoden-erikoisarvot)
         puuttuvat-kkt (odottaa-kannanottoa-kkt-hoitokaudelle lupaus nykyhetki valittu-hoitokausi hoitovuosi-nro hoitovuoden-erikoisarvot)
@@ -383,10 +417,10 @@
       (let [vastaus (kk->vastaus kuukausi)
             kustannusennuste (when kk->kustannusennuste
                                (kk->kustannusennuste kuukausi))
-            maarapaiva-tieto (when kaytettavat-maarapaiva-tiedot 
+            maarapaiva-tieto (when kaytettavat-maarapaiva-tiedot
                                (get kaytettavat-maarapaiva-tiedot kuukausi))
             syotetty-ajoissa? (when (and kustannusennuste maarapaiva-tieto)
-                                (pvm/ennen? (:syotetty_pvm kustannusennuste) 
+                                (pvm/ennen? (:syotetty_pvm kustannusennuste)
                                   (:maarapaiva-pvm maarapaiva-tieto)))]
         (merge
           {:vuosi vuosi
@@ -499,10 +533,10 @@
   Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet
   Sanktiot lasketaan kaavalla:
   0,0033 x (lupauspistemäärä - toteumapistemäärä) x tavoitehinta
-  
+
   HUOM: Tämä funktio käyttää kiinteitä kertoimia ja on jätetty 2019/2020-urakoiden vanhan polun yhteensopivuuden vuoksi.
   Uusi yhteinen laskenta on funktiossa laske-lupauspaatos-bonus-tai-sanktio.
-  
+
   Palauttaa:
   - {:bonus <positiivinen>} kun bonus
   - {:sanktio <negatiivinen>} kun legacy-polku tarvitsee sanktion indeksikorjaukseen
@@ -520,20 +554,20 @@
 
 (defn laske-lupauspaatos-bonus-tai-sanktio
   "Yhteinen lupausbonus/sanktio-laskenta, joka käyttää välikatselmuksen logiikkaa.
-  
+
   Bonuksia tulee kun toteutuneet pisteet ylittää lupauspisteet:
     bonus = (bonusprosentti / 100) × tavoitehinta × (toteutuneet - luvatut)
-  
+
   Sanktiota tulee kun toteutuneet pisteet alittaa lupauspisteet:
     sanktio = (sanktioprosentti / 100) × tavoitehinta × (luvatut - toteutuneet)
-  
+
   Parametrit:
   - toteutuneet-pisteet: Toteutuneet lupauksen pisteet
   - luvatut-pisteet: Luvatut lupauksen pisteet
   - tavoitehinta: Urakan tavoitehinta (tarjouksen tavoitehinta)
   - sanktioprosentti: Sanktioprosentti urakan parametreista (esim. 0.33 tai 0.18)
   - bonusprosentti: Bonusprosentti urakan parametreista (esim. 0.13)
-  
+
   Palauttaa:
   - {:lupausbonus <positiivinen luku>} kun toteutuneet > luvatut
   - {:lupaussanktio <positiivinen luku>} kun toteutuneet < luvatut
@@ -551,11 +585,11 @@
         ;; Toteutuneet pisteet ylittää luvatut -> bonus
         (< erotus 0)
         {:lupausbonus (* (/ bonusprosentti 100) tavoitehinta (Math/abs ^long erotus))}
-        
+
         ;; Toteutuneet pisteet alittaa luvatut -> sanktio (positiivinen)
         (> erotus 0)
         {:lupaussanktio (* (/ sanktioprosentti 100) tavoitehinta erotus)}
-        
+
         ;; Pisteet täsmäävät
         :else
         {:tavoite-taytetty true}))))
@@ -567,7 +601,7 @@
 
 (defn kayttaja-saa-vastata?
   "Saako käyttäjä vastata annettuun kuukauteen.
-  
+
   Excel (roolit.xlsx) määrittää kaikki oikeudet - katso dokumentaatio excelistä tai oikeudet.cljc"
   [kayttaja lupaus-kuukausi lupaustyyppi urakka-id]
   (and (vastauskuukausi? lupaus-kuukausi)
@@ -583,17 +617,17 @@
                                    oikeudet/urakat-lupaukset
                                    urakka-id
                                    kayttaja)
-          
+
           ;; Muut lupaukset: Excel määrittää kuka saa tehdä päätöksiä (W,päätös)
           (oikeudet/on-muu-oikeus? "päätös"
                                    oikeudet/urakat-lupaukset
                                    urakka-id
                                    kayttaja))
-        
+
         ;; Kirjauskuukaudet: perustason kirjoitusoikeus riittää (Excel: W)
         (:kirjauskuukausi? lupaus-kuukausi)
         (oikeudet/voi-kirjoittaa? oikeudet/urakat-lupaukset urakka-id kayttaja)
-        
+
         ;; Ei kirjaus- eikä päättävä kuukausi
         :else false))))
 
@@ -631,12 +665,12 @@
 
 (defn paatos->bonus-tai-sanktio
   "Muuntaa tietokannasta haetun päätöksen API-muotoon.
-  
+
   Tietokanta sisältää:
   - :lupausbonus (positiivinen) ja :tyyppi 'bonus'
   - :lupaussanktio (positiivinen) ja :tyyppi 'sanktio'
   - :tyyppi 'taytetty' kun tavoite on täytetty
-  
+
   API-muoto:
   - {:bonus <positiivinen>}
   - {:sanktio <positiivinen>}
