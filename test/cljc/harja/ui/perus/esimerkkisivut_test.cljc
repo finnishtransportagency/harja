@@ -25,6 +25,16 @@
   (is (= :listaussivu (:id (esimerkkisivut/hae :listaussivu))))
   (is (nil? (esimerkkisivut/hae :ei-ole))))
 
+(deftest esimerkkisivut-ryhmitellaan-metadataan
+  (let [ryhmat (esimerkkisivut/ryhmittele)]
+    (is (= [:perusesimerkit :pilottisivut] (mapv :id ryhmat)))
+    (is (= (set (map :id esimerkkisivut/esimerkkisivut))
+           (set (map :id (mapcat :komponentit ryhmat)))))
+    (doseq [{:keys [id komponentit]} ryhmat]
+      (is (every? #(= (= id :pilottisivut) (boolean (:pilottisivu %)))
+            komponentit)
+          (str id " on ryhmitelty pilottimetadatan perusteella")))))
+
 (deftest esimerkkisivut-eivat-kayta-poistettua-valintaryhmaa
   (doseq [{:keys [id puu]} esimerkkisivut/esimerkkisivut]
     (testing (str id)

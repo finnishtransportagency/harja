@@ -2,6 +2,7 @@
   (:require [clojure.set]
             [clojure.string :as str]
             [clojure.test :refer [deftest is testing]]
+            [harja.ui.primitiivit.viesti :as viesti-primitiivi]
             [harja.ui.perus.rekisteri :as rekisteri]))
 
 (deftest rekisteri-on-ehja
@@ -71,8 +72,15 @@
 (deftest nappi-kuvaa-asetuksensa
   (let [nappi (rekisteri/hae :nappi)]
     (is (contains? (:asetukset nappi) :data-cy))
+    (is (not (contains? (:asetukset nappi) :variantti))
+        ":variantti on simulaattorin asetus, ei napin public API")
+    (is (contains? (:simulaattori-asetukset nappi) :variantti))
     (is (= "harja.ui.napit/nappi" (:funktio nappi)))
     (is (str/starts-with? (rekisteri/api-teksti nappi) "harja.ui.napit/nappi: "))))
+
+(deftest viestin-variantit-vastaavat-toteutusta
+  (is (= (set (keys viesti-primitiivi/flash-viestin-variantit))
+         (:variantit (rekisteri/hae :viesti)))))
 
 (deftest virheet-tunnistaa-suosituksen-puutteet
   (let [ok (first rekisteri/komponentit)
@@ -131,6 +139,7 @@
 (deftest nimeamispoikkeus-sallii-vain-kielletyn-asetuksen
   (let [disabled? {:tyyppi :boolean :pakollinen? false :oletus nil :kuvaus "Pois käytöstä."}
         livi (-> (rekisteri/hae :livi-pudotusvalikko)
+                 (assoc :suositus :uuteen-ui)
                  (assoc-in [:asetukset :disabled?] disabled?)
                  (assoc :nimeamispoikkeukset #{:disabled?}))
         virheet (fn [komponentti]
@@ -158,8 +167,9 @@
       (is (seq (virheet (assoc viesti :yhteiset-variantit [:info])))))))
 
 (deftest pudotusvalikon-suositus-on-yksiselitteinen
-  (testing "livi on uuden UI:n ainoa suositeltu yksivalinta"
-    (is (= :uuteen-ui (:suositus (rekisteri/hae :livi-pudotusvalikko))))
+  (testing "keskeneräistä liviä ei suositella ennen saavutettavuusviipaletta"
+    (is (= :ei-suositusta (:suositus (rekisteri/hae :livi-pudotusvalikko))))
+    (is (= :aktiivinen (rekisteri/legacy-paatos (rekisteri/hae :livi-pudotusvalikko))))
     (is (nil? (rekisteri/hae :valintaryhma)))
     (is (= #{"perus/valintaryhma" "kentat/tee-kentta :valinta"}
            (set (:korvaa (rekisteri/hae :livi-pudotusvalikko))))))

@@ -15,3 +15,19 @@
         (if tabs-taso
           (str tabs-taso "-" cy-title)
           cy-title))))
+
+(defn tabin-id
+  "Muodostaa data-cy-ankkurista vakaan HTML-id:n."
+  [title classes]
+  (str "harja-tab-" (str/replace (tabin-data-cy title classes) #"[^A-Za-z0-9_-]" "-")))
+
+(defn seuraava-tabin-indeksi
+  "Palauttaa nuoli-, Home- tai End-näppäimen kohdeindeksin."
+  [indeksi maara nappain]
+  (when (pos? maara)
+    (case nappain
+      "ArrowRight" (mod (inc indeksi) maara)
+      "ArrowLeft" (mod (dec indeksi) maara)
+      "Home" 0
+      "End" (dec maara)
+      nil)))

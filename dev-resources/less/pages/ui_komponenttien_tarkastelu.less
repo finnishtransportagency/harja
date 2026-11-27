@@ -125,8 +125,16 @@
 
 .ui-simulaattori-tyopoyta {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr);
   gap: 1rem;
+}
+
+.ui-simulaattori-tyokalurivi {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .ui-simulaattori-paneeli {
@@ -138,9 +146,11 @@
 }
 
 .ui-simulaattori-lahde {
-  margin-top: 1.5rem;
-  padding-top: 1.25rem;
-  border-top: 1px solid @gray220;
+  min-width: 0;
+  padding: 1.25rem;
+  background: @white-default;
+  border: 1px solid @gray220;
+  border-radius: 0.25rem;
 }
 
 .ui-simulaattori-paneelin-otsake {
@@ -276,8 +286,28 @@
   }
 }
 
+.ui-tarkastelu-simulaattori {
+  .ui-tarkastelu-tyopoyta {
+    grid-template-columns: 14rem minmax(0, 1fr);
+  }
+}
+
+.ui-tarkastelu-koko-levea {
+  .ui-tarkastelu-tyopoyta {
+    display: block;
+  }
+
+  .ui-tarkastelu-navigaatio {
+    display: none;
+  }
+}
+
 @media (max-width: 60rem) {
   .ui-tarkastelu-tyopoyta {
+    grid-template-columns: 12rem minmax(0, 1fr);
+  }
+
+  .ui-tarkastelu-simulaattori .ui-tarkastelu-tyopoyta {
     grid-template-columns: 12rem minmax(0, 1fr);
   }
 
@@ -293,6 +323,10 @@
 
   .ui-tarkastelu-tyopoyta {
     display: block;
+  }
+
+  .ui-simulaattori-tyokalurivi {
+    align-items: stretch;
   }
 
   .ui-tarkastelu-navigaatio {

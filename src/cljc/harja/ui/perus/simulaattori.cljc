@@ -48,16 +48,42 @@
     (symbol? x) "symboli"
     (tagattu? x) "tagattu literaali"))
 
+(def ^:private asetustyyppitarkistukset
+  {:merkkijono string?
+   :numero number?
+   :boolean boolean?
+   :keyword keyword?
+   :map map?
+   :vektori vector?})
+
+(defn- asetusarvon-virhe [nimi avain arvo asetustieto]
+  (let [{:keys [tyyppi arvot]} asetustieto
+        tarkista (get asetustyyppitarkistukset tyyppi)]
+    (cond
+      (kielletty-tyyppi arvo) nil
+
+      (and tarkista (not (tarkista arvo)))
+      (str nimi ": asetus " avain " on väärän tyyppinen; odotettiin " tyyppi)
+
+      (and (set? arvot)
+           (or (nil? tarkista) (tarkista arvo))
+           (not (contains? arvot arvo)))
+      (str nimi ": asetus " avain " sisältää tuntemattoman arvon " (pr-str arvo)))))
+
 (defn- asetusvirheet [id kuvaus asetukset]
-  (let [nimi (name id)]
+  (let [nimi (name id)
+        asetustiedot (rekisteri/simulaattori-asetukset kuvaus)]
     (for [[avain arvo] asetukset
           virhe (concat
                   (cond
                     (contains? suojatut-asetukset avain)
                     [(str nimi ": suojattu asetus " avain " ei ole sallittu")]
 
-                    (not (contains? (rekisteri/simulaattori-asetukset kuvaus) avain))
+                    (not (contains? asetustiedot avain))
                     [(str nimi ": tuntematon asetus " avain)])
+                  (when-let [asetustieto (get asetustiedot avain)]
+                    (when-let [virhe (asetusarvon-virhe nimi avain arvo asetustieto)]
+                      [virhe]))
                   (for [osa (tree-seq coll? seq arvo)
                         :let [tyyppi (kielletty-tyyppi osa)]
                         :when tyyppi]
@@ -90,8 +116,7 @@
     (get asetukset :rivit)))
 
 (defn- korttivirheet [id asetukset]
-  (let [koko (:koko asetukset :oletus)
-        otsikkotaso (:otsikkotaso asetukset 3)
+  (let [otsikkotaso (:otsikkotaso asetukset 3)
         data-cy (:data-cy asetukset)]
     (concat
       (when (and (map? asetukset)
@@ -99,29 +124,13 @@
                  (or (not (string? data-cy))
                      (str/blank? data-cy)))
         [(str (name id) ": :data-cy pitää olla ei-tyhjä merkkijono")])
-      (when (not (contains? #{:oletus :pieni} koko))
-        [(str (name id) ": tuntematon koko " (pr-str koko))])
       (when (or (not (integer? otsikkotaso))
                 (not (<= 1 otsikkotaso 6)))
         [(str (name id) ": :otsikkotaso pitää olla kokonaisluku 1–6")]))))
 
 (defn- tietolistavirheet [id asetukset]
-  (let [rivit (:rivit asetukset)
-        otsikkoleveys (:otsikkoleveys asetukset :keski)]
-    (concat
-      (when (and (contains? asetukset :rivit)
-                 (not (vector? rivit)))
-        [(str (name id) ": :rivit pitää olla vektori")])
-      (when (vector? rivit)
-        (tietolistarivivirheet id asetukset))
-      (when (not (contains? #{:pieni :keski :suuri} otsikkoleveys))
-        [(str (name id) ": tuntematon otsikkoleveys " (pr-str otsikkoleveys))])
-      (when (and (contains? asetukset :tiivis?)
-                 (not (boolean? (:tiivis? asetukset))))
-        [(str (name id) ": :tiivis? pitää olla boolean")])
-      (when (and (contains? asetukset :viivat?)
-                 (not (boolean? (:viivat? asetukset))))
-        [(str (name id) ": :viivat? pitää olla boolean")]))))
+  (when (vector? (:rivit asetukset))
+    (tietolistarivivirheet id asetukset)))
 
 (defn- slottivirheet [id kuvaus lapset]
   (let [lapsimaara (count lapset)]

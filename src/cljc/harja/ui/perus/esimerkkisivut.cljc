@@ -14,7 +14,8 @@
   simulaattorin säännöillä ja varmistaa renderöijien esimerkkikattavuuden
   (`lein test harja.ui.perus.esikatselu-test harja.ui.perus.esimerkkisivut-test`).
 
-  `asettelut.edn` näyttää `sailio`-, `osio`-, `vaaka`- ja `ruudukko`-komponenttien yhteiskäytön."
+  `asettelut.edn` näyttää layout-komponenttien yhteiskäytön, ja
+  `renderoijien_kattavuus.edn` kattaa myös legacy-renderöijät kuten `panel`."
   #?(:clj (:require [clojure.edn :as edn]
                     [clojure.java.io :as io]
                     [clojure.string :as str])
@@ -39,6 +40,19 @@
 (def esimerkkisivut
   "Esimerkkisivut tiedostonimen mukaisessa järjestyksessä."
   (lataa-esimerkkisivut))
+
+(defn ryhmittele
+  "Ryhmittelee esimerkkisivut simulaattorin navigaatiota varten.
+  Tuotantosivun `:pilottisivu`-metadata erottaa pilottisivut perusesimerkeistä."
+  []
+  (let [{pilottisivut true
+         perusesimerkit false} (group-by (comp boolean :pilottisivu) esimerkkisivut)]
+    [{:id :perusesimerkit
+      :nimi "Perusesimerkit"
+      :komponentit (vec perusesimerkit)}
+     {:id :pilottisivut
+      :nimi "Pilottisivut"
+      :komponentit (vec pilottisivut)}]))
 
 (defn hae
   "Esimerkkisivu id:llä tai nil."

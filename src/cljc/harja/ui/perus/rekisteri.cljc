@@ -44,7 +44,8 @@
     :ryhma :alasvedot
     :luonne :shared-komponentti
     :rooli :syote
-    :suositus :uuteen-ui
+    :suositus :ei-suositusta
+    :legacy-paatos :aktiivinen
     :korvaa ["perus/valintaryhma" "kentat/tee-kentta :valinta"]
     :slotit #{:arvo :vaihtoehdot}
     :tilat #{:normaali :tyhja :virhe :estetty}
@@ -140,8 +141,8 @@
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Napin CSS-luokat, välilyönnillä erotettuna."}
                 :ikoni {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Nappiin piirrettävä ikonikomponentti."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
-                :variantti {:tyyppi :keyword :pakollinen? false :oletus :ensisijainen :kuvaus "Napin tyyli simulaattorissa: :ensisijainen, :toissijainen, :reunaton, :myonteinen, :kielteinen tai :varoitus. Renderöijä muuntaa arvon nappi-luokaksi."}
                 :tallennus-kaynnissa? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Jos true, piirtää latausindikaattorin."}}
+    :simulaattori-asetukset {:variantti {:tyyppi :keyword :arvot #{:ensisijainen :toissijainen :reunaton :myonteinen :kielteinen :varoitus} :pakollinen? false :oletus :ensisijainen :kuvaus "Napin tyyli vain simulaattorissa. Renderöijä muuntaa arvon nappi-luokaksi."}}
     :kuvaus "Yhteinen toimintopainike. Renderöi oman button-elementin, mutta käyttöpaikan :luokka voi tuoda Bootstrapin btn-luokat."}
    {:id :murupolku
     :nimi "Murupolku"
@@ -464,7 +465,7 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
     :funktio "harja.ui.perus/pino"
-    :asetukset {:vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
+    :asetukset {:vali {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :vaaka
@@ -480,10 +481,10 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Vaakasuuntainen flex-asettelu, joka omistaa lasten välit, rivityksen ja tasaukset."
     :funktio "harja.ui.perus/vaaka"
-    :asetukset {:vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
+    :asetukset {:vali {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
                 :rivita? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Rivittää lapset seuraavalle riville tilan loppuessa."}
-                :tasaus {:tyyppi :keyword :pakollinen? false :oletus :alku :kuvaus "Päätasaus: :alku, :keskelle, :loppu tai :valiin."}
-                :ristitasaus {:tyyppi :keyword :pakollinen? false :oletus :keskelle :kuvaus "Ristitasaus: :alku, :keskelle, :loppu tai :venyta."}
+                :tasaus {:tyyppi :keyword :arvot #{:alku :keskelle :loppu :valiin} :pakollinen? false :oletus :alku :kuvaus "Päätasaus: :alku, :keskelle, :loppu tai :valiin."}
+                :ristitasaus {:tyyppi :keyword :arvot #{:alku :keskelle :loppu :venyta} :pakollinen? false :oletus :keskelle :kuvaus "Ristitasaus: :alku, :keskelle, :loppu tai :venyta."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :sailio
@@ -499,8 +500,8 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Rajoittaa sivusisällön leveyden ja vaakasuuntaisen sisäreunan nimettyjen tokenien avulla. Oletuksena ei aseta ulkomarginaaleja. Valinnainen keskitys vaakasuunnassa."
     :funktio "harja.ui.perus/sailio"
-    :asetukset {:leveys {:tyyppi :keyword :pakollinen? false :oletus :suuri :kuvaus "Sisällön enimmäisleveys: :pieni, :keski tai :suuri."}
-                :sisareuna {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Vaakasuuntainen sisäreuna: :pieni, :keski tai :suuri."}
+    :asetukset {:leveys {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :suuri :kuvaus "Sisällön enimmäisleveys: :pieni, :keski tai :suuri."}
+                :sisareuna {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :keski :kuvaus "Vaakasuuntainen sisäreuna: :pieni, :keski tai :suuri."}
                 :keskita? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Keskittää säiliön vaakasuunnassa, kun sisältö on rajattua leveyttä kapeampi."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
@@ -520,9 +521,10 @@
     :asetukset {:id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa osion id ja saavutettavuusyhteyden perusta."}
                 :otsikko {:tyyppi :hiccup :pakollinen? true :oletus nil :kuvaus "Osion otsikko."}
                 :otsikkotaso {:tyyppi :numero :pakollinen? false :oletus 2 :kuvaus "Otsikkoelementin taso 1–6."}
-                :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Otsikon ja sisällön sekä sisällön lasten väli: :pieni, :keski tai :suuri."}
+                :vali {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :keski :kuvaus "Otsikon ja sisällön sekä sisällön lasten väli: :pieni, :keski tai :suuri."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste, oletuksena id."}
-                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}
+    :simulaattori-asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa osion id, aria-labelledby-yhteys ja E2E-ankkuri simulaattorissa."}}}
    {:id :ruudukko
     :nimi "Ruudukko"
     :ryhma :lomakkeet
@@ -536,8 +538,8 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Rajattu 1–4-palstainen grid, joka käyttää yhtä palstaa kapealla näytöllä."
     :funktio "harja.ui.perus/ruudukko"
-    :asetukset {:palstoja {:tyyppi :numero :pakollinen? false :oletus 2 :kuvaus "Palstojen määrä 1–4."}
-                :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
+    :asetukset {:palstoja {:tyyppi :numero :arvot #{1 2 3 4} :pakollinen? false :oletus 2 :kuvaus "Palstojen määrä 1–4."}
+                :vali {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
    {:id :kortti
@@ -559,7 +561,7 @@
                 :kuvaus {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Otsikon alla näytettävä kuvaus."}
                 :toiminto {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Otsakkeen oikean reunan toiminto."}
                 :alatunniste {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Kortin alatunniste, esimerkiksi toiminnot."}
-                :koko {:tyyppi :keyword :pakollinen? false :oletus :oletus :kuvaus "Kortin tiheys: :oletus tai :pieni."}
+                :koko {:tyyppi :keyword :arvot #{:oletus :pieni} :pakollinen? false :oletus :oletus :kuvaus "Kortin tiheys: :oletus tai :pieni."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste, oletuksena id."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille."}}
     :simulaattori-asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa kortin id ja E2E-ankkuri simulaattorissa."}}}
@@ -606,7 +608,7 @@
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Lataus-, onnistumis- tai virhetila käyttöpaikan antamalla viestillä. Säiliö näkyy aina, tyhjä viesti ei näy."
     :funktio "harja.ui.perus/tilaviesti"
-    :asetukset {:tila {:tyyppi :keyword :pakollinen? true :oletus nil :kuvaus "Tila: :lataus, :onnistui tai :virhe."}
+    :asetukset {:tila {:tyyppi :keyword :arvot #{:lataus :onnistui :virhe} :pakollinen? true :oletus nil :kuvaus "Tila: :lataus, :onnistui tai :virhe."}
                 :viesti {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Näytettävä viesti."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
@@ -742,6 +744,7 @@
     :asetukset {:active {:tyyppi :muu :pakollinen? false :oletus nil :kuvaus "Aktiivisen välilehden avain."}
                 :style {:tyyppi :map :pakollinen? false :oletus nil :kuvaus "Tyylit."}
                 :classes {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "CSS-luokat."}
+                :elementin-id {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Vakaa tablistin, tabien ja tabpanelin id-suhteiden etuliite."}
                 :on-change {:tyyppi :funktio :pakollinen? false :oletus nil :kuvaus "Kutsutaan välilehden vaihtuessa."}
                 :valilehdet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Otsikot, avaimet ja sisällöt vuorotellen."}}
     :simulaattori-asetukset {:valilehdet {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Välilehdet datana: [{:otsikko ... :teksti ...}]."}}}
@@ -771,7 +774,7 @@
     :korvaa ["yleiset/toast-viesti" "viesti/nayta-toast!"]
     :slotit #{:sisalto}
     :tilat #{:normaali}
-    :variantit #{:onnistuminen :info :varoitus :vaara}
+    :variantit #{:success :info :warning :danger}
     :yhteiset-variantit {:onnistui :success :info :info :varoitus :warning :virhe :danger}
     :sallitut-vanhemmat #{:sivu}
     :bootstrap-tila :ei-riippuvuutta
@@ -1007,7 +1010,7 @@
     :kuvaus "Responsiivinen semanttinen otsikko-arvo-lista. Pitkät arvot rivityvät, nil-arvot jätetään pois ja otsikkoleveys valitaan nimetyllä tokenilla."
     :funktio "harja.ui.perus/tietolista"
     :asetukset {:rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Rivit karttoina: [{:otsikko ... :arvo ...}]. Arvo voi olla merkkijono tai Hiccup."}
-                :otsikkoleveys {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Otsikkopalstan leveys: :pieni, :keski tai :suuri."}
+                :otsikkoleveys {:tyyppi :keyword :arvot #{:pieni :keski :suuri} :pakollinen? false :oletus :keski :kuvaus "Otsikkopalstan leveys: :pieni, :keski tai :suuri."}
                 :tiivis? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Käyttää pienempää pystysuuntaista sisäreunaa."}
                 :viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää rivien erottimet."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}

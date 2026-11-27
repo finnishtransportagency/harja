@@ -14,3 +14,15 @@
   (testing "map-otsikon :data-cy voittaa"
     (is (= "oma-ankkuri"
            (tabs/tabin-data-cy {:teksti "Suunnittelu" :data-cy "oma-ankkuri"} "tabs-taso1")))))
+
+(deftest tabin-id-on-html-yhteensopiva
+  (is (= "harja-tab-tabs-taso1-Suunnittelu"
+         (tabs/tabin-id "Suunnittelu" "tabs-taso1"))))
+
+(deftest tabin-seuraava-indeksi-kiertaa
+  (is (= 1 (tabs/seuraava-tabin-indeksi 0 3 "ArrowRight")))
+  (is (= 2 (tabs/seuraava-tabin-indeksi 0 3 "ArrowLeft")))
+  (is (= 0 (tabs/seuraava-tabin-indeksi 2 3 "ArrowRight")))
+  (is (= 0 (tabs/seuraava-tabin-indeksi 2 3 "Home")))
+  (is (= 2 (tabs/seuraava-tabin-indeksi 0 3 "End")))
+  (is (nil? (tabs/seuraava-tabin-indeksi 0 3 "Enter"))))

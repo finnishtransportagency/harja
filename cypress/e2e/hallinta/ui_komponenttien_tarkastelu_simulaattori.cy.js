@@ -1,11 +1,23 @@
 const verkkovirheet = [];
+const oamHeaderit = {
+  OAM_REMOTE_USER: 'jvh',
+  OAM_GROUPS: 'Jarjestelmavastaava',
+  OAM_ORGANIZATION: 'Liikennevirasto',
+  OAM_GIVEN_NAME: 'Järjestelmä',
+  OAM_FAMILY_NAME: 'Vastaava',
+  OAM_EMAIL: 'jvh@example.invalid',
+  OAM_USER_PHONE: '0400000000',
+};
 
-function valitseEsimerkkisivu(nimi, { sisaltaaVirheilmoituksen = false } = {}) {
-  painaJaTarkistaValinta('[data-cy=ui-simulaattori-esimerkki]', nimi, true);
+function valitseEsimerkkisivu(nimi) {
+  cy.get('[data-cy=ui-komponenttien-tarkastelu-esimerkkiluettelo]')
+    .contains('button', nimi)
+    .click();
+  cy.get('[data-cy=ui-komponenttien-tarkastelu-esimerkkiluettelo]')
+    .find('button.aktiivinen')
+    .should('contain', nimi);
   cy.get('[data-cy=ui-simulaattori-esikatselu]')
-    .should('be.visible')
-    .find('[role=alert]')
-    .should(sisaltaaVirheilmoituksen ? 'exist' : 'not.exist');
+    .should('be.visible');
 }
 
 function tarkistaAnkkurit(ankkurit) {
@@ -37,30 +49,44 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
   beforeEach(() => {
     verkkovirheet.length = 0;
     cy.intercept('**/*', (request) => {
+      if (request.url.startsWith(Cypress.config('baseUrl'))) {
+        Object.assign(request.headers, oamHeaderit);
+      }
       request.on('response', (response) => {
         if (response.statusCode >= 400) {
           verkkovirheet.push(`${response.statusCode} ${request.url}`);
         }
       });
     });
-    cy.visit('/#/hallinta/hallinta-tyokalut/ui-komponenttien-tarkastelu', {
+    cy.visit('/', {
+      headers: oamHeaderit,
       onBeforeLoad(win) {
         cy.stub(win.console, 'error').as('konsolivirhe');
       },
     });
-    cy.get('[data-cy=ui-komponenttien-tarkastelu-sivu]').should('be.visible');
+    cy.get('.ladataan-harjaa', { timeout: 120000 }).should('not.exist');
+    cy.contains('a', 'Hallinta').click();
+    cy.get('[data-cy="tabs-taso1-Tyokalut"]').click();
+    cy.get('[data-cy="tabs-taso2-UI-komponenttien tarkastelu"]').click();
+    cy.get('[data-cy=ui-komponenttien-tarkastelu-sivu]', { timeout: 120000 }).should('be.visible');
     cy.get('[data-cy=ui-komponenttien-tarkastelu-simulaattori-valinta]').click();
   });
 
   it('renderöi kaikki esimerkkisivut ja säilyttää komponenttien vuorovaikutuksen', () => {
     valitseEsimerkkisivu('Listaussivu: suodattimet ja taulukko');
+    cy.get('[data-cy=ui-simulaattori-lahde]').should('be.visible');
+    cy.get('[data-cy=ui-simulaattori-koko-levea]').click();
+    cy.get('[data-cy=ui-komponenttien-tarkastelu-esimerkkiluettelo]').should('not.be.visible');
+    cy.get('[data-cy=ui-simulaattori-lahde]').should('not.exist');
+    cy.get('[data-cy=ui-simulaattori-koko-levea]').click();
+    cy.get('[data-cy=ui-komponenttien-tarkastelu-esimerkkiluettelo]').should('be.visible');
+    cy.get('[data-cy=ui-simulaattori-lahde]').should('be.visible');
     tarkistaAnkkurit([
       'ui-simulaattori-pino',
       'ui-simulaattori-suodatinrivi',
       'ui-simulaattori-hoitokausi',
       'ui-simulaattori-livi-pudotusvalikko',
       'ui-simulaattori-nappi',
-      'ui-simulaattori-panel',
       'ui-simulaattori-perusgrid',
     ]);
     cy.get('[data-cy=ui-simulaattori-nappi]').click();
@@ -110,7 +136,7 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
     valitseEsimerkkisivu('Renderöijien kattavuus');
     tarkistaAnkkurit([
       'ui-simulaattori-lomake',
-      'ui-simulaattori-kenttaryhma',
+      'renderoijien-kattavuus-nimi',
       'ui-simulaattori-suodatin',
       'ui-simulaattori-numerokentta',
       'ui-simulaattori-sahkopostikentta',
@@ -131,8 +157,9 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
       'ui-simulaattori-muokkausgrid',
       'ui-simulaattori-tabs',
       'ui-simulaattori-dropdown-panel',
+      'ui-simulaattori-panel',
     ]);
-    cy.get('[data-cy=ui-simulaattori-kenttaryhma]').find('input').type('Harja');
+    cy.get('[data-cy=renderoijien-kattavuus-nimi]').find('input').type('Harja');
     cy.get('[data-cy=ui-simulaattori-suodatin]').find('input').type('urakka');
     cy.get('[data-cy=ui-simulaattori-numerokentta]').find('input').type('12.5');
     cy.get('[data-cy=ui-simulaattori-sahkopostikentta]').find('input').type('user-1@example.invalid');
@@ -162,7 +189,8 @@ describe('UI-komponenttien sivusimulaattorin renderöijät', () => {
     cy.get('[data-cy=ui-simulaattori-dropdown-panel]').find('h3').click();
 
     // Esimerkki näyttää tarkoituksella virhetilaviestin
-    valitseEsimerkkisivu('Tilaviestit ja toiminnot', { sisaltaaVirheilmoituksen: true });
+    valitseEsimerkkisivu('Tilaviestit ja toiminnot');
+    cy.get('[data-cy=ui-simulaattori-esikatselu]').find('[role=alert]').should('exist');
     tarkistaAnkkurit([
       'ui-simulaattori-pino',
       'ui-simulaattori-tilaviesti',

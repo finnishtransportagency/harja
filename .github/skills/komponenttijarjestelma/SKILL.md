@@ -7,6 +7,9 @@ description: Harjan komponenttijärjestelmän (harja.ui.perus, komponenttirekist
 
 Harjan uusi UI rakennetaan shared-komponenteista (`harja.ui.perus`). Tämä skill kertoo, miten järjestelmää kehitetään ja käytetään. Yksityiskohtainen sopimus on dokumentissa [ui_komponenttien_tarkastelu_rajaukset.md](../../../src/cljs/harja/views/hallinta/tyokalut/ui_komponenttien_tarkastelu_rajaukset.md). Lue se, kun muutat sopimusta, rekisteriä tai simulaattoria.
 
+Käyttöönoton alku: käytä rajausdokumentin `Aloita tästä` -taulukkoa ensin.
+Älä toista rinnakkaista käyttöönotto-ohjetta tähän tiedostoon.
+
 ## Sijainnit
 
 | Osa | Sijainti |

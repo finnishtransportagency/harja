@@ -824,14 +824,15 @@
      (:asetukset solmu))])
 
 (defn- osio-simulaattorissa [solmu _tila lapsi-fn]
-  (into [ui/osio
-         (merge {:id "ui-simulaattori-osio"
-                 :data-cy "ui-simulaattori-osio"}
-           (:asetukset solmu))]
-    (map-indexed (fn [indeksi lapsi]
-                   ^{:key indeksi}
-                   [lapsi-fn lapsi])
-      (:lapset solmu))))
+  (let [data-cy (get-in solmu [:asetukset :data-cy])]
+    (into [ui/osio
+           (merge {:id data-cy
+                   :data-cy data-cy}
+             (:asetukset solmu))]
+      (map-indexed (fn [indeksi lapsi]
+                     ^{:key indeksi}
+                     [lapsi-fn lapsi])
+        (:lapset solmu)))))
 
 (register! :pino {:esikatselu pino
                   :renderoi (asettelu-simulaattorissa :pino ui/pino)})

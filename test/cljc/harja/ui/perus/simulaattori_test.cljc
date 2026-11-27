@@ -58,6 +58,18 @@
                            :valinnat [{:arvo :hoito :nimi "Hoito"}]
                            :optiot {:data-cy "urakkatyyppi"}}))))
 
+(deftest asetusarvon-tyyppi-tarkistetaan
+  (is (= ["pino: asetus :vali on väärän tyyppinen; odotettiin :keyword"]
+         (simulaattori/virheet
+           [{:komponentti :pino
+             :asetukset {:vali "keski"}}]))))
+
+(deftest asetusarvon-sallittu-token-tarkistetaan
+  (is (= ["pino: asetus :vali sisältää tuntemattoman arvon :olemattomaksi"]
+         (simulaattori/virheet
+           [{:komponentti :pino
+             :asetukset {:vali :olemattomaksi}}]))))
+
 (deftest poistettu-valintaryhma-hylataan
   (is (= ["Tuntematon komponentti: :valintaryhma"]
          (simulaattori/virheet [{:komponentti :valintaryhma}]))))
@@ -114,6 +126,7 @@
     (is (simulaattori/kelvollinen?
           [{:komponentti :sailio
             :lapset [{:komponentti :osio
+                      :asetukset {:data-cy "layout-osio"}
                       :lapset [{:komponentti :pino
                                :lapset [{:komponentti :tietoja}]}
                               {:komponentti :ruudukko
@@ -145,6 +158,7 @@
   (testing "plain checkbox hylätään osion alla"
     (is (seq (simulaattori/virheet
                [{:komponentti :osio
+                 :asetukset {:data-cy "checkbox-osio"}
                  :lapset [{:komponentti :checkbox}]}])))))
 
 (deftest liitteet-sallitaan-lomakkeen-lapsena-ja-hylataan-osion-alla
@@ -155,6 +169,7 @@
          (simulaattori/virheet
            [{:komponentti :lomake
              :lapset [{:komponentti :osio
+                       :asetukset {:data-cy "liite-osio"}
                        :lapset [{:komponentti :liitteet}]}]}]))))
 
 (deftest sailio-sallitaan-vain-sivun-juuressa
@@ -180,10 +195,16 @@
   (is (= ["kortti: pakollinen asetus :data-cy puuttuu"]
          (simulaattori/virheet [{:komponentti :kortti}]))))
 
+(deftest osio-vaatii-vakaan-simulaattoriankkurin
+  (is (= ["osio: pakollinen asetus :data-cy puuttuu"]
+         (simulaattori/virheet
+           [{:komponentti :osio
+             :asetukset {:otsikko "Otsikko"}}]))))
+
 (deftest kortti-hylkaa-virheellisen-tokenin
   (is (= ["kortti: :data-cy pitää olla ei-tyhjä merkkijono"
-          "kortti: tuntematon koko :iso"
-          "kortti: :otsikkotaso pitää olla kokonaisluku 1–6"]
+          "kortti: :otsikkotaso pitää olla kokonaisluku 1–6"
+          "kortti: asetus :koko sisältää tuntemattoman arvon :iso"]
          (simulaattori/virheet
            [{:komponentti :kortti
              :asetukset {:data-cy " "
@@ -198,7 +219,7 @@
                                  "rikki"]}}]))))
 
 (deftest tietolista-hylkaa-skalaaririvit
-  (is (= ["tietolista: :rivit pitää olla vektori"]
+  (is (= ["tietolista: asetus :rivit on väärän tyyppinen; odotettiin :vektori"]
          (simulaattori/virheet
            [{:komponentti :tietolista
              :asetukset {:rivit "ei-vektori"}}]))))
@@ -208,9 +229,9 @@
          (simulaattori/virheet [{:komponentti :tietolista}]))))
 
 (deftest tietolista-hylkaa-virheelliset-asetelmat
-  (is (= ["tietolista: tuntematon otsikkoleveys :massive"
-          "tietolista: :tiivis? pitää olla boolean"
-          "tietolista: :viivat? pitää olla boolean"]
+  (is (= ["tietolista: asetus :otsikkoleveys sisältää tuntemattoman arvon :massive"
+          "tietolista: asetus :tiivis? on väärän tyyppinen; odotettiin :boolean"
+          "tietolista: asetus :viivat? on väärän tyyppinen; odotettiin :boolean"]
          (simulaattori/virheet
            [{:komponentti :tietolista
              :asetukset {:rivit []

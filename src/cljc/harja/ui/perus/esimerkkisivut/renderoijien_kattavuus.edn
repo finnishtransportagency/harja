@@ -70,4 +70,9 @@
                                  {:otsikko "Historia"
                                   :teksti "Historian sisältö"}]}}
        {:komponentti :dropdown-panel
-        :asetukset {:otsikko "Lisäasetukset"}}]}
+        :asetukset {:otsikko "Lisäasetukset"}}
+       {:komponentti :panel
+        :asetukset {:otsikko "Vanha panel-rakenne"}
+        :lapset [{:komponentti :info-laatikko
+                  :asetukset {:tyyppi :neutraali
+                              :ensisijainen-viesti "Paneli renderöidään turvallisena legacy-esimerkkinä."}}]}]}

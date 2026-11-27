@@ -6,7 +6,8 @@
         :lapset [{:komponentti :osio
                   :asetukset {:otsikko "Layout-komponentit"
                               :otsikkotaso 3
-                              :vali :keski}
+                              :vali :keski
+                              :data-cy "asettelut-osio"}
                   :lapset [{:komponentti :vaaka
                             :asetukset {:vali :pieni
                                         :rivita? true

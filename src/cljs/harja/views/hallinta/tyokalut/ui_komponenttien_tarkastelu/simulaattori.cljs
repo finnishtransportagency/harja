@@ -18,7 +18,7 @@
 (defn- esimerkin-teksti [id]
   (puu-tekstina (:puu (esimerkkisivut/hae id))))
 
-(defonce ^:private valittu-esimerkki (r/atom oletusesimerkki))
+(defonce valittu-esimerkki (r/atom oletusesimerkki))
 (defonce ^:private syote (r/atom (esimerkin-teksti oletusesimerkki)))
 
 (defn- lue-syote
@@ -48,32 +48,14 @@
       (when (seq (:lapset solmu))
         [puun-rakenne (:lapset solmu)])])])
 
-(defn- valitse-esimerkki! [id]
-  (reset! valittu-esimerkki id)
-  (when id
-    (reset! syote (esimerkin-teksti id))))
-
-(defn- esimerkkivalinta []
-  (let [valittu (esimerkkisivut/hae @valittu-esimerkki)
-        vaihtoehdot (into [nil] (map :id esimerkkisivut/esimerkkisivut))]
-    [:div.ui-simulaattori-esimerkit
-     [yleiset/pudotusvalikko
-      "Esimerkkisivu"
-      {:data-cy "ui-simulaattori-esimerkki"
-       :elementin-id "ui-simulaattori-esimerkki"
-       :valinta @valittu-esimerkki
-       :valitse-fn valitse-esimerkki!
-       :format-fn #(if %
-                     (:nimi (esimerkkisivut/hae %))
-                     "Oma syöte")
-       :vayla-tyyli? true}
-      vaihtoehdot]
-     (when-let [kuvaus (some-> valittu :kuvaus)]
-       [:p.ui-ohje kuvaus])]))
+(defn valitse-esimerkki! [id]
+  (let [esimerkki-id (when-not (= :oma-syote id) id)]
+    (reset! valittu-esimerkki esimerkki-id)
+    (when esimerkki-id
+      (reset! syote (esimerkin-teksti esimerkki-id)))))
 
 (defn- syotekentta []
   [:div.ui-simulaattori-syotteet
-   [esimerkkivalinta]
    [:label {:for "ui-simulaattori-syote"} "EDN-lähde"]
    [:textarea.ui-simulaattori-syote
     {:id "ui-simulaattori-syote"
@@ -159,21 +141,35 @@
                        :viesti "Esikatselua ei renderöidä, koska lähde ei ole kelvollinen."
                        :data-cy "ui-simulaattori-esikatselu-virhe"}]])))
 
-(defn sivu []
+(defn sivu [koko-levea?]
   (r/with-let [valinta (r/atom :hoito)
                tila (r/atom :normaali)
                sivutila (r/atom :normaali)]
-    (let [tila-atomi {:valinta valinta :tila tila :sivutila sivutila}]
+    (let [tila-atomi {:valinta valinta :tila tila :sivutila sivutila}
+          valittu (esimerkkisivut/hae @valittu-esimerkki)]
       [:main {:data-cy "ui-komponenttien-sivusimulaattori"}
        [:header
         [:p "Deklaratiivinen näkymä"]
         [:h2 "Sivusimulaattori"]
-        [:p "Näe yhdellä silmäyksellä, miten rekisteröity rakenne muuttuu käyttöliittymäksi."]]
+        [:p (or (:kuvaus valittu)
+                "Muokkaa omaa EDN-lähdettä ja tarkista sen validointi.")]]
        [ui/pino {:data-cy "ui-simulaattori"}
-        [sivutilavalinta sivutila]
+        [:div.ui-simulaattori-tyokalurivi
+         [sivutilavalinta sivutila]
+         [:button {:type "button"
+                   :class (str "nappi-toissijainen"
+                               (when @koko-levea? " aktiivinen"))
+                   :data-cy "ui-simulaattori-koko-levea"
+                   :aria-pressed (str @koko-levea?)
+                   :on-click #(swap! koko-levea? not)}
+          (if @koko-levea?
+            "Palaa normaalitilaan"
+            "Koko leveä tila")]]
         [:div.ui-simulaattori-tyopoyta {:data-cy "ui-simulaattori-tyopoyta"}
          [puu tila-atomi]
          [validointi]]
+        (when-not @koko-levea?
+          [lahde])
         (if (= :onnistui @tila)
           [ui/tilaviesti {:tila :onnistui
                           :viesti "Muutokset ovat päivittyneet esikatseluun."

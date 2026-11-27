@@ -9,26 +9,28 @@
     border-bottom: 1px solid @harmaa7;
   }
 
-  > li:not(.active) > a {
+  > li:not(.active):not(.harja-tabs-valittu) > a {
     background-color: @sininen4;
     text-transform: uppercase;
     color: @white-default;
     font-weight: normal;
   }
 
-  > li.active > a {
+  > li.active > a,
+  > li.harja-tabs-valittu > a {
     background-color: @harjan-taustavari;
     text-transform: uppercase;
     color: @black-default;
     font-weight: normal;
   }
 
-  > li:not(.active) > a:hover {
+  > li:not(.active):not(.harja-tabs-valittu) > a:hover {
     background-color: @sininen5;
     color: @white-default;
   }
 
-  > li.active > a:hover {
+  > li.active > a:hover,
+  > li.harja-tabs-valittu > a:hover {
     background-color: @harjan-taustavari;
   }
 
@@ -44,7 +46,7 @@
   margin-left: -10px;
   margin-right: -10px;
 
-  > li:not(.active) > a {
+  > li:not(.active):not(.harja-tabs-valittu) > a {
     font-weight: bold;
     border-left: 1px solid @sininen4;
     border-top: 1px solid @sininen4;
@@ -54,16 +56,18 @@
     color: @sininen4;
   }
 
-  > li.active > a {
+  > li.active > a,
+  > li.harja-tabs-valittu > a {
     background-color: @harjan-taustavari;
   }
 
-  > li:not(.active) > a:hover {
+  > li:not(.active):not(.harja-tabs-valittu) > a:hover {
     color: @sininen5;
     background-color: @harmaa15;
   }
 
-  > li.active > a:hover {
+  > li.active > a:hover,
+  > li.harja-tabs-valittu > a:hover {
     background-color: @harjan-taustavari;
   }
 }

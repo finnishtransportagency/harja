@@ -34,7 +34,7 @@ The following keys are supported in the configuration:
               it will be called with the new tab keyword instead of directly
               resetting the :active atom. "
 
-  [{:keys [active style classes on-change]} & alternating-title-and-component]
+  [{:keys [active style classes on-change elementin-id]} & alternating-title-and-component]
   (let [tarkista-aktiivinen-tabi (fn [active alternating-title-and-component]
                                    (let [tab-nimet (keep #(when (not (nil? (nth % 2)))
                                                             (nth % 1))
@@ -48,38 +48,65 @@ The following keys are supported in the configuration:
     (komp/luo
       (komp/kun-muuttuu (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
                           (tarkista-aktiivinen-tabi active alternating-title-and-component)))
-      (fn [{:keys [active style classes on-change]} & alternating-title-and-component]
+      (fn [{:keys [active style classes on-change elementin-id]} & alternating-title-and-component]
         (let [style-class (tabs-tyyliluokka style)
               tabs (filter #(not (nil? (nth % 2)))
                      (partition 3 alternating-title-and-component))
               [active-tab-title active-tab-keyword active-component]
               (or (first (filter #(= @active (nth % 1)) tabs))
                 (first tabs))
+              tabin-paneeli-id (or (some-> elementin-id (str "-paneeli"))
+                                   (str (tabs/tabin-id active-tab-title classes) "-paneeli"))
               vaihda-aktiivinen-tabi (fn [keyword event]
                                        (.preventDefault event)
                                        (if on-change
                                          (on-change keyword)
-                                         (reset! active keyword)))]
+                                         (reset! active keyword)))
+              kasittele-tab-nappain (fn [indeksi event]
+                                      (if-let [uusi-indeksi (tabs/seuraava-tabin-indeksi
+                                                              indeksi (count tabs) (.-key event))]
+                                        (let [tablist (.closest (.-currentTarget event) "[role=tablist]")
+                                              tabit (.querySelectorAll tablist "[role=tab]")
+                                              uusi-tabi (aget tabit uusi-indeksi)
+                                              [_ uusi-avain] (nth tabs uusi-indeksi)]
+                                          (.preventDefault event)
+                                          (.focus uusi-tabi)
+                                          (vaihda-aktiivinen-tabi uusi-avain event))
+                                        (when (or (dom/enter-nappain? event)
+                                                  (dom/valilyonti? event))
+                                          (vaihda-aktiivinen-tabi (nth (nth tabs indeksi) 1) event))))]
           (if (empty? tabs)
             [:span "Ei käyttöoikeutta."]
             [:span
              [:ul {:class (clj-str/join " " (remove nil? ["harja-tabs" style-class classes]))
                    :role "tablist"}
-              (for [[title keyword] tabs]
+              (for [[indeksi [title keyword]] (map-indexed vector tabs)
+                    :let [valittu? (= keyword active-tab-keyword)
+                          tabin-html-id (if elementin-id
+                                          (str elementin-id "-tab-" indeksi)
+                                          (tabs/tabin-id title classes))]]
                 ^{:key (str (tabin-otsikko-teksti title) "-" keyword)}
                 [:li {:class (clj-str/join " " (remove nil? ["harja-tabs-valilehti"
-                                                              (when (= keyword active-tab-keyword)
+                                                              (when valittu?
                                                                 "harja-tabs-valittu")]))}
                  [:a.harja-tabs-linkki.klikattava (merge
-                                                   {:tabIndex "0"
+                                                   {:id tabin-html-id
+                                                    :tabIndex (if valittu? "0" "-1")
                                                     :role "tab"
-                                                    :aria-selected (str (= keyword active-tab-keyword))
+                                                    :aria-selected (str valittu?)
+                                                    :aria-controls tabin-paneeli-id
                                                     :on-click #(vaihda-aktiivinen-tabi keyword %)
-                                                    :on-key-down #(when (dom/enter-nappain? %)
-                                                                    (vaihda-aktiivinen-tabi keyword %))}
+                                                    :on-key-down #(kasittele-tab-nappain indeksi %)}
                                                    {:data-cy (tabs/tabin-data-cy title classes)})
                   (tabin-otsikko-sisalto title)]])]
-             [:div.valilehti.harja-tabs-sisalto {:role "tabpanel"}
+             [:div.valilehti.harja-tabs-sisalto {:id tabin-paneeli-id
+                                                  :role "tabpanel"
+                                                  :aria-labelledby (if elementin-id
+                                                                    (str elementin-id "-tab-"
+                                                                      (first (keep-indexed
+                                                                               #(when (= (nth %2 1) active-tab-keyword) %1)
+                                                                               tabs)))
+                                                                    (tabs/tabin-id active-tab-title classes))}
               active-component]]))))))
 
 (defn navbar

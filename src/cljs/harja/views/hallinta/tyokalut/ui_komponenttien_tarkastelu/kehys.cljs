@@ -37,9 +37,11 @@
       (get-in rekisteri/legacy-paatokset [paatos teksti-avain])])))
 
 (defn kehys
-  [{:keys [otsikko kuvaus]} navigaatio sisalto sopimus]
-  [:div.ui-tarkastelu
-   {:data-cy "ui-komponenttien-tarkastelu-sivu"}
+  [{:keys [otsikko kuvaus simulaattori? koko-levea?]} navigaatio sisalto sopimus]
+  [:div {:class (str "ui-tarkastelu"
+                     (when simulaattori? " ui-tarkastelu-simulaattori")
+                     (when koko-levea? " ui-tarkastelu-koko-levea"))
+         :data-cy "ui-komponenttien-tarkastelu-sivu"}
    [:header.ui-tarkastelu-otsake
     [:p.ui-tarkastelu-ylaotsikko "Harja / UI"]
     [:h1 otsikko]
@@ -50,10 +52,12 @@
     sopimus]])
 
 (defn navigaatio
-  [{:keys [otsikko ryhmat valittu valitse-fn]}]
+  [{:keys [otsikko ryhmat valittu valitse-fn nayta-elinkaaripaatos? data-cy]
+    :or {nayta-elinkaaripaatos? true
+         data-cy "ui-komponenttien-tarkastelu-komponenttiluettelo"}}]
   [:nav.ui-tarkastelu-navigaatio
    {:aria-label otsikko
-    :data-cy "ui-komponenttien-tarkastelu-komponenttiluettelo"}
+    :data-cy data-cy}
    (for [{:keys [id nimi komponentit]} ryhmat]
      ^{:key id}
      [:section
@@ -67,7 +71,8 @@
           :data-cy (ankkuri komponentti "-valinta")
           :on-click #(valitse-fn komponentin-id)}
          [:span nimi]
-         [legacy-paatos-merkki komponentti true]])])])
+         (when nayta-elinkaaripaatos?
+           [legacy-paatos-merkki komponentti true])])])])
 
 (defn sisalto
   "Valitun komponentin otsikko ja esikatselu."

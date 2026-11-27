@@ -11,6 +11,36 @@ Rakentaa Harjan uutta UI:ta shared-komponenttien avulla niin, että:
 - uusi UI ei lisää suoraa Bootstrap-markupia eikä näkymäkohtaista yleis-CSS:ää
 - komponentin public API näkyy tarkastelusivulla ennen tuotantokäyttöpaikkaa
 
+## Aloita tästä
+
+Tämä tiedosto on uuden UI:n käyttöönoton kanoninen ohje. Rekisterin `:suositus`
+kertoo, voiko komponenttia valita uuteen näkymään: `:uuteen-ui` on sallittu
+lähtökohta, `:ei-suositusta` vaatii perustellun poikkeuksen ja `:vanha` ei ole
+uuden näkymän oletus.
+
+| Käyttötapaus | Aloita rakenteesta |
+| --- | --- |
+| Sivu | `sailio` → `osio` → `kortti`, `pino`, `vaaka` tai `ruudukko` |
+| Lomake | `lomake` → `kenttaryhma` → rekisteröity syöte → `toimintoryhma` |
+| Suodatus ja listaus | `suodatinrivi` → suodatin/syötteet → `perusgrid` |
+| Tietosisältö | `kortti` + `tietolista`; älä aloita `panel`- tai `tietoja`-komponentista |
+| Palaute | `tilaviesti` pienen prosessin tilaan; flash viestille toteutuksen mukainen `viesti`-API |
+
+Tee ensin rekisterihaku (`lein komponenttirekisteri :id <id>`) ja käytä
+olemassa olevaa esimerkkisivua lähtökohtana. Jos komponentti tai yhdistelmä
+puuttuu, lisää sen sopimus ennen käyttöpaikkaa; älä kääri puutetta
+näkymäkohtaisella CSS:llä.
+
+### v1:n takuu
+
+- v1 takaa rekisteröidyn komponenttisopimuksen, API:n, DOM-ankkurit ja
+  validointipolun näkyville uusille käyttöpaikoille.
+- v1 ei takaa kaikkien tuotantokomponenttien Bootstrapin poistamista,
+  kaikkien legacy-komponenttien porttausta tai Livin tavoiteltua
+  saavutettavuussopimusta.
+- Olemassa olevaa legacy-käyttöpaikkaa ei muuteta, ellei ticketissä ole erillistä
+  porttaus- tai migraatioviipaletta.
+
 ## Rakenne
 
 | Osa | Sijainti |
@@ -76,8 +106,10 @@ Esimerkit ladataan käännösaikaisella makrolla, joten EDN-muutos ei laukaise a
 
 ### Suositus ja vastuut
 
-- `livi-pudotusvalikko` on uuden komponenttipohjaisen UI:n suositeltu
-  yksivalinta. Bootstrap-riippuvuus ei muuta suositusta, vaan on tekninen velka.
+- `livi-pudotusvalikko` on edelleen aktiivinen tuotantokomponentti, mutta sitä
+  ei suositella uudelle käyttöpaikalle ennen tavoitetilan saavutettavuustestien
+  toteutumista. Rekisterin suositus on `:ei-suositusta` ja elinkaaripäätös
+  `:aktiivinen`.
 - Rekisteri omistaa public API:n, suosituksen, `:korvaa`-suhteen ja
   Bootstrap-tilan. Tässä tiedostossa ei toisteta rekisterin asetustaulukkoa.
 - Käyttöpaikka omistaa arvon, vaihtoehdot, domain-rajoitukset,
@@ -155,8 +187,8 @@ Myöhempi toteutusviipale muuttaa DOM- ja vuorovaikutussopimuksen näin:
 
 ### Varmennus
 
-- Rekisteritesti lukitsee sen, että livi on `:uuteen-ui`, valintaryhmä ei ole
-  uusi UI -suositus ja livin `:korvaa`-suhde sisältää valintaryhmän.
+- Rekisteritesti lukitsee sen, ettei keskeneräistä liviä merkitä
+  `:uuteen-ui`-suositukseksi ja että sen `:korvaa`-suhde pysyy tallessa.
 - Hiccup- tai rekisteritesti ei todista DOM-fokusta tai saavutettavuuskäytöstä.
 - Tavoitetilan Playwright-passi testaa triggerin, listan ja option tila- ja
   ARIA-suhteet sekä avauksen, nuolinäppäimet, Enterin, Spacen, Tabin, Escapen,
