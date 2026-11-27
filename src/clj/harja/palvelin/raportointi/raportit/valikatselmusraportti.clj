@@ -90,7 +90,13 @@
                                     (fmt/pyorista-desimaaliin hoitovuoden-lopun-tavoitehinta 2))
                                   (not= 0 tavoitehinnan-alitus)))
         hoidonjohtopalkkion-paatos (ota-paatos paatokset :hoidonjohtopalkkion-muutos)
-        hoidonjohtopalkkion-muutos (or (arvopaatoksesta hoidonjohtopalkkion-paatos :hoidonjohtopalkkio_muutos) 0)]
+        hoidonjohtopalkkion-muutos (or (arvopaatoksesta hoidonjohtopalkkion-paatos :hoidonjohtopalkkio_muutos) 0)
+        hoidonjohtopalkkion-muutos (if
+                                     (and
+                                       (:id hoidonjohtopalkkion-paatos)
+                                       (neg? hoidonjohtopalkkion-muutos))
+                                     (* -1 hoidonjohtopalkkion-muutos)
+                                     hoidonjohtopalkkion-muutos)]
 
     {:tavoitehinta (cond-> [["Hoitovuoden alun indeksikorjattu tavoitehinta" (euro hoitovuoden-alun-tavoitehinta)]]
                      ;; Vanhemilla urakoilla ei ole muutostenhallinta käytössä ja heille näytetään vähän erilaiset tiedot
@@ -140,10 +146,7 @@
                  ;; Kun
                  (not arvonvah-vaikk-tavoitehintaan?) (conj ["Arvonvähennykset" (euro sanktio-arvonvahennykset)]))
      :hoidonjohtopalkkio [["Hoidonjohtopalkkion muutos"
-                           (euro (if (and (:id hoidonjohtopalkkion-paatos)
-                                       (neg? hoidonjohtopalkkion-muutos))
-                                   (* -1 hoidonjohtopalkkion-muutos)
-                                   0))]]}))
+                           (euro hoidonjohtopalkkion-muutos)]]}))
 
 (defn suorita [db user {:keys [urakka-id alkupvm loppupvm] :as _parametrit}]
   (let [urakan-tiedot (first (urakat-q/hae-urakka db {:id urakka-id}))

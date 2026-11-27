@@ -116,7 +116,7 @@
 
          [:div.flex-row.summa-rivi
           [:span "Hoidonjohtopalkkion muutos"]
-          [:span (fmt/euro-opt false 0)]])
+          [:span (fmt/euro-opt false hoidonjohtopalkkion-muutos)]])
 
        [:div.flex-row.summa-rivi
         [:span "Hoidonjohtopalkkion muutos"]
