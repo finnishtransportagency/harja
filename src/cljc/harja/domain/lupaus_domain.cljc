@@ -92,16 +92,6 @@
       (int (Math/floor (/ summa jakaja)))
       0)))
 
-(defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
-  (cond (paatos-hylatty? vastaukset joustovara-kkta)
-        0
-
-        (paatos-hyvaksytty? vastaukset joustovara-kkta paatos-kk)
-        pisteet
-
-        :else
-        nil))
-
 (def hoitokuukausi->jarjestysnumero
   {10 1
    11 2
@@ -154,6 +144,16 @@
   (if (= 0 (first paatos-kk))
     (set kaikki-kuukaudet)
     (set paatos-kk)))
+
+(defn yksittainen->toteuma [{:keys [vastaukset joustovara-kkta pisteet paatos-kk]}]
+  (cond (paatos-hylatty? vastaukset joustovara-kkta)
+    0
+
+    (paatos-hyvaksytty? vastaukset joustovara-kkta paatos-kk)
+    pisteet
+
+    :else
+    nil))
 
 (defn monivalinta->toteuma [{:keys [vastaukset paatos-kk]}]
   "Toteuman keskiarvo lasketaan päätökseen vaikuttavien kuukausien perusteella, mutta vain jos kaikki kuukaudet on täytetty.
