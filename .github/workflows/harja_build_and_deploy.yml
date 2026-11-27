@@ -76,7 +76,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Send deploy failure message to Slack
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         # Lähetetään virheviesti, mikäli tämä tai tests-jobi ei palauta success ja sitä ei ole manuaalisesti canceloitu
         if: ${{ (job.status != 'success' || needs.tests.result != 'success') && needs.tests.result != 'cancelled' }}
         with:
@@ -99,7 +99,7 @@ jobs:
           JOB_RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
       - name: Send cancel message to Slack
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         if: ${{ needs.tests.result == 'cancelled' }}
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -170,7 +170,7 @@ jobs:
       # Docs: https://github.com/slackapi/slack-github-action
       - name: Send deploy failure message to Slack
         id: slack
-        uses: slackapi/slack-github-action@dcb1066f776dd043e64d0e8ba94ca15cc7e1875d # v4.0.0
+        uses: slackapi/slack-github-action@0bc3581177d9a0f8d555e07689384b376528e8fa # v4.1.0
         if: failure()
         with:
           webhook: ${{ secrets.SLACK_WEBHOOK_URL }}
@@ -378,7 +378,7 @@ jobs:
           path: .
 
       - name: Upload Trivy scan results to GitHub Security tab
-        uses: github/codeql-action/upload-sarif@33d7b85da1a04171e211befe2c739303b9a4c066 # 4.39.3
+        uses: github/codeql-action/upload-sarif@1bd86f2fdb4b86187fa4059f16f31a3202acc9ea # 4.39.4
         with:
           sarif_file: 'trivy-results.sarif'
 

@@ -13,10 +13,11 @@
       (component/start
         (component/system-map
           :db (tietokanta/luo-tietokanta testitietokanta)
+          :db-replica (tietokanta/luo-tietokanta testitietokanta)
           :http-palvelin (testi-http-palvelin)
           :urakkatilanne (component/using
                                 (kojelauta/->KojelautaHallinta)
-                                [:db :http-palvelin])))))
+                                [:http-palvelin :db-replica])))))
   (testit)
   (alter-var-root #'jarjestelma component/stop))
 
