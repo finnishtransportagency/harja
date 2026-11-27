@@ -152,5 +152,10 @@ FOLLOW THESE BEST PRACTICES FOR CYPRESS TEST DEVELOPMENT:
 * Use `cy.intercept` for waiting for network requests instead of arbitrary waits
 * Actively look for deprecated Cypress commands and suggest to replace them with their modern equivalents
 
+FOLLOW THESE RULES FOR THE COMPONENT SYSTEM 
+(`harja.ui.perus`, component registry, example pages, `dev-resources/less/komponentit.less`):
+* Load the `komponenttijarjestelma` skill (`.github/skills/komponenttijarjestelma/SKILL.md`) before changing or using shared components
+* Components never set outer margins. The parent owns the gap between children with named tokens (`:pieni`, `:keski`, `:suuri`)
+
 
 
