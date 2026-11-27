@@ -456,11 +456,6 @@
   padding-top: 1rem;
 }
 
-.harja-navbar {
-  background: @white-default;
-  border-bottom: 1px solid @gray220;
-}
-
 .harja-navbar-runko,
 .harja-navbar-otsake,
 .harja-navbar-sisalto,
@@ -471,14 +466,22 @@
 
 .harja-navbar-runko {
   justify-content: space-between;
-  gap: 1rem;
-  padding: 0.5rem 1rem;
+  gap: 0;
+  padding: 0 0.9375rem;
 }
 
-.harja-navbar-otsake,
+.harja-navbar-otsake {
+  align-self: flex-start;
+  gap: 0.75rem;
+}
+
 .harja-navbar-sisalto,
 .harja-navbar-lista {
-  gap: 0.75rem;
+  gap: 0;
+}
+
+.harja-navbar-lista {
+  align-items: flex-start;
 }
 
 .harja-navbar-brandi {
@@ -519,11 +522,16 @@
 
 .harja-navbar-lista-oikea {
   margin-left: auto;
+  align-self: flex-start;
+}
+
+.harja-navbar-lista-oikea > .harja-navbar-item > a {
+  padding: 0.625rem;
 }
 
 .harja-navbar-item {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
 }
 
 .harja-navbar-vaihtaja {
