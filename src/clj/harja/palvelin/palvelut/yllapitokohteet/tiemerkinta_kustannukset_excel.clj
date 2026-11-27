@@ -194,10 +194,9 @@
   (let [tiedot (assoc kustannukset
                  :id id
                  :muokkaaja (:id user)
-                 :muokattu (pvm/nyt))]
-    (if (empty? (q/hae-yllapitokustannus db {:yllapitokohde id}))
-      (q/lisaa-tiemerkinta-yllapitokohde-kustannuskirjaus! db (assoc tiedot :luoja (:id user)))
-      (q/paivita-tiemerkinta-yllapitokohde-kustannuskirjaus! db tiedot))))
+                 :muokattu (pvm/nyt)
+                 :luoja (:id user))]
+    (q/tallenna-tiemerkinta-yllapitokohde-kustannuskirjaus! db tiedot)))
 
 (defn tuo-tiemerkintakustannukset-excelista
   "Validoi ja tallentaa Excelin kustannukset. Jos yksikin rivi on virheellinen, mitään ei tallenneta.

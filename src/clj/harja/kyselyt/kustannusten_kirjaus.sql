@@ -101,34 +101,23 @@ AND pk.poistettu = false
 AND pk."tiemerkinnan-tila" = 'valmis'
 ORDER BY coalesce(pk.muokattu,  pk.luotu) DESC;
 
--- name: hae-yllapitokustannus
-SELECT
-    ypk.id
-FROM tiemerkinta_yllapitokohteen_kustannus ypk   
-WHERE ypk.yllapitokohde = :yllapitokohde;
-
---name: lisaa-tiemerkinta-yllapitokohde-kustannuskirjaus!
+--name: tallenna-tiemerkinta-yllapitokohde-kustannuskirjaus!
 INSERT INTO tiemerkinta_yllapitokohteen_kustannus (yllapitokohde, linjamerkinnat, pienmerkinnat, jyrsinnat, muut_kustannukset, muokattu, muokkaaja, luoja)
 VALUES (:id,
-       :linjamerkinnat,
-       :pienmerkinnat,
-       :jyrsinnat,
-       :muut-kustannukset,
-       :muokattu,
-       :muokkaaja,
-       :luoja)
-RETURNING id;
-
---name: paivita-tiemerkinta-yllapitokohde-kustannuskirjaus!
-UPDATE tiemerkinta_yllapitokohteen_kustannus
-SET
-    muokattu = :muokattu,
-    muokkaaja = :muokkaaja,
-    linjamerkinnat = :linjamerkinnat,
-    pienmerkinnat = :pienmerkinnat,
-    jyrsinnat = :jyrsinnat,
-    muut_kustannukset = :muut-kustannukset
-WHERE yllapitokohde = :id
+        :linjamerkinnat,
+        :pienmerkinnat,
+        :jyrsinnat,
+        :muut-kustannukset,
+        :muokattu,
+        :muokkaaja,
+        :luoja)
+ON CONFLICT (yllapitokohde) DO UPDATE
+SET muokattu          = EXCLUDED.muokattu,
+    muokkaaja         = EXCLUDED.muokkaaja,
+    linjamerkinnat    = EXCLUDED.linjamerkinnat,
+    pienmerkinnat     = EXCLUDED.pienmerkinnat,
+    jyrsinnat         = EXCLUDED.jyrsinnat,
+    muut_kustannukset = EXCLUDED.muut_kustannukset
 RETURNING id;
 
 -- name: hae-paikkauskustannus

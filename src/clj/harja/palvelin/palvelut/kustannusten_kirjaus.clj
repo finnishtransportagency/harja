@@ -81,11 +81,8 @@
                              (let [tieto-muokattu (assoc tieto
                                                     :muokkaaja (:id user)
                                                     :muokattu (pvm/nyt))]
-                               (if (empty? (q/hae-yllapitokustannus db {:yllapitokohde (:id tieto)}))
-                                 (q/lisaa-tiemerkinta-yllapitokohde-kustannuskirjaus! db
-                                   (assoc tieto-muokattu :luoja (:id user)))
-                                 (q/paivita-tiemerkinta-yllapitokohde-kustannuskirjaus! db
-                                   tieto-muokattu))))
+                               (q/tallenna-tiemerkinta-yllapitokohde-kustannuskirjaus! db
+                                 (assoc tieto-muokattu :luoja (:id user)))))
                        tiedot)]
         {:onnistui true
          :paivitetyt tulokset}))
