@@ -78,6 +78,77 @@ WHERE  (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= date_par
   AND (select count(*) from rahavaraustehtava where tehtava_id = t.id) = 0
 ORDER BY tro.id, t.jarjestys;
 
+-- name: hae-vhu-tehtavat
+-- Haetaan VHU-urakan (vesivayla-hoito) tehtävät tehtäväryhmäotsikon ja tehtäväryhmän mukaan järjesteltynä
+WITH muutokset_raakadata AS (
+    SELECT mm.id,
+           mmtm.maaramuutos,
+           mmtm.tehtava AS tehtavaid,
+           mm.voimassa_alkaen,
+           mm.syy,
+           COALESCE(v.tarjous_maara, 0) AS tarjous_maara
+      FROM mhu_muutos mm
+           JOIN mhu_muutos_tehtava_ja_maaraluettelo mmtm ON mmtm.muutos = mm.id
+           LEFT JOIN urakka_tehtavamaara_yhteenveto v
+                  ON v.tehtava = mmtm.tehtava
+                 AND v.urakka = mm.urakka
+                 AND v.hoitokauden_alkuvuosi = mmtm.hoitokauden_alkuvuosi
+     WHERE mm.urakka = :urakkaid
+       AND mmtm.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+       AND mm.poistettu IS NOT TRUE
+),
+muutokset_kumulatiiviset AS (
+    SELECT id,
+           tehtavaid,
+           maaramuutos,
+           voimassa_alkaen,
+           syy,
+           tarjous_maara + COALESCE(
+               SUM(maaramuutos) OVER (
+                   PARTITION BY tehtavaid
+                   ORDER BY voimassa_alkaen, id
+                   ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+               ),
+               0
+           ) AS edellinen_maara,
+           tarjous_maara + SUM(maaramuutos) OVER (
+               PARTITION BY tehtavaid
+               ORDER BY voimassa_alkaen, id
+               ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+           ) AS uusi_maara
+      FROM muutokset_raakadata
+)
+SELECT t.id                 AS tehtava_id,
+       t.nimi               AS nimi,
+       t.yksikko            AS suunnitteluyksikko,
+       t.jarjestys          AS jarjestys,
+       tr.id                AS tehtavaryhmaid,
+       tr.nimi              AS tehtavaryhmanimi,
+       tro.otsikko          AS tehtavaryhmaotsikko,
+       v.tarjous_maara,
+       (SELECT array_agg(row(id, edellinen_maara, maaramuutos, uusi_maara, tehtavaid, voimassa_alkaen, syy)
+                         ORDER BY voimassa_alkaen)
+          FROM muutokset_kumulatiiviset
+         WHERE muutokset_kumulatiiviset.tehtavaid = t.id) AS muutokset,
+       v.muutossumma        AS muutos_maaramuutos,
+       v.laskettu_maara     AS yhteensa
+  FROM tehtavaryhmaotsikko tro
+       JOIN tehtavaryhma tr ON tr.tehtavaryhmaotsikko_id = tro.id
+       JOIN tehtava t ON t.tehtavaryhma = tr.id
+       JOIN urakka u ON u.id = :urakkaid
+       LEFT JOIN urakka_tehtavamaara_yhteenveto v
+              ON v.urakka = u.id
+             AND v.hoitokauden_alkuvuosi = :hoitokauden-alkuvuosi
+             AND v.tehtava = t.id
+ WHERE tro.urakkatyyppi = 'vesivayla-hoito'
+   AND t."vhu-tehtava?" IS TRUE
+   AND t.poistettu IS NOT TRUE
+   AND (tr.voimassaolo_alkuvuosi IS NULL OR tr.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
+   AND (tr.voimassaolo_loppuvuosi IS NULL OR tr.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
+   AND (t.voimassaolo_alkuvuosi IS NULL OR t.voimassaolo_alkuvuosi <= DATE_PART('year', u.alkupvm)::INTEGER)
+   AND (t.voimassaolo_loppuvuosi IS NULL OR t.voimassaolo_loppuvuosi >= DATE_PART('year', u.alkupvm)::INTEGER)
+ ORDER BY tro.id, tr.jarjestys, tr.id, t.jarjestys;
+
 -- name: hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja
 SELECT GREATEST(ut.muokattu, ut.luotu) AS viimeisin_muokkaus,
        CASE WHEN k.piilota_nimi IS TRUE THEN 'Järjestelmän ylläpito'

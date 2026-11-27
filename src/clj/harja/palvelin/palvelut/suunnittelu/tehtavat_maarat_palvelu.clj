@@ -7,8 +7,31 @@
             [harja.domain.oikeudet :as oikeudet]
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tehtavat-maarat-kyselyt]
             [harja.kyselyt.tehtavamaarat :as tehtavamaarat-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.palvelin.palvelut.suunnittelu.suunnittelu-apurit :as apurit]
             [harja.palvelin.palvelut.valikatselmus.valikatselmus-lukitus :as valikatselmus-lukitus]))
+
+;; Urakkatyyppi ei muutu palvelimen käynnistyksen aikana.
+(defonce ^:private urakan-tyyppi-cache (atom {}))
+
+(defn- hae-urakan-tyyppi
+  "Urakan tyyppi ei vaihdu, joten voidaan käyttää välimuistia."
+  [db urakka-id]
+  (locking urakan-tyyppi-cache
+    (if (contains? @urakan-tyyppi-cache urakka-id)
+      (get @urakan-tyyppi-cache urakka-id)
+      (let [tyyppi (:tyyppi (first (urakat-kyselyt/hae-urakan-tiedot db urakka-id)))]
+        (when (some? tyyppi)
+          (swap! urakan-tyyppi-cache assoc urakka-id tyyppi))
+        tyyppi))))
+
+(defn- vhu-urakka? [db urakka-id]
+  (= "vesivayla-hoito" (hae-urakan-tyyppi db urakka-id)))
+
+(defn- hae-urakan-tehtavat-ja-maarat [db urakka-id hoitokauden-alkuvuosi]
+  (if (vhu-urakka? db urakka-id)
+    (tehtavat-maarat-kyselyt/hae-vhu-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)
+    (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id hoitokauden-alkuvuosi)))
 
 (defn tallenna-tehtavat-ja-maarat
   "Tallennetaan sopimuksen tehtävät ja määrät.
@@ -32,14 +55,14 @@
           ;; (tarvitaan suolarajoitus- ja analytiikkakyselyille)
           _ (tehtavamaarat-kyselyt/tallenna-sopimuksen-tila db {:urakka-id urakka-id} true)
           ;; Haetaan tallennetut tiedot
-          tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id hk-alkuvuosi)]
+          tehtavat-ja-maarat (hae-urakan-tehtavat-ja-maarat db urakka-id hk-alkuvuosi)]
       tehtavat-ja-maarat)))
 
 (defn hae-tehtavat-ja-maarat [db kayttaja {:keys [urakka-id] :as tiedot}]
   (oikeudet/vaadi-lukuoikeus oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo kayttaja urakka-id)
   (jdbc/with-db-transaction [db db]
     (let [vuosi (pvm/vuosi (first (:valittu-hoitokausi tiedot)))
-          tehtavat-ja-maarat (tehtavat-maarat-kyselyt/hae-tehtavat-ja-maarat db urakka-id vuosi)
+          tehtavat-ja-maarat (hae-urakan-tehtavat-ja-maarat db urakka-id vuosi)
           lukittu? (not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu? db urakka-id vuosi :tehtavat-ja-maarat))]
       {:lukittu? lukittu?
        :tehtavat (:tehtavat tehtavat-ja-maarat)
@@ -47,22 +70,30 @@
        :viimeisin-muokkaaja (:viimeisin_muokkaaja tehtavat-ja-maarat)})))
 
 (defn hae-tehtavaprofiilit
-  "Lukee tehtävien pikatäytön arvot dev-resources-konfiguraatiosta."
-  [http-palvelin _kayttaja]
-  (-> (:asetukset http-palvelin)
-    :dev-resources-path
-    (io/file "testidata/tehtava_profiilit.edn")
-    slurp
-    read-string))
+  "Lukee tehtävien pikatäytön arvot urakkatyypin mukaan dev-resources-konfiguraatiosta."
+  [http-palvelin _kayttaja {:keys [urakkatyyppi]}]
+  (let [profiilit (-> (:asetukset http-palvelin)
+                    :dev-resources-path
+                    (io/file "testidata/tehtava_profiilit.edn")
+                    slurp
+                    read-string)
+        urakkatyyppi (cond
+                       (keyword? urakkatyyppi) urakkatyyppi
+                       (string? urakkatyyppi) (keyword urakkatyyppi)
+                       :else nil)]
+    (or (get profiilit urakkatyyppi)
+      (throw (IllegalArgumentException.
+               (str "Tehtäväprofiilia ei löydy urakkatyypille " urakkatyyppi "."))))))
 
 (defrecord TehtavatJaMaarat []
   component/Lifecycle
   (start [this]
+    (reset! urakan-tyyppi-cache {})
     (when (:kehitysmoodi (:http-palvelin this))
       (julkaise-palvelu (:http-palvelin this)
         :hae-tehtavaprofiilit
-        (fn [user]
-          (hae-tehtavaprofiilit (:http-palvelin this) user))))
+        (fn [user tiedot]
+          (hae-tehtavaprofiilit (:http-palvelin this) user tiedot))))
 
     (julkaise-palvelu (:http-palvelin this)
       :hae-tehtavat-ja-maarat
