@@ -18,12 +18,7 @@ INSERT INTO erilliskustannus (tyyppi,sopimus,urakka,toimenpideinstanssi,pvm,lask
 VALUES ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Pyhäselän urakka') AND paasopimus IS null),
         (SELECT id FROM urakka WHERE nimi='Pyhäselän urakka'),
         (SELECT id FROM toimenpideinstanssi WHERE nimi='Kauppamerenkulun kustannukset TP' AND urakka = (SELECT id FROM urakka WHERE nimi='Pyhäselän urakka')),
-        '2017-01-19', '2017-01-15', 10000, 'MAKU 2005', 'Muun erilliskustannuksen lisätieto Pyhäselkä', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh')),
-
-  ('muu', (SELECT id FROM sopimus WHERE urakka = (SELECT id FROM urakka WHERE nimi='Pyhäselän urakka') AND paasopimus IS null),
-   (SELECT id FROM urakka WHERE nimi='Rentoselän urakka'),
-   (SELECT id FROM toimenpideinstanssi WHERE nimi='Kauppamerenkulun kustannukset TP' AND urakka = (SELECT id FROM urakka WHERE nimi='Rentoselän urakka')),
-   '2017-01-19', '2017-01-15', 10000, 'MAKU 2005', 'Muun erilliskustannuksen lisätieto Rentoselkä', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh'));
+        '2017-01-19', '2017-01-15', 10000, 'MAKU 2005', 'Muun erilliskustannuksen lisätieto Pyhäselkä', NOW(), (SELECT ID FROM kayttaja WHERE kayttajanimi = 'jvh'));
 
 -- Tampereen alueurakalle erilliskustannus, jotta voi varmistaa indeksin toimivuuden
 DO $$

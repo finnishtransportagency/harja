@@ -228,7 +228,7 @@
        :laskutus
        (when (valilehti-mahdollinen? :laskutus ur)
          ^{:key "laskutus"}
-         [laskutus/laskutus])
+         [laskutus/laskutus ur])
 
        "Toteumat"
        :toteumat
