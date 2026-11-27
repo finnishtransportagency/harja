@@ -32,7 +32,7 @@ on:
         required: false
       scan-docker-image:
         description: 'Enabloi scan-docker-image job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       deps-tree:
@@ -62,22 +62,22 @@ on:
         required: false
       slow-tests:
         description: 'Enabloi slow-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       front-end-tests:
         description: 'Enabloi front-end-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       integration-tests:
         description: 'Enabloi integration-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
       e2e-tests:
         description: 'Enabloi e2e-tests job'
-        default: 'false'
+        default: 'true'
         type: string
         required: false
 
@@ -410,7 +410,7 @@ jobs:
       # fail-fast: false → kaikki shardit ajetaan, vaikka joku failaisi. Jos halutaan nopeampi feedback, vaihda true.
       fail-fast: false
       matrix:
-        shard: [2]
+        shard: [1, 2]
     permissions:
       contents: read # Tarvitaan checkout actionissa
       packages: read # Tarvitaan Docker imageiden pullamiseen GH Container Registrystä
