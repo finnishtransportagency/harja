@@ -141,5 +141,4 @@ describe('Vesiväyläurakan Kulut-näkymä', function () {
             .contains('urakkavuosi')
             .should('exist');
     });
-
 });
