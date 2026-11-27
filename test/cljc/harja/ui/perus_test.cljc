@@ -164,3 +164,63 @@
 (deftest luokka-lisataan-juurielementille
   (is (= "ui-pino oma" (:class (attribuutit (ui/pino {:luokka "oma"})))))
   (is (= "ui-toimintoryhma" (:class (attribuutit (ui/toimintoryhma {}))))))
+
+(deftest tietolista-renderoi-semanttiset-rivit-ja-sailyttaa-hiccup-arvon
+  (let [hiccup (ui/tietolista {:data-cy "urakan-tiedot"
+                                :otsikkoleveys :suuri
+                                :tiivis? true
+                                :viivat? false
+                                :rivit [{:otsikko "Urakka" :arvo "Esimerkkiurakka"}
+                                        {:otsikko "Puuttuva" :arvo nil}
+                                        {:otsikko "Tila" :arvo [:a {:href "#tila"} "Käsittelyssä"]}]})
+        juuri (attribuutit hiccup)]
+    (is (= :dl (first hiccup)))
+    (is (= "urakan-tiedot" (:data-cy juuri)))
+    (is (= "ui-tietolista ui-tietolista-otsikkoleveys-suuri ui-tietolista-tiivis ui-tietolista-ilman-viivoja"
+          (:class juuri)))
+    (is (= ["Urakka" "Tila"]
+           (->> hiccup
+                (filter vector?)
+                (filter #(= :dt (first %)))
+                (map #(nth % 2)))))
+    (is (some? (loyda hiccup :a #(= "#tila" (:href %)))))
+    (is (empty? (filter #(and (vector? %)
+                              (= "Puuttuva" (nth % 2 nil)))
+                   hiccup)))))
+
+(deftest tietolista-hylkaa-tuntemattoman-otsikkoleveyden
+  (is (thrown? #?(:clj AssertionError :cljs js/Error)
+        (ui/tietolista {:otsikkoleveys :liian-levea :rivit []}))))
+
+(deftest tietolista-hylkaa-puutteen-ja-virheellisen-rivikartan
+  (is (thrown? #?(:clj AssertionError :cljs js/Error)
+        (ui/tietolista {})))
+  (is (thrown? #?(:clj AssertionError :cljs js/Error)
+        (ui/tietolista {:rivit [{:otsikko nil :arvo "Arvo"}]})))
+  (is (thrown? #?(:clj AssertionError :cljs js/Error)
+        (ui/tietolista {:rivit [{:arvo "Arvo"}]}))))
+
+(deftest kortti-yhdistaa-otsikon-ja-sisallot-kokonaisuudeksi
+  (let [hiccup (ui/kortti {:id "urakkatiedot"
+                            :otsikko "Urakkatiedot"
+                            :otsikkotaso 2
+                            :kuvaus "Keskeiset tiedot valitusta urakasta."
+                            :toiminto [:button "Muokkaa"]
+                            :alatunniste [:button "Sulje"]
+                            :koko :pieni
+                            :luokka "oma-kortti"}
+                   [:p "Sisältö"])]
+    (is (= :article (first hiccup)))
+    (is (= "urakkatiedot"
+          (:id (attribuutit hiccup))))
+    (is (= "urakkatiedot"
+          (:data-cy (attribuutit hiccup))))
+    (is (= "urakkatiedot-otsikko"
+          (:aria-labelledby (attribuutit hiccup))))
+    (is (= "ui-kortti ui-kortti-pieni oma-kortti"
+          (:class (attribuutit hiccup))))
+    (is (= "Urakkatiedot"
+          (nth (loyda hiccup :h2 (constantly true)) 2)))
+    (is (some? (loyda hiccup :header #(= "ui-kortti-otsake" (:class %)))))
+    (is (some? (loyda hiccup :div #(= "ui-kortti-sisalto" (:class %)))))
+    (is (some? (loyda hiccup :footer #(= "ui-kortti-alatunniste" (:class %)))))))

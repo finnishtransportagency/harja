@@ -48,8 +48,10 @@
                             :asetukset {:tyyppi :neutraali
                                         :ensisijainen-viesti "Raportti sisältää 126 kustannusriviä."
                                         :toissijainen-viesti "Luvut perustuvat simulaattorin kuvitteelliseen kuukausidataan."}}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Tavoite- ja toteumatiedot"}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-raportti-tavoite-kortti"
+                                        :otsikko "Tavoite- ja toteumatiedot"
+                                        :otsikkotaso 2}
                             :lapset [{:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :sivuta 5

@@ -5,6 +5,7 @@
   Ankkurit johdetaan rekisteristä (`rekisteri/ankkuri`), jotta kortin, navigaation ja
   sopimusruudun ankkurit eivät voi erota toisistaan."
   (:require [clojure.string :as str]
+            [harja.ui.perus :as ui]
             [harja.ui.perus.rekisteri :as rekisteri]))
 
 (defn ankkuri
@@ -20,6 +21,20 @@
      {:class (str "ui-tarkastelu-tila-" (name tila))
       :data-cy "ui-komponenttien-tarkastelu-bootstrap-tila"}
      (get-in rekisteri/bootstrap-tilat [tila :teksti])]))
+
+(defn legacy-paatos-merkki
+  ([komponentti]
+   (legacy-paatos-merkki komponentti false))
+  ([komponentti lyhyt?]
+   (let [paatos (rekisteri/legacy-paatos komponentti)
+         teksti-avain (if lyhyt? :lyhyt-teksti :teksti)]
+     [:span.ui-tarkastelu-legacy-paatos
+      {:class (str "ui-tarkastelu-legacy-paatos-" (name paatos))
+       :data-cy (ankkuri komponentti
+                  (if lyhyt?
+                    "-legacy-paatos-valinta"
+                    "-legacy-paatos"))}
+      (get-in rekisteri/legacy-paatokset [paatos teksti-avain])])))
 
 (defn kehys
   [{:keys [otsikko kuvaus]} navigaatio sisalto sopimus]
@@ -51,11 +66,12 @@
           :aria-current (when (= komponentin-id valittu) "true")
           :data-cy (ankkuri komponentti "-valinta")
           :on-click #(valitse-fn komponentin-id)}
-         nimi])])])
+         [:span nimi]
+         [legacy-paatos-merkki komponentti true]])])])
 
 (defn sisalto
   "Valitun komponentin otsikko ja esikatselu."
-  [{:keys [nimi kuvaus] :as komponentti} ryhman-nimi esikatselu]
+  [{:keys [nimi kuvaus]} ryhman-nimi esikatselu]
   [:main.ui-tarkastelu-sisalto
    {:data-cy "ui-komponenttien-tarkastelu-valittu-komponentti"}
    [:header.ui-tarkastelu-sisallon-otsake
@@ -67,10 +83,13 @@
 (defn kortti
   "Esikatselun kortti. Juuriankkuri tulee rekisteristä."
   [komponentti & lapset]
-  [:section.ui-tarkastelu-kortti
-   {:data-cy (ankkuri komponentti)}
-   [:h3 "Esikatselu"]
-   (into [:div.ui-tarkastelu-kortin-sisalto] lapset)])
+  (let [ankkuri (ankkuri komponentti)]
+    [ui/kortti {:id (str ankkuri "-esikatselu")
+                :data-cy ankkuri
+                :otsikko "Esikatselu"
+                :otsikkotaso 3
+                :luokka "ui-tarkastelu-kortti"}
+     (into [ui/pino {}] lapset)]))
 
 (defn asetukset-taulukko
   [asetukset]
@@ -100,6 +119,8 @@
       [:dd [asetukset-taulukko asetukset]]
       [:dt "Suositus"]
       [:dd [:span {:data-cy "ui-komponenttien-tarkastelu-suositus"} (some-> (:suositus komponentti) name)]]
+      [:dt "Elinkaaripäätös"]
+      [:dd [legacy-paatos-merkki komponentti]]
       [:dt "Korvaa"]
       [:dd (if (seq (:korvaa komponentti))
              (str/join ", " (:korvaa komponentti))

@@ -176,6 +176,48 @@
            [{:komponentti :perusgrid
              :asetukset {:rivit []}}]))))
 
+(deftest kortti-vaatii-vakaan-simulaattoriankkurin
+  (is (= ["kortti: pakollinen asetus :data-cy puuttuu"]
+         (simulaattori/virheet [{:komponentti :kortti}]))))
+
+(deftest kortti-hylkaa-virheellisen-tokenin
+  (is (= ["kortti: :data-cy pitää olla ei-tyhjä merkkijono"
+          "kortti: tuntematon koko :iso"
+          "kortti: :otsikkotaso pitää olla kokonaisluku 1–6"]
+         (simulaattori/virheet
+           [{:komponentti :kortti
+             :asetukset {:data-cy " "
+                         :koko :iso
+                         :otsikkotaso 7}}]))))
+
+(deftest tietolista-hylkaa-virheellisen-rivin
+  (is (= ["tietolista: rivi 2 ei ole {:otsikko ... :arvo ...}-kartta"]
+         (simulaattori/virheet
+           [{:komponentti :tietolista
+             :asetukset {:rivit [{:otsikko "Nimi" :arvo "Urakka"}
+                                 "rikki"]}}]))))
+
+(deftest tietolista-hylkaa-skalaaririvit
+  (is (= ["tietolista: :rivit pitää olla vektori"]
+         (simulaattori/virheet
+           [{:komponentti :tietolista
+             :asetukset {:rivit "ei-vektori"}}]))))
+
+(deftest tietolista-vaatii-rivit-ilman-asetuskarttaa
+  (is (= ["tietolista: pakollinen asetus :rivit puuttuu"]
+         (simulaattori/virheet [{:komponentti :tietolista}]))))
+
+(deftest tietolista-hylkaa-virheelliset-asetelmat
+  (is (= ["tietolista: tuntematon otsikkoleveys :massive"
+          "tietolista: :tiivis? pitää olla boolean"
+          "tietolista: :viivat? pitää olla boolean"]
+         (simulaattori/virheet
+           [{:komponentti :tietolista
+             :asetukset {:rivit []
+                         :otsikkoleveys :massive
+                         :tiivis? "kyllä"
+                         :viivat? 1}}]))))
+
 (deftest kenttaryhma-sallii-yhden-rekisteroidyn-kenttakomponentin
   (doseq [kentta [:tekstikentta
                   :numerokentta

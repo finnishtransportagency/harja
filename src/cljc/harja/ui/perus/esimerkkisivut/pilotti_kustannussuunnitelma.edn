@@ -17,8 +17,10 @@
                             :asetukset {:tyyppi :varoitus
                                         :ensisijainen-viesti "Tavoitehinnan arvio ylittää laskutusrajan."
                                         :toissijainen-viesti "Muutos perustuu Q4-ennusteeseen ja vaatii hyväksynnän."}}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Suunnitellut tehtävät"}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-kustannussuunnitelma-tehtavat-kortti"
+                                        :otsikko "Suunnitellut tehtävät"
+                                        :otsikkotaso 2}
                             :lapset [{:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :tyhja "Ei suunniteltuja tehtäviä."
@@ -32,14 +34,16 @@
                                                           {:id 2 :toimenpide "Liukkaudentorjunta" :lokakuu "28 000 €" :marraskuu "46 000 €" :joulukuu "61 000 €" :tammikuu "58 000 €" :helmikuu "51 000 €"}
                                                           {:id 3 :toimenpide "Liikenneympäristön hoito" :lokakuu "18 000 €" :marraskuu "12 000 €" :joulukuu "8 000 €" :tammikuu "7 000 €" :helmikuu "9 000 €"}
                                                           {:id :yhteensa :rivityyppi :yhteenveto :toimenpide "Yhteensä" :lokakuu "91 000 €" :marraskuu "136 000 €" :joulukuu "161 000 €" :tammikuu "150 000 €" :helmikuu "134 000 €"}]}}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Tavoitehinta ja rajat"}
-                            :lapset [{:komponentti :tietoja
-                                      :asetukset {:rivit [["Tavoitehinta" "4 860 000 €"]
-                                                          ["Pysyvät muutokset" "86 500 €"]
-                                                          ["Indeksikorjattu tavoitehinta" "4 946 500 €"]
-                                                          ["Laskutusraja" "5 020 000 €"]
-                                                          ["Ero laskutusrajaan" "73 500 €"]]}}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-kustannussuunnitelma-tavoitehinta-kortti"
+                                        :otsikko "Tavoitehinta ja rajat"
+                                        :otsikkotaso 2}
+                            :lapset [{:komponentti :tietolista
+                                      :asetukset {:rivit [{:otsikko "Tavoitehinta" :arvo "4 860 000 €"}
+                                                          {:otsikko "Pysyvät muutokset" :arvo "86 500 €"}
+                                                          {:otsikko "Indeksikorjattu tavoitehinta" :arvo "4 946 500 €"}
+                                                          {:otsikko "Laskutusraja" :arvo "5 020 000 €"}
+                                                          {:otsikko "Ero laskutusrajaan" :arvo "73 500 €"}]}}
                                      {:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :tyhja "Ei kustannuseriä."

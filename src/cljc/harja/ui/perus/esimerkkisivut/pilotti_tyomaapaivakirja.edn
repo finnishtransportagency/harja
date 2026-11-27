@@ -22,8 +22,10 @@
                                      {:komponentti :nappi
                                       :asetukset {:teksti "Hae"
                                                   :variantti :ensisijainen}}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Päiväkirjat"}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-tyomaapaivakirja-paivakirjat-kortti"
+                                        :otsikko "Päiväkirjat"
+                                        :otsikkotaso 2}
                             :lapset [{:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :sivuta 4
@@ -39,14 +41,15 @@
                                                           {:id 4 :pvm "23.11.2026" :tyomaa "VT 5 Kajaani" :tyonjohtaja "Työmaa 3" :havaintoja 2 :tila "valmis"}
                                                           {:id 5 :pvm "22.11.2026" :tyomaa "KT 78 Kokkola" :tyonjohtaja "Työmaa 4" :havaintoja 1 :tila "valmis"}
                                                           {:id 6 :pvm "21.11.2026" :tyomaa "VT 29 Tornio" :tyonjohtaja "Työmaa 5" :havaintoja 0 :tila "valmis"}]}}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "26.11.2026 – KT 4 Rovaniemi"}
-                            :lapset [{:komponentti :tietoja
-                                      :asetukset {:otsikot-omalla-rivilla? [:raportti :kommentit]
-                                                  :rivit [["Työnjohtaja" "Työmaa 1"]
-                                                          ["Sää" "−6 °C, lumisade 18 cm"]
-                                                          ["Raportti" "Auraus valmistui suunnitellusti. Hiontaa jatkettiin mutkissa 3–8, ja rajakohdissa havaittiin kaksi lyhyttä liukkausjaksoa."]
-                                                          ["Kommentit" "Urakoitsija: Kelien vuoksi yövuoro vahvistettiin kahdella koneella. Tilaaja kuittaa seurannan jatkumisen aamulla."]]}}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-tyomaapaivakirja-detalji-kortti"
+                                        :otsikko "26.11.2026 – KT 4 Rovaniemi"
+                                        :otsikkotaso 2}
+                            :lapset [{:komponentti :tietolista
+                                      :asetukset {:rivit [{:otsikko "Työnjohtaja" :arvo "Työmaa 1"}
+                                                          {:otsikko "Sää" :arvo "−6 °C, lumisade 18 cm"}
+                                                          {:otsikko "Raportti" :arvo "Auraus valmistui suunnitellusti. Hiontaa jatkettiin mutkissa 3–8, ja rajakohdissa havaittiin kaksi lyhyttä liukkausjaksoa."}
+                                                          {:otsikko "Kommentit" :arvo "Urakoitsija: Kelien vuoksi yövuoro vahvistettiin kahdella koneella. Tilaaja kuittaa seurannan jatkumisen aamulla."}]}}
                                      {:komponentti :info-laatikko
                                       :asetukset {:tyyppi :neutraali
                                                   :ensisijainen-viesti "Muutoshistoria"

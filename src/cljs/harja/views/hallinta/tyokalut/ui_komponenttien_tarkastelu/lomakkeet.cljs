@@ -482,6 +482,63 @@
      "Tyhjä kenttä" nil
      "Tila" [:span {:data-cy (kehys/ankkuri komponentti "-arvo")} "Hyväksytty"]]]])
 
+(defn- tietolista [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Semanttinen otsikko-arvo-lista ilman Bootstrap-luokkia. Nil-arvoiset rivit jätetään pois."]
+     [ui/kortti {:id (str ankkuri "-esimerkki")
+                 :otsikko "Urakan tiedot"
+                 :kuvaus "Responsiivinen kortin sisältö normaalilla ja pitkällä arvolla."
+                 :toiminto [napit/nappi "Muokkaa" #(identity nil) {:luokka "nappi-toissijainen"}]
+                 :alatunniste [:span "Päivitetty 26.11.2026"]
+                 :data-cy (str ankkuri "-kortti")}
+      [ui/tietolista
+       {:data-cy (str ankkuri "-juuri")
+        :otsikkoleveys :suuri
+        :rivit [{:otsikko "Nimi"
+                 :arvo [:span {:data-cy (str ankkuri "-arvo")} "Pohjois-Suomen hoitourakka 2026–2030"]}
+                {:otsikko "Tila"
+                 :arvo "Hyväksytty"}
+                {:otsikko "Kuvaus"
+                 :arvo "Pitkä kuvaselitys rivityy tietolistan arvopalstassa myös kapealla näytöllä."}
+                {:otsikko "Tyhjä lisätieto"
+                 :arvo nil}]}]]]))
+
+(defn- tietolista-simulaattorissa [solmu _tila _lapsi-fn]
+  [ui/tietolista
+   (merge {:data-cy "ui-simulaattori-tietolista"}
+     (select-keys (:asetukset solmu)
+       [:rivit :otsikkoleveys :tiivis? :viivat? :data-cy :luokka]))])
+
+(register! :tietolista {:esikatselu tietolista
+                         :renderoi tietolista-simulaattorissa})
+
+(defn- kortti [komponentti]
+  (let [ankkuri (kehys/ankkuri komponentti)]
+    [kehys/kortti komponentti
+     [:p "Yhteinen korttipohja: otsake, sisältö, valinnainen toiminto ja alatunniste."]
+     [ui/kortti {:id (str ankkuri "-juuri")
+                 :otsikko "Kortin otsikko"
+                 :kuvaus "Sisältö säilyy käyttöpaikan vastuulla."
+                 :toiminto [napit/nappi "Toiminto" #(identity nil) {:luokka "nappi-toissijainen"}]
+                 :alatunniste [:span {:data-cy (str ankkuri "-alatunniste")} "Valinnainen alatunniste"]}
+      [:p {:data-cy (str ankkuri "-sisalto")} "Kortin sisältö"]]]))
+
+(defn- kortti-simulaattorissa [solmu _tila lapsi-fn]
+  (let [asetukset (:asetukset solmu)]
+    (into [ui/kortti
+           (merge {:id (:data-cy asetukset)
+                   :data-cy "ui-simulaattori-kortti"}
+             (select-keys asetukset
+               [:otsikko :otsikkotaso :kuvaus :toiminto :alatunniste :koko :data-cy :luokka]))]
+      (map-indexed (fn [indeksi lapsi]
+                     ^{:key indeksi}
+                     [lapsi-fn lapsi])
+        (:lapset solmu)))))
+
+(register! :kortti {:esikatselu kortti
+                    :renderoi kortti-simulaattorissa})
+
 (defn- kenttaryhma-simulaattorissa [solmu _tila lapsi-fn]
   (let [{:keys [data-cy] :as asetukset} (:asetukset solmu)]
     [ui/kenttaryhma

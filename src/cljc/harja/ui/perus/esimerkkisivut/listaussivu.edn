@@ -9,8 +9,10 @@
                                         :valinnat ["Urakat" "Raportit" "Hallinta"]}}
                            {:komponentti :nappi
                             :asetukset {:teksti "Hae"}}]}
-                 {:komponentti :panel
-                  :asetukset {:otsikko "Toteumat"}
+                 {:komponentti :kortti
+                  :asetukset {:data-cy "listaussivu-toteumat-kortti"
+                              :otsikko "Toteumat"
+                              :otsikkotaso 2}
                   :lapset [{:komponentti :perusgrid
                             :asetukset {:tunniste :id
                                         :tyhja "Ei toteumia."

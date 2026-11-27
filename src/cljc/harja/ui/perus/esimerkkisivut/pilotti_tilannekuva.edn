@@ -21,16 +21,20 @@
                             :asetukset {:palstoja 2
                                         :vali :pieni
                                         :data-cy "pilotti-tilannekuva-layout"}
-                            :lapset [{:komponentti :panel
-                                      :asetukset {:otsikko "Kartta-alue"}
-                                      :lapset [{:komponentti :tietoja
-                                                :asetukset {:piirra-viivat? false
-                                                            :rivit [["Karttataso" "Tapahtumat ja ilmoitukset"]
-                                                                    ["Alue" "Lapin elinvoimakeskus"]
-                                                                    ["Aikaväli" "24 h"]
-                                                                    ["Näkyvät kohteet" "18"]]}}]}
-                                     {:komponentti :panel
-                                      :asetukset {:otsikko "Tiedot ja suodattimet"}
+                            :lapset [{:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-tilannekuva-kartta-kortti"
+                                                  :otsikko "Kartta-alue"
+                                                  :otsikkotaso 2}
+                                      :lapset [{:komponentti :tietolista
+                                                :asetukset {:viivat? false
+                                                            :rivit [{:otsikko "Karttataso" :arvo "Tapahtumat ja ilmoitukset"}
+                                                                    {:otsikko "Alue" :arvo "Lapin elinvoimakeskus"}
+                                                                    {:otsikko "Aikaväli" :arvo "24 h"}
+                                                                    {:otsikko "Näkyvät kohteet" :arvo "18"}]}}]}
+                                     {:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-tilannekuva-tiedot-kortti"
+                                                  :otsikko "Tiedot ja suodattimet"
+                                                  :otsikkotaso 2}
                                       :lapset [{:komponentti :pino
                                                 :lapset [{:komponentti :kenttaryhma
                                                           :asetukset {:otsikko "Urakkatyyppi"
@@ -39,10 +43,10 @@
                                                                     :asetukset {:otsikko "Urakkatyyppi"
                                                                                 :valinnat ["Hoito" "Päällystys" "Kanavat"]
                                                                                 :optiot {}}}]}
-                                                         {:komponentti :tietoja
-                                                          :asetukset {:rivit [["Auki olevat poikkeamat" "6"]
-                                                                              ["Viimeisin päivitys" "26.11.2026 klo 10.15"]
-                                                                              ["Kartan tila" "Paneeli auki"]]}}
+                                                         {:komponentti :tietolista
+                                                          :asetukset {:rivit [{:otsikko "Auki olevat poikkeamat" :arvo "6"}
+                                                                              {:otsikko "Viimeisin päivitys" :arvo "26.11.2026 klo 10.15"}
+                                                                              {:otsikko "Kartan tila" :arvo "Paneeli auki"}]}}
                                                          {:komponentti :toimintoryhma
                                                           :asetukset {:data-cy "pilotti-tilannekuva-toiminnot"}
                                                           :lapset [{:komponentti :nappi

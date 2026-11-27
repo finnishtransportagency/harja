@@ -17,23 +17,31 @@
                             :asetukset {:palstoja 3
                                         :vali :pieni
                                         :data-cy "pilotti-lupaukset-mittarit"}
-                            :lapset [{:komponentti :panel
-                                      :asetukset {:otsikko "Toteuma"}
-                                      :lapset [{:komponentti :tietoja
-                                                :asetukset {:rivit [["Pisteet" "72"]
-                                                                    ["Tila" "TOTEUMA"]]}}]}
-                                     {:komponentti :panel
-                                      :asetukset {:otsikko "Ennuste"}
-                                      :lapset [{:komponentti :tietoja
-                                                :asetukset {:rivit [["Pisteet" "68"]
-                                                                    ["Tila" "ENNUSTE"]]}}]}
-                                     {:komponentti :panel
-                                      :asetukset {:otsikko "Maksimi"}
-                                      :lapset [{:komponentti :tietoja
-                                                :asetukset {:rivit [["Pisteet" "80"]
-                                                                    ["Puuttuu" "8"]]}}]}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Talvihoito"}
+                            :lapset [{:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-lupaukset-toteuma-kortti"
+                                                  :otsikko "Toteuma"
+                                                  :otsikkotaso 2}
+                                      :lapset [{:komponentti :tietolista
+                                                :asetukset {:rivit [{:otsikko "Pisteet" :arvo "72"}
+                                                                    {:otsikko "Tila" :arvo "TOTEUMA"}]}}]}
+                                     {:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-lupaukset-ennuste-kortti"
+                                                  :otsikko "Ennuste"
+                                                  :otsikkotaso 2}
+                                      :lapset [{:komponentti :tietolista
+                                                :asetukset {:rivit [{:otsikko "Pisteet" :arvo "68"}
+                                                                    {:otsikko "Tila" :arvo "ENNUSTE"}]}}]}
+                                     {:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-lupaukset-maksimi-kortti"
+                                                  :otsikko "Maksimi"
+                                                  :otsikkotaso 2}
+                                      :lapset [{:komponentti :tietolista
+                                                :asetukset {:rivit [{:otsikko "Pisteet" :arvo "80"}
+                                                                    {:otsikko "Puuttuu" :arvo "8"}]}}]}]}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-lupaukset-talvihoito-kortti"
+                                        :otsikko "Talvihoito"
+                                        :otsikkotaso 2}
                             :lapset [{:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :tyhja "Ei lupauksia."

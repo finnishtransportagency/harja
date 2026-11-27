@@ -37,8 +37,10 @@
                                                 :asetukset {:otsikko "Toimenpide"
                                                             :valinnat ["Päällystys" "Tiemerkintä"]
                                                             :optiot {}}}]}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Kohteet ja kerrokset"}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-paallystysilmoitus-kohteet-kortti"
+                                        :otsikko "Kohteet ja kerrokset"
+                                        :otsikkotaso 2}
                             :lapset [{:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :tyhja "Ei kohteita."

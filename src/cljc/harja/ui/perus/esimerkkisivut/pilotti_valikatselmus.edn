@@ -17,8 +17,10 @@
                             :asetukset {:palstoja 2
                                         :vali :pieni
                                         :data-cy "pilotti-valikatselmus-palstat"}
-                            :lapset [{:komponentti :panel
-                                      :asetukset {:otsikko "Päätökset ja perustelut"}
+                            :lapset [{:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-valikatselmus-paatokset-kortti"
+                                                  :otsikko "Päätökset ja perustelut"
+                                                  :otsikkotaso 2}
                                       :lapset [{:komponentti :info-laatikko
                                                 :asetukset {:tyyppi :neutraali
                                                             :ensisijainen-viesti "Käsittelyssä"
@@ -32,15 +34,17 @@
                                                             :rivit [{:id 1 :asia "Tavoitehinnan muutos" :paatos "keskeneräinen" :perustelu "Q4-ennuste ja indeksikorjaus arvioidaan samassa päätöksessä."}
                                                                     {:id 2 :asia "Lupausten toteutuminen" :paatos "valmis" :perustelu "72 pistettä 80:stä, perustelut toimitettu 18.11."}
                                                                     {:id 3 :asia "Sanktioiden peruminen" :paatos "virhe" :perustelu "Kirjaus puuttuu määräpäivältä 15.11.2026."}]}}]}
-                                     {:komponentti :panel
-                                      :asetukset {:otsikko "Yhteenveto"}
-                                      :lapset [{:komponentti :tietoja
-                                                :asetukset {:rivit [["Hoitovuosi" "2026–2027"]
-                                                                    ["Tavoitehinta" "4 860 000 €"]
-                                                                    ["Toteutunut" "2 430 000 €"]
-                                                                    ["Ennuste" "4 946 500 €"]
-                                                                    ["Lupauspisteet" "72 / 80"]
-                                                                    ["Tila" "Käsittelyssä"]]}}]}]}
+                                     {:komponentti :kortti
+                                      :asetukset {:data-cy "pilotti-valikatselmus-yhteenveto-kortti"
+                                                  :otsikko "Yhteenveto"
+                                                  :otsikkotaso 2}
+                                      :lapset [{:komponentti :tietolista
+                                                :asetukset {:rivit [{:otsikko "Hoitovuosi" :arvo "2026–2027"}
+                                                                    {:otsikko "Tavoitehinta" :arvo "4 860 000 €"}
+                                                                    {:otsikko "Toteutunut" :arvo "2 430 000 €"}
+                                                                    {:otsikko "Ennuste" :arvo "4 946 500 €"}
+                                                                    {:otsikko "Lupauspisteet" :arvo "72 / 80"}
+                                                                    {:otsikko "Tila" :arvo "Käsittelyssä"}]}}]}]}
                            {:komponentti :toimintoryhma
                             :asetukset {:data-cy "pilotti-valikatselmus-toiminnot"}
                             :lapset [{:komponentti :nappi

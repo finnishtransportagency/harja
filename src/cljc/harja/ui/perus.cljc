@@ -56,6 +56,8 @@
     lapset))
 
 (def ^:private layout-valit #{:pieni :keski :suuri})
+(def ^:private tietolista-otsikkoleveydet #{:pieni :keski :suuri})
+(def ^:private kortti-koot #{:oletus :pieni})
 (def ^:private vaaka-tasaukset #{:alku :keskelle :loppu :valiin})
 (def ^:private vaaka-ristitasaukset #{:alku :keskelle :loppu :venyta})
 
@@ -124,6 +126,61 @@
                          luokka)
                :data-cy data-cy}]
     lapset))
+
+(defn kortti
+  "Kokoava sisältöalue otsakkeelle, sisällölle, valinnaiselle toiminnolle ja alatunnisteelle."
+  [{:keys [id otsikko otsikkotaso kuvaus toiminto alatunniste data-cy luokka koko]
+    :or {koko :oletus otsikkotaso 3}} & sisalto]
+  {:pre [(and (string? id) (not (str/blank? id)))
+         (and (integer? otsikkotaso) (<= 1 otsikkotaso 6))
+         (kortti-koot koko)]}
+  (let [otsikko-id (when otsikko (str id "-otsikko"))
+        otsikkotagi (keyword (str "h" otsikkotaso))]
+    [:article {:id id
+               :class (luokat "ui-kortti" (when (= :pieni koko) "ui-kortti-pieni") luokka)
+               :aria-labelledby otsikko-id
+               :data-cy (or data-cy id)}
+     (when (or otsikko kuvaus toiminto)
+       [:header {:class "ui-kortti-otsake"}
+        [:div {:class "ui-kortti-otsake-sisalto"}
+         (when otsikko
+          [otsikkotagi {:id otsikko-id :class "ui-kortti-otsikko"} otsikko])
+         (when kuvaus
+           [:p {:class "ui-kortti-kuvaus"} kuvaus])]
+        (when toiminto
+          [:div {:class "ui-kortti-toiminto"} toiminto])])
+     (into [:div {:class "ui-kortti-sisalto"}] sisalto)
+     (when alatunniste
+       [:footer {:class "ui-kortti-alatunniste"} alatunniste])]))
+
+(defn tietolista
+  "Semanttinen otsikko-arvo-lista. Vain nil-arvoiset rivit jätetään pois."
+  [{:keys [rivit data-cy luokka otsikkoleveys tiivis? viivat?]
+    :or {otsikkoleveys :keski tiivis? false viivat? true}}]
+  {:pre [(vector? rivit)
+         (every? #(and (map? %)
+                       (contains? % :otsikko)
+                       (some? (:otsikko %))
+                       (contains? % :arvo))
+           rivit)
+         (tietolista-otsikkoleveydet otsikkoleveys)
+         (boolean? tiivis?)
+         (boolean? viivat?)]}
+  (into [:dl {:class (luokat "ui-tietolista"
+                       (str "ui-tietolista-otsikkoleveys-" (name otsikkoleveys))
+                       (when tiivis? "ui-tietolista-tiivis")
+                       (when-not viivat? "ui-tietolista-ilman-viivoja")
+                       luokka)
+              :data-cy data-cy}]
+    (mapcat
+      (fn [indeksi {:keys [otsikko arvo]}]
+        (when (some? arvo)
+          [^{:key (str "otsikko-" indeksi)}
+           [:dt {:class "ui-tietolista-otsikko"} otsikko]
+           ^{:key (str "arvo-" indeksi)}
+           [:dd {:class "ui-tietolista-arvo"} arvo]]))
+      (range)
+      rivit)))
 
 (defn suodatinrivi
   "Rivittyvä rivi suodattimille."

@@ -17,16 +17,21 @@
                             :asetukset {:tyyppi :varoitus
                                         :ensisijainen-viesti "Havaittu vaaratilanne"
                                         :toissijainen-viesti "Este katkaisee ajoradan ja aiheuttaa liikennettä pysäyttävän tilanteen."}}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Ilmoituksen tiedot"}
-                            :lapset [{:komponentti :tietoja
-                                      :asetukset {:rivit [["Vastaanotettu" "26.11.2026 klo 08.14"]
-                                                          ["Tie" "VT 4, osuus 140, 320 m"]
-                                                          ["Kuvaus" "Kuormasta pudonnut romumetalli on hajaantunut molemmille ajosuunnille. Paikalle on ohjattu kaksi aura-autoa ja liikenteenohjaus. Ajouran avaaminen aloitettiin välittömästi, mutta kaapelivyöhyke vaatii vielä erillisen tarkastuksen."]
-                                                          ["Selitteet" "Este, liukkausvaara, liikennekatko"]
-                                                          ["Ilmoittaja" "Liikenteenohjaus"] ]}}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Käsittely ja kuittaukset"}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-ilmoitukset-tiedot-kortti"
+                                        :otsikko "Ilmoituksen tiedot"
+                                        :otsikkotaso 2}
+                            :lapset [{:komponentti :tietolista
+                                      :asetukset {:otsikkoleveys :suuri
+                                                  :rivit [{:otsikko "Vastaanotettu" :arvo "26.11.2026 klo 08.14"}
+                                                          {:otsikko "Tie" :arvo "VT 4, osuus 140, 320 m"}
+                                                          {:otsikko "Kuvaus" :arvo "Kuormasta pudonnut romumetalli on hajaantunut molemmille ajosuunnille. Paikalle on ohjattu kaksi aura-autoa ja liikenteenohjaus. Ajouran avaaminen aloitettiin välittömästi, mutta kaapelivyöhyke vaatii vielä erillisen tarkastuksen."}
+                                                          {:otsikko "Selitteet" :arvo "Este, liukkausvaara, liikennekatko"}
+                                                          {:otsikko "Ilmoittaja" :arvo "Liikenteenohjaus"}]}}]}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-ilmoitukset-kasittely-kortti"
+                                        :otsikko "Käsittely ja kuittaukset"
+                                        :otsikkotaso 2}
                             :lapset [{:komponentti :perusgrid
                                       :asetukset {:tunniste :id
                                                   :tyhja "Ei kuittauksia."
@@ -38,12 +43,14 @@
                                                   :rivit [{:id 1 :aika "08.16" :kasittelija "Päivystys" :toimenpide "Tehtävä vastaanotettu" :tila "valmis" :viesti "Työryhmä 4 lähetetty paikalle."}
                                                           {:id 2 :aika "08.28" :kasittelija "Työnjohto" :toimenpide "Liikenneohjaus aloitettu" :tila "käsittelyssä" :viesti "Toinen kaista suljettu puhdistusalueelta."}
                                                           {:id 3 :aika "08.42" :kasittelija "Valvoja" :toimenpide "Tilannepäivitys" :tila "valmis" :viesti "Puhdistus etenee, kaapelivyöhyke tarkastetaan ennen avausta."}]}}]}
-                           {:komponentti :panel
-                            :asetukset {:otsikko "Liitteet"}
-                            :lapset [{:komponentti :tietoja
-                                      :asetukset {:rivit [["Kuvat" "3 kuvaa: ylöspäin, alaspäin ja sulkualue"]
-                                                          ["Dokumentti" "Liikennejärjestelyluonnos 45218.pdf"]
-                                                          ["Sijainti" "Karttaliite ja tieosoite"]]}}]}
+                           {:komponentti :kortti
+                            :asetukset {:data-cy "pilotti-ilmoitukset-liitteet-kortti"
+                                        :otsikko "Liitteet"
+                                        :otsikkotaso 2}
+                            :lapset [{:komponentti :tietolista
+                                      :asetukset {:rivit [{:otsikko "Kuvat" :arvo "3 kuvaa: ylöspäin, alaspäin ja sulkualue"}
+                                                          {:otsikko "Dokumentti" :arvo "Liikennejärjestelyluonnos 45218.pdf"}
+                                                          {:otsikko "Sijainti" :arvo "Karttaliite ja tieosoite"}]}}]}
                            {:komponentti :toimintoryhma
                             :asetukset {:data-cy "pilotti-ilmoitukset-toiminnot"}
                             :lapset [{:komponentti :nappi

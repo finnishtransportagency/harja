@@ -162,6 +162,130 @@
   }
 }
 
+.ui-kortti {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background: @white-default;
+  border: 1px solid @gray220;
+  border-radius: 0.5rem;
+  box-shadow: 0 0.25rem 1rem fade(@black-default, 8%);
+}
+
+.ui-kortti-otsake {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: @ui-vali-keski;
+  padding: @ui-vali-keski @ui-vali-keski 0;
+}
+
+.ui-kortti-otsake-sisalto {
+  min-width: 0;
+}
+
+.ui-kortti-otsikko,
+.ui-kortti-kuvaus {
+  margin: 0;
+}
+
+.ui-kortti-kuvaus {
+  margin-top: 0.25rem;
+  color: @gray100;
+}
+
+.ui-kortti-toiminto {
+  flex: 0 0 auto;
+}
+
+.ui-kortti-sisalto,
+.ui-kortti-alatunniste {
+  padding: @ui-vali-keski;
+}
+
+.ui-kortti-alatunniste {
+  border-top: 1px solid @gray220;
+}
+
+.ui-kortti-pieni {
+  .ui-kortti-otsake {
+    padding: @ui-vali-pieni @ui-vali-pieni 0;
+  }
+
+  .ui-kortti-sisalto,
+  .ui-kortti-alatunniste {
+    padding: @ui-vali-pieni;
+  }
+}
+
+.ui-tietolista {
+  display: grid;
+  align-items: baseline;
+  margin: 0;
+
+  > * {
+    min-width: 0;
+  }
+}
+
+.ui-tietolista-otsikkoleveys-pieni {
+  grid-template-columns: minmax(8rem, 1fr) minmax(0, 3fr);
+}
+
+.ui-tietolista-otsikkoleveys-keski {
+  grid-template-columns: minmax(10rem, 1fr) minmax(0, 2fr);
+}
+
+.ui-tietolista-otsikkoleveys-suuri {
+  grid-template-columns: minmax(14rem, 2fr) minmax(0, 3fr);
+}
+
+.ui-tietolista-otsikko,
+.ui-tietolista-arvo {
+  margin: 0;
+  padding-block: 0.5rem;
+  border-bottom: 1px solid @gray220;
+}
+
+.ui-tietolista-otsikko {
+  padding-right: @ui-vali-keski;
+  font-weight: 700;
+}
+
+.ui-tietolista-arvo {
+  overflow-wrap: anywhere;
+}
+
+.ui-tietolista-tiivis {
+  .ui-tietolista-otsikko,
+  .ui-tietolista-arvo {
+    padding-block: 0.25rem;
+  }
+}
+
+.ui-tietolista-ilman-viivoja {
+  .ui-tietolista-otsikko,
+  .ui-tietolista-arvo {
+    border-bottom: 0;
+  }
+}
+
+@media (max-width: 48rem) {
+  .ui-tietolista {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .ui-tietolista-otsikko {
+    padding-right: 0;
+    padding-bottom: 0;
+    border-bottom: 0;
+  }
+
+  .ui-tietolista-arvo {
+    padding-top: 0.25rem;
+  }
+}
+
 .ui-suodatinrivi {
   display: flex;
   flex-wrap: wrap;

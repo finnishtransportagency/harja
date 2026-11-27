@@ -85,6 +85,29 @@
     (testing "korvaa on oltava vektori"
       (is (seq (virheet (assoc ok :korvaa "yleiset/pudotusvalikko")))))))
 
+(deftest legacy-paatos-on-yksiselitteinen
+  (testing "uuteen UI:hin suositeltu komponentti on aktiivinen"
+    (is (= :aktiivinen
+           (rekisteri/legacy-paatos (rekisteri/hae :livi-pudotusvalikko)))))
+  (testing "vanha suositus on legacy"
+    (is (= :legacy
+           (rekisteri/legacy-paatos (rekisteri/hae :rivi)))))
+  (testing "eksplisiittinen päätös voi korjata suosituksen"
+    (is (= :legacy
+           (-> (rekisteri/hae :panel)
+               (assoc :suositus :ei-suositusta)
+               rekisteri/legacy-paatos))))
+  (testing "päätöstä ei ole päätelty ei-suositusta-komponentille"
+    (is (= :paatamatta
+           (rekisteri/legacy-paatos (dissoc (rekisteri/hae :nappi)
+                                      :legacy-paatos)))))
+  (testing "tuntematon legacy-päätös hylätään"
+    (is (some #(str/includes? % "tuntematon legacy-paatos")
+          (rekisteri/virheet
+            rekisteri/ryhmat
+            (cons (assoc (first rekisteri/komponentit) :legacy-paatos :epaselva)
+              (rest rekisteri/komponentit)))))))
+
 (deftest uuden-merkinnan-nimeamiskaytanto-tarkistetaan
   (let [ok (assoc (first rekisteri/komponentit) :suositus :uuteen-ui)
         virheet (fn [komponentti]
@@ -145,3 +168,18 @@
             :let [lyhyt (str/replace funktio #"^harja\.ui\." "")
                   lyhyt (str/replace lyhyt "." "/")]]
       (is (not (some #{lyhyt} korvaa)) funktio))))
+
+(deftest kortti-ja-tietolista-ovat-uuden-ui-n-korvaajat
+  (let [kortti (rekisteri/hae :kortti)
+        tietolista (rekisteri/hae :tietolista)]
+    (is (= :uuteen-ui (:suositus kortti)))
+    (is (= :uuteen-ui (:suositus tietolista)))
+    (is (some #{"bootstrap/panel"} (:korvaa kortti)))
+    (is (some #{"yleiset/tietoja"} (:korvaa tietolista)))
+    (is (= :legacy (rekisteri/legacy-paatos (rekisteri/hae :panel))))
+    (is (= :legacy (rekisteri/legacy-paatos (rekisteri/hae :tietoja))))))
+
+(deftest kortti-sallii-panelin-tyypilliset-lapset
+  (let [lapset (get (rekisteri/sallitut-lapset) :kortti)]
+    (doseq [lapsi [:pino :vaaka :perusgrid :muokkausgrid :tietoja :tietolista :info-laatikko]]
+      (is (contains? lapset lapsi) (str lapsi " ei ole sallittu kortin lapsi")))))

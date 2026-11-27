@@ -81,3 +81,7 @@
 
 (deftest navbar-ei-kayta-sr-only-luokkaa
   (is (not (str/includes? (slurp "src/cljs/harja/ui/bootstrap.cljs") "sr-only"))))
+
+(deftest tarkastelukortti-kayttaa-shared-korttia
+  (let [lahde (slurp "src/cljs/harja/views/hallinta/tyokalut/ui_komponenttien_tarkastelu/kehys.cljs")]
+    (is (str/includes? lahde "[ui/kortti"))))

@@ -460,7 +460,7 @@
     :korvaa []
     :slotit #{:lapset}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :osio :ruudukko :panel :sailio}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :osio :ruudukko :panel :kortti :sailio}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Pystysuuntainen asettelu, joka omistaa lasten väliset välit."
     :funktio "harja.ui.perus/pino"
@@ -475,7 +475,7 @@
     :korvaa ["Rajauston sisäinen flex-rivi"]
     :slotit #{:lapset}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :toimintoryhma :suodatinrivi :sailio :osio :ruudukko}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :kortti :toimintoryhma :suodatinrivi :sailio :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Vaakasuuntainen flex-asettelu, joka omistaa lasten välit, rivityksen ja tasaukset."
     :funktio "harja.ui.perus/vaaka"
@@ -512,7 +512,7 @@
     :korvaa ["Sivukohtainen otsikollinen wrapper-rakenne"]
     :slotit #{:lapset}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :sailio :osio :ruudukko}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :kortti :sailio :osio :ruudukko}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Semanttinen, otsikollinen sisältöalue. Käyttöpaikan antama id yhdistää osion ja otsikon."
     :funktio "harja.ui.perus/osio"
@@ -531,7 +531,7 @@
     :korvaa ["Sivukohtainen CSS-grid ja Bootstrapin row/col-*"]
     :slotit #{:lapset}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :sailio :osio}
+    :sallitut-vanhemmat #{:lomake :sivu :pino :vaaka :panel :kortti :sailio :osio}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Rajattu 1–4-palstainen grid, joka käyttää yhtä palstaa kapealla näytöllä."
     :funktio "harja.ui.perus/ruudukko"
@@ -539,6 +539,29 @@
                 :vali {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Lasten väli: :pieni, :keski tai :suuri."}
                 :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
                 :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka."}}}
+   {:id :kortti
+    :nimi "Kortti"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :rakenne
+    :suositus :uuteen-ui
+    :korvaa ["bootstrap/panel" "Sivukohtainen otsake- ja sisältöwrapper"]
+    :slotit #{:otsake :sisalto :alatunniste}
+    :tilat #{:normaali :tyhja}
+    :sallitut-vanhemmat #{:sivu :sailio :pino :vaaka :osio :ruudukko}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Yhteen kuuluvaa sisältöä ryhmittelevä kortti. Otsake, sisältö ja alatunniste ovat erillisiä alueita; käyttöpaikka antaa sisällön, toiminnon ja tilan."
+    :funktio "harja.ui.perus/kortti"
+    :asetukset {:id {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa kortin id ja otsikkoyhteyden perusta."}
+                :otsikko {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Kortin otsikko."}
+    :otsikkotaso {:tyyppi :numero :pakollinen? false :oletus 3 :kuvaus "Otsikkoelementin taso 1–6."}
+                :kuvaus {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Otsikon alla näytettävä kuvaus."}
+                :toiminto {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Otsakkeen oikean reunan toiminto."}
+                :alatunniste {:tyyppi :hiccup :pakollinen? false :oletus nil :kuvaus "Kortin alatunniste, esimerkiksi toiminnot."}
+                :koko {:tyyppi :keyword :pakollinen? false :oletus :oletus :kuvaus "Kortin tiheys: :oletus tai :pieni."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste, oletuksena id."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille."}}
+    :simulaattori-asetukset {:data-cy {:tyyppi :merkkijono :pakollinen? true :oletus nil :kuvaus "Vakaa kortin id ja E2E-ankkuri simulaattorissa."}}}
    {:id :suodatinrivi
     :nimi "Suodatinrivi"
     :ryhma :lomakkeet
@@ -619,7 +642,7 @@
     :korvaa []
     :slotit #{:kentat :toiminnot :tila}
     :tilat #{:normaali :lataus :virhe :onnistui}
-    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel :kortti}
     :bootstrap-tila :riippuvainen
     :kuvaus "Pieni lomakekokonaisuus, jossa näkymä omistaa arvon ja tallennuksen ehdot."
     :funktio "harja.ui.perus"
@@ -647,6 +670,7 @@
     :luonne :shared-komponentti
     :rooli :rakenne
     :suositus :ei-suositusta
+    :legacy-paatos :legacy
     :korvaa []
     :slotit #{:otsikko :sisalto}
     :tilat #{:normaali :tyhja}
@@ -666,7 +690,7 @@
     :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja :vetolaatikko :ryhmaotsikko :sivutettu :yhteenveto}
-    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel :kortti}
     :bootstrap-tila :riippuvainen
     :kuvaus "Taulukkonäkymä rivien ja sarakkeiden esittämiseen. Simulaattori tukee rekisteröidyn vetolaatikon, ryhmäotsikon, sivutuksen ja valmiiksi lasketun yhteenvetorivin. Funktioita, vapaata Hiccupia tai yhteenvetolaskentaa ei hyväksytä EDN-sopimuksessa. Paneelin ja napin luokat ovat vielä Bootstrapin panel- ja btn-xs-luokkia."
     :funktio "harja.ui.grid/grid"
@@ -686,7 +710,7 @@
     :korvaa []
     :slotit #{:sarakkeet :rivit}
     :tilat #{:normaali :tyhja :muokkaus}
-    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel}
+    :sallitut-vanhemmat #{:sivu :pino :vaaka :osio :ruudukko :panel :kortti}
     :bootstrap-tila :riippuvainen
     :kuvaus "Muokattava taulukko. Rivien muutokset kulkevat käyttöpaikan muutos-callbackin kautta. Paneelin rakenne on vielä Bootstrapin panel-luokkia."
     :funktio "harja.ui.grid/muokkaus-grid"
@@ -950,10 +974,11 @@
     :luonne :shared-komponentti
     :rooli :rakenne
     :suositus :ei-suositusta
+    :legacy-paatos :legacy
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel :kortti}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Geneerinen otsikko-arvo-rivinäkymä. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/tietoja"
@@ -967,6 +992,25 @@
                 :piirra-viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää viivat otsikoiden ja arvojen alle."}
                 :tietorivi-luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka jokaiselle tietoriville."}
                 :rivit {:tyyppi :vektori :pakollinen? false :oletus nil :kuvaus "Rivit datana: vektori [otsikko arvo] -pareja. Vain simulaattorille."}}}
+   {:id :tietolista
+    :nimi "Tietolista"
+    :ryhma :lomakkeet
+    :luonne :shared-komponentti
+    :rooli :sisalto
+    :suositus :uuteen-ui
+    :korvaa ["yleiset/tietoja" "yleiset/kaksi-palstaa-otsikkoja-ja-arvoja"]
+    :slotit #{:rivit}
+    :tilat #{:normaali :tyhja}
+    :sallitut-vanhemmat #{:sivu :sailio :pino :vaaka :osio :ruudukko :kortti :panel}
+    :bootstrap-tila :ei-riippuvuutta
+    :kuvaus "Responsiivinen semanttinen otsikko-arvo-lista. Pitkät arvot rivityvät, nil-arvot jätetään pois ja otsikkoleveys valitaan nimetyllä tokenilla."
+    :funktio "harja.ui.perus/tietolista"
+    :asetukset {:rivit {:tyyppi :vektori :pakollinen? true :oletus nil :kuvaus "Rivit karttoina: [{:otsikko ... :arvo ...}]. Arvo voi olla merkkijono tai Hiccup."}
+                :otsikkoleveys {:tyyppi :keyword :pakollinen? false :oletus :keski :kuvaus "Otsikkopalstan leveys: :pieni, :keski tai :suuri."}
+                :tiivis? {:tyyppi :boolean :pakollinen? false :oletus false :kuvaus "Käyttää pienempää pystysuuntaista sisäreunaa."}
+                :viivat? {:tyyppi :boolean :pakollinen? false :oletus true :kuvaus "Piirtää rivien erottimet."}
+                :data-cy {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "E2E-testien tunniste."}
+                :luokka {:tyyppi :merkkijono :pakollinen? false :oletus nil :kuvaus "Lisäluokka juurielementille."}}}
    {:id :kaksi-palstaa-otsikkoja-ja-arvoja
     :nimi "Kaksipalstainen tietonäkymä"
     :ryhma :lomakkeet
@@ -976,7 +1020,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :panel :kortti}
     :bootstrap-tila :riippuvainen
     :bootstrap-luokat ["container" "row" "col-md-4" "col-md-8"]
     :kuvaus "Vanha kaksipalstainen otsikko-arvo-rivinäkymä Bootstrapin grid-luokilla. Käytössä vain käyttäjän tietojen näkymässä (haku). Uuteen käyttöön tulee :tietoja."
@@ -992,7 +1036,7 @@
     :korvaa []
     :slotit #{:otsikot-ja-arvot}
     :tilat #{:normaali}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel :kortti}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Otsikko-arvo-rivit taulukkona. Rivit, joiden arvo on tyhjä, jätetään pois."
     :funktio "harja.ui.yleiset/taulukkotietonakyma"
@@ -1029,7 +1073,7 @@
     :tilat #{:normaali}
     :variantit #{:varoitus :onnistunut :neutraali :vahva-ilmoitus :huolto}
     :yhteiset-variantit {:onnistui :onnistunut :info :neutraali :varoitus :varoitus}
-    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel}
+    :sallitut-vanhemmat #{:sivu :lomake :pino :vaaka :osio :ruudukko :panel :kortti}
     :bootstrap-tila :ei-riippuvuutta
     :kuvaus "Tyypitelty ilmoitus ensisijaisella ja toissijaisella viestillä. Sulkeminen on valinnainen."
     :funktio "harja.ui.yleiset/info-laatikko"
@@ -1091,6 +1135,27 @@
 (def suositukset
   "Mitä uudessa UI:ssa suositellaan: uuden komponentin käyttöä, vanhaa vastinetta tai ei suositusta."
   #{:uuteen-ui :vanha :ei-suositusta})
+
+(def legacy-paatokset
+  "Komponentin elinkaaren päätös. Puuttuva eksplisiittinen päätös johdetaan suosituksesta."
+  {:aktiivinen {:teksti "Aktiivinen"
+                 :lyhyt-teksti "Aktiivinen"}
+   :legacy {:teksti "Legacy — uusi käyttö kielletty"
+            :lyhyt-teksti "Legacy"}
+   :paatamatta {:teksti "Legacy-päätös puuttuu"
+                :lyhyt-teksti "Päätös puuttuu"}})
+
+(defn legacy-paatos
+  "Palauttaa komponentin elinkaaripäätöksen.
+
+  Eksplisiittinen `:legacy-paatos` ohittaa johdetun arvon. Uuteen UI:hin suositeltu komponentti
+  on aktiivinen, `:vanha`-suositus on legacy ja `:ei-suositusta` ilman päivitystä jää avoimeksi."
+  [{:keys [legacy-paatos suositus]}]
+  (or legacy-paatos
+      (case suositus
+        :uuteen-ui :aktiivinen
+        :vanha :legacy
+        :paatamatta)))
 
 (def uusien-merkintojen-kielletyt-avaimet
   "Vanhoja asetusavaimia, joita uusi merkintä ei käytä. Vanhat merkinnät saavat käyttää niitä."
@@ -1159,9 +1224,13 @@
        (concat
          (for [arvo (tuplat :id)] (str "Tuplaid: " arvo))
          (for [{:keys [id ryhma luonne bootstrap-tila bootstrap-luokat nimi kuvaus funktio asetukset rooli slotit tilat
-                       sallitut-vanhemmat variantit suositus korvaa simulaattori-asetukset simulaattori-slotit] :as komponentti} komponentit
+                       sallitut-vanhemmat variantit suositus korvaa simulaattori-asetukset simulaattori-slotit
+                       legacy-paatos] :as komponentti} komponentit
                virhe [(when-not (contains? suositukset suositus)
                         (str id ": tuntematon tai puuttuva suositus " suositus))
+                      (when (and (some? legacy-paatos)
+                                 (not (contains? #{:aktiivinen :legacy} legacy-paatos)))
+                        (str id ": tuntematon legacy-paatos " legacy-paatos))
                       (when-not (and (vector? korvaa) (every? string? korvaa))
                         (str id ": korvaa on oltava tekstivektori"))
                       (when-not (contains? ryhma-idt ryhma) (str id ": tuntematon ryhmä " ryhma))

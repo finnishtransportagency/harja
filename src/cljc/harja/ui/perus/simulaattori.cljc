@@ -78,6 +78,51 @@
           :when (not (contains? asetukset avain))]
       (str (name id) ": pakollinen asetus " avain " puuttuu"))))
 
+(defn- tietolistarivivirheet [id asetukset]
+  (keep-indexed
+    (fn [indeksi rivi]
+      (when-not (and (map? rivi)
+                     (contains? rivi :otsikko)
+                     (some? (:otsikko rivi))
+                     (contains? rivi :arvo))
+        (str (name id) ": rivi " (inc indeksi)
+             " ei ole {:otsikko ... :arvo ...}-kartta")))
+    (get asetukset :rivit)))
+
+(defn- korttivirheet [id asetukset]
+  (let [koko (:koko asetukset :oletus)
+        otsikkotaso (:otsikkotaso asetukset 3)
+        data-cy (:data-cy asetukset)]
+    (concat
+      (when (and (map? asetukset)
+                 (contains? asetukset :data-cy)
+                 (or (not (string? data-cy))
+                     (str/blank? data-cy)))
+        [(str (name id) ": :data-cy pitää olla ei-tyhjä merkkijono")])
+      (when (not (contains? #{:oletus :pieni} koko))
+        [(str (name id) ": tuntematon koko " (pr-str koko))])
+      (when (or (not (integer? otsikkotaso))
+                (not (<= 1 otsikkotaso 6)))
+        [(str (name id) ": :otsikkotaso pitää olla kokonaisluku 1–6")]))))
+
+(defn- tietolistavirheet [id asetukset]
+  (let [rivit (:rivit asetukset)
+        otsikkoleveys (:otsikkoleveys asetukset :keski)]
+    (concat
+      (when (and (contains? asetukset :rivit)
+                 (not (vector? rivit)))
+        [(str (name id) ": :rivit pitää olla vektori")])
+      (when (vector? rivit)
+        (tietolistarivivirheet id asetukset))
+      (when (not (contains? #{:pieni :keski :suuri} otsikkoleveys))
+        [(str (name id) ": tuntematon otsikkoleveys " (pr-str otsikkoleveys))])
+      (when (and (contains? asetukset :tiivis?)
+                 (not (boolean? (:tiivis? asetukset))))
+        [(str (name id) ": :tiivis? pitää olla boolean")])
+      (when (and (contains? asetukset :viivat?)
+                 (not (boolean? (:viivat? asetukset))))
+        [(str (name id) ": :viivat? pitää olla boolean")]))))
+
 (defn- slottivirheet [id kuvaus lapset]
   (let [lapsimaara (count lapset)]
     (for [[slotti {:keys [min max]}] (:simulaattori-slotit kuvaus)
@@ -166,6 +211,12 @@
                    asetukset-kunnossa?
                    (str/blank? (:data-cy asetukset)))
           ["kenttaryhma: simulaattorissa vaaditaan :data-cy elementti-id:n muodostamiseen"])
+        (when (and (= :kortti komponentti) (nil? asetukset))
+          ["kortti: pakollinen asetus :data-cy puuttuu"])
+        (when (and (= :tietolista komponentti) (nil? asetukset))
+          ["tietolista: pakollinen asetus :rivit puuttuu"])
+        (when (and (= :kortti komponentti) (map? asetukset))
+          (korttivirheet komponentti asetukset))
         (when (and kuvaus asetukset-kunnossa?)
           (concat (asetusvirheet komponentti kuvaus asetukset)
                   (pakolliset-asetusvirheet komponentti kuvaus asetukset)))
@@ -174,6 +225,8 @@
                   (vetolaatikkovirheet komponentti asetukset)
                   (rivityyppivirheet komponentti asetukset)
                   (sivutusvirheet komponentti asetukset)))
+        (when (and (= :tietolista komponentti) (map? asetukset))
+          (tietolistavirheet komponentti asetukset))
         (when lapset-kunnossa?
           (mapcat #(tarkista-solmu % komponentti) lapset))))))
 
