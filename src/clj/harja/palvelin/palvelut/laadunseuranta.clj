@@ -47,6 +47,8 @@
             [harja.pvm :as pvm]
             [harja.domain.laadunseuranta.sanktio :as sanktiot-domain]
             [harja.domain.laadunseuranta.sanktion-laskenta :as sanktion-laskenta]
+            [harja.domain.laadunseuranta.sanktion-summamaaritys :as sanktion-summamaaritys]
+            [harja.domain.laadunseuranta.sanktiotyyppi :as sanktiotyyppi-domain]
 
             [harja.palvelin.integraatiot.api.tyokalut.virheet :as virheet]
             [harja.palvelin.palvelut.yllapitokohteet.yleiset :as yllapitokohteet-yleiset]
@@ -237,6 +239,14 @@
       (throw (SecurityException. (str "Sanktiolaji: " sanktiolaji " ei mahdollinen sanktiotyypille id: "
                                    sanktiotyypin-id ", koodi: " (:koodi sanktiotyyppi)))))))
 
+(defn- lajin-ainoa-sanktiotyyppi-id
+  "Palauttaa lajin sanktiotyypin id:n, jos lajilla on vain yksi mahdollinen tyyppi
+  (esim. ylläpidon sakko, bonus ja muistutus). Muuten nil."
+  [db laji urakan-alkupvm]
+  (let [koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi (keyword laji) urakan-alkupvm)]
+    (when (= 1 (count koodit))
+      (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit koodit}))))))
+
 (defn vaadi-talvisuolan-ylitys-ehto
   "Tarkistaa, että talvisuolan ylitys -sanktion ehdot täyttyvät:
   sanktion laji on talvisuolan ylitys
@@ -276,7 +286,7 @@
             hoitovuosi
             (or (= lukittava-ominaisuus :sanktio)
               (sanktiot-domain/arvonvahennykset-vaikuttaa-tavoitehintaan?
-                urakan-tiedot (pvm/vuodesta-hoitokausi hoitovuosi))))
+                (update urakan-tiedot :tyyppi keyword) (pvm/vuodesta-hoitokausi hoitovuosi))))
       (when-not (valikatselmus-lukitus/ominaisuuden-muokkaus-sallittu?
                   db urakka-id hoitovuosi lukittava-ominaisuus)
         (throw+ {:type virheet/+viallinen-kutsu+
@@ -325,18 +335,18 @@
                             (= (:tyyppi urakan-tiedot) "teiden-hoito")
                             (> (-> urakan-tiedot :alkupvm pvm/vuosi) 2020))
                   indeksi)
-        lajin-sanktiotyyppien-koodit (sanktiot-domain/sanktiolaji->sanktiotyyppi-koodi
-                                       (keyword laji) (:alkupvm urakan-tiedot))
-        sanktiotyyppi (if (:id tyyppi)
-                        (:id tyyppi)
-                        (when laji
-                          (:id (first (sanktiot/hae-sanktiotyyppi-koodilla db {:koodit lajin-sanktiotyyppien-koodit})))))
         paivamaara (or paivamaara perintapvm)
         _ (when-not ohita-lukitus?
             (tarkista-sanktion-lukitus
               db urakka urakan-tiedot sanktio paivamaara))
+        sanktiotyyppi (or (:id tyyppi)
+                        (lajin-ainoa-sanktiotyyppi-id db laji (:alkupvm urakan-tiedot)))
+        _ (when-not sanktiotyyppi
+            (throw (IllegalArgumentException. "Sanktion tyyppi on pakollinen.")))
+        ;; Muut lajit validoidaan sanktio-konfiguraatioprofiilia vasten alla.
         _ (when (= :yllapidon_bonus laji)
-            (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
+            (vaadi-sanktiolaji-ja-sanktiotyyppi-yhteensopivat
+              db laji sanktiotyyppi (:alkupvm urakan-tiedot)))
         profiilirivi (vaadi-sallittu-aktiivisessa-sanktio-konfiguraatiossa
                        db
                        {:urakka-id urakka
@@ -358,13 +368,15 @@
                   (when (number? summa-euroina)
                     summa-euroina))
             (:summamaaritykset profiilin-summamaaritykset)))
-        kiintea-automaattinen-summa? (sanktiot-domain/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
+        kiintea-automaattinen-summa? (sanktion-summamaaritys/sanktiotyypilla-kiintea-automaattinen-summamaaritys?
                                        profiilin-summamaaritykset)
-        automaattinen-summa-raakana (sanktiot-domain/sanktiotyypin-kiintea-automaattinen-summa
+        automaattinen-summa-raakana (sanktion-summamaaritys/sanktiotyypin-kiintea-automaattinen-summa
                                       profiilin-summamaaritykset)
         tilannekuvan-maaritystapa (when sama-profiilirivi?
                                     (let [tallennettu (some-> olemassa-oleva-sanktio :maaritystapa keyword)]
                                       ;; Laskettu määritystapa ratkaistaan aina uudelleen aktiivisesta profiilista.
+                                      ;; Tilannekuva koskee vain samaa profiiliriviä; riviä vaihdettaessa
+                                      ;; määritystapa ja normaalimäärä ratkaistaan uuden rivin mukaan.
                                       (when-not (= :laskettu tallennettu) tallennettu)))
         tilannekuvan-automaattinen-maara? (= :automaattinen tilannekuvan-maaritystapa)
         manuaalinen-maara (when (= :manuaalinen maaritystapa)
@@ -606,10 +618,10 @@
   (oikeudet/vaadi-kirjoitusoikeus oikeudet/urakat-laadunseuranta-sanktiot user urakka)
   (when (id-olemassa? (:yllapitokohde laatupoikkeama))
     (yllapitokohteet-yleiset/vaadi-yllapitokohde-kuuluu-urakkaan-tai-on-suoritettavana-tiemerkintaurakassa db urakka (:yllapitokohde laatupoikkeama)))
-  (let [laatupoikkeama (if (and (= 22 (get-in sanktio [:tyyppi :koodi]))
+  (let [laatupoikkeama (if (and (sanktiotyyppi-domain/perusteluton-sanktio? (:laji sanktio) (:tyyppi sanktio))
                                (contains? #{:sanktio "sanktio"} (get-in laatupoikkeama [:paatos :paatos]))
                                (nil? (get-in laatupoikkeama [:paatos :perustelu])))
-                        (assoc-in laatupoikkeama [:paatos :perustelu] "Laskettava sanktio")
+                        (assoc-in laatupoikkeama [:paatos :perustelu] sanktiotyyppi-domain/laskettavan-sanktion-oletusperustelu)
                         laatupoikkeama)
         olemassa-oleva-sanktio (when (id-olemassa? (:id sanktio))
                                  (first (sanktiot/hae-suorasanktion-tiedot db {:id (:id sanktio)})))

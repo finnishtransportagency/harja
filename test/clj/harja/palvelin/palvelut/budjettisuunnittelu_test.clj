@@ -236,8 +236,13 @@
         iin-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id ii-urakka-id})
         raaseporin-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id raasepori-urakka-id})
         ;; 2023 ja eteenpäin alkavilla urakoilla indeksien vertailukuukausi on poikkeuksellisesti elokuu, eikä syyskuu
-        raahen-mhu-2023-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id raahen-mhu-2023-id})]
+        raahen-mhu-2023-indeksit (bs/hae-urakan-indeksikertoimet db +kayttaja-jvh+ {:urakka-id raahen-mhu-2023-id})
+        urakoiden-indeksit (bs/hae-urakoiden-indeksikertoimet
+                             db +kayttaja-jvh+ [ii-urakka-id raasepori-urakka-id raahen-mhu-2023-id])]
     (is (= iin-indeksit raaseporin-indeksit) "Indeksit pitäisi olla sama samaan aikaan alkaneille urakoillle")
+    (is (= iin-indeksit (get urakoiden-indeksit ii-urakka-id)) "Erähaku palauttaa Iin urakan indeksit")
+    (is (= raaseporin-indeksit (get urakoiden-indeksit raasepori-urakka-id)) "Erähaku palauttaa Raaseporin indeksit")
+    (is (= raahen-mhu-2023-indeksit (get urakoiden-indeksit raahen-mhu-2023-id)) "Erähaku palauttaa Raahen indeksit")
 
     ;; Hae Iin urakan ensimmäisen hoitovuoden indeksi apurilla
     (is (= 1.068 (bs/indeksikerroin iin-indeksit 1)))
