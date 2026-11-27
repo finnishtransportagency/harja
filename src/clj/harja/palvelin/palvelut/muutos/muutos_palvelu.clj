@@ -798,13 +798,20 @@
         urakka (first (q-urakat/hae-urakka db urakka-id))
         kulut (:kulut muutos)
         liitteet (:liitteet muutos)
-        hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
-        ;; Tehtävien määrämuutokset (per tehtävä)
         maaramuutokset (:tehtavat_ja_maarat muutos)
         tavoitehinnan-muutos (:tavoitehinnan-muutos muutos)
         tyyppi-pysyva? (= (:tyyppi muutos) "pysyva")
         tyyppi-muutostyo? (= (:tyyppi muutos) "muutostyo")
         tyyppi-johto-ja-hallinto? (= (:tyyppi muutos) "johto-ja-hallintokorvaus")
+
+        hk-alkuvuosi (pvm/vuosi (first valittu-hoitokausi))
+        voimassa-alkaen-hoitokausi (some-> (:voimassa_alkaen muutos) (pvm/paivamaaran-hoitokausi))
+
+        ;; Laskutusraja päivitetään voimassa alkaen hoitokauden perusteella
+        tarkistettava-alkuvuosi (if tyyppi-pysyva?
+                                  (some-> voimassa-alkaen-hoitokausi first (pvm/vuosi))
+                                  hk-alkuvuosi)
+
         kustannusvaikutukset (cond
                                ;; Pysyvä muutos 
                                tyyppi-pysyva?
@@ -856,8 +863,6 @@
                            (first (muutos-kyselyt/hae-muutos conn {:id (:id muutos)})))
 
             tavoitehinta-indeksikorjattu-per-hoitovuosi (urakan-tavoitehinnat-indeksikorjattu db urakka-id)
-            voimassa-alkaen-hoitokausi (some-> (:voimassa_alkaen muutos) (pvm/paivamaaran-hoitokausi))
-
             tarkistettava-hoitokausi (if tyyppi-pysyva?
                                        voimassa-alkaen-hoitokausi
                                        valittu-hoitokausi)]
@@ -906,7 +911,7 @@
                       laskutusraja_alkuperainen
                       laskutusrajaa_nostettu?
                       muutokset-yhteensa-kaikki
-                      muutokset-yhteensa-ilman-valittua]} (hae-laskutusrajan-konteksti conn urakka-id hk-alkuvuosi (when paivitetaan? (:id muutos)))
+                      muutokset-yhteensa-ilman-valittua]} (hae-laskutusrajan-konteksti conn urakka-id tarkistettava-alkuvuosi (when paivitetaan? (:id muutos)))
 
               aiempi-muutos (- muutokset-yhteensa-kaikki muutokset-yhteensa-ilman-valittua)
               summa (:summa (first kustannusvaikutukset))
@@ -957,7 +962,8 @@
                                    maaramuutokset)]
               (tallenna-muutoksen-tehtavien-maaramuutokset conn (:id kayttaja) urakka-id aiti-muutos-id-ja-versio maaramuutokset)))
 
-          (when-let [uusi-laskutusraja (muutos-apurit/laske-uusi-laskutusraja paivitetaan? tyyppi-muutostyo? tyyppi-pysyva?
+          (when-let [uusi-laskutusraja (muutos-apurit/laske-uusi-laskutusraja
+                                         paivitetaan? tyyppi-muutostyo? tyyppi-pysyva?
                                          muutosten-prosenttiosuus-tavoitehinnasta-uutta-luotaessa
                                          muutosten-prosenttiosuus-tavoitehinnasta-muokattaessa laskutusrajaa_nostettu?
                                          laskutusraja laskutusraja_alkuperainen
