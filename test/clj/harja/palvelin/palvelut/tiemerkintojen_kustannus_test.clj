@@ -2,9 +2,13 @@
   (:require [clojure.test :refer :all]
             [harja.testi :refer :all]
             [com.stuartsierra.component :as component]
+            [dk.ative.docjure.spreadsheet :as xls]
+            [slingshot.slingshot :refer [try+]]
             [harja.palvelin.komponentit.tietokanta :as tietokanta]
             [harja.pvm :as pvm]
-            [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkkarit]))
+            [harja.palvelin.palvelut.kustannusten-kirjaus :as tiemerkkarit]
+            [harja.palvelin.palvelut.yllapitokohteet.tiemerkinta-kustannukset-excel :as tm-excel])
+  (:import (org.apache.poi.xssf.usermodel XSSFWorkbook)))
 
 (defn jarjestelma-fixture [testit]
   (alter-var-root #'jarjestelma
@@ -462,3 +466,139 @@
            paikkauskohde-id))
       (u (format "DELETE FROM paikkauskohde WHERE id = %s"
            paikkauskohde-id)))))
+
+;; --- Päällystyskohteiden tiemerkintäkustannusten Excel-vienti ja -tuonti ---
+
+(def ^:private excel-testiurakka "Oulun tiemerkinnän palvelusopimus 2017-2024")
+
+(defn- luo-paallystyskohde! [urakka-id vuosi nimi kohdenumero]
+  (i (format "INSERT INTO yllapitokohde
+              (nimi, urakka, sopimus, tr_numero, tr_alkuosa, tr_alkuetaisyys, tr_loppuosa, tr_loppuetaisyys,
+               yllapitokohdetyyppi, yllapitokohdetyotyyppi, yotyo, vuodet, kohdenumero, suorittava_tiemerkintaurakka)
+              VALUES ('%s', %s, (SELECT id FROM sopimus WHERE urakka = %s LIMIT 1), 4, 1, 0, 1, 100,
+                      'paallyste'::YLLAPITOKOHDETYYPPI, 'paallystys'::YLLAPITOKOHDETYOTYYPPI,
+                      false, '{%s}'::INTEGER[], %s, %s)"
+       nimi urakka-id urakka-id vuosi (if kohdenumero (str "'" kohdenumero "'") "NULL") urakka-id)))
+
+(defn- poista-kohteet! [idt]
+  (doseq [id idt]
+    (u (format "DELETE FROM tiemerkinta_yllapitokohteen_kustannus WHERE yllapitokohde = %s" id))
+    (u (format "DELETE FROM yllapitokohde WHERE id = %s" id))))
+
+(defn- kohteen-kustannukset [id]
+  (first (q-map (format "SELECT linjamerkinnat, pienmerkinnat, jyrsinnat, muut_kustannukset
+                         FROM tiemerkinta_yllapitokohteen_kustannus WHERE yllapitokohde = %s" id))))
+
+(defn- tuonti-workbook [rivit]
+  (xls/create-workbook "HARJAAN" (into [tm-excel/otsikot] rivit)))
+
+(defn- tuontirivi [id linja pien jyrsinta muut]
+  [(double id) nil nil "4/1/0/1/100" "Testikohde" "1" linja pien jyrsinta muut nil])
+
+(deftest tiemerkintakustannusten-excel-vienti-ja-tuonti-toimii
+  (let [db (:db jarjestelma)
+        vuosi (pvm/vuosi (pvm/nyt))
+        urakka-id (hae-urakan-id-nimella excel-testiurakka)
+        kohde-id (luo-paallystyskohde! urakka-id vuosi "Excel-testikohde" nil)]
+    (try
+      (let [workbook (XSSFWorkbook.)
+            _ (tm-excel/vie-tiemerkintakustannukset-exceliin db workbook +kayttaja-jvh+
+                {:urakka-id urakka-id :vuosi vuosi})
+            sheet (first (xls/sheet-seq workbook))
+            rivit (remove nil? (xls/row-seq sheet))
+            solu (fn [rivi sarake] (some-> (.getCell rivi (int sarake)) xls/read-cell))
+            otsikkorivi (first (filter #(= "HARJA-ID" (solu % 0)) rivit))
+            kohderivi (first (filter #(= (double kohde-id) (solu % 0)) rivit))
+            datarivit (filter #(number? (solu % 0)) rivit)]
+        (is (= tm-excel/otsikot (mapv #(solu otsikkorivi %) (range 11))) "Otsikot oikein")
+        (is (some? kohderivi) "Kohde löytyy Excelistä")
+        (is (nil? (solu kohderivi 2)) "Puuttuva kohdenumero on tyhjä")
+        (is (= (str "SUM(G" (inc (.getRowNum kohderivi)) ":J" (inc (.getRowNum kohderivi)) ")")
+              (.getCellFormula (.getCell kohderivi 10)))
+          "Kokonaishinta lasketaan kaavalla")
+        (is (= 4 (inc (.getRowNum (first datarivit)))) "Data alkaa yhteenvetokaavan olettamalta riviltä")
+        (is (= [true true true true true true false false false false true]
+              (mapv #(.getLocked (.getCellStyle (.getCell kohderivi (int %)))) (range 11)))
+          "Vain kustannussarakkeet G–J ovat muokattavissa")
+
+        ;; Rajataan tuonti testikohteeseen, jotta muiden kohteiden testidata ei muutu
+        (doseq [rivi datarivit
+                :when (not= rivi kohderivi)]
+          (.removeCell rivi (.getCell rivi 0)))
+        (doseq [[sarake arvo] {6 1200.5 7 600.75 9 320.0}]
+          (.setCellValue (.getCell kohderivi (int sarake)) (double arvo)))
+        (.setBlank (.getCell kohderivi 8))
+
+        (is (= {:tallennettu 1}
+              (tm-excel/tuo-tiemerkintakustannukset-excelista db +kayttaja-jvh+ workbook urakka-id vuosi)))
+        (is (= {:linjamerkinnat 1200.50M :pienmerkinnat 600.75M :jyrsinnat 0.00M :muut_kustannukset 320.00M}
+              (kohteen-kustannukset kohde-id))
+          "Tyhjä solu tallennetaan nollana")
+
+        (testing "Päivitys ylikirjoittaa aiemmat arvot"
+          (is (= {:tallennettu 1}
+                (tm-excel/tuo-tiemerkintakustannukset-excelista db +kayttaja-jvh+
+                  (tuonti-workbook [(tuontirivi kohde-id 1.0 2.0 3.0 4.0)]) urakka-id vuosi)))
+          (is (= {:linjamerkinnat 1.00M :pienmerkinnat 2.00M :jyrsinnat 3.00M :muut_kustannukset 4.00M}
+                (kohteen-kustannukset kohde-id)))))
+      (finally
+        (poista-kohteet! [kohde-id])))))
+
+(deftest tiemerkintakustannusten-excel-tuonti-hylkaa-virheelliset-tiedostot
+  (let [db (:db jarjestelma)
+        vuosi (pvm/vuosi (pvm/nyt))
+        urakka-id (hae-urakan-id-nimella excel-testiurakka)
+        toinen-urakka-id (hae-urakan-id-nimella "Muhoksen päällystysurakka")
+        kohde-id (luo-paallystyskohde! urakka-id vuosi "Excel-testikohde" "LK2")
+        toisen-urakan-kohde-id (luo-paallystyskohde! toinen-urakka-id vuosi "Toisen urakan kohde" nil)
+        tuo (fn [workbook]
+              (tm-excel/tuo-tiemerkintakustannukset-excelista db +kayttaja-jvh+ workbook urakka-id vuosi))]
+    (try
+      (testing "Väärät otsikot"
+        (is (= ["Tiedoston rakenne ei vastaa mallipohjaa. Lataa pohja Lataa Excel -napista."]
+              (:virheet (tuo (xls/create-workbook "HARJAAN" [["Kohde-ID" "Kohdenro"] [1 2]]))))))
+
+      (testing "Tiedostossa ei kohteita"
+        (is (= ["Tiedostosta ei löytynyt yhtään kohdetta."] (:virheet (tuo (tuonti-workbook []))))))
+
+      (testing "Virheellisestä tiedostosta ei tallenneta mitään"
+        (let [vastaus (tuo (tuonti-workbook
+                             [(tuontirivi kohde-id 100.0 "abc" -5.0 nil)
+                              (tuontirivi kohde-id 1.0 1.0 1.0 1.0)
+                              (tuontirivi toisen-urakan-kohde-id 1.0 1.0 1.0 1.0)
+                              (tuontirivi 1.5 1.0 1.0 1.0 1.0)]))]
+          (is (= [(str "Rivi 2: Pienmerkinnät (€) ei ole numero")
+                  (str "Rivi 2: Jyrsinnät (€) ei saa olla negatiivinen")
+                  (str "Rivi 2: HARJA-ID " kohde-id " esiintyy tiedostossa useammin kuin kerran")
+                  (str "Rivi 3: HARJA-ID " kohde-id " esiintyy tiedostossa useammin kuin kerran")
+                  (str "Rivi 4: Kohdetta HARJA-ID:llä " toisen-urakan-kohde-id
+                    " ei löydy urakan valitun vuoden päällystyskohteista")
+                  "Rivi 5: HARJA-ID ei ole kelvollinen"]
+                (:virheet vastaus)))
+          (is (nil? (kohteen-kustannukset kohde-id)) "Mitään ei tallennettu")
+          (is (nil? (kohteen-kustannukset toisen-urakan-kohde-id)) "Toisen urakan kohdetta ei muutettu")))
+
+      (testing "Liian suuri summa"
+        (is (= ["Rivi 2: Linjamerkinnät (€) on liian suuri"]
+              (:virheet (tuo (tuonti-workbook [(tuontirivi kohde-id 1.0E8 0.0 0.0 0.0)])))))
+        (is (= ["Rivi 2: Linjamerkinnät (€) on liian suuri"]
+              (:virheet (tuo (tuonti-workbook [(tuontirivi kohde-id "99999999,995" 0.0 0.0 0.0)]))))
+          "Raja tarkistetaan pyöristetystä arvosta"))
+
+      (testing "Toisen vuoden kohde hylätään"
+        (is (seq (:virheet (tm-excel/tuo-tiemerkintakustannukset-excelista db +kayttaja-jvh+
+                             (tuonti-workbook [(tuontirivi kohde-id 1.0 1.0 1.0 1.0)])
+                             urakka-id (dec vuosi))))))
+      (finally
+        (poista-kohteet! [kohde-id toisen-urakan-kohde-id])))))
+
+(deftest tiemerkintakustannusten-excel-tuonti-vaatii-kirjoitusoikeuden
+  (let [vuosi (pvm/vuosi (pvm/nyt))
+        urakka-id (hae-urakan-id-nimella excel-testiurakka)]
+    (is (= :ei-oikeutta
+          (try+
+            (tm-excel/tuo-tiemerkintakustannukset-excelista (:db jarjestelma) +kayttaja-tero+
+              (tuonti-workbook []) urakka-id vuosi)
+            :tallennettu
+            (catch harja.domain.roolit.EiOikeutta _
+              :ei-oikeutta))))))
