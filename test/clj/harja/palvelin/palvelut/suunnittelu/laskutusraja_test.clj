@@ -439,6 +439,114 @@
       (is (> laskutusraja-jalkeen laskutusraja-ennen)
         "Laskutusrajan pitäisi nousta kun pysyvän muutoksen tavoitehinnan muutos on positiivinen"))))
 
+(deftest pysyva-muutos-paivittaa-voimassaolon-hoitovuoden-laskutusrajan
+  (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
+        hoitovuoden-alkuvuosi 2025
+        seuraavan-hoitovuoden-alkuvuosi (inc hoitovuoden-alkuvuosi)
+        hoitokaudet (mapv (fn [vuosi]
+                            [(pvm/hoitokauden-alkupvm vuosi)
+                             (pvm/paivan-lopussa (pvm/hoitokauden-loppupvm (inc vuosi)))])
+                      (range 2025 2030))
+
+        _ (apurit/poista-tarjoukset-tietokannasta! urakka-id)
+
+        ;; Täytä kustikset 1 ja 2 vuosille
+        _ (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id hoitovuoden-alkuvuosi
+            (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+
+        _ (apurit/tallenna-kustannussuunnitelma-ja-tarjous!
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id seuraavan-hoitovuoden-alkuvuosi
+            (:johto-ja-hallintokorvaukset-2025 apurit/johto-ja-hallinto-tietomalli-2025))
+
+        seuraavan-vuoden-hankinnat (-> apurit/hankinnat-tietomalli
+                                     apurit/poista-yhteenvetorivi-toimenpiteilta
+                                     (apurit/paivita-hankintojen-toimenpideinstanssi-id
+                                       (kust-kyselyt/hae-urakan-toimenpiteet (:db jarjestelma) {:urakkaid urakka-id})))
+
+        _ (kust-kyselyt/tallenna-kilpailutettavat-hankinnat
+            (:db jarjestelma) +kayttaja-jvh+ urakka-id seuraavan-hoitovuoden-alkuvuosi
+            (mapv #(assoc % :alkukausi 0 :loppukausi 0) (:toimenpiteet seuraavan-vuoden-hankinnat)))
+
+        ;; Vahvista kustikset 1 ja 2 vuosille, jotta laskutusraja tulee kantaan
+        _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi true)
+        _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id seuraavan-hoitovuoden-alkuvuosi true)
+        _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id seuraavan-hoitovuoden-alkuvuosi false)
+        _ (vahvista-tai-kumoa-tavoite-ja-kattohinta! urakka-id hoitovuoden-alkuvuosi false)
+
+        hae-laskutusraja (fn [hoitokausi]
+                           (ffirst (q (format "SELECT laskutusraja FROM urakka_tavoite
+                                               WHERE urakka = %s AND hoitokausi = %s"
+                                        urakka-id hoitokausi))))
+
+        ensimmaisen-vuoden-raja-ennen (hae-laskutusraja 1)
+        toisen-vuoden-raja-ennen (hae-laskutusraja 2)
+        toimenpideinstanssi-id (ffirst (q (str "SELECT id FROM toimenpideinstanssi WHERE urakka = " urakka-id " LIMIT 1")))
+
+        summa 10000
+
+        muutos (fn [vuosi summa]
+                 {:tyyppi "pysyva"
+                  :nimi (str "Pysyvä muutos hoitovuodelle " vuosi)
+                  :syy "Testitarkoitus"
+                  :voimassa_alkaen (pvm/->pvm (str "01.11." vuosi))
+                  :kustannusvaikutukset [{:toimenpideinstanssi toimenpideinstanssi-id
+                                          :kustannuslaji "hankintakustannukset"
+                                          :summa summa
+                                          :hoitokauden_alkuvuosi vuosi}]})
+
+        _ (is (and
+                (number? ensimmaisen-vuoden-raja-ennen)
+                (pos? ensimmaisen-vuoden-raja-ennen))
+            "Ensimmäisen hoitovuoden laskutusraja on olemassa")
+
+        _ (is (and
+                (number? toisen-vuoden-raja-ennen)
+                (pos? toisen-vuoden-raja-ennen))
+            "Toisen hoitovuoden laskutusraja on olemassa")
+
+        ;; Valittuna 2. hoitokausi
+        ;; mutta muutos voimassa 1. hoitokausi
+        ;; -> pitäisi muuttaa 1. hk laskutusrajaa
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-muutos +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :valittu-hoitokausi (second hoitokaudet)
+             :hoitokaudet hoitokaudet
+             :muutos (muutos hoitovuoden-alkuvuosi summa)})
+
+        ensimmaisen-vuoden-raja-ensimmaisen-muutoksen-jalkeen (hae-laskutusraja 1)
+        toisen-vuoden-raja-ensimmaisen-muutoksen-jalkeen (hae-laskutusraja 2)
+
+        _ (is (= (+ ensimmaisen-vuoden-raja-ennen summa) ensimmaisen-vuoden-raja-ensimmaisen-muutoksen-jalkeen)
+            "Muutoksen voimassa_alkaen korottaa vain sen vuoden laskutusrajaa (1. hk)")
+
+        ;; Tämä on tarkoitus, laskutusraja tulee korottaa muutoksen voimassa_alkaen perusteella
+        _ (is (= toisen-vuoden-raja-ennen toisen-vuoden-raja-ensimmaisen-muutoksen-jalkeen)
+            "Toisen hoitovuoden laskutusraja ei muutu, vaikka se oli valittu hoitokausi")
+
+        ;; Vise-versa:
+        ;;
+        ;; Valittuna 1. hoitokausi
+        ;; mutta muutos voimassa 2. hoitokausi -> 
+        ;; -> pitäisi muuttaa 2. hk laskutusrajaa
+        _ (kutsu-palvelua (:http-palvelin jarjestelma)
+            :tallenna-muutos +kayttaja-jvh+
+            {:urakka-id urakka-id
+             :valittu-hoitokausi (first hoitokaudet)
+             :hoitokaudet hoitokaudet
+             :muutos (muutos seuraavan-hoitovuoden-alkuvuosi summa)})
+
+        ensimmaisen-vuoden-raja-toisen-muutoksen-jalkeen (hae-laskutusraja 1)
+        toisen-vuoden-raja-toisen-muutoksen-jalkeen (hae-laskutusraja 2)]
+
+    ;; Tämä on tarkoitus, laskutusraja tulee korottaa muutoksen voimassa_alkaen perusteella
+    (is (= ensimmaisen-vuoden-raja-ensimmaisen-muutoksen-jalkeen ensimmaisen-vuoden-raja-toisen-muutoksen-jalkeen)
+      "Ekan hoitovuoden laskutusraja ei muutu, vaikka se oli valittu hoitokausi")
+
+    (is (= (+ toisen-vuoden-raja-ennen summa) toisen-vuoden-raja-toisen-muutoksen-jalkeen)
+      "Muutoksen voimassa_alkaen korottaa vain sen vuoden laskutusrajaa (2. hk)")))
+
 (deftest laskutusraja-ei-nouse-kun-pysyva-muutos-negatiivinen
   (let [urakka-id (hae-urakan-id-nimella "POP MHU Kajaani 2025-2030")
         hoitovuoden-alkuvuosi 2025

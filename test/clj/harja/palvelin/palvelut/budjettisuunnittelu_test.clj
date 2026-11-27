@@ -947,9 +947,9 @@
   (let [urakka-id (hae-urakan-id-nimella "Ivalon MHU testiurakka (uusi)")
         ;; TODO: Pysyvätkö urakan indeksit samoina testejä varten, vaikka urakan aloitusvuosi muuttuisi taustalla?
         urakan-indeksit (bs/hae-urakan-indeksikertoimet (:db jarjestelma) +kayttaja-jvh+ {:urakka-id urakka-id})
-        uusi-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
-        paivitetty-tavoitehinta (gen/generate (s/gen ::bs-p/tavoitehinta))
-        kerroin 1.1
+        uusi-tavoitehinta 0.375M
+        paivitetty-tavoitehinta 125.50M
+        kerroin 1.1M
         paivitys-hoitokaudesta-eteenpain 3
         tallennettavat-tavoitteet (mapv (fn [hoitokausi]
                                           {:hoitokausi hoitokausi
