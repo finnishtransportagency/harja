@@ -34,7 +34,7 @@
 (defrecord NollaaTehtavatJaMaaratMuutokset [])
 (defrecord HaeTehtavaprofiilitOnnistui [vastaus])
 (defrecord HaeTehtavaprofiilitEpaonnistui [vastaus])
-(defrecord TestiTallennaKaikkiinTehtaviinArvo [])
+(defrecord TestiTallennaKaikkiinTehtaviinArvo [urakkatyyppi])
 
 (defn hae-tehtavat-ja-maarat [_parametrit]
   (tuck-apurit/post! :hae-tehtavat-ja-maarat
@@ -225,10 +225,10 @@
     app)
 
   TestiTallennaKaikkiinTehtaviinArvo
-  (process-event [_ app]
-    (tuck-apurit/get! :hae-tehtavaprofiilit
+  (process-event [{urakkatyyppi :urakkatyyppi} app]
+    (tuck-apurit/post! :hae-tehtavaprofiilit
+      {:urakkatyyppi urakkatyyppi}
       {:onnistui ->HaeTehtavaprofiilitOnnistui
        :epaonnistui ->HaeTehtavaprofiilitEpaonnistui
        :paasta-virhe-lapi? true})
     app))
-

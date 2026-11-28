@@ -6,6 +6,7 @@
             [com.stuartsierra.component :as component]
             [harja.tyokalut.yleiset :refer :all]
             [harja.kyselyt.tehtavat-maarat-kyselyt :as tm-kyselyt]
+            [harja.kyselyt.urakat :as urakat-kyselyt]
             [harja.kyselyt.paatos-kyselyt :as paatos-kyselyt]))
 
 (defn jarjestelma-fixture [testit]
@@ -54,7 +55,7 @@
              urakka-id hoitokauden-alkuvuosi tehtava-id)))
 
 (defn luo-muutos!
-  "Luo uuden MHU-muutoksen ja siihen liittyvän tehtävä-määräluettelon.
+  "Luo uuden MHU/VHU-muutoksen ja siihen liittyvän tehtävä-määräluettelon.
    Parametrit:
    - urakka-id: Urakan id
    - voimassa-alkaen: Päivämäärä (String tai Date)
@@ -75,7 +76,7 @@
     muutos-id))
 
 (defn luo-muutos-usealle-tehtavalle!
-  "Luo uuden MHU-muutoksen usealle tehtävälle eri määrämuutoksilla ja versioilla.
+  "Luo uuden MHU/VHU-muutoksen usealle tehtävälle eri määrämuutoksilla ja versioilla.
    Käytetään erityisesti versio-suodatustesteihin.
    
    Parametrit:
@@ -206,6 +207,75 @@
 
       (is (= (:nimi (first tehtavat)) "1.0 TALVIHOITO") "Ensimmäinen rivi on talvihoidon tehtäväryhmä")
       (is (= (count tehtavaryhmat) 13) "Tehtäväryhmiä on 13"))))
+
+(deftest hae-vhu-tehtavat-ja-maarat-ryhmiteltyna
+  (let [urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        alkuperainen-vhu-maara 17M
+        pysyvan-muutoksen-maaramuutos 5M
+        urakkavuoden-tavoitemaara (+ alkuperainen-vhu-maara pysyvan-muutoksen-maaramuutos)
+        vhu-muutosten-maara 1
+        parametrit {:urakka-id urakka-id
+                    :valittu-hoitokausi [(hoitokauden-alku-pvm 2023) (hoitokauden-loppu-pvm 2023)]}
+        vastaus-ilman-maaraa (kutsu-palvelua (:http-palvelin jarjestelma) :hae-tehtavat-ja-maarat +kayttaja-jvh+ parametrit)
+        tehtavat-ilman-maaraa (:tehtavat vastaus-ilman-maaraa)
+        valiotsikot (filter :valiotsikko tehtavat-ilman-maaraa)
+        tehtavarivi (first (remove :valiotsikko tehtavat-ilman-maaraa))
+        tehtava-id (:tehtava_id tehtavarivi)
+        _ (varmista-tarjousrivi! urakka-id 2023 tehtava-id)
+        _ (u (format "UPDATE urakka_tehtavamaara
+                         SET maara = %s, poistettu = false
+                       WHERE urakka = %s
+                         AND \"hoitokauden-alkuvuosi\" = 2023
+                         AND tehtava = %s"
+                     alkuperainen-vhu-maara urakka-id tehtava-id))
+        ;; Luodaan muutos, vaikka muutoksia ei ole vielä aktivoitu VHU-urakoille. Ne kuitenkin tukevat niitä.
+        _ (luo-muutos! urakka-id "2023-10-01" tehtava-id 2023 pysyvan-muutoksen-maaramuutos "VHU-tehtävän määrämuutos")
+        vastaus (kutsu-palvelua (:http-palvelin jarjestelma) :hae-tehtavat-ja-maarat +kayttaja-jvh+ parametrit)
+        tehtavat (:tehtavat vastaus)
+        tehtava (first (filter #(= tehtava-id (:tehtava_id %)) tehtavat))]
+    (is (not (:lukittu? vastaus)) "VHU-urakkaa ei lukita välikatselmuksella")
+    (is (seq valiotsikot) "Väliotsikoita löytyy")
+    (is (every? #(re-matches #".+ / .+" (:valiotsikko %)) valiotsikot) "Väliotsikko on muotoa 'OTSIKKO / Tehtäväryhmä'")
+    (is (= "VUOSITARKASTUKSET / Kelluvien turvalaitteiden vuositarkastustyöt ajomatkoineen" (:valiotsikko (first tehtavat)))
+      "Ensimmäinen rivi on ensimmäisen tehtäväryhmän väliotsikko")
+    (is (seq (remove :valiotsikko tehtavat)) "Tehtäviä löytyy")
+    (is (every? :kuuluu (remove :valiotsikko tehtavat)) "Jokainen tehtävä kuuluu väliotsikon alle")
+    (is (= (map :jarjestys tehtavat) (range 1 (inc (count tehtavat)))) "Järjestys on juokseva")
+    (is (= (:kuuluu (second tehtavat)) (:valiotsikko (first tehtavat))) "Tehtävä on väliotsikkonsa jälkeen")
+    (is (= alkuperainen-vhu-maara (:tarjous_maara tehtava)) "Alkuperäinen VHU-määrä palautuu")
+    (is (= pysyvan-muutoksen-maaramuutos (:muutos_maaramuutos tehtava)) "Pysyvien muutosten summa palautuu")
+    (is (= urakkavuoden-tavoitemaara (:yhteensa tehtava)) "Urakkavuoden tavoitemäärä sisältää muutoksen")
+    (is (= vhu-muutosten-maara (count (:muutokset tehtava))) "VHU-tehtävälle palautuu yksi muutos")
+    (is (= (double alkuperainen-vhu-maara) (-> tehtava :muutokset first :edellinen_maara)) "Muutoksen edellinen määrä palautuu")
+    (is (= (double urakkavuoden-tavoitemaara) (-> tehtava :muutokset first :uusi_maara)) "Muutoksen jälkeinen määrä palautuu")
+    (is (= (double pysyvan-muutoksen-maaramuutos) (-> tehtava :muutokset first :maaramuutos)) "VHU-muutoksen historiarivi palautuu")))
+
+(deftest vhu-urakan-tyyppi-cachetaan
+  (let [hakukerrat (atom 0)
+        urakka-id -987654
+        vhu-urakka? (ns-resolve 'harja.palvelin.palvelut.suunnittelu.tehtavat-maarat-palvelu 'vhu-urakka?)]
+    (with-redefs [urakat-kyselyt/hae-urakan-tiedot
+                  (fn [_ _]
+                    (swap! hakukerrat inc)
+                    [{:tyyppi "vesivayla-hoito"}])]
+      (is (true? (vhu-urakka? {} urakka-id)))
+      (is (true? (vhu-urakka? {} urakka-id)))
+      (is (= 1 @hakukerrat) "Urakan tyyppi haetaan kannasta vain kerran"))))
+
+(deftest hae-tehtavaprofiilit-urakkatyypin-mukaan
+  (let [http-palvelin {:asetukset {:dev-resources-path "dev-resources"}}
+        mhu-profiili (tm-palvelu/hae-tehtavaprofiilit http-palvelin nil {:urakkatyyppi "teiden-hoito"})
+        vhu-profiili (tm-palvelu/hae-tehtavaprofiilit http-palvelin nil {:urakkatyyppi :vesivayla-hoito})
+        urakka-id (hae-urakan-id-nimella "Rentoselän urakka")
+        tehtavanimet (->> (tm-kyselyt/hae-vhu-tehtavat-ja-maarat (:db jarjestelma) urakka-id 2023)
+                       :tehtavat
+                       (remove :valiotsikko)
+                       (map :nimi)
+                       set)]
+    (is (contains? mhu-profiili "Ise 1-ajorat."))
+    (is (not (contains? vhu-profiili "Ise 1-ajorat.")))
+    (is (contains? vhu-profiili "Poijujen sijainnin ja asennon tarkastukset ml. vedenpäällisen osan silmämääräinen tarkastaminen ja heijastinkalvojen tarkastus ja tarvittaessa uusiminen"))
+    (is (= tehtavanimet (set (keys vhu-profiili))))))
 
 (deftest tallenna-tarjouksen-tehtavat-ja-maarat-onnistuneesti
   (let [db (:db jarjestelma)]

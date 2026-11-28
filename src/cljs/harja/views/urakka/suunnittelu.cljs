@@ -29,6 +29,7 @@
                      (not (#{:teiden-hoito :paallystys :tiemerkinta} tyyppi))
                      (not (ur/vesivaylaurakkatyyppi? tyyppi)))
       :tehtavat (= tyyppi :teiden-hoito)
+      :tehtavat-maarat (#{:teiden-hoito :vesivayla-hoito} tyyppi)
       :suola (#{:hoito :teiden-hoito} tyyppi)
       :muut (and
               (not (ur/vesivaylaurakkatyyppi? tyyppi))
@@ -112,10 +113,13 @@
           :tehtavat-maarat
           (when (and
                   (oikeudet/urakat-suunnittelu-tehtava-ja-maaraluettelo id)
-                  (istunto/ominaisuus-kaytossa? :mhu-urakka)
-                  (valilehti-mahdollinen? :tehtavat ur)
+                  (valilehti-mahdollinen? :tehtavat-maarat ur)
                   (istunto/ominaisuus-kaytossa? :tehtavat-maarat)
-                  (some-> alkupvm pvm/vuosi (>= 2025)))
+                  (or
+                    (= (:tyyppi ur) :vesivayla-hoito)
+                    (and
+                      (istunto/ominaisuus-kaytossa? :mhu-urakka)
+                      (some-> alkupvm pvm/vuosi (>= 2025)))))
             ^{:key "tehtavat-maarat"}
             [tehtavat-maarat-nakyma/tehtavat-maarat])
 

@@ -7,9 +7,22 @@
   {:positional? true})
 
 (declare hae-maaramitattavat-tehtavat
+  hae-vhu-tehtavat
   hae-tarjous-tehtava-idlla
   hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja
   paivita-tarjous-tehtava<! lisaa-tarjous-tehtava<!)
+
+(defn- muunna-tehtavan-muutokset
+  "Sekä vhu, että mhu urakoill ehaetaan tehtävät. Duplikaattikoodin välttämiseksi muunnetaan tehtävät vektorista mäpiksi tällä funktiolla."
+  [tehtava]
+  (assoc tehtava :muutokset
+    (if (:muutokset tehtava)
+      (mapv
+        (fn [muutos]
+          (konversio/pgobject->map muutos :id :long :edellinen_maara :double :maaramuutos :double
+            :uusi_maara :double :tehtavaid :long :voimassa_alkaen :date :syy :string))
+        (konversio/pgarray->vector (:muutokset tehtava)))
+      [])))
 
 (defn tallenna-tarjouksen-tehtavat-ja-maarat [db urakka-id kayttaja-id hk-alkuvuosi tehtavat]
   (doseq [{:keys [tehtava_id tarjous_maara]} (remove :valiotsikko tehtavat)]
@@ -46,19 +59,7 @@
   [db urakka-id hoitokauden-alkuvuosi]
   (let [tehtavat (hae-maaramitattavat-tehtavat db {:urakkaid urakka-id
                                                    :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
-        ;; Mäppää tehtavan tietokantarivit clojure-mapeiksi.
-        tehtavat (mapv
-                   (fn [tehtava]
-                     (-> tehtava
-                       (assoc :muutokset
-                         (if (:muutokset tehtava)
-                           (mapv
-                             (fn [k]
-                               (konversio/pgobject->map k :id :long :edellinen_maara :double :maaramuutos :double
-                                 :uusi_maara :double :tehtavaid :long :voimassa_alkaen :date :syy :string))
-                             (konversio/pgarray->vector (:muutokset tehtava)))
-                           []))))
-                   tehtavat)
+        tehtavat (mapv muunna-tehtavan-muutokset tehtavat)
 
         ;; Jaotellaan tehtävät tehtävryhmäotsikon alle
         tehtavaryhman-tehtavat (group-by :tehtavaryhmaotsikko tehtavat)
@@ -89,5 +90,32 @@
         viimeisin-muokkaus (first (hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja db {:urakkaid urakka-id
                                                                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
     {:tehtavat tehtavat
+     :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
+     :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
+
+(defn hae-vhu-tehtavat-ja-maarat
+  "Hakee VHU-urakan tehtävät väliotsikoiden alle muodossa 'TEHTÄVÄRYHMÄOTSIKKO / Tehtäväryhmä'.
+  Järjestys tulee kyselyltä (otsikko, tehtäväryhmä, tehtava.jarjestys)."
+  [db urakka-id hoitokauden-alkuvuosi]
+  (let [ryhmat (->> (hae-vhu-tehtavat db {:urakkaid urakka-id
+                                          :hoitokauden-alkuvuosi hoitokauden-alkuvuosi})
+                 (map (fn [tehtava]
+                        (-> tehtava
+                          ;; Frontilla näytetään tehtäväryhmäotsikko muodossa "TEHTÄVÄRYHMÄOTSIKKO / Tehtäväryhmä" eli hieman eri tavalla, kuin MHU-urakoilla.
+                          (assoc :tehtavaryhmaotsikko (str (:tehtavaryhmaotsikko tehtava) " / " (:tehtavaryhmanimi tehtava)))
+                          muunna-tehtavan-muutokset)))
+                 ;; partition-by säilyttää kyselyn järjestyksen ja samalla ryhmittelee tehtävät tehtäväryhmäotsikon mukaan oikeaan järjestykseen.
+                 (partition-by :tehtavaryhmaid))
+        ;; Lisää väliotsikoinnit fronttia varten.
+        tehtavat (mapcat (fn [ryhma]
+                           (let [valiotsikko (:tehtavaryhmaotsikko (first ryhma))]
+                             (cons {:nimi valiotsikko
+                                    :valiotsikko valiotsikko}
+                               (map #(assoc % :kuuluu valiotsikko) ryhma))))
+                   ryhmat)
+        ;; Näytetään projektipäälliköille tieto, että milloin näitä on muokattu viimeksi.
+        viimeisin-muokkaus (first (hae-tarjouksen-tehtavamaarien-viimeisin-muokkaaja db {:urakkaid urakka-id
+                                                                                         :hoitokauden-alkuvuosi hoitokauden-alkuvuosi}))]
+    {:tehtavat (map-indexed (fn [idx rivi] (assoc rivi :jarjestys (inc idx))) tehtavat)
      :viimeisin-muokkaus (:viimeisin_muokkaus viimeisin-muokkaus)
      :viimeisin-muokkaaja (:viimeisin_muokkaaja viimeisin-muokkaus)}))
